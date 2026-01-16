@@ -370,7 +370,7 @@ export const generatePDF = (result, searchTerm) => {
       // Rated-As Instructions
       if (result.ratingCriteria.ratedUnder) {
         checkPageBreak(25);
-        const instructionsLines = doc.splitTextToSize(result.ratingCriteria.ratedUnder, contentWidth - 6);
+        const instructionsLines = doc.splitTextToSize(result.ratingCriteria.ratedUnder, contentWidth - 12);
         const boxHeight = instructionsLines.length * 4 + 13;
         doc.setFillColor(254, 243, 199);
         doc.roundedRect(margin, yPosition - 3, contentWidth, boxHeight, 1, 1, 'F');
@@ -380,7 +380,7 @@ export const generatePDF = (result, searchTerm) => {
         doc.text('RATING INSTRUCTIONS:', margin + 3, yPosition);
         doc.setFont(undefined, 'normal');
         yPosition += 5;
-        doc.text(instructionsLines, margin + 3, yPosition);
+        doc.text(instructionsLines, margin + 3, yPosition, { maxWidth: contentWidth - 12 });
         yPosition += instructionsLines.length * 4 + 5;
         doc.setTextColor(0, 0, 0);
         yPosition += 3;
@@ -389,7 +389,7 @@ export const generatePDF = (result, searchTerm) => {
       // Formula
       if (result.ratingCriteria.formula) {
         checkPageBreak(20);
-        const formulaLines = doc.splitTextToSize(result.ratingCriteria.formula, contentWidth - 6);
+        const formulaLines = doc.splitTextToSize(result.ratingCriteria.formula, contentWidth - 12);
         const boxHeight = formulaLines.length * 4 + 13;
         doc.setFillColor(219, 234, 254);
         doc.roundedRect(margin, yPosition - 3, contentWidth, boxHeight, 1, 1, 'F');
@@ -399,7 +399,7 @@ export const generatePDF = (result, searchTerm) => {
         doc.text('FORMULA:', margin + 3, yPosition);
         doc.setFont(undefined, 'normal');
         yPosition += 5;
-        doc.text(formulaLines, margin + 3, yPosition);
+        doc.text(formulaLines, margin + 3, yPosition, { maxWidth: contentWidth - 12 });
         yPosition += formulaLines.length * 4 + 5;
         doc.setTextColor(0, 0, 0);
         yPosition += 3;
@@ -408,7 +408,7 @@ export const generatePDF = (result, searchTerm) => {
       // Special Instructions
       if (result.ratingCriteria.specialInstructions) {
         checkPageBreak(20);
-        const specialLines = doc.splitTextToSize(result.ratingCriteria.specialInstructions, contentWidth - 6);
+        const specialLines = doc.splitTextToSize(result.ratingCriteria.specialInstructions, contentWidth - 12);
         const boxHeight = specialLines.length * 4 + 13;
         doc.setFillColor(243, 232, 255);
         doc.roundedRect(margin, yPosition - 3, contentWidth, boxHeight, 1, 1, 'F');
@@ -418,7 +418,7 @@ export const generatePDF = (result, searchTerm) => {
         doc.text('SPECIAL INSTRUCTIONS:', margin + 3, yPosition);
         doc.setFont(undefined, 'normal');
         yPosition += 5;
-        doc.text(specialLines, margin + 3, yPosition);
+        doc.text(specialLines, margin + 3, yPosition, { maxWidth: contentWidth - 12 });
         yPosition += specialLines.length * 4 + 5;
         doc.setTextColor(0, 0, 0);
         yPosition += 3;
