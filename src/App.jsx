@@ -178,7 +178,10 @@ function App() {
 
       <footer className="bg-gray-900 text-white py-8 mt-12">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="grid grid-cols-1 md:gri mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h4 className="font-bold mb-3">About This Tool</h4>
+              <p className="text-gray-400 text-sm mb-3">
                 This application provides educational information about VA disability ratings based on official 38 CFR Part 4 data from eCFR.
               </p>
               <button
@@ -252,10 +255,7 @@ function App() {
       {/* Modals */}
       {showPrivacyPolicy && <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />}
       {showAboutUs && <AboutUs onClose={() => setShowAboutUs(false)} />}
-      {showContactUs && <ContactUs onClose={() => setShowContactUs(false)} />}>
-          </div>
-        </div>
-      </footer>
+      {showContactUs && <ContactUs onClose={() => setShowContactUs(false)} />}
     </div>
   );
 }
