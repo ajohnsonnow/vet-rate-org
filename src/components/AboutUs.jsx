@@ -115,9 +115,6 @@ const AboutUs = ({ onClose }) => {
               include affiliate links to helpful veteran resources (e.g., medical gear, books, services). We may 
               earn a small commission if you purchase through these links, but <strong>it never costs you extra</strong>.
             </p>
-            <p className="text-gray-700 mb-3 italic">
-              As an Amazon Associate, we earn from qualifying purchases.
-            </p>
           </section>
 
           <section className="mb-6">

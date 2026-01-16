@@ -218,9 +218,6 @@ function App() {
               <p className="text-gray-400 text-sm">
                 This tool is for educational purposes only. It does not constitute legal or medical advice. Consult with VA officials or qualified professionals for specific guidance.
               </p>
-              <p className="text-gray-400 text-xs mt-2 italic">
-                As an Amazon Associate, I earn from qualifying purchases.
-              </p>
             </div>
           </div>
 
