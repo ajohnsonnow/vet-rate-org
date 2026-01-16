@@ -20,7 +20,7 @@ const ContactUs = ({ onClose }) => {
     e.preventDefault();
     
     // Create mailto link with form data
-    const mailtoLink = `mailto:anthony.johnson.now@gmail.com?subject=${encodeURIComponent(formData.subject || 'Contact from Vet-Rate.org')}&body=${encodeURIComponent(
+    const mailtoLink = `mailto:Anth@StructuredForGrowth.com?subject=${encodeURIComponent(formData.subject || 'Contact from Vet-Rate.org')}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     )}`;
     
@@ -133,8 +133,8 @@ const ContactUs = ({ onClose }) => {
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> This will open your default email client. If you prefer, you can 
                   email us directly at{' '}
-                  <a href="mailto:anthony.johnson.now@gmail.com" className="underline">
-                    anthony.johnson.now@gmail.com
+                  <a href="mailto:Anth@StructuredForGrowth.com" className="underline">
+                    Anth@StructuredForGrowth.com
                   </a>
                 </p>
               </div>
