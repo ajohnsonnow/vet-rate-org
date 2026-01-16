@@ -6,6 +6,9 @@ import DisabilityDetails from './components/DisabilityDetails';
 import Disclaimer from './components/Disclaimer';
 import BuyMeCoffee from './components/BuyMeCoffee';
 import MilitarySeals from './components/MilitarySeals';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import AboutUs from './components/AboutUs';
+import ContactUs from './components/ContactUs';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import disabilityData from './data/disabilityData.json';
 import './index.css';
@@ -17,6 +20,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showAboutUs, setShowAboutUs] = useState(false);
+  const [showContactUs, setShowContactUs] = useState(false);
 
   // Debounced search
   useEffect(() => {
@@ -172,18 +178,27 @@ function App() {
 
       <footer className="bg-gray-900 text-white py-8 mt-12">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h4 className="font-bold mb-3">About This Tool</h4>
-              <p className="text-gray-400 text-sm">
+          <div className="grid grid-cols-1 md:gri mb-3">
                 This application provides educational information about VA disability ratings based on official 38 CFR Part 4 data from eCFR.
               </p>
+              <button
+                onClick={() => setShowAboutUs(true)}
+                className="text-va-gold hover:underline text-sm font-semibold"
+              >
+                Learn More →
+              </button>
             </div>
             <div>
               <h4 className="font-bold mb-3">Data Privacy</h4>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm mb-3">
                 This system operates locally and does not store Personally Identifiable Information (PII) on external servers. All data processing happens in your browser.
               </p>
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="text-va-gold hover:underline text-sm font-semibold"
+              >
+                Privacy Policy →
+              </button>
             </div>
             <div>
               <h4 className="font-bold mb-3">Legal Notice</h4>
@@ -197,6 +212,28 @@ function App() {
           </div>
 
           <div className="border-t border-gray-700 pt-6">
+            <div className="flex flex-wrap justify-center gap-4 mb-4">
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowAboutUs(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                About Us
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowContactUs(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                Contact Us
+              </button>
+            </div>
             <p className="text-center text-gray-400 text-sm">
               &copy; 2024 Veteran Disability Search. All data sourced from{' '}
               <a
@@ -208,6 +245,14 @@ function App() {
                 eCFR Title 38, Chapter I, Part 4
               </a>
             </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      {showPrivacyPolicy && <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} />}
+      {showAboutUs && <AboutUs onClose={() => setShowAboutUs(false)} />}
+      {showContactUs && <ContactUs onClose={() => setShowContactUs(false)} />}>
           </div>
         </div>
       </footer>
