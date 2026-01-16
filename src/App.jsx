@@ -166,7 +166,12 @@ function App() {
             result={selectedResult}
             searchTerm={searchTerm}
             onClose={() => setSelectedResult(null)}
-          /> border-gray-200 shadow-lg z-40">
+          />
+        )}
+      </main>
+
+      {/* Sticky Footer Ad */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="container mx-auto px-4 py-2">
           <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
           <ins className="adsbygoogle"
@@ -177,12 +182,7 @@ function App() {
                data-full-width-responsive="true"></ins>
           <script>
                (adsbygoogle = window.adsbygoogle || []).push({});
-          </scriptassName="container mx-auto px-4 py-2">
-          <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-          <div id="adsense-sticky-footer" className="min-h-[50px] flex items-center justify-center bg-gray-50">
-            {/* Google AdSense sticky footer code goes here */}
-            <p className="text-xs text-gray-400">Sticky Footer Ad - Insert AdSense code</p>
-          </div>
+          </script>
         </div>
       </div>
 
