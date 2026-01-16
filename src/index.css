@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply scroll-smooth;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Vet-Rate.org Brand Colors - Forest Green Theme */
+:root {
+  --va-blue: #2d5016;
+  --va-gold: #88b04b;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Focus Visible for Accessibility */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-va-blue;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+/* Button Hover States */
+button:not(:disabled) {
+  @apply transition-all duration-200;
+}
+
+button:not(:disabled):hover {
+  @apply transform hover:-translate-y-0.5 shadow-lg;
+}
+
+/* Card Shadows */
+.card-shadow {
+  @apply shadow-md hover:shadow-lg transition-shadow;
+}
+
+/* Utility Classes */
+.text-va-blue {
+  @apply text-[#003f87];
+}
+
+.bg-va-blue {
+  @apply bg-[#003f87];
+}
+
+.text-va-gold {
+  @apply text-[#fdb913];
+}
+
+.bg-va-gold {
+  @apply bg-[#fdb913];
+}
+
+/* Form Inputs */
+input[type='text'],
+input[type='search'],
+textarea,
+select {
+  @apply transition-colors duration-200;
+}
+
+input[type='text']:focus,
+input[type='search']:focus,
+textarea:focus,
+select:focus {
+  @apply border-va-blue ring-2 ring-va-blue ring-opacity-20;
+}
+
+/* Links */
+a {
+  @apply transition-colors duration-200;
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  h1 {
+    @apply text-2xl;
+  }
+  h2 {
+    @apply text-xl;
+  }
+  h3 {
+    @apply text-lg;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+  
+  body {
+    @apply bg-white;
+  }
+  
+  .print\:shadow-none {
+    @apply shadow-none;
+  }
+}

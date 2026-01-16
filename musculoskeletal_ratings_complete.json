@@ -1,0 +1,625 @@
+{
+  "system": "Musculoskeletal",
+  "codes": {
+    "5000": {
+      "ratings": {
+        "100": "Of the pelvis, vertebrae, or extending into major joints, or with multiple localization or with long history of intractability and debility, anemia, amyloid liver changes, or other continuous constitutional symptoms",
+        "60": "Frequent episodes, with constitutional symptoms",
+        "30": "With definite involucrum or sequestrum, with or without discharging sinus",
+        "20": "With discharging sinus or other evidence of active infection within the past 5 years",
+        "10": "Inactive, following repeated episodes, without evidence of active infection in past 5 years"
+      },
+      "notes": [
+        "A rating of 10 percent, as an exception to the amputation rule, is to be assigned in any case of active osteomyelitis where the amputation rating for the affected part is no percent. This 10 percent rating and the other partial ratings of 30 percent or less are to be combined with ratings for ankylosis, limited motion, nonunion or malunion, shortening, etc., subject, of course, to the amputation rule. The 60 percent rating, as it is based on constitutional symptoms, is not subject to the amputation rule. A rating for osteomyelitis will not be applied following cure by removal or radical resection of the affected bone.",
+        "The 20 percent rating on the basis of activity within the past 5 years is not assignable following the initial infection of active osteomyelitis with no subsequent reactivation. The prerequisite for this historical rating is an established recurrent osteomyelitis. To qualify for the 10 percent rating, 2 or more episodes following the initial infection are required. This 20 percent rating or the 10 percent rating, when applicable, will be assigned once only to cover disability at all sites of previously active infection with a future ending date in the case of the 20 percent rating."
+      ]
+    },
+    "5001": {
+      "ratings": {
+        "100": "Active"
+      },
+      "specialInstructions": "Inactive: See \u00a7\u00a7 4.88c and 4.89"
+    },
+    "5002": {
+      "ratings": {
+        "100": "With constitutional manifestations associated with active joint involvement, totally incapacitating",
+        "60": "Less than criteria for 100% but with weight loss and anemia productive of severe impairment of health or severely incapacitating exacerbations occurring 4 or more times a year or a lesser number over prolonged periods",
+        "40": "Symptom combinations productive of definite impairment of health objectively supported by examination findings or incapacitating exacerbations occurring 3 or more times a year",
+        "20": "One or two exacerbations a year in a well-established diagnosis"
+      },
+      "notes": [
+        "Examples of conditions rated using this diagnostic code include, but are not limited to, rheumatoid arthritis, psoriatic arthritis, and spondyloarthropathies.",
+        "For chronic residuals, rate under diagnostic code 5003.",
+        "The ratings for the active process will not be combined with the residual ratings for limitation of motion, ankylosis, or diagnostic code 5003. Instead, assign the higher evaluation."
+      ]
+    },
+    "5003": {
+      "rateAs": "Degenerative arthritis established by X-ray findings will be rated on the basis of limitation of motion under the appropriate diagnostic codes for the specific joint or joints involved (DC 5200 etc.). When however, the limitation of motion of the specific joint or joints involved is noncompensable under the appropriate diagnostic codes, a rating of 10 pct is for application for each such major joint or group of minor joints affected by limitation of motion, to be combined, not added under diagnostic code 5003.",
+      "ratings": {
+        "20": "With X-ray evidence of involvement of 2 or more major joints or 2 or more minor joint groups, with occasional incapacitating exacerbations",
+        "10": "With X-ray evidence of involvement of 2 or more major joints or 2 or more minor joint groups"
+      },
+      "notes": [
+        "Limitation of motion must be objectively confirmed by findings such as swelling, muscle spasm, or satisfactory evidence of painful motion.",
+        "The 20 pct and 10 pct ratings based on X-ray findings will not be combined with ratings based on limitation of motion.",
+        "The 20 pct and 10 pct ratings based on X-ray findings will not be utilized in rating conditions listed under diagnostic codes 5013 to 5024, inclusive."
+      ]
+    },
+    "5004": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003."
+    },
+    "5005": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003."
+    },
+    "5006": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003."
+    },
+    "5007": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003."
+    },
+    "5008": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003."
+    },
+    "5009": {
+      "rateAs": "Rate the acute phase under diagnostic code 5002; rate any chronic residuals under diagnostic code 5003.",
+      "notes": [
+        "Other specified forms of arthropathy include, but are not limited to, Charcot neuropathic, hypertrophic, crystalline, and other autoimmune arthropathies."
+      ]
+    },
+    "5010": {
+      "rateAs": "Rate as limitation of motion, dislocation, or other specified instability under the affected joint. If there are 2 or more joints affected, each rating shall be combined in accordance with \u00a7 4.25."
+    },
+    "5011": {
+      "rateAs": "Rate manifestations under the appropriate diagnostic code within the affected body system, such as arthritis for musculoskeletal residuals; auditory system for vestibular residuals; respiratory system for pulmonary barotrauma residuals; and neurologic system for cerebrovascular accident residuals."
+    },
+    "5012": {
+      "ratings": {
+        "100": "Malignant neoplasm, primary or secondary"
+      },
+      "notes": [
+        "The 100 percent rating will be continued for 1 year following the cessation of surgical, X-ray, antineoplastic chemotherapy or other prescribed therapeutic procedure. If there has been no local recurrence or metastases, rate based on residuals."
+      ]
+    },
+    "5013": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5014": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5015": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5016": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5017": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5019": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5021": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5023": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5024": {
+      "rateAs": "Evaluate as degenerative arthritis, based on limitation of motion of affected parts."
+    },
+    "5025": {
+      "ratings": {
+        "40": "With widespread musculoskeletal pain and tender points, with or without associated fatigue, sleep disturbance, stiffness, paresthesias, headache, irritable bowel symptoms, depression, anxiety, or Raynaud's-like symptoms: That are constant, or nearly so, and refractory to therapy",
+        "20": "That are episodic, with exacerbations often precipitated by environmental or emotional stress or by overexertion, but that are present more than one-third of the time",
+        "10": "That require continuous medication for control"
+      },
+      "notes": [
+        "Widespread pain means pain in both the left and right sides of the body, that is both above and below the waist, and that affects both the axial skeleton (i.e., cervical spine, anterior chest, thoracic spine, or low back) and the extremities."
+      ]
+    },
+    "5051": {
+      "ratings": {
+        "100": "For 1 year following implantation of prosthesis (dominant/non-dominant)",
+        "60": "With chronic residuals consisting of severe, painful motion or weakness in the affected extremity (dominant)",
+        "50": "With chronic residuals consisting of severe, painful motion or weakness in the affected extremity (non-dominant)",
+        "30": "Minimum rating (dominant)",
+        "20": "Minimum rating (non-dominant)"
+      },
+      "notes": [
+        "With intermediate degrees of residual weakness, pain or limitation of motion, rate by analogy to diagnostic codes 5200 and 5203."
+      ]
+    },
+    "5052": {
+      "ratings": {
+        "100": "For 1 year following implantation of prosthesis (dominant/non-dominant)",
+        "50": "With chronic residuals consisting of severe painful motion or weakness in the affected extremity (dominant)",
+        "40": "With chronic residuals consisting of severe painful motion or weakness in the affected extremity (non-dominant)",
+        "30": "Minimum evaluation (dominant)",
+        "20": "Minimum evaluation (non-dominant)"
+      },
+      "notes": [
+        "With intermediate degrees of residual weakness, pain or limitation of motion rate by analogy to diagnostic codes 5205 through 5208."
+      ]
+    },
+    "5053": {
+      "ratings": {
+        "100": "For 1 year following implantation of prosthesis (dominant/non-dominant)",
+        "40": "With chronic residuals consisting of severe, painful motion or weakness in the affected extremity (dominant)",
+        "30": "With chronic residuals consisting of severe, painful motion or weakness in the affected extremity (non-dominant)",
+        "20": "Minimum rating (dominant/non-dominant)"
+      },
+      "notes": [
+        "With intermediate degrees of residual weakness, pain or limitation of motion, rate by analogy to diagnostic code 5214."
+      ]
+    },
+    "5054": {
+      "ratings": {
+        "100": "For 4 months following implantation of prosthesis or resurfacing",
+        "90": "Following implantation of prosthesis with painful motion or weakness such as to require the use of crutches",
+        "70": "Markedly severe residual weakness, pain or limitation of motion following implantation of prosthesis",
+        "50": "Moderately severe residuals of weakness, pain or limitation of motion",
+        "30": "Minimum evaluation, total replacement only"
+      },
+      "notes": [
+        "At the conclusion of the 100 percent evaluation period, evaluate resurfacing under diagnostic codes 5250 through 5255; there is no minimum evaluation for resurfacing."
+      ]
+    },
+    "5055": {
+      "ratings": {
+        "100": "For 4 months following implantation of prosthesis or resurfacing",
+        "60": "With chronic residuals consisting of severe painful motion or weakness in the affected extremity",
+        "30": "Minimum evaluation, total replacement only"
+      },
+      "notes": [
+        "With intermediate degrees of residual weakness, pain or limitation of motion rate by analogy to diagnostic codes 5256, 5261, or 5262.",
+        "At the conclusion of the 100 percent evaluation period, evaluate resurfacing under diagnostic codes 5256 through 5262; there is no minimum evaluation for resurfacing."
+      ]
+    },
+    "5056": {
+      "ratings": {
+        "100": "For 1 year following implantation of prosthesis",
+        "40": "With chronic residuals consisting of severe painful motion or weakness",
+        "20": "Minimum rating"
+      },
+      "notes": [
+        "With intermediate degrees of residual weakness, pain or limitation of motion rate by analogy to 5270 or 5271."
+      ]
+    },
+    "5106": {
+      "ratings": {
+        "100": "Anatomical loss of both hands"
+      }
+    },
+    "5107": {
+      "ratings": {
+        "100": "Anatomical loss of both feet"
+      }
+    },
+    "5108": {
+      "ratings": {
+        "100": "Anatomical loss of one hand and one foot"
+      }
+    },
+    "5109": {
+      "ratings": {
+        "100": "Loss of use of both hands"
+      }
+    },
+    "5110": {
+      "ratings": {
+        "100": "Loss of use of both feet"
+      }
+    },
+    "5111": {
+      "ratings": {
+        "100": "Loss of use of one hand and one foot"
+      }
+    },
+    "5120": {
+      "ratings": {
+        "100": "Forequarter amputation (involving complete removal of the humerus along with any portion of the scapula, clavicle, and/or ribs) - dominant/non-dominant",
+        "90": "Disarticulation (involving complete removal of the humerus only) - dominant/non-dominant"
+      }
+    },
+    "5125": {
+      "ratings": {
+        "70": "Hand, loss of use of (dominant)",
+        "60": "Hand, loss of use of (non-dominant)"
+      }
+    },
+    "5160": {
+      "ratings": {
+        "100": "Trans-pelvic amputation (involving complete removal of the femur and intrinsic pelvic musculature along with any portion of the pelvic bones)",
+        "90": "Disarticulation (involving complete removal of the femur and intrinsic pelvic musculature only)"
+      }
+    },
+    "5165": {
+      "ratings": {
+        "40": "At a lower level, permitting prosthesis"
+      }
+    },
+    "5167": {
+      "ratings": {
+        "40": "Foot, loss of use of"
+      }
+    },
+    "5171": {
+      "ratings": {
+        "30": "Toe, great, amputation of: With removal of metatarsal head",
+        "10": "Without metatarsal involvement"
+      }
+    },
+    "5200": {
+      "ratings": {
+        "50": "Unfavorable, abduction limited to 25\u00b0 from side (dominant)",
+        "40": "Unfavorable, abduction limited to 25\u00b0 from side (non-dominant) / Intermediate between favorable and unfavorable (dominant)",
+        "30": "Intermediate between favorable and unfavorable (non-dominant) / Favorable, abduction to 60\u00b0, can reach mouth and head (dominant)",
+        "20": "Favorable, abduction to 60\u00b0, can reach mouth and head (non-dominant)"
+      },
+      "notes": [
+        "The scapula and humerus move as one piece."
+      ]
+    },
+    "5201": {
+      "ratings": {
+        "40": "Flexion and/or abduction limited to 25\u00b0 from side (dominant)",
+        "30": "Flexion and/or abduction limited to 25\u00b0 from side (non-dominant) / Midway between side and shoulder level (flexion and/or abduction limited to 45\u00b0) - dominant",
+        "20": "Midway between side and shoulder level (flexion and/or abduction limited to 45\u00b0) - non-dominant / At shoulder level (flexion and/or abduction limited to 90\u00b0) - dominant/non-dominant"
+      }
+    },
+    "5203": {
+      "ratings": {
+        "20": "Dislocation of / Nonunion of: With loose movement (dominant/non-dominant)",
+        "10": "Nonunion of: Without loose movement / Malunion of (dominant/non-dominant)"
+      },
+      "rateAs": "Or rate on impairment of function of contiguous joint."
+    },
+    "5214": {
+      "ratings": {
+        "50": "Unfavorable, in any degree of palmar flexion, or with ulnar or radial deviation (dominant)",
+        "40": "Unfavorable, in any degree of palmar flexion, or with ulnar or radial deviation (non-dominant) / Any other position, except favorable (dominant)",
+        "30": "Any other position, except favorable (non-dominant) / Favorable in 20\u00b0 to 30\u00b0 dorsiflexion (dominant)",
+        "20": "Favorable in 20\u00b0 to 30\u00b0 dorsiflexion (non-dominant)"
+      },
+      "notes": [
+        "Extremely unfavorable ankylosis will be rated as loss of use of hands under diagnostic code 5125."
+      ]
+    },
+    "5215": {
+      "ratings": {
+        "10": "Dorsiflexion less than 15\u00b0 / Palmar flexion limited in line with forearm (dominant/non-dominant)"
+      }
+    },
+    "5224": {
+      "ratings": {
+        "20": "Thumb, ankylosis of: Unfavorable (dominant/non-dominant)",
+        "10": "Favorable (dominant/non-dominant)"
+      }
+    },
+    "5228": {
+      "ratings": {
+        "20": "With a gap of more than two inches (5.1 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers (dominant/non-dominant)",
+        "10": "With a gap of one to two inches (2.5 to 5.1 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers (dominant/non-dominant)",
+        "0": "With a gap of less than one inch (2.5 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers (dominant/non-dominant)"
+      }
+    },
+    "5235": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5236": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5237": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5238": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5239": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5240": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5241": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5242": {
+      "formula": "General Rating Formula for Diseases and Injuries of the Spine",
+      "ratings": {
+        "100": "Unfavorable ankylosis of the entire spine",
+        "50": "Unfavorable ankylosis of the entire thoracolumbar spine",
+        "40": "Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine",
+        "30": "Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine",
+        "20": "Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis",
+        "10": "Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height"
+      }
+    },
+    "5243": {
+      "formula": "Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes",
+      "ratings": {
+        "60": "With incapacitating episodes having a total duration of at least 6 weeks during the past 12 months",
+        "40": "With incapacitating episodes having a total duration of at least 4 weeks but less than 6 weeks during the past 12 months",
+        "20": "With incapacitating episodes having a total duration of at least 2 weeks but less than 4 weeks during the past 12 months",
+        "10": "With incapacitating episodes having a total duration of at least one week but less than 2 weeks during the past 12 months"
+      },
+      "notes": [
+        "For purposes of evaluations under diagnostic code 5243, an incapacitating episode is a period of acute signs and symptoms due to intervertebral disc syndrome that requires bed rest prescribed by a physician and treatment by a physician."
+      ]
+    },
+    "5250": {
+      "ratings": {
+        "90": "Unfavorable, extremely unfavorable ankylosis, the foot not reaching ground, crutches necessitated",
+        "70": "Intermediate",
+        "60": "Favorable, in flexion at an angle between 20\u00b0 and 40\u00b0, and slight adduction or abduction"
+      }
+    },
+    "5251": {
+      "ratings": {
+        "10": "Extension limited to 5\u00b0"
+      }
+    },
+    "5252": {
+      "ratings": {
+        "40": "Flexion limited to 10\u00b0",
+        "30": "Flexion limited to 20\u00b0",
+        "20": "Flexion limited to 30\u00b0",
+        "10": "Flexion limited to 45\u00b0"
+      }
+    },
+    "5253": {
+      "ratings": {
+        "20": "Limitation of abduction of, motion lost beyond 10\u00b0",
+        "10": "Limitation of adduction of, cannot cross legs / Limitation of rotation of, cannot toe-out more than 15\u00b0, affected leg"
+      }
+    },
+    "5254": {
+      "ratings": {
+        "80": "Hip, flail joint"
+      }
+    },
+    "5256": {
+      "ratings": {
+        "60": "Extremely unfavorable, in flexion at an angle of 45\u00b0 or more",
+        "50": "In flexion between 20\u00b0 and 45\u00b0",
+        "40": "In flexion between 10\u00b0 and 20\u00b0",
+        "30": "Favorable angle in full extension, or in slight flexion between 0\u00b0 and 10\u00b0"
+      }
+    },
+    "5257": {
+      "ratings": {
+        "30": "Recurrent subluxation or instability: Unrepaired or failed repair of complete ligament tear causing persistent instability, and a medical provider prescribes both an assistive device (e.g., cane(s), crutch(es), walker) and bracing for ambulation / Patellar instability: A diagnosed condition involving the patellofemoral complex with recurrent instability after surgical repair that requires a prescription by a medical provider for a brace and either a cane or a walker",
+        "20": "One of the following: (a) Sprain, incomplete ligament tear, or repaired complete ligament tear causing persistent instability, and a medical provider prescribes a brace and/or assistive device (e.g., cane(s), crutch(es), walker) for ambulation. (b) Unrepaired or failed repair of complete ligament tear causing persistent instability, and a medical provider prescribes either an assistive device (e.g., cane(s), crutch(es), walker) or bracing for ambulation / Patellar instability: A diagnosed condition involving the patellofemoral complex with recurrent instability after surgical repair that requires a prescription by a medical provider for one of the following: A brace, cane, or walker / Cartilage, semilunar, dislocated, with frequent episodes of locking, pain, and effusion into the joint",
+        "10": "Sprain, incomplete ligament tear, or complete ligament tear (repaired, unrepaired, or failed repair) causing persistent instability, without a prescription from a medical provider for an assistive device (e.g., cane(s), crutch(es), walker) or bracing for ambulation / Patellar instability: A diagnosed condition involving the patellofemoral complex with recurrent instability (with or without history of surgical repair) that does not require a prescription from a medical provider for a brace, cane, or walker / Cartilage, semilunar, removal of, symptomatic"
+      }
+    },
+    "5260": {
+      "ratings": {
+        "30": "Flexion limited to 15\u00b0",
+        "20": "Flexion limited to 30\u00b0",
+        "10": "Flexion limited to 45\u00b0",
+        "0": "Flexion limited to 60\u00b0"
+      }
+    },
+    "5261": {
+      "ratings": {
+        "50": "Extension limited to 45\u00b0",
+        "40": "Extension limited to 30\u00b0",
+        "30": "Extension limited to 20\u00b0",
+        "20": "Extension limited to 15\u00b0",
+        "10": "Extension limited to 10\u00b0",
+        "0": "Extension limited to 5\u00b0"
+      }
+    },
+    "5262": {
+      "ratings": {
+        "40": "Nonunion of, with loose motion, requiring brace",
+        "30": "Medial tibial stress syndrome (MTSS), or shin splints: Requiring treatment for no less than 12 consecutive months, and unresponsive to surgery and either shoe orthotics or other conservative treatment, both lower extremities",
+        "20": "Medial tibial stress syndrome (MTSS), or shin splints: Requiring treatment for no less than 12 consecutive months, and unresponsive to surgery and either shoe orthotics or other conservative treatment, one lower extremity",
+        "10": "Medial tibial stress syndrome (MTSS), or shin splints: Requiring treatment for no less than 12 consecutive months, and unresponsive to either shoe orthotics or other conservative treatment, one or both lower extremities",
+        "0": "Medial tibial stress syndrome (MTSS), or shin splints: Treatment less than 12 consecutive months, one or both lower extremities"
+      },
+      "rateAs": "Malunion of: Evaluate under diagnostic codes 5256, 5257, 5260, or 5261 for the knee, or 5270 or 5271 for the ankle, whichever results in the highest evaluation."
+    },
+    "5263": {
+      "ratings": {
+        "10": "Genu recurvatum (acquired, traumatic, with weakness and insecurity in weight-bearing objectively demonstrated)"
+      }
+    },
+    "5269": {
+      "ratings": {
+        "30": "No relief from both non-surgical and surgical treatment, bilateral",
+        "20": "No relief from both non-surgical and surgical treatment, unilateral",
+        "10": "Otherwise, unilateral or bilateral"
+      },
+      "notes": [
+        "With actual loss of use of the foot, rate 40 percent",
+        "If a veteran has been recommended for surgical intervention, but is not a surgical candidate, evaluate under the 20 percent or 30 percent criteria, whichever is applicable"
+      ]
+    },
+    "5270": {
+      "ratings": {
+        "40": "In plantar flexion at more than 40\u00b0, or in dorsiflexion at more than 10\u00b0 or with abduction, adduction, inversion or eversion deformity",
+        "30": "In plantar flexion, between 30\u00b0 and 40\u00b0, or in dorsiflexion, between 0\u00b0 and 10\u00b0",
+        "20": "In plantar flexion, less than 30\u00b0"
+      }
+    },
+    "5271": {
+      "ratings": {
+        "20": "Marked (less than 5 degrees dorsiflexion or less than 10 degrees plantar flexion)",
+        "10": "Moderate (less than 15 degrees dorsiflexion or less than 30 degrees plantar flexion)"
+      }
+    },
+    "5276": {
+      "ratings": {
+        "50": "Pronounced; marked pronation, extreme tenderness of plantar surfaces of the feet, marked inward displacement and severe spasm of the tendo achillis on manipulation, not improved by orthopedic shoes or appliances - Bilateral",
+        "30": "Pronounced; marked pronation, extreme tenderness of plantar surfaces of the feet, marked inward displacement and severe spasm of the tendo achillis on manipulation, not improved by orthopedic shoes or appliances - Unilateral / Severe; objective evidence of marked deformity (pronation, abduction, etc.), pain on manipulation and use accentuated, indication of swelling on use, characteristic callosities - Bilateral",
+        "20": "Severe; objective evidence of marked deformity (pronation, abduction, etc.), pain on manipulation and use accentuated, indication of swelling on use, characteristic callosities - Unilateral",
+        "10": "Moderate; weight-bearing line over or medial to great toe, inward bowing of the tendo achillis, pain on manipulation and use of the feet, bilateral or unilateral",
+        "0": "Mild; symptoms relieved by built-up shoe or arch support"
+      }
+    },
+    "5296": {
+      "ratings": {
+        "80": "With brain hernia",
+        "50": "Without brain hernia: Area larger than size of a 50-cent piece or 1.140 in\u00b2 (7.355 cm\u00b2)",
+        "30": "Area intermediate",
+        "10": "Area smaller than the size of a 25-cent piece or 0.716 in\u00b2 (4.619 cm\u00b2)"
+      },
+      "notes": [
+        "Rate separately for intracranial complications."
+      ]
+    },
+    "5297": {
+      "ratings": {
+        "50": "More than six",
+        "40": "Five or six",
+        "30": "Three or four",
+        "20": "Two",
+        "10": "One or resection of two or more ribs without regeneration"
+      }
+    },
+    "5298": {
+      "ratings": {
+        "10": "Partial or complete, with painful residuals",
+        "0": "Without painful residuals"
+      }
+    },
+    "5301": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5302": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "20": "Moderate (both: 20%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5303": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "20": "Moderate (both: 20%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5304": {
+      "ratings": {
+        "30": "Severe (dominant: 30%, non-dominant: 20%)",
+        "20": "Moderately Severe (dominant: 20%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5305": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5306": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5307": {
+      "ratings": {
+        "40": "Severe (dominant: 40%, non-dominant: 30%)",
+        "30": "Moderately Severe (dominant: 30%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5308": {
+      "ratings": {
+        "30": "Severe (dominant: 30%, non-dominant: 20%)",
+        "20": "Moderately Severe (dominant: 20%, non-dominant: 20%)",
+        "10": "Moderate (both: 10%)",
+        "0": "Slight (both: 0%)"
+      }
+    },
+    "5317": {
+      "ratings": {
+        "50": "Severe (bilateral)",
+        "40": "Moderately Severe",
+        "20": "Moderate",
+        "0": "Slight"
+      }
+    },
+    "5324": {
+      "rateAs": "Rate under diagnostic code 7346 (diaphragm rupture with herniation)"
+    }
+  },
+  "metadata": {
+    "ecfrReference": "38 CFR \u00a7 4.71a",
+    "codeRange": "5000-5331",
+    "generatedDate": "2026-01-15"
+  }
+}

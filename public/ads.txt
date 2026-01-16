@@ -1,0 +1,13 @@
+# Google AdSense
+# Replace pub-0000000000000000 with your actual AdSense Publisher ID
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+
+# Instructions:
+# 1. Sign up for Google AdSense at https://www.google.com/adsense
+# 2. Get your Publisher ID (starts with pub-)
+# 3. Replace the placeholder above with your actual Publisher ID
+# 4. Uncomment the line by removing the # at the beginning
+# 5. Deploy this file to your-domain.com/ads.txt
+
+# Example (uncomment and replace with your ID):
+# google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
