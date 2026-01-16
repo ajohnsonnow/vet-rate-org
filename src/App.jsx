@@ -128,12 +128,17 @@ function App() {
             
             {/* Ad Placement: In-Feed Ad (appears after first 3 results) */}
             {results.length > 3 && (
-              <div className="my-8 p-6 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                <p className="text-sm text-gray-500 font-semibold mb-2">Advertisement</p>
-                <div id="adsense-in-feed" className="min-h-[120px] flex items-center justify-center">
-                  {/* Google AdSense code goes here */}
-                  <p className="text-xs text-gray-400">Ad Space - Insert AdSense code</p>
-                </div>
+              <div className="my-8 text-center">
+                <p className="text-xs text-gray-500 mb-2">Advertisement</p>
+                <ins className="adsbygoogle"
+                     style={{ display: 'block' }}
+                     data-ad-client="ca-pub-2010725392546905"
+                     data-ad-slot="1234567890"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
               </div>
             )}
             
@@ -161,13 +166,18 @@ function App() {
             result={selectedResult}
             searchTerm={searchTerm}
             onClose={() => setSelectedResult(null)}
-          />
-        )}
-      </main>
-
-      {/* Sticky Footer Ad */}
-      <div className="sticky bottom-0 bg-white border-t-2 border-gray-200 shadow-lg z-40">
+          /> border-gray-200 shadow-lg z-40">
         <div className="container mx-auto px-4 py-2">
+          <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+          <ins className="adsbygoogle"
+               style={{ display: 'block' }}
+               data-ad-client="ca-pub-2010725392546905"
+               data-ad-slot="9876543210"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <script>
+               (adsbygoogle = window.adsbygoogle || []).push({});
+          </scriptassName="container mx-auto px-4 py-2">
           <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
           <div id="adsense-sticky-footer" className="min-h-[50px] flex items-center justify-center bg-gray-50">
             {/* Google AdSense sticky footer code goes here */}
