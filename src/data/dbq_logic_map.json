@@ -1,0 +1,530 @@
+{
+  "migraines": {
+    "diagnostic_code": "8100",
+    "condition_name": "Migraine Headaches",
+    "cfr_reference": "38 CFR § 4.124a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you have a migraine, do you have to stop what you are doing and lie down?",
+        "intent": "Determine if attacks are 'prostrating' (completely incapacitating, requiring bed rest in dark/quiet room).",
+        "definition": "Prostrating: So severe that physical activity must stop and the person must lie down, usually in a dark, quiet room. The CFR requires attacks to be 'completely prostrating' for 30% or higher ratings.",
+        "options": [
+          {
+            "value": "yes_always",
+            "label": "Yes, I always have to stop everything and lie down in a dark/quiet room",
+            "weight": 3
+          },
+          {
+            "value": "yes_sometimes",
+            "label": "Sometimes I have to lie down, but not always",
+            "weight": 2
+          },
+          {
+            "value": "no",
+            "label": "No, I can usually power through the pain",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "How often do these PROSTRATING attacks happen?",
+        "intent": "Determine frequency. 10% = avg 1 in 2 months. 30% = avg once a month. 50% = very frequent.",
+        "definition": "Frequency is measured over 'the last several months' according to 38 CFR § 4.124a. Count only attacks that are completely prostrating.",
+        "options": [
+          {
+            "value": "very_frequent",
+            "label": "More than once per month (2+ per month)",
+            "weight": 3
+          },
+          {
+            "value": "monthly",
+            "label": "About once per month",
+            "weight": 2
+          },
+          {
+            "value": "bi_monthly",
+            "label": "About once every 2 months",
+            "weight": 1
+          },
+          {
+            "value": "less_frequent",
+            "label": "Less than once every 2 months",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do these attacks cause you to miss work, lose income, or significantly affect your ability to work?",
+        "intent": "Determine 'economic inadaptability' (required for 50% rating). This means attacks are so severe and frequent they prevent you from maintaining employment.",
+        "definition": "Economic Inadaptability: The attacks are productive of severe economic consequences - missing work, losing jobs, or inability to maintain steady employment due to the frequency and severity of attacks.",
+        "options": [
+          {
+            "value": "yes_severe",
+            "label": "Yes, I frequently miss work or have lost job opportunities because of migraines",
+            "weight": 3
+          },
+          {
+            "value": "yes_moderate",
+            "label": "Yes, I occasionally miss work or have reduced productivity",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No, I manage to work despite the migraines",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "How long do these prostrating attacks typically last?",
+        "intent": "Determine if attacks are 'prolonged' (lasting hours to days). This is required for 50% rating.",
+        "definition": "Prolonged: Attacks lasting many hours or days. The 50% rating criteria specifically mentions 'prolonged' attacks.",
+        "options": [
+          {
+            "value": "days",
+            "label": "24+ hours (days)",
+            "weight": 3
+          },
+          {
+            "value": "many_hours",
+            "label": "4-24 hours",
+            "weight": 2
+          },
+          {
+            "value": "few_hours",
+            "label": "1-4 hours",
+            "weight": 1
+          },
+          {
+            "value": "under_hour",
+            "label": "Less than 1 hour",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateMigraineRating",
+    "exam_tips": [
+      "Bring a headache diary showing frequency over the last 6-12 months",
+      "Bring sick leave records or employer letters documenting missed work",
+      "Do NOT downplay symptoms - describe the worst attacks, not the best days",
+      "Use the word 'prostrating' if your attacks require you to stop and lie down",
+      "Mention associated symptoms: nausea, vomiting, photophobia (light sensitivity), phonophobia (sound sensitivity)"
+    ]
+  },
+  "ptsd": {
+    "diagnostic_code": "9411",
+    "condition_name": "Post-Traumatic Stress Disorder",
+    "cfr_reference": "38 CFR § 4.130",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "How often do you experience symptoms like panic attacks, severe anxiety, or flashbacks?",
+        "intent": "Differentiate 30% (Occasional decrease in work efficiency) vs 50% (Reduced reliability/productivity) vs 70% (Deficiencies in most areas).",
+        "definition": "Frequency and severity of symptoms determine the level of occupational and social impairment according to 38 CFR § 4.130.",
+        "options": [
+          {
+            "value": "near_continuous",
+            "label": "Near-continuous symptoms that affect me daily",
+            "weight": 3
+          },
+          {
+            "value": "weekly",
+            "label": "Multiple times per week",
+            "weight": 2
+          },
+          {
+            "value": "occasional",
+            "label": "Occasionally (few times per month)",
+            "weight": 1
+          },
+          {
+            "value": "rarely",
+            "label": "Rarely (less than monthly)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "How do your symptoms affect your ability to work or maintain employment?",
+        "intent": "Determine occupational impairment level. 30% = intermittent inability. 50% = reduced reliability. 70% = deficiencies in most areas.",
+        "definition": "Occupational impairment ranges from occasional decrease in work efficiency (30%) to near-inability to function (100%).",
+        "options": [
+          {
+            "value": "severe",
+            "label": "I cannot work or have extreme difficulty maintaining any job",
+            "weight": 3
+          },
+          {
+            "value": "reduced_reliability",
+            "label": "I work but with reduced reliability and productivity (miss days, poor performance)",
+            "weight": 2
+          },
+          {
+            "value": "intermittent",
+            "label": "I have intermittent periods where I cannot perform work tasks",
+            "weight": 1
+          },
+          {
+            "value": "occasional",
+            "label": "I have occasional decreases in work efficiency",
+            "weight": 0.5
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "How do your symptoms affect your relationships with family, friends, or coworkers?",
+        "intent": "Determine social impairment. This is a key factor in mental health ratings.",
+        "definition": "Social impairment includes difficulty maintaining relationships, avoiding social situations, and inability to function in social settings.",
+        "options": [
+          {
+            "value": "total",
+            "label": "I avoid almost all social contact and have no close relationships",
+            "weight": 3
+          },
+          {
+            "value": "severe",
+            "label": "I have very few relationships and frequently have conflicts or avoid social situations",
+            "weight": 2
+          },
+          {
+            "value": "moderate",
+            "label": "I struggle with relationships and social situations but maintain some connections",
+            "weight": 1
+          },
+          {
+            "value": "mild",
+            "label": "I have occasional social difficulties but maintain relationships",
+            "weight": 0.5
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "Do you experience suicidal thoughts, severe depression, or inability to care for yourself?",
+        "intent": "Identify high-level symptoms that indicate 70% or 100% ratings.",
+        "definition": "Suicidal ideation, severe depression, and inability to perform activities of daily living are indicators of severe impairment.",
+        "options": [
+          {
+            "value": "yes_frequent",
+            "label": "Yes, frequently",
+            "weight": 3
+          },
+          {
+            "value": "yes_occasional",
+            "label": "Yes, occasionally",
+            "weight": 2
+          },
+          {
+            "value": "past_not_current",
+            "label": "I have in the past, but not currently",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculatePTSDRating",
+    "exam_tips": [
+      "Be completely honest - this is not the time to appear 'strong' or 'recovered'",
+      "Describe your worst days, not your best days",
+      "Mention sleep problems, nightmares, hypervigilance, avoidance behaviors",
+      "If you've lost jobs, relationships, or housing due to PTSD, mention it",
+      "Bring buddy statements from family/friends who witness your symptoms",
+      "If you have suicidal thoughts, ALWAYS mention this to the examiner"
+    ]
+  },
+  "back_pain": {
+    "diagnostic_code": "5237",
+    "condition_name": "General Rating Formula for Diseases of the Spine",
+    "cfr_reference": "38 CFR § 4.71a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you bend forward (flexion), how far can you go before pain stops you?",
+        "intent": "Range of Motion (ROM) is THE primary rating factor for spine conditions. Forward flexion is measured from standing to the angle you can bend.",
+        "definition": "Normal forward flexion: 90 degrees (fingertips to toes). 40% rating: 30 degrees or less. 20% rating: 30-60 degrees. ROM is measured to the point where pain STOPS you, not where you can push through.",
+        "options": [
+          {
+            "value": "30_or_less",
+            "label": "30 degrees or less (barely past my hips)",
+            "weight": 3
+          },
+          {
+            "value": "30_to_60",
+            "label": "Between 30-60 degrees (somewhere between hips and knees)",
+            "weight": 2
+          },
+          {
+            "value": "60_to_90",
+            "label": "60-90 degrees (past my knees but can't touch toes)",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "I can touch my toes (90 degrees)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "Is the pain always present, even without movement?",
+        "intent": "Determine if condition meets 'Intervertebral Disc Syndrome' (IVDS) criteria which can add to rating or qualify for separate rating.",
+        "definition": "Incapacitating episodes: Pain so severe you cannot work or perform daily activities, requiring bed rest.",
+        "options": [
+          {
+            "value": "yes_frequent_episodes",
+            "label": "Yes, with frequent incapacitating episodes requiring bed rest (6+ weeks/year total)",
+            "weight": 3
+          },
+          {
+            "value": "yes_some_episodes",
+            "label": "Yes, with some incapacitating episodes (2-4 weeks/year total)",
+            "weight": 2
+          },
+          {
+            "value": "yes_no_episodes",
+            "label": "Yes, constant pain but no incapacitating episodes",
+            "weight": 1
+          },
+          {
+            "value": "only_with_movement",
+            "label": "Only with movement (painful motion)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do you have radiating pain, numbness, or weakness in your legs?",
+        "intent": "Identify radiculopathy (nerve involvement) which can add separate ratings or increase the spine rating.",
+        "definition": "Radiculopathy: Nerve damage causing pain, numbness, tingling, or weakness along a nerve path (e.g., down the leg in sciatica).",
+        "options": [
+          {
+            "value": "yes_severe",
+            "label": "Yes, severe symptoms with weakness/loss of reflexes",
+            "weight": 3
+          },
+          {
+            "value": "yes_moderate",
+            "label": "Yes, moderate pain/numbness radiating down leg(s)",
+            "weight": 2
+          },
+          {
+            "value": "yes_mild",
+            "label": "Yes, mild occasional symptoms",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No nerve symptoms",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "Does the pain affect your gait or require you to use assistive devices?",
+        "intent": "Determine functional impact. Abnormal gait or need for assistive devices indicates higher level of impairment.",
+        "definition": "Assistive devices: Cane, walker, wheelchair. Abnormal gait: Limping, inability to walk normally.",
+        "options": [
+          {
+            "value": "wheelchair",
+            "label": "I use a wheelchair due to back pain",
+            "weight": 3
+          },
+          {
+            "value": "cane_walker",
+            "label": "I use a cane or walker",
+            "weight": 2
+          },
+          {
+            "value": "abnormal_gait",
+            "label": "I limp or have abnormal gait but no assistive devices",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "I can walk normally",
+            "weight": 0
+          }
+        ],
+        "required": false
+      }
+    ],
+    "rating_calculator": "calculateBackPainRating",
+    "exam_tips": [
+      "CRITICAL: Stop at the point of pain during ROM testing - do NOT push through",
+      "The examiner will measure your ROM with a goniometer or inclinometer",
+      "ROM is measured on your worst day - tell the examiner if today is a 'good day'",
+      "Mention morning stiffness (how long until you can move normally)",
+      "Bring MRI/X-ray reports showing disc issues, stenosis, or other findings",
+      "If you have flare-ups, describe frequency and what triggers them",
+      "If you've modified your work duties or home life due to back pain, mention it"
+    ]
+  },
+  "tinnitus": {
+    "diagnostic_code": "6260",
+    "condition_name": "Tinnitus",
+    "cfr_reference": "38 CFR § 4.87a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "Do you experience ringing, buzzing, or other sounds in your ears that are not from an external source?",
+        "intent": "Confirm tinnitus diagnosis. Tinnitus is rated at 10% only if recurrent.",
+        "definition": "Tinnitus: Perception of sound (ringing, buzzing, hissing, roaring) when no external sound is present. Must be recurrent (not constant or never present).",
+        "options": [
+          {
+            "value": "yes_constant",
+            "label": "Yes, it is constant (24/7)",
+            "weight": 1
+          },
+          {
+            "value": "yes_frequent",
+            "label": "Yes, it is frequent (daily or near-daily)",
+            "weight": 1
+          },
+          {
+            "value": "yes_recurrent",
+            "label": "Yes, it is recurrent (several times per week)",
+            "weight": 1
+          },
+          {
+            "value": "occasional",
+            "label": "Occasionally (less than weekly)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateTinnitusRating",
+    "exam_tips": [
+      "Tinnitus is rated at a flat 10% if recurrent - there is no higher or lower rating",
+      "The VA does not require objective evidence of tinnitus (it's subjective)",
+      "Mention if it affects your sleep, concentration, or daily activities",
+      "Mention if you use white noise machines, fans, or other coping mechanisms",
+      "If you have hearing loss separately, that is rated under different diagnostic codes"
+    ]
+  },
+  "knee_pain": {
+    "diagnostic_code": "5260",
+    "condition_name": "Limitation of Flexion of the Knee",
+    "cfr_reference": "38 CFR § 4.71a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you bend your knee, how far can you bend it before pain or stiffness stops you?",
+        "intent": "Knee flexion ROM is the primary rating factor. Normal flexion is 140 degrees (heel to buttock).",
+        "definition": "Normal knee flexion: 140 degrees. Ratings based on limitation: 30% = 45 degrees. 20% = 45-90 degrees. 10% = 90-110 degrees.",
+        "options": [
+          {
+            "value": "45_or_less",
+            "label": "45 degrees or less (very limited)",
+            "weight": 3
+          },
+          {
+            "value": "45_to_90",
+            "label": "Between 45-90 degrees",
+            "weight": 2
+          },
+          {
+            "value": "90_to_110",
+            "label": "Between 90-110 degrees",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "Normal or near-normal (110+ degrees)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "Is your knee unstable (gives way, buckles, or feels like it might give out)?",
+        "intent": "Instability can qualify for a separate rating under DC 5257 (recurrent subluxation or lateral instability).",
+        "definition": "Instability: Knee gives way, buckles, shifts, or feels unstable during walking or activities. May indicate ligament damage (ACL, MCL, PCL, LCL).",
+        "options": [
+          {
+            "value": "severe_recurrent",
+            "label": "Yes, severe and recurrent instability requiring a brace",
+            "weight": 3
+          },
+          {
+            "value": "moderate",
+            "label": "Yes, moderate instability with frequent episodes",
+            "weight": 2
+          },
+          {
+            "value": "mild",
+            "label": "Yes, mild occasional instability",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No instability",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do you experience swelling (effusion) in your knee?",
+        "intent": "Chronic effusion can add additional percentage under DC 5260.",
+        "definition": "Effusion: Fluid buildup in the knee joint causing visible swelling.",
+        "options": [
+          {
+            "value": "persistent",
+            "label": "Yes, persistent swelling (always present)",
+            "weight": 2
+          },
+          {
+            "value": "recurrent",
+            "label": "Yes, recurrent swelling (comes and goes)",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No swelling",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateKneePainRating",
+    "exam_tips": [
+      "The examiner will measure knee flexion with a goniometer",
+      "If you wear a knee brace, mention why (instability, pain control, etc.)",
+      "Bring imaging reports (MRI showing meniscus tears, ligament damage, arthritis)",
+      "Mention if you've had surgery (meniscectomy, ACL repair, etc.)",
+      "If the knee gives out, describe specific incidents",
+      "You may qualify for multiple separate ratings (flexion limitation + instability + arthritis)"
+    ]
+  }
+}

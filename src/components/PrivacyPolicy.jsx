@@ -1,18 +1,27 @@
 import React from 'react';
+import ReportBugLink from './ReportBugLink';
 
-const PrivacyPolicy = ({ onClose }) => {
+const PrivacyPolicy = ({ onClose, onReportBug }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacy-policy-title"
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
-          <h2 className="text-2xl font-bold text-gray-900">Privacy Policy</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
-            aria-label="Close"
-          >
-            ×
-          </button>
+          <h2 id="privacy-policy-title" className="text-2xl font-bold text-gray-900">🔒 Privacy Policy</h2>
+          <div className="flex items-center gap-3">
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Privacy Policy" />}
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
