@@ -151,7 +151,7 @@ const CLAIMS_TOOLKIT = {
       },
       {
         name: 'Rationale',
-        description: 'The opinion must include a clear medical rationale explaining WHY the condition is service-connected. Generic statements like "patient reports service connection" are insufficient—cite medical evidence, diagnostic findings, and clinical reasoning.',
+        description: 'The opinion must include a clear medical rationale explaining WHY the condition is service-connected. Generic statements like "patient reports service connection" are insufficient - cite medical evidence, diagnostic findings, and clinical reasoning.',
       },
     ],
   },
@@ -279,7 +279,7 @@ export const generatePDF = (result, searchTerm) => {
     // Add logo (centered at top)
     try {
       const logoImg = new Image();
-      logoImg.src = '/images/Vet-Rate-org-logo.png';
+      logoImg.src = '/images/Vet-Rate-org-logo-official.png';
       // Logo: 15x15mm square, centered, at top of header
       doc.addImage(logoImg, 'PNG', (pageWidth - 15) / 2, 8, 15, 15);
     } catch (e) {
@@ -753,7 +753,7 @@ export const generatePDF = (result, searchTerm) => {
     checkPageBreak(50);
     addHeading('Personal Statement - The 4 Pillars', 2);
     addText(
-      'When writing your statement (VA Form 21-4138), address these four critical elements. Don\'t just list diagnoses—explain how your condition impacts your daily life:',
+      'When writing your statement (VA Form 21-4138), address these four critical elements. Don\'t just list diagnoses - explain how your condition impacts your daily life:',
       10
     );
     yPosition += 5;
@@ -990,7 +990,7 @@ export const generatePDF = (result, searchTerm) => {
     doc.setFontSize(10);
     doc.setTextColor(...colors.darkGray);
     const supportText = doc.splitTextToSize(
-      'This tool is free and built by veterans for veterans. We don\'t sell your data or take cuts from lawyers. If this PDF helped you with your claim, please consider supporting us with a coffee. Every contribution helps keep this resource free and available to all veterans.',
+      'This tool is free and built by veterans for veterans. We don\'t sell your data or show ads. If this PDF helped you with your claim, please consider supporting us. Every contribution helps keep this resource free for all veterans.',
       contentWidth - 15
     );
     // Center each line
@@ -1001,11 +1001,11 @@ export const generatePDF = (result, searchTerm) => {
     
     yPosition += 3;
 
-    // Centered URL
+    // Multiple funding options
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(...colors.accentBlue);
-    doc.text('https://buymeacoffee.com/vetrate', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('☕ buymeacoffee.com/vetrate  |  💳 paypal.me/ajohnsonnow  |  💵 $ajnow (Cash App)  |  📱 @ajnow (Venmo)', pageWidth / 2, yPosition, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 
     // Footer with enhanced styling

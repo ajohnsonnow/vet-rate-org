@@ -990,7 +990,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                 </div>
                 <textarea
                   className="w-full h-56 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                  placeholder="Paste from VA.gov or type manually:&#10;&#10;20% rating for PTSD&#10;10% rating for tinnitus&#10;&#10;— OR just list conditions: —&#10;&#10;PTSD&#10;Tinnitus&#10;Right Knee Arthritis"
+                  placeholder="Paste from VA.gov or type manually:&#10;&#10;20% rating for PTSD&#10;10% rating for tinnitus&#10;&#10;- OR just list conditions: -&#10;&#10;PTSD&#10;Tinnitus&#10;Right Knee Arthritis"
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
                 />

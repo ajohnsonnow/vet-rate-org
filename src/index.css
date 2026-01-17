@@ -377,7 +377,7 @@ html.dark .bg-gray-100 {
   background-color: #1f2937 !important; /* gray-800 */
 }
 
-html.dark .text-gray-900 {
+html.dark .text-gray-900:not(.dark\:text-gray-900) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -825,7 +825,7 @@ html.dark .hover\:border-indigo-300:hover {
 }
 
 /* Gray text in dark mode */
-html.dark .text-gray-900 {
+html.dark .text-gray-900:not(.dark\:text-gray-900) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -845,12 +845,12 @@ html.dark .text-gray-500 {
   color: #9ca3af !important; /* gray-400 */
 }
 
-/* Links in dark mode - ensure visibility */
-html.dark a:not(.bg-va-gold) {
+/* Links in dark mode - ensure visibility (exclude colored funding card backgrounds) */
+html.dark a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(.bg-green-600):not(.bg-sky-600) {
   color: #93c5fd;
 }
 
-html.dark a:not(.bg-va-gold):hover {
+html.dark a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(.bg-green-600):not(.bg-sky-600):hover {
   color: #bfdbfe;
 }
 

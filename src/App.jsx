@@ -15,6 +15,7 @@ import SearchBar from './components/SearchBar';
 import SearchResultCard from './components/SearchResultCard';
 import DisabilityDetails from './components/DisabilityDetails';
 import Disclaimer from './components/Disclaimer';
+import DisclaimerSplash from './components/DisclaimerSplash';
 import BuyMeCoffee from './components/BuyMeCoffee';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import AboutUs from './components/AboutUs';
@@ -28,6 +29,7 @@ import VAResources from './components/VAResources';
 import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
+import FundingModal from './components/FundingModal';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import { saveStatement, getSavedClaims, getStatement } from './utils/claimsStorage';
 import { initializeErrorCapture } from './utils/bugReportUtils';
@@ -53,6 +55,10 @@ function App() {
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showVAResources, setShowVAResources] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
+  const [showFundingModal, setShowFundingModal] = useState(false);
+  const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
+    () => localStorage.getItem('vetrate-disclaimer-acknowledged') === 'true'
+  );
 
   // Initialize error capture for bug reports
   useEffect(() => {
@@ -214,6 +220,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+      {/* Disclaimer Splash - shows on first visit */}
+      <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
+      
       <Header 
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
         onMyPacketClick={() => setShowMyPacket(true)}
@@ -226,7 +235,6 @@ function App() {
       />
 
       <main id="main-content" className="flex-1 container mx-auto px-4 py-8 max-w-7xl" role="main" aria-label="Main content">
-        <Disclaimer />
         
         {/* Hero Section with Search */}
         <div className="text-center mb-8">
@@ -282,22 +290,6 @@ function App() {
                 />
               ))}
             </div>
-            
-            {/* Ad Placement: In-Feed Ad (appears after first 3 results) */}
-            {results.length > 3 && (
-              <div className="my-8 text-center">
-                <p className="text-xs text-gray-500 mb-2">Advertisement</p>
-                <ins className="adsbygoogle"
-                     style={{ display: 'block' }}
-                     data-ad-client="ca-pub-2010725392546905"
-                     data-ad-slot="1234567890"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-              </div>
-            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
               {results.slice(3).map((result) => (
@@ -384,27 +376,14 @@ function App() {
               </button>
             </div>
           </div>
+          
+          {/* Compact Disclaimer */}
+          <Disclaimer compact />
         </div>
       </main>
 
       {/* Floating Bug Report Button */}
       <FloatingBugButton onClick={() => setShowBugSquasher(true)} />
-
-      {/* Sticky Footer Ad */}
-      <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
-        <div className="container mx-auto px-4 py-2">
-          <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mb-1">Advertisement</p>
-          <ins className="adsbygoogle"
-               style={{ display: 'block' }}
-               data-ad-client="ca-pub-2010725392546905"
-               data-ad-slot="9876543210"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <script>
-               (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        </div>
-      </div>
 
       <footer className="bg-gray-900 dark:bg-black text-white py-8 mt-12" role="contentinfo">
         <div className="container mx-auto px-4 max-w-7xl">
@@ -471,17 +450,15 @@ function App() {
                 🐛 Report Bug
               </button>
               <span className="text-gray-600">|</span>
-              <a
-                href="https://buymeacoffee.com/vetrate"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => setShowFundingModal(true)}
                 className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all hover:scale-105"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                 </svg>
                 Back the Mission
-              </a>
+              </button>
             </div>
             <p className="text-center text-gray-400 text-sm">
               &copy; 2024-2026 Veteran Disability Search. All data sourced from{' '}
@@ -616,6 +593,12 @@ function App() {
           appState={getCurrentAppState()}
         />
       )}
+      
+      {/* Funding Modal */}
+      <FundingModal 
+        show={showFundingModal} 
+        onClose={() => setShowFundingModal(false)} 
+      />
     </div>
   );
 }

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import PDFButton from './PDFButton';
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
 import { PACTActInfoCard, PACTActBadge } from './PACTActIndicator';
+import FundingModal from './FundingModal';
 
 function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSecondaryConditionClick }) {
   const [expandedSection, setExpandedSection] = useState('documentation');
   const [isSaved, setIsSaved] = useState(isClaimSaved(result.conditionName, null));
+  const [showFundingModal, setShowFundingModal] = useState(false);
 
   const VAResources = {
     emergency: [
@@ -151,10 +153,8 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
               View on eCFR
             </a>
           )}
-          <a
-            href="https://buymeacoffee.com/vetrate"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setShowFundingModal(true)}
             className="inline-flex items-center gap-2 bg-va-gold text-va-blue px-4 py-2 rounded-lg font-bold hover:bg-yellow-400 hover:scale-105 shadow-md hover:shadow-lg transition-all"
             title="Help keep Vet-Rate free for all veterans"
           >
@@ -163,9 +163,12 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
             </svg>
             <span className="hidden sm:inline">Back the Mission</span>
             <span className="sm:hidden">💚 Support</span>
-          </a>
+          </button>
         </div>
       </div>
+      
+      {/* Funding Modal */}
+      <FundingModal show={showFundingModal} onClose={() => setShowFundingModal(false)} />
 
       {/* Content */}
       <div id="diagnostic-content" className="p-8">

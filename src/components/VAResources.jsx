@@ -381,7 +381,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                 </h3>
                 <p className="text-amber-800 dark:text-amber-200 mb-3">
                   If you served in Vietnam, the Gulf War, Iraq, Afghanistan, or any combat zone after 9/11, 
-                  you may now be eligible for VA health care and benefits—even if you were denied before.
+                  you may now be eligible for VA health care and benefits - even if you were denied before.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
