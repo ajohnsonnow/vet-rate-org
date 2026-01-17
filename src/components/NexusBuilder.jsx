@@ -316,24 +316,25 @@ Sincerely,
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-va-blue to-green-800 text-white px-6 py-6 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 id="nexus-builder-title" className="text-3xl font-bold mb-2">
-                  {existingStatement ? 'Edit Statement' : 'Nexus Narrative Builder'}
+          <div className="bg-gradient-to-r from-va-blue to-green-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1 min-w-0 pr-10 sm:pr-0">
+                <h2 id="nexus-builder-title" className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">
+                  {existingStatement ? 'Edit Statement' : '📝 Nexus Builder'}
                 </h2>
-                <p className="text-green-200">
-                  {existingStatement ? 'Updating' : 'Generating'} Statement in Support of Claim for: <strong>{condition}</strong>
-                  {isSecondary && <span> (Secondary to {primaryCondition})</span>}
+                <p className="text-green-200 text-sm sm:text-base">
+                  {existingStatement ? 'Updating' : 'Statement'} for: <strong className="block sm:inline truncate">{condition}</strong>
+                  {isSecondary && <span className="block sm:inline text-xs sm:text-sm"> (Secondary to {primaryCondition})</span>}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Nexus Builder" />}
                 <button
                   onClick={onClose}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -544,11 +545,11 @@ Sincerely,
                 Back
               </button>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 {step < totalSteps && (
                   <button
                     onClick={handleNext}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base"
                   >
                     Next Step
                   </button>
@@ -559,9 +560,9 @@ Sincerely,
                     <div className="relative">
                       <button
                         onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                        className="px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center gap-2"
+                        className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                       >
-                        Download Statement
+                        <span className="hidden sm:inline">Download </span>Statement
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -601,9 +602,9 @@ Sincerely,
                     </div>
                     <button
                       onClick={handleFinish}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base"
                     >
-                      Save to My Packet
+                      Save to Packet
                     </button>
                   </>
                 )}

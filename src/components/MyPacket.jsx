@@ -368,21 +368,22 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-6 py-6 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 id="my-packet-title" className="text-3xl font-bold mb-2">📁 My Claim Packet</h2>
-                <p className="text-indigo-100">
+          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 id="my-packet-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">📁 My Claim Packet</h2>
+                <p className="text-indigo-100 text-sm sm:text-base">
                   Manage your saved claims and generated statements
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="My Claim Packet" />}
                 <button
                   onClick={onClose}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -391,46 +392,46 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
           </div>
 
           {/* Statistics Dashboard */}
-          <div className="grid grid-cols-4 gap-4 p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">📊 Total Claims</div>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">📊 Total</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.drafting}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">✏️ Drafting</div>
+              <div className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.drafting}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">✏️ Drafting</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.statementGenerated}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">✅ Ready to File</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.statementGenerated}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">✅ Ready</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.filed}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">🏆 Filed</div>
+              <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">{stats.filed}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">🏆 Filed</div>
             </div>
           </div>
 
           {/* Backup/Restore Controls */}
-          <div className="flex items-center justify-between px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 onClick={handleBackupPacket}
                 disabled={claims.length === 0}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Backup Packet
+                <span className="hidden xs:inline">Backup</span> Packet
               </button>
               <button
                 onClick={handleRestoreClick}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Load Backup
+                <span className="hidden xs:inline">Load</span> Backup
               </button>
               <input
                 type="file"
@@ -441,8 +442,8 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                 aria-label="Select backup file"
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              💡 Backup your packet to transfer between devices
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-right">
+              💡 Backup to transfer between devices
             </p>
           </div>
 
@@ -513,12 +514,12 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                           </p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {/* Status Dropdown */}
                           <select
                             value={claim.status}
                             onChange={(e) => handleStatusChange(claim.id, e.target.value)}
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100"
+                            className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100"
                           >
                             <option value="Drafting">Drafting</option>
                             <option value="Statement Generated">Statement Generated</option>
