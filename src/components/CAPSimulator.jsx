@@ -1450,16 +1450,15 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
       }
     ];
 
-    // Initialize expanded categories if empty
-    if (Object.keys(expandedCategories).length === 0) {
-      const initial = termCategories.reduce((acc, cat) => ({ ...acc, [cat.category]: true }), {});
-      setExpandedCategories(initial);
-    }
+    // Helper to check if category is expanded - defaults to false (collapsed) for cleaner initial view
+    const isCategoryExpanded = (categoryName) => {
+      return expandedCategories[categoryName] === true;
+    };
 
     const toggleCategory = (category) => {
       setExpandedCategories(prev => ({
         ...prev,
-        [category]: !prev[category]
+        [category]: !isCategoryExpanded(category)
       }));
     };
 
@@ -1566,14 +1565,14 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                     <span className="font-bold text-gray-800">{category.category}</span>
                     <span className="text-sm text-gray-500">({category.terms.length} terms)</span>
                   </div>
-                  {expandedCategories[category.category] ? (
+                  {isCategoryExpanded(category.category) ? (
                     <ChevronDown className="h-5 w-5 text-gray-500" />
                   ) : (
                     <ChevronRight className="h-5 w-5 text-gray-500" />
                   )}
                 </button>
                 
-                {expandedCategories[category.category] && (
+                {isCategoryExpanded(category.category) && (
                   <div className="p-4 space-y-4 bg-white">
                     {category.terms.map((item, index) => (
                       <div key={index} className="bg-white border-2 border-purple-200 rounded-lg p-5">
