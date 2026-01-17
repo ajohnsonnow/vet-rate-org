@@ -831,30 +831,30 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
       >
         <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
           {/* Header - Fixed at top */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-t-lg relative flex-shrink-0">
-            <div className="absolute top-4 right-4 flex items-center gap-2">
+          <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
+            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="C&P Exam Simulator" />}
               <button
                 onClick={onClose}
-                className="text-white hover:text-gray-200"
+                className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
                 aria-label="Close C&P Simulator"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
-            <div className="flex items-center gap-3 mb-2">
-              <ClipboardList className="h-8 w-8" />
-              <h2 id="cap-simulator-title" className="text-3xl font-bold">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
+              <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+              <h2 id="cap-simulator-title" className="text-xl sm:text-3xl font-bold">
                 C&P Exam Simulator
               </h2>
             </div>
-            <p className="text-amber-100 text-lg">
+            <p className="text-amber-100 text-sm sm:text-lg pr-8">
               Turn the "Black Box" of the C&P Exam into an Open-Book Test
             </p>
           </div>
 
           {/* Content - Scrollable */}
-          <div className="p-8 space-y-6 overflow-y-auto flex-1">
+          <div className="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
             <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-3">
                 What is the C&P Exam Simulator?

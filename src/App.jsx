@@ -494,48 +494,53 @@ function App() {
       {showSecondaryScout && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
           <div className="min-h-screen px-4 py-8">
-            <div className="bg-white rounded-lg shadow-xl max-w-7xl mx-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-4 flex items-center justify-between z-10 rounded-t-lg">
-                <div>
-                  <h2 className="text-2xl font-bold">🔍 Secondary Scout Results</h2>
-                  <p className="text-sm text-blue-100 mt-1">
-                    Based on {userConditions.length} service-connected condition{userConditions.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ReportBugLink onClick={() => setShowBugSquasher(true)} variant="light" moduleName="Secondary Scout Results" />
-                  <button
-                    onClick={() => {
-                      setShowSecondaryScout(false);
-                      setShowMyPacket(true);
-                    }}
-                    className="px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    My Packet
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowSecondaryScout(false);
-                      setShowSecondaryScoutLauncher(true);
-                    }}
-                    className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
-                  >
-                    Change Conditions
-                  </button>
-                  <button
-                    onClick={() => setShowSecondaryScout(false)}
-                    className="text-white hover:text-gray-200 transition-colors"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-7xl mx-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 z-10 rounded-t-lg">
+                {/* Mobile: Stack vertically, Desktop: Side by side */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl sm:text-2xl font-bold truncate">🔍 Secondary Scout Results</h2>
+                    <p className="text-sm text-blue-100 mt-1">
+                      Based on {userConditions.length} service-connected condition{userConditions.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  {/* Mobile: Full width buttons, Desktop: Inline */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <ReportBugLink onClick={() => setShowBugSquasher(true)} variant="light" moduleName="Secondary Scout Results" />
+                    <button
+                      onClick={() => {
+                        setShowSecondaryScout(false);
+                        setShowMyPacket(true);
+                      }}
+                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-va-gold text-va-blue rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                    >
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="hidden xs:inline">My </span>Packet
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSecondaryScout(false);
+                        setShowSecondaryScoutLauncher(true);
+                      }}
+                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                    >
+                      <span className="hidden sm:inline">Change </span>Conditions
+                    </button>
+                    <button
+                      onClick={() => setShowSecondaryScout(false)}
+                      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                      aria-label="Close"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <SecondaryScout 
                   userDisabilities={userConditions}
                   onLearnHow={handleLearnHow}

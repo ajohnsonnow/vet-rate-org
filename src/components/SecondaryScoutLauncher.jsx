@@ -905,21 +905,22 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto max-h-[90vh] flex flex-col">
           {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-6 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 id="secondary-scout-launcher-title" className="text-3xl font-bold mb-2">Secondary Scout</h2>
-                <p className="text-blue-100">
-                  Discover potential secondary claims based on your service-connected disabilities
+          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 id="secondary-scout-launcher-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">🔍 Secondary Scout</h2>
+                <p className="text-blue-100 text-sm sm:text-base">
+                  Discover potential secondary claims based on your conditions
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Secondary Scout Launcher" />}
                 <button
                   onClick={onClose}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -927,38 +928,38 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
             </div>
           </div>
 
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1">
             {/* Input Method Tabs */}
-            <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setInputMethod('manual')}
-                className={`px-6 py-3 font-semibold transition-colors ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
                   inputMethod === 'manual'
                     ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
               >
-                Type Your Conditions
+                <span className="hidden sm:inline">Type </span>Conditions
               </button>
               <button
                 onClick={() => setInputMethod('checkbox')}
-                className={`px-6 py-3 font-semibold transition-colors ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
                   inputMethod === 'checkbox'
                     ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
               >
-                Select from List
+                <span className="hidden sm:inline">Select from </span>List
               </button>
               <button
                 onClick={() => setInputMethod('examples')}
-                className={`px-6 py-3 font-semibold transition-colors ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
                   inputMethod === 'examples'
                     ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
               >
-                Example Profiles
+                Examples
               </button>
             </div>
 
