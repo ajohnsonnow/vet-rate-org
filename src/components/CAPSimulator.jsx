@@ -1616,6 +1616,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
         <BuyMeCoffee 
           show={true} 
           trigger="terminology"
+          context={{ term: flashcardTerm }}
         />
       </div>
     );
@@ -1806,6 +1807,10 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
         <BuyMeCoffee 
           show={true} 
           trigger="cap-sim"
+          context={{ 
+            rating: simulationResult?.predictedRating,
+            conditionName: conditionName
+          }}
         />
       </div>
     );

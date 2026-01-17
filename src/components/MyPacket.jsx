@@ -31,6 +31,7 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
   const [showImportConfirm, setShowImportConfirm] = useState(null);
+  const [backupCreated, setBackupCreated] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
     const exportData = exportPacketData(claims, statements);
     downloadPacketBackup(exportData);
     setImportStatus({ type: 'success', message: `Backup created with ${claims.length} claims` });
+    setBackupCreated(true);
     setTimeout(() => setImportStatus(null), 3000);
   };
 
@@ -731,8 +733,17 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
 
       {/* Buy Me a Coffee - shows when packet has claims */}
       <BuyMeCoffee 
-        show={claims.length > 0} 
+        show={claims.length > 0 && !backupCreated} 
         trigger="packet"
+        context={{ count: claims.length }}
+      />
+      
+      {/* Buy Me a Coffee - shows after backup created */}
+      <BuyMeCoffee 
+        show={backupCreated} 
+        trigger="export"
+        context={{ count: claims.length }}
+        onDismiss={() => setBackupCreated(false)}
       />
     </div>
   );

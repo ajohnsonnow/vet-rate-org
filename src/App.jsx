@@ -232,6 +232,7 @@ function App() {
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
         trigger="search"
+        context={{ count: results.length, query: searchQuery }}
       />
 
       <main id="main-content" className="flex-1 container mx-auto px-4 py-8 max-w-7xl" role="main" aria-label="Main content">
