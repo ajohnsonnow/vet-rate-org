@@ -919,27 +919,27 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
                 Comprehensive Condition Coverage:
               </h3>
               <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-blue-600 mb-1">{allConditions.length}</div>
-                  <div className="text-sm text-gray-700">Conditions with Simulations</div>
+                <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{allConditions.length}</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">Conditions with Simulations</div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-green-600 mb-1">15+</div>
-                  <div className="text-sm text-gray-700">Body Systems Covered</div>
-                  <div className="text-xs text-gray-500 mt-1">All 38 CFR Part 4 Subpart B</div>
+                <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">15+</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">Body Systems Covered</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">All 38 CFR Part 4 Subpart B</div>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="text-3xl font-bold text-purple-600 mb-1">100%</div>
-                  <div className="text-sm text-gray-700">FREE</div>
-                  <div className="text-xs text-gray-500 mt-1">Always, no premium tiers</div>
+                <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">100%</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">FREE</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Always, no premium tiers</div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 <strong>Body System-Specific Questions:</strong> Each simulation generates questions tailored to the specific body system (musculoskeletal, mental health, respiratory, neurological, etc.) based on actual DBQ criteria and 38 CFR Part 4 rating schedules. Questions target the specific symptoms, measurements, and functional limitations examiners assess for your condition.
               </p>
             </div>
