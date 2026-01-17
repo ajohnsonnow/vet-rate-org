@@ -374,6 +374,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
       <BuyMeCoffee 
         show={filteredSuggestions.length > 0} 
         trigger="secondary-scout"
+        context={{ count: filteredSuggestions.length }}
       />
     </div>
   );

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { generatePDF } from '../utils/pdfGenerator';
+import BuyMeCoffee from './BuyMeCoffee';
 
 function PDFButton({ result, searchTerm }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pdfGenerated, setPdfGenerated] = useState(false);
 
   const handleGeneratePDF = async () => {
     setIsLoading(true);
     setError(null);
     try {
       await generatePDF(result, searchTerm);
+      setPdfGenerated(true);
     } catch (err) {
       setError(err.message || 'Failed to generate PDF. Please try again.');
       console.error('PDF generation error:', err);
@@ -52,6 +55,14 @@ function PDFButton({ result, searchTerm }) {
           {error}
         </div>
       )}
+      
+      {/* Show BuyMeCoffee after successful PDF generation */}
+      <BuyMeCoffee 
+        show={pdfGenerated} 
+        trigger="pdf"
+        context={{ conditionName: result?.condition_name || searchTerm }}
+        onDismiss={() => setPdfGenerated(false)}
+      />
     </div>
   );
 }

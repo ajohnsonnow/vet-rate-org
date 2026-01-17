@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
+import BuyMeCoffee from './BuyMeCoffee';
 
 /**
  * NexusBuilder Component
@@ -27,6 +28,7 @@ const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingSt
     specificExamples: ''
   });
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [nexusDownloaded, setNexusDownloaded] = useState(false);
 
   const isSecondary = Boolean(primaryCondition);
   const totalSteps = isSecondary ? 4 : 3;
@@ -168,6 +170,7 @@ Sincerely,
     }
     
     setShowDownloadMenu(false);
+    setNexusDownloaded(true);
   };
 
   const downloadAsTxt = (statement, doctorNote, fileName) => {
@@ -609,6 +612,14 @@ Sincerely,
           </div>
         </div>
       </div>
+      
+      {/* BuyMeCoffee - shows after download */}
+      <BuyMeCoffee 
+        show={nexusDownloaded} 
+        trigger="nexus"
+        context={{ conditionName: condition }}
+        onDismiss={() => setNexusDownloaded(false)}
+      />
     </div>
   );
 };
