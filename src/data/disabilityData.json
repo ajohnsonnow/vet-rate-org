@@ -29,7 +29,7 @@
         },
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         }
       ],
       "ratingCriteria": {
@@ -99,7 +99,7 @@
       "relatedSecondaryConditions": [
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Carpal Tunnel Syndrome",
@@ -11515,7 +11515,7 @@
         },
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Weight Loss",
@@ -11893,7 +11893,7 @@
       "relatedSecondaryConditions": [
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Weight Loss",
@@ -12477,43 +12477,42 @@
     {
       "id": 438,
       "diagnosticCode": "7346",
-      "conditionName": "Gastroesophageal Reflux Disease (GERD)",
+      "conditionName": "Hiatal hernia and paraesophageal hernia",
       "aliases": [
-        "GERD",
-        "acid reflux",
-        "heartburn",
-        "reflux"
+        "hiatal hernia",
+        "paraesophageal hernia",
+        "diaphragmatic hernia",
+        "hernia of diaphragm",
+        "sliding hiatal hernia",
+        "rolling hernia"
       ],
       "searchTerms": [
-        "GERD",
-        "acid reflux",
-        "heartburn",
-        "gastroesophageal reflux"
+        "hiatal hernia",
+        "paraesophageal hernia",
+        "diaphragmatic hernia",
+        "hernia",
+        "GERD complication",
+        "7346"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.114",
       "ratingSchedule": "38 CFR § 4.114",
-      "documentationRequirements": "Documentation must include: endoscopy findings (esophagitis, Barrett's esophagus), pH monitoring results, symptom frequency and severity, response to medications (PPI, H2 blockers), dietary restrictions, and any complications.",
+      "documentationRequirements": "Documentation must include: upper GI imaging (barium swallow, endoscopy), size and type of hernia (sliding vs paraesophageal), symptoms (heartburn, chest pain, difficulty swallowing), presence of esophagitis or stricture, and treatment history.",
       "relatedSecondaryConditions": [
+        {
+          "name": "Gastroesophageal Reflux Disease (GERD)",
+          "diagnosticCode": "7206"
+        },
         {
           "name": "Esophageal Stricture",
           "diagnosticCode": "7203"
-        },
-        {
-          "name": "Barrett's Esophagus",
-          "diagnosticCode": "7203"
-        },
-        {
-          "name": "Sleep Disorders",
-          "diagnosticCode": "9434"
         }
       ],
       "ratingCriteria": {
         "type": "direct",
         "ratings": {
-          "100": "Very extensive",
-          "80": "Extensive",
-          "60": "Moderately extensive",
-          "40": "Moderate"
+          "60": "Symptoms of pain, vomiting, material weight loss and hematemesis or melena with moderate anemia; or other findings consistent with chronic hemorrhage",
+          "30": "Persistently recurrent epigastric distress with dysphagia, pyrosis, and regurgitation, accompanied by substernal or arm or shoulder pain",
+          "10": "Two or more of the symptoms for the 30 percent evaluation, less pronounced"
         }
       }
     },
@@ -12537,9 +12536,13 @@
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
       "relatedSecondaryConditions": [],
       "ratingCriteria": {
-        "type": "rated-as",
-        "ratedUnder": "7346",
-        "notes": "Carcinoma of the rectum is rated as carcinoma of the large intestine under diagnostic code 7346"
+        "type": "direct",
+        "ratings": {
+          "100": "Severe symptoms requiring total parenteral nutrition (TPN) or similar interventions",
+          "60": "Moderately severe; maldigestion and malabsorption with severe diarrhea and substantial weight loss",
+          "30": "Frequent episodes of abdominal pain with nausea and vomiting; requiring prescribed medication",
+          "10": "Intermittent abdominal distress with pancreatic insufficiency partially managed by diet and medication"
+        }
       }
     },
     {
@@ -12798,7 +12801,7 @@
         },
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Renal Osteodystrophy",
@@ -14010,7 +14013,7 @@
         },
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Chronic Pelvic Pain",
@@ -14576,7 +14579,7 @@
         },
         {
           "name": "Anemia",
-          "diagnosticCode": "7700"
+          "diagnosticCode": "7720"
         },
         {
           "name": "Chronic Pelvic Pain",
@@ -14770,53 +14773,6 @@
         "ratings": {
           "0": "Female sexual arousal disorder (FSAD)"
         }
-      }
-    },
-    {
-      "id": 508,
-      "diagnosticCode": "7700",
-      "conditionName": "Sleep Apnea",
-      "aliases": [
-        "sleep apnea",
-        "obstructive sleep apnea",
-        "OSA",
-        "central sleep apnea"
-      ],
-      "searchTerms": [
-        "sleep apnea",
-        "obstructive sleep apnea",
-        "OSA",
-        "sleep-disordered breathing"
-      ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.97#p-4.97(SleepApnea)",
-      "ratingSchedule": "38 CFR § 4.97",
-      "documentationRequirements": "Documentation must include: sleep study (polysomnography) results with AHI score, type of apnea (obstructive/central), oxygen desaturation events, daytime sleepiness severity, CPAP/BIPAP usage compliance and settings, and impact on daily functioning.",
-      "relatedSecondaryConditions": [
-        {
-          "name": "Hypertension",
-          "diagnosticCode": "7005"
-        },
-        {
-          "name": "Ischemic Heart Disease",
-          "diagnosticCode": "7005"
-        },
-        {
-          "name": "Cerebrovascular Accident",
-          "diagnosticCode": "8007"
-        },
-        {
-          "name": "Hypersomnia",
-          "diagnosticCode": "8108"
-        },
-        {
-          "name": "Cognitive Impairment",
-          "diagnosticCode": "9326"
-        }
-      ],
-      "ratingCriteria": {
-        "type": "rated-as",
-        "ratedUnder": "6847",
-        "notes": "Sleep apnea is rated under diagnostic code 6847 in the Respiratory System"
       }
     },
     {
@@ -21834,8 +21790,7 @@
       "obstructive sleep apnea",
       "OSA",
       "sleep-disordered breathing",
-      "6847",
-      "7700"
+      "6847"
     ],
     "liver": [
       "hepatic",
@@ -22288,12 +22243,12 @@
       "anemia",
       "bleeding",
       "clotting",
-      "7700-7725"
+      "7720-7725"
     ],
     "anemia": [
       "low blood count",
       "low hemoglobin",
-      "7700-7707"
+      "7720-7723"
     ],
     "allergic rhinitis": [
       "hay fever",

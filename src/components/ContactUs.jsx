@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import ReportBugLink from './ReportBugLink';
 
-const ContactUs = ({ onClose }) => {
+const ContactUs = ({ onClose, onReportBug }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,23 +36,31 @@ const ContactUs = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="contact-us-title"
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
-          <h2 className="text-2xl font-bold text-gray-900">Contact Us</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
-            aria-label="Close"
-          >
-            ×
-          </button>
+          <h2 id="contact-us-title" className="text-2xl font-bold text-gray-900">📧 Contact Us</h2>
+          <div className="flex items-center gap-3">
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Contact Us" />}
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           <section className="mb-6">
             <p className="text-gray-700 mb-4">
-              Have questions, feedback, or suggestions? We'd love to hear from you! Whether you've found an error, 
+              Have questions, feedback, or suggestions? I'd love to hear from you! Whether you've found an error, 
               want to suggest a feature, or just want to say thanks, feel free to reach out.
             </p>
           </section>
@@ -196,8 +205,8 @@ const ContactUs = ({ onClose }) => {
               <div>
                 <p className="font-semibold text-gray-800">Q: How can I support this project?</p>
                 <p className="text-gray-700 text-sm">
-                  Share it with fellow veterans! You can also support us by using our affiliate links or 
-                  donating via Buy Me a Coffee.
+                  Share it with fellow veterans! You can also support this project by 
+                  donating via Buy Me a Coffee or simply by using the tool and providing feedback.
                 </p>
               </div>
             </div>

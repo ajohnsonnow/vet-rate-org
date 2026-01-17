@@ -1,0 +1,687 @@
+{
+  "pactActInfo": {
+    "title": "The PACT Act",
+    "fullName": "Sergeant First Class (SFC) Heath Robinson Honoring our Promise to Address Comprehensive Toxics (PACT) Act",
+    "effectiveDate": "2022-08-10",
+    "description": "The PACT Act is the largest health care and benefit expansion in VA history. It expands VA health care and benefits for Veterans exposed to burn pits, Agent Orange, and other toxic substances.",
+    "vaResourceUrl": "https://www.va.gov/resources/the-pact-act-and-your-va-benefits/",
+    "keyBenefits": [
+      "Expands eligibility for VA health care for Veterans with toxic exposures",
+      "Adds 20+ presumptive conditions for burn pits, Agent Orange, and other toxic exposures",
+      "Adds more presumptive-exposure locations",
+      "Requires VA to provide toxic exposure screening",
+      "Improves research, staff education, and treatment for toxic exposures"
+    ]
+  },
+  "exposureCategories": {
+    "burnPit": {
+      "name": "Burn Pit & Airborne Hazards",
+      "description": "Exposure to smoke and fumes from open burn pits, sand, dust, particulate matter, and other airborne hazards during service in Iraq, Afghanistan, and other locations.",
+      "statute": "PACT Act (2022)",
+      "serviceRequirements": {
+        "locations": [
+          "Iraq",
+          "Afghanistan", 
+          "Southwest Asia Theater of Operations",
+          "Gulf War Theater of Operations",
+          "Other qualifying locations as defined by VA"
+        ],
+        "dateRange": "On or after August 2, 1990",
+        "minimumService": "Any length of time in qualifying location"
+      },
+      "airborneHazards": [
+        "Smoke and fumes from open burn pits",
+        "Sand, dust, and particulate matter",
+        "General air pollution common in certain countries",
+        "Fuel, aircraft exhaust, and other mechanical fumes",
+        "Smoke from oil well fires"
+      ],
+      "burnPitWaste": [
+        "Chemicals, paint, medical and human waste",
+        "Metal and aluminum cans",
+        "Munitions and unexploded ordnance",
+        "Petroleum and lubricant products",
+        "Plastics, rubber, wood, and food waste"
+      ],
+      "vaUrl": "https://www.publichealth.va.gov/exposures/burnpits/index.asp",
+      "registryUrl": "https://www.publichealth.va.gov/exposures/burnpits/registry.asp"
+    },
+    "agentOrange": {
+      "name": "Agent Orange / Herbicide Exposure",
+      "description": "Exposure to herbicides including Agent Orange during service in Vietnam, Thailand, Korean DMZ, and other qualifying locations.",
+      "statute": "38 USC 1116, PACT Act (2022)",
+      "serviceRequirements": {
+        "locations": [
+          "Republic of Vietnam",
+          "Inland waterways of Vietnam",
+          "Korean Demilitarized Zone (DMZ)",
+          "Thailand (any U.S. or Royal Thai military base)",
+          "Laos",
+          "Cambodia (Mimot or Krek, Kampong Cham Province)",
+          "Guam or American Samoa",
+          "Johnston Atoll",
+          "C-123 Aircraft exposure"
+        ],
+        "dateRange": {
+          "vietnam": "January 9, 1962 - May 7, 1975",
+          "korea": "September 1, 1967 - August 31, 1971",
+          "thailand": "January 9, 1962 - June 30, 1976",
+          "guam": "January 9, 1962 - July 31, 1980"
+        },
+        "minimumService": "Any length of time in qualifying location"
+      },
+      "vaUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/"
+    },
+    "radiation": {
+      "name": "Radiation Exposure",
+      "description": "Exposure to ionizing radiation during military service including nuclear weapons testing, occupation of Hiroshima/Nagasaki, or other qualifying activities.",
+      "statute": "38 USC 1112",
+      "serviceRequirements": {
+        "activities": [
+          "Occupation of Hiroshima or Nagasaki",
+          "Nuclear weapons testing",
+          "Gaseous diffusion plant service",
+          "Other radiation-risk activities"
+        ]
+      },
+      "vaUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/"
+    },
+    "campLejeune": {
+      "name": "Camp Lejeune Water Contamination",
+      "description": "Exposure to contaminated drinking water at Camp Lejeune or MCAS New River, North Carolina.",
+      "statute": "38 USC 1118, Camp Lejeune Justice Act (2022)",
+      "serviceRequirements": {
+        "location": "Camp Lejeune or MCAS New River, North Carolina",
+        "dateRange": "August 1, 1953 - December 31, 1987",
+        "minimumService": "At least 30 days (cumulative)"
+      },
+      "vaUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/camp-lejeune-water-contamination/"
+    },
+    "gulfWar": {
+      "name": "Gulf War Illness",
+      "description": "Undiagnosed illnesses and medically unexplained chronic multi-symptom illnesses in Gulf War Veterans.",
+      "statute": "38 USC 1117",
+      "serviceRequirements": {
+        "locations": [
+          "Southwest Asia Theater of Operations",
+          "Afghanistan"
+        ],
+        "dateRange": "On or after August 2, 1990"
+      },
+      "vaUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/gulf-war-illness-southwest-asia/"
+    }
+  },
+  "presumptiveConditions": {
+    "burnPitCancers": [
+      {
+        "condition": "Brain Cancer",
+        "diagnosticCodes": ["8045"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Gastrointestinal Cancer (any type)",
+        "diagnosticCodes": ["7343", "7301"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Head Cancer (any type)",
+        "diagnosticCodes": [],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Kidney Cancer",
+        "diagnosticCodes": ["7528"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Lymphatic Cancer (any type)",
+        "diagnosticCodes": ["7715"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Lymphoma (any type)",
+        "diagnosticCodes": ["7715", "7709"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Melanoma",
+        "diagnosticCodes": ["7833"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Neck Cancer (any type)",
+        "diagnosticCodes": [],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Pancreatic Cancer",
+        "diagnosticCodes": ["7343"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Reproductive Cancer (any type)",
+        "diagnosticCodes": ["7528"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Respiratory Cancer (any type)",
+        "diagnosticCodes": ["6819", "6820"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Leukemia (Acute and Chronic)",
+        "diagnosticCodes": ["7703"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Multiple Myeloma",
+        "diagnosticCodes": ["7703"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Glioblastoma",
+        "diagnosticCodes": ["8045"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      }
+    ],
+    "burnPitRespiratory": [
+      {
+        "condition": "Asthma (diagnosed after service)",
+        "diagnosticCodes": ["6602"],
+        "category": "burnPit",
+        "addedBy": "PACT Act",
+        "note": "Must be diagnosed after military service"
+      },
+      {
+        "condition": "Chronic Bronchitis",
+        "diagnosticCodes": ["6600"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Chronic Obstructive Pulmonary Disease (COPD)",
+        "diagnosticCodes": ["6604"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Chronic Rhinitis",
+        "diagnosticCodes": ["6522"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Chronic Sinusitis",
+        "diagnosticCodes": ["6510", "6511", "6512", "6513", "6514"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Constrictive Bronchiolitis / Obliterative Bronchiolitis",
+        "diagnosticCodes": ["6600"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Emphysema",
+        "diagnosticCodes": ["6603"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Granulomatous Disease",
+        "diagnosticCodes": ["6600"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Interstitial Lung Disease (ILD)",
+        "diagnosticCodes": ["6825", "6826", "6827"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Pleuritis",
+        "diagnosticCodes": ["6845"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Pulmonary Fibrosis",
+        "diagnosticCodes": ["6825"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Sarcoidosis",
+        "diagnosticCodes": ["6846"],
+        "category": "burnPit",
+        "addedBy": "PACT Act"
+      }
+    ],
+    "agentOrangeCancers": [
+      {
+        "condition": "Bladder Cancer",
+        "diagnosticCodes": ["7528"],
+        "category": "agentOrange",
+        "addedBy": "Blue Water Navy Act (2019)"
+      },
+      {
+        "condition": "Chronic B-cell Leukemia",
+        "diagnosticCodes": ["7703"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Hodgkin's Disease",
+        "diagnosticCodes": ["7709"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Multiple Myeloma",
+        "diagnosticCodes": ["7703"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Non-Hodgkin's Lymphoma",
+        "diagnosticCodes": ["7715"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Prostate Cancer",
+        "diagnosticCodes": ["7528"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Respiratory Cancers (lung, bronchus, larynx, trachea)",
+        "diagnosticCodes": ["6819", "6820"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Soft Tissue Sarcomas",
+        "diagnosticCodes": ["7121"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      }
+    ],
+    "agentOrangeOther": [
+      {
+        "condition": "AL Amyloidosis (Primary Amyloidosis)",
+        "diagnosticCodes": ["7717"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Chloracne",
+        "diagnosticCodes": ["7829"],
+        "category": "agentOrange",
+        "addedBy": "Original List",
+        "note": "Must manifest within 1 year of exposure"
+      },
+      {
+        "condition": "Diabetes Mellitus Type 2",
+        "diagnosticCodes": ["7913"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "High Blood Pressure (Hypertension)",
+        "diagnosticCodes": ["7101"],
+        "category": "agentOrange",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Hypothyroidism",
+        "diagnosticCodes": ["7903"],
+        "category": "agentOrange",
+        "addedBy": "Blue Water Navy Act (2019)"
+      },
+      {
+        "condition": "Ischemic Heart Disease",
+        "diagnosticCodes": ["7005", "7006", "7017"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Monoclonal Gammopathy of Undetermined Significance (MGUS)",
+        "diagnosticCodes": ["7703"],
+        "category": "agentOrange",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Parkinson's Disease",
+        "diagnosticCodes": ["8004"],
+        "category": "agentOrange",
+        "addedBy": "Original List"
+      },
+      {
+        "condition": "Parkinsonism",
+        "diagnosticCodes": ["8004"],
+        "category": "agentOrange",
+        "addedBy": "Blue Water Navy Act (2019)"
+      },
+      {
+        "condition": "Peripheral Neuropathy (Early-Onset)",
+        "diagnosticCodes": ["8520", "8521", "8515"],
+        "category": "agentOrange",
+        "addedBy": "Original List",
+        "note": "Must manifest within 1 year of last exposure"
+      },
+      {
+        "condition": "Porphyria Cutanea Tarda",
+        "diagnosticCodes": ["7815"],
+        "category": "agentOrange",
+        "addedBy": "Original List",
+        "note": "Must manifest within 1 year of exposure"
+      }
+    ],
+    "campLejeune": [
+      {
+        "condition": "Adult Leukemia",
+        "diagnosticCodes": ["7703"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Aplastic Anemia and Other Myelodysplastic Syndromes",
+        "diagnosticCodes": ["7716"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Bladder Cancer",
+        "diagnosticCodes": ["7528"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Kidney Cancer",
+        "diagnosticCodes": ["7528"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Liver Cancer",
+        "diagnosticCodes": ["7343"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Multiple Myeloma",
+        "diagnosticCodes": ["7703"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Non-Hodgkin's Lymphoma",
+        "diagnosticCodes": ["7715"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      },
+      {
+        "condition": "Parkinson's Disease",
+        "diagnosticCodes": ["8004"],
+        "category": "campLejeune",
+        "addedBy": "PACT Act"
+      }
+    ],
+    "radiation": [
+      {
+        "condition": "All Cancers",
+        "diagnosticCodes": [],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.311",
+        "note": "Any cancer may be considered for radiation exposure"
+      },
+      {
+        "condition": "Leukemia (except chronic lymphocytic leukemia)",
+        "diagnosticCodes": ["7703"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309"
+      },
+      {
+        "condition": "Multiple Myeloma",
+        "diagnosticCodes": ["7703"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309"
+      },
+      {
+        "condition": "Thyroid Cancer",
+        "diagnosticCodes": ["7903"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309"
+      }
+    ]
+  },
+  "diagnosticCodePactMapping": {
+    "6510": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Sinusitis"],
+      "claimTip": "If you served in Iraq, Afghanistan, or other burn pit locations after August 2, 1990, chronic sinusitis is now a presumptive condition under the PACT Act."
+    },
+    "6511": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Ethmoid Sinusitis"],
+      "claimTip": "Chronic sinusitis conditions are presumptive for burn pit exposure under the PACT Act."
+    },
+    "6512": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Frontal Sinusitis"],
+      "claimTip": "Chronic sinusitis conditions are presumptive for burn pit exposure under the PACT Act."
+    },
+    "6513": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Maxillary Sinusitis"],
+      "claimTip": "Chronic sinusitis conditions are presumptive for burn pit exposure under the PACT Act."
+    },
+    "6514": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Sphenoid Sinusitis"],
+      "claimTip": "Chronic sinusitis conditions are presumptive for burn pit exposure under the PACT Act."
+    },
+    "6522": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Rhinitis"],
+      "claimTip": "Chronic rhinitis is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "6600": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Chronic Bronchitis", "Constrictive Bronchiolitis"],
+      "claimTip": "Chronic bronchitis and constrictive bronchiolitis are presumptive conditions for burn pit exposure under the PACT Act."
+    },
+    "6602": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Asthma"],
+      "claimTip": "Asthma diagnosed AFTER military service is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "6603": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Emphysema"],
+      "claimTip": "Emphysema is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "6604": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["COPD"],
+      "claimTip": "Chronic Obstructive Pulmonary Disease (COPD) is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "6819": {
+      "pactAct": true,
+      "exposures": ["burnPit", "agentOrange"],
+      "conditions": ["Respiratory Cancer", "Lung Cancer"],
+      "claimTip": "Respiratory cancers are presumptive for both burn pit exposure and Agent Orange exposure."
+    },
+    "6820": {
+      "pactAct": true,
+      "exposures": ["burnPit", "agentOrange"],
+      "conditions": ["Respiratory Cancer"],
+      "claimTip": "Respiratory cancers are presumptive for both burn pit exposure and Agent Orange exposure."
+    },
+    "6825": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Pulmonary Fibrosis", "Interstitial Lung Disease"],
+      "claimTip": "Pulmonary fibrosis and interstitial lung disease are presumptive conditions for burn pit exposure under the PACT Act."
+    },
+    "6845": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Pleuritis"],
+      "claimTip": "Pleuritis is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "6846": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Sarcoidosis"],
+      "claimTip": "Sarcoidosis is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "7005": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Ischemic Heart Disease"],
+      "claimTip": "Ischemic heart disease is a presumptive condition for Agent Orange exposure."
+    },
+    "7006": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Ischemic Heart Disease (MI)"],
+      "claimTip": "Ischemic heart disease including myocardial infarction is a presumptive condition for Agent Orange exposure."
+    },
+    "7017": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Coronary Bypass Surgery"],
+      "claimTip": "Coronary artery disease requiring bypass surgery is part of ischemic heart disease, presumptive for Agent Orange."
+    },
+    "7101": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Hypertension"],
+      "claimTip": "High blood pressure (hypertension) was added as a presumptive condition for Agent Orange exposure under the PACT Act."
+    },
+    "7343": {
+      "pactAct": true,
+      "exposures": ["burnPit", "campLejeune"],
+      "conditions": ["Gastrointestinal Cancer", "Liver Cancer", "Pancreatic Cancer"],
+      "claimTip": "GI cancers are presumptive for burn pit exposure. Liver cancer is also presumptive for Camp Lejeune water contamination."
+    },
+    "7528": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "burnPit", "campLejeune"],
+      "conditions": ["Prostate Cancer", "Bladder Cancer", "Kidney Cancer"],
+      "claimTip": "Prostate cancer is presumptive for Agent Orange. Bladder and kidney cancers are presumptive for burn pit exposure and Camp Lejeune."
+    },
+    "7703": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "burnPit", "campLejeune", "radiation"],
+      "conditions": ["Leukemia", "Multiple Myeloma", "MGUS"],
+      "claimTip": "Leukemia and multiple myeloma are presumptive for multiple exposures including Agent Orange, burn pits, Camp Lejeune, and radiation."
+    },
+    "7709": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "burnPit"],
+      "conditions": ["Hodgkin's Disease", "Hodgkin's Lymphoma"],
+      "claimTip": "Hodgkin's disease is a presumptive condition for Agent Orange exposure."
+    },
+    "7715": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "burnPit", "campLejeune"],
+      "conditions": ["Non-Hodgkin's Lymphoma"],
+      "claimTip": "Non-Hodgkin's lymphoma is presumptive for Agent Orange, burn pit exposure, and Camp Lejeune water contamination."
+    },
+    "7717": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["AL Amyloidosis"],
+      "claimTip": "AL amyloidosis (primary amyloidosis) is a presumptive condition for Agent Orange exposure."
+    },
+    "7815": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Porphyria Cutanea Tarda"],
+      "claimTip": "Porphyria cutanea tarda is presumptive for Agent Orange, but must manifest within 1 year of exposure."
+    },
+    "7829": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Chloracne"],
+      "claimTip": "Chloracne is presumptive for Agent Orange exposure, but must manifest within 1 year of last exposure."
+    },
+    "7833": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Melanoma"],
+      "claimTip": "Melanoma is a presumptive condition for burn pit exposure under the PACT Act."
+    },
+    "7903": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "radiation"],
+      "conditions": ["Hypothyroidism", "Thyroid Cancer"],
+      "claimTip": "Hypothyroidism is presumptive for Agent Orange. Thyroid cancer is presumptive for radiation exposure."
+    },
+    "7913": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Type 2 Diabetes Mellitus"],
+      "claimTip": "Type 2 diabetes is a presumptive condition for Agent Orange exposure. You don't need to prove direct causation."
+    },
+    "8004": {
+      "pactAct": true,
+      "exposures": ["agentOrange", "campLejeune"],
+      "conditions": ["Parkinson's Disease", "Parkinsonism"],
+      "claimTip": "Parkinson's disease and Parkinsonism are presumptive for Agent Orange and Camp Lejeune water contamination."
+    },
+    "8045": {
+      "pactAct": true,
+      "exposures": ["burnPit"],
+      "conditions": ["Brain Cancer", "Glioblastoma"],
+      "claimTip": "Brain cancers including glioblastoma are presumptive conditions for burn pit exposure under the PACT Act."
+    },
+    "8515": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Peripheral Neuropathy"],
+      "claimTip": "Early-onset peripheral neuropathy is presumptive for Agent Orange, but must manifest within 1 year of last exposure."
+    },
+    "8520": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Peripheral Neuropathy"],
+      "claimTip": "Early-onset peripheral neuropathy is presumptive for Agent Orange, but must manifest within 1 year of last exposure."
+    },
+    "8521": {
+      "pactAct": true,
+      "exposures": ["agentOrange"],
+      "conditions": ["Peripheral Neuropathy"],
+      "claimTip": "Early-onset peripheral neuropathy is presumptive for Agent Orange, but must manifest within 1 year of last exposure."
+    }
+  }
+}

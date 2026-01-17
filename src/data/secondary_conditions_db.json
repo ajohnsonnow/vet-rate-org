@@ -1,0 +1,558 @@
+{
+  "ptsd": {
+    "name": "Post-Traumatic Stress Disorder (PTSD)",
+    "potential_secondaries": [
+      {
+        "condition": "Obstructive Sleep Apnea (OSA)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected PTSD proximately causes or aggravates obstructive sleep apnea through multiple pathophysiological mechanisms: (1) PTSD-associated hyperarousal and chronic stress responses disrupt normal upper airway muscle tone during sleep; (2) psychiatric medications (SSRIs, benzodiazepines, sedatives) commonly prescribed for PTSD management can cause weight gain and decreased pharyngeal muscle tone; (3) PTSD-related hypervigilance and fragmented sleep architecture predispose to respiratory disturbances. The chronic stress response in PTSD activates the hypothalamic-pituitary-adrenal axis, leading to metabolic dysfunction and central obesity, which mechanically narrows the upper airway. Medical literature demonstrates a significantly elevated prevalence of OSA among veterans with PTSD compared to the general population.",
+        "medical_citations": [
+          "Sharafkhaneh et al., 'Association between PTSD and sleep apnea,' Chest 2005",
+          "Babson & Feldner, 'Temporal relations between sleep problems and PTSD,' J Trauma Stress 2010",
+          "Krakow et al., 'Sleep-disordered breathing in PTSD patients,' J Nerv Ment Dis 2000"
+        ]
+      },
+      {
+        "condition": "Gastroesophageal Reflux Disease (GERD)",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected PTSD necessitates continuous pharmacological treatment with selective serotonin reuptake inhibitors (SSRIs) and/or benzodiazepines. These medications directly cause or aggravate GERD through documented mechanisms: (1) SSRIs reduce lower esophageal sphincter (LES) pressure, permitting reflux of gastric contents; (2) chronic anxiety and hyperarousal associated with PTSD increase gastric acid secretion via vagal stimulation; (3) stress hormones (cortisol, catecholamines) impair gastric emptying and increase acid production. The nexus is both direct (PTSD-induced stress response) and medication-induced (iatrogenic effect of necessary psychiatric treatment).",
+        "medical_citations": [
+          "Hampel et al., 'Meta-analysis of PPI use and adverse effects,' Aliment Pharmacol Ther 2019",
+          "Eslick & Talley, 'Gastroesophageal reflux disease and psychiatric disorders,' World J Gastroenterol 2008",
+          "Bradley et al., 'Effect of anxiety and depression on GERD symptoms,' Psychosom Med 2005"
+        ]
+      },
+      {
+        "condition": "Bruxism (Teeth Grinding/TMJ Disorder)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected PTSD directly causes nocturnal and diurnal bruxism (teeth grinding) through stress-mediated neuromuscular hyperactivity. PTSD-associated hypervigilance, hyperarousal, and chronic sympathetic nervous system activation manifest as involuntary jaw clenching and grinding, particularly during sleep when conscious inhibition is absent. This repetitive biomechanical stress on the temporomandibular joint (TMJ) leads to joint inflammation, disc displacement, and muscle dysfunction. The psychological distress inherent to PTSD creates a continuous state of muscular tension in the masticatory apparatus, proximately causing TMJ disorder, dental wear, and associated facial pain.",
+        "medical_citations": [
+          "Ahlberg et al., 'Bruxism and PTSD in military personnel,' J Oral Rehabil 2004",
+          "Manfredini et al., 'Role of psychosocial factors in TMD,' Oral Surg Oral Med Oral Pathol 2009",
+          "Lobbezoo et al., 'Bruxism defined and graded,' J Oral Rehabil 2013"
+        ]
+      },
+      {
+        "condition": "Hypertension (High Blood Pressure)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected PTSD proximately causes or aggravates essential hypertension through chronic activation of the sympathetic nervous system and hypothalamic-pituitary-adrenal (HPA) axis. PTSD is characterized by sustained hyperarousal, hypervigilance, and exaggerated startle responses, which maintain elevated catecholamine levels (epinephrine, norepinephrine). This chronic sympathetic overdrive increases cardiac output, peripheral vascular resistance, and renin-angiotensin-aldosterone system activity, culminating in sustained blood pressure elevation. Additionally, PTSD-related behaviors (poor sleep, sedentary lifestyle, unhealthy coping mechanisms) and psychotropic medications contribute to hypertensive pathophysiology. Epidemiological studies demonstrate significantly higher prevalence and earlier onset of hypertension in PTSD populations.",
+        "medical_citations": [
+          "Vaccarino et al., 'PTSD and incidence of coronary heart disease,' J Am Coll Cardiol 2013",
+          "Kibler et al., 'PTSD and cardiovascular disease,' J Trauma Stress 2014",
+          "Edmondson et al., 'PTSD and cardiovascular disease,' Prog Cardiovasc Dis 2013"
+        ]
+      },
+      {
+        "condition": "Erectile Dysfunction",
+        "probability": "Medium",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected PTSD causes or aggravates erectile dysfunction through multiple mechanisms: (1) SSRIs and other antidepressants commonly prescribed for PTSD are well-documented to cause sexual dysfunction, including decreased libido and erectile difficulties; (2) PTSD-related psychological distress (hypervigilance, emotional numbing, avoidance behaviors) directly interferes with sexual arousal and performance; (3) chronic stress responses associated with PTSD reduce testosterone levels and impair vascular function necessary for erectile response. The sexual dysfunction represents both a direct psychogenic effect of PTSD symptomatology and an iatrogenic consequence of medically necessary psychiatric treatment.",
+        "medical_citations": [
+          "Atlantis & Sullivan, 'Bidirectional association between depression and ED,' J Sex Med 2012",
+          "Kotler et al., 'Sexual dysfunction in male PTSD patients,' Psychother Psychosom 2000",
+          "Serretti & Chiesa, 'Treatment-emergent sexual dysfunction related to antidepressants,' J Clin Psychopharmacol 2009"
+        ]
+      },
+      {
+        "condition": "Migraine Headaches",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected PTSD aggravates or causes migraine headaches through neurobiological mechanisms. PTSD-associated chronic stress, hyperarousal, and sleep disruption alter pain processing pathways and lower migraine thresholds. Chronic activation of the stress response leads to dysregulation of neurotransmitters (serotonin, norepinephrine) and neuropeptides (calcitonin gene-related peptide) that are central to migraine pathophysiology. Additionally, PTSD-related muscle tension, particularly in the cervical and cranial regions, triggers tension-type headaches that can evolve into migraines. The comorbidity of PTSD and migraines is well-established in military and civilian populations.",
+        "medical_citations": [
+          "Peterlin et al., 'Post-traumatic stress disorder in migraine,' Headache 2011",
+          "Smitherman et al., 'The prevalence, impact, and treatment of migraine and PTSD,' Headache 2013",
+          "Afari et al., 'Psychological trauma and functional somatic syndromes,' Psychosom Med 2014"
+        ]
+      },
+      {
+        "condition": "Irritable Bowel Syndrome (IBS)",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected PTSD proximately causes or aggravates irritable bowel syndrome through the brain-gut axis. PTSD-induced chronic stress disrupts the bidirectional communication between the central nervous system and the enteric nervous system, leading to altered gut motility, visceral hypersensitivity, and intestinal inflammation. Chronic activation of the stress response affects gut microbiome composition, increases intestinal permeability, and sensitizes visceral pain pathways. PTSD-related autonomic dysfunction manifests as gastrointestinal symptoms including abdominal pain, altered bowel habits, and dysmotility that characterize IBS.",
+        "medical_citations": [
+          "Videlock et al., 'Posttraumatic stress and gastrointestinal symptoms,' Neurogastroenterol Motil 2016",
+          "Gradus et al., 'PTSD and gastrointestinal disorders,' Psychosom Med 2017",
+          "Mayer et al., 'Gut-brain axis in health and disease,' Gastroenterology 2015"
+        ]
+      }
+    ]
+  },
+  "anxiety": {
+    "name": "Generalized Anxiety Disorder",
+    "potential_secondaries": [
+      {
+        "condition": "Obstructive Sleep Apnea (OSA)",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected anxiety disorder proximately causes or aggravates obstructive sleep apnea through psychophysiological mechanisms. Chronic anxiety increases sympathetic nervous system activity, disrupting normal sleep architecture and respiratory control during sleep. Anxiety-related medications (benzodiazepines, sedatives) reduce pharyngeal muscle tone and respiratory drive, predisposing to airway collapse. Additionally, anxiety-induced stress eating and metabolic changes contribute to weight gain and central obesity, which mechanically narrow the upper airway. The bidirectional relationship between anxiety and sleep-disordered breathing is well-established in medical literature.",
+        "medical_citations": [
+          "Kales et al., 'Sleep disorders and psychiatric comorbidity,' Psychiatr Clin North Am 2006",
+          "Ohayon, 'The effects of breathing-related sleep disorders on mood,' J Psychiatr Res 2003"
+        ]
+      },
+      {
+        "condition": "Gastroesophageal Reflux Disease (GERD)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected anxiety disorder directly causes or aggravates GERD through multiple pathophysiological pathways. Chronic anxiety activates the autonomic nervous system, increasing gastric acid secretion and reducing lower esophageal sphincter pressure. Anxiety-induced hyperventilation and aerophagia (air swallowing) increase intra-gastric pressure, promoting reflux. Stress hormones (cortisol, catecholamines) impair gastric motility and delay emptying, prolonging acid exposure to the esophageal mucosa. The visceral hypersensitivity associated with anxiety amplifies perception of reflux symptoms, creating a cycle of symptom amplification.",
+        "medical_citations": [
+          "Johnston et al., 'Anxiety and depression in GERD,' Gut 2006",
+          "Jansson et al., 'Anxiety and depression in patients with GERD,' Scand J Gastroenterol 2007"
+        ]
+      },
+      {
+        "condition": "Hypertension (High Blood Pressure)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected anxiety disorder proximately causes essential hypertension through sustained sympathetic nervous system activation. Chronic anxiety maintains elevated levels of stress hormones (cortisol, epinephrine, norepinephrine), which increase heart rate, cardiac contractility, and peripheral vascular resistance. This persistent hemodynamic stress leads to vascular remodeling and sustained blood pressure elevation. Anxiety-related behaviors (poor sleep, sedentary lifestyle) and autonomic dysregulation further contribute to hypertensive pathophysiology. The association between anxiety disorders and cardiovascular disease, including hypertension, is well-documented.",
+        "medical_citations": [
+          "Player & Peterson, 'Anxiety disorders and cardiovascular disease,' Int Rev Psychiatry 2011",
+          "Hildrum et al., 'Anxiety and depression lowers BP threshold,' J Hypertens 2011"
+        ]
+      },
+      {
+        "condition": "Bruxism (Teeth Grinding/TMJ Disorder)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected anxiety disorder directly causes bruxism and temporomandibular joint disorder through chronic neuromuscular tension. Anxiety manifests as involuntary jaw clenching and teeth grinding, particularly during sleep and periods of stress. This repetitive biomechanical loading exceeds the physiological capacity of the TMJ, causing inflammation, disc displacement, and degenerative changes. The sustained masticatory muscle hyperactivity associated with anxiety creates a continuous state of pathological stress on the temporomandibular apparatus, leading to pain, limited range of motion, and joint dysfunction.",
+        "medical_citations": [
+          "Manfredini et al., 'Anxiety and depression in TMD patients,' J Dent 2010",
+          "Suvinen et al., 'Psychophysical subtypes of TMD pain,' Eur J Pain 2005"
+        ]
+      }
+    ]
+  },
+  "depression": {
+    "name": "Major Depressive Disorder",
+    "potential_secondaries": [
+      {
+        "condition": "Obstructive Sleep Apnea (OSA)",
+        "probability": "Medium",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected major depressive disorder necessitates treatment with antidepressant medications (SSRIs, SNRIs, tricyclics) and/or sedatives, which directly contribute to the development or aggravation of obstructive sleep apnea. These medications cause weight gain through metabolic effects, reduce upper airway muscle tone, and alter respiratory control mechanisms during sleep. Depression-related behavioral changes (reduced physical activity, poor diet) contribute to obesity, which mechanically narrows the pharyngeal airway. Additionally, depression disrupts normal sleep architecture, creating fragmented sleep patterns that predispose to sleep-disordered breathing.",
+        "medical_citations": [
+          "Schwartz et al., 'Depression and obstructive sleep apnea,' Psychosom Med 2005",
+          "Harris et al., 'Depression and sleep-disordered breathing in older adults,' Sleep Med 2009"
+        ]
+      },
+      {
+        "condition": "Erectile Dysfunction",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected depression causes or aggravates erectile dysfunction through direct psychogenic mechanisms and iatrogenic medication effects. Depression is characterized by anhedonia, fatigue, and decreased libido, which directly impair sexual function. SSRIs and other antidepressants commonly prescribed for depression management are well-established causes of sexual dysfunction, including erectile difficulties, through serotonergic mechanisms. Depression also reduces testosterone levels and impairs the neurovascular processes necessary for erectile response. The sexual dysfunction represents both a symptom of the underlying depressive disorder and a consequence of medically necessary pharmacotherapy.",
+        "medical_citations": [
+          "Atlantis & Sullivan, 'Bidirectional association between depression and ED,' J Sex Med 2012",
+          "Kennedy et al., 'Sexual dysfunction in depression,' J Affect Disord 2006"
+        ]
+      },
+      {
+        "condition": "Chronic Pain Syndrome",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected depression proximately causes or aggravates chronic pain through shared neurobiological pathways. Depression and chronic pain involve overlapping brain regions and neurotransmitter systems (serotonin, norepinephrine, substance P), creating bidirectional amplification. Depression lowers pain thresholds, impairs pain inhibitory pathways, and increases pain perception through central sensitization. The neuroinflammatory processes in depression contribute to peripheral and central pain states. Depression-related behavioral factors (physical inactivity, poor sleep, reduced self-care) further perpetuate pain chronicity.",
+        "medical_citations": [
+          "Bair et al., 'Depression and pain comorbidity,' Arch Intern Med 2003",
+          "Fishbain et al., 'Chronic pain-associated depression,' Clin J Pain 1997"
+        ]
+      }
+    ]
+  },
+  "tinnitus": {
+    "name": "Tinnitus (Ringing in Ears)",
+    "potential_secondaries": [
+      {
+        "condition": "Migraine Headaches",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected tinnitus proximately causes or aggravates migraine headaches through sensory pathway sensitization and neurological mechanisms. Tinnitus represents aberrant neural activity in the auditory cortex and associated brain regions, which can trigger or lower the threshold for migraine attacks. Chronic auditory phantom perception creates continuous sensory stress, activating trigeminovascular pathways implicated in migraine pathophysiology. The shared neural substrates between tinnitus and migraine (particularly involving the brainstem and thalamus) facilitate cross-sensitization. Additionally, tinnitus-induced sleep disruption, stress, and anxiety independently precipitate migraines.",
+        "medical_citations": [
+          "Langguth et al., 'Tinnitus and headache,' Biomed Res Int 2015",
+          "Haider et al., 'Tinnitus, headache, and mood disorders,' J Head Face Pain 2017",
+          "Vielsmeier et al., 'Tinnitus with temporomandibular joint disorders,' PLoS One 2011"
+        ]
+      },
+      {
+        "condition": "Anxiety Disorder",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected tinnitus directly causes or aggravates anxiety disorder through chronic auditory distress and psychophysiological mechanisms. Persistent, intrusive tinnitus perception creates continuous psychological stress, hypervigilance toward the symptom, and fear of symptom permanence. This chronic sensory disturbance activates the limbic system (amygdala) and disrupts autonomic regulation, manifesting as anxiety symptoms including hyperarousal, rumination, and avoidance behaviors. Tinnitus-related sleep disruption further perpetuates anxiety through sleep deprivation effects on emotional regulation. The inability to escape or control the auditory symptom creates learned helplessness and anxiety sensitization.",
+        "medical_citations": [
+          "Pinto et al., 'Tinnitus and its association with psychiatric disorders,' Braz J Otorhinolaryngol 2010",
+          "Hesser et al., 'A systematic review of randomized controlled trials for tinnitus,' J Am Acad Audiol 2011",
+          "Zöger et al., 'Psychiatric disorders in tinnitus patients,' Psychother Psychosom 2001"
+        ]
+      },
+      {
+        "condition": "Major Depressive Disorder",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected tinnitus proximately causes or aggravates major depressive disorder through chronic distress and neurobiological mechanisms. Persistent tinnitus creates an uncontrollable stressor that depletes coping resources and induces feelings of helplessness characteristic of depression. Tinnitus-induced sleep deprivation disrupts mood-regulating neurotransmitters (serotonin, norepinephrine), precipitating depressive episodes. The chronic intrusive nature of tinnitus impairs concentration, social engagement, and quality of life, leading to anhedonia and withdrawal. Neuroimaging studies demonstrate overlapping brain regions affected by both tinnitus and depression, particularly involving limbic and attentional networks.",
+        "medical_citations": [
+          "Pinto et al., 'Tinnitus and depression,' Hear Res 2014",
+          "Langguth et al., 'Tinnitus and depression,' World J Biol Psychiatry 2011",
+          "Geocze et al., 'Depression and quality of life in tinnitus,' Braz J Otorhinolaryngol 2013"
+        ]
+      },
+      {
+        "condition": "Insomnia / Sleep Disorder",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected tinnitus directly causes insomnia and chronic sleep disruption through continuous auditory stimulation. Tinnitus perception typically intensifies in quiet environments, making sleep initiation and maintenance particularly difficult. The intrusive auditory phantom perception prevents the sensory quieting necessary for sleep onset. Tinnitus-related anxiety and hypervigilance further activate arousal systems that antagonize sleep. Chronic sleep deprivation resulting from tinnitus creates a self-perpetuating cycle, as sleep loss amplifies tinnitus perception and distress, further impairing sleep quality.",
+        "medical_citations": [
+          "Crönlein et al., 'Tinnitus and insomnia,' J Psychosom Res 2016",
+          "Asnis et al., 'Insomnia in tinnitus patients,' Sleep Med Rev 2018",
+          "Folmer & Griest, 'Tinnitus and insomnia,' Am J Otolaryngol 2000"
+        ]
+      },
+      {
+        "condition": "Temporomandibular Joint (TMJ) Disorder",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected tinnitus is associated with or causes temporomandibular joint disorder through shared anatomical and neurological pathways. The trigeminal nerve, which innervates the TMJ, has direct connections to the auditory system through the tensor tympani muscle. TMJ dysfunction can both cause and be caused by tinnitus through somatosensory-auditory interactions. Tinnitus-related stress and anxiety manifest as jaw clenching and bruxism, creating excessive biomechanical loading on the TMJ. The co-occurrence of tinnitus and TMJ symptoms is well-documented, with shared pathophysiological mechanisms involving central sensitization.",
+        "medical_citations": [
+          "Camparis et al., 'Tinnitus and TMD,' J Oral Rehabil 2005",
+          "Levine, 'Somatic (craniocervical) tinnitus and TMJ dysfunction,' Int Tinnitus J 1999"
+        ]
+      }
+    ]
+  },
+  "hearing_loss": {
+    "name": "Hearing Loss (Sensorineural)",
+    "potential_secondaries": [
+      {
+        "condition": "Tinnitus (Ringing in Ears)",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected sensorineural hearing loss directly causes tinnitus through cochlear damage and aberrant neural activity. Hearing loss damages hair cells in the cochlea, creating abnormal spontaneous activity in the auditory nerve and central auditory pathways. The brain's attempt to compensate for reduced auditory input results in increased central gain and neuroplastic changes that manifest as tinnitus perception. The loss of inhibitory input from damaged cochlear regions leads to hyperactivity in the auditory cortex, generating the phantom auditory sensation characteristic of tinnitus.",
+        "medical_citations": [
+          "Eggermont & Roberts, 'The neuroscience of tinnitus,' Trends Neurosci 2004",
+          "Nondahl et al., 'Tinnitus and its risk factors,' Int J Audiol 2002"
+        ]
+      },
+      {
+        "condition": "Social Isolation / Depression",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected hearing loss causes or aggravates depression through impaired communication and social isolation. Hearing loss creates barriers to effective communication, leading to frustration, embarrassment, and withdrawal from social interactions. The cognitive effort required to compensate for hearing deficits causes fatigue and reduces engagement in activities. Chronic communication difficulties impair relationships and reduce quality of life, precipitating depressive symptoms. The sensory deprivation and social disconnection resulting from hearing loss activate neurobiological pathways associated with depression.",
+        "medical_citations": [
+          "Li et al., 'Hearing loss and depression,' JAMA Otolaryngol Head Neck Surg 2014",
+          "Dawes et al., 'Hearing loss and cognition,' Int J Audiol 2016"
+        ]
+      },
+      {
+        "condition": "Meniere's Disease",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected hearing loss may progress to or be associated with Meniere's disease when accompanied by episodes of vertigo and aural fullness. Hearing loss in Meniere's disease results from endolymphatic hydrops (increased pressure in the inner ear fluid). If the veteran experiences fluctuating hearing loss, episodic vertigo, tinnitus, and ear pressure, these constitute the classic tetrad of Meniere's disease. The progressive nature of inner ear damage can manifest initially as hearing loss, with other symptoms developing subsequently.",
+        "medical_citations": [
+          "Havia et al., 'Prevalence of Meniere's disease,' Otolaryngol Head Neck Surg 2005",
+          "Nakashima et al., 'Meniere's disease diagnostic criteria,' Acta Otolaryngol 2016"
+        ]
+      }
+    ]
+  },
+  "knee_right": {
+    "name": "Right Knee Condition (Degenerative/Injury)",
+    "potential_secondaries": [
+      {
+        "condition": "Left Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral left knee joint. The asymmetric loading pattern creates abnormal contact pressures on the left knee articular cartilage, accelerating degenerative changes. The altered kinematics affect the entire lower extremity kinetic chain, causing the left knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates osteoarthritis in the left knee.",
+        "medical_citations": [
+          "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
+          "Thorp et al., 'Biomechanical gait alterations and contralateral knee OA,' Clin Biomech 2007",
+          "Henriksen et al., 'Knee OA and gait compensations,' Gait Posture 2010"
+        ]
+      },
+      {
+        "condition": "Lumbar Spine Degenerative Disc Disease",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right knee disability requires biomechanical compensation through altered gait mechanics, pelvic tilt, and postural adjustments. This asymmetric loading pattern creates abnormal stress distribution on the lumbar spine, particularly affecting the L4-L5 and L5-S1 segments. The antalgic gait shortens stride length and alters the normal lumbar lordosis, increasing compressive and shear forces on intervertebral discs. Chronic compensatory postures cause muscle imbalances (weakened core stabilizers, hypertonic paraspinals) that further destabilize the lumbar spine. The altered kinetic chain from the right knee proximately causes accelerated degenerative disc disease and facet arthropathy in the lumbar spine.",
+        "medical_citations": [
+          "Lewek et al., 'Knee OA and trunk kinematics during gait,' Gait Posture 2006",
+          "Hunt et al., 'Biomechanical changes at the spine due to lower limb OA,' Arthritis Care Res 2011",
+          "Robbins et al., 'Knee OA and spine kinematics,' J Biomech 2011"
+        ]
+      },
+      {
+        "condition": "Right Hip Degenerative Arthritis",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right knee disability creates compensatory biomechanical stress on the ipsilateral right hip joint. The altered gait pattern necessitated by knee pain increases hip joint contact forces, particularly during stance phase. Knee dysfunction requires the hip to compensate for lost knee range of motion and shock absorption capacity, placing abnormal stress on the hip joint. The kinematic coupling between the knee and hip means that right knee pathology alters hip joint loading patterns, accelerating degenerative changes in the hip articular cartilage and causing or aggravating hip osteoarthritis.",
+        "medical_citations": [
+          "Sharma et al., 'Knee OA and risk of contiguous joint OA,' Osteoarthritis Cartilage 2011",
+          "Shakoor et al., 'Joint loading in knee OA,' Arthritis Rheum 2008"
+        ]
+      },
+      {
+        "condition": "Right Ankle Instability / Arthritis",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right knee disability alters the biomechanics of the entire right lower extremity kinetic chain, including the right ankle. Knee dysfunction changes ankle joint loading patterns, weight distribution during gait, and compensatory movements that stress the ankle. Reduced right knee stability requires increased ankle stabilization efforts, causing chronic strain on ankle ligaments and cartilage. The altered gait mechanics increase ground reaction forces transmitted through the ankle, accelerating degenerative changes and causing or aggravating ankle arthritis and instability.",
+        "medical_citations": [
+          "Shakoor & Moisio, 'Effects of common footwear on joint loading in OA,' Arthritis Care Res 2012",
+          "Amin et al., 'Association of knee OA with lower extremity joint OA,' Osteoarthritis Cartilage 2008"
+        ]
+      }
+    ]
+  },
+  "knee_left": {
+    "name": "Left Knee Condition (Degenerative/Injury)",
+    "potential_secondaries": [
+      {
+        "condition": "Right Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected left knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral right knee joint. The asymmetric loading pattern creates abnormal contact pressures on the right knee articular cartilage, accelerating degenerative changes. The altered kinematics affect the entire lower extremity kinetic chain, causing the right knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates osteoarthritis in the right knee.",
+        "medical_citations": [
+          "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
+          "Thorp et al., 'Biomechanical gait alterations and contralateral knee OA,' Clin Biomech 2007"
+        ]
+      },
+      {
+        "condition": "Lumbar Spine Degenerative Disc Disease",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected left knee disability requires biomechanical compensation through altered gait mechanics, pelvic tilt, and postural adjustments. This asymmetric loading pattern creates abnormal stress distribution on the lumbar spine, particularly affecting the L4-L5 and L5-S1 segments. The antalgic gait shortens stride length and alters the normal lumbar lordosis, increasing compressive and shear forces on intervertebral discs. Chronic compensatory postures cause muscle imbalances that further destabilize the lumbar spine. The altered kinetic chain from the left knee proximately causes accelerated degenerative disc disease and facet arthropathy in the lumbar spine.",
+        "medical_citations": [
+          "Lewek et al., 'Knee OA and trunk kinematics during gait,' Gait Posture 2006",
+          "Hunt et al., 'Biomechanical changes at the spine due to lower limb OA,' Arthritis Care Res 2011"
+        ]
+      },
+      {
+        "condition": "Left Hip Degenerative Arthritis",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected left knee disability creates compensatory biomechanical stress on the ipsilateral left hip joint. The altered gait pattern necessitated by knee pain increases hip joint contact forces. Knee dysfunction requires the hip to compensate for lost knee range of motion and shock absorption capacity, placing abnormal stress on the hip joint. The kinematic coupling between the knee and hip means that left knee pathology alters hip joint loading patterns, accelerating degenerative changes in the hip articular cartilage and causing or aggravating hip osteoarthritis.",
+        "medical_citations": [
+          "Sharma et al., 'Knee OA and risk of contiguous joint OA,' Osteoarthritis Cartilage 2011"
+        ]
+      }
+    ]
+  },
+  "lumbar_spine": {
+    "name": "Lumbar Spine / Lower Back Condition",
+    "potential_secondaries": [
+      {
+        "condition": "Right Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations and postural adjustments to minimize back pain. This altered biomechanics places abnormal mechanical stress on the right knee joint. Lumbar spine pathology causes shortened stride length, reduced lumbar lordosis, and asymmetric weight distribution, which increase knee joint contact forces. The compensatory movement patterns required to protect the lumbar spine force the right knee to absorb greater impact forces and operate outside its normal biomechanical parameters, proximately causing or aggravating right knee osteoarthritis.",
+        "medical_citations": [
+          "Creamer et al., 'Determinants of pain severity in knee OA,' Ann Rheum Dis 1998",
+          "van der Pas et al., 'Multi-joint OA and disability,' Ann Rheum Dis 2013"
+        ]
+      },
+      {
+        "condition": "Left Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations and postural adjustments to minimize back pain. This altered biomechanics places abnormal mechanical stress on the left knee joint. Lumbar spine pathology causes shortened stride length, reduced lumbar lordosis, and asymmetric weight distribution, which increase knee joint contact forces. The compensatory movement patterns required to protect the lumbar spine force the left knee to absorb greater impact forces and operate outside its normal biomechanical parameters, proximately causing or aggravating left knee osteoarthritis.",
+        "medical_citations": [
+          "Creamer et al., 'Determinants of pain severity in knee OA,' Ann Rheum Dis 1998",
+          "van der Pas et al., 'Multi-joint OA and disability,' Ann Rheum Dis 2013"
+        ]
+      },
+      {
+        "condition": "Hip Degenerative Arthritis (Bilateral)",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected lumbar spine disability creates compensatory biomechanical stress on both hip joints through altered posture and movement patterns. Lumbar pathology reduces spinal mobility, requiring increased hip range of motion to perform daily activities. The altered pelvic tilt and postural compensations place abnormal stress on the hip joints, accelerating degenerative changes. The biomechanical relationship between the lumbar spine and hips means that chronic lumbar spine pathology proximately causes or aggravates hip osteoarthritis through abnormal loading patterns.",
+        "medical_citations": [
+          "Ben-Galim et al., 'Hip-spine syndrome,' J Spinal Disord Tech 2007",
+          "Offierski & MacNab, 'Hip-spine syndrome,' Spine 1983"
+        ]
+      },
+      {
+        "condition": "Radiculopathy / Sciatica",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected lumbar spine degenerative disc disease and/or facet arthropathy directly causes radiculopathy through nerve root compression. Disc herniation, foraminal stenosis, and facet hypertrophy mechanically compress lumbar nerve roots (L4, L5, S1), causing radiating pain, paresthesias, and motor weakness in the lower extremities. The degenerative cascade in the lumbar spine progressively narrows the neural foramina and central canal, creating chronic nerve root irritation and inflammation that manifests as sciatica.",
+        "medical_citations": [
+          "Hasegawa et al., 'Lumbar foraminal stenosis,' Eur Spine J 2012",
+          "Tarulli & Raynor, 'Lumbosacral radiculopathy,' Neurol Clin 2007"
+        ]
+      },
+      {
+        "condition": "Gastroesophageal Reflux Disease (GERD)",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected lumbar spine condition necessitates continuous pain management with nonsteroidal anti-inflammatory drugs (NSAIDs) such as ibuprofen, naproxen, or aspirin. Chronic NSAID use directly causes or aggravates GERD through well-documented mechanisms: NSAIDs inhibit prostaglandin synthesis, disrupting the gastric mucosal protective barrier and reducing lower esophageal sphincter pressure. This permits gastric acid reflux into the esophagus, causing inflammation and symptoms of GERD. The medically necessary use of NSAIDs to manage service-connected back pain creates an iatrogenic gastrointestinal condition.",
+        "medical_citations": [
+          "Lanza et al., 'Guidelines for prevention of NSAID-related ulcers,' Am J Gastroenterol 2009",
+          "Sostres et al., 'Adverse effects of NSAIDs on the GI tract,' Gastroenterol Res Pract 2010"
+        ]
+      }
+    ]
+  },
+  "shoulder_right": {
+    "name": "Right Shoulder Condition (Rotator Cuff/Arthritis)",
+    "potential_secondaries": [
+      {
+        "condition": "Cervical Spine Degenerative Disc Disease",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right shoulder disability creates compensatory biomechanical stress on the cervical spine through altered posture and movement patterns. Shoulder pathology causes protective scapular elevation, forward head posture, and abnormal cervical muscle activation to minimize shoulder pain. These compensatory postures increase mechanical loading on cervical intervertebral discs and facet joints, accelerating degenerative changes. The altered scapulohumeral rhythm requires increased cervical muscle activity, creating chronic muscle tension and myofascial pain that contribute to cervical spine pathology.",
+        "medical_citations": [
+          "Hidalgo-Lozano et al., 'Shoulder pathology and cervical spine dysfunction,' Clin Biomech 2010",
+          "Neumann, 'Kinesiology of the shoulder girdle,' Kinesiology of Musculoskeletal System 2010"
+        ]
+      },
+      {
+        "condition": "Left Shoulder Compensatory Strain",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right shoulder disability necessitates overuse of the contralateral left shoulder to perform daily activities. Tasks requiring bilateral upper extremity function place disproportionate load on the left shoulder when the right shoulder is impaired. This chronic mechanical overload and repetitive stress on the left shoulder causes rotator cuff tendinopathy, impingement syndrome, and accelerated degenerative changes. The compensatory overuse of the left shoulder to maintain function proximately causes left shoulder pathology.",
+        "medical_citations": [
+          "Matsen et al., 'Shoulder biomechanics,' J Bone Joint Surg Am 1998",
+          "Ludewig & Cook, 'Alterations in shoulder kinematics,' J Orthop Sports Phys Ther 2000"
+        ]
+      },
+      {
+        "condition": "Gastroesophageal Reflux Disease (GERD)",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected right shoulder condition necessitates continuous pain management with nonsteroidal anti-inflammatory drugs (NSAIDs) such as ibuprofen, naproxen, or aspirin. Chronic NSAID use directly causes or aggravates GERD through disruption of the gastric mucosal protective barrier. NSAIDs inhibit cyclooxygenase enzymes, reducing prostaglandin synthesis necessary for gastric mucosa protection. This permits gastric acid to damage the esophageal lining and reduces lower esophageal sphincter pressure, causing reflux symptoms. The medically necessary use of NSAIDs to manage service-connected shoulder pain creates an iatrogenic gastrointestinal condition.",
+        "medical_citations": [
+          "Lanza et al., 'NSAID-related ulcer prevention guidelines,' Am J Gastroenterol 2009",
+          "Cryer & Feldman, 'Effects of NSAIDs on GI tract,' Am J Med 1998"
+        ]
+      }
+    ]
+  },
+  "hip_right": {
+    "name": "Right Hip Condition (Degenerative/Injury)",
+    "potential_secondaries": [
+      {
+        "condition": "Lumbar Spine Degenerative Disc Disease",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right hip disability creates compensatory biomechanical stress on the lumbar spine through altered gait mechanics and pelvic asymmetry. Hip pathology causes antalgic gait, reduced hip range of motion, and altered pelvic tilt, which increase mechanical loading on lumbar intervertebral discs. The kinematic relationship between the hip and lumbar spine (hip-spine syndrome) means that hip dysfunction transfers abnormal stress to the lumbar spine, accelerating degenerative disc disease. Compensatory lumbar hypermobility to offset lost hip motion proximately causes lumbar spine pathology.",
+        "medical_citations": [
+          "Offierski & MacNab, 'Hip-spine syndrome,' Spine 1983",
+          "Ben-Galim et al., 'Hip-spine syndrome,' J Spinal Disord Tech 2007"
+        ]
+      },
+      {
+        "condition": "Left Hip Degenerative Arthritis",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right hip disability necessitates compensatory overload on the contralateral left hip joint. The antalgic gait pattern shifts weight-bearing preferentially to the left hip, creating asymmetric and excessive mechanical stress. This chronic overload accelerates degenerative changes in the left hip articular cartilage. The altered gait mechanics place the left hip outside its normal biomechanical parameters, causing or aggravating left hip osteoarthritis.",
+        "medical_citations": [
+          "Shakoor et al., 'Asymmetric loading in OA,' Arthritis Rheum 2011"
+        ]
+      },
+      {
+        "condition": "Right Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right hip disability alters the biomechanics of the entire right lower extremity kinetic chain. Hip pathology changes knee joint loading patterns, increases knee adduction moments, and places abnormal stress on knee articular cartilage. The kinematic coupling between hip and knee means that hip dysfunction transfers excessive and abnormal forces to the knee joint, accelerating degenerative changes and causing or aggravating right knee osteoarthritis.",
+        "medical_citations": [
+          "Sharma et al., 'Hip OA and knee OA association,' Osteoarthritis Cartilage 2011"
+        ]
+      }
+    ]
+  },
+  "chronic_pain_nsaid": {
+    "name": "Chronic Pain Requiring NSAID Use",
+    "potential_secondaries": [
+      {
+        "condition": "Gastroesophageal Reflux Disease (GERD)",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected chronic pain condition necessitates continuous or frequent use of nonsteroidal anti-inflammatory drugs (NSAIDs) including ibuprofen, naproxen, aspirin, or COX-2 inhibitors for pain management. Chronic NSAID use directly causes or aggravates GERD through well-established pharmacological mechanisms: (1) NSAIDs inhibit cyclooxygenase enzymes, reducing prostaglandin synthesis necessary for maintaining the gastric mucosal protective barrier; (2) NSAIDs reduce lower esophageal sphincter pressure, permitting reflux of gastric contents; (3) direct topical injury to the esophageal mucosa from NSAID tablets. The medically necessary use of NSAIDs to manage service-connected pain creates an iatrogenic gastrointestinal condition that is secondary to the primary disability.",
+        "medical_citations": [
+          "Lanza et al., 'Guidelines for prevention of NSAID-related ulcer complications,' Am J Gastroenterol 2009",
+          "Sostres et al., 'Adverse effects of NSAIDs on the gastrointestinal tract,' Gastroenterol Res Pract 2010",
+          "Cryer & Feldman, 'Effects of NSAIDs on the gastrointestinal tract,' Am J Med 1998"
+        ]
+      },
+      {
+        "condition": "Peptic Ulcer Disease",
+        "probability": "High",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected chronic pain condition requires ongoing treatment with NSAIDs for pain control. Chronic NSAID use is a well-established cause of peptic ulcer disease through disruption of gastric mucosal defenses. NSAIDs inhibit prostaglandin synthesis, reducing mucus production, bicarbonate secretion, and mucosal blood flow that protect the gastric lining from acid injury. This permits gastric acid to damage the gastric and duodenal mucosa, forming ulcers. The risk increases with dose, duration, and concurrent use of corticosteroids. The medically necessary NSAID therapy for service-connected pain proximately causes peptic ulcer disease.",
+        "medical_citations": [
+          "Lanza et al., 'NSAID-associated gastric ulcers,' Am J Gastroenterol 2009",
+          "Sostres & Lanas, 'Gastrointestinal effects of NSAIDs,' Expert Opin Drug Saf 2011"
+        ]
+      },
+      {
+        "condition": "Chronic Kidney Disease (CKD)",
+        "probability": "Medium",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected chronic pain condition necessitates long-term use of NSAIDs for pain management. Chronic NSAID use causes or aggravates chronic kidney disease through multiple renal injury mechanisms: (1) NSAIDs reduce renal blood flow by inhibiting vasodilatory prostaglandins, causing ischemic injury; (2) NSAIDs cause acute tubular necrosis and acute interstitial nephritis; (3) chronic NSAID use leads to analgesic nephropathy with papillary necrosis and chronic tubulointerstitial damage. The cumulative renal toxicity from medically necessary NSAID therapy for service-connected pain proximately causes progressive chronic kidney disease.",
+        "medical_citations": [
+          "Gooch et al., 'NSAID use and progression of chronic kidney disease,' Am J Med 2007",
+          "Perneger et al., 'Risk of kidney failure associated with NSAIDs,' Kidney Int 1994",
+          "De Broe & Elseviers, 'Analgesic nephropathy,' N Engl J Med 1998"
+        ]
+      },
+      {
+        "condition": "Hypertension (High Blood Pressure)",
+        "probability": "Medium",
+        "mechanism": "Medication",
+        "nexus_theory": "The veteran's service-connected chronic pain condition requires continuous NSAID therapy for pain control. NSAIDs cause or aggravate hypertension through renal and vascular mechanisms: (1) NSAIDs promote sodium and water retention by inhibiting renal prostaglandins, increasing blood volume; (2) NSAIDs reduce the effectiveness of antihypertensive medications; (3) NSAIDs cause vasoconstriction by altering the balance of vasodilatory and vasoconstrictive prostaglandins. The cumulative cardiovascular effects of medically necessary NSAID use for service-connected pain proximately cause or aggravate hypertension.",
+        "medical_citations": [
+          "Radack et al., 'Ibuprofen interferes with antihypertensive drugs,' Ann Intern Med 1987",
+          "Johnson et al., 'NSAIDs and hypertension,' Arch Intern Med 1994"
+        ]
+      }
+    ]
+  },
+  "ankle_right": {
+    "name": "Right Ankle Condition (Instability/Arthritis)",
+    "potential_secondaries": [
+      {
+        "condition": "Right Knee Degenerative Arthritis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right ankle disability necessitates compensatory gait alterations that place abnormal mechanical stress on the ipsilateral right knee. Ankle instability or arthritis impairs normal shock absorption and propulsion during gait, forcing the knee to compensate for lost ankle function. The altered kinetic chain from the right ankle transfers excessive forces to the right knee, placing it outside normal biomechanical parameters. This chronic mechanical overload accelerates degenerative changes in the right knee articular cartilage, proximately causing or aggravating right knee osteoarthritis.",
+        "medical_citations": [
+          "Valderrabano et al., 'Ankle OA and gait alterations,' Foot Ankle Clin 2003",
+          "Khazzam et al., 'Effect of ankle pathology on knee biomechanics,' Foot Ankle Int 2007"
+        ]
+      },
+      {
+        "condition": "Lumbar Spine Strain",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right ankle disability creates compensatory postural and gait alterations that place abnormal stress on the lumbar spine. Ankle pathology shortens stride length, alters pelvic mechanics, and requires compensatory trunk movements that increase lumbar spine loading. The altered kinetic chain from the ankle to the lumbar spine transfers abnormal forces through the lower extremity, causing chronic lumbar muscle strain and accelerated disc degeneration. The biomechanical compensations necessitated by right ankle dysfunction proximately cause or aggravate lumbar spine pathology.",
+        "medical_citations": [
+          "Nuesch et al., 'Ankle OA affects gait and function,' Gait Posture 2012"
+        ]
+      }
+    ]
+  },
+  "peripheral_neuropathy": {
+    "name": "Peripheral Neuropathy",
+    "potential_secondaries": [
+      {
+        "condition": "Falls / Traumatic Injuries",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected peripheral neuropathy causes sensory deficits (reduced proprioception, numbness, paresthesias) and motor weakness that directly increase fall risk. The loss of protective sensation in the lower extremities impairs balance, coordination, and the ability to detect environmental hazards. Neuropathic pain and weakness alter gait patterns, further compromising stability. The impaired proprioception prevents appropriate postural corrections, leading to increased frequency of falls and resultant traumatic injuries including fractures, contusions, and head trauma.",
+        "medical_citations": [
+          "Richardson et al., 'Peripheral neuropathy and falls in older adults,' J Am Geriatr Soc 1992",
+          "Menz et al., 'Foot and ankle characteristics associated with falls,' J Gerontol 2005"
+        ]
+      },
+      {
+        "condition": "Foot Ulcers / Diabetic Foot Complications",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected peripheral neuropathy causes loss of protective sensation in the feet, preventing detection of minor trauma, pressure points, and developing wounds. The sensory deficit allows repetitive microtrauma to progress undetected, forming ulcerations. Neuropathy-associated autonomic dysfunction reduces sweat production, causing dry, cracked skin that is prone to breakdown. Motor neuropathy causes intrinsic foot muscle weakness and deformities that create abnormal pressure points. The combination of sensory loss, autonomic dysfunction, and structural foot changes proximately causes chronic foot ulcers and complications.",
+        "medical_citations": [
+          "Boulton et al., 'Diabetic neuropathies,' Diabetes Care 2005",
+          "Singh et al., 'Preventing foot ulcers in diabetic neuropathy,' JAMA 2005"
+        ]
+      }
+    ]
+  }
+}

@@ -5,13 +5,16 @@
 
 /**
  * Normalize search term for comparison
+ * Removes punctuation (commas, hyphens, slashes, parentheses) and normalizes spaces
+ * This ensures 'Ankle, ankylosis' matches 'ankle ankylosis'
  */
 export const normalizeSearchTerm = (term) => {
   return term
     .toLowerCase()
     .trim()
-    .replace(/[-\/]/g, '') // Remove hyphens and slashes
-    .replace(/\s+/g, ' '); // Normalize spaces
+    .replace(/[\-\/,().]/g, ' ') // Replace punctuation with spaces
+    .replace(/\s+/g, ' ')         // Normalize multiple spaces to single
+    .trim();                       // Remove leading/trailing spaces
 };
 
 /**
@@ -177,24 +180,41 @@ const calculateMatchScore = (searchTerm, disability, synonymDictionary) => {
 
 /**
  * Get suggestions/autocomplete options
+ * Deduplicates case-insensitive matches to avoid showing "Ankle, ankylosis" and "ankle, ankylosis"
  */
 export const getSearchSuggestions = (searchTerm, data, limit = 10) => {
   if (!searchTerm || searchTerm.length < 2) return [];
 
   const normalized = normalizeSearchTerm(searchTerm);
-  const suggestions = new Set();
+  const suggestionsMap = new Map(); // Use Map to track lowercase -> display form
 
   if (!data || !data.disabilities) return [];
 
-  // Add condition names
+  // Helper to add suggestion while deduplicating (prefer Title Case version)
+  const addSuggestion = (text) => {
+    const key = normalizeSearchTerm(text);
+    const existing = suggestionsMap.get(key);
+    // Prefer version with capital letter (more readable) or keep first found
+    if (!existing || (text[0] === text[0].toUpperCase() && existing[0] !== existing[0].toUpperCase())) {
+      suggestionsMap.set(key, text);
+    }
+  };
+
+  // Add condition names (these are Title Case, so add them first)
   data.disabilities.forEach((disability) => {
     if (normalizeSearchTerm(disability.conditionName).includes(normalized)) {
-      suggestions.add(disability.conditionName);
+      addSuggestion(disability.conditionName);
     }
+    // Only add aliases that are meaningfully different from condition name
     if (disability.aliases) {
       disability.aliases.forEach((alias) => {
         if (normalizeSearchTerm(alias).includes(normalized)) {
-          suggestions.add(alias);
+          // Skip aliases that are just lowercase versions of condition name
+          const aliasNorm = normalizeSearchTerm(alias);
+          const conditionNorm = normalizeSearchTerm(disability.conditionName);
+          if (aliasNorm !== conditionNorm) {
+            addSuggestion(alias);
+          }
         }
       });
     }
@@ -204,19 +224,19 @@ export const getSearchSuggestions = (searchTerm, data, limit = 10) => {
   if (data.synonymDictionary) {
     Object.entries(data.synonymDictionary).forEach(([keyword, synonyms]) => {
       if (normalizeSearchTerm(keyword).includes(normalized)) {
-        suggestions.add(keyword);
+        addSuggestion(keyword);
       }
       if (Array.isArray(synonyms)) {
         synonyms.forEach((syn) => {
           if (normalizeSearchTerm(syn).includes(normalized)) {
-            suggestions.add(syn);
+            addSuggestion(syn);
           }
         });
       }
     });
   }
 
-  return Array.from(suggestions).slice(0, limit);
+  return Array.from(suggestionsMap.values()).slice(0, limit);
 };
 
 /**

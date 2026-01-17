@@ -1,24 +1,45 @@
-MIT License
+PROPRIETARY SOFTWARE LICENSE
 
-Copyright (c) 2024 Veteran Disability Search Contributors
+Copyright (c) 2024-2026 Anthony Johnson (Vet-Rate.org)
+All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+NOTICE: This software and all associated documentation, data, algorithms, and 
+source code are the exclusive intellectual property of Anthony Johnson and 
+Vet-Rate.org. This software is protected by copyright law and international 
+treaties.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+TERMS AND CONDITIONS:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. GRANT OF LICENSE: No license is granted. This software is provided for 
+   personal, non-commercial use only through the official Vet-Rate.org website.
+
+2. RESTRICTIONS: You may NOT:
+   - Copy, reproduce, or distribute this software or its source code
+   - Modify, adapt, or create derivative works
+   - Reverse engineer, decompile, or disassemble the software
+   - Use this software for any commercial purpose
+   - Remove or alter any proprietary notices or labels
+   - Use this software to provide paid services to veterans ("claim sharks")
+
+3. INTELLECTUAL PROPERTY: All content, including but not limited to:
+   - Source code and algorithms
+   - User interface designs
+   - Database structures and content
+   - Documentation and educational materials
+   are protected intellectual property.
+
+4. CLAIM SHARK PROHIBITION: Use of this software, its concepts, algorithms,
+   or derivative works by any individual or entity that charges veterans for
+   claims assistance, coaching, consulting, or similar services is EXPRESSLY
+   PROHIBITED and will be subject to legal action.
+
+5. NO WARRANTY: This software is provided "AS IS" without warranty of any kind.
+   The author shall not be liable for any damages arising from use of this software.
+
+6. TERMINATION: Any violation of these terms immediately terminates any implied
+   permission to use this software.
+
+For licensing inquiries: https://vet-rate.org/contact
 
 ---
 

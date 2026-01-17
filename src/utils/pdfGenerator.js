@@ -283,7 +283,7 @@ export const generatePDF = (result, searchTerm) => {
       // Logo: 15x15mm square, centered, at top of header
       doc.addImage(logoImg, 'PNG', (pageWidth - 15) / 2, 8, 15, 15);
     } catch (e) {
-      console.log('Logo not loaded, using text header');
+      // Logo failed to load - continue with text-only header
     }
     
     doc.setTextColor(255, 255, 255);
@@ -1053,52 +1053,5 @@ export const generatePDF = (result, searchTerm) => {
   } catch (error) {
     console.error('PDF generation error:', error);
     throw new Error(`Failed to generate PDF: ${error.message}`);
-  }
-};
-
-/**
- * Generate summary PDF (quick reference)
- */
-export const generateSummaryPDF = (result) => {
-  try {
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    let yPosition = margin;
-
-    // Title
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text(`${result.conditionName}`, margin, yPosition);
-    yPosition += 10;
-
-    // Quick facts
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Diagnostic Code: ${result.diagnosticCode}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Rating Schedule: ${result.ratingSchedule}`, margin, yPosition);
-    yPosition += 10;
-
-    // Documentation
-    doc.setFont(undefined, 'bold');
-    doc.text('Key Documentation:', margin, yPosition);
-    yPosition += 5;
-    doc.setFont(undefined, 'normal');
-    const docLines = doc.splitTextToSize(result.documentationRequirements, pageWidth - margin * 2);
-    doc.text(docLines, margin, yPosition);
-
-    const filename = `VA-Summary-${result.diagnosticCode}.pdf`;
-    doc.save(filename);
-
-    return { success: true, filename };
-  } catch (error) {
-    console.error('Summary PDF generation error:', error);
-    throw new Error(`Failed to generate summary PDF: ${error.message}`);
   }
 };

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import PDFButton from './PDFButton';
+import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
+import { PACTActInfoCard, PACTActBadge } from './PACTActIndicator';
 
-function DisabilityDetails({ result, searchTerm, onClose }) {
+function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSecondaryConditionClick }) {
   const [expandedSection, setExpandedSection] = useState('documentation');
+  const [isSaved, setIsSaved] = useState(isClaimSaved(result.conditionName, null));
 
   const VAResources = {
     emergency: [
@@ -43,15 +46,52 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
     ],
   };
 
+  const handleSaveToPacket = () => {
+    const success = saveClaim({
+      conditionName: result.conditionName,
+      diagnosticCode: result.diagnosticCode,
+      parentCondition: null,
+      status: 'Drafting'
+    });
+    
+    if (success) {
+      setIsSaved(true);
+      alert(`${result.conditionName} has been saved to your claim packet!`);
+    } else {
+      alert('Error saving claim. Please try again.');
+    }
+  };
+
+  const handleBuildStatement = () => {
+    // First save the claim if not already saved
+    if (!isSaved) {
+      saveClaim({
+        conditionName: result.conditionName,
+        diagnosticCode: result.diagnosticCode,
+        parentCondition: null,
+        status: 'Drafting'
+      });
+      setIsSaved(true);
+    }
+    
+    // Open NexusBuilder directly
+    if (onBuildStatement) {
+      onBuildStatement(result.conditionName);
+    }
+  };
+
   return (
-    <div className="mt-12 bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+    <div id="diagnostic-header" className="mt-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="bg-gradient-to-r from-va-blue to-green-900 text-white p-8">
         <div className="flex justify-between items-start gap-4 mb-4">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
-              {result.conditionName}
-            </h2>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-3xl md:text-4xl font-bold">
+                {result.conditionName}
+              </h2>
+              <PACTActBadge diagnosticCode={result.diagnosticCode} showTooltip={false} />
+            </div>
             <p className="text-blue-100 text-lg">
               Diagnostic Code: <span className="font-bold">{result.diagnosticCode}</span>
             </p>
@@ -71,6 +111,31 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
           </button>
         </div>
         <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleSaveToPacket}
+            disabled={isSaved}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition ${
+              isSaved 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {isSaved ? 'Saved to Packet' : 'Save to Packet'}
+          </button>
+          
+          <button
+            onClick={handleBuildStatement}
+            className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Build Statement
+          </button>
+          
           <PDFButton result={result} searchTerm={searchTerm} />
           {result.ecfrUrl && (
             <a
@@ -90,24 +155,27 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
             href="https://buymeacoffee.com/vetrate"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-va-gold text-va-blue px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition"
+            className="inline-flex items-center gap-2 bg-va-gold text-va-blue px-4 py-2 rounded-lg font-bold hover:bg-yellow-400 hover:scale-105 shadow-md hover:shadow-lg transition-all"
+            title="Help keep Vet-Rate free for all veterans"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
             </svg>
-            <span className="hidden sm:inline">Support Us</span>
-            <span className="sm:hidden">☕</span>
+            <span className="hidden sm:inline">Back the Mission</span>
+            <span className="sm:hidden">💚 Support</span>
           </a>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div id="diagnostic-content" className="p-8">
+        {/* PACT Act Info Card - Show if applicable */}
+        <PACTActInfoCard diagnosticCode={result.diagnosticCode} conditionName={result.conditionName} />
+        
         {/* Rating Schedule */}
-        <div className="mb-8 p-4 bg-green-50 rounded-lg border border-green-200">
-          <p className="text-gray-700">
-            <span className="font-bold text-va-blue">Rating Schedule:</span> {result.ratingSchedule}
+        <div className="mb-8 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
+          <p className="text-gray-700 dark:text-gray-300">
+            <span className="font-bold text-va-blue dark:text-blue-300">📊 Rating Schedule:</span> {result.ratingSchedule}
           </p>
         </div>
 
@@ -142,35 +210,35 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
               </svg>
             </button>
             {expandedSection === 'ratingCriteria' && (
-              <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 {/* Type Badge */}
-                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                  <span className="text-xs font-semibold text-gray-600 uppercase">
+                <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
                     Rating Type: {result.ratingCriteria.type.replace(/-/g, ' ')}
                   </span>
                 </div>
 
                 {/* Rated-As Instructions */}
                 {result.ratingCriteria.ratedUnder && (
-                  <div className="p-4 bg-amber-50 border-b border-amber-200">
-                    <p className="text-sm font-semibold text-amber-900 mb-2">⚠️ Rating Instructions:</p>
-                    <p className="text-gray-700 text-sm">{result.ratingCriteria.ratedUnder}</p>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700">
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-300 mb-2">⚠️ Rating Instructions:</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">{result.ratingCriteria.ratedUnder}</p>
                   </div>
                 )}
 
                 {/* Formula */}
                 {result.ratingCriteria.formula && (
-                  <div className="p-4 bg-blue-50 border-b border-blue-200">
-                    <p className="text-sm font-semibold text-blue-900 mb-1">📋 Formula:</p>
-                    <p className="text-gray-700 text-sm font-mono">{result.ratingCriteria.formula}</p>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700">
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">📋 Formula:</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm font-mono">{result.ratingCriteria.formula}</p>
                   </div>
                 )}
 
                 {/* Special Instructions */}
                 {result.ratingCriteria.specialInstructions && (
-                  <div className="p-4 bg-purple-50 border-b border-purple-200">
-                    <p className="text-sm font-semibold text-purple-900 mb-2">ℹ️ Special Instructions:</p>
-                    <p className="text-gray-700 text-sm">{result.ratingCriteria.specialInstructions}</p>
+                  <div className="p-4 bg-purple-50 dark:bg-purple-900/30 border-b border-purple-200 dark:border-purple-700">
+                    <p className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">ℹ️ Special Instructions:</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">{result.ratingCriteria.specialInstructions}</p>
                   </div>
                 )}
 
@@ -191,14 +259,14 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
                           .map(([percentage, criteria], idx) => (
                             <tr
                               key={percentage}
-                              className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                              className={idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}
                             >
-                              <td className="px-4 py-4 border-b border-gray-200">
+                              <td className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
                                 <span className="inline-block bg-va-gold text-va-blue font-bold px-3 py-1 rounded-lg text-lg">
                                   {percentage}%
                                 </span>
                               </td>
-                              <td className="px-4 py-4 border-b border-gray-200 text-gray-700 text-sm leading-relaxed">
+                              <td className="px-4 py-4 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                                 {criteria}
                               </td>
                             </tr>
@@ -210,9 +278,9 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
 
                 {/* Notes */}
                 {result.ratingCriteria.notes && (
-                  <div className="p-4 bg-green-50 border-t border-green-200">
-                    <p className="text-sm font-semibold text-green-900 mb-2">📝 Important Notes:</p>
-                    <div className="text-gray-700 text-sm leading-relaxed pl-4 border-l-2 border-green-400">
+                  <div className="p-4 bg-green-50 dark:bg-green-900/30 border-t border-green-200 dark:border-green-700">
+                    <p className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">📝 Important Notes:</p>
+                    <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed pl-4 border-l-2 border-green-400 dark:border-green-600">
                       {typeof result.ratingCriteria.notes === 'string' ? (
                         <p>{result.ratingCriteria.notes}</p>
                       ) : (
@@ -238,13 +306,13 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
                 expandedSection === 'documentation' ? '' : 'documentation'
               )
             }
-            className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
+            className="w-full flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 transition"
           >
-            <h3 className="text-xl font-bold text-gray-800">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
               Documentation Requirements for Medical Providers
             </h3>
             <svg
-              className={`w-6 h-6 text-gray-600 transition-transform ${
+              className={`w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform ${
                 expandedSection === 'documentation' ? 'transform rotate-180' : ''
               }`}
               fill="none"
@@ -260,12 +328,12 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
             </svg>
           </button>
           {expandedSection === 'documentation' && (
-            <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-              <p className="text-gray-700 mb-4">
+            <div className="mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
                 Please ensure your medical documentation includes the following information
                 to support disability rating decisions:
               </p>
-              <div className="prose prose-sm max-w-none text-gray-700">
+              <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
                 {result.documentationRequirements.split('\n').map((line, idx) => (
                   line.trim() && (
                     <p key={idx} className="mb-2">
@@ -280,9 +348,9 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
 
         {/* Related Secondary Conditions */}
         {result.relatedSecondaryConditions && result.relatedSecondaryConditions.length > 0 && (
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="font-bold text-gray-800 mb-3">Related Secondary Conditions</h3>
-            <p className="text-sm text-gray-700 mb-3">
+          <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-3">🔗 Related Secondary Conditions</h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
               These conditions may arise as a result of your primary service-connected disability:
             </p>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -293,20 +361,34 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
                 
                 return (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold mt-0.5">→</span>
-                    <span className="text-gray-800">
-                      {conditionName}
-                      {diagnosticCode && (
-                        <span className="ml-1 text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                    <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">→</span>
+                    {onSecondaryConditionClick && diagnosticCode ? (
+                      <button
+                        onClick={() => onSecondaryConditionClick(diagnosticCode, conditionName)}
+                        className="text-left group hover:bg-amber-100 dark:hover:bg-amber-800/50 rounded px-1 -mx-1 transition-colors"
+                      >
+                        <span className="text-va-blue dark:text-blue-400 group-hover:underline font-medium">
+                          {conditionName}
+                        </span>
+                        <span className="ml-2 text-xs font-mono text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800/50 px-1.5 py-0.5 rounded group-hover:bg-amber-200 dark:group-hover:bg-amber-700/50 transition-colors">
                           DC {diagnosticCode}
                         </span>
-                      )}
-                    </span>
+                      </button>
+                    ) : (
+                      <span className="text-gray-800 dark:text-gray-200">
+                        {conditionName}
+                        {diagnosticCode && (
+                          <span className="ml-1 text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                            DC {diagnosticCode}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </li>
                 );
               })}
             </ul>
-            <p className="text-xs text-gray-600 mt-4 pt-3 border-t border-amber-200">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-4 pt-3 border-t border-amber-200 dark:border-amber-700">
               <strong>Note:</strong> Veterans must provide medical evidence establishing a nexus (medical link) 
               between their service-connected condition and any secondary condition. This requires a medical 
               opinion stating it is "at least as likely as not" (50% or greater probability) that the secondary 
@@ -317,18 +399,18 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
 
         {/* Veteran Support & Resources */}
         <div className="mb-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Veteran Support & Resources
           </h3>
 
           {/* Emergency Support */}
-          <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded">
-            <h4 className="font-bold text-red-800 mb-3">🚨 EMERGENCY & CRISIS SUPPORT</h4>
+          <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded">
+            <h4 className="font-bold text-red-800 dark:text-red-300 mb-3">🚨 EMERGENCY & CRISIS SUPPORT</h4>
             <ul className="space-y-2">
               {VAResources.emergency.map((resource, idx) => (
-                <li key={idx} className="text-gray-700">
-                  <span className="font-semibold text-gray-800">{resource.label}:</span>{' '}
-                  <span className="text-red-700 font-bold">{resource.value}</span>
+                <li key={idx} className="text-gray-700 dark:text-gray-300">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">{resource.label}:</span>{' '}
+                  <span className="text-red-700 dark:text-red-400 font-bold">{resource.value}</span>
                 </li>
               ))}
             </ul>
@@ -336,7 +418,7 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
 
           {/* Essential VA Tools */}
           <div className="mb-8">
-            <h4 className="font-bold text-gray-800 mb-4">📋 ESSENTIAL VA TOOLS & BENEFITS</h4>
+            <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4">📋 ESSENTIAL VA TOOLS & BENEFITS</h4>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {VAResources.essential.map((resource, idx) => (
                 <li key={idx}>
@@ -344,7 +426,7 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
                     href={resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-va-blue hover:text-green-900 font-semibold underline hover:no-underline transition"
+                    className="text-va-blue dark:text-blue-400 hover:text-green-900 dark:hover:text-green-400 font-semibold underline hover:no-underline transition"
                   >
                     {resource.label}
                   </a>
@@ -354,15 +436,15 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
           </div>
 
           {/* Rating Schedule Link */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-            <h4 className="font-bold text-gray-800 mb-2">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded">
+            <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">
               38 CFR Part 4 - The Rating Schedule
             </h4>
             <a
               href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-va-blue hover:text-blue-900 font-semibold underline"
+              className="text-va-blue dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-semibold underline"
             >
               https://www.ecfr.gov/current/title-38/chapter-I/part-4
             </a>
@@ -370,32 +452,32 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
         </div>
 
         {/* Glossary Preview */}
-        <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Reference Glossary</h3>
+        <div className="mt-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">📖 Quick Reference Glossary</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="font-bold text-gray-800">Diagnostic Code (DC)</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-bold text-gray-800 dark:text-gray-100">Diagnostic Code (DC)</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 A 4-digit number used by the VA to classify and rate specific disabilities
               </p>
             </div>
             <div>
-              <p className="font-bold text-gray-800">Secondary Condition</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-bold text-gray-800 dark:text-gray-100">Secondary Condition</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 A disability that is proximately due to or the result of a service-connected
                 disease or injury
               </p>
             </div>
             <div>
-              <p className="font-bold text-gray-800">Service Connection</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-bold text-gray-800 dark:text-gray-100">Service Connection</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Acknowledgment by the VA that a disability was incurred or aggravated during
                 military service
               </p>
             </div>
             <div>
-              <p className="font-bold text-gray-800">Nexus</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-bold text-gray-800 dark:text-gray-100">Nexus</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 The mandatory medical link between a current disability and an event, injury,
                 or disease in service
               </p>
@@ -405,8 +487,8 @@ function DisabilityDetails({ result, searchTerm, onClose }) {
       </div>
 
       {/* Footer Legal Notice */}
-      <div className="bg-gray-100 border-t border-gray-200 p-6">
-        <p className="text-xs text-gray-600">
+      <div className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-6">
+        <p className="text-xs text-gray-600 dark:text-gray-400">
           <strong>LEGAL NOTICE:</strong> This information is for educational purposes only. It
           does not constitute legal or medical advice. Please consult with VA officials or
           qualified professionals for specific guidance regarding your disability claim or
