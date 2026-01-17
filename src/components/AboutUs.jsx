@@ -99,11 +99,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   alt="Veteran in military uniform" 
                   className="w-48 h-auto rounded-lg shadow-lg border-2 border-gray-300"
                 />
-                <p className="text-xs text-gray-500 text-center mt-2 italic">Fellow service disabled veteran</p>
+                <p className="text-xs text-gray-500 text-center mt-2 italic">SGT Johnson, 92Y20</p>
               </div>
               <div className="flex-1">
                 <p className="text-gray-700 mb-3">
-                  Vet-Rate.org is an independent educational resource created by a fellow veteran passionate about helping 
+                  Vet-Rate.org is an independent educational resource created by a fellow service-disabled veteran passionate about helping 
                   other veterans navigate the VA disability system. This is not an official VA website, law firm, or medical 
                   service. I am simply providing a tool that makes publicly available information easier to access 
                   and understand.
@@ -115,6 +115,111 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </p>
                 <p className="text-gray-600 italic text-left mt-4">~ Anth</p>
               </div>
+            </div>
+          </section>
+
+          <section className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-3">🐱 The Development Team</h3>
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
+              <p className="text-gray-700 mb-4">
+                Behind every late-night coding session is a dedicated team:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🐱</span>
+                    <h4 className="font-bold text-gray-800">Luna</h4>
+                    <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">aka Sweet Baby Kitty Cat</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Chief Morale Officer & Keyboard Supervisor. Specializes in walking across the keyboard at 
+                    critical moments and demanding attention during important debugging sessions.
+                  </p>
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-pink-600 hover:text-pink-800 font-medium">
+                      📸 View Luna's Gallery
+                    </summary>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div>
+                        <img 
+                          src="/images/ReadyForHerCloseup.jpg" 
+                          alt="Luna the calico cat - portrait" 
+                          className="w-full h-auto rounded-lg shadow-sm border border-gray-200"
+                        />
+                        <p className="text-center text-gray-500 mt-1 text-xs">Ready for her closeup 📷</p>
+                      </div>
+                      <div>
+                        <img 
+                          src="/images/Kitty_Coder.jpg" 
+                          alt="Luna supervising coding at the workstation" 
+                          className="w-full h-auto rounded-lg shadow-sm border border-gray-200"
+                        />
+                        <p className="text-center text-gray-500 mt-1 text-xs">Supervising the code 💻</p>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🖥️</span>
+                    <h4 className="font-bold text-gray-800">Midnight</h4>
+                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">The Workstation</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    The tireless machine that brought Vet-Rate.org to life. Running countless builds, tests, 
+                    and deployments without complaint (mostly).
+                  </p>
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
+                      🔧 View Midnight's Specs
+                    </summary>
+                    <div className="mt-2 bg-gray-50 rounded p-3 space-y-1 text-gray-600">
+                      <p><strong>CPU:</strong> AMD Ryzen 9 7950X3D 4.2 GHz 16-Core</p>
+                      <p><strong>Cooler:</strong> Asus ProArt LC 420 107 CFM Liquid</p>
+                      <p><strong>Motherboard:</strong> Asus ProArt X670E-CREATOR WIFI ATX AM5</p>
+                      <p><strong>Memory:</strong> Corsair Vengeance 128 GB (4 x 32 GB) DDR5-5600 CL40</p>
+                      <p><strong>Primary SSD:</strong> MSI SPATIUM M570 HS 2 TB PCIe 5.0 X4 NVMe</p>
+                      <p><strong>Storage:</strong> 2 x Silicon Power UD90 4 TB PCIe 4.0 X4 NVMe</p>
+                      <p><strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB</p>
+                      <p><strong>Case:</strong> Asus ProArt PA602 ATX Mid Tower</p>
+                      <p><strong>PSU:</strong> be quiet! Dark Power Pro 13 1300W 80+ Titanium</p>
+                      <p><strong>Displays:</strong> Asus ProArt PA329CV 32" 4K + PA279CRV 27" 4K</p>
+                      <p className="pt-1 border-t border-gray-200 mt-1"><strong>eGPU:</strong> Asus ProArt OC RTX 4070 Ti SUPER 16 GB in Sonnet Breakaway Box 750ex</p>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-3">💻 How This Was Built</h3>
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <p className="text-gray-700 mb-3">
+                Vet-Rate.org was developed using modern tools and AI-assisted development:
+              </p>
+              <ul className="space-y-2 text-gray-700">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">📖</span>
+                  <span><strong>Data Source:</strong> All disability information was meticulously extracted and structured from the official <a href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">eCFR (Electronic Code of Federal Regulations)</a></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">🛠️</span>
+                  <span><strong>Development Environment:</strong> Visual Studio Code - the go-to editor for modern web development</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-600 mt-1">✨</span>
+                  <span><strong>Prompt Engineering:</strong> Google's Gemini assisted with crafting effective prompts and planning</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-600 mt-1">🤖</span>
+                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) powered the code development and implementation</span>
+                </li>
+              </ul>
+              <p className="text-sm text-gray-500 mt-3 italic">
+                AI-assisted development allowed a single veteran to build a comprehensive tool that would have 
+                otherwise required a full development team. The future is now! 🚀
+              </p>
             </div>
           </section>
 
@@ -136,16 +241,58 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">How This Project Is Funded</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">💚 How This Project Is Funded</h3>
             <p className="text-gray-700 mb-3">
-              To keep this tool free and maintain hosting costs, this project is funded through:
+              To keep this tool free and maintain hosting costs, this project relies entirely on voluntary support from the veteran community:
             </p>
-            <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li><strong>Google AdSense:</strong> Display advertisements that help cover server and maintenance costs</li>
-              <li><strong>Buy Me a Coffee:</strong> Optional donations from users who want to support the project</li>
-            </ul>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <a
+                href="https://buymeacoffee.com/vetrate"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center p-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-all hover:scale-105 shadow-sm"
+              >
+                <span className="text-2xl mb-1">☕</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">Buy Me a Coffee</span>
+                <span className="text-xs font-medium text-yellow-900 dark:text-yellow-900">vet-rate.org</span>
+              </a>
+              <a
+                href="https://paypal.me/ajohnsonnow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all hover:scale-105 shadow-sm"
+              >
+                <span className="text-2xl mb-1">💳</span>
+                <span className="text-sm font-bold text-white dark:text-white">PayPal</span>
+                <span className="text-xs font-medium text-blue-100 dark:text-blue-100">ajohnsonnow</span>
+              </a>
+              <a
+                href="https://cash.app/$ajnow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center p-3 bg-green-600 hover:bg-green-700 rounded-lg transition-all hover:scale-105 shadow-sm"
+              >
+                <span className="text-2xl mb-1">💵</span>
+                <span className="text-sm font-bold text-white dark:text-white">Cash App</span>
+                <span className="text-xs font-medium text-green-100 dark:text-green-100">$ajnow</span>
+              </a>
+              <a
+                href="https://venmo.com/ajnow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center p-3 bg-sky-600 hover:bg-sky-700 rounded-lg transition-all hover:scale-105 shadow-sm"
+              >
+                <span className="text-2xl mb-1">📱</span>
+                <span className="text-sm font-bold text-white dark:text-white">Venmo</span>
+                <span className="text-xs font-medium text-sky-100 dark:text-sky-100">@ajnow</span>
+              </a>
+            </div>
             <p className="text-gray-700 mb-3">
-              Your support helps keep this tool free and accessible for all veterans.
+              Your support helps keep this tool free and accessible for all veterans. We intentionally avoid 
+              using advertising networks to protect veteran privacy - no third-party trackers, no data collection.
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              100% of contributions go toward hosting, development, and keeping Vet-Rate.org running for the veteran community.
             </p>
           </section>
 
@@ -156,7 +303,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
             </p>
             <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
               <li>✅ Keeping the tool <strong>100% free</strong> forever</li>
-              <li>✅ Protecting your <strong>privacy</strong> - no data collection or tracking beyond ads</li>
+              <li>✅ Protecting your <strong>privacy</strong> - no ads, no tracking, no data collection</li>
               <li>✅ Providing <strong>accurate, up-to-date</strong> information from official sources</li>
               <li>✅ Continuously <strong>improving</strong> the tool based on veteran feedback</li>
             </ul>

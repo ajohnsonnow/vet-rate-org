@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import AccessibilityMenu from './AccessibilityMenu';
+import FundingModal from './FundingModal';
 import { useTheme } from '../contexts/ThemeContext';
 
 function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick }) {
   const { isDark, toggleTheme } = useTheme();
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
+  const [showFundingModal, setShowFundingModal] = useState(false);
 
   const veteranResources = [
     {
@@ -99,11 +101,13 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
-            <img 
-              src="/images/vet-rate-org-logo-transparent.png" 
-              alt="Vet-Rate.org Logo" 
-              className="h-16 md:h-20 w-auto"
-            />
+            <div className="bg-white rounded-full h-16 w-16 md:h-20 md:w-20 flex items-center justify-center overflow-hidden shadow-md">
+              <img 
+                src="/images/Vet-Rate-org-logo-official.png" 
+                alt="Vet-Rate.org Logo" 
+                className="h-full w-full object-contain"
+              />
+            </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap">Vet-Rate.org</h1>
               <p className="text-green-100 dark:text-gray-300 text-sm md:text-base whitespace-nowrap">
@@ -139,7 +143,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
             </button>
             
             {/* Veteran Resources Dropdown */}
-            <div className="relative">
+            <div className="relative static sm:relative">
               <button
                 onClick={() => setShowResourcesMenu(!showResourcesMenu)}
                 onBlur={() => setTimeout(() => setShowResourcesMenu(false), 200)}
@@ -155,7 +159,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               </button>
               
               {showResourcesMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
+                <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden max-h-[70vh] sm:max-h-[80vh] overflow-y-auto">
                   <div className="p-2">
                     <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 font-semibold uppercase tracking-wide">
                       Veteran Resources
@@ -260,23 +264,24 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
             {/* Accessibility Menu */}
             <AccessibilityMenu />
             
-            <a
-              href="https://buymeacoffee.com/vetrate"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setShowFundingModal(true)}
               className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 hover:scale-105 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white animate-pulse-subtle"
               title="Support Vet-Rate.org - Help keep this free for veterans"
-              aria-label="Back the Mission - Support Vet-Rate.org (opens in new tab)"
+              aria-label="Back the Mission - Support Vet-Rate.org"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
               </svg>
               <span className="hidden md:inline">Back the Mission</span>
               <span className="md:hidden">💚</span>
-            </a>
+            </button>
           </nav>
         </div>
       </div>
+      
+      {/* Funding Modal */}
+      <FundingModal show={showFundingModal} onClose={() => setShowFundingModal(false)} />
     </header>
   );
 }

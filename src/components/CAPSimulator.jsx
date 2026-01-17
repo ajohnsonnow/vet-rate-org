@@ -863,7 +863,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                 The Compensation & Pension (C&P) exam can feel like a mystery. You walk in not knowing what the doctor will ask, and you walk out not knowing if you said the "right" things. <strong>This tool removes that mystery.</strong>
               </p>
               <p className="text-gray-700">
-                I analyze the <strong>exact rating criteria from 38 CFR Part 4</strong> for your specific condition and simulate the "tipping point" questions—the questions that determine whether you get 10%, 30%, 50%, or higher.
+                This simulator uses the <strong>exact rating criteria from 38 CFR Part 4</strong> for your specific condition to present the "tipping point" questions - the questions that determine whether you get 10%, 30%, 50%, or higher.
               </p>
             </div>
 
@@ -913,7 +913,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                     The "Stop When It Hurts" Principle
                   </h4>
                   <p className="text-yellow-800 text-sm">
-                    For conditions like back pain or knee pain, the simulator will teach you the most important exam tip: <strong>Range of Motion is measured to the point where pain STOPS you</strong>—not where you can force yourself to go. Many veterans unknowingly lower their ratings by "pushing through" during ROM testing.
+                    For conditions like back pain or knee pain, the simulator will teach you the most important exam tip: <strong>Range of Motion is measured to the point where pain STOPS you</strong> - not where you can force yourself to go. Many veterans unknowingly lower their ratings by "pushing through" during ROM testing.
                   </p>
                 </div>
               </div>
@@ -965,7 +965,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             {/* Disclaimer */}
             <div className="bg-gray-100 border-l-4 border-gray-400 p-4 rounded mt-6">
               <p className="text-xs text-gray-600 italic">
-                <strong>Disclaimer:</strong> This is a training tool, not legal advice. Always tell the truth during your exam. The C&P examiner's job is to document your condition accurately—be honest about your worst days, not just your best days. This tool is based on 38 CFR Part 4 as of January 2026.
+                <strong>Disclaimer:</strong> This is a training tool, not legal advice. Always tell the truth during your exam. The C&P examiner's job is to document your condition accurately - be honest about your worst days, not just your best days. This tool is based on 38 CFR Part 4 as of January 2026.
               </p>
             </div>
           </div>

@@ -55,110 +55,51 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
 
             <h4 className="text-lg font-semibold text-gray-800 mb-2">2.2 Automatically Collected Information</h4>
             <p className="text-gray-700 mb-3">
-              When you visit our website, certain information about your device and browsing activity may 
-              be automatically collected by third-party services:
+              <strong>We do not use advertising networks or third-party trackers.</strong> To protect veteran 
+              privacy, we have intentionally avoided implementing any tracking technologies that could collect 
+              your data. Your searches and browsing activity on this site remain completely private.
             </p>
-            <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li><strong>Cookies:</strong> We use cookies for advertising purposes (Google AdSense)</li>
-              <li><strong>Analytics Data:</strong> IP address, browser type, device information, pages visited</li>
-              <li><strong>Advertising Data:</strong> Ad interactions and preferences collected by Google AdSense</li>
-            </ul>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">3. Use of Cookies and Advertising</h3>
-            
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">3.1 Google AdSense</h4>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">3. Cookies and Tracking</h3>
             <p className="text-gray-700 mb-3">
-              We use <strong>Google AdSense</strong> to display advertisements on our website. Google AdSense 
-              uses cookies and other tracking technologies to:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li>Display personalized ads based on your interests and browsing history</li>
-              <li>Measure ad performance and engagement</li>
-              <li>Prevent fraudulent ad clicks</li>
-            </ul>
-            <p className="text-gray-700 mb-3">
-              Google may use cookies to serve ads based on your prior visits to our website or other websites. 
-              You can opt out of personalized advertising by visiting{' '}
-              <a 
-                href="https://www.google.com/settings/ads" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                Google Ads Settings
-              </a> or{' '}
-              <a 
-                href="http://www.aboutads.info/choices/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                www.aboutads.info
-              </a>.
-            </p>
-
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">3.2 Third-Party Cookies</h4>
-            <p className="text-gray-700 mb-3">
-              Third-party vendors, including Google, use cookies to serve ads based on your past visits to 
-              our website. These cookies enable Google and its partners to serve ads to you based on your 
-              visit to this site and/or other sites on the Internet.
+              <strong>We do not use cookies for tracking or advertising purposes.</strong> Any cookies used 
+              by this site are strictly for essential functionality (such as saving your preferences locally 
+              in your browser). We do not share any information with third-party advertisers.
             </p>
           </section>
 
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3">4. How We Use Your Information</h3>
             <p className="text-gray-700 mb-3">
-              Since we do not collect PII, your information is only used by third-party services for:
+              Since we do not collect PII or use tracking technologies:
             </p>
             <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li>Displaying relevant advertisements (Google AdSense)</li>
-              <li>Analyzing website traffic and usage patterns (if analytics are implemented)</li>
-              <li>Improving website performance and user experience</li>
+              <li>Your search queries remain private in your browser</li>
+              <li>Your disability research is never transmitted to any server</li>
+              <li>Your "My Packet" saved items are stored only in your browser's local storage</li>
+              <li>No advertising profiles are created about you</li>
             </ul>
           </section>
 
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3">5. Data Sharing and Disclosure</h3>
             <p className="text-gray-700 mb-3">
-              We do not sell, trade, or rent your personal information. However, third-party advertising 
-              partners (Google AdSense) may collect and process data as described in their privacy policies:
+              <strong>We do not sell, trade, rent, or share your personal information with anyone.</strong> 
+              Since we don't collect data, there is nothing to share. Your privacy is protected by design.
             </p>
-            <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li>
-                <a 
-                  href="https://policies.google.com/privacy" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  Google Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://policies.google.com/technologies/partner-sites" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  How Google Uses Information from Sites or Apps That Use Our Services
-                </a>
-              </li>
-            </ul>
           </section>
 
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3">6. Your Privacy Rights</h3>
             <p className="text-gray-700 mb-3">
-              Depending on your location, you may have the following rights:
+              Since we do not collect personal data, your privacy is inherently protected. However, you always have the right to:
             </p>
             <ul className="list-disc list-inside text-gray-700 mb-3 ml-4">
-              <li><strong>Access:</strong> Request a copy of data collected about you</li>
-              <li><strong>Opt-Out:</strong> Disable personalized ads via Google Ads Settings</li>
-              <li><strong>Cookie Control:</strong> Manage cookies through your browser settings</li>
-              <li><strong>Do Not Track:</strong> Enable Do Not Track (DNT) signals in your browser</li>
+              <li><strong>Clear Local Storage:</strong> Delete any locally saved preferences from your browser</li>
+              <li><strong>Browse Privately:</strong> Use your browser's private/incognito mode</li>
+              <li><strong>Contact Us:</strong> Ask questions about our privacy practices</li>
             </ul>
           </section>
 
@@ -174,9 +115,9 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-3">8. Security</h3>
             <p className="text-gray-700 mb-3">
-              Since our application operates entirely client-side and does not transmit or store PII, your 
-              searches and interactions remain private on your device. However, we cannot guarantee the 
-              security of information collected by third-party services like Google AdSense.
+              Our application operates entirely client-side and does not transmit or store PII. Your 
+              searches and interactions remain private on your device. We do not use any third-party 
+              advertising or tracking services that could compromise your privacy.
             </p>
           </section>
 
@@ -196,11 +137,11 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
             </p>
           </section>
 
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-6">
-            <p className="text-sm text-blue-800">
-              <strong>Summary:</strong> We respect your privacy. This site does not collect, store, or 
-              transmit your personal information. Third-party advertising services (Google AdSense) use 
-              cookies to display relevant ads. You can opt out of personalized advertising at any time.
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mt-6">
+            <p className="text-sm text-green-800">
+              <strong>🛡️ Privacy-First Design:</strong> Vet-Rate.org is built with veteran privacy as a top priority. 
+              We do not collect, store, or transmit your personal information. We do not use advertising networks 
+              or third-party trackers. Your searches and disability research remain completely private.
             </p>
           </div>
         </div>

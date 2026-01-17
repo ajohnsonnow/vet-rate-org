@@ -73,9 +73,7 @@ Essential Files (will be in GitHub & deployed):
 │   │   └── disabilityData.json  ← 749 disabilities (0.89 MB)
 │   └── utils/                   ← PDF generator, search utils
 ├── public/
-│   └── ads.txt                  ← AdSense verification
-├── images/
-│   └── Vet-Rate-org-logo.png    ← Logo asset
+│   └── images/                   ← Logo and image assets
 ├── index.html                    ← Entry point
 ├── package.json                  ← Dependencies
 ├── package-lock.json            ← Lock file
