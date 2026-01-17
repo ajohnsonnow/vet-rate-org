@@ -53,7 +53,7 @@ function DisclaimerSplash({ onAcknowledge }) {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
               <span className="font-semibold">From one veteran to another:</span> I built this tool because 
-              navigating the VA disability system shouldn't feel like a second deployment. Everything here 
+              navigating the VA disability system shouldn't feel like another deployment. Everything here 
               is free, no tricks, no sales pitches - just the information you need to understand your rating criteria.
             </p>
             <p className="text-blue-600 dark:text-blue-300 text-xs mt-2 italic">

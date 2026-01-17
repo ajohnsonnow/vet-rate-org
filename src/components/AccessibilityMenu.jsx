@@ -60,7 +60,7 @@ export default function AccessibilityMenu() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative static sm:relative">
       {/* Accessibility Toggle Button */}
       <button
         ref={buttonRef}
@@ -102,7 +102,7 @@ export default function AccessibilityMenu() {
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+          className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-auto mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="accessibility-menu"
