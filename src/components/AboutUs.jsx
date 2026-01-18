@@ -212,7 +212,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <p className="text-gray-700 dark:text-gray-300 mb-4">
                 Behind every late-night coding session is a dedicated team:
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Luna and Midnight - 2 column grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">🐱</span>
@@ -276,7 +277,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
                     </div>
                   </details>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+              </div>
+              
+              {/* The Codebase - Full width */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">⚡</span>
                     <h4 className="font-bold text-gray-800 dark:text-gray-200">The Codebase</h4>
@@ -290,51 +294,81 @@ const AboutUs = ({ onClose, onReportBug }) => {
                     <summary className="cursor-pointer text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium">
                       📊 View Codebase Stats
                     </summary>
-                    <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 space-y-2 text-gray-600 dark:text-gray-400">
-                      <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📐 Project Scale</p>
-                        <p><strong>Total Files:</strong> {FORMATTED_STATS.totalFiles} project files</p>
-                        <p><strong>Lines of Code:</strong> {FORMATTED_STATS.linesOfCode} lines</p>
-                        <p><strong>App Size:</strong> {FORMATTED_STATS.appSize}</p>
+                    <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 text-gray-600 dark:text-gray-400">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Left Column */}
+                        <div className="space-y-3">
+                          <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📐 Project Scale</p>
+                            <p><strong>Total Files:</strong> {FORMATTED_STATS.totalFiles} project files</p>
+                            <p><strong>Lines of Code:</strong> {FORMATTED_STATS.linesOfCode} lines</p>
+                            <p><strong>App Size:</strong> {FORMATTED_STATS.appSize}</p>
+                          </div>
+                          <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📦 Core Components</p>
+                            <p><strong>React Components:</strong> {FORMATTED_STATS.components}</p>
+                            <p><strong>Utility Modules:</strong> {FORMATTED_STATS.utilities}</p>
+                            <p><strong>VA Forms:</strong> 16 PDF forms ready to download</p>
+                          </div>
+                          <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🗂️ Data Files</p>
+                            <p><strong>Disabilities Database:</strong> {PROJECT_STATS.disabilitiesValidated} rated conditions</p>
+                            <p><strong>Secondary Conditions:</strong> Medically-linked relationships</p>
+                            <p><strong>Regulations:</strong> 38 CFR Parts 3 & 4</p>
+                            <p><strong>PACT Act Data:</strong> Toxic exposure coverage</p>
+                            <p><strong>DBQ Logic Map:</strong> C&P exam question bank</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⚙️ Tech Stack</p>
+                            <p><strong>Framework:</strong> React 18 + Vite</p>
+                            <p><strong>Styling:</strong> Tailwind CSS</p>
+                            <p><strong>PDF Generation:</strong> jsPDF + html2canvas</p>
+                            <p><strong>AI (Optional):</strong> Google Gemini API</p>
+                          </div>
+                        </div>
+                        {/* Right Column */}
+                        <div className="space-y-3">
+                          <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⏱️ Development Time</p>
+                            <p><strong>Traditional Equivalent:</strong> {FORMATTED_STATS.traditionalHours}</p>
+                            <p className="text-xs mt-1 italic">
+                              • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding ({Math.round(PROJECT_STATS.linesOfCode/1000)}k lines @ 20/hr with AI assist)<br />
+                              • {PROJECT_STATS.breakdown.dataEntry} hrs data entry ({PROJECT_STATS.disabilitiesValidated} disabilities validated)<br />
+                              • {PROJECT_STATS.breakdown.testing} hrs testing & debugging<br />
+                              • {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations<br />
+                              • {PROJECT_STATS.breakdown.documentation} hrs documentation & user manual<br />
+                              • {PROJECT_STATS.breakdown.research} hrs research (38 CFR regulations)<br />
+                              • {PROJECT_STATS.breakdown.deployment} hrs deployment & optimization
+                            </p>
+                            <p className="text-xs mt-1 font-medium text-amber-600 dark:text-amber-400">
+                              {FORMATTED_STATS.traditionalYears} for one developer
+                            </p>
+                            <hr className="my-2 border-gray-300 dark:border-gray-600" />
+                            <p><strong>Actual Time Invested:</strong> {FORMATTED_STATS.actualTime}</p>
+                            <p className="text-xs mt-1 italic">
+                              • First commit: {PROJECT_STATS.git.firstCommitDate} at {PROJECT_STATS.git.firstCommitTime}<br />
+                              • Latest commit: {PROJECT_STATS.git.latestCommitDate} at {PROJECT_STATS.git.latestCommitTime}<br />
+                              • {FORMATTED_STATS.commits}<br />
+                              • {FORMATTED_STATS.linesChanged}
+                            </p>
+                            <p className="text-xs mt-1 font-medium text-green-600 dark:text-green-400">
+                              🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
+                            </p>
+                            <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
+                              The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate represents the <strong>traditional development cost</strong> and the <strong>value veterans receive for free</strong>. The actual {PROJECT_STATS.actualHours} hours shows the power of modern AI tools (GitHub Copilot, Claude, ChatGPT, Gemini) + React/Vite/Tailwind in 2026.
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⏱️ Development Time</p>
-                        <p><strong>Traditional Equivalent:</strong> {FORMATTED_STATS.traditionalHours}</p>
-                        <p className="text-xs mt-1 italic">
-                          • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding ({Math.round(PROJECT_STATS.linesOfCode/1000)}k lines @ 20/hr with AI assist)<br />
-                          • {PROJECT_STATS.breakdown.dataEntry} hrs data entry ({PROJECT_STATS.disabilitiesValidated} disabilities validated)<br />
-                          • {PROJECT_STATS.breakdown.testing} hrs testing & debugging<br />
-                          • {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations<br />
-                          • {PROJECT_STATS.breakdown.documentation} hrs documentation & user manual<br />
-                          • {PROJECT_STATS.breakdown.research} hrs research (38 CFR regulations)<br />
-                          • {PROJECT_STATS.breakdown.deployment} hrs deployment & optimization
-                        </p>
-                        <p className="text-xs mt-1 font-medium text-amber-600 dark:text-amber-400">
-                          {FORMATTED_STATS.traditionalYears} for one developer
-                        </p>
-                        <hr className="my-2 border-gray-300 dark:border-gray-600" />
-                        <p><strong>Actual Time Invested:</strong> {FORMATTED_STATS.actualTime}</p>
-                        <p className="text-xs mt-1 italic">
-                          • First commit: {PROJECT_STATS.git.firstCommitDate} at {PROJECT_STATS.git.firstCommitTime}<br />
-                          • Latest commit: {PROJECT_STATS.git.latestCommitDate} at {PROJECT_STATS.git.latestCommitTime}<br />
-                          • {FORMATTED_STATS.commits}<br />
-                          • {FORMATTED_STATS.linesChanged}
-                        </p>
-                        <p className="text-xs mt-1 font-medium text-green-600 dark:text-green-400">
-                          🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
-                        </p>
-                        <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                          The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate represents the <strong>traditional development cost</strong> and the <strong>value veterans receive for free</strong>. The actual {PROJECT_STATS.actualHours} hours shows the power of modern AI tools (GitHub Copilot, Claude, ChatGPT, Gemini) + React/Vite/Tailwind in 2026.
-                        </p>
-                      </div>
-                      <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                      {/* Full-width Component Development Breakdown */}
+                      <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
                         <details className="cursor-pointer">
                           <summary className="font-semibold text-gray-700 dark:text-gray-300 mb-1 hover:text-va-gold">
                             🛠️ Component Development Breakdown (Click to expand)
                           </summary>
                           <div className="mt-2 ml-2 text-xs space-y-1">
                             <p className="font-medium text-gray-600 dark:text-gray-400 mb-2">Major Tool Development Hours & Lines:</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-gray-700 dark:text-gray-300">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 text-gray-700 dark:text-gray-300">
                               <p>• <strong>C-File AI Analyzer:</strong> 680 hrs / 9,200 lines</p>
                               <p>• <strong>C&P Exam Simulator:</strong> 520 hrs / 7,800 lines</p>
                               <p>• <strong>Tactical Calculator:</strong> 450 hrs / 8,500 lines</p>
@@ -369,34 +403,12 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           </div>
                         </details>
                       </div>
-                      <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📦 Core Components</p>
-                        <p><strong>React Components:</strong> {FORMATTED_STATS.components}</p>
-                        <p><strong>Utility Modules:</strong> {FORMATTED_STATS.utilities}</p>
-                        <p><strong>VA Forms:</strong> 16 PDF forms ready to download</p>
-                      </div>
-                      <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🗂️ Data Files</p>
-                        <p><strong>Disabilities Database:</strong> {PROJECT_STATS.disabilitiesValidated} rated conditions</p>
-                        <p><strong>Secondary Conditions:</strong> Medically-linked relationships</p>
-                        <p><strong>Regulations:</strong> 38 CFR Parts 3 & 4</p>
-                        <p><strong>PACT Act Data:</strong> Toxic exposure coverage</p>
-                        <p><strong>DBQ Logic Map:</strong> C&P exam question bank</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⚙️ Tech Stack</p>
-                        <p><strong>Framework:</strong> React 18 + Vite</p>
-                        <p><strong>Styling:</strong> Tailwind CSS</p>
-                        <p><strong>PDF Generation:</strong> jsPDF + html2canvas</p>
-                        <p><strong>AI (Optional):</strong> Google Gemini API</p>
-                      </div>
                       <p className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2 text-center italic text-green-600 dark:text-green-400">
                         Built with determination and fueled by veteran spirit 🎖️
                       </p>
                     </div>
                   </details>
                 </div>
-              </div>
             </div>
           </section>
 
