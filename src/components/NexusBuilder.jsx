@@ -6,7 +6,7 @@ import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
 import DoctorsPacket from './DoctorsPacket';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { isAIAvailable, enhancePersonalStatement } from '../utils/aiStatementHelper';
+import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from '../utils/aiStatementHelper';
 
 /**
  * NexusBuilder Component
@@ -44,6 +44,9 @@ const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingSt
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [useAIVersion, setUseAIVersion] = useState(false);
+  
+  // Inline AI field helper state
+  const [fieldHelping, setFieldHelping] = useState(null); // which field is being helped
   
   // Doctor's Packet modal state
   const [showDoctorsPacket, setShowDoctorsPacket] = useState(false);
@@ -187,6 +190,37 @@ Sincerely,
 
   const toggleStatementVersion = () => {
     setUseAIVersion(!useAIVersion);
+  };
+
+  // Inline AI field helper
+  const handleFieldHelp = async (fieldName) => {
+    if (!isAIAvailable()) {
+      setAiError('No API key configured. Add your Gemini API key in Settings to use AI assistance.');
+      return;
+    }
+    
+    setFieldHelping(fieldName);
+    setAiError(null);
+    
+    try {
+      const result = await generateFieldSuggestion(
+        fieldName,
+        condition,
+        primaryCondition,
+        answers[fieldName] || ''
+      );
+      
+      if (result.success) {
+        updateAnswer(fieldName, result.content);
+      } else {
+        setAiError(result.error);
+      }
+    } catch (error) {
+      console.error('Field help error:', error);
+      setAiError('Failed to generate suggestion. Please try again.');
+    } finally {
+      setFieldHelping(null);
+    }
   };
 
   // Get the current statement (AI or standard)
@@ -502,9 +536,25 @@ Sincerely,
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Explain in your own words how {primaryCondition} affects your {condition}:
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Explain in your own words how {primaryCondition} affects your {condition}:
+                    </label>
+                    {isAIAvailable() && (
+                      <button
+                        type="button"
+                        onClick={() => handleFieldHelp('aggravationExplanation')}
+                        disabled={fieldHelping === 'aggravationExplanation'}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {fieldHelping === 'aggravationExplanation' ? (
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                        ) : (
+                          <><span>✨</span> AI Help</>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Example: My PTSD causes severe anxiety and hypervigilance, which prevents me from falling asleep and staying asleep. The constant state of alertness disrupts my breathing patterns during sleep..."
@@ -514,9 +564,25 @@ Sincerely,
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Describe a specific recent incident where these two conditions interacted:
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Describe a specific recent incident where these two conditions interacted:
+                    </label>
+                    {isAIAvailable() && (
+                      <button
+                        type="button"
+                        onClick={() => handleFieldHelp('specificIncident')}
+                        disabled={fieldHelping === 'specificIncident'}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {fieldHelping === 'specificIncident' ? (
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                        ) : (
+                          <><span>✨</span> AI Help</>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Example: Last month, I had a PTSD episode triggered by fireworks. That night, my sleep apnea symptoms worsened significantly - I woke up gasping for air multiple times, which my partner witnessed..."
@@ -533,9 +599,25 @@ Sincerely,
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Severity and Daily Impact</h3>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    How does {condition} affect your ability to work?
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      How does {condition} affect your ability to work?
+                    </label>
+                    {isAIAvailable() && (
+                      <button
+                        type="button"
+                        onClick={() => handleFieldHelp('workImpact')}
+                        disabled={fieldHelping === 'workImpact'}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {fieldHelping === 'workImpact' ? (
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                        ) : (
+                          <><span>✨</span> AI Help</>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Example: I have difficulty concentrating due to fatigue from poor sleep. I've missed 15+ days of work in the past year. My supervisor has documented performance issues related to exhaustion..."
@@ -545,9 +627,25 @@ Sincerely,
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    How does {condition} affect your social and family life?
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      How does {condition} affect your social and family life?
+                    </label>
+                    {isAIAvailable() && (
+                      <button
+                        type="button"
+                        onClick={() => handleFieldHelp('socialImpact')}
+                        disabled={fieldHelping === 'socialImpact'}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {fieldHelping === 'socialImpact' ? (
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                        ) : (
+                          <><span>✨</span> AI Help</>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Example: I avoid social gatherings because I'm exhausted. My spouse says I'm irritable and moody due to poor sleep. I've had to stop participating in activities I used to enjoy..."
@@ -557,9 +655,25 @@ Sincerely,
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Provide specific examples of how this condition limits your daily activities:
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Provide specific examples of how this condition limits your daily activities:
+                    </label>
+                    {isAIAvailable() && (
+                      <button
+                        type="button"
+                        onClick={() => handleFieldHelp('specificExamples')}
+                        disabled={fieldHelping === 'specificExamples'}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {fieldHelping === 'specificExamples' ? (
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                        ) : (
+                          <><span>✨</span> AI Help</>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <textarea
                     className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
                     placeholder="Example: I can no longer drive long distances safely due to fatigue. I need to take frequent breaks during simple tasks. My memory and focus have noticeably declined..."
