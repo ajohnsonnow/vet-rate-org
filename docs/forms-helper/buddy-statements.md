@@ -70,9 +70,31 @@ Enter the <strong>witness's information</strong>
 Complete the <strong>statement sections</strong>
 </div>
 <div class="step">
+<strong>Optionally enhance with AI</strong> using the Three Pillars approach
+</div>
+<div class="step">
 <strong>Download</strong> and have witness sign
 </div>
 </div>
+
+### AI Enhancement (Optional)
+
+After generating your buddy statement, you can optionally enhance it with AI:
+
+1. Click **"✨ Enhance with AI"** button
+2. Review the privacy disclosure (shows exactly what will be shared)
+3. Consent to AI enhancement
+4. Toggle between AI-enhanced and original versions
+5. Download whichever version you prefer
+
+!!! info "What AI Improves"
+    The AI uses the "Three Pillars" approach to make buddy statements more compelling:
+    
+    - **Pillar 1:** Your relationship to the veteran
+    - **Pillar 2:** What you personally observed
+    - **Pillar 3:** Impact you've witnessed on daily life
+    
+    [Learn more about AI privacy →](../privacy/ai-assistant/)
 
 ### Form Sections
 

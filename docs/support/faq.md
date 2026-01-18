@@ -79,6 +79,31 @@ Suggestions are **educational**. Success depends on individual circumstances and
 
 **No.** The simulator is for **educational preparation only**. It helps you understand what's evaluated but cannot predict actual VA decisions.
 
+### What is the AI Statement Assistant?
+
+The AI Statement Assistant is an **optional** feature that uses Google Gemini to help write more professional and effective claim statements. Key points:
+
+- ✅ **Completely optional** — Works without it
+- ✅ **Privacy-first** — No names, SSN, dates, or PII sent
+- ✅ **Consent required** — You approve each AI request
+- ✅ **Toggle versions** — Switch between AI and original
+- ✅ **Free** — No cost for AI features
+
+[Learn more about AI privacy →](../privacy/ai-assistant/)
+
+### Is my data shared with AI?
+
+Only if you explicitly consent. When you click "Enhance with AI":
+
+1. You see exactly what will be shared
+2. You click to consent (or cancel)
+3. Only condition names and symptom descriptions are sent
+4. **Never sent:** Your name, SSN, dates, locations, or any PII
+
+### Can I use Vet-Rate without AI?
+
+**Yes, absolutely!** The AI assistant is 100% optional. All features work perfectly with locally-processed templates. Your data never leaves your device unless you choose AI enhancement.
+
 ### Can I submit forms directly to the VA?
 
 **No.** Forms Helper assists with completing forms, but you must still:

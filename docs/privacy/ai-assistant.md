@@ -12,6 +12,14 @@ Understanding how the AI Statement Assistant works and what data is shared.
 
 Vet-Rate.org offers an **optional** AI-powered statement assistant that helps veterans write more professional and effective statements for their VA claims. This feature is powered by **Google Gemini**, Google's AI service.
 
+The AI assistant is available in:
+
+- ✨ **Nexus Builder** — For secondary claim statements
+- ✨ **Forms Helper** — For buddy statements, PTSD stressor statements, and personal statements
+- ✨ **My Packet** — When resuming saved claims
+- ✨ **Secondary Scout** — When building statements for discovered conditions
+- ✨ **Disability Details** — When building statements for primary conditions
+
 !!! warning "AI is Optional"
     The AI assistant is completely optional. You can always use the standard template that processes everything locally on your device with no external data sharing.
 

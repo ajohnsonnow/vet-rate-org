@@ -17,6 +17,10 @@ Forms Helper simplifies the process of completing VA forms by:
 - ✅ **Pre-filling information** — Uses your saved profile data
 - ✅ **Step-by-step guidance** — Wizard-style completion
 - ✅ **Export options** — Download completed forms
+- ✨ **AI Enhancement** — Optional AI-powered statement improvement
+
+!!! tip "AI Statement Assistant"
+    After generating a statement, you can optionally enhance it with AI using the "Three Pillars" approach. This helps create more professional and compelling statements while keeping your personal information private. [Learn more about AI privacy →](../privacy/ai-assistant/)
 
 ---
 

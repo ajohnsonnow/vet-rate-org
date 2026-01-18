@@ -59,6 +59,22 @@ Use this form for stressors including:
 - Symptoms you experience
 - Treatment you've received
 
+### AI Enhancement (Optional)
+
+After completing the PTSD stressor statement wizard, you can optionally enhance it with AI:
+
+1. Click **"✨ Enhance with AI"** button
+2. Review what data will be shared (no PII is ever sent)
+3. The AI uses the "Three Pillars" approach:
+    - **Pillar 1:** The traumatic event type
+    - **Pillar 2:** Current PTSD symptoms
+    - **Pillar 3:** How it affects your life now
+4. Toggle between AI-enhanced and original versions
+5. Download your preferred version
+
+!!! warning "Sensitive Content"
+    The AI is designed to handle PTSD statements sensitively. Only general categories (e.g., "combat exposure") are shared—never specific details that could identify you or others.
+
 ---
 
 ## Form 21-0781a: Personal Assault/MST

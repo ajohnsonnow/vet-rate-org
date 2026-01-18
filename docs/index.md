@@ -29,6 +29,7 @@ This manual is organized into the following sections:
 | **C&P Exam Simulator** | Practice for your Compensation & Pension exam with DBQ-aligned questions |
 | **Nexus Builder** | Generate nexus letter templates and doctor's cheat sheets |
 | **Forms Helper** | Guided assistance for VA forms including buddy statements |
+| **AI Assistant** | Optional AI-powered statement enhancement (privacy-first) |
 | **My Packet** | Manage your claims, save evidence, and backup your data |
 | **VA Resources** | Direct links to official VA programs and services |
 | **Settings** | Customize your experience with accessibility options |
@@ -47,6 +48,7 @@ Vet-Rate.org was built with your privacy as the top priority:
 - ✅ **No Tracking** — No analytics, cookies, or telemetry
 - ✅ **No External Transmission** — All processing happens in your browser
 - ✅ **100% Free** — No hidden fees, subscriptions, or upsells
+- ✨ **AI is Optional** — When using AI features, only non-PII descriptions are shared (with explicit consent)
 
 ---
 

@@ -48,6 +48,9 @@ The welcome screen lists all available tools:
 <strong>Forms Helper</strong> — guided buddy statements & VA form assistance
 </div>
 <div class="step">
+<strong>AI Statement Assistant</strong> — optional AI-powered statement enhancement ✨
+</div>
+<div class="step">
 <strong>My Packet</strong> — organize your evidence and track your claims
 </div>
 </div>

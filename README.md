@@ -13,10 +13,14 @@ A comprehensive, production-ready web application for veterans to research VA di
 - **Secondary Scout**: Discover medically-recognized secondary conditions
 - **C&P Exam Simulator**: Practice compensation & pension exam questions
 - **Nexus Builder**: Generate nexus letter templates with optional AI enhancement
-- **AI Statement Assistant**: ✨ Optional AI-powered statement drafting (Google Gemini)
+- **AI Statement Assistant**: ✨ Optional AI-powered statement drafting using "Three Pillars" approach (Google Gemini)
+  - Personal statements (VA Form 21-4138)
+  - Buddy/Lay statements (VA Form 21-10210)
+  - PTSD Stressor statements (VA Form 21-0781)
+  - Secondary claim statements
 - **My Packet**: Save and manage your claims evidence
 - **PDF Reports**: Download comprehensive condition guides with VA resources
-- **VA Forms Helper**: Access and fill common VA claim forms
+- **VA Forms Helper**: Access and fill common VA claim forms with AI enhancement option
 
 ### Privacy & Security
 - **100% Client-Side**: All core processing happens in your browser
