@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FundingModal from './FundingModal';
+import { getComponentStats } from '../utils/componentStats';
 
 /**
  * BuyMeCoffee - Contextual funding request that appears after valuable actions
@@ -8,8 +9,9 @@ import FundingModal from './FundingModal';
  * @param {string} trigger - What action triggered this (search, secondary-scout, cap-sim, packet, pdf, save, nexus)
  * @param {object} context - Additional context about the action (e.g., { conditionName, count, action })
  * @param {function} onDismiss - Optional callback when dismissed
+ * @param {string} componentKey - Optional component key to show development stats in funding modal
  */
-function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss }) {
+function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, componentKey }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
@@ -120,6 +122,103 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss }) {
         : "Using the right language gets you the rating you earned. This glossary took hundreds of hours to compile.",
       cta: "Appreciate It?",
       icon: "🗣️"
+    },
+    // === NEW SHOCK & AWE TOOLS ===
+    'million-dollar': {
+      headline: "That's YOUR money! 💰",
+      body: context.total
+        ? `${context.total} lifetime value - and you almost let the VA lowball you. This calculator took months to build. Help keep it free.`
+        : "You just saw your VA rating's true worth. Most vets never realize they're fighting for millions. Spread the word.",
+      cta: "Share the Wealth",
+      icon: "🤑"
+    },
+    'mos-hazard': {
+      headline: "Your job DID this! 🎖️",
+      body: context.mos
+        ? `${context.mos} injuries mapped. This database took hundreds of hours researching military occupational hazards.`
+        : "You now have proof your military job caused real damage. Help us add more MOS codes for fellow veterans.",
+      cta: "Back the Research",
+      icon: "💪"
+    },
+    'web-conditions': {
+      headline: "Connections revealed! 🕸️",
+      body: context.condition
+        ? `You discovered how ${context.condition} links to other claims. This medical research took serious time.`
+        : "You just explored secondary connections most veterans never see. Help keep this visualization free for everyone.",
+      cta: "Fund the Mission",
+      icon: "🔗"
+    },
+    // === SPECIALIZED TOOLS ===
+    'tdiu': {
+      headline: "TDIU case built! 📋",
+      body: context.impact
+        ? "Your Individual Unemployability statement is ready. That vocational assessment would cost $500+ privately."
+        : "You just built a professional-grade TDIU impact statement. A vocational expert charges $500+ for this.",
+      cta: "Worth $5?",
+      icon: "🏆"
+    },
+    'pact-act': {
+      headline: "Presumptive found! 🔥",
+      body: context.condition
+        ? `${context.condition} may be presumptive under PACT Act. No nexus letter needed - this research just saved you $1,500+.`
+        : "You found presumptive conditions that don't need nexus letters. That's $1,500+ saved per condition.",
+      cta: "Pay It Forward",
+      icon: "🗺️"
+    },
+    'foia': {
+      headline: "FOIA request ready! 🔑",
+      body: "Your C-File request is generated. Knowing what's in your file is CRITICAL. Help us keep building transparency tools.",
+      cta: "Unlock More Tools",
+      icon: "🔓"
+    },
+    // === DIAMOND TIER TOOLS ===
+    'blue-button': {
+      headline: "Records analyzed! 🩺",
+      body: context.count
+        ? `${context.count} medical records scanned. This AI-powered analysis would cost hundreds at a legal firm.`
+        : "Your medical records are now claim-ready intel. Help fund the servers that make this possible.",
+      cta: "Back the Tech",
+      icon: "📊"
+    },
+    'witness-bench': {
+      headline: "Buddy letter drafted! ✍️",
+      body: context.witness
+        ? `${context.witness}'s statement is ready. A claims attorney charges $150+ for witness prep.`
+        : "Professional-grade witness statement ready. Claims attorneys charge $150+ for this service.",
+      cta: "Worth a Coffee?",
+      icon: "👥"
+    },
+    'risk-assessment': {
+      headline: "Claim protected! 🛡️",
+      body: context.risks
+        ? `${context.risks} risk${context.risks > 1 ? 's' : ''} identified before VA could use them against you. This protection is priceless.`
+        : "You just found vulnerabilities before the VA did. Protection like this is worth every penny.",
+      cta: "Protect More Vets",
+      icon: "⚠️"
+    },
+    'decision-decoder': {
+      headline: "Decision decoded! 📜",
+      body: context.type
+        ? `Your ${context.type} decision letter translated. Understanding VA-speak is half the battle.`
+        : "You decoded VA's confusing language into plain English. Help us decode more decisions.",
+      cta: "Fund Clarity",
+      icon: "🔍"
+    },
+    'symptom-logger': {
+      headline: "Symptoms documented! 📝",
+      body: context.count
+        ? `${context.count} symptom${context.count > 1 ? 's' : ''} logged for your records. This evidence trail could win your claim.`
+        : "Your symptom journal is building. This evidence could be the difference between 30% and 70%.",
+      cta: "Track More Vets",
+      icon: "📋"
+    },
+    'state-benefits': {
+      headline: "State benefits found! 🏛️",
+      body: context.state
+        ? `You discovered ${context.state}'s veteran benefits. This research covers all 50 states - that's serious work.`
+        : "You found state benefits most vets miss. This database took months to compile.",
+      cta: "Keep It Updated",
+      icon: "🗺️"
     }
   };
 
@@ -178,7 +277,11 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss }) {
       </div>
       
       {/* Funding Modal */}
-      <FundingModal show={showFundingModal} onClose={() => setShowFundingModal(false)} />
+      <FundingModal 
+        show={showFundingModal} 
+        onClose={() => setShowFundingModal(false)}
+        componentStats={componentKey ? getComponentStats(componentKey) : null}
+      />
     </>
   );
 }

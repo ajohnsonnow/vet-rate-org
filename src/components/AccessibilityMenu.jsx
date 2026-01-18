@@ -149,7 +149,19 @@ export default function AccessibilityMenu() {
               </svg>
               ♿ Accessibility Settings
             </h3>
-            <p className="text-sm text-green-100 dark:text-gray-300">Section 508 Compliant</p>
+            <p className="text-sm text-green-100 dark:text-gray-300">
+              Section 508 Compliant • Voice Input • Color Vision Support
+            </p>
+          </div>
+
+          {/* Accessibility Features Summary */}
+          <div className="px-4 pt-3 pb-2 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-100 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <span className="text-lg">✨</span>
+              <div className="text-xs text-blue-700 dark:text-blue-300">
+                <strong>Built for ALL veterans:</strong> Dark mode, color-blind modes, adjustable text size, reduced motion, keyboard navigation, screen reader support, and voice dictation in all text fields.
+              </div>
+            </div>
           </div>
 
           <div className="p-4 space-y-5 max-h-[70vh] overflow-y-auto">

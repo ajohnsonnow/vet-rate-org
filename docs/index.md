@@ -8,11 +8,11 @@
 
 ## Welcome, Fellow Veteran 🎖️
 
-**Vet-Rate.org** is your complete VA claims toolkit — built by a fellow service-disabled veteran to help you navigate the VA disability claims process. This comprehensive manual covers every feature, setting, and tool available on the platform.
+**Vet-Rate.org** is your complete VA claims arsenal — 28 professional-grade tools built by a fellow service-disabled veteran to help you navigate the VA disability claims process from initial research through appeals. This comprehensive manual covers every feature, setting, and tool available on the platform.
 
 <div class="feature-card">
 <h3>🛡️ Your Claims Command Center</h3>
-<p>Search <strong>748 rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet—all in one place.</p>
+<p>Search <strong>748 rated disabilities</strong> with official rating criteria, calculate combined ratings, discover secondary conditions, practice for C&P exams, analyze documents with AI, and build your complete evidence packet—all in one place. What "claim sharks" charge thousands for, absolutely free.</p>
 </div>
 
 ---
@@ -24,13 +24,14 @@ This manual is organized into the following sections:
 | Section | Description |
 |---------|-------------|
 | **Getting Started** | First-time setup, interface overview, and accessibility settings |
-| **Search & Explore** | How to search disabilities, understand results, and rating criteria |
-| **Secondary Scout** | Discover secondary conditions linked to your service-connected disabilities |
+| **Search & Explore** | How to search 748 disabilities, understand results, and rating criteria |
+| **Rating Calculators** | Tactical Calculator, Million Dollar Dashboard, TDIU Builder |
+| **Discovery Tools** | Secondary Scout, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions |
 | **C&P Exam Simulator** | Practice for your Compensation & Pension exam with DBQ-aligned questions |
-| **Nexus Builder** | Generate nexus letter templates and doctor's cheat sheets |
-| **Forms Helper** | Guided assistance for VA forms including buddy statements |
-| **C-File AI Analyzer** | AI-powered analysis of your entire claims file (what competitors charge $500+ for) |
-| **AI Assistant** | Optional AI-powered statement enhancement (privacy-first) |
+| **Evidence Builders** | Nexus Builder, Forms Helper, Witness Bench, Symptom Logger |
+| **AI Analysis Suite** | C-File Analyzer, Decision Decoder, Blue Button X-Ray, Red Team (premium features, free) |
+| **Strategic Tools** | Pathfinder, Risk Assessment, VSO Finder, State Benefit Hunter |
+| **Protection Tools** | Shark Radar, FOIA Generator |
 | **My Packet** | Manage your claims, save evidence, and backup your data |
 | **VA Resources** | Direct links to official VA programs and services |
 | **Settings** | Customize your experience with accessibility options |

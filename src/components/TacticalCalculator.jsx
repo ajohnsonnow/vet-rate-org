@@ -1,0 +1,1594 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import ReportBugLink from './ReportBugLink';
+import BuyMeCoffee from './BuyMeCoffee';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import {
+  calculateVARating,
+  calculateCompensation,
+  calculateWhatIf,
+  calculateNeededRating,
+  BODY_PARTS,
+  VA_PAY_RATES_2026,
+} from '../utils/vaCalculator';
+import {
+  getMyRatings,
+  saveMyRatings,
+  addRating,
+  removeRating,
+  hasMyRatings,
+} from '../utils/veteranProfile';
+
+/**
+ * TacticalCalculator - "The Rate You Deserve"
+ * 
+ * The irony: Vet-Rate.org didn't have a rating calculator!
+ * 
+ * This isn't just another "dumb" calculator. This is a TACTICAL PLANNER:
+ * - Shows the GAP to next tier
+ * - Correctly handles Bilateral Factor (10% boost)
+ * - Calculates real paycheck with dependents
+ * - Shows "What If" scenarios
+ */
+
+const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capSimulatorResults = [], onClearCapResults }) => {
+  useBodyScrollLock(true);
+  
+  // Conditions list (for calculator tab)
+  const [conditions, setConditions] = useState(initialConditions);
+  
+  // C&P Simulator imported results
+  const [capResults, setCapResults] = useState(capSimulatorResults);
+  
+  // My Ratings - saved actual VA ratings
+  const [myRatings, setMyRatings] = useState(() => getMyRatings());
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  
+  // New condition form
+  const [newCondition, setNewCondition] = useState({
+    name: '',
+    bodyPart: '',
+    rating: 10,
+    side: 'none', // 'left', 'right', 'bilateral', 'none'
+  });
+  
+  // Dependents for pay calculation
+  const [dependents, setDependents] = useState({
+    married: false,
+    spouseAidAttendance: false,
+    childrenUnder18: 0,
+    childrenSchool: 0,
+    dependentParents: 0,
+  });
+  
+  // What-If scenario
+  const [whatIfRating, setWhatIfRating] = useState(30);
+  const [whatIfBilateral, setWhatIfBilateral] = useState(false);
+  
+  // View mode
+  const [activeTab, setActiveTab] = useState(
+    capSimulatorResults.length > 0 ? 'capresults' : 
+    hasMyRatings() ? 'myratings' : 'calculator'
+  );
+  const [showSteps, setShowSteps] = useState(false);
+
+  // Handle incoming C&P Simulator results
+  useEffect(() => {
+    if (capSimulatorResults.length > 0) {
+      setCapResults(capSimulatorResults);
+      setActiveTab('capresults');
+    }
+  }, [capSimulatorResults]);
+
+  // Load my ratings from storage when saved ratings change
+  const loadMyRatings = () => {
+    setMyRatings(getMyRatings());
+  };
+
+  // Save current calculator conditions as "My Ratings"
+  const handleSaveAsMyRatings = () => {
+    if (conditions.length === 0) {
+      alert('Add some conditions in the Calculator tab first!');
+      return;
+    }
+    saveMyRatings(conditions);
+    setMyRatings(conditions);
+    setShowSaveConfirm(true);
+    setTimeout(() => setShowSaveConfirm(false), 3000);
+  };
+
+  // Load My Ratings into the calculator
+  const handleLoadMyRatings = () => {
+    if (myRatings.length > 0) {
+      setConditions(myRatings);
+      setActiveTab('calculator');
+    }
+  };
+
+  // Add a rating directly to My Ratings
+  const handleAddToMyRatings = (rating) => {
+    const newId = addRating(rating);
+    if (newId) {
+      loadMyRatings();
+    }
+  };
+
+  // Remove a rating from My Ratings
+  const handleRemoveFromMyRatings = (ratingId) => {
+    removeRating(ratingId);
+    loadMyRatings();
+  };
+
+  // Calculate results from My Ratings
+  const myRatingsResults = calculateVARating(myRatings);
+  const myRatingsCompensation = calculateCompensation(myRatingsResults.combinedRating, dependents);
+
+  // Calculate results
+  const results = calculateVARating(conditions);
+  const compensation = calculateCompensation(results.combinedRating, dependents);
+  const whatIfResults = calculateWhatIf(conditions, whatIfRating, whatIfBilateral);
+  const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
+  const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
+
+  // Get all body parts as flat array
+  const allBodyParts = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+  
+  // Check if selected body part can be bilateral
+  const selectedBodyPartInfo = allBodyParts.find(bp => bp.value === newCondition.bodyPart);
+  const canBeBilateral = selectedBodyPartInfo?.canBeBilateral || false;
+
+  // Handle adding a condition
+  const handleAddCondition = () => {
+    if (!newCondition.bodyPart) {
+      alert('Please select a body part.');
+      return;
+    }
+    
+    const bodyPartLabel = allBodyParts.find(bp => bp.value === newCondition.bodyPart)?.label || newCondition.bodyPart;
+    const sideSuffix = newCondition.side !== 'none' 
+      ? ` (${newCondition.side.charAt(0).toUpperCase() + newCondition.side.slice(1)})`
+      : '';
+    
+    const condition = {
+      id: Date.now().toString(),
+      name: newCondition.name || `${bodyPartLabel}${sideSuffix}`,
+      bodyPart: newCondition.bodyPart,
+      rating: newCondition.rating,
+      side: canBeBilateral ? newCondition.side : 'none',
+    };
+    
+    setConditions(prev => [...prev, condition]);
+    
+    // Reset form
+    setNewCondition({
+      name: '',
+      bodyPart: '',
+      rating: 10,
+      side: 'none',
+    });
+  };
+
+  // Handle removing a condition
+  const handleRemoveCondition = (id) => {
+    setConditions(prev => prev.filter(c => c.id !== id));
+  };
+
+  // Rating percentage options
+  const ratingOptions = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+  // Progress ring component
+  const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percentage / 100) * circumference;
+    
+    const getColor = () => {
+      if (percentage >= 100) return '#22c55e'; // green
+      if (percentage >= 70) return '#3b82f6'; // blue
+      if (percentage >= 50) return '#f59e0b'; // amber
+      return '#ef4444'; // red
+    };
+    
+    return (
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-gray-200 dark:text-gray-700"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={getColor()}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-500"
+        />
+      </svg>
+    );
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="calculator-title"
+    >
+      <div className="min-h-screen px-4 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🧮</span>
+                </div>
+                <div>
+                  <h2 id="calculator-title" className="text-2xl sm:text-3xl font-bold">
+                    Tactical Calculator
+                  </h2>
+                  <p className="text-blue-100 text-sm sm:text-base mt-1">
+                    VA Math • Bilateral Factor • Gap Analysis • Pay Estimator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Tactical Calculator" />}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="px-6 pt-4 border-b dark:border-gray-700">
+            <nav className="flex gap-1 overflow-x-auto pb-1">
+              {[
+                { id: 'myratings', label: '⭐ My Ratings', icon: '⭐' },
+                ...(capResults.length > 0 ? [{ id: 'capresults', label: '🏥 C&P Results', icon: '🏥', badge: capResults.length }] : []),
+                { id: 'calculator', label: '🧮 Calculator', icon: '🧮' },
+                { id: 'paycheck', label: '💵 Paycheck', icon: '💵' },
+                { id: 'whatif', label: '🎯 What-If', icon: '🎯' },
+                { id: 'rates', label: '📊 2026 Rates', icon: '📊' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-3 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? tab.id === 'capresults' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.badge && (
+                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${
+                      activeTab === tab.id ? 'bg-white/30' : 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                    }`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {/* My Ratings Tab - Save and manage your actual VA ratings */}
+            {activeTab === 'myratings' && (
+              <div className="space-y-6">
+                {/* Header Info */}
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">⭐</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-amber-800 dark:text-amber-200">My VA Ratings</h3>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        Save your actual service-connected disability ratings here. They'll be saved locally on your device and can be used across the app.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Confirmation */}
+                {showSaveConfirm && (
+                  <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span className="text-green-700 dark:text-green-300 text-sm">Ratings saved successfully!</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* My Saved Ratings List */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200">Saved Ratings</h4>
+                      {myRatings.length > 0 && (
+                        <button
+                          onClick={handleLoadMyRatings}
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          Load into Calculator →
+                        </button>
+                      )}
+                    </div>
+
+                    {myRatings.length === 0 ? (
+                      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
+                        <span className="text-4xl mb-3 block">📋</span>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">No ratings saved yet</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                          Add your conditions in the Calculator tab, then save them here for quick access.
+                        </p>
+                        <button
+                          onClick={() => setActiveTab('calculator')}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          Go to Calculator
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {myRatings.map((rating, index) => (
+                          <div 
+                            key={rating.id || index}
+                            className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white ${
+                                rating.rating >= 70 ? 'bg-red-500' :
+                                rating.rating >= 50 ? 'bg-orange-500' :
+                                rating.rating >= 30 ? 'bg-yellow-500' : 'bg-gray-400'
+                              }`}>
+                                {rating.rating}%
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                  {rating.name || allBodyParts.find(bp => bp.value === rating.bodyPart)?.label || rating.bodyPart}
+                                </p>
+                                {rating.side !== 'none' && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{rating.side}</p>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveFromMyRatings(rating.id)}
+                              className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                              title="Remove"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Save from Calculator Button */}
+                    {conditions.length > 0 && (
+                      <button
+                        onClick={handleSaveAsMyRatings}
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center justify-center gap-2"
+                      >
+                        <span>⭐</span> Save Calculator Conditions as My Ratings
+                      </button>
+                    )}
+                  </div>
+
+                  {/* My Ratings Summary */}
+                  <div className="space-y-4">
+                    {myRatings.length > 0 ? (
+                      <>
+                        {/* Combined Rating Display */}
+                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-6 text-center">
+                          <p className="text-blue-100 text-sm mb-2">My Combined VA Rating</p>
+                          <div className="text-5xl font-bold mb-2">{myRatingsResults.combinedRating}%</div>
+                          {myRatingsResults.bilateralFactor > 0 && (
+                            <p className="text-blue-200 text-sm">
+                              Includes {myRatingsResults.bilateralFactor.toFixed(1)}% Bilateral Factor
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Monthly Pay Estimate */}
+                        <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
+                          <p className="text-green-100 text-sm mb-2">Estimated Monthly Pay (Solo)</p>
+                          <div className="text-4xl font-bold">
+                            ${VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating]?.toLocaleString() || '0'}
+                          </div>
+                          <p className="text-green-200 text-sm mt-2">
+                            ${((VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating] || 0) * 12).toLocaleString()}/year
+                          </p>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{myRatings.length}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Conditions</div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{myRatingsResults.rawScore}%</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Raw Score</div>
+                          </div>
+                        </div>
+
+                        {/* Gap Analysis */}
+                        {myRatingsResults.combinedRating < 100 && (
+                          <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                            <h5 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Gap to Next Tier</h5>
+                            <p className="text-sm text-purple-700 dark:text-purple-300">
+                              You're <strong>{myRatingsResults.gapToNextTier}%</strong> away from the next rating tier.
+                              {myRatingsResults.combinedRating < 100 && myRatingsResults.combinedRating >= 90 && (
+                                <span className="block mt-1">So close to 100%! Use What-If to explore options.</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
+                        <span className="text-6xl mb-4 block opacity-30">📊</span>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Save your ratings to see your combined rating and pay estimate here.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Integration Note */}
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                  <div className="flex gap-3">
+                    <span className="text-xl">💡</span>
+                    <div>
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Pro Tip:</strong> Your saved ratings can be used to:
+                      </p>
+                      <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
+                        <li>Quick-load into the Calculator for what-if scenarios</li>
+                        <li>Pre-populate Secondary Scout with your service-connected conditions</li>
+                        <li>Track your rating progress over time</li>
+                        <li>Calculate accurate paycheck estimates with dependents</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* C&P Simulator Results Tab */}
+            {activeTab === 'capresults' && capResults.length > 0 && (
+              <div className="space-y-6">
+                {/* Header Info */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">🏥</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-purple-900 dark:text-purple-100">C&P Simulator Results</h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                        These ratings were predicted from your C&P Exam simulations. Add them to your calculator to see the combined rating impact!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCapResults([]);
+                        if (onClearCapResults) onClearCapResults();
+                        setActiveTab('calculator');
+                      }}
+                      className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+
+                {/* Results List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {capResults.map((result, index) => (
+                    <div 
+                      key={result.id || index}
+                      className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-purple-200 dark:border-purple-700 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-14 h-14 rounded-lg flex items-center justify-center font-bold text-white text-xl ${
+                            result.rating >= 70 ? 'bg-red-500' :
+                            result.rating >= 50 ? 'bg-orange-500' :
+                            result.rating >= 30 ? 'bg-yellow-500' : 'bg-gray-400'
+                          }`}>
+                            {result.rating}%
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {result.conditionName}
+                            </p>
+                            {result.diagnosticCode && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                DC {result.diagnosticCode}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                          C&P Sim
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            // Add to current calculator conditions
+                            const condition = {
+                              id: Date.now().toString() + index,
+                              name: result.conditionName,
+                              bodyPart: 'other',
+                              rating: result.rating,
+                              side: 'none',
+                              source: 'C&P Simulator',
+                              diagnosticCode: result.diagnosticCode,
+                            };
+                            setConditions(prev => [...prev, condition]);
+                            // Remove from C&P results
+                            setCapResults(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <span>🧮</span> Add to Calculator
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Add directly to My Ratings
+                            const rating = {
+                              name: result.conditionName,
+                              bodyPart: 'other',
+                              rating: result.rating,
+                              side: 'none',
+                              source: 'C&P Simulator',
+                              diagnosticCode: result.diagnosticCode,
+                            };
+                            handleAddToMyRatings(rating);
+                            // Remove from C&P results
+                            setCapResults(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <span>⭐</span> Save to My Ratings
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calculate Combined if we add all */}
+                {capResults.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Quick Preview</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      If you add all {capResults.length} C&P result{capResults.length !== 1 ? 's' : ''} to your existing conditions:
+                    </p>
+                    
+                    {(() => {
+                      const previewConditions = [
+                        ...conditions,
+                        ...capResults.map((r, i) => ({
+                          id: `preview-${i}`,
+                          name: r.conditionName,
+                          bodyPart: 'other',
+                          rating: r.rating,
+                          side: 'none',
+                        }))
+                      ];
+                      const previewResults = calculateVARating(previewConditions);
+                      
+                      return (
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                            <div className="text-2xl font-bold text-blue-600">{conditions.length}</div>
+                            <div className="text-xs text-gray-500">Current</div>
+                          </div>
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                            <div className="text-2xl font-bold text-purple-600">+{capResults.length}</div>
+                            <div className="text-xs text-gray-500">From C&P</div>
+                          </div>
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                            <div className="text-2xl font-bold text-green-600">{previewResults.combinedRating}%</div>
+                            <div className="text-xs text-gray-500">Combined</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    <button
+                      onClick={() => {
+                        // Add all C&P results to conditions
+                        const newConditions = capResults.map((r, i) => ({
+                          id: Date.now().toString() + i,
+                          name: r.conditionName,
+                          bodyPart: 'other',
+                          rating: r.rating,
+                          side: 'none',
+                          source: 'C&P Simulator',
+                          diagnosticCode: r.diagnosticCode,
+                        }));
+                        setConditions(prev => [...prev, ...newConditions]);
+                        setCapResults([]);
+                        if (onClearCapResults) onClearCapResults();
+                        setActiveTab('calculator');
+                      }}
+                      className="w-full mt-3 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all"
+                    >
+                      Add All to Calculator
+                    </button>
+                  </div>
+                )}
+
+                {/* Educational Note */}
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                  <div className="flex gap-3">
+                    <span className="text-xl">💡</span>
+                    <div>
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Remember:</strong> C&P Simulator predictions are based on your self-reported answers. 
+                        The actual rating from the VA may differ based on the examiner's findings and all evidence in your file.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Calculator Tab */}
+            {activeTab === 'calculator' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Input Section */}
+                <div className="space-y-6">
+                  {/* Quick Load from My Ratings */}
+                  {myRatings.length > 0 && conditions.length === 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between">
+                      <span className="text-sm text-amber-700 dark:text-amber-300">
+                        ⭐ You have {myRatings.length} saved rating{myRatings.length !== 1 ? 's' : ''}
+                      </span>
+                      <button
+                        onClick={handleLoadMyRatings}
+                        className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
+                      >
+                        Load Now →
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Add Condition Form */}
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                      <span>➕</span> Add Rated Condition
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Body Part */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Body Part / Condition Type
+                        </label>
+                        <select
+                          value={newCondition.bodyPart}
+                          onChange={(e) => {
+                            const bp = e.target.value;
+                            const info = allBodyParts.find(p => p.value === bp);
+                            setNewCondition(prev => ({ 
+                              ...prev, 
+                              bodyPart: bp,
+                              side: info?.canBeBilateral ? prev.side : 'none'
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        >
+                          <option value="">-- Select --</option>
+                          <optgroup label="Extremities (Can be Bilateral)">
+                            {BODY_PARTS.extremities.map(bp => (
+                              <option key={bp.value} value={bp.value}>{bp.label}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Other Body Systems">
+                            {BODY_PARTS.other.map(bp => (
+                              <option key={bp.value} value={bp.value}>{bp.label}</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Side (if bilateral capable) */}
+                      {canBeBilateral && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Side
+                          </label>
+                          <select
+                            value={newCondition.side}
+                            onChange={(e) => setNewCondition(prev => ({ ...prev, side: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          >
+                            <option value="none">Not Bilateral</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                            <option value="bilateral">Both (Bilateral)</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Rating %
+                        </label>
+                        <select
+                          value={newCondition.rating}
+                          onChange={(e) => setNewCondition(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        >
+                          {ratingOptions.map(r => (
+                            <option key={r} value={r}>{r}%</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Custom Name (optional) */}
+                      <div className={canBeBilateral ? 'sm:col-span-2' : ''}>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Custom Label (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={newCondition.name}
+                          onChange={(e) => setNewCondition(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g., Tinnitus, PTSD, etc."
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleAddCondition}
+                      disabled={!newCondition.bodyPart}
+                      className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ➕ Add to Calculator
+                    </button>
+                  </div>
+
+                  {/* Conditions List */}
+                  <div>
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between">
+                      <span>📋 Your Rated Conditions ({conditions.length})</span>
+                      {conditions.length > 0 && (
+                        <button
+                          onClick={() => setConditions([])}
+                          className="text-xs text-red-600 hover:text-red-700"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </h3>
+                    
+                    {conditions.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                        <div className="text-4xl mb-2">📝</div>
+                        <p>No conditions added yet.</p>
+                        <p className="text-sm mt-1">Add your service-connected ratings above.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {conditions.map(condition => (
+                          <div 
+                            key={condition.id}
+                            className={`flex items-center justify-between p-3 rounded-lg border ${
+                              condition.side !== 'none'
+                                ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700'
+                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+                                {condition.rating}%
+                              </span>
+                              <div>
+                                <p className="font-medium text-gray-800 dark:text-gray-200">
+                                  {condition.name}
+                                </p>
+                                {condition.side !== 'none' && (
+                                  <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+                                    🔄 Bilateral ({condition.side})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveCondition(condition.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                              aria-label="Remove"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Results Section */}
+                <div className="space-y-6">
+                  {/* Main Rating Display */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+                    <div className="flex items-center justify-center gap-6">
+                      {/* Progress Ring */}
+                      <div className="relative">
+                        <ProgressRing percentage={results.combinedRating} size={160} strokeWidth={14} />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                            {results.combinedRating}%
+                          </span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Combined</span>
+                        </div>
+                      </div>
+                      
+                      {/* Details */}
+                      <div className="space-y-2">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Raw Score</p>
+                          <p className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
+                            {results.rawScore}%
+                          </p>
+                        </div>
+                        {results.bilateralFactor > 0 && (
+                          <div className="text-center px-3 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                            <p className="text-xs text-purple-600 dark:text-purple-400">Bilateral Factor</p>
+                            <p className="font-semibold text-purple-700 dark:text-purple-300">
+                              +{results.bilateralFactor}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gap Analysis */}
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                      <span>🎯</span> Gap Analysis
+                    </h4>
+                    
+                    {results.combinedRating >= 100 ? (
+                      <div className="text-center py-4">
+                        <span className="text-4xl">🎉</span>
+                        <p className="text-green-600 dark:text-green-400 font-bold text-lg mt-2">
+                          You've reached 100%!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Gap to next tier */}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Gap to {results.nextTier}%:
+                          </span>
+                          <span className="font-semibold text-orange-600 dark:text-orange-400">
+                            {results.gapToNext10}% away
+                          </span>
+                        </div>
+                        
+                        {/* Progress bar to next tier */}
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                            style={{ width: `${((10 - results.gapToNext10) / 10) * 100}%` }}
+                          />
+                        </div>
+                        
+                        {/* What you need */}
+                        {results.combinedRating < 90 && (
+                          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+                            <p className="text-sm text-amber-700 dark:text-amber-300">
+                              <strong>To reach 90%:</strong> You need approximately <strong>{ratingNeededFor90}%</strong> more in new ratings.
+                            </p>
+                          </div>
+                        )}
+                        
+                        {results.combinedRating < 100 && (
+                          <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+                            <p className="text-sm text-green-700 dark:text-green-300">
+                              <strong>To reach 100%:</strong> You need approximately <strong>{ratingNeededFor100}%</strong> more in new ratings.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Pay Preview */}
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-green-600 dark:text-green-400">Monthly Pay (Solo)</p>
+                        <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                          ${VA_PAY_RATES_2026.solo[results.combinedRating]?.toLocaleString() || '0'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('paycheck')}
+                        className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+                      >
+                        Add Dependents →
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Show Calculation Steps */}
+                  <button
+                    onClick={() => setShowSteps(!showSteps)}
+                    className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
+                  >
+                    <span>{showSteps ? '▼' : '▶'}</span>
+                    {showSteps ? 'Hide' : 'Show'} Calculation Steps
+                  </button>
+                  
+                  {showSteps && results.calculationSteps.length > 0 && (
+                    <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 text-sm font-mono space-y-2">
+                      {results.calculationSteps.map((step, idx) => (
+                        <div key={idx} className="text-gray-700 dark:text-gray-300">
+                          <strong>Step {step.step}:</strong> {step.description}
+                          {step.ratings && (
+                            <div className="ml-4 text-gray-500">Ratings: {step.ratings.join(', ')}%</div>
+                          )}
+                          {step.bilateralGroupRating && (
+                            <div className="ml-4 text-purple-600 dark:text-purple-400">
+                              Bilateral Group: {step.combinedBilateral}% + {step.bilateralFactor}% = {step.bilateralGroupRating}%
+                            </div>
+                          )}
+                          {step.rawScore && (
+                            <div className="ml-4 text-green-600 dark:text-green-400">
+                              Raw: {step.rawScore}% → Rounded: {step.roundedTo}%
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Paycheck Tab */}
+            {activeTab === 'paycheck' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Dependents Input */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <span>👨‍👩‍👧‍👦</span> Your Dependents
+                  </h3>
+                  
+                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      <strong>Note:</strong> Dependent benefits only apply at 30% or higher combined rating.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Spouse */}
+                    <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
+                      <input
+                        type="checkbox"
+                        checked={dependents.married}
+                        onChange={(e) => setDependents(prev => ({ 
+                          ...prev, 
+                          married: e.target.checked,
+                          spouseAidAttendance: e.target.checked ? prev.spouseAidAttendance : false
+                        }))}
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="font-medium text-gray-800 dark:text-gray-200">💑 Married</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          +${VA_PAY_RATES_2026.spouse[results.combinedRating] || 0}/mo at your rating
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Spouse A&A */}
+                    {dependents.married && (
+                      <label className="flex items-center gap-3 p-4 ml-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750">
+                        <input
+                          type="checkbox"
+                          checked={dependents.spouseAidAttendance}
+                          onChange={(e) => setDependents(prev => ({ ...prev, spouseAidAttendance: e.target.checked }))}
+                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">🏥 Spouse Needs Aid & Attendance</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Additional +${VA_PAY_RATES_2026.spouseAidAttendance[results.combinedRating] || 0}/mo
+                          </p>
+                        </div>
+                      </label>
+                    )}
+
+                    {/* Children Under 18 */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">👶 Children Under 18</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            +${VA_PAY_RATES_2026.childUnder18[results.combinedRating] || 0}/mo each
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, childrenUnder18: Math.max(0, prev.childrenUnder18 - 1) }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center font-bold">{dependents.childrenUnder18}</span>
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, childrenUnder18: prev.childrenUnder18 + 1 }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Children in School */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">🎓 Children 18-23 in School</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            +${VA_PAY_RATES_2026.childSchool[results.combinedRating] || 0}/mo each
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, childrenSchool: Math.max(0, prev.childrenSchool - 1) }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center font-bold">{dependents.childrenSchool}</span>
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, childrenSchool: prev.childrenSchool + 1 }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dependent Parents */}
+                    <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">👴 Dependent Parents</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            1: +${VA_PAY_RATES_2026.parentOne[results.combinedRating] || 0}/mo | 2: +${VA_PAY_RATES_2026.parentTwo[results.combinedRating] || 0}/mo
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, dependentParents: Math.max(0, prev.dependentParents - 1) }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center font-bold">{dependents.dependentParents}</span>
+                          <button
+                            onClick={() => setDependents(prev => ({ ...prev, dependentParents: Math.min(2, prev.dependentParents + 1) }))}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pay Results */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <span>💰</span> Your Estimated Pay (2025 Rates)
+                  </h3>
+
+                  {/* Big Pay Display */}
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white text-center">
+                    <p className="text-green-100 text-sm">Monthly Compensation</p>
+                    <p className="text-5xl font-bold my-2">
+                      ${compensation.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-green-100">
+                      ${compensation.annualTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}/year
+                    </p>
+                  </div>
+
+                  {/* Breakdown */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💵 Breakdown</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Base Rate ({results.combinedRating}%)</span>
+                        <span className="font-medium">${compensation.breakdown.baseRate.toLocaleString()}</span>
+                      </div>
+                      {compensation.breakdown.spouseAddition > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>+ Spouse</span>
+                          <span>+${compensation.breakdown.spouseAddition.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {compensation.breakdown.spouseAidAttendanceAddition > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>+ Spouse A&A</span>
+                          <span>+${compensation.breakdown.spouseAidAttendanceAddition.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {compensation.breakdown.childrenUnder18Addition > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>+ Children Under 18</span>
+                          <span>+${compensation.breakdown.childrenUnder18Addition.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {compensation.breakdown.childrenSchoolAddition > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>+ Children in School</span>
+                          <span>+${compensation.breakdown.childrenSchoolAddition.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {compensation.breakdown.parentsAddition > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>+ Dependent Parent(s)</span>
+                          <span>+${compensation.breakdown.parentsAddition.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
+                        <span>Total</span>
+                        <span>${compensation.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SMC Note */}
+                  {results.combinedRating === 100 && (
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        <strong>💡 SMC Note:</strong> At 100%, you may qualify for Special Monthly Compensation (SMC) 
+                        if you have additional disabilities rated 60%+ or loss of use. This calculator shows base rates only.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* What-If Tab */}
+            {activeTab === 'whatif' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Scenario Input */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <span>🎯</span> What If I Got Another Rating?
+                  </h3>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      See how adding a new rating would change your combined percentage and monthly pay.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        New Rating Percentage
+                      </label>
+                      <div className="grid grid-cols-6 gap-2">
+                        {ratingOptions.filter(r => r > 0).map(r => (
+                          <button
+                            key={r}
+                            onClick={() => setWhatIfRating(r)}
+                            className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                              whatIfRating === r
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            {r}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={whatIfBilateral}
+                        onChange={(e) => setWhatIfBilateral(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                      />
+                      <div>
+                        <span className="font-medium text-purple-800 dark:text-purple-200">
+                          🔄 This would be a bilateral condition
+                        </span>
+                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                          Adds 10% bilateral factor boost
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* What-If Results */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <span>📊</span> Projected Impact
+                  </h3>
+
+                  {/* Before/After Comparison */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-4 text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Current</p>
+                      <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">
+                        {whatIfResults.currentRating}%
+                      </p>
+                      <p className="text-xs text-gray-500">Raw: {whatIfResults.currentRaw}%</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 rounded-xl p-4 text-center border-2 border-green-300 dark:border-green-700">
+                      <p className="text-sm text-green-600 dark:text-green-400 mb-1">With +{whatIfRating}%</p>
+                      <p className="text-3xl font-bold text-green-700 dark:text-green-300">
+                        {whatIfResults.newRating}%
+                      </p>
+                      <p className="text-xs text-green-600">Raw: {whatIfResults.newRaw}%</p>
+                    </div>
+                  </div>
+
+                  {/* Change Summary */}
+                  <div className={`p-4 rounded-xl ${
+                    whatIfResults.ratingIncrease > 0
+                      ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700'
+                      : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700 dark:text-gray-300">Rating Change:</span>
+                      <span className={`font-bold text-xl ${
+                        whatIfResults.ratingIncrease > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {whatIfResults.ratingIncrease > 0 ? '+' : ''}{whatIfResults.ratingIncrease}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Pay Comparison */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💰 Pay Comparison (Solo)</h4>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Current ({whatIfResults.currentRating}%)</span>
+                        <span>${VA_PAY_RATES_2026.solo[whatIfResults.currentRating]?.toLocaleString() || 0}/mo</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                        <span>Projected ({whatIfResults.newRating}%)</span>
+                        <span>${VA_PAY_RATES_2026.solo[whatIfResults.newRating]?.toLocaleString() || 0}/mo</span>
+                      </div>
+                      <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
+                        <span>Monthly Increase</span>
+                        <span className="text-green-600 dark:text-green-400">
+                          +${((VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) - (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                        <span>Annual Increase</span>
+                        <span>
+                          +${(((VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) - (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)) * 12).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pathfinder Hook */}
+                  <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                    <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                      <strong>💡 Pro Tip:</strong> Use our Pathfinder tool to discover secondary conditions 
+                      that could help you reach your target rating!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rates Tab - 2026 VA Compensation Rates */}
+            {activeTab === 'rates' && (
+              <div className="space-y-6">
+                {/* Header Info */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">📊</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-green-800 dark:text-green-200">2026 VA Disability Compensation Rates</h3>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Effective December 1, 2025 • Source: <a href="https://www.va.gov/disability/compensation-rates/veteran-rates/" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">VA.gov</a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Basic Rates - 10% to 20% */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">💰</span>
+                    Veterans with 10% to 20% Rating
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    Note: At 10-20%, you won't receive a higher rate even if you have dependents.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">$180.42</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">10% Rating</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white">$356.66</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">20% Rating</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Veteran Alone Rates - 30% to 100% */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">👤</span>
+                    Veteran Alone (No Dependents)
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b dark:border-gray-700">
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Rating</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Monthly</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Annual</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[30, 40, 50, 60, 70, 80, 90, 100].map(rating => (
+                          <tr key={rating} className={`border-b dark:border-gray-700 ${rating === 100 ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
+                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">{rating}%</td>
+                            <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                              ${VA_PAY_RATES_2026.solo[rating]?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-400">
+                              ${(VA_PAY_RATES_2026.solo[rating] * 12)?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* With Spouse Rates */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">💑</span>
+                    With Spouse (No Children or Parents)
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b dark:border-gray-700">
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Rating</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Monthly</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Spouse Add</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[30, 40, 50, 60, 70, 80, 90, 100].map(rating => (
+                          <tr key={rating} className="border-b dark:border-gray-700">
+                            <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">{rating}%</td>
+                            <td className="py-2 px-3 text-right font-semibold text-gray-900 dark:text-white">
+                              ${(VA_PAY_RATES_2026.solo[rating] + VA_PAY_RATES_2026.spouse[rating])?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">
+                              +${VA_PAY_RATES_2026.spouse[rating]?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Added Amounts Table */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">➕</span>
+                    Additional Amounts for Dependents
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    These amounts are added to your base rate at 30%+ rating.
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b dark:border-gray-700">
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Dependent Type</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">30%</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">50%</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">70%</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">100%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">Spouse</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">Spouse A&A</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">First Child</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">Each Add'l Child &lt;18</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">Child 18+ in School</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">1 Parent</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[100]}</td>
+                        </tr>
+                        <tr className="border-b dark:border-gray-700">
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">2 Parents</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[30]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[50]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[70]}</td>
+                          <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[100]}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Quick Reference Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
+                    <div className="text-3xl font-bold">$3,938.58</div>
+                    <div className="text-green-100 text-sm">100% Veteran Alone</div>
+                    <div className="text-green-100 text-xs mt-1">$47,262.96/year</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
+                    <div className="text-3xl font-bold">$4,158.17</div>
+                    <div className="text-blue-100 text-sm">100% with Spouse</div>
+                    <div className="text-blue-100 text-xs mt-1">$49,898.04/year</div>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
+                    <div className="text-3xl font-bold">$4,318.99</div>
+                    <div className="text-purple-100 text-sm">100% with Spouse + Child</div>
+                    <div className="text-purple-100 text-xs mt-1">$51,827.88/year</div>
+                  </div>
+                </div>
+
+                {/* COLA Note */}
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+                  <div className="flex gap-3">
+                    <span className="text-xl">ℹ️</span>
+                    <div>
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Cost-of-Living Adjustment (COLA):</strong> VA is required by law to match the COLA 
+                        percentage applied to Social Security benefits. This ensures your benefits keep up with inflation.
+                      </p>
+                      <a 
+                        href="https://www.ssa.gov/cola/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
+                      >
+                        Learn more about COLA on SSA.gov →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                <p>📋 Based on 38 CFR § 4.25 (Combined Ratings) and 2026 VA Pay Rates (Effective Dec 1, 2025)</p>
+                <p>This is an estimate. Actual payments may vary.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <BuyMeCoffee 
+                  show={conditions.length > 0} 
+                  trigger="tactical-calculator"
+                  componentKey="tactical-calculator"
+                />
+                <button
+                  onClick={onClose}
+                  className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Export a function that other components can use to add conditions
+export const addToCalculator = (condition, rating, side = 'none') => {
+  // This will be handled via context or state management
+  // For now, we'll dispatch a custom event
+  const event = new CustomEvent('addToCalculator', {
+    detail: { condition, rating, side }
+  });
+  window.dispatchEvent(event);
+};
+
+export default TacticalCalculator;

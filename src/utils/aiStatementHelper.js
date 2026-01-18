@@ -730,6 +730,489 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
   }
 };
 
+/**
+ * ===========================================
+ * STATE BENEFIT HUNTER - Feature A
+ * Finds state-specific veteran benefits
+ * ===========================================
+ */
+
+/**
+ * Build prompt for State Benefits search
+ * Uses the "State Expert" system prompt
+ */
+const buildStateBenefitsPrompt = (state, rating) => {
+  return `You are a State Veterans Benefits Expert.
+User Input: "${state}, ${rating}"
+
+YOUR GOAL: List the specific financial and legal benefits available in ${state} for veterans with a ${rating} disability rating.
+
+Focus on finding benefits that many veterans miss, including:
+- Property tax exemptions or reductions
+- Vehicle registration fee waivers or discounts
+- Free or discounted hunting/fishing licenses
+- Education benefits (tuition waivers, grants)
+- Employment preferences
+- Healthcare benefits beyond federal VA
+- Housing assistance programs
+- State veteran bonus programs
+
+OUTPUT FORMAT:
+Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
+{
+  "state": "${state}",
+  "summary": "Brief summary of what ${state} offers for ${rating} disabled veterans.",
+  "benefits": [
+    {
+      "category": "Property Tax",
+      "benefit_name": "Name of the specific benefit",
+      "value": "Specific dollar amount or percentage saved",
+      "requirement": "Specific rating or other requirements"
+    }
+  ],
+  "link": "The official .gov or state website URL for veteran benefits, or null if unknown"
+}
+
+Important:
+- Include ALL applicable benefits for this rating level
+- Be specific about dollar amounts or percentages when known
+- Include requirements for each benefit
+- Categories should be: Property Tax, Vehicle, Education, Recreation, Employment, Healthcare, Housing, or Other
+- Provide the most accurate official website link available`;
+};
+
+/**
+ * Search for state-specific veteran benefits using Gemini AI
+ * @param {string} state - Full state name (e.g., "Oregon")
+ * @param {string} rating - VA rating (e.g., "100% P&T" or "70%")
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const searchStateBenefits = async (state, rating) => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  }
+
+  const prompt = buildStateBenefitsPrompt(state, rating);
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3, // Lower temperature for more factual responses
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+      }
+      if (response.status === 429) {
+        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
+      }
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!text) {
+      return { success: false, error: 'No response generated. Please try again.' };
+    }
+
+    // Parse the JSON response
+    try {
+      // Clean up the response - remove any markdown code blocks if present
+      let cleanedText = text.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      const benefitsData = JSON.parse(cleanedText);
+      return { success: true, data: benefitsData };
+    } catch (parseError) {
+      console.error('Failed to parse state benefits JSON:', parseError, text);
+      return { success: false, error: 'Failed to parse benefits data. Please try again.' };
+    }
+  } catch (error) {
+    console.error('State benefits search error:', error);
+    return { success: false, error: 'Network error. Please check your connection and try again.' };
+  }
+};
+
+/**
+ * ===========================================
+ * VSO FINDER - Feature C
+ * Helps veterans find accredited VSOs
+ * ===========================================
+ */
+
+/**
+ * Build prompt for VSO search
+ */
+const buildVSOFinderPrompt = (zipCode) => {
+  return `You are a VA Accreditation Expert helping a veteran find FREE, ACCREDITED representation.
+
+The veteran is located near ZIP code: ${zipCode}
+
+YOUR GOAL: List accredited Veterans Service Officers (VSOs) and Veterans Service Organizations near this location.
+
+IMPORTANT:
+- ONLY list official, accredited representatives
+- Include County Veterans Service Officers (CVSOs)
+- Include state VA offices
+- Include accredited national organizations (DAV, VFW, American Legion, etc.)
+- DO NOT list private consulting firms or "claims sharks"
+- DO NOT list any organization that charges fees for filing initial claims
+
+OUTPUT FORMAT:
+Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
+{
+  "zipCode": "${zipCode}",
+  "warning": "Always verify accreditation at va.gov/ogc/apps/accreditation before signing any forms. NEVER pay fees for filing an initial VA claim.",
+  "organizations": [
+    {
+      "name": "Organization or office name",
+      "type": "County VSO | State VA Office | National Organization",
+      "address": "Full address if known, or 'Contact for location'",
+      "phone": "Phone number if known, or null",
+      "website": "Website URL if known, or null",
+      "notes": "Any helpful notes about this organization"
+    }
+  ],
+  "nationalResources": [
+    {
+      "name": "DAV (Disabled American Veterans)",
+      "website": "https://www.dav.org/veterans/find-your-local-office/",
+      "phone": "1-877-426-2838"
+    }
+  ],
+  "verificationLink": "https://www.va.gov/ogc/apps/accreditation/index.asp"
+}
+
+Focus on providing accurate, helpful information that will connect the veteran with FREE, legitimate help.`;
+};
+
+/**
+ * Search for accredited VSOs near a ZIP code using Gemini AI
+ * @param {string} zipCode - 5-digit ZIP code
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const searchVSOs = async (zipCode) => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  }
+
+  // Validate ZIP code format
+  if (!/^\d{5}$/.test(zipCode)) {
+    return { success: false, error: 'Please enter a valid 5-digit ZIP code.' };
+  }
+
+  const prompt = buildVSOFinderPrompt(zipCode);
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+      }
+      if (response.status === 429) {
+        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
+      }
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!text) {
+      return { success: false, error: 'No response generated. Please try again.' };
+    }
+
+    // Parse the JSON response
+    try {
+      let cleanedText = text.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      const vsoData = JSON.parse(cleanedText);
+      return { success: true, data: vsoData };
+    } catch (parseError) {
+      console.error('Failed to parse VSO JSON:', parseError, text);
+      return { success: false, error: 'Failed to parse VSO data. Please try again.' };
+    }
+  } catch (error) {
+    console.error('VSO search error:', error);
+    return { success: false, error: 'Network error. Please check your connection and try again.' };
+  }
+};
+
+/**
+ * ===========================================
+ * RED TEAM - Statement Stress Test
+ * "The Drill Sergeant" - Reviews draft statements
+ * for weak language that hurts claims
+ * ===========================================
+ */
+
+/**
+ * Build prompt for statement stress test
+ */
+const buildStressTestPrompt = (statement) => {
+  return `You are "The Drill Sergeant" - a VA claims expert who reviews veterans' draft statements to find WEAK LANGUAGE that will hurt their claims.
+
+CONTEXT:
+- Veterans are trained to be "tough" and downplay their pain
+- They write things like "My back hurts a bit, but I push through"
+- The VA reads that as "Not severe enough" = DENIAL
+- Your job is to find these self-sabotaging phrases WITHOUT rewriting the statement
+
+THE DRAFT STATEMENT:
+"""
+${statement}
+"""
+
+ANALYZE THIS STATEMENT FOR:
+1. Minimizing language ("a little", "sometimes", "not too bad")
+2. Downplaying severity ("I manage", "I push through", "I can still...")
+3. Vague frequency ("sometimes", "occasionally", "when it acts up")
+4. Missing functional impact (how does this STOP them from doing things?)
+5. Tough-guy phrases that hurt claims ("I don't like to complain", "others have it worse")
+
+OUTPUT FORMAT:
+Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
+{
+  "score": 7,
+  "critique": "Overall assessment in 1-2 sentences. Be direct but constructive.",
+  "weak_spots": [
+    {
+      "quote": "exact phrase from their statement",
+      "issue": "Why this hurts the claim",
+      "suggestion": "What language would be stronger (clinical/specific)"
+    }
+  ]
+}
+
+SCORING GUIDE:
+- 9-10: Strong clinical language, specific frequencies, clear functional impact
+- 7-8: Good but has 1-2 weak spots
+- 5-6: Several minimizing phrases or missing functional impact
+- 3-4: Significant tough-guy language that will hurt the claim
+- 1-2: Statement reads like "I'm fine" - major rewrite needed
+
+Be helpful but BLUNT. This veteran needs to hear the truth before the VA denies them.`;
+};
+
+/**
+ * Stress test a draft statement using Gemini AI
+ * @param {string} statement - The draft statement to analyze
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const stressTestStatement = async (statement) => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  }
+
+  const prompt = buildStressTestPrompt(statement);
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+      }
+      if (response.status === 429) {
+        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
+      }
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!text) {
+      return { success: false, error: 'No response generated. Please try again.' };
+    }
+
+    try {
+      let cleanedText = text.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      const analysisData = JSON.parse(cleanedText);
+      return { success: true, data: analysisData };
+    } catch (parseError) {
+      console.error('Failed to parse stress test JSON:', parseError, text);
+      return { success: false, error: 'Failed to parse analysis. Please try again.' };
+    }
+  } catch (error) {
+    console.error('Stress test error:', error);
+    return { success: false, error: 'Network error. Please check your connection and try again.' };
+  }
+};
+
+/**
+ * ===========================================
+ * DECISION DECODER - Denial Translator
+ * Translates VA legalese into plain English
+ * with actionable next steps
+ * ===========================================
+ */
+
+/**
+ * Build prompt for decision decoding
+ */
+const buildDecisionDecoderPrompt = (decisionText) => {
+  return `You are a VA Claims Appeals Expert who translates confusing VA decision letters into plain English.
+
+A veteran received this VA decision and doesn't understand what it means:
+"""
+${decisionText}
+"""
+
+YOUR GOAL:
+1. Translate this into plain English a non-lawyer can understand
+2. Identify what evidence the VA says is MISSING
+3. Provide a clear ACTION PLAN to fix this
+
+OUTPUT FORMAT:
+Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
+{
+  "decision_type": "Full Denial | Partial Denial | Reduction | Deferred | Granted",
+  "plain_english": "In simple terms, the VA is saying... (1-2 sentences)",
+  "va_reasoning": "The VA made this decision because... (explain their logic)",
+  "missing_elements": [
+    "First thing missing from the claim",
+    "Second thing missing (if any)",
+    "Third thing missing (if any)"
+  ],
+  "action_plan": [
+    "Step 1: Specific action to take",
+    "Step 2: Next specific action",
+    "Step 3: Additional steps if needed"
+  ],
+  "appeal_options": "Brief explanation of appeal options (Supplemental Claim, HLR, or BVA)",
+  "deadline_warning": "You typically have 1 year from the decision date to file an appeal while preserving your effective date. Check your decision letter for specific deadlines."
+}
+
+KEY DENIAL REASONS TO WATCH FOR:
+- "No nexus" = Need a doctor's letter connecting condition to service
+- "No current diagnosis" = Need a current diagnosis from a doctor
+- "Not incurred in service" = Need service records or buddy statements
+- "Less likely than not" = C&P examiner gave negative opinion, may need IMO
+- "No aggravation shown" = For secondary claims, need evidence showing the primary condition made it worse
+
+Be empathetic but professional. This veteran is confused and possibly upset. Help them understand and take action.`;
+};
+
+/**
+ * Decode a VA decision letter using Gemini AI
+ * @param {string} decisionText - The decision letter text to analyze
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const decodeDecision = async (decisionText) => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  }
+
+  const prompt = buildDecisionDecoderPrompt(decisionText);
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+      }
+      if (response.status === 429) {
+        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
+      }
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!text) {
+      return { success: false, error: 'No response generated. Please try again.' };
+    }
+
+    try {
+      let cleanedText = text.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      const decodedData = JSON.parse(cleanedText);
+      return { success: true, data: decodedData };
+    } catch (parseError) {
+      console.error('Failed to parse decision decoder JSON:', parseError, text);
+      return { success: false, error: 'Failed to parse decision. Please try again.' };
+    }
+  } catch (error) {
+    console.error('Decision decoder error:', error);
+    return { success: false, error: 'Network error. Please check your connection and try again.' };
+  }
+};
+
 export default {
   isAIAvailable,
   enhancePersonalStatement,
@@ -739,5 +1222,9 @@ export default {
   generateNexusLetterRequest,
   enhanceFormStatement,
   getAIDataDisclosure,
-  generateFieldSuggestion
+  generateFieldSuggestion,
+  searchStateBenefits,
+  searchVSOs,
+  stressTestStatement,
+  decodeDecision
 };

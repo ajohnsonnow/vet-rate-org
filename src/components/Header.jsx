@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick, onFormsHelperClick, onCFileAnalyzerClick, onUserManualClick }) {
   const { isDark, toggleTheme } = useTheme();
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
 
   const veteranResources = [
@@ -127,46 +128,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
           </div>
 
           <nav className="flex flex-wrap justify-center gap-4 md:gap-6 items-center" role="navigation" aria-label="Main navigation">
-            <button
-              onClick={onSecondaryScoutClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="Secondary Scout - Find potential secondary claims"
-              aria-label="Open Secondary Scout tool to find potential secondary claims"
-            >
-              🔍 Secondary Scout
-            </button>
-            <button
-              onClick={onCAPSimulatorClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="C&P Exam Simulator - Prepare for your exam"
-              aria-label="Open C&P Exam Simulator to prepare for your compensation and pension exam"
-            >
-              ✅ C&P Simulator
-            </button>
-            <button
-              onClick={onMyPacketClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="My Packet - View saved claims"
-              aria-label="Open My Packet to view your saved claims"
-            >
-              📁 My Packet
-            </button>
-            <button
-              onClick={onFormsHelperClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="Forms Helper - Get help with VA forms"
-              aria-label="Open Forms Helper for guided assistance with VA claim forms"
-            >
-              ✏️ Forms Helper
-            </button>
-            <button
-              onClick={onCFileAnalyzerClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="C-File Analyzer - AI analysis of your claims file"
-              aria-label="Open C-File Analyzer for AI-powered analysis of your VA claims file"
-            >
-              🔬 C-File AI
-            </button>
+            {/* Help - First thing users need */}
             <button
               onClick={onUserManualClick}
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
@@ -175,6 +137,103 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
             >
               ❓ Help
             </button>
+            
+            {/* My Packet - Where users save everything */}
+            <button
+              onClick={onMyPacketClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              title="My Packet - View saved claims"
+              aria-label="Open My Packet to view your saved claims"
+            >
+              📁 My Packet
+            </button>
+            
+            {/* Tools Dropdown - Main feature tools */}
+            <div className="relative static sm:relative">
+              <button
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+                title="Claims Tools"
+                aria-expanded={showToolsMenu}
+                aria-haspopup="true"
+              >
+                🛠️ Tools
+                <svg className={`w-4 h-4 transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showToolsMenu && (
+                <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                  <div className="p-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 font-semibold uppercase tracking-wide mb-1">
+                      Claims Toolkit
+                    </p>
+                    
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        onSecondaryScoutClick();
+                      }}
+                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🔍 Secondary Scout
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Discover 500+ linked secondary conditions
+                      </p>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        onCAPSimulatorClick();
+                      }}
+                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        ✅ C&P Exam Simulator
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Practice with DBQ-aligned exam questions
+                      </p>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        onFormsHelperClick();
+                      }}
+                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        ✏️ Forms Helper
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Guided assistance for VA forms & statements
+                      </p>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        onCFileAnalyzerClick();
+                      }}
+                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-l-4 border-purple-500"
+                    >
+                      <span className="font-medium text-purple-700 dark:text-purple-100 flex items-center gap-2">
+                        🔬 C-File AI Analyzer
+                      </span>
+                      <p className="text-xs mt-0.5 text-purple-600 dark:text-purple-400">
+                        AI analysis of your claims file (worth $500+)
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Veteran Resources Dropdown */}
             <div className="relative static sm:relative">
@@ -186,7 +245,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                 aria-expanded={showResourcesMenu}
                 aria-haspopup="true"
               >
-                🎖️ <span className="hidden lg:inline">Vet Resources</span><span className="lg:hidden">VA Links</span>
+                🎖️ <span className="hidden lg:inline">Resources</span><span className="lg:hidden">VA Links</span>
                 <svg className={`w-4 h-4 transition-transform ${showResourcesMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>

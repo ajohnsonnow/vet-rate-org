@@ -30,7 +30,7 @@ import disabilityDataFile from '../data/disabilityData.json';
  * 
  * CRITICAL: All criteria based on verbatim 38 CFR Part 4 requirements.
  */
-const CAPSimulator = ({ onClose, onReportBug }) => {
+const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   const [mode, setMode] = useState('intro'); // intro, select-condition, flashcard, simulation, results
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);
@@ -1858,6 +1858,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
           show={true} 
           trigger="terminology"
           context={{ term: flashcardTerm }}
+          componentKey="cap-simulator"
         />
       </div>
     );
@@ -2045,6 +2046,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
               questions={currentQuestions}
               onRestart={handleRestart}
               onClose={onClose}
+              onSendToCalculator={onSendToCalculator ? () => onSendToCalculator(simulationResult, conditionName, diagnosticCode) : null}
             />
           </div>
         </div>
@@ -2057,6 +2059,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             rating: simulationResult?.predictedRating,
             conditionName: conditionName
           }}
+          componentKey="cap-simulator"
         />
       </div>
     );
