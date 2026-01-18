@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-// Navigation structure matching the docs
+// Navigation structure matching the docs - organized by category
 const navigationStructure = [
   {
     id: 'home',
@@ -33,6 +33,29 @@ const navigationStructure = [
       { id: 'rating-criteria', title: 'Rating Criteria' },
     ],
   },
+  // === CALCULATE YOUR RATING ===
+  {
+    id: 'category-calculate',
+    title: '📊 Calculate',
+    isCategory: true,
+  },
+  {
+    id: 'tactical-calculator',
+    title: 'Tactical Calculator',
+    icon: '🧮',
+    children: [
+      { id: 'calc-overview', title: 'How VA Math Works' },
+      { id: 'calc-bilateral', title: 'Bilateral Factor' },
+      { id: 'calc-dependents', title: 'Dependent Benefits' },
+      { id: 'calc-what-if', title: 'What-If Scenarios' },
+    ],
+  },
+  // === DISCOVER YOUR CLAIMS ===
+  {
+    id: 'category-discover',
+    title: '🔍 Discover',
+    isCategory: true,
+  },
   {
     id: 'secondary-scout',
     title: 'Secondary Scout',
@@ -56,9 +79,49 @@ const navigationStructure = [
     ],
   },
   {
+    id: 'pathfinder',
+    title: 'Pathfinder',
+    icon: '🧭',
+  },
+  // === BUILD YOUR EVIDENCE ===
+  {
+    id: 'category-evidence',
+    title: '📋 Build Evidence',
+    isCategory: true,
+  },
+  {
+    id: 'cfile-analyzer',
+    title: 'C-File AI Analyzer',
+    icon: '🔎',
+    children: [
+      { id: 'cfile-what-is', title: 'What is a C-File?' },
+      { id: 'cfile-upload', title: 'Uploading Records' },
+      { id: 'cfile-analysis', title: 'Understanding Results' },
+    ],
+  },
+  {
+    id: 'blue-button',
+    title: 'Blue Button X-Ray',
+    icon: '💙',
+    children: [
+      { id: 'blue-overview', title: 'What Is Blue Button?' },
+      { id: 'blue-extract', title: 'Extracting Evidence' },
+    ],
+  },
+  {
+    id: 'witness-bench',
+    title: 'Witness Bench',
+    icon: '👥',
+    children: [
+      { id: 'witness-overview', title: 'Buddy Statements' },
+      { id: 'witness-interview', title: 'The Interview' },
+      { id: 'witness-output', title: 'Statement Output' },
+    ],
+  },
+  {
     id: 'nexus-builder',
     title: 'Nexus Builder',
-    icon: '📝',
+    icon: '🔗',
     children: [
       { id: 'what-is-nexus', title: 'What is a Nexus?' },
       { id: 'building-statement', title: 'Building Your Statement' },
@@ -78,25 +141,19 @@ const navigationStructure = [
       { id: 'veteran-profile', title: 'Veteran Profile' },
     ],
   },
+  // === QUALITY CONTROL ===
   {
-    id: 'tactical-calculator',
-    title: 'Tactical Calculator',
-    icon: '🧮',
-    children: [
-      { id: 'calc-overview', title: 'How VA Math Works' },
-      { id: 'calc-bilateral', title: 'Bilateral Factor' },
-      { id: 'calc-dependents', title: 'Dependent Benefits' },
-      { id: 'calc-what-if', title: 'What-If Scenarios' },
-    ],
+    id: 'category-qc',
+    title: '🎯 Quality Control',
+    isCategory: true,
   },
   {
-    id: 'cfile-analyzer',
-    title: 'C-File AI Analyzer',
-    icon: '🔎',
+    id: 'red-team',
+    title: 'Red Team Simulator',
+    icon: '🎭',
     children: [
-      { id: 'cfile-what-is', title: 'What is a C-File?' },
-      { id: 'cfile-upload', title: 'Uploading Records' },
-      { id: 'cfile-analysis', title: 'Understanding Results' },
+      { id: 'red-overview', title: 'What is Red Team?' },
+      { id: 'red-analysis', title: 'Weakness Analysis' },
     ],
   },
   {
@@ -110,37 +167,15 @@ const navigationStructure = [
     ],
   },
   {
-    id: 'blue-button',
-    title: 'Blue Button X-Ray',
-    icon: '💙',
-    children: [
-      { id: 'blue-overview', title: 'What Is Blue Button?' },
-      { id: 'blue-extract', title: 'Extracting Evidence' },
-    ],
+    id: 'shark-radar',
+    title: 'Shark Radar',
+    icon: '🦈',
   },
+  // === ADVANCED STRATEGY ===
   {
-    id: 'red-team',
-    title: 'Red Team Simulator',
-    icon: '🎭',
-    children: [
-      { id: 'red-overview', title: 'What is Red Team?' },
-      { id: 'red-analysis', title: 'Weakness Analysis' },
-    ],
-  },
-  {
-    id: 'witness-bench',
-    title: 'Witness Bench',
-    icon: '👥',
-    children: [
-      { id: 'witness-overview', title: 'Buddy Statements' },
-      { id: 'witness-interview', title: 'The Interview' },
-      { id: 'witness-output', title: 'Statement Output' },
-    ],
-  },
-  {
-    id: 'risk-assessment',
-    title: 'Risk Assessment',
-    icon: '⚠️',
+    id: 'category-advanced',
+    title: '⚡ Advanced Strategy',
+    isCategory: true,
   },
   {
     id: 'tdiu-builder',
@@ -150,6 +185,11 @@ const navigationStructure = [
       { id: 'tdiu-overview', title: 'What is TDIU?' },
       { id: 'tdiu-eligibility', title: 'Eligibility Check' },
     ],
+  },
+  {
+    id: 'risk-assessment',
+    title: 'Risk Assessment',
+    icon: '⚠️',
   },
   {
     id: 'symptom-logger',
@@ -162,11 +202,6 @@ const navigationStructure = [
     ],
   },
   {
-    id: 'million-dollar',
-    title: 'Million Dollar Dashboard',
-    icon: '💰',
-  },
-  {
     id: 'pact-act',
     title: 'PACT Act Navigator',
     icon: '☢️',
@@ -177,14 +212,20 @@ const navigationStructure = [
     ],
   },
   {
-    id: 'state-benefits',
-    title: 'State Benefit Hunter',
-    icon: '🗺️',
+    id: 'foia-generator',
+    title: 'FOIA Keysmith',
+    icon: '🔑',
+  },
+  // === SHOCK & AWE ===
+  {
+    id: 'category-shock',
+    title: '💎 Shock & Awe',
+    isCategory: true,
   },
   {
-    id: 'vso-finder',
-    title: 'VSO Finder',
-    icon: '🤝',
+    id: 'million-dollar',
+    title: 'Million Dollar Dashboard',
+    icon: '💰',
   },
   {
     id: 'mos-matcher',
@@ -196,20 +237,27 @@ const navigationStructure = [
     title: 'Web of Conditions',
     icon: '🕸️',
   },
+  // === SUPPORT & RESOURCES ===
   {
-    id: 'foia-generator',
-    title: 'FOIA Generator',
-    icon: '📄',
+    id: 'category-support',
+    title: '🤝 Support',
+    isCategory: true,
   },
   {
-    id: 'shark-radar',
-    title: 'Shark Radar',
-    icon: '🦈',
+    id: 'vso-finder',
+    title: 'VSO Finder',
+    icon: '🏢',
   },
   {
-    id: 'pathfinder',
-    title: 'Pathfinder',
-    icon: '🗺️',
+    id: 'state-benefits',
+    title: 'State Benefit Hunter',
+    icon: '💵',
+  },
+  // === DATA MANAGEMENT ===
+  {
+    id: 'category-data',
+    title: '📁 Data & Settings',
+    isCategory: true,
   },
   {
     id: 'my-packet',
@@ -3164,7 +3212,12 @@ const UserManual = ({ onClose, onReportBug }) => {
           <nav className="p-3">
             {navigationStructure.map((section) => (
               <div key={section.id} className="mb-1">
-                {section.children ? (
+                {/* Category Headers */}
+                {section.isCategory ? (
+                  <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                    {section.title}
+                  </div>
+                ) : section.children ? (
                   <>
                     <button
                       onClick={() => toggleSection(section.id)}

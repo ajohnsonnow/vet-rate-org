@@ -325,13 +325,39 @@ function App() {
       <MobileNotice />
       
       <Header 
-        onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
+        // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
-        onCAPSimulatorClick={() => setShowCAPSimulator(true)}
-        onVAResourcesClick={() => setShowVAResources(true)}
-        onFormsHelperClick={() => setShowFormsHelper(true)}
-        onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onUserManualClick={() => setShowUserManual(true)}
+        onVAResourcesClick={() => setShowVAResources(true)}
+        // Calculate
+        onTacticalCalculatorClick={() => setShowTacticalCalculator(true)}
+        // Discover
+        onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
+        onCAPSimulatorClick={() => setShowCAPSimulator(true)}
+        onPathfinderClick={() => setShowPathfinder(true)}
+        // Evidence
+        onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
+        onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
+        onWitnessBenchClick={() => setShowWitnessBench(true)}
+        onNexusBuilderClick={() => setShowNexusBuilder(true)}
+        onFormsHelperClick={() => setShowFormsHelper(true)}
+        // Quality Control
+        onRedTeamClick={() => setShowRedTeam(true)}
+        onDecisionDecoderClick={() => setShowDecisionDecoder(true)}
+        onSharkRadarClick={() => setShowSharkRadar(true)}
+        // Advanced Strategy
+        onTDIUBuilderClick={() => setShowTDIUBuilder(true)}
+        onRiskAssessmentClick={() => setShowRiskAssessment(true)}
+        onSymptomLoggerClick={() => setShowSymptomLogger(true)}
+        onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
+        onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
+        // Shock & Awe
+        onMillionDollarDashboardClick={() => setShowMillionDollarDashboard(true)}
+        onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
+        onWebOfConditionsClick={() => setShowWebOfConditions(true)}
+        // Support & Resources
+        onVSOFinderClick={() => setShowVSOFinder(true)}
+        onStateBenefitHunterClick={() => setShowStateBenefitHunter(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
