@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import disabilityData from '../data/disabilityData.json';
+import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
 
 /**
  * QuickConditionPicker Component
- * A compact homepage widget to quickly select conditions and launch Secondary Scout
+ * A compact homepage widget to quickly select conditions and add them to My Packet
  * Dynamically loads all 748 conditions from disabilityData.json
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
-const QuickConditionPicker = ({ onLaunchScout }) => {
+const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
   const [expandedSystems, setExpandedSystems] = useState(new Set());
@@ -166,9 +167,51 @@ const QuickConditionPicker = ({ onLaunchScout }) => {
 
   const clearAll = () => setSelectedConditions([]);
 
-  const handleLaunch = () => {
-    if (onLaunchScout && selectedConditions.length > 0) {
-      onLaunchScout(selectedConditions);
+  const [addedCount, setAddedCount] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleAddToPacket = () => {
+    if (selectedConditions.length === 0) return;
+    
+    let added = 0;
+    let skipped = 0;
+    
+    selectedConditions.forEach(conditionName => {
+      // Check if already in packet
+      if (!isClaimSaved(conditionName, null)) {
+        // Find the full condition data for diagnostic code
+        let diagnosticCode = null;
+        for (const disabilities of Object.values(conditionsBySystem)) {
+          const found = disabilities.find(d => d.name === conditionName);
+          if (found) {
+            diagnosticCode = found.diagnosticCode;
+            break;
+          }
+        }
+        
+        saveClaim({
+          conditionName,
+          parentCondition: null, // Primary condition
+          diagnosticCode,
+          status: 'Drafting',
+          source: 'Quick Condition Picker'
+        });
+        added++;
+      } else {
+        skipped++;
+      }
+    });
+    
+    setAddedCount(added);
+    setShowSuccess(true);
+    setSelectedConditions([]);
+    
+    // Auto-hide success message
+    setTimeout(() => setShowSuccess(false), 5000);
+    
+    // Notify parent if callback provided
+    if (onAddToPacket) {
+      onAddToPacket(added, skipped);
     }
   };
 
@@ -182,7 +225,7 @@ const QuickConditionPicker = ({ onLaunchScout }) => {
       </div>
       
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-        Select conditions to explore in <strong>Secondary Scout</strong>. Browse all {totalConditions} VA-rated conditions organized by body system.
+        Select your service-connected conditions to add them to <strong>My Packet</strong> for evidence building. Browse all {totalConditions} VA-rated conditions organized by body system.
       </p>
 
       {/* Expand/Collapse Toggle */}
@@ -344,19 +387,41 @@ const QuickConditionPicker = ({ onLaunchScout }) => {
         </div>
       )}
 
-      {/* Launch Button */}
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="mt-3 p-3 bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-700 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-green-600 dark:text-green-400 text-lg">✓</span>
+              <span className="text-sm text-green-800 dark:text-green-200">
+                {addedCount} condition{addedCount !== 1 ? 's' : ''} added to My Packet!
+              </span>
+            </div>
+            {onViewPacket && (
+              <button
+                onClick={onViewPacket}
+                className="text-sm text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 font-medium underline"
+              >
+                View Packet →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add to Packet Button */}
       <button
-        onClick={handleLaunch}
+        onClick={handleAddToPacket}
         disabled={selectedConditions.length === 0}
         className={`w-full mt-3 px-4 py-2.5 rounded-lg font-semibold transition-colors ${
           selectedConditions.length > 0
-            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
             : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
         }`}
       >
         {selectedConditions.length > 0 
-          ? `🚀 Launch Secondary Scout (${selectedConditions.length} conditions)` 
-          : '🔍 Select conditions above to get started'}
+          ? `📁 Add ${selectedConditions.length} to My Packet` 
+          : '📋 Select conditions above to add to packet'}
       </button>
     </div>
   );

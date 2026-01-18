@@ -452,7 +452,7 @@ function App() {
 
           {/* Quick Condition Picker - Full Width */}
           <div className="mt-6">
-            <QuickConditionPicker onLaunchScout={handleLaunchSecondaryScout} />
+            <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
           </div>
           
           {/* Compact Disclaimer */}
