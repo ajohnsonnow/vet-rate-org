@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import ReportBugLink from './ReportBugLink';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import disabilityData from '../data/disabilityData.json';
 
 /**
  * SecondaryScoutLauncher Component
@@ -7,6 +9,9 @@ import ReportBugLink from './ReportBugLink';
  * Organized by body system per 38 CFR Part 4, Subpart B - Schedule for Rating Disabilities
  */
 const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   const [inputMethod, setInputMethod] = useState('manual'); // 'manual' or 'examples'
   const [manualInput, setManualInput] = useState('');
   const [selectedConditions, setSelectedConditions] = useState([]);
@@ -19,540 +24,509 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     // MUSCULOSKELETAL SYSTEM (§§ 4.40-4.73)
     // ═══════════════════════════════════════════════════════════════════
     '🦴 Musculoskeletal - Spine (DC 5235-5243)': [
-      'Cervical Spine Degenerative Disc Disease',
-      'Cervical Strain',
-      'Cervical Spondylosis',
-      'Thoracic Spine Strain',
-      'Thoracolumbar Spine DDD',
-      'Lumbar Spine Degenerative Disc Disease',
-      'Lumbosacral Strain',
-      'Spinal Stenosis',
-      'Spondylolisthesis',
-      'Segmental Instability',
-      'Ankylosing Spondylitis',
-      'Spinal Fusion',
-      'Intervertebral Disc Syndrome (IVDS)',
-      'Vertebral Fracture or Dislocation',
-      'Sacroiliac Injury and Weakness',
-      'Chronic Back Pain',
-      'Chronic Neck Pain',
-      'Radiculopathy (Cervical)',
-      'Radiculopathy (Lumbar)',
-      'Sciatica'
+      'Lumbosacral or Cervical Strain (DC 5237)',
+      'Spinal Stenosis (DC 5238)',
+      'Spondylolisthesis or Segmental Instability (DC 5239)',
+      'Ankylosing Spondylitis (DC 5240)',
+      'Spinal Fusion (DC 5241)',
+      'Degenerative Arthritis of the Spine (DC 5242)',
+      'Intervertebral Disc Syndrome (DC 5243)',
+      'Vertebral Fracture or Dislocation (DC 5235)',
+      'Sacroiliac Injury and Weakness (DC 5236)'
     ],
     '🦴 Musculoskeletal - Shoulder & Arm (DC 5200-5203)': [
-      'Right Shoulder Limitation of Motion',
-      'Left Shoulder Limitation of Motion',
-      'Right Shoulder Rotator Cuff Tear',
-      'Left Shoulder Rotator Cuff Tear',
-      'Right Shoulder Arthritis',
-      'Left Shoulder Arthritis',
-      'Right Shoulder Impingement Syndrome',
-      'Left Shoulder Impingement Syndrome',
-      'Right Shoulder Instability',
-      'Left Shoulder Instability',
-      'Right Shoulder Ankylosis',
-      'Left Shoulder Ankylosis',
-      'Right Humerus Impairment',
-      'Left Humerus Impairment',
-      'Right Clavicle/Scapula Impairment',
-      'Left Clavicle/Scapula Impairment',
-      'Right Shoulder Replacement',
-      'Left Shoulder Replacement'
+      'Scapulohumeral Articulation, Ankylosis of (DC 5200)',
+      'Arm, Limitation of Motion of (DC 5201)',
+      'Humerus, Other Impairment of (DC 5202)',
+      'Clavicle or Scapula, Impairment of (DC 5203)',
+      'Shoulder Replacement (DC 5051)',
+      'Rotator Cuff Tear (rated under DC 5201)',
+      'Shoulder Arthritis (rated under DC 5003, 5201)',
+      'Shoulder Instability (rated under DC 5202)'
     ],
     '🦴 Musculoskeletal - Elbow & Forearm (DC 5205-5213)': [
-      'Right Elbow Limitation of Motion',
-      'Left Elbow Limitation of Motion',
-      'Right Elbow Arthritis',
-      'Left Elbow Arthritis',
-      'Right Elbow Ankylosis',
-      'Left Elbow Ankylosis',
-      'Right Radius/Ulna Impairment',
-      'Left Radius/Ulna Impairment',
-      'Right Elbow Replacement',
-      'Left Elbow Replacement',
-      'Right Lateral Epicondylitis (Tennis Elbow)',
-      'Left Lateral Epicondylitis (Tennis Elbow)',
-      'Right Medial Epicondylitis (Golfer\'s Elbow)',
-      'Left Medial Epicondylitis (Golfer\'s Elbow)'
+      'Elbow Ankylosis (DC 5205)',
+      'Forearm, Limitation of Flexion (DC 5206)',
+      'Forearm, Limitation of Extension (DC 5207)',
+      'Forearm, Flexion Limited to 100° and Extension to 45° (DC 5208)',
+      'Elbow, Other Impairment (Flail Joint) (DC 5209)',
+      'Radius and Ulna, Nonunion of (DC 5210)',
+      'Ulna, Impairment of (DC 5211)',
+      'Radius, Impairment of (DC 5212)',
+      'Supination and Pronation, Impairment of (DC 5213)',
+      'Elbow Replacement (DC 5052)',
+      'Lateral Epicondylitis (Tennis Elbow) (rated under DC 5024)',
+      'Medial Epicondylitis (Golfer\'s Elbow) (rated under DC 5024)',
+      'Elbow Arthritis (rated under DC 5003)'
     ],
     '🦴 Musculoskeletal - Wrist & Hand (DC 5214-5230)': [
-      'Right Wrist Limitation of Motion',
-      'Left Wrist Limitation of Motion',
-      'Right Wrist Arthritis',
-      'Left Wrist Arthritis',
-      'Right Wrist Ankylosis',
-      'Left Wrist Ankylosis',
-      'Carpal Tunnel Syndrome (Right)',
-      'Carpal Tunnel Syndrome (Left)',
-      'Right Hand Injury',
-      'Left Hand Injury',
-      'Right Thumb Limitation of Motion',
-      'Left Thumb Limitation of Motion',
-      'Right Finger(s) Limitation of Motion',
-      'Left Finger(s) Limitation of Motion',
-      'Right Trigger Finger',
-      'Left Trigger Finger',
-      'Dupuytren\'s Contracture (Right)',
-      'Dupuytren\'s Contracture (Left)',
-      'De Quervain\'s Tenosynovitis (Right)',
-      'De Quervain\'s Tenosynovitis (Left)'
+      'Wrist Ankylosis (DC 5214)',
+      'Wrist, Limitation of Motion (DC 5215)',
+      'Thumb Ankylosis (DC 5224)',
+      'Index Finger Ankylosis (DC 5225)',
+      'Long Finger Ankylosis (DC 5226)',
+      'Ring or Little Finger Ankylosis (DC 5227)',
+      'Thumb, Limitation of Motion (DC 5228)',
+      'Index or Long Finger, Limitation of Motion (DC 5229)',
+      'Ring or Little Finger, Limitation of Motion (DC 5230)',
+      'Wrist Replacement (DC 5053)',
+      'Wrist Arthritis (rated under DC 5003, 5215)',
+      'Hand Injury (rated under DC 5309)',
+      'Trigger Finger (rated under DC 5024)',
+      'Dupuytren\'s Contracture (rated under DC 5229)',
+      'De Quervain\'s Tenosynovitis (rated under DC 5024)'
     ],
     '🦴 Musculoskeletal - Hip & Thigh (DC 5250-5255)': [
-      'Right Hip Limitation of Motion',
-      'Left Hip Limitation of Motion',
-      'Right Hip Arthritis',
-      'Left Hip Arthritis',
-      'Right Hip Ankylosis',
-      'Left Hip Ankylosis',
-      'Right Hip Flail Joint',
-      'Left Hip Flail Joint',
-      'Right Femur Impairment',
-      'Left Femur Impairment',
-      'Right Hip Replacement',
-      'Left Hip Replacement',
-      'Right Greater Trochanteric Pain Syndrome',
-      'Left Greater Trochanteric Pain Syndrome',
-      'Right Hip Bursitis',
-      'Left Hip Bursitis'
+      'Hip Ankylosis (DC 5250)',
+      'Thigh, Limitation of Extension (DC 5251)',
+      'Thigh, Limitation of Flexion (DC 5252)',
+      'Thigh, Impairment of (DC 5253)',
+      'Hip, Flail Joint (DC 5254)',
+      'Femur, Impairment of (DC 5255)',
+      'Hip, Resurfacing or Replacement (DC 5054)',
+      'Hip Arthritis (rated under DC 5003, 5252)',
+      'Hip Bursitis (rated under DC 5019)',
+      'Hip Limitation of Motion (rated under DC 5251-5253)'
     ],
     '🦴 Musculoskeletal - Knee & Leg (DC 5256-5263)': [
-      'Right Knee Limitation of Motion (Flexion)',
-      'Left Knee Limitation of Motion (Flexion)',
-      'Right Knee Limitation of Motion (Extension)',
-      'Left Knee Limitation of Motion (Extension)',
-      'Right Knee Degenerative Arthritis',
-      'Left Knee Degenerative Arthritis',
-      'Right Knee Ankylosis',
-      'Left Knee Ankylosis',
-      'Right Knee Instability',
-      'Left Knee Instability',
-      'Right Knee Meniscal Tear',
-      'Left Knee Meniscal Tear',
-      'Right Knee Cartilage Removal',
-      'Left Knee Cartilage Removal',
-      'Right Knee Replacement',
-      'Left Knee Replacement',
-      'Right Tibia/Fibula Impairment',
-      'Left Tibia/Fibula Impairment',
-      'Right Patellofemoral Syndrome',
-      'Left Patellofemoral Syndrome',
-      'Right Shin Splints',
-      'Left Shin Splints'
+      'Knee Ankylosis (DC 5256)',
+      'Knee, Other Impairment (Instability) (DC 5257)',
+      'Cartilage, Semilunar, Dislocated (DC 5258)',
+      'Cartilage, Semilunar, Removal of, Symptomatic (DC 5259)',
+      'Leg, Limitation of Flexion (DC 5260)',
+      'Leg, Limitation of Extension (DC 5261)',
+      'Tibia and Fibula, Impairment of (DC 5262)',
+      'Genu Recurvatum (DC 5263)',
+      'Medial Tibial Stress Syndrome (Shin Splints) (DC 5262)',
+      'Knee, Resurfacing or Replacement (DC 5055)',
+      'Knee Degenerative Arthritis (rated under DC 5003, 5260, 5261)',
+      'Knee Instability (rated under DC 5257)',
+      'Knee Meniscal Condition (rated under DC 5258, 5259)'
     ],
-    '🦴 Musculoskeletal - Ankle & Foot (DC 5270-5284)': [
-      'Right Ankle Limitation of Motion',
-      'Left Ankle Limitation of Motion',
-      'Right Ankle Arthritis',
-      'Left Ankle Arthritis',
-      'Right Ankle Ankylosis',
-      'Left Ankle Ankylosis',
-      'Right Ankle Instability',
-      'Left Ankle Instability',
-      'Right Foot Injury',
-      'Left Foot Injury',
-      'Right Plantar Fasciitis',
-      'Left Plantar Fasciitis',
-      'Right Pes Planus (Flat Feet)',
-      'Left Pes Planus (Flat Feet)',
-      'Bilateral Pes Planus (Flat Feet)',
-      'Right Hallux Valgus (Bunion)',
-      'Left Hallux Valgus (Bunion)',
-      'Right Hallux Rigidus',
-      'Left Hallux Rigidus',
-      'Right Hammer Toes',
-      'Left Hammer Toes',
-      'Right Morton\'s Neuroma',
-      'Left Morton\'s Neuroma',
-      'Right Achilles Tendinitis',
-      'Left Achilles Tendinitis',
-      'Right Tarsal Tunnel Syndrome',
-      'Left Tarsal Tunnel Syndrome'
+    '🦴 Musculoskeletal - Ankle & Foot (DC 5269-5284)': [
+      'Plantar Fasciitis (DC 5269)',
+      'Ankle Ankylosis (DC 5270)',
+      'Ankle Limited Motion (DC 5271)',
+      'Subastragalar or Tarsal Joint Ankylosis (DC 5272)',
+      'Os Calcis or Astragalus Malunion (DC 5273)',
+      'Astragalectomy (DC 5274)',
+      'Flatfoot, Acquired (DC 5276)',
+      'Weak Foot, Bilateral (DC 5277)',
+      'Claw Foot (Pes Cavus), Acquired (DC 5278)',
+      'Metatarsalgia, Anterior (Morton\'s Disease) (DC 5279)',
+      'Hallux Valgus (DC 5280)',
+      'Hallux Rigidus (DC 5281)',
+      'Hammer Toe (DC 5282)',
+      'Tarsal or Metatarsal Bones Malunion/Nonunion (DC 5283)',
+      'Foot Injuries, Other (DC 5284)',
+      'Ankle Replacement (DC 5056)',
+      'Ankle Arthritis (rated under DC 5003, 5271)',
+      'Achilles Tendinitis (rated under DC 5024)'
     ],
     '🦴 Musculoskeletal - Systemic/Arthritis (DC 5000-5025)': [
-      'Osteomyelitis',
-      'Multi-Joint Arthritis (Rheumatoid)',
-      'Degenerative Arthritis (Osteoarthritis)',
-      'Post-Traumatic Arthritis',
-      'Psoriatic Arthritis',
-      'Fibromyalgia',
-      'Gout',
-      'Bursitis',
-      'Tendonitis/Tenosynovitis',
-      'Myositis',
-      'Chronic Pain Syndrome',
-      'Complex Regional Pain Syndrome (CRPS)'
+      'Osteomyelitis, Acute, Subacute, or Chronic (DC 5000)',
+      'Multi-Joint Arthritis (except post-traumatic and gout) (DC 5002)',
+      'Degenerative Arthritis, Other Than Post-Traumatic (DC 5003)',
+      'Post-Traumatic Arthritis (DC 5010)',
+      'Osteoporosis, Residuals of (DC 5013)',
+      'Osteomalacia, Residuals of (DC 5014)',
+      'Osteitis Deformans (DC 5016)',
+      'Gout (DC 5017)',
+      'Bursitis (DC 5019)',
+      'Myositis (DC 5021)',
+      'Heterotopic Ossification (DC 5023)',
+      'Tenosynovitis, Tendinitis, Tendinosis or Tendinopathy (DC 5024)',
+      'Fibromyalgia (DC 5025)'
     ],
     '🦴 Musculoskeletal - Muscle Injuries (DC 5301-5329)': [
-      'Muscle Injury - Shoulder Girdle (Group I-IV)',
-      'Muscle Injury - Arm (Group V-VI)',
-      'Muscle Injury - Forearm/Hand (Group VII-IX)',
-      'Muscle Injury - Foot/Leg (Group X-XII)',
-      'Muscle Injury - Thigh/Pelvis (Group XIII-XVIII)',
-      'Muscle Injury - Torso/Neck (Group XIX-XXIII)',
-      'Muscle Hernia',
-      'Rhabdomyolysis Residuals',
-      'Compartment Syndrome'
+      'Muscle Injury - Shoulder Girdle, Group I-IV (DC 5301-5304)',
+      'Muscle Injury - Arm, Group V-VI (DC 5305-5306)',
+      'Muscle Injury - Forearm/Hand, Group VII-IX (DC 5307-5309)',
+      'Muscle Injury - Foot/Leg, Group X-XII (DC 5310-5312)',
+      'Muscle Injury - Thigh/Pelvis, Group XIII-XVIII (DC 5313-5318)',
+      'Muscle Injury - Torso/Neck, Group XIX-XXIII (DC 5319-5323)',
+      'Muscle Hernia (DC 5326)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // ORGANS OF SPECIAL SENSE - EYE (§§ 4.75-4.79)
     // ═══════════════════════════════════════════════════════════════════
     '👁️ Eye Conditions (DC 6000-6091)': [
-      'Cataracts',
-      'Glaucoma',
-      'Macular Degeneration',
-      'Diabetic Retinopathy',
-      'Retinal Detachment',
-      'Uveitis/Iritis',
-      'Keratitis',
-      'Scleritis',
-      'Conjunctivitis (Chronic)',
-      'Dry Eye Syndrome',
-      'Ptosis',
-      'Diplopia (Double Vision)',
-      'Visual Field Loss',
-      'Visual Acuity Loss',
-      'Eye Injury Residuals',
-      'Optic Neuritis',
-      'Corneal Dystrophy',
-      'Ectropion/Entropion'
+      'Cataracts (DC 6027-6029)',
+      'Glaucoma (DC 6012, 6013)',
+      'Macular Degeneration (DC 6007)',
+      'Diabetic Retinopathy (DC 6006)',
+      'Retinal Detachment (DC 6008)',
+      'Iridocyclitis (Uveitis/Iritis) (DC 6003)',
+      'Keratopathy (Keratitis) (DC 6001)',
+      'Scleritis (DC 6002)',
+      'Conjunctivitis (DC 6017, 6018)',
+      'Dry Eye Syndrome (rated under DC 6025)',
+      'Ptosis, Unilateral (DC 6019)',
+      'Diplopia (DC 6090)',
+      'Visual Field Loss (DC 6080)',
+      'Visual Acuity Loss (DC 6061-6079)',
+      'Eye Injury Residuals (rated analogously)',
+      'Optic Neuropathy (DC 6026)',
+      'Corneal Dystrophy (rated under DC 6001)',
+      'Ectropion (DC 6020)',
+      'Entropion (DC 6021)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // IMPAIRMENT OF AUDITORY ACUITY (§§ 4.85-4.87a)
     // ═══════════════════════════════════════════════════════════════════
     '👂 Ear & Hearing (DC 6100-6276)': [
-      'Hearing Loss (Sensorineural)',
-      'Hearing Loss (Conductive)',
-      'Hearing Loss (Mixed)',
-      'Tinnitus',
-      'Meniere\'s Disease',
-      'Vertigo',
-      'Labyrinthitis',
-      'Otitis Media (Chronic)',
-      'Otitis Externa (Chronic)',
-      'Cholesteatoma',
-      'Perforation of Tympanic Membrane',
-      'Otosclerosis',
-      'Loss of Auricle',
-      'Hyperacusis',
-      'Loss of Sense of Smell',
-      'Loss of Sense of Taste'
+      'Hearing Impairment (DC 6100)',
+      'Tinnitus, Recurrent (DC 6260)',
+      'Meniere\'s Syndrome (DC 6205)',
+      'Peripheral Vestibular Disorders (DC 6204)',
+      'Loss of Auricle (DC 6207)',
+      'Malignant Neoplasm of Ear (DC 6208)',
+      'Benign Neoplasms of Ear (DC 6209)',
+      'Chronic Otitis Media (DC 6200)',
+      'Chronic Otitis Externa (DC 6210)',
+      'Tympanic Membrane, Perforation of (DC 6211)',
+      'Mastoiditis, Chronic (DC 6201)',
+      'Labyrinthitis, Chronic (DC 6202)',
+      'Cholesteatoma (DC 6200)',
+      'Otosclerosis (DC 6202)',
+      'Loss of Sense of Smell (DC 6275)',
+      'Loss of Sense of Taste (DC 6276)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // INFECTIOUS DISEASES, IMMUNE DISORDERS & NUTRITIONAL DEFICIENCIES (§§ 4.88-4.89)
     // ═══════════════════════════════════════════════════════════════════
     '🦠 Infectious & Immune Disorders (DC 6300-6354)': [
-      'Chronic Fatigue Syndrome',
-      'Lupus Erythematosus (Systemic)',
-      'HIV-Related Illness',
-      'Lyme Disease',
-      'Tuberculosis (Pulmonary)',
-      'Tuberculosis (Non-Pulmonary)',
-      'Hepatitis B',
-      'Hepatitis C',
-      'Malaria Residuals',
-      'Brucellosis',
-      'West Nile Virus Residuals',
-      'Gulf War Presumptive Conditions',
-      'Fibromyalgia'
+      'Chronic Fatigue Syndrome (DC 6354)',
+      'Lupus Erythematosus, Systemic (DC 6350)',
+      'HIV-Related Illness (DC 6351)',
+      'Lyme Disease (DC 6319)',
+      'Tuberculosis, Pulmonary, Chronic Active (DC 6730)',
+      'Tuberculosis, Miliary (DC 6314)',
+      'Hepatitis B (DC 7345)',
+      'Hepatitis C (DC 7354)',
+      'Malaria (DC 6304)',
+      'Brucellosis (DC 6305)',
+      'Leishmaniasis (DC 6301)',
+      'Leprosy (Hansen\'s Disease) (DC 6302)',
+      'Syphilis (DC 6310)',
+      'West Nile Virus Residuals (DC 6335)',
+      'Fibromyalgia (DC 5025)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // RESPIRATORY SYSTEM (§§ 4.96-4.97)
     // ═══════════════════════════════════════════════════════════════════
     '🫁 Respiratory System (DC 6502-6847)': [
-      'Deviated Nasal Septum',
-      'Sinusitis (Chronic)',
-      'Rhinitis (Allergic)',
-      'Rhinitis (Vasomotor)',
-      'Laryngitis (Chronic)',
-      'Aphonia',
-      'Stenosis of Larynx',
-      'Asthma',
-      'Chronic Obstructive Pulmonary Disease (COPD)',
-      'Chronic Bronchitis',
-      'Emphysema',
-      'Bronchiectasis',
-      'Pulmonary Fibrosis',
-      'Restrictive Lung Disease',
-      'Pneumoconiosis',
-      'Asbestosis',
-      'Sarcoidosis',
-      'Sleep Apnea (Obstructive)',
-      'Sleep Apnea (Central)',
-      'Pleural Effusion',
-      'Pulmonary Hypertension',
-      'Residuals of Lung Surgery'
+      'Deviated Nasal Septum (DC 6502)',
+      'Sinusitis, Chronic Maxillary (DC 6513)',
+      'Sinusitis, Chronic Pansinusitis (DC 6514)',
+      'Rhinitis, Allergic or Vasomotor (DC 6522)',
+      'Bacterial Rhinitis (DC 6523)',
+      'Granulomatous Rhinitis (DC 6524)',
+      'Laryngitis, Chronic (DC 6516)',
+      'Aphonia, Complete Organic (DC 6519)',
+      'Stenosis of Larynx (DC 6520)',
+      'Asthma, Bronchial (DC 6602)',
+      'Bronchitis, Chronic (DC 6600)',
+      'Emphysema, Pulmonary (DC 6603)',
+      'COPD (rated under DC 6604)',
+      'Bronchiectasis (DC 6601)',
+      'Pulmonary Fibrosis (DC 6825)',
+      'Restrictive Lung Disease (rated under DC 6845)',
+      'Pneumoconiosis (DC 6832)',
+      'Asbestosis (DC 6833)',
+      'Sarcoidosis (DC 6846)',
+      'Sleep Apnea Syndromes (DC 6847)',
+      'Pulmonary Vascular Disease (DC 6817)',
+      'Pleural Effusion, Chronic (DC 6844)',
+      'Residuals of Lung Surgery (rated under DC 6844)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // CARDIOVASCULAR SYSTEM (§§ 4.100-4.104)
     // ═══════════════════════════════════════════════════════════════════
     '❤️ Cardiovascular System (DC 7000-7124)': [
-      'Hypertension (High Blood Pressure)',
-      'Ischemic Heart Disease',
-      'Coronary Artery Disease',
-      'Arteriosclerotic Heart Disease',
-      'Myocardial Infarction Residuals',
-      'Cardiomyopathy',
-      'Valvular Heart Disease',
-      'Arrhythmia/Atrial Fibrillation',
-      'Heart Failure (Congestive)',
-      'Pericarditis',
-      'Endocarditis',
-      'Cardiac Pacemaker',
-      'Aortic Aneurysm',
-      'Peripheral Arterial Disease',
-      'Peripheral Vascular Disease',
-      'Varicose Veins',
-      'Deep Vein Thrombosis (DVT)',
-      'Post-Phlebitic Syndrome',
-      'Raynaud\'s Syndrome/Disease',
-      'Cold Injury Residuals',
-      'Arteriovenous Fistula',
-      'Lymphedema'
+      'Hypertensive Vascular Disease (DC 7101)',
+      'Arteriosclerotic Heart Disease (DC 7005)',
+      'Coronary Artery Disease (rated under DC 7005)',
+      'Myocardial Infarction (DC 7006)',
+      'Cardiomyopathy (DC 7020)',
+      'Valvular Heart Disease (DC 7000)',
+      'Supraventricular Arrhythmias (DC 7010)',
+      'Ventricular Arrhythmias (DC 7011)',
+      'Atrial Fibrillation (DC 7010)',
+      'Heart Failure, Congestive (DC 7007)',
+      'Pericarditis (DC 7002)',
+      'Endocarditis (DC 7001)',
+      'Pacemaker Implant (DC 7018)',
+      'Aortic Aneurysm (DC 7110, 7111)',
+      'Arteriosclerosis Obliterans (DC 7114)',
+      'Thromboangiitis Obliterans (DC 7115)',
+      'Varicose Veins (DC 7120)',
+      'Post-Phlebitic Syndrome (DC 7121)',
+      'Raynaud\'s Syndrome (DC 7117)',
+      'Cold Injury Residuals (DC 7122)',
+      'Arteriovenous Fistula (DC 7113)',
+      'Lymphedema (DC 7121)',
+      'Angioneurotic Edema (DC 7118)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // DIGESTIVE SYSTEM (§§ 4.110-4.114)
     // ═══════════════════════════════════════════════════════════════════
     '🍽️ Digestive System (DC 7200-7357)': [
-      'GERD (Gastroesophageal Reflux Disease)',
-      'Hiatal Hernia',
-      'Esophageal Stricture',
-      'Barrett\'s Esophagus',
-      'Peptic Ulcer Disease',
-      'Gastritis (Chronic)',
-      'Gastroparesis',
-      'Post-Gastrectomy Syndrome',
-      'Irritable Bowel Syndrome (IBS)',
-      'Crohn\'s Disease',
-      'Ulcerative Colitis',
-      'Diverticulitis/Diverticulosis',
-      'Intestinal Resection',
-      'Peritoneal Adhesions',
-      'Hemorrhoids',
-      'Anal Fissure',
-      'Fecal Incontinence',
-      'Cirrhosis of Liver',
-      'Chronic Liver Disease',
-      'Chronic Pancreatitis',
-      'Cholecystitis (Gallbladder)',
-      'Cholelithiasis (Gallstones)',
-      'Hepatitis (Chronic)',
-      'Inguinal Hernia',
-      'Ventral/Incisional Hernia',
-      'Celiac Disease',
-      'Malabsorption Syndrome'
+      'Esophagus, Stricture of (DC 7203)',
+      'Esophagus, Spasm of (DC 7204)',
+      'Diverticulum of the Esophagus (DC 7205)',
+      'Stomach, Injury Residuals (DC 7310)',
+      'Ulcer Disease, Duodenal (DC 7305)',
+      'Ulcer Disease, Gastric (DC 7304)',
+      'Gastritis, Chronic, Hypertrophic (DC 7307)',
+      'Post-Gastrectomy Syndromes (DC 7308)',
+      'Stomach, Stenosis of (DC 7309)',
+      'Hiatal Hernia (DC 7346)',
+      'GERD (rated under DC 7346)',
+      'Irritable Colon Syndrome (DC 7319)',
+      'Colitis, Ulcerative (DC 7323)',
+      'Ileitis (Crohn\'s Disease) (DC 7323)',
+      'Diverticulitis (DC 7327)',
+      'Intestine, Resection (DC 7328, 7329)',
+      'Peritoneal Adhesions (DC 7301)',
+      'Hemorrhoids, External or Internal (DC 7336)',
+      'Anus, Stricture of (DC 7333)',
+      'Anus, Prolapse of (DC 7334)',
+      'Fistula in Ano (DC 7335)',
+      'Rectum, Prolapse of (DC 7334)',
+      'Cirrhosis of Liver (DC 7312)',
+      'Liver, Chronic Disease (DC 7345, 7354)',
+      'Pancreatitis, Chronic (DC 7347)',
+      'Cholecystitis, Chronic (DC 7314)',
+      'Cholelithiasis (DC 7314)',
+      'Inguinal Hernia (DC 7338)',
+      'Ventral Hernia (DC 7339)',
+      'Celiac Disease (DC 7325)',
+      'Malabsorption Syndrome (DC 7325)',
+      'Fecal Incontinence (DC 7332)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // GENITOURINARY SYSTEM (§§ 4.115-4.115b)
     // ═══════════════════════════════════════════════════════════════════
-    '🫘 Genitourinary System (DC 7500-7542)': [
-      'Chronic Kidney Disease',
-      'Renal Dysfunction',
-      'Kidney Removal (Nephrectomy)',
-      'Kidney Stones (Nephrolithiasis)',
-      'Hydronephrosis',
-      'Chronic Pyelonephritis',
-      'Nephritis (Chronic)',
-      'Ureter Stricture',
-      'Cystitis (Chronic)',
-      'Bladder Stones',
-      'Bladder Dysfunction',
-      'Urinary Incontinence',
-      'Urinary Frequency',
-      'Urinary Tract Infections (Recurrent)',
-      'Prostate Cancer',
-      'Benign Prostatic Hyperplasia (BPH)',
-      'Prostatitis (Chronic)',
-      'Erectile Dysfunction',
-      'Testicular Atrophy',
-      'Kidney Transplant',
-      'Dialysis Requirement'
+    '� Genitourinary System (DC 7500-7542)': [
+      'Kidney Disease, Chronic (DC 7530-7541)',
+      'Renal Dysfunction (DC 7500-7509)',
+      'Kidney, Removal of One (DC 7500)',
+      'Kidney, Injury, Residuals (DC 7502)',
+      'Nephrolithiasis (DC 7508)',
+      'Hydronephrosis (DC 7509)',
+      'Pyelonephritis, Chronic (DC 7504)',
+      'Nephritis, Chronic (DC 7501, 7502)',
+      'Ureterolithiasis (DC 7510)',
+      'Ureter, Stricture of (DC 7511)',
+      'Cystitis, Chronic (DC 7512)',
+      'Bladder, Injury, Residuals (DC 7516, 7517)',
+      'Voiding Dysfunction (DC 7542)',
+      'Urinary Incontinence (DC 7542)',
+      'Urinary Frequency (DC 7542)',
+      'Urinary Tract Infection (DC 7512)',
+      'Prostate Gland Injuries, Infections (DC 7527)',
+      'Benign Prostatic Hyperplasia (DC 7527)',
+      'Prostatitis (DC 7527)',
+      'Erectile Dysfunction (DC 7522)',
+      'Testicular Atrophy (DC 7523)',
+      'Kidney Transplant (DC 7531)',
+      'Dialysis Requirement (DC 7530)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // GYNECOLOGICAL CONDITIONS (§§ 4.116)
     // ═══════════════════════════════════════════════════════════════════
     '♀️ Gynecological Conditions (DC 7610-7631)': [
-      'Endometriosis',
-      'Ovarian Cysts',
-      'Uterine Fibroids',
-      'Pelvic Inflammatory Disease',
-      'Cervical Disease/Injury',
-      'Hysterectomy Residuals',
-      'Ovary Removal Residuals',
-      'Vulvovaginitis',
-      'Menstrual Disorders',
-      'Breast Disease/Injury',
-      'Mastectomy Residuals'
+      'Vulva, Disease or Injury of (DC 7610)',
+      'Vagina, Disease or Injury of (DC 7611)',
+      'Cervix, Disease or Injury of (DC 7612)',
+      'Uterus, Disease, Injury, or Adhesions (DC 7613)',
+      'Fallopian Tube, Disease, Injury, or Adhesions (DC 7614)',
+      'Ovary, Disease, Injury, or Adhesions (DC 7615)',
+      'Ovary, Removal of (DC 7619)',
+      'Uterus, Removal of (DC 7617, 7618)',
+      'Endometriosis (DC 7629)',
+      'Ovarian Cysts (rated under DC 7615)',
+      'Uterine Leiomyoma (Fibroids) (DC 7613)',
+      'Pelvic Inflammatory Disease (DC 7614, 7615)',
+      'Menstrual Disorders (rated analogously)',
+      'Breast, Disease or Injury, Unlisted (DC 7626-7628)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // HEMATOLOGIC AND LYMPHATIC SYSTEMS (§ 4.117)
     // ═══════════════════════════════════════════════════════════════════
     '🩸 Hematologic & Lymphatic (DC 7700-7725)': [
-      'Anemia (Various Types)',
-      'Sickle Cell Disease',
-      'Leukemia',
-      'Lymphoma (Hodgkin\'s)',
-      'Lymphoma (Non-Hodgkin\'s)',
-      'Multiple Myeloma',
-      'Polycythemia Vera',
-      'Thrombocytopenia',
-      'Splenectomy Residuals',
-      'Spleen Injury',
-      'Lymph Node Removal',
-      'Immune Thrombocytopenia (ITP)',
-      'Bone Marrow Transplant Residuals',
-      'Aplastic Anemia',
-      'Hemophilia'
+      'Anemia, Hypochromic-Microcytic and Megaloblastic (DC 7700)',
+      'Anemia, Pernicious (DC 7700)',
+      'Sickle Cell Anemia (DC 7714)',
+      'Leukemia (DC 7703)',
+      'Hodgkin\'s Disease (DC 7709)',
+      'Non-Hodgkin\'s Lymphoma (DC 7715)',
+      'Multiple Myeloma (DC 7709)',
+      'Polycythemia Vera (DC 7704)',
+      'Thrombocytopenia, Idiopathic or Immune (DC 7705)',
+      'Spleen, Removal of (DC 7706)',
+      'Spleen, Injury, Residuals (DC 7707)',
+      'Lymphadenitis (DC 7710)',
+      'Agranulocytosis (DC 7702)',
+      'Aplastic Anemia (DC 7716)',
+      'Hemophilia (DC 7705)',
+      'Bone Marrow Transplant (DC 7717)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // SKIN CONDITIONS (§ 4.118)
     // ═══════════════════════════════════════════════════════════════════
     '🧴 Skin Conditions (DC 7800-7833)': [
-      'Burn Scars (Head/Face/Neck)',
-      'Burn Scars (Body)',
-      'Scars (Disfiguring)',
-      'Scars (Unstable)',
-      'Scars (Painful)',
-      'Dermatitis/Eczema',
-      'Psoriasis',
-      'Acne/Chloracne',
-      'Tinea (Fungal Infections)',
-      'Urticaria (Hives)',
-      'Hyperhidrosis',
-      'Alopecia',
-      'Vitiligo',
-      'Skin Cancer (Malignant)',
-      'Benign Skin Neoplasms',
-      'Bullous Disorders',
-      'Lupus Erythematosus (Cutaneous)',
-      'Erythroderma',
-      'Hidradenitis Suppurativa',
-      'Leishmaniasis (Cutaneous)'
+      'Scars, Disfigurement of Head, Face, or Neck (DC 7800)',
+      'Scars, Burn (DC 7801, 7802)',
+      'Scars, Unstable or Painful (DC 7804)',
+      'Scars, Other (DC 7805)',
+      'Dermatitis or Eczema (DC 7806)',
+      'Psoriasis (DC 7816)',
+      'Acne (DC 7828)',
+      'Chloracne (DC 7829)',
+      'Dermatophytosis (Tinea/Fungal Infections) (DC 7813)',
+      'Tinea Barbae (DC 7814)',
+      'Urticaria (DC 7825)',
+      'Hyperhidrosis (DC 7832)',
+      'Alopecia Areata (DC 7831)',
+      'Vitiligo (DC 7823)',
+      'Malignant Melanoma (DC 7833)',
+      'Skin Cancer, Other (DC 7818)',
+      'Benign Skin Neoplasms (DC 7819)',
+      'Pemphigus (DC 7815)',
+      'Bullous Disorders (DC 7815)',
+      'Lupus Erythematosus, Cutaneous (DC 7809)',
+      'Erythroderma (DC 7817)',
+      'Hidradenitis Suppurativa (DC 7820)',
+      'Leishmaniasis, Cutaneous (DC 7807)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // ENDOCRINE SYSTEM (§ 4.119)
     // ═══════════════════════════════════════════════════════════════════
     '⚗️ Endocrine System (DC 7900-7919)': [
-      'Diabetes Mellitus Type I',
-      'Diabetes Mellitus Type II',
-      'Diabetic Nephropathy',
-      'Diabetic Retinopathy',
-      'Diabetic Peripheral Neuropathy',
-      'Hypothyroidism',
-      'Hyperthyroidism (Graves\' Disease)',
-      'Thyroiditis',
-      'Thyroid Nodules/Goiter',
-      'Hyperparathyroidism',
-      'Hypoparathyroidism',
-      'Cushing\'s Syndrome',
-      'Addison\'s Disease',
-      'Acromegaly',
-      'Pituitary Tumor/Dysfunction',
-      'Adrenal Gland Dysfunction',
-      'Pheochromocytoma'
+      'Diabetes Mellitus (DC 7913)',
+      'Diabetic Nephropathy (rated under DC 7541)',
+      'Diabetic Retinopathy (rated under DC 6006)',
+      'Diabetic Peripheral Neuropathy (rated under DC 8520)',
+      'Hypothyroidism (DC 7903)',
+      'Hyperthyroidism (Toxic Diffuse Goiter, Graves\' Disease) (DC 7900)',
+      'Thyroiditis (DC 7902)',
+      'Thyroid Enlargement, Nontoxic (DC 7901)',
+      'Hyperparathyroidism (DC 7904)',
+      'Hypoparathyroidism (DC 7905)',
+      'Cushing\'s Syndrome (DC 7907)',
+      'Addison\'s Disease (DC 7911)',
+      'Acromegaly (DC 7908)',
+      'Hyperpituitarism (DC 7909)',
+      'Hypopituitarism (DC 7906)',
+      'Pheochromocytoma (DC 7915)',
+      'C-Cell Hyperplasia of Thyroid (DC 7914)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // NEUROLOGICAL CONDITIONS (§§ 4.120-4.124a)
     // ═══════════════════════════════════════════════════════════════════
     '🧠 Neurological - Brain & Central Nervous (DC 8000-8046)': [
-      'Traumatic Brain Injury (TBI)',
-      'Epilepsy/Seizure Disorder (Grand Mal)',
-      'Epilepsy/Seizure Disorder (Petit Mal)',
-      'Multiple Sclerosis',
-      'Parkinson\'s Disease',
-      'Migraine Headaches',
-      'Tension Headaches',
-      'Cluster Headaches',
-      'Stroke Residuals (CVA)',
-      'Brain Tumor Residuals',
-      'Meningitis Residuals',
-      'Encephalitis Residuals',
-      'ALS (Amyotrophic Lateral Sclerosis)',
-      'Syringomyelia',
-      'Dementia',
-      'Narcolepsy',
-      'Myasthenia Gravis',
-      'Essential Tremor',
-      'Huntington\'s Disease'
+      'Traumatic Brain Injury (TBI) (DC 8045)',
+      'Epilepsy, Grand Mal (DC 8910)',
+      'Epilepsy, Petit Mal (DC 8911)',
+      'Multiple Sclerosis (DC 8018)',
+      'Parkinson\'s Disease (Paralysis Agitans) (DC 8004)',
+      'Migraine (DC 8100)',
+      'Cerebrovascular Disease Residuals (CVA/Stroke) (DC 8007, 8008)',
+      'Brain, New Growth (DC 8002, 8003)',
+      'Meningitis, Epidemic Cerebrospinal (DC 8019)',
+      'Encephalitis, Epidemic (DC 8000)',
+      'ALS (DC 8017)',
+      'Syringomyelia (DC 8024)',
+      'Dementia (rated under DC 8045, 9326)',
+      'Narcolepsy (DC 8108)',
+      'Myasthenia Gravis (DC 8025)',
+      'Chorea, Huntington\'s (DC 8106)',
+      'Chorea, Sydenham\'s (DC 8105)'
     ],
     '🧠 Neurological - Cranial Nerves (DC 8205-8412)': [
-      'Trigeminal Neuralgia (5th Cranial)',
-      'Facial Nerve Paralysis (Bell\'s Palsy)',
-      'Glossopharyngeal Neuralgia',
-      'Vagus Nerve Dysfunction',
-      'Spinal Accessory Nerve Injury',
-      'Hypoglossal Nerve Injury'
+      'Trigeminal Nerve, Paralysis of (5th) (DC 8205)',
+      'Facial Nerve, Paralysis of (7th) (DC 8207)',
+      'Glossopharyngeal Nerve, Paralysis of (9th) (DC 8209)',
+      'Pneumogastric (Vagus) Nerve, Paralysis of (10th) (DC 8210)',
+      'Spinal Accessory Nerve, Paralysis of (11th) (DC 8211)',
+      'Hypoglossal Nerve, Paralysis of (12th) (DC 8212)',
+      'Tic Douloureux (Trigeminal Neuralgia) (DC 8405)'
     ],
     '🧠 Neurological - Peripheral Nerves (DC 8510-8730)': [
-      'Peripheral Neuropathy (Diabetic)',
-      'Peripheral Neuropathy (Toxic)',
-      'Peripheral Neuropathy (Idiopathic)',
-      'Radiculopathy (Cervical)',
-      'Radiculopathy (Lumbar)',
-      'Sciatica',
-      'Median Nerve (Carpal Tunnel)',
-      'Ulnar Nerve Entrapment',
-      'Radial Nerve Injury',
-      'Musculocutaneous Nerve Injury',
-      'Sciatic Nerve Injury',
-      'Femoral Nerve Injury',
-      'Peroneal (Common) Nerve Injury',
-      'Tibial Nerve Injury',
-      'Pudendal Neuralgia',
-      'Long Thoracic Nerve Injury',
-      'Brachial Plexus Injury',
-      'Lumbosacral Plexus Injury',
-      'Small Fiber Neuropathy'
+      'Median Nerve, Paralysis of (Carpal Tunnel) (DC 8515)',
+      'Ulnar Nerve, Paralysis of (DC 8516)',
+      'Radial Nerve, Paralysis of (DC 8514)',
+      'Musculocutaneous Nerve, Paralysis of (DC 8517)',
+      'Sciatic Nerve, Paralysis of (DC 8520)',
+      'External Popliteal (Common Peroneal) Nerve, Paralysis of (DC 8521)',
+      'Tibial (Posterior) Nerve, Paralysis of (Tarsal Tunnel) (DC 8525)',
+      'Anterior Crural (Femoral) Nerve, Paralysis of (DC 8526)',
+      'Internal Popliteal (Tibial) Nerve, Paralysis of (DC 8524)',
+      'Long Thoracic Nerve, Paralysis of (DC 8519)',
+      'Upper Radicular Group (Erb-Duchenne) (DC 8510)',
+      'Lower Radicular Group (Klumpke-Dejerine) (DC 8512)',
+      'Middle Radicular Group (DC 8511)',
+      'All Radicular Groups (DC 8513)',
+      'Radiculopathy, Cervical (rated under affected nerve)',
+      'Radiculopathy, Lumbar (rated under affected nerve)',
+      'Sciatica (rated under DC 8520)',
+      'Peripheral Neuropathy (rated under affected nerves)',
+      'Small Fiber Neuropathy (rated under affected nerves)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // MENTAL DISORDERS (§§ 4.125-4.130)
     // ═══════════════════════════════════════════════════════════════════
     '🧩 Mental Health - Trauma & Stressor (DC 9400-9440)': [
-      'PTSD (Post-Traumatic Stress Disorder)',
-      'Acute Stress Disorder',
-      'Adjustment Disorder',
-      'Prolonged Grief Disorder',
-      'Dissociative Disorders'
+      'Post-Traumatic Stress Disorder (PTSD) (DC 9411)',
+      'Acute Stress Disorder (DC 9413)',
+      'Adjustment Disorders (DC 9440)',
+      'Prolonged Grief Disorder (DC 9412)',
+      'Dissociative Amnesia (DC 9416)',
+      'Depersonalization/Derealization Disorder (DC 9417)'
     ],
     '🧩 Mental Health - Mood Disorders': [
-      'Major Depressive Disorder',
-      'Persistent Depressive Disorder (Dysthymia)',
-      'Bipolar I Disorder',
-      'Bipolar II Disorder',
-      'Cyclothymic Disorder'
+      'Major Depressive Disorder (DC 9434)',
+      'Persistent Depressive Disorder (Dysthymia) (DC 9433)',
+      'Bipolar I Disorder (DC 9432)',
+      'Bipolar II Disorder (DC 9432)',
+      'Cyclothymic Disorder (DC 9431)'
     ],
     '🧩 Mental Health - Anxiety Disorders': [
-      'Generalized Anxiety Disorder',
-      'Panic Disorder',
-      'Social Anxiety Disorder',
-      'Specific Phobias',
-      'Agoraphobia'
+      'Generalized Anxiety Disorder (DC 9400)',
+      'Panic Disorder with or without Agoraphobia (DC 9412)',
+      'Social Anxiety Disorder (DC 9403)',
+      'Specific Phobias (DC 9403)',
+      'Agoraphobia (DC 9403)'
     ],
     '🧩 Mental Health - Other': [
-      'Obsessive-Compulsive Disorder (OCD)',
-      'Somatic Symptom Disorder',
-      'Illness Anxiety Disorder',
-      'Schizophrenia',
-      'Schizoaffective Disorder',
-      'Delusional Disorder',
-      'Eating Disorders',
-      'Insomnia Disorder',
-      'Substance Use Disorders',
-      'Neurocognitive Disorders'
+      'Obsessive-Compulsive Disorder (OCD) (DC 9404)',
+      'Somatic Symptom and Related Disorders (DC 9422)',
+      'Illness Anxiety Disorder (DC 9424)',
+      'Schizophrenia (DC 9203, 9204, 9205)',
+      'Schizoaffective Disorder (DC 9211)',
+      'Delusional Disorder (DC 9208)',
+      'Eating Disorders (DC 9520, 9521)',
+      'Insomnia Disorder (rated under DC 9413)',
+      'Substance Use Disorders (DC 9431)',
+      'Major or Mild Neurocognitive Disorders (DC 9326)'
     ],
     // ═══════════════════════════════════════════════════════════════════
     // DENTAL AND ORAL CONDITIONS (§§ 4.149-4.150)
     // ═══════════════════════════════════════════════════════════════════
     '🦷 Dental & Oral Conditions (DC 9900-9916)': [
-      'TMJ (Temporomandibular Joint) Disorder',
-      'Loss of Teeth',
-      'Maxilla/Mandible Loss',
-      'Loss of Maxilla/Mandible Substance',
-      'Osteomyelitis (Jaw)',
-      'Osteoradionecrosis',
-      'Loss of Hard Palate',
-      'Oral/Pharyngeal Cancer Residuals',
-      'Bruxism'
+      'Temporomandibular Articulation, Limited Motion of (DC 9905)',
+      'Mandible, Loss of All or Part (DC 9901-9902)',
+      'Maxilla, Loss of All or Part (DC 9914-9915)',
+      'Ramus, Loss of (DC 9906-9907)',
+      'Condyloid Process, Loss of (DC 9908-9909)',
+      'Hard Palate, Loss of (DC 9910-9911)',
+      'Teeth, Loss of, Due to Loss of Substance (DC 9913)',
+      'Osteomyelitis (DC 9900)',
+      'Osteoradionecrosis (DC 9900)',
+      'Malunion of Mandible (DC 9904)',
+      'Nonunion of Mandible (DC 9903)'
     ]
   };
 
@@ -811,6 +785,38 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     }
   ];
 
+  // Create a lookup map from condition names (lowercase) to diagnostic codes
+  const conditionToDCCode = useMemo(() => {
+    const map = {};
+    disabilityData.disabilities.forEach(disability => {
+      // Map by condition name (lowercase for case-insensitive lookup)
+      map[disability.conditionName.toLowerCase()] = disability.diagnosticCode;
+      // Also map by aliases
+      if (disability.aliases) {
+        disability.aliases.forEach(alias => {
+          map[alias.toLowerCase()] = disability.diagnosticCode;
+        });
+      }
+    });
+    return map;
+  }, []);
+
+  // Helper function to get DC code for a condition
+  const getDCCode = (conditionName) => {
+    // Try exact match first (case-insensitive)
+    const exactMatch = conditionToDCCode[conditionName.toLowerCase()];
+    if (exactMatch) return exactMatch;
+    
+    // Try partial match - find if the condition name contains or is contained in a known condition
+    const lowerName = conditionName.toLowerCase();
+    for (const [key, code] of Object.entries(conditionToDCCode)) {
+      if (lowerName.includes(key) || key.includes(lowerName)) {
+        return code;
+      }
+    }
+    return null;
+  };
+
   const toggleCondition = (condition) => {
     setSelectedConditions(prev => 
       prev.includes(condition) 
@@ -897,13 +903,13 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="secondary-scout-launcher-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto max-h-[90vh] flex flex-col">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto max-h-[90vh] flex flex-col modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -970,7 +976,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                   Enter your service-connected conditions (one per line):
                 </label>
                 <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
+                  <p className="text-sm text-blue-800 dark:text-blue-100 mb-2">
                     <strong>💡 Pro Tip:</strong> You can copy/paste directly from your VA.gov rating page!
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
@@ -1082,7 +1088,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                             onClick={() => toggleSystem(system)}
                             className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-900/50 dark:hover:to-teal-900/50 transition-colors"
                           >
-                            <span className="font-semibold text-sm text-emerald-900 dark:text-emerald-300">{system}</span>
+                            <span className="font-semibold text-sm text-emerald-900 dark:text-emerald-100">{system}</span>
                             <div className="flex items-center gap-2">
                               {selectedInSystem > 0 && (
                                 <span className="px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
@@ -1104,7 +1110,28 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                           </button>
                           {isExpanded && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-3 bg-white dark:bg-gray-800">
-                              {conditions.map((condition, index) => (
+                              {conditions.map((condition, index) => {
+                                // Extract DC code from condition name if present
+                                // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
+                                const dcMatch = condition.match(/\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i);
+                                let displayDCCode = null;
+                                let displayCondition = condition;
+                                
+                                if (dcMatch) {
+                                  // Extract first DC code number for display
+                                  displayDCCode = dcMatch[1].split(/[,\s-]/)[0].trim();
+                                  // Remove the exact matched text from display
+                                  displayCondition = condition.replace(dcMatch[0], '').trim();
+                                } else if (condition.includes('(rated under') || condition.includes('(rated analogously')) {
+                                  // Has a "rated under" clause but no specific DC - don't look up, just clean the display
+                                  displayCondition = condition.replace(/\s*\(rated under [^)]+\)/gi, '').replace(/\s*\(rated analogously[^)]*\)/gi, '').trim();
+                                  displayDCCode = null; // No DC code to show
+                                } else {
+                                  // Try to look up DC code from disabilityData
+                                  displayDCCode = getDCCode(condition);
+                                }
+                                
+                                return (
                                 <label
                                   key={`${system}-${index}`}
                                   className={`flex items-start p-2 rounded-lg border cursor-pointer transition-all ${
@@ -1117,15 +1144,17 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                                     type="checkbox"
                                     checked={selectedConditions.includes(condition)}
                                     onChange={() => toggleCondition(condition)}
-                                    className="mt-0.5 mr-2 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                                    className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0 text-blue-600 rounded focus:ring-blue-500"
                                   />
                                   <span className={`text-xs ${
-                                    selectedConditions.includes(condition) ? 'text-blue-900 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'
+                                    selectedConditions.includes(condition) ? 'text-blue-900 dark:text-blue-100 font-medium' : 'text-gray-700 dark:text-gray-300'
                                   }`}>
-                                    {condition}
+                                    {displayDCCode && <span className="text-gray-400 dark:text-gray-500 mr-1">DC {displayDCCode}</span>}
+                                    {displayCondition}
                                   </span>
                                 </label>
-                              ))}
+                              );
+                              })}
                             </div>
                           )}
                         </div>
@@ -1228,7 +1257,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-100">
                     <strong>Important:</strong> This tool is educational and based on 38 CFR § 3.310 (Secondary Service Connection). 
                     Suggestions should be reviewed with a VA-accredited representative and require a medical nexus opinion.
                   </p>

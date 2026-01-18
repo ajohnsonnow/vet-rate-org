@@ -18,22 +18,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Light mode body background - warm and easy on eyes */
+html:not(.dark) body {
+  background-color: #e9e9e3;
+}
+
 /* ============================================
    THEME SYSTEM - Dark Mode & Accessibility
    Section 508 & WCAG 2.1 AA Compliant
    ============================================ */
 
-/* Light Mode (Default) */
+/* Light Mode (Default) - Softer, warmer tones for eye comfort */
 :root {
   --va-blue: #2d5016;
   --va-gold: #88b04b;
-  --bg-primary: #f9fafb;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
-  --border-color: #e5e7eb;
+  --bg-primary: #e9e9e3;      /* Warm muted gray - darker for eye comfort */
+  --bg-secondary: #f2f2ed;    /* Soft cream for cards */
+  --bg-tertiary: #dfe1db;     /* Muted sage gray */
+  --text-primary: #1a1f16;    /* Soft charcoal with green tint */
+  --text-secondary: #3d453d;  /* Darker olive gray for better contrast */
+  --text-muted: #5a625a;      /* Softer muted text */
+  --border-color: #c8cdc4;    /* Soft sage border */
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -55,6 +60,123 @@ html.dark {
 html.dark body {
   background-color: #111827; /* gray-900 */
   color: #f3f4f6; /* gray-100 */
+}
+
+/* ============================================
+   LIGHT MODE - Softer Color Overrides
+   Replaces harsh whites with warmer, eye-friendly tones
+   ============================================ */
+
+/* Main backgrounds */
+html:not(.dark) .bg-gray-50 {
+  background-color: var(--bg-primary) !important;
+}
+
+html:not(.dark) .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
+
+html:not(.dark) .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Card and container backgrounds */
+html:not(.dark) .bg-blue-50 {
+  background-color: #e5ebe0 !important;
+}
+
+html:not(.dark) .bg-green-50,
+html:not(.dark) .bg-emerald-50 {
+  background-color: #e5ebe2 !important;
+}
+
+html:not(.dark) .bg-amber-50,
+html:not(.dark) .bg-yellow-50 {
+  background-color: #edebe0 !important;
+}
+
+html:not(.dark) .bg-purple-50,
+html:not(.dark) .bg-indigo-50 {
+  background-color: #e8e6eb !important;
+}
+
+/* Text colors - softer contrast */
+html:not(.dark) .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .text-gray-800 {
+  color: #252d22 !important;
+}
+
+html:not(.dark) .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .text-gray-600 {
+  color: #566056 !important;
+}
+
+html:not(.dark) .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Border colors */
+html:not(.dark) .border-gray-200,
+html:not(.dark) .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) .border-blue-200 {
+  border-color: #c5d4bc !important;
+}
+
+/* Shadows - softer */
+html:not(.dark) .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(45, 80, 22, 0.06), 0 4px 6px -4px rgba(45, 80, 22, 0.04) !important;
+}
+
+html:not(.dark) .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(45, 80, 22, 0.05), 0 2px 4px -2px rgba(45, 80, 22, 0.03) !important;
+}
+
+/* Feature card gradients - warmer tones in light mode */
+html:not(.dark) .from-emerald-50,
+html:not(.dark) .from-teal-50 {
+  --tw-gradient-from: #e5ebe2 !important;
+}
+
+html:not(.dark) .to-emerald-50,
+html:not(.dark) .to-teal-50 {
+  --tw-gradient-to: #dce5d8 !important;
+}
+
+html:not(.dark) .from-amber-50,
+html:not(.dark) .from-yellow-50 {
+  --tw-gradient-from: #edebe0 !important;
+}
+
+html:not(.dark) .to-amber-50,
+html:not(.dark) .to-yellow-50 {
+  --tw-gradient-to: #e8e4d8 !important;
+}
+
+html:not(.dark) .from-purple-50,
+html:not(.dark) .from-indigo-50 {
+  --tw-gradient-from: #e8e6eb !important;
+}
+
+html:not(.dark) .to-purple-50,
+html:not(.dark) .to-indigo-50 {
+  --tw-gradient-to: #e0dde6 !important;
+}
+
+html:not(.dark) .from-blue-50 {
+  --tw-gradient-from: #e5ebe0 !important;
+}
+
+html:not(.dark) .to-blue-50 {
+  --tw-gradient-to: #dce5d8 !important;
 }
 
 /* ============================================
@@ -386,11 +508,11 @@ html.dark .text-gray-800 {
 }
 
 html.dark .text-gray-700 {
-  color: #d1d5db !important; /* gray-300 */
+  color: #e5e7eb !important; /* gray-200 */
 }
 
 html.dark .text-gray-600 {
-  color: #9ca3af !important; /* gray-400 */
+  color: #e5e7eb !important; /* gray-200 */
 }
 
 html.dark .border-gray-200 {
@@ -536,41 +658,41 @@ html.dark .bg-orange-100 {
 
 /* Blue text - convert to light blue for dark backgrounds */
 html.dark .text-blue-900 {
-  color: #93c5fd !important; /* blue-300 */
+  color: #dbeafe !important; /* blue-100 */
 }
 
 html.dark .text-blue-800 {
-  color: #93c5fd !important; /* blue-300 */
+  color: #dbeafe !important; /* blue-100 */
 }
 
 html.dark .text-blue-700 {
-  color: #bfdbfe !important; /* blue-200 */
+  color: #dbeafe !important; /* blue-100 */
 }
 
 html.dark .text-blue-600 {
-  color: #bfdbfe !important; /* blue-200 */
+  color: #dbeafe !important; /* blue-100 */
 }
 
 /* Green text - convert to light green */
 html.dark .text-green-800 {
-  color: #86efac !important; /* green-300 */
+  color: #dcfce7 !important; /* green-100 */
 }
 
 html.dark .text-green-700 {
-  color: #bbf7d0 !important; /* green-200 */
+  color: #dcfce7 !important; /* green-100 */
 }
 
 html.dark .text-green-600 {
-  color: #bbf7d0 !important; /* green-200 */
+  color: #dcfce7 !important; /* green-100 */
 }
 
 /* Emerald text - toned down for dark mode */
 html.dark .text-emerald-900 {
-  color: #a7f3d0 !important; /* emerald-200 - softer for headings */
+  color: #d1fae5 !important; /* emerald-100 */
 }
 
 html.dark .text-emerald-800 {
-  color: #a7f3d0 !important; /* emerald-200 */
+  color: #d1fae5 !important; /* emerald-100 */
 }
 
 html.dark .text-emerald-700 {
@@ -583,80 +705,80 @@ html.dark .text-emerald-600 {
 
 /* Teal text - toned down for dark mode */
 html.dark .text-teal-900 {
-  color: #99f6e4 !important; /* teal-200 */
+  color: #ccfbf1 !important; /* teal-100 */
 }
 
 html.dark .text-teal-800 {
-  color: #99f6e4 !important; /* teal-200 */
+  color: #ccfbf1 !important; /* teal-100 */
 }
 
 html.dark .text-teal-700 {
-  color: #99f6e4 !important; /* teal-200 */
+  color: #ccfbf1 !important; /* teal-100 */
 }
 
 /* Purple/Indigo text */
 html.dark .text-purple-800 {
-  color: #c4b5fd !important; /* purple-300 */
+  color: #f3e8ff !important; /* purple-100 */
 }
 
 html.dark .text-purple-700 {
-  color: #ddd6fe !important; /* purple-200 */
+  color: #f3e8ff !important; /* purple-100 */
 }
 
 html.dark .text-indigo-800 {
-  color: #a5b4fc !important; /* indigo-300 */
+  color: #e0e7ff !important; /* indigo-100 */
 }
 
 html.dark .text-indigo-700 {
-  color: #c7d2fe !important; /* indigo-200 */
+  color: #e0e7ff !important; /* indigo-100 */
 }
 
 /* Slate text */
 html.dark .text-slate-800 {
-  color: #cbd5e1 !important; /* slate-300 */
+  color: #f1f5f9 !important; /* slate-100 */
 }
 
 html.dark .text-slate-700 {
-  color: #e2e8f0 !important; /* slate-200 */
+  color: #f1f5f9 !important; /* slate-100 */
 }
 
 /* Yellow/Orange warning colors - adjust for visibility */
 html.dark .text-yellow-800 {
-  color: #fde047 !important; /* yellow-300 */
+  color: #fef9c3 !important; /* yellow-100 */
 }
 
 html.dark .text-yellow-700 {
-  color: #fef08a !important; /* yellow-200 */
+  color: #fef9c3 !important; /* yellow-100 */
 }
 
 html.dark .text-orange-800 {
-  color: #fdba74 !important; /* orange-300 */
+  color: #ffedd5 !important; /* orange-100 */
 }
 
 html.dark .text-orange-700 {
-  color: #fed7aa !important; /* orange-200 */
+  color: #ffedd5 !important; /* orange-100 */
 }
 
 /* Red error text */
 html.dark .text-red-800 {
-  color: #fca5a5 !important; /* red-300 */
+  color: #fee2e2 !important; /* red-100 */
 }
 
 html.dark .text-red-700 {
-  color: #fecaca !important; /* red-200 */
+  color: #fee2e2 !important; /* red-100 */
 }
 
 html.dark .text-red-600 {
-  color: #fecaca !important; /* red-200 */
+  color: #fee2e2 !important; /* red-100 */
 }
 
 /* Cyan text */
 html.dark .text-cyan-800 {
-  color: #67e8f9 !important; /* cyan-300 */
+  color: #cffafe !important; /* cyan-100 */
 }
 
 html.dark .text-cyan-700 {
-  color: #a5f3fc !important; /* cyan-200 */
+  color: #cffafe !important; /* cyan-100 */
 }
 
 /* Code blocks in dark mode */
@@ -834,15 +956,15 @@ html.dark .text-gray-800 {
 }
 
 html.dark .text-gray-700 {
-  color: #d1d5db !important; /* gray-300 */
+  color: #e5e7eb !important; /* gray-200 */
 }
 
 html.dark .text-gray-600 {
-  color: #9ca3af !important; /* gray-400 */
+  color: #e5e7eb !important; /* gray-200 */
 }
 
 html.dark .text-gray-500 {
-  color: #9ca3af !important; /* gray-400 */
+  color: #e5e7eb !important; /* gray-200 */
 }
 
 /* Links in dark mode - ensure visibility (exclude colored funding card backgrounds) */
@@ -865,6 +987,56 @@ html.dark ::-webkit-scrollbar-thumb {
 
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
+}
+
+/* ============================================
+   MOBILE SCROLL FIX FOR MODALS
+   Prevents double-scroll and scroll bleed-through
+   ============================================ */
+
+/* Body scroll lock class - applied when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Preserve scroll position when locked */
+body.modal-open-with-position {
+  overflow: hidden !important;
+}
+
+/* Modal backdrop - scrollable container */
+.modal-backdrop {
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
+  overscroll-behavior: contain; /* Prevent scroll chaining to body */
+  touch-action: pan-y; /* Allow vertical scrolling only */
+}
+
+/* Modal content - prevent nested scroll issues */
+.modal-content {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Fix for iOS momentum scrolling issues */
+@supports (-webkit-touch-callout: none) {
+  .modal-backdrop {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent rubber-banding on iOS when at scroll boundaries */
+  body.modal-open {
+    position: fixed;
+    overflow: hidden;
+  }
+}
+
+/* Utility class for scroll containers inside modals */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Animations */

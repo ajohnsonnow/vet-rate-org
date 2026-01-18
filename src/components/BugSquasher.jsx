@@ -10,11 +10,15 @@ import {
   formatBugReport,
   copyToClipboard
 } from '../utils/bugReportUtils';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 // Developer contact email for bug reports
 const DEVELOPER_EMAIL = 'Anth@StructuredForGrowth.com';
 
 function BugSquasher({ onClose, appState = {} }) {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -155,9 +159,9 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
   const canProceedStep2 = formData.userDescription.trim().length >= 10;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] overflow-y-auto modal-backdrop overscroll-contain">
       <div className="min-h-screen px-4 py-8 flex items-start justify-center">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5">
             <div className="flex items-center justify-between">
@@ -417,12 +421,12 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
                     <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
                       Email Client Opened! 📧
                     </h3>
-                    <p className="text-green-700 dark:text-green-300 mb-4">
+                    <p className="text-green-700 dark:text-green-100 mb-4">
                       Your email app should have opened with the bug report. The <strong>full detailed report has been copied to your clipboard</strong>.
                     </p>
                     <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
                       <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">📋 Complete these steps:</h4>
-                      <ol className="text-sm text-green-700 dark:text-green-300 space-y-1 list-decimal list-inside">
+                      <ol className="text-sm text-green-700 dark:text-green-100 space-y-1 list-decimal list-inside">
                         <li>In your email, paste the full report (Ctrl+V or Cmd+V)</li>
                         <li>Send the email to complete your submission</li>
                       </ol>
@@ -479,7 +483,7 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
                     {/* Submit Error Message */}
                     {submitError && (
                       <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
-                        <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
+                        <p className="text-sm text-red-700 dark:text-red-100">{submitError}</p>
                       </div>
                     )}
 

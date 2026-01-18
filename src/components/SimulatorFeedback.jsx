@@ -370,7 +370,7 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
             {gaps.map((gap, index) => (
               <div key={index} className="text-gray-700 dark:text-gray-300">
                 {gap.startsWith('**') ? (
-                  <p className="font-bold text-lg text-purple-800 dark:text-purple-300 mt-4 mb-2">
+                  <p className="font-bold text-lg text-purple-800 dark:text-purple-100 mt-4 mb-2">
                     {gap.replace(/\*\*/g, '')}
                   </p>
                 ) : gap.startsWith('•') ? (

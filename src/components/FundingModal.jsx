@@ -1,9 +1,13 @@
 import React from 'react';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 /**
  * FundingModal - Modal with multiple ways to support Vet-Rate.org
  */
 function FundingModal({ show, onClose }) {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(show);
+
   if (!show) return null;
 
   const fundingOptions = [
@@ -47,11 +51,11 @@ function FundingModal({ show, onClose }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 relative"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 relative modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}

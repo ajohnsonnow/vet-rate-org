@@ -66,7 +66,7 @@ function Disclaimer({ compact = false }) {
           </h3>
           
           {/* Content */}
-          <div className="text-amber-700 dark:text-amber-300 space-y-3 max-w-2xl">
+          <div className="text-amber-700 dark:text-amber-100 space-y-3 max-w-2xl">
             <p>
               <strong className="text-amber-800 dark:text-amber-200">Vet-Rate.org is an informational resource</strong> created by a disabled veteran. 
               This is not a Veterans Service Organization (VSO) or law firm. This website is for{' '}

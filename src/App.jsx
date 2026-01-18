@@ -26,10 +26,13 @@ import NexusBuilder from './components/NexusBuilder';
 import MyPacket from './components/MyPacket';
 import CAPSimulator from './components/CAPSimulator';
 import VAResources from './components/VAResources';
+import FormsHelper from './components/FormsHelper';
 import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
 import FundingModal from './components/FundingModal';
+import QuickConditionPicker from './components/QuickConditionPicker';
+import UserManual from './components/UserManual';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import { saveStatement, getSavedClaims, getStatement } from './utils/claimsStorage';
 import { initializeErrorCapture } from './utils/bugReportUtils';
@@ -54,8 +57,10 @@ function App() {
   const [showMyPacket, setShowMyPacket] = useState(false);
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showVAResources, setShowVAResources] = useState(false);
+  const [showFormsHelper, setShowFormsHelper] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
+  const [showUserManual, setShowUserManual] = useState(false);
   const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
     () => localStorage.getItem('vetrate-disclaimer-acknowledged') === 'true'
   );
@@ -210,12 +215,14 @@ function App() {
     nexusBuilderData,
     showMyPacket,
     showCAPSimulator,
-    showVAResources
+    showVAResources,
+    showFormsHelper,
+    showUserManual
   }), [
     searchTerm, results, selectedResult, hasSearched, error,
     showPrivacyPolicy, showAboutUs, showContactUs,
     showSecondaryScoutLauncher, showSecondaryScout, userConditions,
-    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources
+    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showUserManual
   ]);
 
   return (
@@ -228,6 +235,8 @@ function App() {
         onMyPacketClick={() => setShowMyPacket(true)}
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
         onVAResourcesClick={() => setShowVAResources(true)}
+        onFormsHelperClick={() => setShowFormsHelper(true)}
+        onUserManualClick={() => setShowUserManual(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
@@ -240,10 +249,10 @@ function App() {
         {/* Hero Section with Search */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            🏛️ Veteran Disability Search
+            🛡️ Your VA Claims Command Center
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-6">
-            Find your rated disability or diagnostic code from the official VA Schedule for Rating Disabilities (38 CFR Part 4).
+            Search <strong>748 rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet—all in one place.
           </p>
         </div>
 
@@ -257,7 +266,7 @@ function App() {
               isLoading={isLoading}
             />
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
-              💡 <strong>Tip:</strong> Search by condition name (PTSD, arthritis), diagnostic code (9411, 5002), or synonyms
+              💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or keyword — covers all 15 body systems from 38 CFR Part 4
             </p>
           </div>
         </div>
@@ -323,7 +332,7 @@ function App() {
 
         {/* Feature CTAs - Below Search */}
         <div className="mt-12 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">🛠️ Additional Tools</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">🛠️ Claims Building Tools</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Secondary Scout CTA */}
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 border border-emerald-200 dark:border-emerald-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
@@ -341,7 +350,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Discover potential <strong>secondary claims</strong> based on your existing service-connected disabilities using 38 CFR § 3.310.
+                Discover <strong>secondary claims</strong> linked to your service-connected disabilities — powered by our comprehensive nexus database and 38 CFR § 3.310.
               </p>
               <button
                 onClick={() => setShowSecondaryScoutLauncher(true)}
@@ -367,7 +376,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Practice for your <strong>Compensation & Pension exam</strong> with realistic scenarios and instant feedback.
+                Practice for your <strong>C&P exam</strong> with condition-specific questions, DBQ-aligned scenarios, and real-time feedback to maximize your rating.
               </p>
               <button
                 onClick={() => setShowCAPSimulator(true)}
@@ -376,6 +385,39 @@ function App() {
                 🎯 Launch C&P Simulator
               </button>
             </div>
+          </div>
+
+          {/* Forms Helper CTA - Full Width */}
+          <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40 border border-purple-200 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="bg-purple-100 dark:bg-purple-800/50 rounded-lg p-2">
+                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    📋 Forms Helper
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">NEW</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Get guided help filling out VA forms, especially <strong>buddy statements</strong> – one of the most powerful but hardest-to-get forms of evidence!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFormsHelper(true)}
+                className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+              >
+                📝 Open Forms Helper
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Condition Picker - Full Width */}
+          <div className="mt-6">
+            <QuickConditionPicker onLaunchScout={handleLaunchSecondaryScout} />
           </div>
           
           {/* Compact Disclaimer */}
@@ -390,9 +432,9 @@ function App() {
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h4 className="font-bold mb-3">ℹ️ About This Tool</h4>
+              <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                This application provides educational information about VA disability ratings based on official 38 CFR Part 4 data from eCFR.
+                The most comprehensive free VA claims toolkit—748 disabilities, official rating criteria, secondary condition discovery, C&P exam prep, and evidence-building tools.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -445,6 +487,20 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
+                onClick={() => setShowFormsHelper(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                📋 Forms Helper
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowUserManual(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                📖 User Manual
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
                 onClick={() => setShowBugSquasher(true)}
                 className="text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1"
               >
@@ -462,14 +518,14 @@ function App() {
               </button>
             </div>
             <p className="text-center text-gray-400 text-sm">
-              &copy; 2024-2026 Veteran Disability Search. All data sourced from{' '}
+              &copy; 2024-2026 Vet-Rate.org — Your Complete VA Claims Toolkit. Data sourced from{' '}
               <a
                 href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-va-gold hover:underline"
               >
-                eCFR Title 38, Chapter I, Part 4
+                38 CFR Part 4
               </a>
             </p>
           </div>
@@ -592,11 +648,30 @@ function App() {
         />
       )}
       
+      {/* Forms Helper */}
+      {showFormsHelper && (
+        <FormsHelper
+          onClose={() => setShowFormsHelper(false)}
+          onReportBug={() => setShowBugSquasher(true)}
+        />
+      )}
+      
       {/* Bug Squasher */}
       {showBugSquasher && (
         <BugSquasher
           onClose={() => setShowBugSquasher(false)}
           appState={getCurrentAppState()}
+        />
+      )}
+      
+      {/* User Manual */}
+      {showUserManual && (
+        <UserManual
+          onClose={() => setShowUserManual(false)}
+          onReportBug={() => {
+            setShowUserManual(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       

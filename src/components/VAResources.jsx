@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X, ExternalLink, Phone, AlertTriangle, Shield, Heart, Brain, Home, Users, Briefcase, Calendar, ChevronDown, ChevronUp, Leaf, Globe, Award } from 'lucide-react';
+import { X, ExternalLink, Phone, AlertTriangle, Shield, Heart, Brain, Home, Users, Briefcase, Calendar, ChevronDown, ChevronUp, Leaf, Globe, Award, Scale, BookOpen } from 'lucide-react';
 import ReportBugLink from './ReportBugLink';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import RegulationsReference from './RegulationsReference';
 
 /**
  * VAResources Component
@@ -11,13 +13,18 @@ import ReportBugLink from './ReportBugLink';
  * and specialized veteran programs.
  */
 const VAResources = ({ onClose, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
+  const [showRegulationsReference, setShowRegulationsReference] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     pactAct: true,
     exposures: false,
     mentalHealth: false,
     specializedPrograms: false,
     healthCare: false,
-    benefits: false
+    benefits: false,
+    regulations: false
   });
 
   const toggleSection = (section) => {
@@ -322,17 +329,68 @@ const VAResources = ({ onClose, onReportBug }) => {
           description: 'Comprehensive guide to VA benefits and services'
         }
       ]
+    },
+    {
+      id: 'regulations',
+      title: '38 CFR Part 3 - Your Rights & The Rules',
+      icon: <Scale className="h-6 w-6" />,
+      iconBg: 'bg-slate-100 dark:bg-slate-900/30',
+      iconColor: 'text-slate-600 dark:text-slate-400',
+      description: 'Know the regulations VA must follow when deciding your claim',
+      resources: [
+        {
+          name: '38 CFR Part 3 Regulations Reference',
+          url: '#',
+          description: 'Interactive guide to all major claims regulations, deadlines, forms, and your rights',
+          isInternal: true,
+          important: true
+        },
+        {
+          name: '38 CFR Part 3 - Full Text (eCFR)',
+          url: 'https://www.ecfr.gov/current/title-38/chapter-I/part-3',
+          description: 'Official regulations governing adjudication of claims'
+        },
+        {
+          name: '38 CFR Part 4 - Rating Schedule (eCFR)',
+          url: 'https://www.ecfr.gov/current/title-38/chapter-I/part-4',
+          description: 'Official disability rating criteria and diagnostic codes'
+        },
+        {
+          name: 'M21-1 Adjudication Manual',
+          url: 'https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/content/554400000014201/M21-1-Adjudication-Procedures-Manual',
+          description: 'VA internal manual for processing disability claims',
+          important: true
+        },
+        {
+          name: 'Board of Veterans Appeals (BVA)',
+          url: 'https://www.bva.va.gov/',
+          description: 'Appeal decisions directly to VA\'s highest internal authority'
+        },
+        {
+          name: 'Decision Review Process',
+          url: 'https://www.va.gov/decision-reviews/',
+          description: 'Understand your options: Supplemental Claim, Higher-Level Review, or Board Appeal',
+          important: true
+        }
+      ],
+      keyInfo: [
+        'Benefit of the Doubt (§3.102): When evidence is equal, the tie goes to you',
+        'Duty to Assist (§3.159): VA must help gather evidence for your claim',
+        'Intent to File (§3.155): Protects your effective date for up to 1 year',
+        'Rating Stabilization (§3.344): Ratings held 5+ years have extra protection',
+        'One Year from Decision: File appeal within 1 year or decision becomes final'
+      ]
     }
   ];
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="va-resources-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col modal-content">
         {/* Header - Fixed */}
         <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 rounded-t-lg relative flex-shrink-0">
           <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -464,7 +522,34 @@ const VAResources = ({ onClose, onReportBug }) => {
 
                   {/* Resources Grid */}
                   <div className="grid md:grid-cols-2 gap-3">
-                    {category.resources.map((resource, idx) => (
+                    {category.resources.map((resource, idx) => {
+                      // Handle internal links (like RegulationsReference)
+                      if (resource.isInternal) {
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setShowRegulationsReference(true)}
+                            className={`block p-3 rounded-lg border transition-all hover:shadow-md text-left ${
+                              resource.important
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                {resource.name}
+                              </h4>
+                              <BookOpen className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {resource.description}
+                            </p>
+                          </button>
+                        );
+                      }
+                      
+                      // External links
+                      return (
                       <a
                         key={idx}
                         href={resource.url}
@@ -481,7 +566,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                         <div className="flex items-start justify-between gap-2">
                           <h4 className={`font-semibold ${
                             resource.urgent 
-                              ? 'text-red-700 dark:text-red-300' 
+                              ? 'text-red-700 dark:text-red-100' 
                               : 'text-gray-900 dark:text-gray-100'
                           }`}>
                             {resource.name}
@@ -504,7 +589,8 @@ const VAResources = ({ onClose, onReportBug }) => {
                           </div>
                         )}
                       </a>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
               )}
@@ -531,6 +617,11 @@ const VAResources = ({ onClose, onReportBug }) => {
           </div>
         </div>
       </div>
+
+      {/* Regulations Reference Modal */}
+      {showRegulationsReference && (
+        <RegulationsReference onClose={() => setShowRegulationsReference(false)} />
+      )}
     </div>
   );
 };

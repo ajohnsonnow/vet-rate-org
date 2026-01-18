@@ -1,15 +1,19 @@
 import React from 'react';
 import ReportBugLink from './ReportBugLink';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const AboutUs = ({ onClose, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="about-us-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full my-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full my-8 modal-content">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
           <h2 id="about-us-title" className="text-2xl font-bold text-gray-900 dark:text-gray-100">ℹ️ About Vet-Rate.org</h2>
           <div className="flex items-center gap-3">
@@ -28,61 +32,70 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 My Mission</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> was created to empower veterans with accessible, accurate information 
-              about VA disability ratings. Navigating the VA disability system can be overwhelming. My goal is 
-              to simplify the process by providing instant access to official rating criteria from{' '}
-              <a 
-                href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                38 CFR Part 4
-              </a>, helping veterans understand their benefits and prepare for C&P exams.
+              <strong>Vet-Rate.org</strong> is the most comprehensive free VA claims toolkit available—built to 
+              empower veterans with everything needed to understand, prepare, and build their disability claims. 
+              The VA system is complex, but your path through it doesn't have to be. From rating criteria to 
+              C&P exam prep to evidence building, this toolkit puts you in command of your claim.
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ What This Tool Does</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ Complete Claims Toolkit</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              This free tool allows veterans to:
+              This free toolkit gives you:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
-              <li>🔍 <strong>Search by Condition:</strong> Find your disability by name (PTSD, arthritis) or diagnostic code (9411, 5002)</li>
-              <li>📊 <strong>Understand Rating Criteria:</strong> See exactly what the VA looks for when assigning ratings (0%, 10%, 30%, etc.)</li>
-              <li>🎯 <strong>Prepare for C&P Exams:</strong> Learn what symptoms and functional limitations matter for your condition</li>
-              <li>🔗 <strong>Discover Secondary Conditions:</strong> Identify related conditions that may qualify for additional benefits</li>
-              <li>📄 <strong>Generate PDF Reports:</strong> Download comprehensive guides with VA resources and claim guidance</li>
+              <li>🔍 <strong>748 Rated Conditions:</strong> Search every VA disability with official rating criteria from 38 CFR Part 4</li>
+              <li>📊 <strong>Rating Criteria Breakdown:</strong> See exactly what the VA evaluates at each percentage level (0%–100%)</li>
+              <li>🎯 <strong>C&P Exam Simulator:</strong> Practice with DBQ-aligned questions and get real-time feedback</li>
+              <li>🔗 <strong>Secondary Scout:</strong> Discover linked conditions based on your service-connected disabilities</li>
+              <li>📝 <strong>Nexus Builder:</strong> Generate medical nexus language to support secondary claims</li>
+              <li>📝 <strong>Forms Helper:</strong> Guided assistance for buddy statements and VA forms</li>
+              <li>📁 <strong>My Packet:</strong> Save and organize your claims evidence in one place</li>
+              <li>📄 <strong>PDF Reports:</strong> Download comprehensive condition guides with VA resources</li>
             </ul>
           </section>
 
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Data Sources</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              All disability information is sourced directly from official U.S. Government regulations:
+              Our comprehensive knowledge base has been <strong>fully validated against the official eCFR</strong> (Electronic Code of Federal Regulations):
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
               <li>
-                <strong>38 CFR Part 4 (eCFR):</strong> The VA Schedule for Rating Disabilities, which defines 
-                how conditions are evaluated and rated
+                <strong>38 CFR Part 3 - Verified:</strong> Adjudication rules, eligibility requirements, and 
+                claims procedures cross-referenced with official VA regulations
               </li>
               <li>
-                <strong>748 VA Disabilities:</strong> Comprehensive coverage of all body systems (Musculoskeletal, 
-                Mental Disorders, Cardiovascular, Respiratory, Neurological, etc.)
+                <strong>38 CFR Part 4 - Verified:</strong> Every diagnostic code, rating percentage, and evaluation 
+                criteria has been cross-referenced with the official VA Schedule for Rating Disabilities
               </li>
               <li>
-                <strong>100% Rating Criteria Coverage:</strong> All 748 conditions include detailed percentage 
-                breakdowns from official 38 CFR regulations
+                <strong>748 VA Disabilities - Complete Coverage:</strong> All body systems thoroughly documented 
+                (Musculoskeletal System, Organs of Special Sense, Systemic Diseases, Respiratory System, Cardiovascular System, Digestive System, Genitourinary System, Gynecological Conditions, Hemic and Lymphatic Systems, Skin, Endocrine System, Neurological Conditions, Mental Disorders, Dental and Oral Conditions, and Infectious Diseases)
+              </li>
+              <li>
+                <strong>100% Rating Criteria Validated:</strong> All 748 conditions include detailed percentage 
+                breakdowns verified against current 38 CFR regulations
+              </li>
+              <li>
+                <strong>Secondary Conditions Database:</strong> Medically-recognized secondary conditions linked 
+                to primary disabilities with supporting documentation
               </li>
             </ul>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 italic">
+              Last validated: January 2026 against eCFR Title 38, Parts 3 & 4
+            </p>
           </section>
 
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Why I Built This</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Too many veterans struggle to understand VA ratings because official resources are scattered, 
-              technical, and hard to navigate. I believe every veteran deserves clear, actionable information 
-              about their benefits without hiring expensive consultants or spending hours researching.
+              Too many veterans struggle because the VA system is scattered, technical, and frustrating. 
+              I've been there myself. That's why I built Vet-Rate.org—a single place where you can research 
+              your conditions, understand what the VA is looking for, practice your C&P exam, find secondary 
+              conditions, and build your evidence packet. No expensive consultants. No endless Google searches. 
+              Just the tools you need to take charge of your claim.
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               <strong>This tool is 100% free</strong> and runs entirely in your browser - no accounts, no data 

@@ -1,15 +1,19 @@
 import React from 'react';
 import ReportBugLink from './ReportBugLink';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const PrivacyPolicy = ({ onClose, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-policy-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8 modal-content">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
           <h2 id="privacy-policy-title" className="text-2xl font-bold text-gray-900">🔒 Privacy Policy</h2>
           <div className="flex items-center gap-3">

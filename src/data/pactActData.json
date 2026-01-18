@@ -446,29 +446,137 @@
     ],
     "radiation": [
       {
-        "condition": "All Cancers",
-        "diagnosticCodes": [],
-        "category": "radiation",
-        "addedBy": "38 CFR 3.311",
-        "note": "Any cancer may be considered for radiation exposure"
-      },
-      {
-        "condition": "Leukemia (except chronic lymphocytic leukemia)",
+        "condition": "Leukemia (other than chronic lymphocytic leukemia)",
         "diagnosticCodes": ["7703"],
         "category": "radiation",
-        "addedBy": "38 CFR 3.309"
+        "addedBy": "38 CFR 3.309(d)(2)(i)"
+      },
+      {
+        "condition": "Cancer of the Thyroid",
+        "diagnosticCodes": ["7903"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(ii)"
+      },
+      {
+        "condition": "Cancer of the Breast",
+        "diagnosticCodes": ["7626"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(iii)"
+      },
+      {
+        "condition": "Cancer of the Pharynx",
+        "diagnosticCodes": ["6819"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(iv)"
+      },
+      {
+        "condition": "Cancer of the Esophagus",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(v)"
+      },
+      {
+        "condition": "Cancer of the Stomach",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(vi)"
+      },
+      {
+        "condition": "Cancer of the Small Intestine",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(vii)"
+      },
+      {
+        "condition": "Cancer of the Pancreas",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(viii)"
       },
       {
         "condition": "Multiple Myeloma",
         "diagnosticCodes": ["7703"],
         "category": "radiation",
-        "addedBy": "38 CFR 3.309"
+        "addedBy": "38 CFR 3.309(d)(2)(ix)"
       },
       {
-        "condition": "Thyroid Cancer",
-        "diagnosticCodes": ["7903"],
+        "condition": "Lymphomas (except Hodgkin's disease)",
+        "diagnosticCodes": ["7715"],
         "category": "radiation",
-        "addedBy": "38 CFR 3.309"
+        "addedBy": "38 CFR 3.309(d)(2)(x)"
+      },
+      {
+        "condition": "Cancer of the Bile Ducts",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xi)"
+      },
+      {
+        "condition": "Cancer of the Gall Bladder",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xii)"
+      },
+      {
+        "condition": "Primary Liver Cancer (except if cirrhosis or hepatitis B is indicated)",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xiii)"
+      },
+      {
+        "condition": "Cancer of the Salivary Gland",
+        "diagnosticCodes": ["7200"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xiv)"
+      },
+      {
+        "condition": "Cancer of the Urinary Tract (kidneys, renal pelves, ureters, bladder, urethra)",
+        "diagnosticCodes": ["7528"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xv)"
+      },
+      {
+        "condition": "Bronchiolo-alveolar Carcinoma",
+        "diagnosticCodes": ["6819"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xvi)"
+      },
+      {
+        "condition": "Cancer of the Bone",
+        "diagnosticCodes": ["5012"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xvii)"
+      },
+      {
+        "condition": "Cancer of the Brain",
+        "diagnosticCodes": ["8002"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xviii)"
+      },
+      {
+        "condition": "Cancer of the Colon",
+        "diagnosticCodes": ["7343"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xix)"
+      },
+      {
+        "condition": "Cancer of the Lung",
+        "diagnosticCodes": ["6819"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xx)"
+      },
+      {
+        "condition": "Cancer of the Ovary",
+        "diagnosticCodes": ["7627"],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.309(d)(2)(xxi)"
+      },
+      {
+        "condition": "Other Radiogenic Diseases (per 38 CFR 3.311)",
+        "diagnosticCodes": [],
+        "category": "radiation",
+        "addedBy": "38 CFR 3.311",
+        "note": "Any other cancer or disease claimed may be considered under 38 CFR 3.311 if evidence shows radiation exposure"
       }
     ]
   },

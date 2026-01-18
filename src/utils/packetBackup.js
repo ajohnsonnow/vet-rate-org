@@ -290,8 +290,81 @@ export const downloadPacketBackup = (exportData, filename = null) => {
   URL.revokeObjectURL(url);
 };
 
+/**
+ * Export COMPLETE packet with veteran profile and saved forms
+ * This is the comprehensive backup that includes everything
+ * @param {Array} claims - Array of claim objects
+ * @param {Object} statements - Object mapping claim IDs to statements
+ * @param {Object} veteranProfile - Veteran profile data
+ * @param {Array} savedForms - Array of saved forms
+ * @returns {Object} - Complete export object
+ */
+export const exportCompletePacket = (claims, statements, veteranProfile = null, savedForms = []) => {
+  const exportData = {
+    version: '2.0',
+    exportDate: new Date().toISOString(),
+    source: 'Vet-Rate.org',
+    disclaimer: 'This backup contains personal claim data and sensitive information. Keep it secure and private. NEVER share this file.',
+    data: {
+      claims: claims.map(claim => validateClaim(claim)).filter(Boolean),
+      statements: {},
+      veteranProfile: veteranProfile || null,
+      savedForms: savedForms || []
+    }
+  };
+
+  // Validate each statement
+  for (const [claimId, statement] of Object.entries(statements || {})) {
+    const sanitizedId = sanitizeString(String(claimId), MAX_ID_LENGTH);
+    const validatedStatement = validateStatement(statement);
+    if (validatedStatement) {
+      exportData.data.statements[sanitizedId] = validatedStatement;
+    }
+  }
+
+  return exportData;
+};
+
+/**
+ * Import complete packet including veteran profile and saved forms
+ * @param {string} jsonString - The JSON string to parse
+ * @returns {Object} - Result object with success flag, data or error
+ */
+export const importCompletePacket = (jsonString) => {
+  // First use standard validation
+  const baseResult = importPacketData(jsonString);
+  
+  if (!baseResult.success) {
+    return baseResult;
+  }
+
+  // Parse again to get additional fields
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonString);
+  } catch (e) {
+    return baseResult; // Return basic result if can't parse again
+  }
+
+  // Add veteranProfile if present
+  if (parsed.data?.veteranProfile && typeof parsed.data.veteranProfile === 'object') {
+    baseResult.data.veteranProfile = parsed.data.veteranProfile;
+    baseResult.meta.hasProfile = true;
+  }
+
+  // Add savedForms if present
+  if (parsed.data?.savedForms && Array.isArray(parsed.data.savedForms)) {
+    baseResult.data.savedForms = parsed.data.savedForms;
+    baseResult.meta.savedFormsCount = parsed.data.savedForms.length;
+  }
+
+  return baseResult;
+};
+
 export default {
   exportPacketData,
   importPacketData,
-  downloadPacketBackup
+  downloadPacketBackup,
+  exportCompletePacket,
+  importCompletePacket
 };

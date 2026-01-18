@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#2d5016"/>
+  
+  <!-- Star (military/veteran symbol) -->
+  <polygon points="128,40 146,95 205,95 157,130 175,185 128,155 81,185 99,130 51,95 110,95" fill="#88b04b"/>
+  
+  <!-- V for Veteran/Vet-Rate -->
+  <text x="128" y="215" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">VET-RATE</text>
+</svg>

@@ -11,6 +11,7 @@ import SimulatorFeedback from './SimulatorFeedback';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
 import { getCalculatorFunction } from '../utils/capSimulatorLogic';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import dbqLogicMap from '../data/dbq_logic_map.json';
 import disabilityDataFile from '../data/disabilityData.json';
 
@@ -41,6 +42,9 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
 
   // Load saved packet and all conditions from localStorage
   useEffect(() => {
@@ -940,12 +944,12 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
   if (mode === 'intro') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-simulator-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
           {/* Header - Fixed at top */}
           <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
@@ -1094,12 +1098,12 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
   if (mode === 'select-condition') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-condition-select-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
           {/* Header */}
           <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-t-lg relative">
             <button
@@ -1563,6 +1567,128 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             example: 'I have no medical records of my shoulder injury during combat, but my account is consistent with combat circumstances. Under 1154(b), this is accepted as evidence.'
           }
         ]
+      },
+      {
+        category: '38 CFR Part 3 - Claims Regulations',
+        icon: '📜',
+        terms: [
+          {
+            term: 'Benefit of the Doubt (§3.102)',
+            definition: 'When evidence is in approximate balance (50/50), VA must decide in the veteran\'s favor. You do NOT need to prove your case beyond reasonable doubt - just reach equipoise (50% probability).',
+            example: 'My doctor said my condition was "at least as likely as not" related to service. Even though the C&P examiner disagreed, the evidence was roughly equal, so under §3.102, I should win.'
+          },
+          {
+            term: 'Duty to Assist (§3.159)',
+            definition: 'VA\'s legal obligation to help develop your claim: obtain service records, VA records, and private records (with authorization), schedule C&P exams, and notify you of needed evidence.',
+            example: 'VA denied my claim without getting my service treatment records. They violated their duty to assist under §3.159. I appealed citing this failure.'
+          },
+          {
+            term: 'Intent to File (§3.155(b))',
+            definition: 'A submission that reserves your effective date for up to 1 year while you gather evidence. Can be filed electronically, on VA Form 21-0966, or verbally to VA. Preserves back-pay rights.',
+            example: 'I filed an Intent to File on January 1st. Even though my full claim wasn\'t ready until June, my effective date will be January 1st - preserving 5 months of back-pay.'
+          },
+          {
+            term: 'Complete Claim (§3.160)',
+            definition: 'A claim with all required elements: claimant\'s name, service information, signature, benefit sought, and condition description. Incomplete claims cause delays.',
+            example: 'My claim was returned as incomplete because I forgot to sign it. Always double-check you\'ve provided everything required.'
+          },
+          {
+            term: 'Favorable Findings (§3.104(c))',
+            definition: 'Any favorable finding by a VA adjudicator is binding on all future adjudicators unless clear and unmistakable error is shown. Past favorable findings carry forward.',
+            example: 'In 2018, VA acknowledged my in-service back injury even though they denied service connection then. That finding is binding - new adjudicators cannot reverse it.'
+          },
+          {
+            term: 'Rating Stabilization (§3.344)',
+            definition: 'Ratings in effect 5+ years cannot be reduced unless sustained improvement under ordinary conditions of life is shown. After 20 years, ratings are essentially permanent.',
+            example: 'I\'ve had 70% for PTSD for 8 years. VA can\'t reduce it just because one exam looked better - they must show sustained improvement in my daily life.'
+          },
+          {
+            term: 'Clear and Unmistakable Error (CUE) (§3.105)',
+            definition: 'A high standard for correcting final decisions. Must show correct facts were known but law was incorrectly applied, and outcome would undoubtedly have been different. Can recover decades of back-pay.',
+            example: 'VA failed to apply the bilateral factor to my knees in 2010. This is CUE because the law clearly requires it. I filed a CUE claim and got 15 years of back-pay.'
+          },
+          {
+            term: 'Effective Date Rules (§3.400)',
+            definition: 'When benefits start. Usually date VA received claim OR date entitlement arose, whichever is LATER. Can be earlier with Intent to File or claim within 1 year of discharge.',
+            example: 'I filed within 1 year of discharge, so my effective date is the day after discharge. Veterans who wait lose months or years of back-pay.'
+          },
+          {
+            term: 'Review Options (§3.2500)',
+            definition: 'After a decision, you have 1 year to choose: Supplemental Claim (add evidence), Higher-Level Review (error review), or Board Appeal. Each preserves different rights.',
+            example: 'I got denied and had new evidence, so I filed a Supplemental Claim within 1 year. My original effective date was preserved when I won.'
+          },
+          {
+            term: 'Secondary Service Connection (§3.310)',
+            definition: 'A disability caused OR aggravated by an already service-connected condition. Does NOT need to occur during service. Medical evidence must show the connection.',
+            example: 'My service-connected diabetes caused peripheral neuropathy in my feet. Under §3.310, the neuropathy is secondary service-connected.'
+          },
+          {
+            term: 'Special Monthly Compensation (§3.350)',
+            definition: 'Additional compensation beyond schedular ratings for: loss of use of limbs/organs, blindness, deafness, being housebound, or needing aid and attendance.',
+            example: 'I qualify for SMC(s) because I have 100% for PTSD plus 60% for other conditions that are separate and distinct. That\'s an extra ~$400/month.'
+          },
+          {
+            term: 'Procedural Due Process (§3.103)',
+            definition: 'Your rights as a claimant: written notice of decisions, right to a hearing, right to representation. VA must assist you and grant every benefit supported by law.',
+            example: 'VA decided my claim without telling me what evidence I needed. They violated my due process rights under §3.103. I appealed based on this procedural error.'
+          }
+        ]
+      },
+      {
+        category: 'Board of Veterans Appeals (Parts 19 & 20)',
+        icon: '⚖️',
+        terms: [
+          {
+            term: 'Notice of Disagreement (NOD)',
+            definition: 'The form (VA Form 10182) you file to appeal a VA decision to the Board of Veterans\' Appeals. Must be filed within 1 year of the decision. You must choose one of three dockets.',
+            example: 'VA denied my claim, and I believe they misread the evidence. I filed a Notice of Disagreement within the 1-year deadline to take my case to the Board.'
+          },
+          {
+            term: 'Direct Review Docket',
+            definition: 'One of three BVA docket options. The Board reviews your existing record without new evidence or a hearing. Fastest option - typically under 1 year wait time.',
+            example: 'My evidence was strong but the regional office misapplied the law. I chose Direct Review because I didn\'t need to add anything - just needed a fresh look.'
+          },
+          {
+            term: 'Evidence Submission Docket',
+            definition: 'One of three BVA docket options. You can submit new evidence within 90 days of filing, but no hearing. Wait time typically 1-2 years.',
+            example: 'I got a new nexus letter after my denial. I chose Evidence Submission docket so I could add this new evidence to my appeal.'
+          },
+          {
+            term: 'Hearing Request Docket',
+            definition: 'One of three BVA docket options. You testify before a Veterans Law Judge and can submit evidence at the hearing. Longest wait (2-4 years) but most comprehensive.',
+            example: 'My case is complex and I want to explain my symptoms directly to the judge. I chose Hearing Request even though it takes longer.'
+          },
+          {
+            term: 'Veterans Law Judge (VLJ)',
+            definition: 'An attorney appointed by the VA Secretary who decides Board appeals. VLJs are required to be experienced in veterans law and conduct hearings.',
+            example: 'At my Board hearing, the Veterans Law Judge asked clarifying questions and really seemed to understand my condition.'
+          },
+          {
+            term: 'Remand',
+            definition: 'When the Board sends your case back to the regional office for additional development (like a new exam) or to fix errors. NOT a denial - often leads to a grant.',
+            example: 'The Board remanded my case because VA never got my private treatment records. After the remand, the regional office got the records and granted my claim.'
+          },
+          {
+            term: 'CAVC (Court of Appeals for Veterans Claims)',
+            definition: 'The federal court that reviews BVA decisions. You have ONLY 120 days to appeal to CAVC after a Board denial. This deadline is absolute with almost no exceptions.',
+            example: 'The Board denied me and I believed they made a legal error. I filed a Notice of Appeal to CAVC within the strict 120-day deadline.'
+          },
+          {
+            term: 'Joint Motion for Remand (JMR)',
+            definition: 'An agreement between the veteran and VA at CAVC to send the case back to the Board. Most CAVC cases settle this way rather than going to full court decision.',
+            example: 'At CAVC, VA agreed they made an error. We filed a Joint Motion for Remand, and the court sent my case back to the Board with instructions.'
+          },
+          {
+            term: 'VA Pension',
+            definition: 'A needs-based benefit for wartime veterans who are 65+ or permanently disabled (not from service) with limited income. Different from disability compensation - does NOT require service connection.',
+            example: 'I\'m a Vietnam-era veteran with heart disease that isn\'t service-connected. Since I\'m 70 with limited income, I qualified for VA Pension.'
+          },
+          {
+            term: 'Aid and Attendance (A&A)',
+            definition: 'An enhanced pension rate for veterans who need help with daily activities like bathing, dressing, or eating. Can add over $1,000/month to pension.',
+            example: 'My father is a wartime veteran on pension who now needs help bathing and dressing. Adding Aid and Attendance increased his monthly benefit significantly.'
+          }
+        ]
       }
     ];
 
@@ -1601,12 +1727,12 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-terminology-title"
       >
-        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-6 relative flex-shrink-0">
             <button
@@ -1714,7 +1840,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             ))}
 
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5 mt-6">
-              <p className="text-blue-900 text-sm">
+              <p className="text-blue-900 dark:text-blue-100 text-sm">
                 <strong>💡 Pro Tip:</strong> Using the exact terminology from the CFR during your C&P exam helps ensure the examiner documents your condition correctly. For example, saying "I have prostrating migraines that cause economic inadaptability" is much more precise than "I have really bad headaches that make me miss work."
               </p>
             </div>
@@ -1746,12 +1872,12 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-question-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
           {/* Header with Progress */}
           <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-t-lg relative">
             <button
@@ -1817,7 +1943,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                       <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
                         CFR Definition:
                       </h4>
-                      <p className="text-purple-800 dark:text-purple-300 text-sm">
+                      <p className="text-purple-800 dark:text-purple-100 text-sm">
                         {currentQuestion.definition}
                       </p>
                     </div>
@@ -1896,12 +2022,12 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
     
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-label="C&P Exam Simulation Results"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white z-10"

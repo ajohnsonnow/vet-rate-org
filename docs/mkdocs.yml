@@ -1,0 +1,153 @@
+site_name: Vet-Rate.org User Manual
+site_description: Comprehensive user documentation for Vet-Rate.org VA Claims Toolkit
+site_author: Vet-Rate.org
+copyright: Copyright &copy; 2024-2026 Vet-Rate.org - All Rights Reserved
+
+# Theme configuration
+theme:
+  name: material
+  custom_dir: overrides
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+  palette:
+    - scheme: vetrate
+      primary: custom
+      accent: custom
+  font:
+    text: Inter
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+
+# Custom colors matching Vet-Rate.org branding
+extra_css:
+  - stylesheets/extra.css
+  - stylesheets/pdf.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://vet-rate.org
+      name: Vet-Rate.org Website
+
+# Plugins
+plugins:
+  - search
+  - with-pdf:
+      author: Vet-Rate.org
+      copyright: Copyright © 2024-2026 Vet-Rate.org. All Rights Reserved.
+      cover: true
+      back_cover: true
+      cover_title: Vet-Rate.org User Manual
+      cover_subtitle: Your Complete VA Claims Toolkit
+      cover_logo: assets/images/logo.svg
+      toc_title: Table of Contents
+      enabled_if_env: ENABLE_PDF_EXPORT
+      output_path: ../Vet-Rate-User-Manual.pdf
+      render_js: true
+      headless_chrome_path: chromium-browser
+
+# Markdown extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - First Visit: getting-started/first-visit.md
+    - Understanding the Interface: getting-started/interface-overview.md
+    - Accessibility Settings: getting-started/accessibility.md
+  - Search & Explore:
+    - search/index.md
+    - How to Search: search/how-to-search.md
+    - Search Results: search/search-results.md
+    - Disability Details: search/disability-details.md
+    - Rating Criteria: search/rating-criteria.md
+  - Secondary Scout:
+    - secondary-scout/index.md
+    - Launching Secondary Scout: secondary-scout/launching.md
+    - Understanding Results: secondary-scout/results.md
+    - Adding to My Packet: secondary-scout/add-to-packet.md
+  - C&P Exam Simulator:
+    - cap-simulator/index.md
+    - Getting Started: cap-simulator/getting-started.md
+    - Condition Selection: cap-simulator/condition-selection.md
+    - Taking the Simulation: cap-simulator/taking-simulation.md
+    - Understanding Results: cap-simulator/results.md
+    - Flashcard Mode: cap-simulator/flashcards.md
+  - Nexus Builder:
+    - nexus-builder/index.md
+    - What is a Nexus: nexus-builder/what-is-nexus.md
+    - Building Your Statement: nexus-builder/building-statement.md
+    - Doctor's Cheat Sheet: nexus-builder/doctor-cheat-sheet.md
+    - Download Options: nexus-builder/download-options.md
+  - Forms Helper:
+    - forms-helper/index.md
+    - Available Forms: forms-helper/available-forms.md
+    - Buddy Statements: forms-helper/buddy-statements.md
+    - Intent to File: forms-helper/intent-to-file.md
+    - PTSD Stressor: forms-helper/ptsd-stressor.md
+    - Veteran Profile: forms-helper/veteran-profile.md
+  - My Packet:
+    - my-packet/index.md
+    - Managing Claims: my-packet/managing-claims.md
+    - Saved Forms: my-packet/saved-forms.md
+    - Backup & Restore: my-packet/backup-restore.md
+    - Exporting Data: my-packet/exporting-data.md
+  - VA Resources:
+    - va-resources/index.md
+    - Online Portals: va-resources/online-portals.md
+    - Phone Numbers: va-resources/phone-numbers.md
+    - External Resources: va-resources/external-resources.md
+  - Settings:
+    - settings/index.md
+    - Display Mode: settings/display-mode.md
+    - Accessibility Options: settings/accessibility-options.md
+    - Data Management: settings/data-management.md
+  - Privacy & Security:
+    - privacy/index.md
+    - Data Privacy: privacy/data-privacy.md
+    - Local Processing: privacy/local-processing.md
+    - Security Practices: privacy/security-practices.md
+  - Support:
+    - support/index.md
+    - Reporting Bugs: support/reporting-bugs.md
+    - FAQ: support/faq.md
+    - Contact Us: support/contact.md
+  - Reference:
+    - reference/index.md
+    - Glossary: reference/glossary.md
+    - CFR Reference: reference/cfr-reference.md
+    - Keyboard Shortcuts: reference/keyboard-shortcuts.md
+  - Legal:
+    - legal/index.md
+    - Terms of Service: legal/terms-of-service.md
+    - Privacy Policy: legal/privacy-policy.md
+    - Disclaimers: legal/disclaimers.md

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete instructions for deploying the Veteran Disability Search application to various hosting platforms.
+Complete instructions for deploying Vet-Rate.org to various hosting platforms.
 
 ## Pre-Deployment Checklist
 
