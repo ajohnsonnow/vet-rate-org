@@ -1,0 +1,819 @@
+/**
+ * Vet-Rate.org - Blue Button X-Ray Component
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * All Rights Reserved.
+ * 
+ * "Instant Evidence" - Client-side parser for VA Blue Button Medical Records
+ * Extracts diagnoses from Problem List section without requiring 6-month C-File wait
+ * 
+ * Privacy: ALL processing happens locally in the browser. No data is ever sent to any server.
+ */
+
+import React, { useState, useCallback, useRef } from 'react';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import BuyMeCoffee from './BuyMeCoffee';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+/**
+ * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
+ * These vary based on the export format (text vs PDF)
+ */
+const PROBLEM_LIST_PATTERNS = [
+  // VA Blue Button common headers
+  /(?:VA\s*)?Problem\s*List[:\s]*\n/gi,
+  /Active\s*Problems?[:\s]*\n/gi,
+  /(?:VA\s*)?Health\s*Issues?[:\s]*\n/gi,
+  /(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*\n/gi,
+  /(?:Medical\s*)?Conditions?[:\s]*\n/gi,
+  /ICD[-\s]*(?:10|9)[:\s]*(?:Codes?)?[:\s]*\n/gi,
+  // Section end markers
+  /(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|Health\s*Care\s*Team)[:\s]*\n)/gi
+];
+
+/**
+ * Patterns to extract individual diagnoses from the problem list
+ * Handles various Blue Button formats
+ */
+const DIAGNOSIS_PATTERNS = [
+  // Format: "Condition Name - Date" or "Condition Name (Date)"
+  /^\s*[-•*]?\s*(.+?)\s*[-–—]\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})/gm,
+  // Format: "ICD-10: Code - Description"
+  /(?:ICD[-\s]*10[:\s]*)?([A-Z]\d{2}(?:\.\d{1,4})?)\s*[-–—:]\s*(.+?)(?:\n|$)/gi,
+  // Format: Simple "Condition Name" on its own line
+  /^\s*[-•*]?\s*([A-Za-z][A-Za-z\s,'()-]+?)(?:\s*(?:Since|Onset|Date)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}))?$/gm,
+  // Format: "Date: Condition" or "Date - Condition"
+  /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4})\s*[-–—:]\s*(.+?)(?:\n|$)/gm
+];
+
+/**
+ * Common VA diagnoses we want to flag (conditions often claimed)
+ * Maps common variations to standardized names
+ */
+const CLAIMABLE_CONDITIONS = {
+  // Mental Health
+  'ptsd': 'PTSD (Post-Traumatic Stress Disorder)',
+  'post traumatic stress': 'PTSD (Post-Traumatic Stress Disorder)',
+  'depression': 'Major Depressive Disorder',
+  'major depressive': 'Major Depressive Disorder',
+  'anxiety': 'Generalized Anxiety Disorder',
+  'generalized anxiety': 'Generalized Anxiety Disorder',
+  'bipolar': 'Bipolar Disorder',
+  'insomnia': 'Insomnia / Sleep Disorder',
+  'sleep apnea': 'Sleep Apnea',
+  'obstructive sleep': 'Sleep Apnea',
+  
+  // Musculoskeletal
+  'tinnitus': 'Tinnitus',
+  'hearing loss': 'Hearing Loss',
+  'degenerative disc': 'Degenerative Disc Disease',
+  'lumbar': 'Lumbar Spine Condition',
+  'cervical': 'Cervical Spine Condition',
+  'thoracolumbar': 'Thoracolumbar Spine Condition',
+  'arthritis': 'Arthritis',
+  'osteoarthritis': 'Osteoarthritis',
+  'rheumatoid': 'Rheumatoid Arthritis',
+  'fibromyalgia': 'Fibromyalgia',
+  'gout': 'Gout',
+  'plantar fasciitis': 'Plantar Fasciitis',
+  'pes planus': 'Pes Planus (Flat Feet)',
+  'flat feet': 'Pes Planus (Flat Feet)',
+  'hallux valgus': 'Hallux Valgus (Bunions)',
+  'bunion': 'Hallux Valgus (Bunions)',
+  'carpal tunnel': 'Carpal Tunnel Syndrome',
+  'radiculopathy': 'Radiculopathy',
+  'sciatica': 'Sciatica / Lumbar Radiculopathy',
+  
+  // Cardiovascular
+  'hypertension': 'Hypertension (High Blood Pressure)',
+  'high blood pressure': 'Hypertension (High Blood Pressure)',
+  'coronary artery': 'Coronary Artery Disease',
+  'heart disease': 'Heart Disease',
+  'atrial fibrillation': 'Atrial Fibrillation',
+  'peripheral artery': 'Peripheral Artery Disease',
+  'varicose': 'Varicose Veins',
+  
+  // Respiratory
+  'asthma': 'Asthma',
+  'copd': 'COPD',
+  'chronic obstructive': 'COPD',
+  'sinusitis': 'Sinusitis',
+  'rhinitis': 'Allergic Rhinitis',
+  
+  // Gastrointestinal
+  'gerd': 'GERD (Acid Reflux)',
+  'acid reflux': 'GERD (Acid Reflux)',
+  'gastroesophageal': 'GERD (Acid Reflux)',
+  'ibs': 'Irritable Bowel Syndrome',
+  'irritable bowel': 'Irritable Bowel Syndrome',
+  'hiatal hernia': 'Hiatal Hernia',
+  
+  // Endocrine
+  'diabetes': 'Diabetes Mellitus',
+  'type 2 diabetes': 'Diabetes Mellitus Type II',
+  'hypothyroid': 'Hypothyroidism',
+  'hyperthyroid': 'Hyperthyroidism',
+  
+  // Skin
+  'eczema': 'Eczema',
+  'psoriasis': 'Psoriasis',
+  'acne': 'Acne / Chloracne',
+  
+  // Neurological
+  'migraine': 'Migraine Headaches',
+  'tension headache': 'Tension Headaches',
+  'headache': 'Chronic Headaches',
+  'peripheral neuropathy': 'Peripheral Neuropathy',
+  'neuropathy': 'Peripheral Neuropathy',
+  'tremor': 'Tremors',
+  'parkinson': "Parkinson's Disease",
+  
+  // Other common
+  'erectile dysfunction': 'Erectile Dysfunction',
+  'ed': 'Erectile Dysfunction',
+  'chronic fatigue': 'Chronic Fatigue Syndrome',
+  'gulf war': 'Gulf War Syndrome',
+};
+
+/**
+ * Conditions to filter out (not claimable or too vague)
+ */
+const EXCLUDED_CONDITIONS = [
+  'blood pressure check',
+  'routine exam',
+  'annual physical',
+  'well visit',
+  'follow up',
+  'followup',
+  'referral',
+  'lab work',
+  'imaging',
+  'screening',
+  'preventive',
+  'immunization',
+  'vaccine',
+  'counseling',
+  'education',
+  'unknown',
+  'unspecified'
+];
+
+export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRatingCriteria }) {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+  
+  // File state
+  const [file, setFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+  
+  // Processing state
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState('');
+  const [error, setError] = useState(null);
+  
+  // Results state
+  const [extractedConditions, setExtractedConditions] = useState([]);
+  const [rawText, setRawText] = useState('');
+  const [showRawText, setShowRawText] = useState(false);
+  
+  // Handle file drop
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const droppedFile = e.dataTransfer?.files?.[0];
+    if (droppedFile) {
+      const fileType = droppedFile.type;
+      const fileName = droppedFile.name.toLowerCase();
+      
+      if (fileType !== 'application/pdf' && fileType !== 'text/plain' && !fileName.endsWith('.txt')) {
+        setError('Please upload a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
+        return;
+      }
+      setFile(droppedFile);
+      setError(null);
+      setExtractedConditions([]);
+    }
+  }, []);
+  
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+  
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+  
+  const handleFileSelect = useCallback((e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      const fileType = selectedFile.type;
+      const fileName = selectedFile.name.toLowerCase();
+      
+      if (fileType !== 'application/pdf' && fileType !== 'text/plain' && !fileName.endsWith('.txt')) {
+        setError('Please upload a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
+        return;
+      }
+      setFile(selectedFile);
+      setError(null);
+      setExtractedConditions([]);
+    }
+  }, []);
+  
+  /**
+   * Read text file
+   */
+  const readTextFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(new Error('Failed to read text file'));
+      reader.readAsText(file);
+    });
+  };
+  
+  /**
+   * Extract text from PDF using PDF.js
+   */
+  const extractTextFromPDF = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      setProcessingStage(`Extracting page ${i} of ${pdf.numPages}...`);
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    
+    return fullText;
+  };
+  
+  /**
+   * Parse the text to find Problem List section and extract diagnoses
+   */
+  const parseBlueButtonText = (text) => {
+    const conditions = [];
+    const seenConditions = new Set();
+    
+    // Normalize text
+    const normalizedText = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\t/g, ' ')
+      .replace(/\s{2,}/g, ' ');
+    
+    // Try to find the Problem List section
+    let problemListSection = '';
+    
+    // Look for various section headers
+    const sectionPatterns = [
+      /(?:VA\s*)?Problem\s*List[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|Health\s*Care\s*Team|Active\s*Outpatient|Procedures|$)[\s:]*\n)/i,
+      /Active\s*Problems?[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|$)[\s:]*\n)/i,
+      /(?:My\s*)?VA\s*(?:Health\s*)?Issues?[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|Immunizations|$)[\s:]*\n)/i,
+      /Diagnos[ie]s[\s:]*\n([\s\S]*?)(?=\n(?:Allergies|Medications|Vitals|$)[\s:]*\n)/i,
+    ];
+    
+    for (const pattern of sectionPatterns) {
+      const match = normalizedText.match(pattern);
+      if (match && match[1]) {
+        problemListSection = match[1];
+        break;
+      }
+    }
+    
+    // If no section found, try to extract from the whole document
+    if (!problemListSection) {
+      problemListSection = normalizedText;
+    }
+    
+    // Extract conditions line by line
+    const lines = problemListSection.split('\n');
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.length < 3) continue;
+      
+      // Skip excluded patterns
+      const lowerLine = trimmedLine.toLowerCase();
+      if (EXCLUDED_CONDITIONS.some(exc => lowerLine.includes(exc))) continue;
+      
+      // Try to extract condition and date
+      let conditionName = trimmedLine;
+      let dateFound = null;
+      
+      // Check for date patterns
+      const dateMatch = trimmedLine.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}|\b\d{4}\b)/i);
+      if (dateMatch) {
+        dateFound = dateMatch[1];
+        // Remove date from condition name
+        conditionName = trimmedLine.replace(dateMatch[0], '').trim();
+      }
+      
+      // Clean up condition name
+      conditionName = conditionName
+        .replace(/^[-•*\d.)\]]+\s*/, '') // Remove list markers
+        .replace(/\s*[-–—:]+\s*$/, '') // Remove trailing separators
+        .replace(/^\s*ICD[-\s]*10[:\s]*/i, '') // Remove ICD-10 prefix
+        .replace(/\s*\([^)]*\)\s*$/, '') // Remove trailing parenthetical
+        .trim();
+      
+      // Skip if too short or looks like a header
+      if (conditionName.length < 4 || conditionName.length > 100) continue;
+      if (/^(Problem|Active|Health|Issue|Date|Status|Provider|Note)s?$/i.test(conditionName)) continue;
+      
+      // Check if this is a claimable condition
+      const normalizedCondition = conditionName.toLowerCase();
+      const normalizedKey = seenConditions.has(normalizedCondition) ? null : normalizedCondition;
+      
+      if (normalizedKey) {
+        seenConditions.add(normalizedCondition);
+        
+        // Check if it matches a known claimable condition
+        let matchedClaimable = null;
+        for (const [key, value] of Object.entries(CLAIMABLE_CONDITIONS)) {
+          if (normalizedCondition.includes(key)) {
+            matchedClaimable = value;
+            break;
+          }
+        }
+        
+        conditions.push({
+          id: conditions.length + 1,
+          rawName: conditionName,
+          standardizedName: matchedClaimable || conditionName,
+          dateFound: dateFound,
+          isClaimable: Boolean(matchedClaimable),
+          selected: false
+        });
+      }
+    }
+    
+    // Sort: claimable conditions first, then alphabetically
+    conditions.sort((a, b) => {
+      if (a.isClaimable && !b.isClaimable) return -1;
+      if (!a.isClaimable && b.isClaimable) return 1;
+      return a.standardizedName.localeCompare(b.standardizedName);
+    });
+    
+    return conditions;
+  };
+  
+  /**
+   * Process the uploaded file
+   */
+  const handleProcessFile = async () => {
+    if (!file) {
+      setError('Please select a file first.');
+      return;
+    }
+    
+    setIsProcessing(true);
+    setError(null);
+    setExtractedConditions([]);
+    
+    try {
+      let text = '';
+      
+      if (file.type === 'application/pdf') {
+        setProcessingStage('Extracting text from PDF...');
+        text = await extractTextFromPDF(file);
+      } else {
+        setProcessingStage('Reading text file...');
+        text = await readTextFile(file);
+      }
+      
+      setRawText(text);
+      
+      setProcessingStage('Analyzing Problem List...');
+      const conditions = parseBlueButtonText(text);
+      
+      if (conditions.length === 0) {
+        setError('No diagnoses found in this file. This might not be a Blue Button report, or the format is not recognized. You can try viewing the raw text below.');
+      } else {
+        setExtractedConditions(conditions);
+      }
+      
+    } catch (err) {
+      console.error('Processing error:', err);
+      setError(`Error processing file: ${err.message}`);
+    } finally {
+      setIsProcessing(false);
+      setProcessingStage('');
+    }
+  };
+  
+  /**
+   * Toggle condition selection
+   */
+  const toggleConditionSelection = (id) => {
+    setExtractedConditions(prev => 
+      prev.map(c => c.id === id ? { ...c, selected: !c.selected } : c)
+    );
+  };
+  
+  /**
+   * Select all claimable conditions
+   */
+  const selectAllClaimable = () => {
+    setExtractedConditions(prev => 
+      prev.map(c => ({ ...c, selected: c.isClaimable }))
+    );
+  };
+  
+  /**
+   * Reset the tool
+   */
+  const handleReset = () => {
+    setFile(null);
+    setExtractedConditions([]);
+    setRawText('');
+    setError(null);
+    setShowRawText(false);
+  };
+  
+  /**
+   * Get count of claimable conditions not typically claimed
+   */
+  const getUnclaimedCount = () => {
+    return extractedConditions.filter(c => c.isClaimable).length;
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="min-h-screen">
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
+          onClick={onClose}
+        ></div>
+        
+        {/* Modal Content */}
+        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-cyan-600 to-blue-600 p-4 shadow-lg">
+            <div className="max-w-4xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">📋</span>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Blue Button X-Ray</h2>
+                  <p className="text-sm text-cyan-100">Instant Evidence Mining from VA Medical Records</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Main Content */}
+          <div className="max-w-4xl mx-auto p-6">
+            {/* Info Banner */}
+            <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💡</span>
+                <div>
+                  <h3 className="font-bold text-cyan-800 dark:text-cyan-200">What is the Blue Button Report?</h3>
+                  <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-1">
+                    The <strong>Blue Button</strong> is your instant-download VA medical record from <a href="https://www.myhealth.va.gov" target="_blank" rel="noopener noreferrer" className="underline hover:text-cyan-600">MyHealtheVet</a>. 
+                    Unlike the C-File (which takes 6+ months), you can get this <strong>today</strong>.
+                  </p>
+                  <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
+                    🔒 <strong>Privacy:</strong> This tool processes your file <strong>100% locally in your browser</strong>. 
+                    Your data is NEVER uploaded to any server.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* File Upload Section */}
+            {!extractedConditions.length && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+                  Step 1: Upload Your Blue Button Report
+                </h3>
+                
+                {/* Drop Zone */}
+                <div
+                  className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                    isDragging
+                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30'
+                      : file
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500'
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.txt,text/plain,application/pdf"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  
+                  {file ? (
+                    <div className="space-y-2">
+                      <span className="text-4xl">✅</span>
+                      <p className="text-green-700 dark:text-green-300 font-semibold">{file.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <span className="text-5xl">📄</span>
+                      <p className="text-gray-600 dark:text-gray-300 font-semibold">
+                        Drop your Blue Button report here
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Accepts PDF or TXT files from MyHealtheVet
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Process Button */}
+                {file && (
+                  <button
+                    onClick={handleProcessFile}
+                    disabled={isProcessing}
+                    className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:from-cyan-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        <span>{processingStage}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🔍</span>
+                        <span>Scan for Diagnoses</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
+                {/* How to Download Blue Button */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📥 How to Download Your Blue Button:</h4>
+                  <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                    <li>Go to <a href="https://www.myhealth.va.gov" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 underline">MyHealtheVet.va.gov</a></li>
+                    <li>Sign in with your Login.gov or ID.me account</li>
+                    <li>Click <strong>"Health Records"</strong> → <strong>"Blue Button"</strong></li>
+                    <li>Select <strong>"VA Health Summary"</strong> or <strong>"VA Problem List"</strong></li>
+                    <li>Download as PDF or TXT and upload here</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+            
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <h3 className="font-bold text-red-800 dark:text-red-200">Issue Found</h3>
+                    <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Results Section */}
+            {extractedConditions.length > 0 && (
+              <div className="space-y-6">
+                {/* Summary Card */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white/20 rounded-full p-3">
+                      <span className="text-4xl">🎯</span>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold">Found {extractedConditions.length} Conditions!</h3>
+                      <p className="text-green-100">
+                        {getUnclaimedCount()} are commonly claimed VA disabilities
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={selectAllClaimable}
+                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
+                  >
+                    <span>✅</span> Select All Claimable
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    <span>🔄</span> Start Over
+                  </button>
+                  <button
+                    onClick={() => setShowRawText(!showRawText)}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    <span>📝</span> {showRawText ? 'Hide' : 'Show'} Raw Text
+                  </button>
+                </div>
+                
+                {/* Conditions List */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                      📋 Extracted Diagnoses
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Click a condition to select it, then add to your calculator or check rating criteria
+                    </p>
+                  </div>
+                  
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                    {extractedConditions.map((condition) => (
+                      <div
+                        key={condition.id}
+                        className={`p-4 cursor-pointer transition-colors ${
+                          condition.selected
+                            ? 'bg-cyan-50 dark:bg-cyan-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        }`}
+                        onClick={() => toggleConditionSelection(condition.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Checkbox */}
+                          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            condition.selected
+                              ? 'bg-cyan-600 border-cyan-600 text-white'
+                              : 'border-gray-300 dark:border-gray-600'
+                          }`}>
+                            {condition.selected && (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          
+                          {/* Condition Info */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-gray-800 dark:text-gray-100">
+                                {condition.standardizedName}
+                              </span>
+                              {condition.isClaimable && (
+                                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium rounded-full">
+                                  ⭐ Commonly Claimed
+                                </span>
+                              )}
+                            </div>
+                            {condition.rawName !== condition.standardizedName && (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                From record: "{condition.rawName}"
+                              </p>
+                            )}
+                            {condition.dateFound && (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                📅 Date in record: {condition.dateFound}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Quick Actions */}
+                          <div className="flex gap-2 flex-shrink-0">
+                            {onCheckRatingCriteria && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onCheckRatingCriteria(condition.standardizedName);
+                                }}
+                                className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
+                                title="Search rating criteria for this condition"
+                              >
+                                🔍 Check Criteria
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Add Selected to Calculator */}
+                {extractedConditions.some(c => c.selected) && onAddToCalculator && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <div>
+                        <p className="font-semibold text-gray-800 dark:text-gray-100">
+                          {extractedConditions.filter(c => c.selected).length} condition(s) selected
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Add to Pathfinder for strategic analysis
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const selected = extractedConditions.filter(c => c.selected);
+                          onAddToCalculator(selected);
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2"
+                      >
+                        <span>🧭</span>
+                        Add to Pathfinder
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Raw Text View */}
+                {showRawText && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                        📝 Raw Extracted Text
+                      </h3>
+                    </div>
+                    <div className="p-4 max-h-96 overflow-y-auto">
+                      <pre className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-mono">
+                        {rawText.substring(0, 10000)}
+                        {rawText.length > 10000 && '\n\n... [Text truncated for display]'}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Not Currently Claimed Alert */}
+            {extractedConditions.length > 0 && getUnclaimedCount() > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mt-6 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💰</span>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">
+                      Potential Unclaimed Disabilities Found!
+                    </h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                      You have <strong>{getUnclaimedCount()} condition(s)</strong> in your VA records that are commonly service-connected. 
+                      Use the <strong>Pathfinder</strong> to analyze which ones might qualify for compensation!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Support CTA after extraction */}
+            {extractedConditions.length > 0 && (
+              <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/images/Anth.jpg" 
+                    alt="Anthony - Vet-Rate Developer"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <p className="text-blue-200 font-semibold mb-1">
+                      🩺 That medical record parsing would cost $200+ at a law firm
+                    </p>
+                    <p className="text-blue-300/70 text-sm">
+                      This AI-powered tool scans your Blue Button records, extracts diagnoses, and 
+                      cross-references VA's rating schedule - all locally in your browser. 
+                      Help fund the servers and development that make this possible.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* BuyMeCoffee - shows after successful extraction */}
+      <BuyMeCoffee 
+        show={extractedConditions.length > 0} 
+        trigger="blue-button" 
+        context={{ count: extractedConditions.length }}
+        componentKey="blue-button-xray"
+      />
+    </div>
+  );
+}

@@ -5,6 +5,7 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
 import DoctorsPacket from './DoctorsPacket';
+import VoiceInputButton, { isSpeechRecognitionSupported } from './VoiceInput';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from '../utils/aiStatementHelper';
 
@@ -555,12 +556,22 @@ Sincerely,
                       </button>
                     )}
                   </div>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Example: My PTSD causes severe anxiety and hypervigilance, which prevents me from falling asleep and staying asleep. The constant state of alertness disrupts my breathing patterns during sleep..."
-                    value={answers.aggravationExplanation}
-                    onChange={(e) => updateAnswer('aggravationExplanation', e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Example: My PTSD causes severe anxiety and hypervigilance, which prevents me from falling asleep and staying asleep. The constant state of alertness disrupts my breathing patterns during sleep..."
+                      value={answers.aggravationExplanation}
+                      onChange={(e) => updateAnswer('aggravationExplanation', e.target.value)}
+                    />
+                    {isSpeechRecognitionSupported() && (
+                      <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                        <VoiceInputButton
+                          onTranscript={(text) => updateAnswer('aggravationExplanation', answers.aggravationExplanation ? `${answers.aggravationExplanation} ${text}` : text)}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -583,17 +594,27 @@ Sincerely,
                       </button>
                     )}
                   </div>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Example: Last month, I had a PTSD episode triggered by fireworks. That night, my sleep apnea symptoms worsened significantly - I woke up gasping for air multiple times, which my partner witnessed..."
-                    value={answers.specificIncident}
-                    onChange={(e) => updateAnswer('specificIncident', e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Example: Last month, I had a PTSD episode triggered by fireworks. That night, my sleep apnea symptoms worsened significantly - I woke up gasping for air multiple times, which my partner witnessed..."
+                      value={answers.specificIncident}
+                      onChange={(e) => updateAnswer('specificIncident', e.target.value)}
+                    />
+                    {isSpeechRecognitionSupported() && (
+                      <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                        <VoiceInputButton
+                          onTranscript={(text) => updateAnswer('specificIncident', answers.specificIncident ? `${answers.specificIncident} ${text}` : text)}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step 3 (or 2 for primary): Severity and Impact */}
+            {/* Step 3 (or 2 for primary): Severity and Daily Impact */}
             {((step === 3 && isSecondary) || (step === 2 && !isSecondary)) && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Severity and Daily Impact</h3>
@@ -618,12 +639,22 @@ Sincerely,
                       </button>
                     )}
                   </div>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Example: I have difficulty concentrating due to fatigue from poor sleep. I've missed 15+ days of work in the past year. My supervisor has documented performance issues related to exhaustion..."
-                    value={answers.workImpact}
-                    onChange={(e) => updateAnswer('workImpact', e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Example: I have difficulty concentrating due to fatigue from poor sleep. I've missed 15+ days of work in the past year. My supervisor has documented performance issues related to exhaustion..."
+                      value={answers.workImpact}
+                      onChange={(e) => updateAnswer('workImpact', e.target.value)}
+                    />
+                    {isSpeechRecognitionSupported() && (
+                      <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                        <VoiceInputButton
+                          onTranscript={(text) => updateAnswer('workImpact', answers.workImpact ? `${answers.workImpact} ${text}` : text)}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -646,12 +677,22 @@ Sincerely,
                       </button>
                     )}
                   </div>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Example: I avoid social gatherings because I'm exhausted. My spouse says I'm irritable and moody due to poor sleep. I've had to stop participating in activities I used to enjoy..."
-                    value={answers.socialImpact}
-                    onChange={(e) => updateAnswer('socialImpact', e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Example: I avoid social gatherings because I'm exhausted. My spouse says I'm irritable and moody due to poor sleep. I've had to stop participating in activities I used to enjoy..."
+                      value={answers.socialImpact}
+                      onChange={(e) => updateAnswer('socialImpact', e.target.value)}
+                    />
+                    {isSpeechRecognitionSupported() && (
+                      <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                        <VoiceInputButton
+                          onTranscript={(text) => updateAnswer('socialImpact', answers.socialImpact ? `${answers.socialImpact} ${text}` : text)}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -674,12 +715,22 @@ Sincerely,
                       </button>
                     )}
                   </div>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Example: I can no longer drive long distances safely due to fatigue. I need to take frequent breaks during simple tasks. My memory and focus have noticeably declined..."
-                    value={answers.specificExamples}
-                    onChange={(e) => updateAnswer('specificExamples', e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Example: I can no longer drive long distances safely due to fatigue. I need to take frequent breaks during simple tasks. My memory and focus have noticeably declined..."
+                      value={answers.specificExamples}
+                      onChange={(e) => updateAnswer('specificExamples', e.target.value)}
+                    />
+                    {isSpeechRecognitionSupported() && (
+                      <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                        <VoiceInputButton
+                          onTranscript={(text) => updateAnswer('specificExamples', answers.specificExamples ? `${answers.specificExamples} ${text}` : text)}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -916,6 +967,7 @@ Sincerely,
         trigger="nexus"
         context={{ conditionName: condition }}
         onDismiss={() => setNexusDownloaded(false)}
+        componentKey="nexus-builder"
       />
       
       {/* AI Consent Modal */}

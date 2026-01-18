@@ -219,8 +219,9 @@ const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
     <div className="rounded-xl border border-blue-200 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 p-5 transition-shadow hover:shadow-md">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-2xl">📋</span>
-        <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
+        <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
           Quick Condition Picker
+          <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">NEW</span>
         </h3>
       </div>
       

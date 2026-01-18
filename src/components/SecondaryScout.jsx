@@ -385,6 +385,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
         show={filteredSuggestions.length > 0} 
         trigger="secondary-scout"
         context={{ count: filteredSuggestions.length }}
+        componentKey="secondary-scout"
       />
       
       {/* Doctor's Packet Modal */}

@@ -11,6 +11,7 @@
 
 const PROFILE_KEY = 'vet_rate_veteran_profile';
 const SAVED_FORMS_KEY = 'vet_rate_saved_forms';
+const RATINGS_KEY = 'vet_rate_my_ratings';
 
 // Valid profile fields for security
 const VALID_PROFILE_FIELDS = [
@@ -357,6 +358,185 @@ export const importVeteranData = (data, mode = 'replace') => {
   }
 };
 
+// ============================================================================
+// MY RATINGS STORAGE - User's actual VA disability ratings
+// ============================================================================
+
+/**
+ * Valid body parts for ratings
+ */
+const VALID_BODY_PARTS = [
+  'shoulder', 'arm', 'elbow', 'forearm', 'wrist', 'hand', 'fingers',
+  'hip', 'thigh', 'knee', 'leg', 'ankle', 'foot', 'toes',
+  'head', 'eye', 'ear', 'nose', 'mouth', 'neck', 'back', 'chest',
+  'heart', 'lungs', 'digestive', 'kidney', 'bladder', 'reproductive',
+  'skin', 'mental', 'tbi', 'diabetes', 'migraines', 'other'
+];
+
+/**
+ * Get all saved ratings
+ * @returns {Array} Array of {id, name, bodyPart, rating, side, effectiveDate}
+ */
+export const getMyRatings = () => {
+  try {
+    const saved = localStorage.getItem(RATINGS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading ratings:', error);
+    return [];
+  }
+};
+
+/**
+ * Save/replace all ratings
+ * @param {Array} ratings - Array of rating objects
+ * @returns {boolean} Success status
+ */
+export const saveMyRatings = (ratings) => {
+  try {
+    if (!Array.isArray(ratings)) return false;
+    
+    // Validate and sanitize each rating
+    const sanitizedRatings = ratings.map(r => ({
+      id: r.id || `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: sanitizeString(r.name || '', 200),
+      bodyPart: VALID_BODY_PARTS.includes(r.bodyPart) ? r.bodyPart : 'other',
+      rating: Math.max(0, Math.min(100, parseInt(r.rating) || 0)),
+      side: ['left', 'right', 'bilateral', 'none'].includes(r.side) ? r.side : 'none',
+      effectiveDate: r.effectiveDate || null,
+      dateAdded: r.dateAdded || new Date().toISOString(),
+      dateUpdated: new Date().toISOString()
+    }));
+    
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(sanitizedRatings));
+    return true;
+  } catch (error) {
+    console.error('Error saving ratings:', error);
+    return false;
+  }
+};
+
+/**
+ * Add a new rating
+ * @param {Object} rating - The rating to add
+ * @returns {string|null} The new rating ID or null on error
+ */
+export const addRating = (rating) => {
+  try {
+    const ratings = getMyRatings();
+    
+    const newRating = {
+      id: `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: sanitizeString(rating.name || '', 200),
+      bodyPart: VALID_BODY_PARTS.includes(rating.bodyPart) ? rating.bodyPart : 'other',
+      rating: Math.max(0, Math.min(100, parseInt(rating.rating) || 0)),
+      side: ['left', 'right', 'bilateral', 'none'].includes(rating.side) ? rating.side : 'none',
+      effectiveDate: rating.effectiveDate || null,
+      dateAdded: new Date().toISOString(),
+      dateUpdated: new Date().toISOString()
+    };
+    
+    ratings.push(newRating);
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(ratings));
+    
+    return newRating.id;
+  } catch (error) {
+    console.error('Error adding rating:', error);
+    return null;
+  }
+};
+
+/**
+ * Update an existing rating
+ * @param {string} ratingId - The rating ID to update
+ * @param {Object} updates - Fields to update
+ * @returns {boolean} Success status
+ */
+export const updateRating = (ratingId, updates) => {
+  try {
+    const ratings = getMyRatings();
+    const index = ratings.findIndex(r => r.id === ratingId);
+    
+    if (index === -1) return false;
+    
+    ratings[index] = {
+      ...ratings[index],
+      ...updates,
+      dateUpdated: new Date().toISOString()
+    };
+    
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(ratings));
+    return true;
+  } catch (error) {
+    console.error('Error updating rating:', error);
+    return false;
+  }
+};
+
+/**
+ * Remove a rating
+ * @param {string} ratingId - The rating ID to remove
+ * @returns {boolean} Success status
+ */
+export const removeRating = (ratingId) => {
+  try {
+    const ratings = getMyRatings();
+    const filtered = ratings.filter(r => r.id !== ratingId);
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(filtered));
+    return true;
+  } catch (error) {
+    console.error('Error removing rating:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all ratings
+ * @returns {boolean} Success status
+ */
+export const clearMyRatings = () => {
+  try {
+    localStorage.removeItem(RATINGS_KEY);
+    return true;
+  } catch (error) {
+    console.error('Error clearing ratings:', error);
+    return false;
+  }
+};
+
+/**
+ * Check if user has saved ratings
+ * @returns {boolean}
+ */
+export const hasMyRatings = () => {
+  const ratings = getMyRatings();
+  return ratings.length > 0;
+};
+
+/**
+ * Get the user's current combined VA rating (requires vaCalculator)
+ * @returns {number} Combined rating percentage
+ */
+export const getMyTotalRating = () => {
+  const ratings = getMyRatings();
+  if (ratings.length === 0) return 0;
+  
+  // VA math: combine ratings using efficiency formula
+  // Formula: A + B(1-A) = combined, then round to nearest 10%
+  const sortedRatings = ratings.map(r => r.rating).sort((a, b) => b - a);
+  
+  let combined = 0;
+  for (const rating of sortedRatings) {
+    const ratingDecimal = rating / 100;
+    const combinedDecimal = combined / 100;
+    combined = Math.round((combinedDecimal + ratingDecimal * (1 - combinedDecimal)) * 100);
+  }
+  
+  // Round to nearest 10%
+  return Math.round(combined / 10) * 10;
+};
+
+// Default export - must be at the end after all functions are defined
 export default {
   // Profile functions
   getVeteranProfile,
@@ -376,5 +556,14 @@ export default {
   getFormStats,
   // Backup functions
   exportAllVeteranData,
-  importVeteranData
+  importVeteranData,
+  // Ratings functions
+  getMyRatings,
+  saveMyRatings,
+  addRating,
+  updateRating,
+  removeRating,
+  clearMyRatings,
+  hasMyRatings,
+  getMyTotalRating
 };

@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import disabilityData from '../data/disabilityData.json';
+import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
 
 /**
  * SecondaryScoutLauncher Component
@@ -12,11 +13,18 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
-  const [inputMethod, setInputMethod] = useState('manual'); // 'manual' or 'examples'
+  const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', or 'myratings'
   const [manualInput, setManualInput] = useState('');
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
   const [expandedSystems, setExpandedSystems] = useState(new Set());
+  const [savedRatings, setSavedRatings] = useState([]);
+  
+  // Load saved ratings on mount
+  useEffect(() => {
+    const ratings = getMyRatings();
+    setSavedRatings(ratings);
+  }, []);
 
   // Organized by body system per 38 CFR Part 4, Subpart B - Schedule for Rating Disabilities
   const conditionsBySystem = {
@@ -941,6 +949,27 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     }
   };
 
+  // Handler for My Ratings submission
+  const handleMyRatingsSubmit = () => {
+    if (savedRatings.length > 0) {
+      // Convert saved ratings to condition names for Secondary Scout
+      const conditions = savedRatings.map(rating => rating.name);
+      onLaunch(conditions);
+    }
+  };
+
+  // Calculate combined rating from saved ratings using VA math
+  const calculateCombinedRating = (ratings) => {
+    if (!ratings || ratings.length === 0) return 0;
+    const sortedRatings = [...ratings].sort((a, b) => b.rating - a.rating);
+    let efficiency = 100;
+    sortedRatings.forEach(r => {
+      efficiency = efficiency - (efficiency * r.rating / 100);
+    });
+    const combined = 100 - efficiency;
+    return Math.round(combined / 10) * 10; // Round to nearest 10
+  };
+
   const loadExampleProfile = (conditions) => {
     setSelectedConditions(conditions);
     setInputMethod('checkbox');
@@ -1012,6 +1041,22 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
               >
                 Examples
               </button>
+              {/* My Ratings Tab - shows only if user has saved ratings */}
+              {savedRatings.length > 0 && (
+                <button
+                  onClick={() => setInputMethod('myratings')}
+                  className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+                    inputMethod === 'myratings'
+                      ? 'text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-600 dark:border-yellow-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                  }`}
+                >
+                  ⭐ My Ratings
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">
+                    {savedRatings.length}
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* Manual Input Method */}
@@ -1298,6 +1343,82 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* My Ratings Method */}
+            {inputMethod === 'myratings' && (
+              <div>
+                <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">⭐</span>
+                    <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200">Your Saved Ratings</h3>
+                  </div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    These are your actual VA disability ratings saved from the Tactical Calculator. 
+                    Use them to find potential secondary conditions!
+                  </p>
+                  {savedRatings.length > 0 && (
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                        Combined Rating: 
+                      </span>
+                      <span className="px-3 py-1 bg-yellow-600 text-white font-bold rounded-full">
+                        {calculateCombinedRating(savedRatings)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 max-h-[280px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                  {savedRatings.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <span className="text-4xl mb-3 block">📭</span>
+                      <p className="font-medium">No saved ratings found</p>
+                      <p className="text-sm mt-1">
+                        Use the <strong>Tactical Calculator</strong> to save your VA disability ratings
+                      </p>
+                    </div>
+                  ) : (
+                    savedRatings.map((rating, index) => (
+                      <div 
+                        key={rating.id || index}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs font-bold rounded ${
+                              rating.rating >= 70 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                              rating.rating >= 40 ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
+                              rating.rating >= 20 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300' :
+                              'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                            }`}>
+                              {rating.rating}%
+                            </span>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {rating.name}
+                            </span>
+                          </div>
+                          {(rating.bodyPart || rating.side) && (
+                            <div className="flex gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              {rating.bodyPart && <span>📍 {rating.bodyPart}</span>}
+                              {rating.side && <span>↔️ {rating.side}</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {savedRatings.length > 0 && (
+                  <button
+                    onClick={handleMyRatingsSubmit}
+                    className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                  >
+                    🔍 Analyze My {savedRatings.length} Rating{savedRatings.length !== 1 ? 's' : ''} for Secondary Conditions
+                  </button>
+                )}
               </div>
             )}
 

@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
+import VoiceInputButton, { isSpeechRecognitionSupported } from './VoiceInput';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { fillAndDownloadForm } from '../utils/pdfFormFiller';
 import { isAIAvailable, enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
@@ -2506,14 +2507,27 @@ Phone: 1-202-461-7699
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {field.label} {field.required && <span className="text-red-500">*</span>}
           </label>
-          <textarea
-            value={formData[field.name] || ''}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
-            placeholder={field.placeholder}
-            rows={field.rows || 4}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-            required={field.required}
-          />
+          <div className="relative">
+            <textarea
+              value={formData[field.name] || ''}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
+              rows={field.rows || 4}
+              className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+              required={field.required}
+            />
+            {isSpeechRecognitionSupported() && (
+              <div className="absolute right-2 top-2" title="Click to dictate using voice">
+                <VoiceInputButton
+                  onTranscript={(text) => {
+                    const currentValue = formData[field.name] || '';
+                    handleFieldChange(field.name, currentValue ? `${currentValue} ${text}` : text);
+                  }}
+                  size="sm"
+                />
+              </div>
+            )}
+          </div>
         </div>
       );
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, TrendingUp, CheckCircle, Info, FileText, AlertTriangle, Download, ClipboardList, X } from 'lucide-react';
+import { AlertCircle, TrendingUp, CheckCircle, Info, FileText, AlertTriangle, Download, ClipboardList, X, Calculator } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 /**
@@ -10,7 +10,7 @@ import jsPDF from 'jspdf';
  * 
  * CRITICAL: This is an educational tool, not a guarantee. All feedback based on 38 CFR Part 4.
  */
-const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, questions, onRestart, onClose }) => {
+const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, questions, onRestart, onClose, onSendToCalculator }) => {
   if (!result) return null;
 
   const { predictedRating, ratingRationale, gaps, actionItems, warnings } = result;
@@ -440,6 +440,15 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
 
       {/* Buttons */}
       <div className="flex gap-4 justify-center flex-wrap">
+        {onSendToCalculator && (
+          <button
+            onClick={onSendToCalculator}
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-indigo-700 transition shadow-md flex items-center gap-2"
+          >
+            <Calculator className="h-5 w-5" />
+            Send to Tactical Calculator
+          </button>
+        )}
         <button
           onClick={onRestart}
           className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-md flex items-center gap-2"

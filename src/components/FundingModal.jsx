@@ -3,8 +3,12 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 /**
  * FundingModal - Modal with multiple ways to support Vet-Rate.org
+ * Shows context-specific development stats when provided
+ * @param {boolean} show - Whether to show the modal
+ * @param {function} onClose - Callback when modal is closed
+ * @param {object} componentStats - Optional stats about the component { name, hours, lines, description }
  */
-function FundingModal({ show, onClose }) {
+function FundingModal({ show, onClose, componentStats = null }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(show);
 
@@ -81,6 +85,29 @@ function FundingModal({ show, onClose }) {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             💚 Back the Mission
           </h2>
+          
+          {/* Component-specific stats */}
+          {componentStats && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg p-3 mb-3 border border-blue-200 dark:border-blue-700">
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1">
+                {componentStats.name}
+              </p>
+              <div className="flex justify-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                <div>
+                  <span className="font-semibold">⏱️ {componentStats.hours} hrs</span> to build
+                </div>
+                <div>
+                  <span className="font-semibold">📝 {componentStats.lines.toLocaleString()} lines</span> of code
+                </div>
+              </div>
+              {componentStats.description && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 italic">
+                  {componentStats.description}
+                </p>
+              )}
+            </div>
+          )}
+          
           <p className="text-gray-600 dark:text-gray-300 text-sm">
             100% of contributions go toward keeping Vet-Rate.org free for all veterans.
             No ads, no tracking, no data selling - just vets helping vets.

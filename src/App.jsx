@@ -36,6 +36,22 @@ import ReportBugLink from './components/ReportBugLink';
 import FundingModal from './components/FundingModal';
 import QuickConditionPicker from './components/QuickConditionPicker';
 import UserManual from './components/UserManual';
+import StateBenefitHunter from './components/StateBenefitHunter';
+import VSOFinder from './components/VSOFinder';
+import RedTeam from './components/RedTeam';
+import SymptomLogger from './components/SymptomLogger';
+import DecisionDecoder from './components/DecisionDecoder';
+import TacticalCalculator from './components/TacticalCalculator';
+import MobileNotice from './components/MobileNotice';
+import BlueButtonXRay from './components/BlueButtonXRay';
+import WitnessBench from './components/WitnessBench';
+import RiskAssessment from './components/RiskAssessment';
+import TDIUBuilder from './components/TDIUBuilder';
+import PACTActNavigator from './components/PACTActNavigator';
+import FOIAGenerator from './components/FOIAGenerator';
+import MillionDollarDashboard from './components/MillionDollarDashboard';
+import MOSHazardMatcher from './components/MOSHazardMatcher';
+import WebOfConditions from './components/WebOfConditions';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import { saveStatement, getSavedClaims, getStatement } from './utils/claimsStorage';
 import { initializeErrorCapture } from './utils/bugReportUtils';
@@ -67,6 +83,22 @@ function App() {
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
+  const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
+  const [showVSOFinder, setShowVSOFinder] = useState(false);
+  const [showRedTeam, setShowRedTeam] = useState(false);
+  const [showSymptomLogger, setShowSymptomLogger] = useState(false);
+  const [showDecisionDecoder, setShowDecisionDecoder] = useState(false);
+  const [showTacticalCalculator, setShowTacticalCalculator] = useState(false);
+  const [showBlueButtonXRay, setShowBlueButtonXRay] = useState(false);
+  const [showWitnessBench, setShowWitnessBench] = useState(false);
+  const [showRiskAssessment, setShowRiskAssessment] = useState(false);
+  const [showTDIUBuilder, setShowTDIUBuilder] = useState(false);
+  const [showPACTActNavigator, setShowPACTActNavigator] = useState(false);
+  const [showFOIAGenerator, setShowFOIAGenerator] = useState(false);
+  const [showMillionDollarDashboard, setShowMillionDollarDashboard] = useState(false);
+  const [showMOSHazardMatcher, setShowMOSHazardMatcher] = useState(false);
+  const [showWebOfConditions, setShowWebOfConditions] = useState(false);
+  const [capSimulatorResults, setCapSimulatorResults] = useState([]);
   const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
     () => localStorage.getItem('vetrate-disclaimer-acknowledged') === 'true'
   );
@@ -152,6 +184,21 @@ function App() {
     } else if (tool === 'secondary-scout') {
       setShowSecondaryScoutLauncher(true);
     }
+  };
+
+  // Handler for sending C&P Simulator results to Tactical Calculator
+  const handleSendToCalculator = (result, conditionName, diagnosticCode) => {
+    const newResult = {
+      id: Date.now(),
+      conditionName: conditionName,
+      diagnosticCode: diagnosticCode,
+      rating: result.predictedRating,
+      source: 'C&P Simulator',
+      dateAdded: new Date().toISOString()
+    };
+    setCapSimulatorResults(prev => [...prev, newResult]);
+    setShowCAPSimulator(false);
+    setShowTacticalCalculator(true);
   };
 
   // Handler for navigating to a secondary condition from DisabilityDetails
@@ -243,18 +290,39 @@ function App() {
     showVAResources,
     showFormsHelper,
     showCFileAnalyzer,
-    showUserManual
+    showUserManual,
+    showStateBenefitHunter,
+    showVSOFinder,
+    showRedTeam,
+    showSymptomLogger,
+    showDecisionDecoder,
+    showTacticalCalculator,
+    showBlueButtonXRay,
+    showWitnessBench,
+    showRiskAssessment,
+    showTDIUBuilder,
+    showPACTActNavigator,
+    showFOIAGenerator,
+    showMillionDollarDashboard,
+    showMOSHazardMatcher,
+    showWebOfConditions
   }), [
     searchTerm, results, selectedResult, hasSearched, error,
     showPrivacyPolicy, showAboutUs, showContactUs,
     showSecondaryScoutLauncher, showSecondaryScout, userConditions,
-    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showCFileAnalyzer, showUserManual
+    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showCFileAnalyzer, showUserManual,
+    showStateBenefitHunter, showVSOFinder, showRedTeam, showSymptomLogger, showDecisionDecoder, showTacticalCalculator,
+    showBlueButtonXRay, showWitnessBench, showRiskAssessment, showTDIUBuilder, showPACTActNavigator, showFOIAGenerator,
+    showMillionDollarDashboard, showMOSHazardMatcher, showWebOfConditions
   ]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
       {/* Disclaimer Splash - shows on first visit */}
       <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
+      
+      {/* Mobile device notice */}
+      <MobileNotice />
       
       <Header 
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
@@ -296,6 +364,11 @@ function App() {
               💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or keyword — covers all 15 body systems from 38 CFR Part 4
             </p>
           </div>
+        </div>
+
+        {/* Quick Condition Picker - Prominent Position */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
         </div>
 
         {error && (
@@ -359,7 +432,53 @@ function App() {
 
         {/* Feature CTAs - Below Search */}
         <div className="mt-12 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">🛠️ Claims Building Tools</h2>
+          {/* SECTION 1: ESSENTIAL TOOLS - What Everyone Needs First */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2">⚡ Essential Tools</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Start here — calculate your rating and organize your claims</p>
+          
+          {/* TACTICAL CALCULATOR - THE Core Feature */}
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-16 -translate-x-16"></div>
+              
+              <div className="relative flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+                    <span className="text-5xl">🧮</span>
+                  </div>
+                </div>
+                
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 className="text-2xl font-bold">Tactical Calculator</h3>
+                    <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-pulse">CORE FEATURE</span>
+                  </div>
+                  <p className="text-blue-100 max-w-xl">
+                    <strong>Calculate your REAL rating</strong> using official VA math (38 CFR § 4.25). 
+                    Includes <strong>Bilateral Factor</strong>, gap analysis to reach 100%, and 
+                    <strong> 2026 pay estimates</strong> with dependents.
+                  </p>
+                </div>
+                
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setShowTacticalCalculator(true)}
+                    className="px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <span>🎯</span>
+                    <span>Calculate My Rating</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 2: DISCOVER YOUR CLAIMS - Find What to Claim */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🔍 Discover Your Claims</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find secondary conditions, practice for exams, and strategize your approach</p>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Secondary Scout CTA */}
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 border border-emerald-200 dark:border-emerald-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
@@ -414,36 +533,50 @@ function App() {
             </div>
           </div>
 
-          {/* Forms Helper CTA - Full Width */}
-          <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40 border border-purple-200 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="bg-purple-100 dark:bg-purple-800/50 rounded-lg p-2">
-                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+          {/* Pathfinder CTA - Full Width Featured */}
+          <div className="mt-6">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+              
+              <div className="relative flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                    <span className="text-4xl">🧭</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    📋 Forms Helper
-                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">NEW</span>
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Get guided help filling out VA forms, especially <strong>buddy statements</strong> – one of the most powerful but hardest-to-get forms of evidence!
+                
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 className="text-xl font-bold">The Pathfinder</h3>
+                    <span className="px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI STRATEGY</span>
+                  </div>
+                  <p className="text-blue-100 max-w-2xl">
+                    <strong>Your personal claims strategist.</strong> Enter your current ratings and let AI analyze your profile to suggest 
+                    <strong> high-probability secondary claims</strong> you may be missing, with direct links to build your case. Like having a VSO in your pocket.
                   </p>
                 </div>
+                
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setShowPathfinder(true)}
+                    className="px-6 py-3 bg-white text-indigo-700 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <span>📊</span>
+                    <span>Analyze My Strategy</span>
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setShowFormsHelper(true)}
-                className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
-              >
-                📝 Open Forms Helper
-              </button>
             </div>
           </div>
 
+          {/* SECTION 3: BUILD YOUR EVIDENCE - Documentation & Medical Records */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">📋 Build Your Evidence</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Gather medical records, fill out forms, and create supporting statements</p>
+
           {/* C-File Analyzer CTA - Full Width - Featured */}
-          <div className="mt-6 bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-fuchsia-900/40 border-2 border-pink-300 dark:border-pink-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+          <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-fuchsia-900/40 border-2 border-pink-300 dark:border-pink-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden mb-6">
             {/* Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse"></div>
             
@@ -473,8 +606,147 @@ function App() {
             </div>
           </div>
 
-          {/* Shark Radar & Pathfinder - Two Column */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Blue Button X-Ray CTA */}
+            <div className="bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 dark:from-cyan-900/40 dark:via-blue-900/40 dark:to-indigo-900/40 border-2 border-cyan-300 dark:border-cyan-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">📋</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Blue Button X-Ray
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">INSTANT</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Instant Evidence Mining.</strong> Upload your <strong>Blue Button</strong> from MyHealtheVet (instant download!) and find <strong>unclaimed diagnoses</strong> hiding in your records.
+              </p>
+              <button
+                onClick={() => setShowBlueButtonXRay(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:from-cyan-700 hover:to-blue-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🔬 Scan My Records
+              </button>
+            </div>
+
+            {/* Witness Bench CTA */}
+            <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-fuchsia-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Witness Bench
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-amber-500 text-black text-xs font-bold rounded-full">AI</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Buddy Letter Wizard.</strong> Hand off to your <strong>spouse, friend, or battle buddy</strong>. AI asks the RIGHT questions to capture powerful <strong>witness evidence</strong>.
+              </p>
+              <button
+                onClick={() => setShowWitnessBench(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                ✍️ Create Buddy Statement
+              </button>
+            </div>
+          </div>
+
+          {/* Forms Helper CTA - Full Width */}
+          <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40 border border-purple-200 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="bg-purple-100 dark:bg-purple-800/50 rounded-lg p-2">
+                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    📋 Forms Helper
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">NEW</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Get guided help filling out VA forms, especially <strong>buddy statements</strong> – one of the most powerful but hardest-to-get forms of evidence!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFormsHelper(true)}
+                className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+              >
+                📝 Open Forms Helper
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION 4: QUALITY CONTROL - Check Before You Submit */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">✅ Quality Control</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Review your work, decode VA decisions, and protect yourself from scams</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Red Team CTA */}
+            <div className="bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 dark:from-red-900/40 dark:via-orange-900/40 dark:to-amber-900/40 border-2 border-red-300 dark:border-red-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-red-500 to-orange-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🎖️</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Red Team
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Statement Stress Test.</strong> Find weak language that's <strong>hurting your claim</strong> before the VA does. "Tough guy" language = denials.
+              </p>
+              <button
+                onClick={() => setShowRedTeam(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg font-bold hover:from-red-700 hover:to-orange-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🔍 Stress Test My Statement
+              </button>
+            </div>
+
+            {/* Decision Decoder CTA */}
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🔓</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Decision Decoder
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Denial Translator.</strong> Got a confusing VA letter? Paste it in and get <strong>plain English</strong> + what's missing + next steps.
+              </p>
+              <button
+                onClick={() => setShowDecisionDecoder(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold hover:from-amber-600 hover:to-orange-600 transition-colors shadow-md hover:shadow-lg"
+              >
+                🔓 Decode My Decision
+              </button>
+            </div>
+
             {/* Shark Radar CTA */}
             <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/40 dark:to-orange-900/40 border border-red-200 dark:border-red-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-3 mb-3">
@@ -499,38 +771,305 @@ function App() {
                 🔍 Scan Contract
               </button>
             </div>
+          </div>
 
-            {/* Pathfinder CTA */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 border border-blue-200 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="bg-blue-100 dark:bg-blue-800/50 rounded-lg p-2">
-                  <span className="text-2xl">🧭</span>
+          {/* SECTION 5: ADVANCED STRATEGY - Power User Tools */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🚀 Advanced Strategy</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Power tools for maximizing your rating and protecting what you have</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* TDIU Work Impact Builder CTA */}
+            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/40 dark:via-emerald-900/40 dark:to-teal-900/40 border-2 border-green-300 dark:border-green-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">💼</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    The Pathfinder
-                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">NEW</span>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    TDIU Builder
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded-full">💰 100%</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                <strong>Strategic claims analysis.</strong> Enter your current ratings and let AI suggest 
-                <strong> high-probability secondary claims</strong> you may be missing, with direct links to build your case.
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>The 100% Backdoor.</strong> Translate your symptoms into <strong>vocational language</strong> for VA Form 21-8940. Get paid at 100% even with a 60-70% rating.
               </p>
               <button
-                onClick={() => setShowPathfinder(true)}
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-colors"
+                onClick={() => setShowTDIUBuilder(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-colors shadow-md hover:shadow-lg"
               >
-                📊 Analyze My Strategy
+                📝 Build My TDIU Case
+              </button>
+            </div>
+
+            {/* Poke the Bear Calculator CTA */}
+            <div className="bg-gradient-to-br from-orange-50 via-red-50 to-rose-50 dark:from-orange-900/40 dark:via-red-900/40 dark:to-rose-900/40 border-2 border-orange-300 dark:border-orange-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🐻</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Risk Calculator
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full">DEFENSE</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Don't Poke the Bear!</strong> Check 5-Year, 20-Year, and P&T protections <strong>BEFORE</strong> you file. Sharks push frivolous claims that <strong>trigger rating reductions</strong>.
+              </p>
+              <button
+                onClick={() => setShowRiskAssessment(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                ⚖️ Check My Risk
               </button>
             </div>
           </div>
 
-          {/* Quick Condition Picker - Full Width */}
-          <div className="mt-6">
-            <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            {/* Symptom Logger CTA */}
+            <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-fuchsia-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Symptom Logger
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-violet-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded-full">50%</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>The 50% Maker.</strong> Track <strong>migraines/IBS frequency</strong> for your C&P exam. Export PDF proof of "prostrating attacks per month."
+              </p>
+              <button
+                onClick={() => setShowSymptomLogger(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-violet-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                📝 Log My Symptoms
+              </button>
+            </div>
+
+            {/* PACT Act Navigator CTA */}
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-violet-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🔥</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    PACT Act Navigator
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded-full">PRESUMPTIVE</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Skip the Nexus Letter.</strong> Check if your condition is <strong>presumptive</strong> under PACT Act—Agent Orange, burn pits, Gulf War, radiation. <strong>No proof needed.</strong>
+              </p>
+              <button
+                onClick={() => setShowPACTActNavigator(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🗺️ Check My Presumptives
+              </button>
+            </div>
+
+            {/* FOIA Keysmith CTA */}
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🔑</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    The Keysmith
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-gray-700 text-white text-xs font-bold rounded-full">FOIA</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Unlock Your C-File.</strong> Generate a <strong>FOIA request</strong> for your complete VA claims file. See what VA used—and <strong>what they ignored</strong>.
+              </p>
+              <button
+                onClick={() => setShowFOIAGenerator(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🔓 Generate FOIA Request
+              </button>
+            </div>
           </div>
-          
+
+          {/* SECTION 6: SUPPORT & RESOURCES - Get Free Help */}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🤝 Support & Resources</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation and unlock state-specific benefits</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* VSO Finder CTA */}
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-purple-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              {/* Decorative element */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">🤝</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    VSO Finder
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">FREE HELP</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>The Honest Broker.</strong> Find <strong>FREE, Accredited</strong> representation near you. 
+                Connect with County VSOs, DAV, VFW, and avoid <strong>"Claim Sharks"</strong> forever.
+              </p>
+              <button
+                onClick={() => setShowVSOFinder(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🔍 Find Free Help Near Me
+              </button>
+            </div>
+
+            {/* State Benefit Hunter CTA */}
+            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/40 dark:via-emerald-900/40 dark:to-teal-900/40 border-2 border-green-300 dark:border-green-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+              {/* Decorative shimmer */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
+              
+              <div className="flex items-start gap-3 mb-3 relative">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 shadow-lg">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    State Benefit Hunter
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-pulse">$$$</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <strong>Money on the Table!</strong> Discover state-specific benefits many veterans miss: 
+                <strong> property tax exemptions, free vehicle registration, education grants,</strong> and more.
+              </p>
+              <button
+                onClick={() => setShowStateBenefitHunter(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-colors shadow-md hover:shadow-lg"
+              >
+                🎯 Find My State Benefits
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION 7: PREMIUM VISUALIZATIONS - Shock & Awe */}
+          <div className="mt-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent">
+                💎 SHOCK & AWE TOOLS 💎
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Premium visualizations that make you say "Whoa"</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Million Dollar Dashboard */}
+              <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-900/40 dark:via-green-900/40 dark:to-teal-900/40 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+                
+                <div className="flex items-start gap-3 mb-3 relative">
+                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg p-3 shadow-lg">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                      Million Dollar Dashboard
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-bold rounded-full animate-pulse">WOW</span>
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                  <strong>Your rating is worth MORE than you think.</strong> See your <strong>lifetime value</strong>—VA pay, property tax savings, education benefits, healthcare. Watch the number climb.
+                </p>
+                <button
+                  onClick={() => setShowMillionDollarDashboard(true)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-bold hover:from-emerald-700 hover:to-green-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  💵 Show Me The Money
+                </button>
+              </div>
+
+              {/* MOS Hazard Matcher */}
+              <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-zinc-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-slate-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+                
+                <div className="flex items-start gap-3 mb-3 relative">
+                  <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-lg p-3 shadow-lg">
+                    <span className="text-2xl">🎖️</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                      MOS Hazard Matcher
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-slate-500 to-gray-600 text-white text-xs font-bold rounded-full">JOB→INJURY</span>
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                  <strong>Your MOS broke your body.</strong> Enter your job code, see <strong>what injuries that job causes</strong>. Hearing loss? Back pain? <strong>It's not just you—it's the job.</strong>
+                </p>
+                <button
+                  onClick={() => setShowMOSHazardMatcher(true)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-colors shadow-md hover:shadow-lg"
+                >
+                  🔍 Match My MOS
+                </button>
+              </div>
+
+              {/* Web of Conditions */}
+              <div className="bg-gradient-to-br from-purple-50 via-indigo-50 to-violet-50 dark:from-purple-900/40 dark:via-indigo-900/40 dark:to-violet-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+                
+                <div className="flex items-start gap-3 mb-3 relative">
+                  <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-3 shadow-lg">
+                    <span className="text-2xl">🕸️</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                      Web of Conditions
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full">INTERACTIVE</span>
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                  <strong>See how conditions connect.</strong> Interactive node map—click a condition, watch secondaries <strong>orbit around it</strong>. Click a link, see the medical nexus.
+                </p>
+                <button
+                  onClick={() => setShowWebOfConditions(true)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  🗺️ Explore The Web
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Compact Disclaimer */}
           <Disclaimer compact />
         </div>
@@ -545,7 +1084,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                The most comprehensive free VA claims toolkit—748 disabilities, official rating criteria, secondary condition discovery, C&P exam prep, and evidence-building tools.
+                The most comprehensive free VA claims arsenal—28 professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -749,6 +1288,7 @@ function App() {
         <CAPSimulator
           onClose={() => setShowCAPSimulator(false)}
           onReportBug={() => setShowBugSquasher(true)}
+          onSendToCalculator={handleSendToCalculator}
         />
       )}
       
@@ -853,6 +1393,188 @@ function App() {
           onClose={() => setShowUserManual(false)}
           onReportBug={() => {
             setShowUserManual(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* State Benefit Hunter */}
+      {showStateBenefitHunter && (
+        <StateBenefitHunter
+          onClose={() => setShowStateBenefitHunter(false)}
+          onReportBug={() => {
+            setShowStateBenefitHunter(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* VSO Finder */}
+      {showVSOFinder && (
+        <VSOFinder
+          onClose={() => setShowVSOFinder(false)}
+          onReportBug={() => {
+            setShowVSOFinder(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Red Team - Statement Stress Test */}
+      {showRedTeam && (
+        <RedTeam
+          onClose={() => setShowRedTeam(false)}
+          onReportBug={() => {
+            setShowRedTeam(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Symptom Logger */}
+      {showSymptomLogger && (
+        <SymptomLogger
+          onClose={() => setShowSymptomLogger(false)}
+          onReportBug={() => {
+            setShowSymptomLogger(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Decision Decoder */}
+      {showDecisionDecoder && (
+        <DecisionDecoder
+          onClose={() => setShowDecisionDecoder(false)}
+          onReportBug={() => {
+            setShowDecisionDecoder(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Tactical Calculator */}
+      {showTacticalCalculator && (
+        <TacticalCalculator
+          onClose={() => setShowTacticalCalculator(false)}
+          onReportBug={() => {
+            setShowTacticalCalculator(false);
+            setShowBugSquasher(true);
+          }}
+          capSimulatorResults={capSimulatorResults}
+          onClearCapResults={() => setCapSimulatorResults([])}
+        />
+      )}
+      
+      {/* Blue Button X-Ray - Diamond Tier Data Mining */}
+      {showBlueButtonXRay && (
+        <BlueButtonXRay
+          onClose={() => setShowBlueButtonXRay(false)}
+          onAddToCalculator={(conditions) => {
+            // Add conditions to Pathfinder for analysis
+            setShowBlueButtonXRay(false);
+            setShowPathfinder(true);
+          }}
+          onCheckRatingCriteria={(conditionName) => {
+            // Search for the condition in the database
+            setShowBlueButtonXRay(false);
+            setSearchTerm(conditionName);
+          }}
+        />
+      )}
+      
+      {/* Witness Bench - Diamond Tier Buddy Letter Wizard */}
+      {showWitnessBench && (
+        <WitnessBench
+          onClose={() => setShowWitnessBench(false)}
+          onReportBug={() => {
+            setShowWitnessBench(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Risk Assessment - Diamond Tier Poke the Bear Calculator */}
+      {showRiskAssessment && (
+        <RiskAssessment
+          onClose={() => setShowRiskAssessment(false)}
+          onReportBug={() => {
+            setShowRiskAssessment(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* TDIU Work Impact Builder - Specialized Tool */}
+      {showTDIUBuilder && (
+        <TDIUBuilder
+          onClose={() => setShowTDIUBuilder(false)}
+          onReportBug={() => {
+            setShowTDIUBuilder(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* PACT Act Navigator - Specialized Tool */}
+      {showPACTActNavigator && (
+        <PACTActNavigator
+          onClose={() => setShowPACTActNavigator(false)}
+          onReportBug={() => {
+            setShowPACTActNavigator(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* FOIA Generator (The Keysmith) - Specialized Tool */}
+      {showFOIAGenerator && (
+        <FOIAGenerator
+          onClose={() => setShowFOIAGenerator(false)}
+          onReportBug={() => {
+            setShowFOIAGenerator(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Million Dollar Dashboard - Shock & Awe */}
+      {showMillionDollarDashboard && (
+        <MillionDollarDashboard
+          onClose={() => setShowMillionDollarDashboard(false)}
+          onReportBug={() => {
+            setShowMillionDollarDashboard(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* MOS Hazard Matcher - Shock & Awe */}
+      {showMOSHazardMatcher && (
+        <MOSHazardMatcher
+          onClose={() => setShowMOSHazardMatcher(false)}
+          onAddToPathfinder={(conditions) => {
+            // Could integrate with Pathfinder or My Packet in the future
+            console.log('Add to pathfinder:', conditions);
+            setShowMOSHazardMatcher(false);
+          }}
+          onReportBug={() => {
+            setShowMOSHazardMatcher(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Web of Conditions - Shock & Awe */}
+      {showWebOfConditions && (
+        <WebOfConditions
+          onClose={() => setShowWebOfConditions(false)}
+          onSelectCondition={(condition) => {
+            // Could navigate to search for the condition
+            console.log('Selected condition:', condition);
+          }}
+          onReportBug={() => {
+            setShowWebOfConditions(false);
             setShowBugSquasher(true);
           }}
         />
