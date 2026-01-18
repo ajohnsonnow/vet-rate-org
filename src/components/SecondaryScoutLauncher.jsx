@@ -551,86 +551,17 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       ]
     },
     {
-      name: 'Combat Veteran - PTSD & Musculoskeletal',
-      description: '50% PTSD, spine/hip/knee issues from service',
+      name: 'Agent Orange Exposure',
+      description: 'Presumptive conditions from herbicide exposure (Vietnam era)',
       conditions: [
-        'PTSD (Post-Traumatic Stress Disorder)',
-        'Lumbar Spine Degenerative Disc Disease',
-        'Radiculopathy (Lumbar)',
-        'Right Hip Arthritis',
-        'Left Hip Arthritis',
-        'Tinnitus',
-        'Rhinitis (Allergic)'
-      ]
-    },
-    {
-      name: 'Female Veteran - MST Survivor',
-      description: 'Military Sexual Trauma with related mental health and physical conditions',
-      conditions: [
-        'PTSD (Post-Traumatic Stress Disorder)',
-        'Major Depressive Disorder',
-        'Generalized Anxiety Disorder',
-        'Fibromyalgia',
-        'Irritable Bowel Syndrome (IBS)',
-        'Migraine Headaches',
-        'Chronic Pelvic Pain',
-        'Sleep Apnea (Obstructive)'
-      ]
-    },
-    {
-      name: 'Male Veteran - MST Survivor',
-      description: 'Military Sexual Trauma affects all genders - mental health and physical impacts',
-      conditions: [
-        'PTSD (Post-Traumatic Stress Disorder)',
-        'Major Depressive Disorder',
-        'Generalized Anxiety Disorder',
-        'Substance Use Disorder (in remission)',
-        'Irritable Bowel Syndrome (IBS)',
-        'Erectile Dysfunction',
-        'Sleep Apnea (Obstructive)',
-        'Chronic Pain Syndrome'
-      ]
-    },
-    {
-      name: 'Female Veteran - Musculoskeletal Focus',
-      description: 'Common conditions in female veterans from physical demands',
-      conditions: [
-        'Lumbar Spine Degenerative Disc Disease',
-        'Cervical Spine Degenerative Disc Disease',
-        'Right Knee Degenerative Arthritis',
-        'Left Knee Degenerative Arthritis',
-        'Stress Fractures',
-        'Right Shoulder Rotator Cuff Tear',
-        'Plantar Fasciitis (Bilateral)',
-        'Migraine Headaches'
-      ]
-    },
-    {
-      name: 'Infantry/Airborne - Joint Cascade',
-      description: 'Multiple weight-bearing joint issues from rucking and jumps',
-      conditions: [
-        'Right Knee Degenerative Arthritis',
-        'Left Knee Degenerative Arthritis',
-        'Lumbar Spine Degenerative Disc Disease',
-        'Right Hip Arthritis',
-        'Left Ankle Instability',
-        'Right Plantar Fasciitis',
-        'Left Plantar Fasciitis',
-        'Chronic Back Pain'
-      ]
-    },
-    {
-      name: 'Navy/Coast Guard - Hearing & Respiratory',
-      description: 'Shipboard noise exposure and environmental conditions',
-      conditions: [
-        'Hearing Loss (Sensorineural)',
-        'Tinnitus',
-        'Asthma',
-        'Sinusitis (Chronic)',
-        'Sleep Apnea (Obstructive)',
-        'Lumbar Spine Degenerative Disc Disease',
-        'Right Knee Degenerative Arthritis',
-        'Hypertension (High Blood Pressure)'
+        'Diabetes Mellitus Type II',
+        'Ischemic Heart Disease',
+        'Peripheral Neuropathy (Toxic)',
+        'Prostate Cancer',
+        'Chloracne',
+        'Parkinson\'s Disease',
+        'Hypertension (High Blood Pressure)',
+        'Bladder Cancer'
       ]
     },
     {
@@ -648,33 +579,6 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       ]
     },
     {
-      name: 'Mental Health Focus',
-      description: 'PTSD with common secondary mental health conditions',
-      conditions: [
-        'PTSD (Post-Traumatic Stress Disorder)',
-        'Major Depressive Disorder',
-        'Generalized Anxiety Disorder',
-        'Sleep Apnea (Obstructive)',
-        'Migraine Headaches',
-        'GERD (Gastroesophageal Reflux Disease)',
-        'Erectile Dysfunction'
-      ]
-    },
-    {
-      name: 'PACT Act - Burn Pit Exposure',
-      description: 'Post-9/11 toxic exposure conditions (Iraq, Afghanistan, etc.)',
-      conditions: [
-        'Asthma',
-        'Chronic Obstructive Pulmonary Disease (COPD)',
-        'Sinusitis (Chronic)',
-        'Rhinitis (Allergic)',
-        'Sleep Apnea (Obstructive)',
-        'GERD (Gastroesophageal Reflux Disease)',
-        'Constrictive Bronchiolitis',
-        'Interstitial Lung Disease'
-      ]
-    },
-    {
       name: 'Camp Lejeune Water Contamination',
       description: 'Presumptive conditions from contaminated water exposure',
       conditions: [
@@ -686,47 +590,6 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
         'Parkinson\'s Disease',
         'Hepatic Steatosis (Fatty Liver)',
         'Infertility'
-      ]
-    },
-    {
-      name: 'Agent Orange Exposure',
-      description: 'Presumptive conditions from herbicide exposure (Vietnam era)',
-      conditions: [
-        'Diabetes Mellitus Type II',
-        'Ischemic Heart Disease',
-        'Peripheral Neuropathy (Toxic)',
-        'Prostate Cancer',
-        'Chloracne',
-        'Parkinson\'s Disease',
-        'Hypertension (High Blood Pressure)',
-        'Bladder Cancer'
-      ]
-    },
-    {
-      name: 'Gulf War Syndrome',
-      description: 'Multiple systemic conditions common in Gulf War veterans',
-      conditions: [
-        'Chronic Fatigue Syndrome',
-        'Fibromyalgia',
-        'Irritable Bowel Syndrome (IBS)',
-        'GERD (Gastroesophageal Reflux Disease)',
-        'Migraine Headaches',
-        'Peripheral Neuropathy (Idiopathic)',
-        'Chronic Pain Syndrome',
-        'Functional Gastrointestinal Disorders'
-      ]
-    },
-    {
-      name: 'Diabetes & Complications',
-      description: 'Diabetes with common secondary conditions',
-      conditions: [
-        'Diabetes Mellitus Type II',
-        'Diabetic Peripheral Neuropathy',
-        'Diabetic Retinopathy',
-        'Diabetic Nephropathy',
-        'Hypertension (High Blood Pressure)',
-        'Erectile Dysfunction',
-        'Coronary Artery Disease'
       ]
     },
     {
@@ -744,43 +607,85 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       ]
     },
     {
-      name: 'Upper Extremity Focus',
-      description: 'Shoulder, elbow, and hand injuries',
+      name: 'Combat Veteran - PTSD & Musculoskeletal',
+      description: '50% PTSD, spine/hip/knee issues from service',
       conditions: [
-        'Right Shoulder Rotator Cuff Tear',
-        'Left Shoulder Arthritis',
-        'Carpal Tunnel Syndrome (Right)',
-        'Carpal Tunnel Syndrome (Left)',
-        'Cervical Spine Degenerative Disc Disease',
-        'Radiculopathy (Cervical)',
-        'TMJ (Temporomandibular Joint) Disorder'
-      ]
-    },
-    {
-      name: 'Spinal Injury with Radiculopathy',
-      description: 'Spine conditions with nerve involvement',
-      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
         'Lumbar Spine Degenerative Disc Disease',
         'Radiculopathy (Lumbar)',
-        'Spinal Stenosis',
         'Right Hip Arthritis',
         'Left Hip Arthritis',
-        'Chronic Back Pain',
-        'Peripheral Neuropathy (Idiopathic)',
-        'Sciatica'
+        'Tinnitus',
+        'Rhinitis (Allergic)'
       ]
     },
     {
-      name: 'Post-Surgical Complications',
-      description: 'Joint replacements and surgical residuals',
+      name: 'Diabetes & Complications',
+      description: 'Diabetes with common secondary conditions',
       conditions: [
-        'Right Knee Replacement',
-        'Left Knee Replacement',
-        'Right Hip Replacement',
+        'Diabetes Mellitus Type II',
+        'Diabetic Peripheral Neuropathy',
+        'Diabetic Retinopathy',
+        'Diabetic Nephropathy',
+        'Hypertension (High Blood Pressure)',
+        'Erectile Dysfunction',
+        'Coronary Artery Disease'
+      ]
+    },
+    {
+      name: 'Female Veteran - MST Survivor',
+      description: 'Military Sexual Trauma with related mental health and physical conditions',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Fibromyalgia',
+        'Irritable Bowel Syndrome (IBS)',
+        'Migraine Headaches',
+        'Chronic Pelvic Pain',
+        'Sleep Apnea (Obstructive)'
+      ]
+    },
+    {
+      name: 'Female Veteran - Musculoskeletal Focus',
+      description: 'Common conditions in female veterans from physical demands',
+      conditions: [
         'Lumbar Spine Degenerative Disc Disease',
+        'Cervical Spine Degenerative Disc Disease',
+        'Right Knee Degenerative Arthritis',
+        'Left Knee Degenerative Arthritis',
+        'Stress Fractures',
+        'Right Shoulder Rotator Cuff Tear',
+        'Plantar Fasciitis (Bilateral)',
+        'Migraine Headaches'
+      ]
+    },
+    {
+      name: 'Gulf War Syndrome',
+      description: 'Multiple systemic conditions common in Gulf War veterans',
+      conditions: [
+        'Chronic Fatigue Syndrome',
+        'Fibromyalgia',
+        'Irritable Bowel Syndrome (IBS)',
+        'GERD (Gastroesophageal Reflux Disease)',
+        'Migraine Headaches',
+        'Peripheral Neuropathy (Idiopathic)',
         'Chronic Pain Syndrome',
-        'Right Ankle Arthritis',
-        'Peripheral Neuropathy (Idiopathic)'
+        'Functional Gastrointestinal Disorders'
+      ]
+    },
+    {
+      name: 'Infantry/Airborne - Joint Cascade',
+      description: 'Multiple weight-bearing joint issues from rucking and jumps',
+      conditions: [
+        'Right Knee Degenerative Arthritis',
+        'Left Knee Degenerative Arthritis',
+        'Lumbar Spine Degenerative Disc Disease',
+        'Right Hip Arthritis',
+        'Left Ankle Instability',
+        'Right Plantar Fasciitis',
+        'Left Plantar Fasciitis',
+        'Chronic Back Pain'
       ]
     },
     {
@@ -814,6 +719,88 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       note: 'LGBTQ+ veterans face unique stressors including concealment during service under past policies. VA research shows higher risk for suicide in this population.'
     },
     {
+      name: 'Male Veteran - MST Survivor',
+      description: 'Military Sexual Trauma affects all genders - mental health and physical impacts',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Substance Use Disorder (in remission)',
+        'Irritable Bowel Syndrome (IBS)',
+        'Erectile Dysfunction',
+        'Sleep Apnea (Obstructive)',
+        'Chronic Pain Syndrome'
+      ]
+    },
+    {
+      name: 'Mental Health Focus',
+      description: 'PTSD with common secondary mental health conditions',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Sleep Apnea (Obstructive)',
+        'Migraine Headaches',
+        'GERD (Gastroesophageal Reflux Disease)',
+        'Erectile Dysfunction'
+      ]
+    },
+    {
+      name: 'Navy/Coast Guard - Hearing & Respiratory',
+      description: 'Shipboard noise exposure and environmental conditions',
+      conditions: [
+        'Hearing Loss (Sensorineural)',
+        'Tinnitus',
+        'Asthma',
+        'Sinusitis (Chronic)',
+        'Sleep Apnea (Obstructive)',
+        'Lumbar Spine Degenerative Disc Disease',
+        'Right Knee Degenerative Arthritis',
+        'Hypertension (High Blood Pressure)'
+      ]
+    },
+    {
+      name: 'PACT Act - Burn Pit Exposure',
+      description: 'Post-9/11 toxic exposure conditions (Iraq, Afghanistan, etc.)',
+      conditions: [
+        'Asthma',
+        'Chronic Obstructive Pulmonary Disease (COPD)',
+        'Sinusitis (Chronic)',
+        'Rhinitis (Allergic)',
+        'Sleep Apnea (Obstructive)',
+        'GERD (Gastroesophageal Reflux Disease)',
+        'Constrictive Bronchiolitis',
+        'Interstitial Lung Disease'
+      ]
+    },
+    {
+      name: 'Post-Surgical Complications',
+      description: 'Joint replacements and surgical residuals',
+      conditions: [
+        'Right Knee Replacement',
+        'Left Knee Replacement',
+        'Right Hip Replacement',
+        'Lumbar Spine Degenerative Disc Disease',
+        'Chronic Pain Syndrome',
+        'Right Ankle Arthritis',
+        'Peripheral Neuropathy (Idiopathic)'
+      ]
+    },
+    {
+      name: 'Spinal Injury with Radiculopathy',
+      description: 'Spine conditions with nerve involvement',
+      conditions: [
+        'Lumbar Spine Degenerative Disc Disease',
+        'Radiculopathy (Lumbar)',
+        'Spinal Stenosis',
+        'Right Hip Arthritis',
+        'Left Hip Arthritis',
+        'Chronic Back Pain',
+        'Peripheral Neuropathy (Idiopathic)',
+        'Sciatica'
+      ]
+    },
+    {
       name: 'Transgender Veteran',
       description: 'Conditions common in transgender veterans, including gender dysphoria and related health impacts',
       conditions: [
@@ -827,6 +814,19 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
         'HIV-Related Illness'
       ],
       note: 'VA provides gender-affirming care. Contact your LGBTQ+ Veteran Care Coordinator for support navigating VA services.'
+    },
+    {
+      name: 'Upper Extremity Focus',
+      description: 'Shoulder, elbow, and hand injuries',
+      conditions: [
+        'Right Shoulder Rotator Cuff Tear',
+        'Left Shoulder Arthritis',
+        'Carpal Tunnel Syndrome (Right)',
+        'Carpal Tunnel Syndrome (Left)',
+        'Cervical Spine Degenerative Disc Disease',
+        'Radiculopathy (Cervical)',
+        'TMJ (Temporomandibular Joint) Disorder'
+      ]
     }
   ];
 
