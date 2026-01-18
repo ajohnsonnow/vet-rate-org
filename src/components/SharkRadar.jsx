@@ -1,0 +1,471 @@
+/**
+ * Vet-Rate.org - Shark Radar Component
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * All Rights Reserved.
+ * 
+ * Contract scanner that detects predatory practices
+ * targeting veterans from "claim consulting" firms.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { 
+  analyzeContract, 
+  getRiskLevelColors, 
+  getSeverityColor,
+  getSharkRadarPrivacyDisclosure 
+} from '../utils/sharkRadar';
+
+// Icons
+const SharkIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const InfoIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+
+const ExternalLinkIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+  </svg>
+);
+
+/**
+ * Risk Meter Component
+ */
+const RiskMeter = ({ score, riskLevel }) => {
+  const colors = getRiskLevelColors(riskLevel);
+  const rotation = (score / 100) * 180 - 90; // -90 to 90 degrees
+  
+  return (
+    <div className="relative w-48 h-24 mx-auto">
+      {/* Meter background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="w-48 h-48 rounded-full border-[16px] border-gray-200 dark:border-gray-700" 
+             style={{ clipPath: 'polygon(0 50%, 100% 50%, 100% 0, 0 0)' }}>
+        </div>
+        {/* Colored segments */}
+        <div className="absolute inset-0">
+          <div className="w-48 h-48 rounded-full border-[16px] border-transparent"
+               style={{ 
+                 borderTopColor: '#22c55e',
+                 borderRightColor: '#eab308', 
+                 clipPath: 'polygon(0 50%, 100% 50%, 100% 0, 0 0)',
+                 transform: 'rotate(-90deg)'
+               }}>
+          </div>
+        </div>
+      </div>
+      
+      {/* Needle */}
+      <div 
+        className="absolute bottom-0 left-1/2 w-1 h-20 bg-gray-800 dark:bg-white origin-bottom transition-transform duration-1000 ease-out"
+        style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
+      >
+        <div className="w-3 h-3 bg-gray-800 dark:bg-white rounded-full -ml-1 -mt-1"></div>
+      </div>
+      
+      {/* Score display */}
+      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-center">
+        <div className={`text-3xl font-bold ${colors.text}`}>{score}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">Risk Score</div>
+      </div>
+      
+      {/* Labels */}
+      <div className="absolute bottom-0 left-0 text-xs text-green-600 dark:text-green-400 font-medium">Safe</div>
+      <div className="absolute bottom-0 right-0 text-xs text-red-600 dark:text-red-400 font-medium">Danger</div>
+    </div>
+  );
+};
+
+/**
+ * Main Shark Radar Component
+ */
+export default function SharkRadar() {
+  const [textInput, setTextInput] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [hasConsented, setHasConsented] = useState(false);
+  
+  // Load API key on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('vetrate_gemini_key');
+    if (storedKey) {
+      setApiKey(storedKey);
+    }
+    const consent = localStorage.getItem('vetrate_ai_consent');
+    if (consent === 'true') {
+      setHasConsented(true);
+    }
+  }, []);
+  
+  const handleSaveKey = (key) => {
+    localStorage.setItem('vetrate_gemini_key', key);
+    setApiKey(key);
+  };
+  
+  const handleConsent = () => {
+    localStorage.setItem('vetrate_ai_consent', 'true');
+    setHasConsented(true);
+  };
+  
+  const handleAnalyze = async () => {
+    if (!textInput.trim()) {
+      setError('Please paste contract or email text to analyze');
+      return;
+    }
+    
+    if (!apiKey) {
+      setError('Please enter your Gemini API key first');
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    setError(null);
+    setResults(null);
+    
+    try {
+      const result = await analyzeContract(apiKey, textInput);
+      setResults(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const handleClear = () => {
+    setTextInput('');
+    setResults(null);
+    setError(null);
+  };
+  
+  return (
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl mb-4 shadow-lg">
+          <span className="text-3xl">🦈</span>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Shark Radar</h1>
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Scan contracts and emails from "VA Claim Consultants" for predatory practices.
+          Protect yourself from illegal fees and scams based on 38 CFR § 14.636.
+        </p>
+      </div>
+      
+      {/* Consent Check */}
+      {!hasConsented ? (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-3">
+              <ShieldIcon />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Privacy First</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Before scanning, please review how we protect your information.
+            </p>
+          </div>
+          
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-6 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+            {getSharkRadarPrivacyDisclosure()}
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={handleConsent}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2"
+            >
+              <CheckIcon /> I Understand, Continue
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* API Key Section */}
+          {!apiKey && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-6">
+              <h3 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">API Key Required</h3>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
+                Get your free Gemini API key from{' '}
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" 
+                   className="underline hover:text-amber-900 dark:hover:text-amber-200">
+                  Google AI Studio
+                </a>
+              </p>
+              <input
+                type="password"
+                placeholder="Paste your Gemini API key..."
+                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg focus:ring-2 focus:ring-amber-500"
+                onChange={(e) => handleSaveKey(e.target.value)}
+              />
+            </div>
+          )}
+          
+          {apiKey && (
+            <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-3 mb-6">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
+                <CheckIcon /> API Key saved
+              </div>
+              <button
+                onClick={() => { localStorage.removeItem('vetrate_gemini_key'); setApiKey(''); }}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Change key
+              </button>
+            </div>
+          )}
+          
+          {/* Input Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Paste Contract or Email Text
+            </label>
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Paste the contract, agreement, email, or marketing material from a VA claim consulting company here...
+
+Example red flags to look for:
+• 'We charge 5x your monthly increase'
+• 'Provide your VA.gov login credentials'
+• 'Guaranteed 100% rating'
+• 'Pay $3,000 upfront to start'"
+              className="w-full h-64 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+            />
+            
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {textInput.length} characters
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleClear}
+                  disabled={!textInput && !results}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing || !apiKey || !textInput.trim()}
+                  className="px-6 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <SearchIcon /> Scan for Red Flags
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <AlertIcon />
+              <div className="text-red-700 dark:text-red-300">{error}</div>
+            </div>
+          )}
+          
+          {/* Results Section */}
+          {results && results.success && (
+            <div className="space-y-6">
+              {/* Risk Level Card */}
+              <div className={`rounded-2xl shadow-xl p-6 border-2 ${getRiskLevelColors(results.data.risk_level).border} ${getRiskLevelColors(results.data.risk_level).bgLight}`}>
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  {/* Risk Meter */}
+                  <div className="flex-shrink-0">
+                    <RiskMeter score={results.data.score} riskLevel={results.data.risk_level} />
+                  </div>
+                  
+                  {/* Verdict */}
+                  <div className="flex-1">
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-lg mb-3 ${
+                      results.data.risk_level === 'PREDATORY' ? 'bg-red-600 text-white' :
+                      results.data.risk_level === 'CAUTION' ? 'bg-yellow-500 text-black' :
+                      'bg-green-500 text-white'
+                    }`}>
+                      {results.data.risk_level === 'PREDATORY' && '🚨'}
+                      {results.data.risk_level === 'CAUTION' && '⚠️'}
+                      {results.data.risk_level === 'SAFE' && '✅'}
+                      {results.data.risk_level}
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300 text-lg">
+                      {results.data.verdict_summary}
+                    </p>
+                    {results.data.recommendation && (
+                      <p className={`mt-2 font-semibold ${
+                        results.data.recommendation === 'RUN' || results.data.recommendation === 'DO_NOT_SIGN' 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-yellow-600 dark:text-yellow-400'
+                      }`}>
+                        Recommendation: {results.data.recommendation.replace(/_/g, ' ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Red Flags */}
+              {results.data.flags && results.data.flags.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="text-red-500">⚠️</span> Red Flags Detected ({results.data.flags.length})
+                  </h3>
+                  <div className="space-y-4">
+                    {results.data.flags.map((flag, index) => (
+                      <div key={index} className={`p-4 rounded-xl border ${getSeverityColor(flag.severity)}`}>
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <span className="font-semibold">{flag.violation}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                            flag.severity === 'HIGH' ? 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200' :
+                            flag.severity === 'MEDIUM' ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200' :
+                            'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
+                          }`}>
+                            {flag.severity}
+                          </span>
+                        </div>
+                        <div className="text-sm mb-2 bg-gray-100 dark:bg-gray-900 p-2 rounded border-l-4 border-red-500">
+                          <span className="font-medium">Found: </span>"{flag.trigger_text}"
+                        </div>
+                        <p className="text-sm opacity-90">{flag.advice}</p>
+                        {flag.legal_reference && (
+                          <p className="text-xs mt-2 opacity-75">📜 {flag.legal_reference}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Positive Signs */}
+              {results.data.positive_signs && results.data.positive_signs.length > 0 && (
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+                  <h3 className="text-lg font-bold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+                    <CheckIcon /> Positive Signs
+                  </h3>
+                  <ul className="space-y-2">
+                    {results.data.positive_signs.map((sign, index) => (
+                      <li key={index} className="flex items-start gap-2 text-green-700 dark:text-green-300">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        {sign}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* PREDATORY Warning Actions */}
+              {results.data.risk_level === 'PREDATORY' && (
+                <div className="bg-red-900 text-white rounded-2xl p-6">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    🚨 Protect Yourself - Take Action
+                  </h3>
+                  <p className="mb-4">
+                    This contract contains serious red flags. Do NOT sign or share personal information with this company.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <a
+                      href="https://www.va.gov/ogc/apps/accreditation/index.asp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-white text-red-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
+                    >
+                      Find Accredited Rep <ExternalLinkIcon />
+                    </a>
+                    <a
+                      href="https://www.va.gov/oig/hotline/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-400 text-black rounded-xl font-semibold hover:bg-yellow-300 transition-colors"
+                    >
+                      Report to VA OIG <ExternalLinkIcon />
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Educational Info */}
+          <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-3">Know Your Rights</h3>
+            <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">•</span>
+                <span><strong>Free Help Exists:</strong> VA-accredited VSOs (like DAV, VFW, American Legion) help veterans for FREE.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">•</span>
+                <span><strong>Fees Are Regulated:</strong> Only VA-accredited attorneys/agents can charge fees, and only AFTER an initial claim decision.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">•</span>
+                <span><strong>Never Share Passwords:</strong> Legitimate representatives never need your VA.gov or ID.me login credentials.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">•</span>
+                <span><strong>No Guarantees:</strong> No one can guarantee a specific rating. Anyone who does is being deceptive.</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Privacy Toggle */}
+          <button
+            onClick={() => setShowPrivacy(!showPrivacy)}
+            className="mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
+          >
+            <InfoIcon /> {showPrivacy ? 'Hide' : 'View'} Privacy Information
+          </button>
+          
+          {showPrivacy && (
+            <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+              {getSharkRadarPrivacyDisclosure()}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

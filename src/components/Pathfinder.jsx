@@ -1,0 +1,685 @@
+/**
+ * Vet-Rate.org - Pathfinder Component (Strategy Engine)
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * All Rights Reserved.
+ * 
+ * AI-powered claims strategy engine that analyzes current ratings
+ * and suggests high-probability secondary claims.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { 
+  analyzeStrategy, 
+  getProbabilityColors, 
+  getConnectionTypeColors,
+  getPathfinderPrivacyDisclosure 
+} from '../utils/pathfinderEngine';
+import { getAllClaims } from '../utils/claimsStorage';
+
+// Icons
+const CompassIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+  </svg>
+);
+
+const ChartIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const TargetIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const SparklesIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+  </svg>
+);
+
+const ArrowRightIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const InfoIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const LightbulbIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+  </svg>
+);
+
+const TrendingUpIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>
+);
+
+// Common conditions list for dropdown
+const COMMON_CONDITIONS = [
+  'PTSD', 'Depression', 'Anxiety', 'TBI (Traumatic Brain Injury)',
+  'Tinnitus', 'Hearing Loss', 'Migraines', 
+  'Lumbar Strain (Back Pain)', 'Cervical Strain (Neck Pain)', 'Degenerative Disc Disease',
+  'Radiculopathy', 'Sciatica', 
+  'Left Knee Condition', 'Right Knee Condition', 'Left Ankle Condition', 'Right Ankle Condition',
+  'Left Hip Condition', 'Right Hip Condition', 'Left Shoulder Condition', 'Right Shoulder Condition',
+  'Sleep Apnea', 'Insomnia',
+  'GERD', 'IBS', 
+  'Hypertension', 'Diabetes Type II',
+  'Peripheral Neuropathy', 'Carpal Tunnel Syndrome',
+  'Eczema', 'Psoriasis',
+  'Erectile Dysfunction', 
+  'Other (type below)'
+];
+
+const RATING_OPTIONS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+/**
+ * Rating Input Row Component
+ */
+const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
+  const [isCustom, setIsCustom] = useState(!COMMON_CONDITIONS.includes(rating.condition) && rating.condition !== '');
+  
+  return (
+    <div className="flex flex-col sm:flex-row gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+      <div className="flex-1">
+        {isCustom ? (
+          <input
+            type="text"
+            value={rating.condition}
+            onChange={(e) => onUpdate(index, 'condition', e.target.value)}
+            placeholder="Enter condition name..."
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+        ) : (
+          <select
+            value={rating.condition}
+            onChange={(e) => {
+              if (e.target.value === 'Other (type below)') {
+                setIsCustom(true);
+                onUpdate(index, 'condition', '');
+              } else {
+                onUpdate(index, 'condition', e.target.value);
+              }
+            }}
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select condition...</option>
+            {COMMON_CONDITIONS.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <select
+          value={rating.rating}
+          onChange={(e) => onUpdate(index, 'rating', e.target.value)}
+          className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">%</option>
+          {RATING_OPTIONS.map(r => (
+            <option key={r} value={r}>{r}%</option>
+          ))}
+        </select>
+        <button
+          onClick={() => onRemove(index)}
+          className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+        >
+          <TrashIcon />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Opportunity Card Component
+ */
+const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
+  const probColors = getProbabilityColors(opportunity.win_probability);
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition-shadow">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+            {opportunity.proposed_condition}
+          </h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Secondary to: <span className="font-medium">{opportunity.primary_source}</span>
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${probColors.bg} ${probColors.text}`}>
+            {opportunity.win_probability} Probability
+          </span>
+          {opportunity.typical_rating && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              Typical: {opportunity.typical_rating}
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {opportunity.connection_type && (
+        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-3 ${getConnectionTypeColors(opportunity.connection_type)}`}>
+          {opportunity.connection_type}
+        </span>
+      )}
+      
+      <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+        {opportunity.mechanism}
+      </p>
+      
+      {opportunity.evidence_needed && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
+          <p className="text-xs text-blue-800 dark:text-blue-300">
+            <strong>Evidence Needed:</strong> {opportunity.evidence_needed}
+          </p>
+        </div>
+      )}
+      
+      {opportunity.next_step && (
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-4">
+          <p className="text-xs text-green-800 dark:text-green-300">
+            <strong>Next Step:</strong> {opportunity.next_step}
+          </p>
+        </div>
+      )}
+      
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => onBuildNexus(opportunity)}
+          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
+        >
+          Build Nexus <ArrowRightIcon />
+        </button>
+        <button
+          onClick={() => onPracticeExam(opportunity)}
+          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+        >
+          Practice Exam <ArrowRightIcon />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Main Pathfinder Component
+ */
+export default function Pathfinder({ onNavigate }) {
+  const [ratings, setRatings] = useState([{ condition: '', rating: '' }]);
+  const [additionalContext, setAdditionalContext] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [hasConsented, setHasConsented] = useState(false);
+  const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  
+  // Load API key and check for saved claims
+  useEffect(() => {
+    const storedKey = localStorage.getItem('vetrate_gemini_key');
+    if (storedKey) {
+      setApiKey(storedKey);
+    }
+    const consent = localStorage.getItem('vetrate_ai_consent');
+    if (consent === 'true') {
+      setHasConsented(true);
+    }
+  }, []);
+  
+  const handleSaveKey = (key) => {
+    localStorage.setItem('vetrate_gemini_key', key);
+    setApiKey(key);
+  };
+  
+  const handleConsent = () => {
+    localStorage.setItem('vetrate_ai_consent', 'true');
+    setHasConsented(true);
+  };
+  
+  const addRating = () => {
+    setRatings([...ratings, { condition: '', rating: '' }]);
+  };
+  
+  const updateRating = (index, field, value) => {
+    const newRatings = [...ratings];
+    newRatings[index][field] = value;
+    setRatings(newRatings);
+  };
+  
+  const removeRating = (index) => {
+    if (ratings.length > 1) {
+      setRatings(ratings.filter((_, i) => i !== index));
+    }
+  };
+  
+  const loadFromPacket = () => {
+    try {
+      const claims = getAllClaims();
+      if (claims && claims.length > 0) {
+        // Filter for primary claims (conditions that would be service-connected)
+        const loadedRatings = claims.map(claim => ({
+          condition: claim.primaryCondition || claim.conditionName || claim.condition,
+          rating: ''
+        })).filter(r => r.condition);
+        
+        if (loadedRatings.length > 0) {
+          setRatings(loadedRatings);
+          setLoadedFromPacket(true);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading from packet:', err);
+    }
+  };
+  
+  const handleAnalyze = async () => {
+    const validRatings = ratings.filter(r => r.condition.trim());
+    
+    if (validRatings.length === 0) {
+      setError('Please add at least one current rating');
+      return;
+    }
+    
+    if (!apiKey) {
+      setError('Please enter your Gemini API key first');
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    setError(null);
+    setResults(null);
+    
+    try {
+      const result = await analyzeStrategy(apiKey, validRatings, additionalContext);
+      setResults(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const handleBuildNexus = (opportunity) => {
+    // Navigate to NexusBuilder with pre-filled data
+    if (onNavigate) {
+      onNavigate('nexus', {
+        condition: opportunity.proposed_condition,
+        primaryCondition: opportunity.primary_source?.replace('Secondary to ', '')
+      });
+    }
+  };
+  
+  const handlePracticeExam = (opportunity) => {
+    // Navigate to DBQ/Exam tool
+    if (onNavigate) {
+      onNavigate('dbq', {
+        condition: opportunity.proposed_condition
+      });
+    }
+  };
+  
+  const handleClear = () => {
+    setRatings([{ condition: '', rating: '' }]);
+    setAdditionalContext('');
+    setResults(null);
+    setError(null);
+    setLoadedFromPacket(false);
+  };
+  
+  return (
+    <div className="max-w-5xl mx-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg">
+          <span className="text-3xl">🧭</span>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">The Pathfinder</h1>
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Strategic claims analysis powered by AI. Enter your current ratings and discover 
+          high-probability secondary claims you may be missing.
+        </p>
+      </div>
+      
+      {/* Consent Check */}
+      {!hasConsented ? (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-3">
+              <TargetIcon />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Privacy First</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Before analyzing, please review how we protect your information.
+            </p>
+          </div>
+          
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-6 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+            {getPathfinderPrivacyDisclosure()}
+          </div>
+          
+          <button
+            onClick={handleConsent}
+            className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+          >
+            <CheckIcon /> I Understand, Continue
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* API Key Section */}
+          {!apiKey && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-6">
+              <h3 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">API Key Required</h3>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
+                Get your free Gemini API key from{' '}
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" 
+                   className="underline hover:text-amber-900 dark:hover:text-amber-200">
+                  Google AI Studio
+                </a>
+              </p>
+              <input
+                type="password"
+                placeholder="Paste your Gemini API key..."
+                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg focus:ring-2 focus:ring-amber-500"
+                onChange={(e) => handleSaveKey(e.target.value)}
+              />
+            </div>
+          )}
+          
+          {apiKey && (
+            <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-3 mb-6">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
+                <CheckIcon /> API Key saved
+              </div>
+              <button
+                onClick={() => { localStorage.removeItem('vetrate_gemini_key'); setApiKey(''); }}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Change key
+              </button>
+            </div>
+          )}
+          
+          {/* Input Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Your Current Service-Connected Ratings
+              </h2>
+              <button
+                onClick={loadFromPacket}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-1"
+              >
+                Load from My Packet
+              </button>
+            </div>
+            
+            {loadedFromPacket && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm p-2 rounded-lg mb-4">
+                ✓ Loaded conditions from your saved packet. Add rating percentages if known.
+              </div>
+            )}
+            
+            <div className="space-y-2 mb-4">
+              {ratings.map((rating, index) => (
+                <RatingInput
+                  key={index}
+                  rating={rating}
+                  index={index}
+                  onUpdate={updateRating}
+                  onRemove={removeRating}
+                />
+              ))}
+            </div>
+            
+            <button
+              onClick={addRating}
+              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+            >
+              <PlusIcon /> Add Another Rating
+            </button>
+            
+            {/* Additional Context */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Additional Context (Optional)
+              </label>
+              <textarea
+                value={additionalContext}
+                onChange={(e) => setAdditionalContext(e.target.value)}
+                placeholder="Symptoms you experience, medications you take, or any other relevant information..."
+                className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+            
+            {/* Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleClear}
+                className="px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || !apiKey}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Analyzing Strategy...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon /> Analyze My Strategy
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-red-700 dark:text-red-300">{error}</div>
+            </div>
+          )}
+          
+          {/* Results Section */}
+          {results && results.success && (
+            <div className="space-y-6">
+              {/* Strategy Overview */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <ChartIcon />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold mb-2">Strategy Analysis</h3>
+                    <p className="text-blue-100">{results.data.strategy_analysis}</p>
+                    
+                    {(results.data.current_estimated_combined || results.data.potential_combined) && (
+                      <div className="flex gap-6 mt-4">
+                        {results.data.current_estimated_combined && (
+                          <div>
+                            <div className="text-sm text-blue-200">Current Estimated</div>
+                            <div className="text-2xl font-bold">{results.data.current_estimated_combined}</div>
+                          </div>
+                        )}
+                        {results.data.potential_combined && (
+                          <div>
+                            <div className="text-sm text-blue-200">Potential With Opportunities</div>
+                            <div className="text-2xl font-bold flex items-center gap-2">
+                              {results.data.potential_combined}
+                              <TrendingUpIcon />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Opportunities */}
+              {results.data.opportunities && results.data.opportunities.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <TargetIcon /> Strategic Opportunities ({results.data.opportunities.length})
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {results.data.opportunities.map((opp, index) => (
+                      <OpportunityCard
+                        key={index}
+                        opportunity={opp}
+                        onBuildNexus={handleBuildNexus}
+                        onPracticeExam={handlePracticeExam}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Missing Diagnoses */}
+              {results.data.missing_diagnoses && results.data.missing_diagnoses.length > 0 && (
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
+                  <h3 className="text-lg font-bold text-purple-900 dark:text-purple-200 mb-4 flex items-center gap-2">
+                    <LightbulbIcon /> Potential Undiagnosed Conditions
+                  </h3>
+                  <div className="space-y-4">
+                    {results.data.missing_diagnoses.map((item, index) => (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+                        <div className="font-semibold text-gray-900 dark:text-white mb-1">
+                          {item.condition}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Linked to: {item.linked_to}
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                          {item.reasoning}
+                        </p>
+                        {item.action && (
+                          <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">
+                            → {item.action}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Increase Opportunities */}
+              {results.data.increase_opportunities && results.data.increase_opportunities.length > 0 && (
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+                  <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-4 flex items-center gap-2">
+                    <TrendingUpIcon /> Potential Rating Increases
+                  </h3>
+                  <div className="space-y-4">
+                    {results.data.increase_opportunities.map((item, index) => (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-semibold text-gray-900 dark:text-white">
+                            {item.current_condition}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500">{item.current_rating}</span>
+                            <span className="text-green-600">→</span>
+                            <span className="text-green-600 font-bold">{item.potential_rating}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                          <strong>Criteria:</strong> {item.criteria}
+                        </p>
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          <strong>Action:</strong> {item.action}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Strategic Notes */}
+              {results.data.strategic_notes && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
+                  <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-2">
+                    <InfoIcon /> Strategic Notes
+                  </h4>
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    {results.data.strategic_notes}
+                  </p>
+                </div>
+              )}
+              
+              {/* Analyze Again */}
+              <div className="text-center">
+                <button
+                  onClick={() => setResults(null)}
+                  className="px-6 py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors font-medium"
+                >
+                  Analyze Different Ratings
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Privacy Toggle */}
+          <button
+            onClick={() => setShowPrivacy(!showPrivacy)}
+            className="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
+          >
+            <InfoIcon /> {showPrivacy ? 'Hide' : 'View'} Privacy Information
+          </button>
+          
+          {showPrivacy && (
+            <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+              {getPathfinderPrivacyDisclosure()}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
