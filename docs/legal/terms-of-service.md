@@ -19,8 +19,9 @@ Vet-Rate.org is a free, educational web application that provides:
 - Information about VA disability rating criteria
 - Tools to explore potential secondary conditions
 - C&P exam preparation resources
-- Forms assistance
+- Forms assistance with optional AI enhancement
 - Claims organization tools
+- Optional AI-powered statement drafting (via Google Gemini)
 
 The Service is provided "as is" for educational purposes only.
 

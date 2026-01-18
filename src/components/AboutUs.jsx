@@ -50,9 +50,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <li>🎯 <strong>C&P Exam Simulator:</strong> Practice with DBQ-aligned questions and get real-time feedback</li>
               <li>🔗 <strong>Secondary Scout:</strong> Discover linked conditions based on your service-connected disabilities</li>
               <li>📝 <strong>Nexus Builder:</strong> Generate medical nexus language to support secondary claims</li>
-              <li>📝 <strong>Forms Helper:</strong> Guided assistance for buddy statements and VA forms</li>
+              <li>� <strong>Forms Helper:</strong> Guided assistance for buddy statements, PTSD stressor statements, and VA forms</li>
+              <li>✨ <strong>AI Statement Assistant:</strong> Optional AI-powered statement enhancement using the "Three Pillars" approach (powered by Google Gemini)</li>
               <li>📁 <strong>My Packet:</strong> Save and organize your claims evidence in one place</li>
-              <li>📄 <strong>PDF Reports:</strong> Download comprehensive condition guides with VA resources</li>
+              <li>📃 <strong>PDF Reports:</strong> Download comprehensive condition guides with VA resources</li>
             </ul>
           </section>
 

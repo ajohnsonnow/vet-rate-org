@@ -74,10 +74,12 @@ We believe veterans' personal information deserves the highest level of protecti
 | Aspect | Details |
 |--------|---------|
 | **Provider** | Google Gemini (free tier) |
+| **Where Available** | Nexus Builder, Forms Helper (Buddy/PTSD/Personal statements), My Packet |
 | **When Used** | Only when you click "Enhance with AI" |
 | **What's Sent** | Condition names and symptom descriptions |
 | **What's NOT Sent** | Names, SSN, dates, addresses, or any PII |
 | **Your Control** | Explicit consent required each time |
+| **Toggle Option** | Switch between AI and original versions anytime |
 
 [Learn more about AI privacy →](ai-assistant/)
 
