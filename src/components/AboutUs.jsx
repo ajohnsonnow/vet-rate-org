@@ -1,6 +1,7 @@
 import React from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { PROJECT_STATS, FORMATTED_STATS, formatNumber } from '../data/projectStats';
 
 const AboutUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
@@ -292,38 +293,38 @@ const AboutUs = ({ onClose, onReportBug }) => {
                     <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 space-y-2 text-gray-600 dark:text-gray-400">
                       <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                         <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📐 Project Scale</p>
-                        <p><strong>Total Files:</strong> 976 project files</p>
-                        <p><strong>Lines of Code:</strong> 91,368 lines</p>
-                        <p><strong>App Size:</strong> 43.33 MB</p>
+                        <p><strong>Total Files:</strong> {FORMATTED_STATS.totalFiles} project files</p>
+                        <p><strong>Lines of Code:</strong> {FORMATTED_STATS.linesOfCode} lines</p>
+                        <p><strong>App Size:</strong> {FORMATTED_STATS.appSize}</p>
                       </div>
                       <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                         <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⏱️ Development Time</p>
-                        <p><strong>Traditional Equivalent:</strong> ~5,800 hours</p>
+                        <p><strong>Traditional Equivalent:</strong> {FORMATTED_STATS.traditionalHours}</p>
                         <p className="text-xs mt-1 italic">
-                          • 4,568 hrs coding (91k lines @ 20/hr with AI assist)<br />
-                          • 200 hrs data entry (748 disabilities validated)<br />
-                          • 400 hrs testing & debugging<br />
-                          • 200 hrs UI/UX design & iterations<br />
-                          • 100 hrs documentation & user manual<br />
-                          • 100 hrs research (38 CFR regulations)<br />
-                          • 230 hrs deployment & optimization
+                          • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding ({Math.round(PROJECT_STATS.linesOfCode/1000)}k lines @ 20/hr with AI assist)<br />
+                          • {PROJECT_STATS.breakdown.dataEntry} hrs data entry ({PROJECT_STATS.disabilitiesValidated} disabilities validated)<br />
+                          • {PROJECT_STATS.breakdown.testing} hrs testing & debugging<br />
+                          • {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations<br />
+                          • {PROJECT_STATS.breakdown.documentation} hrs documentation & user manual<br />
+                          • {PROJECT_STATS.breakdown.research} hrs research (38 CFR regulations)<br />
+                          • {PROJECT_STATS.breakdown.deployment} hrs deployment & optimization
                         </p>
                         <p className="text-xs mt-1 font-medium text-amber-600 dark:text-amber-400">
-                          ≈ 3 years full-time equivalent for one developer
+                          {FORMATTED_STATS.traditionalYears} for one developer
                         </p>
                         <hr className="my-2 border-gray-300 dark:border-gray-600" />
-                        <p><strong>Actual Time Invested:</strong> 35-40 hours over 2.3 days</p>
+                        <p><strong>Actual Time Invested:</strong> {FORMATTED_STATS.actualTime}</p>
                         <p className="text-xs mt-1 italic">
-                          • First commit: Jan 15, 2026 at 8:05 PM<br />
-                          • Latest commit: Jan 18, 2026 at 1:07 AM<br />
-                          • 41 commits across 13 active coding sessions<br />
-                          • +56,696 lines added, -8,817 lines removed
+                          • First commit: {PROJECT_STATS.git.firstCommitDate} at {PROJECT_STATS.git.firstCommitTime}<br />
+                          • Latest commit: {PROJECT_STATS.git.latestCommitDate} at {PROJECT_STATS.git.latestCommitTime}<br />
+                          • {FORMATTED_STATS.commits}<br />
+                          • {FORMATTED_STATS.linesChanged}
                         </p>
                         <p className="text-xs mt-1 font-medium text-green-600 dark:text-green-400">
-                          🚀 145x productivity multiplier (AI-assisted development)
+                          🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
                         </p>
                         <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                          The 5,800-hour estimate represents the <strong>traditional development cost</strong> and the <strong>value veterans receive for free</strong>. The actual 35-40 hours shows the power of modern AI tools (GitHub Copilot, Claude, ChatGPT, Gemini) + React/Vite/Tailwind in 2026.
+                          The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate represents the <strong>traditional development cost</strong> and the <strong>value veterans receive for free</strong>. The actual {PROJECT_STATS.actualHours} hours shows the power of modern AI tools (GitHub Copilot, Claude, ChatGPT, Gemini) + React/Vite/Tailwind in 2026.
                         </p>
                       </div>
                       <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -370,13 +371,13 @@ const AboutUs = ({ onClose, onReportBug }) => {
                       </div>
                       <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                         <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📦 Core Components</p>
-                        <p><strong>React Components:</strong> 54 modular UI components (28 major tools + 26 supporting)</p>
-                        <p><strong>Utility Modules:</strong> 15 helper functions & tools</p>
+                        <p><strong>React Components:</strong> {FORMATTED_STATS.components}</p>
+                        <p><strong>Utility Modules:</strong> {FORMATTED_STATS.utilities}</p>
                         <p><strong>VA Forms:</strong> 16 PDF forms ready to download</p>
                       </div>
                       <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                         <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🗂️ Data Files</p>
-                        <p><strong>Disabilities Database:</strong> 748 rated conditions</p>
+                        <p><strong>Disabilities Database:</strong> {PROJECT_STATS.disabilitiesValidated} rated conditions</p>
                         <p><strong>Secondary Conditions:</strong> Medically-linked relationships</p>
                         <p><strong>Regulations:</strong> 38 CFR Parts 3 & 4</p>
                         <p><strong>PACT Act Data:</strong> Toxic exposure coverage</p>
