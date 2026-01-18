@@ -3,7 +3,42 @@ import AccessibilityMenu from './AccessibilityMenu';
 import FundingModal from './FundingModal';
 import { useTheme } from '../contexts/ThemeContext';
 
-function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick, onFormsHelperClick, onCFileAnalyzerClick, onUserManualClick }) {
+function Header({ 
+  // Core Navigation
+  onMyPacketClick, 
+  onUserManualClick,
+  onVAResourcesClick,
+  // Calculate
+  onTacticalCalculatorClick,
+  // Discover  
+  onSecondaryScoutClick,
+  onCAPSimulatorClick,
+  onPathfinderClick,
+  // Evidence
+  onCFileAnalyzerClick,
+  onBlueButtonXRayClick,
+  onWitnessBenchClick,
+  onFormsHelperClick,
+  // Quality Control
+  onRedTeamClick,
+  onDecisionDecoderClick,
+  onSharkRadarClick,
+  // Advanced Strategy
+  onTDIUBuilderClick,
+  onRiskAssessmentClick,
+  onSymptomLoggerClick,
+  onPACTActNavigatorClick,
+  onFOIAGeneratorClick,
+  // Shock & Awe
+  onMillionDollarDashboardClick,
+  onMOSHazardMatcherClick,
+  onWebOfConditionsClick,
+  // Support & Resources
+  onVSOFinderClick,
+  onStateBenefitHunterClick,
+  // Special
+  onNexusBuilderClick
+}) {
   const { isDark, toggleTheme } = useTheme();
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -165,18 +200,32 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               </button>
               
               {showToolsMenu && (
-                <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
                   <div className="p-2">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 font-semibold uppercase tracking-wide mb-1">
-                      Claims Toolkit
-                    </p>
                     
+                    {/* CALCULATE */}
+                    <p className="text-xs text-blue-600 dark:text-blue-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-blue-200 dark:border-blue-800 mb-1">
+                      📊 Calculate Your Rating
+                    </p>
                     <button
-                      onClick={() => {
-                        setShowToolsMenu(false);
-                        onSecondaryScoutClick();
-                      }}
-                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => { setShowToolsMenu(false); onTacticalCalculatorClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🧮 Tactical Calculator
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        VA Math calculator with 2026 rates
+                      </p>
+                    </button>
+                    
+                    {/* DISCOVER */}
+                    <p className="text-xs text-purple-600 dark:text-purple-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-purple-200 dark:border-purple-800 mb-1 mt-3">
+                      🔍 Discover Your Claims
+                    </p>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onSecondaryScoutClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/30"
                     >
                       <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         🔍 Secondary Scout
@@ -185,13 +234,9 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                         Discover 500+ linked secondary conditions
                       </p>
                     </button>
-                    
                     <button
-                      onClick={() => {
-                        setShowToolsMenu(false);
-                        onCAPSimulatorClick();
-                      }}
-                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => { setShowToolsMenu(false); onCAPSimulatorClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/30"
                     >
                       <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         ✅ C&P Exam Simulator
@@ -200,13 +245,72 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                         Practice with DBQ-aligned exam questions
                       </p>
                     </button>
-                    
                     <button
-                      onClick={() => {
-                        setShowToolsMenu(false);
-                        onFormsHelperClick();
-                      }}
-                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => { setShowToolsMenu(false); onPathfinderClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🧭 Pathfinder
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Step-by-step claims guidance
+                      </p>
+                    </button>
+                    
+                    {/* BUILD YOUR EVIDENCE */}
+                    <p className="text-xs text-green-600 dark:text-green-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-green-200 dark:border-green-800 mb-1 mt-3">
+                      📋 Build Your Evidence
+                    </p>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onCFileAnalyzerClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-l-4 border-purple-500"
+                    >
+                      <span className="font-medium text-purple-700 dark:text-purple-100 flex items-center gap-2">
+                        🔬 C-File AI Analyzer
+                        <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-purple-600 dark:text-purple-400">
+                        AI analysis of your claims file (worth $500+)
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onBlueButtonXRayClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-green-50 dark:hover:bg-green-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        💙 Blue Button X-Ray
+                        <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">AI</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Analyze VA Blue Button health records
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onWitnessBenchClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-green-50 dark:hover:bg-green-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        👥 Witness Bench
+                        <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">AI</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        AI-assisted buddy statement generator
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onNexusBuilderClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-green-50 dark:hover:bg-green-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🔗 Nexus Builder
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Build medical connection arguments
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onFormsHelperClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-green-50 dark:hover:bg-green-900/30"
                     >
                       <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         ✏️ Forms Helper
@@ -216,20 +320,175 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                       </p>
                     </button>
                     
+                    {/* QUALITY CONTROL */}
+                    <p className="text-xs text-red-600 dark:text-red-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-red-200 dark:border-red-800 mb-1 mt-3">
+                      🎯 Quality Control
+                    </p>
                     <button
-                      onClick={() => {
-                        setShowToolsMenu(false);
-                        onCFileAnalyzerClick();
-                      }}
-                      className="w-full text-left block px-3 py-2.5 rounded-md transition-colors bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-l-4 border-purple-500"
+                      onClick={() => { setShowToolsMenu(false); onRedTeamClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-red-50 dark:hover:bg-red-900/30"
                     >
-                      <span className="font-medium text-purple-700 dark:text-purple-100 flex items-center gap-2">
-                        🔬 C-File AI Analyzer
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🔴 Red Team
+                        <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">AI</span>
                       </span>
-                      <p className="text-xs mt-0.5 text-purple-600 dark:text-purple-400">
-                        AI analysis of your claims file (worth $500+)
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Devil's advocate for your claims
                       </p>
                     </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onDecisionDecoderClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        📄 Decision Decoder
+                        <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">AI</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Analyze VA decision letters
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onSharkRadarClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🦈 Shark Radar
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Identify and avoid claims predators
+                      </p>
+                    </button>
+                    
+                    {/* ADVANCED STRATEGY */}
+                    <p className="text-xs text-orange-600 dark:text-orange-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-orange-200 dark:border-orange-800 mb-1 mt-3">
+                      ⚡ Advanced Strategy
+                    </p>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onTDIUBuilderClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        💼 TDIU Builder
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Total Disability Individual Unemployability
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onRiskAssessmentClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        ⚠️ Risk Assessment
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Evaluate claim risks & reduction triggers
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onSymptomLoggerClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        📝 Symptom Logger
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Track symptoms with timestamp evidence
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onPACTActNavigatorClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 border-l-4 border-amber-500"
+                    >
+                      <span className="font-medium text-amber-700 dark:text-amber-100 flex items-center gap-2">
+                        ☢️ PACT Act Navigator
+                        <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">HOT</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-amber-600 dark:text-amber-400">
+                        Find your presumptive conditions
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onFOIAGeneratorClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🔑 FOIA Keysmith
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Generate FOIA requests for records
+                      </p>
+                    </button>
+                    
+                    {/* SHOCK & AWE */}
+                    <p className="text-xs text-amber-600 dark:text-amber-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-amber-200 dark:border-amber-800 mb-1 mt-3">
+                      💎 Shock & Awe Tools
+                    </p>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onMillionDollarDashboardClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        💰 Million Dollar Dashboard
+                        <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded animate-pulse">WOW</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        See your lifetime benefits value
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onMOSHazardMatcherClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🎖️ MOS Hazard Matcher
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Find injuries linked to your MOS
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onWebOfConditionsClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🕸️ Web of Conditions
+                        <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">INTERACTIVE</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Visual map of connected conditions
+                      </p>
+                    </button>
+                    
+                    {/* SUPPORT & RESOURCES */}
+                    <p className="text-xs text-teal-600 dark:text-teal-400 px-3 py-1 font-bold uppercase tracking-wide border-b border-teal-200 dark:border-teal-800 mb-1 mt-3">
+                      🤝 Support & Resources
+                    </p>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onVSOFinderClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-50 dark:hover:bg-teal-900/30"
+                    >
+                      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🏢 VSO Finder
+                      </span>
+                      <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                        Find Veteran Service Organizations near you
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => { setShowToolsMenu(false); onStateBenefitHunterClick?.(); }}
+                      className="w-full text-left block px-3 py-2 rounded-md transition-colors bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border-l-4 border-green-500"
+                    >
+                      <span className="font-medium text-green-700 dark:text-green-100 flex items-center gap-2">
+                        💵 State Benefit Hunter
+                        <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded animate-pulse">$$$</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-green-600 dark:text-green-400">
+                        Find state-specific veteran benefits
+                      </p>
+                    </button>
+                    
                   </div>
                 </div>
               )}
