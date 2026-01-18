@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { findSecondaryClaims, getSecondaryClaimsSummary, filterByProbability } from '../utils/secondaryClaimsEngine.js';
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage.js';
 import BuyMeCoffee from './BuyMeCoffee';
+import DoctorsPacket from './DoctorsPacket';
 
 /**
  * SecondaryScout Component
@@ -23,6 +24,10 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
   const [probabilityFilter, setProbabilityFilter] = useState('Medium'); // 'High' or 'Medium'
   const [savedClaims, setSavedClaims] = useState(new Set());
   const [selectedForPacket, setSelectedForPacket] = useState(new Set());
+  // Doctor's Packet modal state
+  const [showDoctorsPacket, setShowDoctorsPacket] = useState(false);
+  const [packetPrimary, setPacketPrimary] = useState('');
+  const [packetSecondary, setPacketSecondary] = useState('');
 
   useEffect(() => {
     if (userDisabilities && userDisabilities.length > 0) {
@@ -300,6 +305,11 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
             onViewPacket={onViewPacket}
             isSelected={isSelectedForPacket(suggestion)}
             onToggleSelect={() => toggleSelectForPacket(suggestion)}
+            onGetDoctorsPacket={() => {
+              setPacketPrimary(suggestion.primaryCondition);
+              setPacketSecondary(suggestion.secondaryCondition);
+              setShowDoctorsPacket(true);
+            }}
           />
         ))}
       </div>
@@ -376,6 +386,14 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
         trigger="secondary-scout"
         context={{ count: filteredSuggestions.length }}
       />
+      
+      {/* Doctor's Packet Modal */}
+      <DoctorsPacket 
+        isOpen={showDoctorsPacket}
+        onClose={() => setShowDoctorsPacket(false)}
+        primaryCondition={packetPrimary}
+        secondaryCondition={packetSecondary}
+      />
     </div>
   );
 };
@@ -394,7 +412,8 @@ const SecondaryConditionCard = ({
   isSaved,
   onViewPacket,
   isSelected,
-  onToggleSelect
+  onToggleSelect,
+  onGetDoctorsPacket
 }) => {
   return (
     <div className={`bg-white rounded-lg shadow-md border-2 overflow-hidden transition-all hover:shadow-lg ${
@@ -529,19 +548,34 @@ const SecondaryConditionCard = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 onLearnHow();
               }}
-              className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 min-w-[200px] bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Build Statement (VA Form 21-4138)
             </button>
+            
+            {/* Doctor's Packet Button - AI-powered nexus research */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onGetDoctorsPacket();
+              }}
+              className="flex-1 min-w-[200px] bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-md font-semibold hover:from-purple-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              Get Doctor's Packet (AI)
+            </button>
+            
             <button 
               onClick={(e) => {
                 e.stopPropagation();
