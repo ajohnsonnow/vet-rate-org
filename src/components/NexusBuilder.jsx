@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
+import DoctorsPacket from './DoctorsPacket';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable, enhancePersonalStatement } from '../utils/aiStatementHelper';
 
@@ -43,6 +44,9 @@ const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingSt
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [useAIVersion, setUseAIVersion] = useState(false);
+  
+  // Doctor's Packet modal state
+  const [showDoctorsPacket, setShowDoctorsPacket] = useState(false);
 
   const isSecondary = Boolean(primaryCondition);
   const totalSteps = isSecondary ? 4 : 3;
@@ -679,6 +683,37 @@ Sincerely,
                     </pre>
                   </div>
                 </div>
+                
+                {/* Doctor's Packet - AI Research Brief for Secondary Claims */}
+                {isSecondary && (
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border-2 border-purple-200 dark:border-purple-700 rounded-lg p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Doctor's Packet Generator (AI)</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          Generate a comprehensive medical research brief explaining the pathophysiological connection between 
+                          <span className="font-medium text-purple-700 dark:text-purple-300"> {primaryCondition}</span> and 
+                          <span className="font-medium text-purple-700 dark:text-purple-300"> {condition}</span>.
+                          Includes medical literature references and a physician template letter.
+                        </p>
+                        <button
+                          onClick={() => setShowDoctorsPacket(true)}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-500 hover:to-indigo-500 transition-all shadow-md hover:shadow-lg"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                          Generate Doctor's Packet
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -775,6 +810,14 @@ Sincerely,
         onConsent={handleAIConsent}
         onCancel={handleAICancel}
         statementType="personal"
+      />
+      
+      {/* Doctor's Packet Modal */}
+      <DoctorsPacket 
+        isOpen={showDoctorsPacket}
+        onClose={() => setShowDoctorsPacket(false)}
+        primaryCondition={primaryCondition || ''}
+        secondaryCondition={condition}
       />
     </div>
   );
