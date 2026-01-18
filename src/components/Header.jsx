@@ -3,7 +3,7 @@ import AccessibilityMenu from './AccessibilityMenu';
 import FundingModal from './FundingModal';
 import { useTheme } from '../contexts/ThemeContext';
 
-function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick, onFormsHelperClick, onUserManualClick }) {
+function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick, onFormsHelperClick, onCFileAnalyzerClick, onUserManualClick }) {
   const { isDark, toggleTheme } = useTheme();
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
@@ -158,6 +158,14 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               aria-label="Open Forms Helper for guided assistance with VA claim forms"
             >
               ✏️ Forms Helper
+            </button>
+            <button
+              onClick={onCFileAnalyzerClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              title="C-File Analyzer - AI analysis of your claims file"
+              aria-label="Open C-File Analyzer for AI-powered analysis of your VA claims file"
+            >
+              🔬 C-File AI
             </button>
             <button
               onClick={onUserManualClick}
