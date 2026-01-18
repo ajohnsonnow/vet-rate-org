@@ -27,6 +27,7 @@ import MyPacket from './components/MyPacket';
 import CAPSimulator from './components/CAPSimulator';
 import VAResources from './components/VAResources';
 import FormsHelper from './components/FormsHelper';
+import CFileAnalyzer from './components/CFileAnalyzer';
 import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
@@ -58,6 +59,7 @@ function App() {
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showVAResources, setShowVAResources] = useState(false);
   const [showFormsHelper, setShowFormsHelper] = useState(false);
+  const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
@@ -217,12 +219,13 @@ function App() {
     showCAPSimulator,
     showVAResources,
     showFormsHelper,
+    showCFileAnalyzer,
     showUserManual
   }), [
     searchTerm, results, selectedResult, hasSearched, error,
     showPrivacyPolicy, showAboutUs, showContactUs,
     showSecondaryScoutLauncher, showSecondaryScout, userConditions,
-    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showUserManual
+    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showCFileAnalyzer, showUserManual
   ]);
 
   return (
@@ -236,6 +239,7 @@ function App() {
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
         onVAResourcesClick={() => setShowVAResources(true)}
         onFormsHelperClick={() => setShowFormsHelper(true)}
+        onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onUserManualClick={() => setShowUserManual(true)}
       />
       <BuyMeCoffee 
@@ -411,6 +415,37 @@ function App() {
                 className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
               >
                 📝 Open Forms Helper
+              </button>
+            </div>
+          </div>
+
+          {/* C-File Analyzer CTA - Full Width - Featured */}
+          <div className="mt-6 bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-fuchsia-900/40 border-2 border-pink-300 dark:border-pink-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse"></div>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 relative">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="bg-pink-100 dark:bg-pink-800/50 rounded-lg p-3">
+                  <span className="text-3xl">🔬</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    C-File AI Analyzer
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">BETA</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <strong>What competitors charge $500+ for.</strong> Upload your C-File (Claims File) and let AI analyze thousands of pages to find 
+                    <strong> in-service events, diagnoses, and nexus evidence</strong>—all processed locally in your browser for maximum privacy.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCFileAnalyzer(true)}
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
+              >
+                🚀 Analyze My C-File
               </button>
             </div>
           </div>
@@ -653,6 +688,13 @@ function App() {
         <FormsHelper
           onClose={() => setShowFormsHelper(false)}
           onReportBug={() => setShowBugSquasher(true)}
+        />
+      )}
+      
+      {/* C-File Analyzer */}
+      {showCFileAnalyzer && (
+        <CFileAnalyzer
+          onClose={() => setShowCFileAnalyzer(false)}
         />
       )}
       

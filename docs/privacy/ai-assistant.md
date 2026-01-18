@@ -19,6 +19,7 @@ The AI assistant is available in:
 - ✨ **My Packet** — When resuming saved claims
 - ✨ **Secondary Scout** — When building statements for discovered conditions
 - ✨ **Disability Details** — When building statements for primary conditions
+- 🔬 **C-File AI Analyzer** — For analyzing your entire Claims File (see dedicated section below)
 
 !!! warning "AI is Optional"
     The AI assistant is completely optional. You can always use the standard template that processes everything locally on your device with no external data sharing.
@@ -189,6 +190,80 @@ You can switch back to the standard template anytime by clicking the "Standard" 
 ### Does AI cost extra?
 
 No. The AI feature is free for all users, powered by Google Gemini's free tier.
+
+---
+
+## C-File AI Analyzer Privacy
+
+The C-File Analyzer is a special case that deserves its own privacy explanation because it processes much larger amounts of data.
+
+### How C-File Analysis Differs
+
+| Aspect | Statement Assistant | C-File Analyzer |
+|--------|--------------------|--------------------|
+| Data volume | Small (few paragraphs) | Large (thousands of pages) |
+| Data source | You type it | Your PDF file |
+| Processing location | Your browser | Your browser (extraction) + Google (analysis) |
+| API model | Gemini 1.5 Flash | Gemini 1.5 Flash (1M token context) |
+| Contains PII? | Deliberately excluded | May contain full records |
+
+### What Happens to Your C-File
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   YOUR DEVICE                            │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │  1. You drop your C-File PDF                    │    │
+│  │  2. pdf.js extracts TEXT (images ignored)       │    │
+│  │  3. Page markers added: "--- PAGE X ---"        │    │
+│  │  ❌ PDF NEVER UPLOADED TO ANY SERVER           │    │
+│  └─────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼ (Only extracted text, after consent)
+┌─────────────────────────────────────────────────────────┐
+│            GOOGLE GEMINI API (YOUR KEY)                  │
+│                                                          │
+│  • Receives extracted text (may contain PII)            │
+│  • Analyzes for claims evidence                         │
+│  • Returns structured JSON results                      │
+│  • Processed per Google's API policies                  │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### C-File Privacy Considerations
+
+!!! warning "Your C-File Contains Sensitive Data"
+    Unlike the statement assistant where we deliberately exclude PII, your C-File likely contains:
+    
+    - Your name and SSN
+    - Medical diagnoses and treatments
+    - Service history details
+    - Personal addresses
+    - Family information
+
+### Protections in Place
+
+1. **Your PDF stays local** — The actual file is NEVER uploaded
+2. **You provide your own API key** — We never see your key or your data
+3. **Explicit consent required** — You must acknowledge the privacy notice
+4. **No Vet-Rate storage** — We don't save any part of your C-File or analysis
+
+### Google's Handling of C-File Data
+
+When you use your personal Gemini API key, the extracted text is subject to [Google's AI Terms](https://policies.google.com/terms/generative-ai). Key points:
+
+- Google may process data to provide the service
+- Data retention varies by account type
+- You can review Google's data practices in their privacy policy
+
+### Recommendations
+
+1. **Use a dedicated Google account** — Create a separate Google account for the API key if desired
+2. **Only analyze on secure devices** — Don't use public computers
+3. **Review results carefully** — Verify AI findings against original documents
+4. **Clear browser data after** — If you want extra privacy, clear your browser cache
 
 ---
 

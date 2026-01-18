@@ -18,6 +18,12 @@ A comprehensive, production-ready web application for veterans to research VA di
   - Buddy/Lay statements (VA Form 21-10210)
   - PTSD Stressor statements (VA Form 21-0781)
   - Secondary claim statements
+- **🔬 C-File AI Analyzer**: What competitors charge $500+ for, FREE
+  - Upload your Claims File (C-File) PDF
+  - AI analyzes thousands of pages in minutes
+  - Finds in-service events, diagnoses, and nexus evidence
+  - PDF processed locally—only text goes to AI
+  - Interactive dashboard with timeline, claims, and action items
 - **My Packet**: Save and manage your claims evidence
 - **PDF Reports**: Download comprehensive condition guides with VA resources
 - **VA Forms Helper**: Access and fill common VA claim forms with AI enhancement option
