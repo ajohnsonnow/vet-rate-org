@@ -3,8 +3,10 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } fro
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import AIConsentModal from './AIConsentModal';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { fillAndDownloadForm } from '../utils/pdfFormFiller';
+import { isAIAvailable, enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
 import { 
   getVeteranProfile, 
   saveVeteranProfile, 
@@ -36,6 +38,13 @@ const FormsHelper = ({ onClose, onReportBug }) => {
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
+
+  // AI Enhancement State
+  const [showAIConsent, setShowAIConsent] = useState(false);
+  const [isEnhancingWithAI, setIsEnhancingWithAI] = useState(false);
+  const [aiEnhancedContent, setAiEnhancedContent] = useState(null);
+  const [showAIVersion, setShowAIVersion] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   // Load veteran profile on mount
   useEffect(() => {
@@ -2257,6 +2266,68 @@ Phone: 1-202-461-7699
   const handleFinishWizard = () => {
     generateContent();
     setCurrentStep(getFormSteps().length + 1);
+    // Reset AI state when generating new content
+    setAiEnhancedContent(null);
+    setShowAIVersion(false);
+    setAiError(null);
+  };
+
+  // Check if current form type supports AI enhancement
+  const isAIEnabledFormType = () => {
+    const aiEnabledForms = ['buddy-statement', 'personal-statement', 'ptsd-stressor'];
+    return aiEnabledForms.includes(selectedForm?.id);
+  };
+
+  // Get the statement type for AI disclosure
+  const getAIStatementType = () => {
+    switch (selectedForm?.id) {
+      case 'buddy-statement': return 'buddy';
+      case 'ptsd-stressor': return 'ptsd';
+      default: return 'personal';
+    }
+  };
+
+  // Handle AI enhancement request
+  const handleAIEnhanceClick = () => {
+    setShowAIConsent(true);
+  };
+
+  // Handle AI consent and proceed with enhancement
+  const handleAIConsent = async () => {
+    setShowAIConsent(false);
+    setIsEnhancingWithAI(true);
+    setAiError(null);
+
+    try {
+      const result = await enhanceFormStatement(selectedForm?.id, formData);
+      
+      if (result.success) {
+        setAiEnhancedContent(result.content);
+        setShowAIVersion(true);
+      } else {
+        setAiError(result.error || 'Failed to enhance statement with AI.');
+      }
+    } catch (error) {
+      console.error('AI enhancement error:', error);
+      setAiError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsEnhancingWithAI(false);
+    }
+  };
+
+  // Handle canceling AI consent
+  const handleAICancel = () => {
+    setShowAIConsent(false);
+  };
+
+  // Toggle between AI and standard version
+  const toggleAIVersion = () => {
+    setShowAIVersion(!showAIVersion);
+  };
+
+  // Get the current display content (AI or standard)
+  const getDisplayContent = () => {
+    return showAIVersion && aiEnhancedContent ? aiEnhancedContent : generatedContent;
   };
 
   const downloadAsTxt = (content, fileName) => {
@@ -2992,6 +3063,8 @@ Phone: 1-202-461-7699
   const renderReviewStep = () => {
     if (!generatedContent) return null;
 
+    const displayContent = getDisplayContent();
+
     return (
       <div className="space-y-6">
         {/* Success message */}
@@ -3007,10 +3080,95 @@ Phone: 1-202-461-7699
           </div>
         </div>
 
+        {/* AI Enhancement Option - Only show for supported form types */}
+        {isAIEnabledFormType() && isAIAvailable() && (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="text-3xl">✨</span>
+                <div>
+                  <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg">AI Statement Assistant</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Enhance your statement with AI to make it more professional and compelling. 
+                    Uses the "Three Pillars" approach for effective VA claim statements.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {!aiEnhancedContent ? (
+                  <button
+                    onClick={handleAIEnhanceClick}
+                    disabled={isEnhancingWithAI}
+                    className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  >
+                    {isEnhancingWithAI ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Enhancing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Enhance with AI
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={toggleAIVersion}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        showAIVersion 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+                      }`}
+                    >
+                      ✨ AI Version
+                    </button>
+                    <button
+                      onClick={toggleAIVersion}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        !showAIVersion 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+                      }`}
+                    >
+                      📝 Original
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* AI Error Message */}
+            {aiError && (
+              <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
+                ⚠️ {aiError}
+              </div>
+            )}
+
+            {/* Version indicator */}
+            {aiEnhancedContent && (
+              <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
+                {showAIVersion ? '✨ Viewing AI-enhanced version' : '📝 Viewing original template version'}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Download Options - Prominent */}
         <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
           <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
             <span className="text-xl">📥</span> Download Your Form
+            {showAIVersion && aiEnhancedContent && (
+              <span className="text-sm font-normal text-purple-600 dark:text-purple-400">(AI-Enhanced)</span>
+            )}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Primary: Official PDF */}
@@ -3087,15 +3245,17 @@ Phone: 1-202-461-7699
 
         {/* Preview */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <details className="group">
+          <details className="group" open={showAIVersion && aiEnhancedContent}>
             <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
-              <span className="font-medium text-gray-700 dark:text-gray-300">📄 Text Preview (click to expand)</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                📄 Text Preview {showAIVersion && aiEnhancedContent ? '(AI-Enhanced)' : ''} (click to expand)
+              </span>
               <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </summary>
             <pre className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72">
-              {generatedContent}
+              {displayContent}
             </pre>
           </details>
         </div>
@@ -3118,6 +3278,8 @@ Phone: 1-202-461-7699
             onClick={() => {
               setCurrentStep(1);
               setGeneratedContent(null);
+              setAiEnhancedContent(null);
+              setShowAIVersion(false);
             }}
             className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
           >
@@ -3129,6 +3291,8 @@ Phone: 1-202-461-7699
               setFormData({});
               setCurrentStep(0);
               setGeneratedContent(null);
+              setAiEnhancedContent(null);
+              setShowAIVersion(false);
             }}
             className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
           >
@@ -3217,6 +3381,14 @@ Phone: 1-202-461-7699
           </div>
         </div>
       </div>
+
+      {/* AI Consent Modal */}
+      <AIConsentModal
+        isOpen={showAIConsent}
+        onConsent={handleAIConsent}
+        onCancel={handleAICancel}
+        statementType={getAIStatementType()}
+      />
     </div>
   );
 };

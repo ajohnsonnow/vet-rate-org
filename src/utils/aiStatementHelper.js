@@ -291,6 +291,138 @@ export const enhancePTSDStatement = async (answers) => {
 };
 
 /**
+ * Build prompt for an appeal statement (Notice of Disagreement, HLR, Supplemental Claim)
+ */
+const buildAppealStatementPrompt = (answers) => {
+  const appealTypeLabels = {
+    'nod': 'Notice of Disagreement (NOD) / Board Appeal',
+    'hlr': 'Higher-Level Review (HLR)',
+    'supplemental': 'Supplemental Claim with New Evidence'
+  };
+
+  return `Draft an Appeal Statement based on the following:
+
+=== APPEAL INFORMATION ===
+Appeal Type: ${appealTypeLabels[answers.appealType] || answers.appealType || 'Disability claim appeal'}
+Condition: ${answers.conditionName || 'Not specified'}
+Original Decision Date: ${answers.decisionDate || 'Recent'}
+Original Rating: ${answers.originalRating || 'Not specified'}
+Desired Rating: ${answers.desiredRating || 'Higher rating warranted by evidence'}
+
+=== PILLAR 1: WHY THE DECISION IS INCORRECT ===
+${answers.whyIncorrect || 'The evidence in the record supports a higher rating than assigned.'}
+
+=== PILLAR 2: WHAT EVIDENCE SUPPORTS YOUR APPEAL ===
+${answers.supportingEvidence || 'Medical records and personal statements demonstrate greater severity.'}
+
+=== PILLAR 3: WHAT OUTCOME YOU ARE SEEKING ===
+${answers.desiredOutcome || 'Request reconsideration with appropriate rating that reflects actual severity of condition.'}
+
+${answers.newEvidence ? `=== NEW/ADDITIONAL EVIDENCE ===
+${answers.newEvidence}` : ''}
+
+=== OUTPUT FORMAT ===
+Write this in the first person ("I").
+Be professional, factual, and respectful.
+Reference 38 CFR rating criteria where appropriate.
+Focus on the discrepancy between evidence and the decision.
+Do NOT include specific dates, names, or identifying information.
+The statement should be 3-5 paragraphs.
+End with a clear request for the desired outcome.
+
+Write the statement now:`;
+};
+
+/**
+ * Build prompt for a nexus letter request (help veteran communicate with doctor)
+ */
+const buildNexusLetterRequestPrompt = (answers) => {
+  const isSecondary = Boolean(answers.primaryCondition);
+
+  return `Draft a Nexus Letter Request to help a veteran communicate with their doctor about what to include in a medical opinion letter.
+
+=== CLAIM INFORMATION ===
+Condition Being Claimed: ${answers.conditionName || 'Not specified'}
+${isSecondary ? `Primary Service-Connected Condition: ${answers.primaryCondition}
+Connection Theory: ${answers.connectionTheory || 'The primary condition caused or aggravates the claimed condition'}` : `In-Service Event/Cause: ${answers.inServiceEvent || 'Event during military service'}`}
+
+=== VETERAN'S SYMPTOMS ===
+${answers.symptoms || 'Current symptoms affecting daily life'}
+
+=== RELEVANT MEDICAL HISTORY ===
+${answers.medicalHistory || 'Treatment history and relevant medical records'}
+
+=== OUTPUT FORMAT ===
+Create a PROFESSIONAL letter the veteran can give to their doctor explaining:
+1. What a nexus letter is and why it's important for VA claims
+2. The specific connection that needs to be established (service connection ${isSecondary ? 'OR secondary connection' : ''})
+3. The standard of proof: "at least as likely as not" (50% or greater probability)
+4. What the doctor should include in the letter
+5. Key medical terminology that would strengthen the opinion
+
+Write this as a helpful guide for the doctor, not as the medical opinion itself.
+Keep it professional and educational.
+Do NOT include patient names or identifying information (use [Veteran Name]).
+Remind that the doctor should base their opinion on their professional medical judgment and the patient's records.
+
+Write the letter request now:`;
+};
+
+/**
+ * Enhance an appeal statement using AI
+ */
+export const enhanceAppealStatement = async (answers) => {
+  const prompt = buildAppealStatementPrompt(answers);
+  return callGeminiAPI(prompt);
+};
+
+/**
+ * Generate a nexus letter request using AI
+ */
+export const generateNexusLetterRequest = async (answers) => {
+  const prompt = buildNexusLetterRequestPrompt(answers);
+  return callGeminiAPI(prompt);
+};
+
+/**
+ * Generic enhance function that takes FormData from FormsHelper
+ * This allows the FormsHelper to call AI enhancement on any generated statement
+ */
+export const enhanceFormStatement = async (formType, formData) => {
+  switch (formType) {
+    case 'buddy-statement':
+      return enhanceBuddyStatement({
+        relationship: formData.witnessRelation,
+        knownDuration: formData.knownSince,
+        observations: formData.whatObserved,
+        changesNoticed: formData.specificExamples,
+        dailyImpact: formData.dailyImpact
+      }, formData.conditionName);
+      
+    case 'personal-statement':
+      return enhancePersonalStatement({
+        inServiceEvent: formData.inServiceEvent,
+        specificExamples: formData.worstDays,
+        workImpact: formData.workImpact,
+        socialImpact: formData.socialImpact,
+        symptomOnsetDate: formData.onsetDate,
+        hasTreatment: formData.currentTreatment ? 'yes-va' : 'no'
+      }, formData.conditionName, formData.primaryCondition);
+      
+    case 'ptsd-stressor':
+      return enhancePTSDStatement({
+        stressorType: formData.stressorType,
+        eventDescription: formData.eventDescription,
+        currentSymptoms: Array.isArray(formData.symptoms) ? formData.symptoms.join(', ') : formData.symptomDetails,
+        dailyImpact: formData.symptomDetails
+      });
+      
+    default:
+      return { success: false, error: 'Unsupported form type for AI enhancement' };
+  }
+};
+
+/**
  * Get information about what data is shared with AI (Three Pillars structure)
  * Used for the consent modal
  */
@@ -401,6 +533,71 @@ export const getAIDataDisclosure = (statementType) => {
         'Names of others involved',
         'Any information you have not entered'
       ]
+    },
+    appeal: {
+      ...baseInfo,
+      pillars: [
+        {
+          name: 'Pillar 1: Why Decision is Incorrect',
+          description: 'What was wrong with the original decision',
+          example: 'e.g., "Evidence shows severity is greater than 10% rating"'
+        },
+        {
+          name: 'Pillar 2: Supporting Evidence',
+          description: 'What evidence supports your appeal',
+          example: 'e.g., "Medical records show daily symptoms"'
+        },
+        {
+          name: 'Pillar 3: Desired Outcome',
+          description: 'What you are asking for',
+          example: 'e.g., "Request 30% rating based on rating criteria"'
+        }
+      ],
+      dataShared: [
+        'Condition name',
+        'Original and desired rating',
+        'Your description of why decision is incorrect',
+        'Summary of supporting evidence'
+      ],
+      notShared: [
+        'Your name or identifying information',
+        'Decision letter details',
+        'Specific dates or claim numbers',
+        'Any information you have not entered'
+      ]
+    },
+    nexusRequest: {
+      ...baseInfo,
+      purpose: 'To help you communicate with your doctor about VA nexus letter requirements',
+      pillars: [
+        {
+          name: 'Pillar 1: The Condition',
+          description: 'What condition needs medical support',
+          example: 'e.g., "Lumbar strain secondary to knee injury"'
+        },
+        {
+          name: 'Pillar 2: The Connection',
+          description: 'How it relates to service or primary condition',
+          example: 'e.g., "Altered gait from knee causes back strain"'
+        },
+        {
+          name: 'Pillar 3: Medical Support Needed',
+          description: 'What the doctor needs to address',
+          example: 'e.g., "Medical opinion on causation"'
+        }
+      ],
+      dataShared: [
+        'Condition name being claimed',
+        'Primary condition (if secondary)',
+        'Connection theory',
+        'Symptom descriptions'
+      ],
+      notShared: [
+        'Your name or doctor\'s name',
+        'Medical record numbers',
+        'Facility names or locations',
+        'Any information you have not entered'
+      ]
     }
   };
 
@@ -412,5 +609,8 @@ export default {
   enhancePersonalStatement,
   enhanceBuddyStatement,
   enhancePTSDStatement,
+  enhanceAppealStatement,
+  generateNexusLetterRequest,
+  enhanceFormStatement,
   getAIDataDisclosure
 };
