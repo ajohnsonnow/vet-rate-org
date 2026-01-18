@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme, THEME_MODES, COLOR_BLIND_MODES } from '../contexts/ThemeContext';
 
+// LocalStorage key for Gemini API key (BYOK)
+const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
+
 export default function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+  
+  // API Key state
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeySaved, setApiKeySaved] = useState(false);
   
   const {
     theme,
@@ -43,6 +51,31 @@ export default function AccessibilityMenu() {
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen]);
+
+  // Load API key on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+    if (savedKey) {
+      setApiKey(savedKey);
+      setApiKeySaved(true);
+    }
+  }, []);
+
+  // Save API key
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      localStorage.setItem(GEMINI_KEY_STORAGE, apiKey.trim());
+      setApiKeySaved(true);
+      setTimeout(() => setApiKeySaved(false), 2000);
+    }
+  };
+
+  // Clear API key
+  const handleClearApiKey = () => {
+    localStorage.removeItem(GEMINI_KEY_STORAGE);
+    setApiKey('');
+    setApiKeySaved(false);
+  };
 
   const colorBlindOptions = [
     { value: COLOR_BLIND_MODES.NONE, label: 'Default Colors', description: 'Standard color palette' },
@@ -260,6 +293,77 @@ export default function AccessibilityMenu() {
                 />
               </button>
             </label>
+
+            <hr className="border-gray-200 dark:border-gray-600" />
+
+            {/* AI Settings */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                AI Features (BYOK)
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Enter your free Google Gemini API key to enable AI features like statement assistance, contract scanning, and strategy analysis.
+              </p>
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type={showApiKey ? 'text' : 'password'}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter Gemini API key..."
+                    className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                  >
+                    {showApiKey ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveApiKey}
+                    disabled={!apiKey.trim()}
+                    className="flex-1 py-2 px-3 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    {apiKeySaved ? '✓ Saved!' : 'Save Key'}
+                  </button>
+                  {apiKey && (
+                    <button
+                      onClick={handleClearApiKey}
+                      className="py-2 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:underline"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Get free API key from Google AI Studio
+                </a>
+              </div>
+            </div>
 
             {/* Reset Button */}
             <button
