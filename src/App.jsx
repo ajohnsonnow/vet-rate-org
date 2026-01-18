@@ -28,6 +28,8 @@ import CAPSimulator from './components/CAPSimulator';
 import VAResources from './components/VAResources';
 import FormsHelper from './components/FormsHelper';
 import CFileAnalyzer from './components/CFileAnalyzer';
+import SharkRadar from './components/SharkRadar';
+import Pathfinder from './components/Pathfinder';
 import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
@@ -60,6 +62,8 @@ function App() {
   const [showVAResources, setShowVAResources] = useState(false);
   const [showFormsHelper, setShowFormsHelper] = useState(false);
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
+  const [showSharkRadar, setShowSharkRadar] = useState(false);
+  const [showPathfinder, setShowPathfinder] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
@@ -129,6 +133,25 @@ function App() {
     });
     setSelectedResult(null); // Close the details view
     setShowNexusBuilder(true);
+  };
+
+  // Handler for Pathfinder navigation to other tools
+  const handlePathfinderNavigate = (tool, data) => {
+    setShowPathfinder(false);
+    
+    if (tool === 'nexus') {
+      setNexusBuilderData({
+        condition: data.condition,
+        primaryCondition: data.primaryCondition,
+        existingStatement: null
+      });
+      setShowNexusBuilder(true);
+    } else if (tool === 'dbq') {
+      // Navigate to C&P Simulator with condition
+      setShowCAPSimulator(true);
+    } else if (tool === 'secondary-scout') {
+      setShowSecondaryScoutLauncher(true);
+    }
   };
 
   // Handler for navigating to a secondary condition from DisabilityDetails
@@ -450,6 +473,59 @@ function App() {
             </div>
           </div>
 
+          {/* Shark Radar & Pathfinder - Two Column */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Shark Radar CTA */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/40 dark:to-orange-900/40 border border-red-200 dark:border-red-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="bg-red-100 dark:bg-red-800/50 rounded-lg p-2">
+                  <span className="text-2xl">🦈</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    Shark Radar
+                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">NEW</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                <strong>Before you sign ANYTHING!</strong> Paste contract or email text from "VA consultants" to scan for 
+                <strong> illegal fees, predatory practices, and scams</strong> based on 38 CFR § 14.636.
+              </p>
+              <button
+                onClick={() => setShowSharkRadar(true)}
+                className="w-full px-4 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-colors"
+              >
+                🔍 Scan Contract
+              </button>
+            </div>
+
+            {/* Pathfinder CTA */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 border border-blue-200 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="bg-blue-100 dark:bg-blue-800/50 rounded-lg p-2">
+                  <span className="text-2xl">🧭</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    The Pathfinder
+                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">NEW</span>
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                <strong>Strategic claims analysis.</strong> Enter your current ratings and let AI suggest 
+                <strong> high-probability secondary claims</strong> you may be missing, with direct links to build your case.
+              </p>
+              <button
+                onClick={() => setShowPathfinder(true)}
+                className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-700 transition-colors"
+              >
+                📊 Analyze My Strategy
+              </button>
+            </div>
+          </div>
+
           {/* Quick Condition Picker - Full Width */}
           <div className="mt-6">
             <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
@@ -664,6 +740,7 @@ function App() {
           onResume={handleResumeFromPacket}
           onClose={() => setShowMyPacket(false)}
           onReportBug={() => setShowBugSquasher(true)}
+          onAnalyzeStrategy={() => { setShowMyPacket(false); setShowPathfinder(true); }}
         />
       )}
       
@@ -696,6 +773,70 @@ function App() {
         <CFileAnalyzer
           onClose={() => setShowCFileAnalyzer(false)}
         />
+      )}
+      
+      {/* Shark Radar */}
+      {showSharkRadar && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="min-h-screen">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSharkRadar(false)}></div>
+            <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-red-600 to-orange-500 p-4 shadow-lg">
+                <div className="max-w-4xl mx-auto flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🦈</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Shark Radar</h2>
+                      <p className="text-sm text-red-100">Contract & Email Scanner</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSharkRadar(false)}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <SharkRadar />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Pathfinder */}
+      {showPathfinder && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="min-h-screen">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPathfinder(false)}></div>
+            <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shadow-lg">
+                <div className="max-w-5xl mx-auto flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🧭</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">The Pathfinder</h2>
+                      <p className="text-sm text-blue-100">Strategic Claims Analysis</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowPathfinder(false)}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <Pathfinder onNavigate={handlePathfinderNavigate} />
+            </div>
+          </div>
+        </div>
       )}
       
       {/* Bug Squasher */}

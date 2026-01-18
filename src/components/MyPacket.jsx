@@ -25,7 +25,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
 
-const MyPacket = ({ onResume, onClose, onReportBug }) => {
+const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
   const [claims, setClaims] = useState([]);
   const [stats, setStats] = useState({ total: 0, drafting: 0, statementGenerated: 0, filed: 0 });
   const [viewingStatement, setViewingStatement] = useState(null);
@@ -489,6 +489,15 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                 </svg>
                 Restore
               </button>
+              {onAnalyzeStrategy && (
+                <button
+                  onClick={onAnalyzeStrategy}
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
+                >
+                  <span>🧭</span>
+                  Analyze Strategy
+                </button>
+              )}
               <input
                 type="file"
                 ref={fileInputRef}
