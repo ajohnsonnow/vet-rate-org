@@ -141,7 +141,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               title="C&P Exam Simulator - Prepare for your exam"
               aria-label="Open C&P Exam Simulator to prepare for your compensation and pension exam"
             >
-              📋 C&P Simulator
+              ✅ C&P Simulator
             </button>
             <button
               onClick={onMyPacketClick}
@@ -157,7 +157,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               title="Forms Helper - Get help with VA forms"
               aria-label="Open Forms Helper for guided assistance with VA claim forms"
             >
-              📋 Forms Helper
+              ✏️ Forms Helper
             </button>
             <button
               onClick={onUserManualClick}
@@ -165,7 +165,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               title="User Manual - Documentation & Help"
               aria-label="Open User Manual for documentation and help"
             >
-              📖 Help
+              ❓ Help
             </button>
             
             {/* Veteran Resources Dropdown */}
@@ -178,7 +178,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                 aria-expanded={showResourcesMenu}
                 aria-haspopup="true"
               >
-                🎖️ <span className="hidden lg:inline">Vet Resources</span><span className="lg:hidden">Help</span>
+                🎖️ <span className="hidden lg:inline">Vet Resources</span><span className="lg:hidden">VA Links</span>
                 <svg className={`w-4 h-4 transition-transform ${showResourcesMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -266,7 +266,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               title="eCFR 38 Part 4"
               aria-label="Visit official eCFR Rating Schedule (opens in new tab)"
             >
-              📖 <span className="hidden lg:inline">Rating Schedule</span><span className="lg:hidden">eCFR</span>
+              ⚖️ <span className="hidden lg:inline">Rating Schedule</span><span className="lg:hidden">eCFR</span>
             </a>
             
             {/* Quick Dark Mode Toggle */}
