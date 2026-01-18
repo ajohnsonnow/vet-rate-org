@@ -79,6 +79,139 @@ const navigationStructure = [
     ],
   },
   {
+    id: 'tactical-calculator',
+    title: 'Tactical Calculator',
+    icon: '🧮',
+    children: [
+      { id: 'calc-overview', title: 'How VA Math Works' },
+      { id: 'calc-bilateral', title: 'Bilateral Factor' },
+      { id: 'calc-dependents', title: 'Dependent Benefits' },
+      { id: 'calc-what-if', title: 'What-If Scenarios' },
+    ],
+  },
+  {
+    id: 'cfile-analyzer',
+    title: 'C-File AI Analyzer',
+    icon: '🔎',
+    children: [
+      { id: 'cfile-what-is', title: 'What is a C-File?' },
+      { id: 'cfile-upload', title: 'Uploading Records' },
+      { id: 'cfile-analysis', title: 'Understanding Results' },
+    ],
+  },
+  {
+    id: 'decision-decoder',
+    title: 'Decision Decoder',
+    icon: '📜',
+    children: [
+      { id: 'decoder-overview', title: 'Overview' },
+      { id: 'decoder-upload', title: 'Upload Decision' },
+      { id: 'decoder-appeal', title: 'Appeal Options' },
+    ],
+  },
+  {
+    id: 'blue-button',
+    title: 'Blue Button X-Ray',
+    icon: '💙',
+    children: [
+      { id: 'blue-overview', title: 'What Is Blue Button?' },
+      { id: 'blue-extract', title: 'Extracting Evidence' },
+    ],
+  },
+  {
+    id: 'red-team',
+    title: 'Red Team Simulator',
+    icon: '🎭',
+    children: [
+      { id: 'red-overview', title: 'What is Red Team?' },
+      { id: 'red-analysis', title: 'Weakness Analysis' },
+    ],
+  },
+  {
+    id: 'witness-bench',
+    title: 'Witness Bench',
+    icon: '👥',
+    children: [
+      { id: 'witness-overview', title: 'Buddy Statements' },
+      { id: 'witness-interview', title: 'The Interview' },
+      { id: 'witness-output', title: 'Statement Output' },
+    ],
+  },
+  {
+    id: 'risk-assessment',
+    title: 'Risk Assessment',
+    icon: '⚠️',
+  },
+  {
+    id: 'tdiu-builder',
+    title: 'TDIU Builder',
+    icon: '💼',
+    children: [
+      { id: 'tdiu-overview', title: 'What is TDIU?' },
+      { id: 'tdiu-eligibility', title: 'Eligibility Check' },
+    ],
+  },
+  {
+    id: 'symptom-logger',
+    title: 'Symptom Logger',
+    icon: '📊',
+    children: [
+      { id: 'symptom-overview', title: 'Why Track Symptoms?' },
+      { id: 'symptom-logging', title: 'Logging Symptoms' },
+      { id: 'symptom-reports', title: 'Reports & Export' },
+    ],
+  },
+  {
+    id: 'million-dollar',
+    title: 'Million Dollar Dashboard',
+    icon: '💰',
+  },
+  {
+    id: 'pact-act',
+    title: 'PACT Act Navigator',
+    icon: '☢️',
+    children: [
+      { id: 'pact-overview', title: 'What is PACT Act?' },
+      { id: 'pact-conditions', title: 'Covered Conditions' },
+      { id: 'pact-locations', title: 'Covered Locations' },
+    ],
+  },
+  {
+    id: 'state-benefits',
+    title: 'State Benefit Hunter',
+    icon: '🗺️',
+  },
+  {
+    id: 'vso-finder',
+    title: 'VSO Finder',
+    icon: '🤝',
+  },
+  {
+    id: 'mos-matcher',
+    title: 'MOS Hazard Matcher',
+    icon: '🎖️',
+  },
+  {
+    id: 'web-conditions',
+    title: 'Web of Conditions',
+    icon: '🕸️',
+  },
+  {
+    id: 'foia-generator',
+    title: 'FOIA Generator',
+    icon: '📄',
+  },
+  {
+    id: 'shark-radar',
+    title: 'Shark Radar',
+    icon: '🦈',
+  },
+  {
+    id: 'pathfinder',
+    title: 'Pathfinder',
+    icon: '🗺️',
+  },
+  {
     id: 'my-packet',
     title: 'My Packet',
     icon: '📁',
@@ -131,7 +264,7 @@ const documentationContent = {
   home: {
     title: 'Vet-Rate.org User Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** — your complete VA claims toolkit.
+Welcome to the comprehensive user manual for **Vet-Rate.org** — your complete VA claims toolkit with **28 powerful tools**.
 
 ## About This Manual
 
@@ -139,21 +272,64 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 
 - **Search & understand** 748 VA disability conditions
 - **Discover secondary conditions** linked to your service-connected disabilities
+- **Calculate combined ratings** with the Tactical Calculator
 - **Prepare for C&P exams** with our simulator
+- **Analyze your C-File** with AI assistance
 - **Build nexus statements** to support your claims
 - **Complete VA forms** with guided assistance
 - **Organize your claims packet** in one place
+- **Find free VSO help** and avoid claim sharks
 
-## Quick Navigation
+## All 28 Tools
 
-| Feature | What It Does |
-|---------|--------------|
+### Core Tools
+| Tool | What It Does |
+|------|--------------|
 | **Search** | Find any of 748 rated disabilities |
 | **Secondary Scout** | Discover potential secondary claims |
 | **C&P Simulator** | Practice for your exam |
 | **Nexus Builder** | Create supporting statements |
-| **Forms Helper** | Fill out VA forms |
+| **Forms Helper** | Fill out 16+ VA forms |
 | **My Packet** | Manage all your claims |
+
+### Analysis Tools
+| Tool | What It Does |
+|------|--------------|
+| **Tactical Calculator** | VA combined rating math |
+| **C-File AI Analyzer** | Analyze your claims file |
+| **Decision Decoder** | Understand decision letters |
+| **Blue Button X-Ray** | Extract medical evidence |
+| **Red Team Simulator** | Find claim weaknesses |
+| **Risk Assessment** | Pre-filing risk analysis |
+
+### Evidence Builders
+| Tool | What It Does |
+|------|--------------|
+| **Witness Bench** | AI buddy statement wizard |
+| **Symptom Logger** | Track symptoms over time |
+| **FOIA Generator** | Request records |
+
+### Special Programs
+| Tool | What It Does |
+|------|--------------|
+| **TDIU Builder** | Unemployability evaluation |
+| **PACT Act Navigator** | Toxic exposure conditions |
+| **Million Dollar Dashboard** | Lifetime benefit value |
+
+### Discovery Tools
+| Tool | What It Does |
+|------|--------------|
+| **Web of Conditions** | Visual condition map |
+| **MOS Hazard Matcher** | Job-related exposures |
+| **State Benefit Hunter** | State-level benefits |
+
+### Support Tools
+| Tool | What It Does |
+|------|--------------|
+| **VSO Finder** | Free accredited help |
+| **Shark Radar** | Avoid predatory services |
+| **Pathfinder** | Strategic claim roadmap |
+| **VA Resources** | Official VA links |
 
 ## Important Notice
 
@@ -1018,6 +1194,1163 @@ This is for your reference — not submitted to VA.
 - Keep information consistent
 - Track your claims history
 - Share with VSO
+    `,
+  },
+
+  // ========== NEW TOOLS DOCUMENTATION ==========
+
+  'tactical-calculator': {
+    title: 'Tactical Calculator',
+    content: `
+Calculate your combined VA disability rating with precision.
+
+## What It Does
+
+- Calculates combined ratings using official VA math (38 CFR § 4.25)
+- Applies the Bilateral Factor for paired extremities
+- Shows 2026 compensation rates with dependents
+- Projects "What If" scenarios
+
+## Why VA Math Matters
+
+The VA doesn't add ratings. They use "efficiency" math:
+- 50% + 30% ≠ 80%
+- 50% + 30% = 65% (rounds to 70%)
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Combined Rating** | Precise VA math calculation |
+| **Bilateral Factor** | 10% boost for paired limbs |
+| **Pay Calculator** | Monthly/yearly compensation |
+| **Dependents** | Spouse, children, parents |
+| **What-If** | Test adding new ratings |
+    `,
+  },
+
+  'calc-overview': {
+    title: 'How VA Math Works',
+    content: `
+Understanding the VA Combined Ratings Table.
+
+## The Formula
+
+Combined = A + B × (1 - A)
+
+Where A and B are decimal ratings.
+
+## Example
+
+50% + 30%:
+1. Convert: 0.50 + 0.30
+2. Calculate: 0.50 + (0.30 × 0.50) = 0.50 + 0.15 = 0.65
+3. Result: 65% (rounds to 70%)
+
+## Key Rules
+
+- Ratings are applied largest first
+- Final result rounds to nearest 10
+- 0.5 rounds UP (favorable to veteran)
+
+## Why This Matters
+
+Understanding VA math helps you:
+- Know your realistic combined rating
+- Identify which conditions will boost you most
+- Plan strategic claim filing
+    `,
+  },
+
+  'calc-bilateral': {
+    title: 'Bilateral Factor',
+    content: `
+Get a 10% boost for paired extremity conditions.
+
+## What Is It?
+
+Per 38 CFR § 4.26, when you have conditions affecting both:
+- Arms/shoulders
+- Legs/hips/knees
+- Hands/feet
+
+You get a 10% increase on the COMBINED bilateral rating.
+
+## Example
+
+Left knee 20% + Right knee 10%:
+1. Combine: 20% + 10% = 28%
+2. Add 10%: 28% × 1.10 = 30.8%
+3. Use 31% in final calculation
+
+## How to Use
+
+1. Mark conditions as Left/Right/Bilateral
+2. Calculator automatically applies the factor
+3. See the bilateral bonus in your breakdown
+    `,
+  },
+
+  'calc-dependents': {
+    title: 'Dependent Benefits',
+    content: `
+Additional compensation for dependents at 30%+.
+
+## Who Qualifies
+
+Veterans rated 30% or higher can receive additional compensation for:
+- Spouse
+- Children under 18
+- Children 18-23 in school
+- Dependent parents
+
+## 2026 Rates Example (100%)
+
+| Dependent | Additional |
+|-----------|------------|
+| Spouse | +$219.59/mo |
+| Child <18 | +$109.11/mo |
+| Child 18+ in school | +$352.45/mo |
+| 1 Parent | +$176.24/mo |
+| 2 Parents | +$352.48/mo |
+
+## Spouse Aid & Attendance
+
+Extra amount if your spouse requires A&A care.
+    `,
+  },
+
+  'calc-what-if': {
+    title: 'What-If Scenarios',
+    content: `
+Test how new ratings would affect your combined.
+
+## How to Use
+
+1. Enter your current conditions
+2. Click "What If" or add a test condition
+3. See projected new combined rating
+4. Compare pay difference
+
+## Strategic Planning
+
+Use What-If to:
+- Prioritize which claims to file first
+- See impact of potential rating increases
+- Plan for secondary conditions
+- Understand diminishing returns at higher ratings
+    `,
+  },
+
+  'cfile-analyzer': {
+    title: 'C-File AI Analyzer',
+    content: `
+AI-powered analysis of your VA claims file.
+
+## What Others Charge $500+ For — FREE
+
+The C-File Analyzer uses AI to:
+- Identify favorable evidence
+- Find missing nexus connections
+- Spot rating inconsistencies
+- Suggest claim strategies
+
+## What Is a C-File?
+
+Your Claims File (C-File) contains everything VA has about you:
+- Service records
+- Medical records
+- Previous decisions
+- Correspondence
+
+## Privacy First
+
+Your documents are processed locally or with your own API key. We never store your records.
+    `,
+  },
+
+  'cfile-what-is': {
+    title: 'What is a C-File?',
+    content: `
+Your complete VA claims history.
+
+## Contents
+
+- Service treatment records
+- VA medical records
+- Private medical records you've submitted
+- Previous rating decisions
+- Exam reports
+- Correspondence
+
+## How to Get Yours
+
+1. Request via VA.gov
+2. Submit FOIA request (use our FOIA Generator)
+3. Request through your VSO
+
+## Why Review It?
+
+- Find evidence you didn't know existed
+- Identify errors in previous decisions
+- Prepare stronger appeals
+- Understand VA's reasoning
+    `,
+  },
+
+  'cfile-upload': {
+    title: 'Uploading Records',
+    content: `
+How to use the C-File Analyzer.
+
+## Supported Formats
+
+- PDF files
+- Text documents
+- Images (with OCR)
+
+## Privacy
+
+Your files are processed:
+- In your browser (when possible)
+- Via your own API key (Gemini)
+- Never stored on our servers
+
+## Tips
+
+- Upload complete documents
+- Include decision letters
+- Add medical records
+- Include service records
+    `,
+  },
+
+  'cfile-analysis': {
+    title: 'Understanding Results',
+    content: `
+Reading your C-File analysis.
+
+## What You'll See
+
+- **Favorable Evidence** — Supports your claims
+- **Missing Elements** — What you need
+- **Inconsistencies** — Potential rating errors
+- **Action Items** — Next steps
+
+## Using the Results
+
+1. Review highlighted evidence
+2. Note missing documentation
+3. Identify appeal opportunities
+4. Plan your next filing
+    `,
+  },
+
+  'decision-decoder': {
+    title: 'Decision Decoder',
+    content: `
+Understand VA decision letters and find appeal opportunities.
+
+## What It Does
+
+Upload your VA decision letter and get:
+- Plain-English explanation
+- Rating breakdown analysis
+- Appeal option recommendations
+- Timeline information
+
+## Decision Types
+
+- **Rating Decision** — Initial claim result
+- **Statement of Case** — Appeal response
+- **Supplemental Decision** — New evidence result
+- **Board Decision** — BVA ruling
+    `,
+  },
+
+  'decoder-overview': {
+    title: 'Decision Decoder Overview',
+    content: `
+Turn confusing VA letters into actionable information.
+
+## The Problem
+
+VA decision letters are:
+- Full of legal jargon
+- Hard to understand
+- Confusing on appeal rights
+- Easy to miss deadlines
+
+## The Solution
+
+Decision Decoder:
+- Translates to plain English
+- Highlights key dates
+- Explains your options
+- Suggests next steps
+    `,
+  },
+
+  'decoder-upload': {
+    title: 'Upload Decision',
+    content: `
+How to upload your decision letter.
+
+## Steps
+
+1. Click "Upload Decision Letter"
+2. Select your PDF or image
+3. Wait for AI analysis
+4. Review the breakdown
+
+## Tips
+
+- Upload complete letters
+- Include all pages
+- Clearer scans work better
+    `,
+  },
+
+  'decoder-appeal': {
+    title: 'Appeal Options',
+    content: `
+Understanding your appeal choices.
+
+## Appeal Lanes (AMA)
+
+| Lane | Best For | Timeline |
+|------|----------|----------|
+| **Supplemental Claim** | New evidence | ~4-6 months |
+| **Higher-Level Review** | VA error | ~4-6 months |
+| **Board Appeal** | Complex issues | 1-2+ years |
+
+## Key Deadlines
+
+- **1 Year** — Appeal most decisions
+- **Continuous Pursuit** — Maintain effective date
+
+## Decision Decoder Shows
+
+- Which lane fits your situation
+- Required evidence
+- Expected timelines
+- Strategic recommendations
+    `,
+  },
+
+  'blue-button': {
+    title: 'Blue Button X-Ray',
+    content: `
+Extract claim-relevant evidence from your VA medical records.
+
+## What Is Blue Button?
+
+Blue Button is the VA's health record download system. X-Ray helps you find the evidence hidden in those records.
+
+## What It Finds
+
+- Diagnosis dates
+- Symptom documentation
+- Treatment history
+- Provider opinions
+- Medication records
+
+## Why It Matters
+
+Your VA records often contain evidence you didn't know existed — including statements from doctors that support service connection.
+    `,
+  },
+
+  'blue-overview': {
+    title: 'What Is Blue Button?',
+    content: `
+VA's health record download system.
+
+## Getting Your Records
+
+1. Log into My HealtheVet
+2. Click "Blue Button"
+3. Select date range
+4. Download records
+
+## Record Types
+
+- VA health records
+- DoD military records (if linked)
+- Self-entered data
+
+## Using with X-Ray
+
+1. Download Blue Button records
+2. Upload to X-Ray
+3. AI extracts evidence
+4. Review findings
+    `,
+  },
+
+  'blue-extract': {
+    title: 'Extracting Evidence',
+    content: `
+Finding hidden evidence in your records.
+
+## What X-Ray Looks For
+
+- **Diagnoses** — Condition names and dates
+- **Nexus Language** — "Related to," "caused by," etc.
+- **Symptom Severity** — Frequency, duration, impact
+- **Treatment Records** — Continuity of care
+
+## Using Results
+
+1. Review extracted evidence
+2. Note strong statements
+3. Identify gaps
+4. Build your claim
+    `,
+  },
+
+  'red-team': {
+    title: 'Red Team Simulator',
+    content: `
+Think like a VA examiner to strengthen your claim.
+
+## What Is Red Teaming?
+
+Military concept: Have someone attack your own plan to find weaknesses before the enemy does.
+
+## How It Works
+
+1. Enter your claim details
+2. AI simulates examiner review
+3. See potential denial reasons
+4. Get strengthening recommendations
+
+## What You Learn
+
+- Weak points in your evidence
+- Missing documentation
+- Examiner perspective
+- How to address gaps
+    `,
+  },
+
+  'red-overview': {
+    title: 'What is Red Team?',
+    content: `
+Adversarial analysis of your claim.
+
+## The Concept
+
+Before filing, understand how VA might deny your claim. Then fix those weaknesses.
+
+## Examiner Perspective
+
+VA examiners look for:
+- Nexus to service
+- Current diagnosis
+- Severity evidence
+- Rating criteria fit
+
+## Benefits
+
+- File stronger claims
+- Fewer denials
+- Better preparation
+- Realistic expectations
+    `,
+  },
+
+  'red-analysis': {
+    title: 'Weakness Analysis',
+    content: `
+Understanding Red Team results.
+
+## Risk Levels
+
+- 🟢 **Low Risk** — Strong evidence
+- 🟡 **Medium Risk** — Needs strengthening
+- 🔴 **High Risk** — Likely denial point
+
+## Common Weaknesses
+
+- Missing nexus statement
+- No current diagnosis
+- Gaps in treatment
+- Inconsistent statements
+
+## Action Items
+
+Each weakness includes:
+- What's missing
+- Why it matters
+- How to fix it
+    `,
+  },
+
+  'witness-bench': {
+    title: 'Witness Bench',
+    content: `
+AI-powered buddy statement wizard.
+
+## The Problem
+
+Veterans downplay their symptoms. Witnesses see the truth.
+
+## How It Works
+
+1. Select relationship to veteran
+2. Enter the condition
+3. Answer interview questions
+4. AI generates formal statement
+
+## Why Buddy Statements Matter
+
+Third-party observations are powerful evidence:
+- Spouses see sleep problems
+- Coworkers see work limitations
+- Friends see personality changes
+- Battle buddies saw the event
+    `,
+  },
+
+  'witness-overview': {
+    title: 'Buddy Statements',
+    content: `
+Third-party evidence for your claim.
+
+## What Is a Buddy Statement?
+
+A lay/witness statement (VA Form 21-10210) from someone who:
+- Witnessed the event
+- Observes your symptoms
+- Knows your limitations
+
+## Who Can Write One?
+
+- Spouse/partner
+- Family members
+- Fellow veterans
+- Coworkers
+- Friends
+- Neighbors
+
+## What Makes Them Powerful?
+
+Specific, observable details that veterans often don't report themselves.
+    `,
+  },
+
+  'witness-interview': {
+    title: 'The Interview',
+    content: `
+Guided questions for powerful statements.
+
+## How It Works
+
+The Witness Bench asks questions designed to elicit:
+- Specific examples
+- Observable behaviors
+- Changes over time
+- Impact on daily life
+
+## Question Types
+
+- Sleep behaviors
+- Social withdrawal
+- Activity limitations
+- Work impact
+- Personality changes
+
+## Tips
+
+- Be specific
+- Give examples
+- Include dates when possible
+- Describe what you SEE, not diagnose
+    `,
+  },
+
+  'witness-output': {
+    title: 'Statement Output',
+    content: `
+Your completed buddy statement.
+
+## Generated Content
+
+- Properly formatted statement
+- First-person narrative
+- Specific observations
+- Attestation clause
+
+## Download Options
+
+- **PDF** — Ready to print/sign
+- **DOCX** — Edit in Word
+- **Copy** — Paste anywhere
+
+## Next Steps
+
+1. Review for accuracy
+2. Witness signs and dates
+3. Submit with claim
+    `,
+  },
+
+  'risk-assessment': {
+    title: 'Risk Assessment',
+    content: `
+Identify potential weaknesses before filing.
+
+## What It Does
+
+Analyzes your claim for:
+- Evidence gaps
+- Documentation issues
+- Rating criteria fit
+- Strategic concerns
+
+## Risk Categories
+
+| Category | Description |
+|----------|-------------|
+| **Evidence** | Medical documentation |
+| **Nexus** | Service connection link |
+| **Severity** | Rating level support |
+| **Timing** | Effective date issues |
+
+## How to Use
+
+1. Enter your conditions
+2. Add your evidence
+3. Review risk analysis
+4. Address weaknesses before filing
+    `,
+  },
+
+  'tdiu-builder': {
+    title: 'TDIU Builder',
+    content: `
+Evaluate your eligibility for Total Disability Individual Unemployability.
+
+## What Is TDIU?
+
+Compensation at the 100% rate when you can't work due to service-connected disabilities, even if your combined rating is less than 100%.
+
+## Eligibility Requirements
+
+**Schedular:**
+- One disability at 60%+, OR
+- Combined 70%+ with one at 40%+
+
+**Extraschedular:**
+- Any rating if you can't work
+
+## What TDIU Builder Does
+
+- Checks your eligibility
+- Calculates your ratings
+- Identifies qualifying conditions
+- Guides your application
+    `,
+  },
+
+  'tdiu-overview': {
+    title: 'What is TDIU?',
+    content: `
+100% pay without 100% rating.
+
+## The Concept
+
+If your service-connected disabilities prevent you from maintaining "substantially gainful employment," you may qualify for TDIU.
+
+## Types
+
+- **Schedular TDIU** — Meet rating requirements
+- **Extraschedular TDIU** — Special circumstances
+
+## Benefits
+
+- Paid at 100% rate
+- May be easier than proving 100% schedular
+- Protects if you can't work
+    `,
+  },
+
+  'tdiu-eligibility': {
+    title: 'Eligibility Check',
+    content: `
+Do you qualify for TDIU?
+
+## Schedular Requirements
+
+**Option 1:** Single disability at 60%+
+
+**Option 2:** Combined 70%+ with at least one disability at 40%+
+
+## Employment Factor
+
+Must be unable to secure and follow "substantially gainful employment" due to service-connected disabilities.
+
+## TDIU Builder Shows
+
+- Your current rating math
+- Which option you might qualify for
+- Which conditions count
+- What evidence you need
+    `,
+  },
+
+  'symptom-logger': {
+    title: 'Symptom Logger',
+    content: `
+Track your symptoms over time to build evidence.
+
+## Why Track?
+
+- Document severity patterns
+- Show "bad days" frequency
+- Build evidence for ratings
+- Prepare for C&P exams
+
+## What to Log
+
+- Pain levels
+- Flare-up frequency
+- Sleep disruption
+- Mood changes
+- Activity limitations
+- Medication use
+
+## How It Helps
+
+Your symptom history becomes powerful evidence showing the true impact of your conditions.
+    `,
+  },
+
+  'symptom-overview': {
+    title: 'Why Track Symptoms?',
+    content: `
+Build an evidence trail.
+
+## The Problem
+
+At C&P exams, veterans often:
+- Forget their worst days
+- Understate their symptoms
+- Can't remember frequency
+
+## The Solution
+
+Daily logging creates:
+- Objective record
+- Frequency data
+- Severity patterns
+- Evidence for claims
+
+## What Raters Want
+
+- How often symptoms occur
+- How severe they get
+- How they affect function
+- Treatment response
+    `,
+  },
+
+  'symptom-logging': {
+    title: 'Logging Symptoms',
+    content: `
+Recording your daily symptoms.
+
+## Quick Log
+
+- Select condition
+- Rate severity (1-10)
+- Add notes
+- Save
+
+## Detail Log
+
+- Time of day
+- Duration
+- Triggers
+- Impact on activities
+- Medications taken
+
+## Consistency
+
+Log regularly — even good days. It shows the complete picture.
+    `,
+  },
+
+  'symptom-reports': {
+    title: 'Reports & Export',
+    content: `
+Using your symptom data.
+
+## Reports Available
+
+- **Summary** — Overview by condition
+- **Trends** — Severity over time
+- **Frequency** — How often symptoms occur
+- **Calendar** — Visual timeline
+
+## Export Options
+
+- PDF report
+- CSV data
+- Print-friendly
+
+## For Your C&P Exam
+
+Bring your symptom log to show the examiner your true condition over time, not just that one day.
+    `,
+  },
+
+  'million-dollar': {
+    title: 'Million Dollar Dashboard',
+    content: `
+See the lifetime value of your VA benefits.
+
+## What It Shows
+
+- **Lifetime Compensation** — Total benefits over time
+- **Healthcare Value** — VA medical savings
+- **Education Benefits** — GI Bill value
+- **Other Benefits** — Insurance, commissary, etc.
+
+## Why "Million Dollar"?
+
+A 100% disabled veteran retiring at 50 with 35+ years of benefits often receives over $1 million in total value.
+
+## Calculations Include
+
+- Monthly compensation × life expectancy
+- Healthcare cost savings
+- Dependent benefits
+- COLA adjustments (estimated)
+
+## Motivation
+
+See the true value of fighting for accurate ratings.
+    `,
+  },
+
+  'pact-act': {
+    title: 'PACT Act Navigator',
+    content: `
+Find toxic exposure conditions covered by the PACT Act.
+
+## What Is the PACT Act?
+
+The Promise to Address Comprehensive Toxics (PACT) Act of 2022 expanded VA benefits for veterans exposed to:
+- Burn pits
+- Agent Orange
+- Radiation
+- Other toxic substances
+
+## What Changed
+
+- New presumptive conditions
+- Expanded locations
+- Extended timeframes
+- Easier service connection
+
+## How Navigator Helps
+
+1. Enter your service details
+2. See which exposures apply
+3. Find presumptive conditions
+4. Learn filing requirements
+    `,
+  },
+
+  'pact-overview': {
+    title: 'What is PACT Act?',
+    content: `
+Major expansion of toxic exposure benefits.
+
+## Key Provisions
+
+- 23+ new presumptive conditions
+- Burn pit exposure recognition
+- Agent Orange expansion
+- Radiation exposure updates
+
+## Who Benefits
+
+Veterans who served in:
+- Gulf War (1990+)
+- Post-9/11 conflicts
+- Vietnam (expanded)
+- Specific bases/locations
+
+## Timeline
+
+- Some conditions presumptive now
+- Others phased in through 2026
+    `,
+  },
+
+  'pact-conditions': {
+    title: 'Covered Conditions',
+    content: `
+Presumptive conditions under PACT Act.
+
+## Respiratory
+
+- Asthma
+- Rhinitis
+- Sinusitis
+- Constrictive bronchiolitis
+- Pulmonary fibrosis
+- And more...
+
+## Cancers
+
+- Head/neck cancers
+- Respiratory cancers
+- GI cancers
+- Reproductive cancers
+- Kidney cancer
+- Multiple others
+
+## Other
+
+- Hypertension (Agent Orange)
+- Various other conditions
+
+Navigator shows which conditions apply to your service.
+    `,
+  },
+
+  'pact-locations': {
+    title: 'Covered Locations',
+    content: `
+Where toxic exposure is presumed.
+
+## Gulf War / Post-9/11
+
+- Iraq
+- Afghanistan
+- Kuwait
+- Saudi Arabia
+- And other Southwest Asia locations
+
+## Agent Orange
+
+- Vietnam
+- Thailand (certain bases)
+- Korean DMZ
+- Guam
+- Other specific locations
+
+## Other
+
+- Radiation exposure sites
+- Water contamination (Camp Lejeune)
+- Specific bases with known exposures
+    `,
+  },
+
+  'state-benefits': {
+    title: 'State Benefit Hunter',
+    content: `
+Discover state-level veteran benefits you may be missing.
+
+## What It Finds
+
+- Property tax exemptions
+- State income tax breaks
+- Education benefits
+- Employment preferences
+- Vehicle registration discounts
+- Recreation passes
+- And more...
+
+## How to Use
+
+1. Enter your state
+2. Enter your rating
+3. See available benefits
+4. Get links to apply
+
+## Why It Matters
+
+State benefits can add thousands in annual savings on top of federal VA compensation.
+    `,
+  },
+
+  'vso-finder': {
+    title: 'VSO Finder',
+    content: `
+Find FREE, accredited help near you.
+
+## What Is a VSO?
+
+Veterans Service Organizations provide FREE assistance with VA claims:
+- DAV
+- VFW
+- American Legion
+- County/State VSOs
+
+## Why Use a VSO?
+
+- 100% free
+- Accredited by VA
+- Experienced with claims
+- Can access your records
+- Represent you at hearings
+
+## How to Find One
+
+1. Enter your ZIP code
+2. See local options
+3. Verify accreditation
+4. Schedule appointment
+
+## Warning
+
+BEWARE of "claim sharks" who charge fees! Legitimate VSOs are FREE.
+    `,
+  },
+
+  'mos-matcher': {
+    title: 'MOS Hazard Matcher',
+    content: `
+Link your military job to exposures and conditions.
+
+## What It Does
+
+Enter your MOS/Rating/AFSC and see:
+- Known hazards of that job
+- Common conditions
+- Exposure documentation
+- Nexus suggestions
+
+## Why It Matters
+
+Your job specialty often involved exposures that cause conditions decades later. Documentation helps prove the connection.
+
+## Examples
+
+- Infantry → Hearing loss, joint problems
+- Burn pit exposure → Respiratory conditions
+- Mechanics → Chemical exposures
+- Aviation → Hearing, toxic exposures
+    `,
+  },
+
+  'web-conditions': {
+    title: 'Web of Conditions',
+    content: `
+Visualize how conditions connect to each other.
+
+## The Interactive Map
+
+See a visual web showing:
+- Primary conditions (your service-connected)
+- Secondary conditions (caused by primaries)
+- Connection strength
+- Medical nexus logic
+
+## How to Use
+
+1. Click a primary condition
+2. See connected secondaries
+3. Click connection lines
+4. Read the nexus explanation
+
+## Why It Helps
+
+Understand the medical logic connecting conditions, making it easier to argue secondary claims.
+    `,
+  },
+
+  'foia-generator': {
+    title: 'FOIA Generator',
+    content: `
+Create Freedom of Information Act requests for your records.
+
+## What You Can Request
+
+- Service personnel records
+- Medical records
+- VA claims file (C-File)
+- Unit records
+- Investigation reports
+
+## How It Works
+
+1. Select record type
+2. Enter your information
+3. Generate the request
+4. Submit to appropriate agency
+
+## Why Use FOIA?
+
+Sometimes records aren't in your C-File. FOIA requests can uncover documentation that supports your claim.
+    `,
+  },
+
+  'shark-radar': {
+    title: 'Shark Radar',
+    content: `
+Identify and avoid predatory claim services.
+
+## Warning Signs
+
+- Upfront fees for initial claims
+- Percentage of backpay demands
+- Pressure tactics
+- Guarantees of ratings
+- Unlicensed "consultants"
+
+## Safe Options
+
+- VSOs (always free)
+- VA-accredited attorneys (regulated fees)
+- VA-accredited claims agents (regulated fees)
+
+## Red Flags
+
+| Warning | Safe Alternative |
+|---------|------------------|
+| "Pay us 5x your backpay" | VSO (free) |
+| "Guaranteed 100%" | No one can guarantee |
+| "Act now or lose benefits" | You have time |
+| Unlicensed | Check VA accreditation |
+
+## Verify
+
+Always verify accreditation at VA.gov before signing anything.
+    `,
+  },
+
+  'pathfinder': {
+    title: 'Pathfinder',
+    content: `
+Your strategic roadmap from claim to benefits.
+
+## What It Does
+
+Creates a step-by-step plan based on:
+- Your current rating
+- Conditions you want to claim
+- Your evidence situation
+- Your timeline
+
+## The Path
+
+1. **Assessment** — Where you are now
+2. **Planning** — What to file and when
+3. **Evidence** — What you need
+4. **Filing** — How to submit
+5. **Exam** — Preparation
+6. **Decision** — Next steps
+
+## Customized Strategy
+
+Pathfinder considers your specific situation to recommend whether to file primary claims, secondaries, increases, or appeals.
     `,
   },
 
