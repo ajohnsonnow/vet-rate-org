@@ -103,7 +103,7 @@ npm run preview
 ```
 vet-rate-org/
 ├── src/
-│   ├── components/           # 54 React components (28 major tools + 26 supporting)
+│   ├── components/           # 52 React components (28 major tools + 24 supporting)
 │   │   ├── TacticalCalculator.jsx    # Combined rating calculator
 │   │   ├── MillionDollarDashboard.jsx # Lifetime benefit calculator
 │   │   ├── CAPSimulator.jsx          # C&P Exam practice
@@ -129,8 +129,8 @@ vet-rate-org/
 │   │   ├── FOIAGenerator.jsx         # FOIA request builder
 │   │   ├── VAResources.jsx           # Resource hub
 │   │   ├── UserManual.jsx            # Documentation
-│   │   └── ... (29 more supporting components)
-│   ├── utils/                # 15 utility modules
+│   │   └── ... (28 more supporting components)
+│   ├── utils/                # 19 utility modules
 │   │   ├── vaCalculator.js           # VA rating math
 │   │   ├── capSimulatorLogic.js      # DBQ logic engine
 │   │   ├── cfileAnalyzer.js          # AI analysis engine
@@ -140,11 +140,7 @@ vet-rate-org/
 │   │   ├── searchUtils.js            # Search algorithms
 │   │   ├── aiStatementEnhancer.js    # AI enhancement
 │   │   ├── bugReportUtils.js         # Error capture
-│   │   └── ... (6 more utilities)
-│   │   ├── claimsStorage.js
-│   │   ├── pdfGenerator.js
-│   │   ├── searchUtils.js
-│   │   └── ... (7 more)
+│   │   └── ... (10 more utilities)
 │   ├── data/                 # Data files
 │   │   ├── disabilityData.json       # 748 disabilities
 │   │   ├── secondary_conditions_db.json
@@ -212,17 +208,17 @@ This comprehensive platform represents significant development effort to create 
 
 ### Overall Project
 - **Total Development Time**: ~5,800 hours (≈3 years full-time equivalent)
-- **Actual Time Invested**: 35-40 hours over 2.3 days (Jan 15-18, 2026)
-- **Productivity Multiplier**: 145x (thanks to AI-assisted development)
-- **Lines of Code**: 91,368 lines
-- **Total Files**: 976 project files
-- **App Size**: 43.33 MB
-- **Components**: 54 React components (28 major tools + 26 supporting)
-- **Utilities**: 15 helper modules
+- **Actual Time Invested**: 40-45 hours over 3.5 days (Jan 15-18, 2026)
+- **Productivity Multiplier**: 130x (thanks to AI-assisted development)
+- **Lines of Code**: 93,314 lines
+- **Total Files**: 977 project files
+- **App Size**: 43.41 MB
+- **Components**: 52 React components (28 major tools + 24 supporting)
+- **Utilities**: 19 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR
 
 ### Development Breakdown (Traditional Equivalent)
-- **4,568 hrs** - Coding (91k lines @ 20/hr with AI assist)
+- **4,666 hrs** - Coding (93k lines @ 20/hr with AI assist)
 - **200 hrs** - Data entry (748 disabilities validated)
 - **400 hrs** - Testing & debugging
 - **200 hrs** - UI/UX design & iterations
@@ -232,17 +228,17 @@ This comprehensive platform represents significant development effort to create 
 
 ### Actual Development Timeline
 - **First Commit**: January 15, 2026 at 8:05 PM
-- **Latest Commit**: January 18, 2026 at 1:07 AM
-- **Total Commits**: 41 commits across 13 active coding sessions
-- **Code Changes**: +56,696 lines added, -8,817 lines removed
+- **Latest Commit**: January 18, 2026 at 2:45 AM
+- **Total Commits**: 44 commits across 14 active coding sessions
+- **Code Changes**: +113,809 lines added, -9,190 lines removed
 - **Daily Breakdown**:
   - Jan 15: 13 commits (~6-8 hours)
   - Jan 16: 2 commits (~2-3 hours)
   - Jan 17: 16 commits (~10-12 hours)
-  - Jan 18: 10 commits (~4-5 hours)
+  - Jan 18: 13 commits (~8-10 hours)
 
 ### The Reality of Modern Development
-The **5,800-hour estimate** represents the **traditional development cost and complexity** of building this from scratch—the true value veterans receive for free. The **actual 35-40 hours** represents the power of **2026 AI-assisted development** (GitHub Copilot, Claude, ChatGPT, Gemini) combined with modern frameworks (React 18, Vite, Tailwind CSS). This 145x productivity multiplier is why we can offer professional-grade tools that others charge $500+ per use or 30% of backpay.
+The **5,800-hour estimate** represents the **traditional development cost and complexity** of building this from scratch—the true value veterans receive for free. The **actual 40-45 hours** represents the power of **2026 AI-assisted development** (GitHub Copilot, Claude, ChatGPT, Gemini) combined with modern frameworks (React 18, Vite, Tailwind CSS). This 130x productivity multiplier is why we can offer professional-grade tools that others charge $500+ per use or 30% of backpay.
 
 ### Major Component Development Hours
 
