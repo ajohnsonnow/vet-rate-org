@@ -3,12 +3,15 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } fro
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import AIConsentModal from './AIConsentModal';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { isAIAvailable, enhancePersonalStatement } from '../utils/aiStatementHelper';
 
 /**
  * NexusBuilder Component
  * Dynamic wizard that generates a Statement in Support of Claim (VA Form 21-4138)
  * Customizes questions based on whether the claim is primary or secondary
+ * Now with optional AI enhancement powered by Google Gemini
  */
 const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingStatement = null, onReportBug }) => {
   // Lock body scroll when modal is open
@@ -33,6 +36,13 @@ const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingSt
   });
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [nexusDownloaded, setNexusDownloaded] = useState(false);
+  
+  // AI Enhancement state
+  const [showAIConsent, setShowAIConsent] = useState(false);
+  const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [useAIVersion, setUseAIVersion] = useState(false);
 
   const isSecondary = Boolean(primaryCondition);
   const totalSteps = isSecondary ? 4 : 3;
@@ -140,8 +150,51 @@ Sincerely,
     setStep(prev => Math.max(prev - 1, 1));
   };
 
+  // AI Enhancement handlers
+  const handleRequestAIEnhance = () => {
+    setShowAIConsent(true);
+  };
+
+  const handleAIConsent = async () => {
+    setShowAIConsent(false);
+    setIsEnhancing(true);
+    setAiError(null);
+
+    try {
+      const result = await enhancePersonalStatement(answers, condition, primaryCondition);
+      
+      if (result.success) {
+        setAiEnhancedStatement(result.content);
+        setUseAIVersion(true);
+      } else {
+        setAiError(result.error);
+      }
+    } catch (error) {
+      console.error('AI enhancement error:', error);
+      setAiError('An unexpected error occurred. Please try again or use the standard template.');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleAICancel = () => {
+    setShowAIConsent(false);
+  };
+
+  const toggleStatementVersion = () => {
+    setUseAIVersion(!useAIVersion);
+  };
+
+  // Get the current statement (AI or standard)
+  const getCurrentStatement = () => {
+    if (useAIVersion && aiEnhancedStatement) {
+      return aiEnhancedStatement;
+    }
+    return generateStatement();
+  };
+
   const handleFinish = () => {
-    const statement = generateStatement();
+    const statement = getCurrentStatement();
     const doctorNote = generateDoctorNote();
     
     onSave({
@@ -155,7 +208,7 @@ Sincerely,
   };
 
   const handleDownload = (format = 'txt') => {
-    const statement = generateStatement();
+    const statement = getCurrentStatement();
     const doctorNote = generateDoctorNote();
     const fileName = `VA-Statement-${condition.replace(/\s+/g, '-')}`;
     
@@ -516,13 +569,103 @@ Sincerely,
             {/* Final Step: Review and Download */}
             {step === totalSteps && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Review Your Statement</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Review Your Statement</h3>
+                  
+                  {/* AI Enhancement Button */}
+                  {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
+                    <button
+                      onClick={handleRequestAIEnhance}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      ✨ Enhance with AI
+                    </button>
+                  )}
+                  
+                  {/* Loading state */}
+                  {isEnhancing && (
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg font-semibold text-sm">
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      AI is writing...
+                    </div>
+                  )}
+                  
+                  {/* Toggle between versions */}
+                  {aiEnhancedStatement && !isEnhancing && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Version:</span>
+                      <button
+                        onClick={toggleStatementVersion}
+                        className={`px-3 py-1 rounded-l-lg text-sm font-medium transition-colors ${
+                          !useAIVersion 
+                            ? 'bg-gray-700 text-white' 
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        Standard
+                      </button>
+                      <button
+                        onClick={toggleStatementVersion}
+                        className={`px-3 py-1 rounded-r-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                          useAIVersion 
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white' 
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        ✨ AI Enhanced
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI Error message */}
+                {aiError && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-red-700 dark:text-red-300">{aiError}</p>
+                      <button 
+                        onClick={handleRequestAIEnhance}
+                        className="text-sm text-red-600 dark:text-red-400 underline mt-1 hover:text-red-800 dark:hover:text-red-200"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Success indicator */}
+                {useAIVersion && aiEnhancedStatement && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <span className="text-sm text-purple-700 dark:text-purple-300">
+                      ✨ AI-enhanced statement • Powered by Google Gemini • <span className="opacity-75">Review before downloading</span>
+                    </span>
+                  </div>
+                )}
                 
                 <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Statement in Support of Claim (VA Form 21-4138)</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Statement in Support of Claim (VA Form 21-4138)</h4>
+                    {useAIVersion && aiEnhancedStatement && (
+                      <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
+                        ✨ AI Enhanced
+                      </span>
+                    )}
+                  </div>
                   <div className="prose prose-sm max-w-none">
                     <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-                      {generateStatement()}
+                      {getCurrentStatement()}
                     </pre>
                   </div>
                 </div>
@@ -624,6 +767,14 @@ Sincerely,
         trigger="nexus"
         context={{ conditionName: condition }}
         onDismiss={() => setNexusDownloaded(false)}
+      />
+      
+      {/* AI Consent Modal */}
+      <AIConsentModal
+        isOpen={showAIConsent}
+        onConsent={handleAIConsent}
+        onCancel={handleAICancel}
+        statementType="personal"
       />
     </div>
   );

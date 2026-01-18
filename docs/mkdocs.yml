@@ -136,6 +136,7 @@ nav:
     - Data Privacy: privacy/data-privacy.md
     - Local Processing: privacy/local-processing.md
     - Security Practices: privacy/security-practices.md
+    - AI Assistant Privacy: privacy/ai-assistant.md
   - Support:
     - support/index.md
     - Reporting Bugs: support/reporting-bugs.md

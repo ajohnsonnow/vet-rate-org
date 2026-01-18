@@ -12,15 +12,17 @@ A comprehensive, production-ready web application for veterans to research VA di
 - **Rating Criteria**: Detailed percentage breakdowns for every condition
 - **Secondary Scout**: Discover medically-recognized secondary conditions
 - **C&P Exam Simulator**: Practice compensation & pension exam questions
-- **Nexus Builder**: Generate nexus letter templates
+- **Nexus Builder**: Generate nexus letter templates with optional AI enhancement
+- **AI Statement Assistant**: ✨ Optional AI-powered statement drafting (Google Gemini)
 - **My Packet**: Save and manage your claims evidence
 - **PDF Reports**: Download comprehensive condition guides with VA resources
 - **VA Forms Helper**: Access and fill common VA claim forms
 
 ### Privacy & Security
-- **100% Client-Side**: All processing happens in your browser
+- **100% Client-Side**: All core processing happens in your browser
 - **No Data Collection**: No accounts, no tracking, no PII storage
 - **No External Transmission**: Your searches never leave your device
+- **AI is Optional**: When using AI features, only non-PII condition descriptions are shared (with explicit consent)
 
 ### Accessibility
 - **WCAG 2.1 AA Compliant**: Full keyboard navigation and screen reader support
@@ -45,6 +47,10 @@ cd vet-rate-org
 
 # Install dependencies
 npm install
+
+# (Optional) Set up AI features - copy and configure environment
+cp .env.example .env.local
+# Edit .env.local and add your Gemini API key (get free key at https://aistudio.google.com/app/apikey)
 
 # Start development server (opens at http://localhost:3000)
 npm run dev
@@ -144,6 +150,30 @@ Our comprehensive knowledge base has been **fully validated against the official
 - **VA Benefits**: https://www.va.gov/disability/
 
 *Last validated: January 2026 against eCFR Title 38, Parts 3 & 4*
+
+## ✨ AI Statement Assistant
+
+Vet-Rate.org includes an optional AI-powered statement assistant that helps veterans write more professional VA claim statements.
+
+### Features
+- **Powered by Google Gemini** (free tier)
+- **Explicit consent required** before any data is sent
+- **No PII shared** - only condition names and symptom descriptions
+- **Completely optional** - standard templates always available
+
+### Setup (Optional)
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Copy `.env.example` to `.env.local`
+3. Add your key: `VITE_GEMINI_API_KEY=your_key_here`
+4. Restart the dev server
+
+### Privacy
+- Users must explicitly consent before each AI use
+- No names, SSN, dates, or addresses are ever sent
+- Google's free tier doesn't use prompts for model training
+- Full disclosure shown before any data transmission
+
+See [AI Privacy Documentation](docs/privacy/ai-assistant.md) for complete details.
 
 ## 🚀 Deployment
 
