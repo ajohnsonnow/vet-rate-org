@@ -9,11 +9,23 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
   const [showFundingModal, setShowFundingModal] = useState(false);
 
   const veteranResources = [
+    // CRISIS - Always first
     {
       name: '🆘 Veterans Crisis Line',
       url: 'https://www.veteranscrisisline.net/',
       description: 'Call 988, Press 1 | Text 838255',
       urgent: true
+    },
+    // HEALTH & MEDICAL
+    {
+      name: '🏥 VA Health Care',
+      url: 'https://www.va.gov/health-care/',
+      description: 'Apply for VA health benefits'
+    },
+    {
+      name: '🧠 Mental Health & PTSD',
+      url: 'https://www.ptsd.va.gov/',
+      description: 'PTSD treatment & resources'
     },
     {
       name: '⚠️ PACT Act Benefits',
@@ -26,35 +38,32 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
       url: 'https://www.publichealth.va.gov/MEEA/index.asp',
       description: 'Free MEEA evaluations'
     },
-    {
-      name: '🏠 Homeless Veterans',
-      url: 'https://www.va.gov/homeless/',
-      description: 'Call 1-877-4AID-VET (1-877-424-3838)'
-    },
-    {
-      name: '🧠 Mental Health & PTSD',
-      url: 'https://www.ptsd.va.gov/',
-      description: 'PTSD treatment & resources'
-    },
-    {
-      name: '🏥 VA Health Care',
-      url: 'https://www.va.gov/health-care/',
-      description: 'Apply for VA health benefits'
-    },
+    // SPECIALIZED VETERAN POPULATIONS
     {
       name: '👩 Women Veterans',
       url: 'https://www.va.gov/womenvet/',
       description: 'Resources for women Veterans'
     },
     {
-      name: '💼 Veteran Jobs',
-      url: 'https://www.va.gov/careers-employment/',
-      description: 'Employment resources & training'
+      name: '🏳️‍🌈 LGBTQ+ Veterans',
+      url: 'https://www.patientcare.va.gov/lgbt/',
+      description: 'LGBTQ+ Veteran Care Coordinators at every VA'
     },
+    {
+      name: '🏠 Homeless Veterans',
+      url: 'https://www.va.gov/homeless/',
+      description: 'Call 1-877-4AID-VET (1-877-424-3838)'
+    },
+    // BENEFITS & SERVICES
     {
       name: '🎓 GI Bill Benefits',
       url: 'https://www.va.gov/education/',
       description: 'Education & training benefits'
+    },
+    {
+      name: '💼 Veteran Jobs',
+      url: 'https://www.va.gov/careers-employment/',
+      description: 'Employment resources & training'
     },
     {
       name: '🏡 VA Home Loans',
@@ -66,6 +75,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
       url: 'https://www.caregiver.va.gov/',
       description: 'Support for veteran caregivers'
     },
+    // APPEALS & COMPREHENSIVE RESOURCES
     {
       name: '⚖️ Board of Veterans Appeals',
       url: 'https://www.bva.va.gov/',
