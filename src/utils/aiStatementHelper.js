@@ -12,18 +12,32 @@
 // API endpoint for Gemini
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
+// LocalStorage key for BYOK (Bring Your Own Key)
+const STORAGE_KEY = 'vetrate_gemini_key';
+
 /**
  * Check if AI features are available (API key is configured)
+ * Now supports both env variable (legacy) and BYOK (localStorage)
  */
 export const isAIAvailable = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  return Boolean(apiKey && apiKey.length > 0);
+  // Check localStorage first (BYOK)
+  const storedKey = localStorage.getItem(STORAGE_KEY);
+  if (storedKey && storedKey.length > 0) return true;
+  
+  // Fallback to env variable (legacy)
+  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+  return Boolean(envKey && envKey.length > 0);
 };
 
 /**
- * Get the configured API key
+ * Get the configured API key (localStorage takes priority)
  */
 const getApiKey = () => {
+  // Check localStorage first (BYOK)
+  const storedKey = localStorage.getItem(STORAGE_KEY);
+  if (storedKey && storedKey.length > 0) return storedKey;
+  
+  // Fallback to env variable (legacy)
   return import.meta.env.VITE_GEMINI_API_KEY || '';
 };
 
@@ -604,6 +618,118 @@ export const getAIDataDisclosure = (statementType) => {
   return dataByType[statementType] || dataByType.personal;
 };
 
+/**
+ * Generate AI-assisted text for a specific textarea field
+ * Helps veterans articulate their symptoms and impacts
+ */
+export const generateFieldSuggestion = async (fieldType, condition, primaryCondition = null, currentText = '') => {
+  const apiKey = getApiKey();
+  
+  if (!apiKey) {
+    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  }
+
+  const prompts = {
+    workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work. 
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+
+Focus on:
+- Concentration and productivity issues
+- Days missed or reduced hours
+- Performance impacts documented by supervisors
+- Safety concerns
+- Career limitations
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    socialImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their social and family life.
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+
+Focus on:
+- Relationship strain with spouse/partner
+- Difficulty with children or family activities
+- Social isolation and avoiding gatherings
+- Mood changes noticed by others
+- Loss of hobbies or activities
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    specificExamples: `As a VA claims specialist, help a veteran describe specific examples of how ${condition} limits their daily activities.
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+
+Focus on:
+- Driving limitations
+- Self-care difficulties
+- Household task limitations
+- Need for rest/breaks
+- Memory or cognitive issues
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    aggravationExplanation: `As a VA claims specialist, help a veteran explain how their service-connected ${primaryCondition} causes or worsens their ${condition}.
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+
+Focus on:
+- The medical/logical connection
+- Timing correlation
+- How symptoms interact
+- Observable patterns
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    specificIncident: `As a VA claims specialist, help a veteran describe a specific recent incident where their ${primaryCondition || 'primary condition'} and ${condition} interacted.
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+
+Focus on:
+- Specific date or timeframe ("last month", "two weeks ago")
+- What triggered the episode
+- How symptoms manifested
+- Who witnessed it
+- The aftermath
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`
+  };
+
+  const prompt = prompts[fieldType];
+  if (!prompt) {
+    return { success: false, error: 'Unknown field type' };
+  }
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 300
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
+        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+      }
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!text) {
+      return { success: false, error: 'No response generated' };
+    }
+
+    return { success: true, content: text.trim() };
+  } catch (error) {
+    console.error('Field suggestion error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
 export default {
   isAIAvailable,
   enhancePersonalStatement,
@@ -612,5 +738,6 @@ export default {
   enhanceAppealStatement,
   generateNexusLetterRequest,
   enhanceFormStatement,
-  getAIDataDisclosure
+  getAIDataDisclosure,
+  generateFieldSuggestion
 };
