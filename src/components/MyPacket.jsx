@@ -420,18 +420,18 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                 className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span className="hidden xs:inline">Backup</span> Packet
+                Backup
               </button>
               <button
                 onClick={handleRestoreClick}
                 className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <span className="hidden xs:inline">Load</span> Backup
+                Restore
               </button>
               <input
                 type="file"
@@ -489,15 +489,15 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                   {claims.map((claim) => (
                     <div
                       key={claim.id}
-                      className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all"
+                      className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
                               {claim.conditionName}
                             </h3>
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(claim.status)}`}>
+                            <span className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border whitespace-nowrap ${getStatusColor(claim.status)}`}>
                               {claim.status}
                             </span>
                           </div>
@@ -514,12 +514,12 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                           </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
                           {/* Status Dropdown */}
                           <select
                             value={claim.status}
                             onChange={(e) => handleStatusChange(claim.id, e.target.value)}
-                            className="px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100"
+                            className="w-full sm:w-auto px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100 col-span-2 sm:col-span-1"
                           >
                             <option value="Drafting">Drafting</option>
                             <option value="Statement Generated">Statement Generated</option>
@@ -530,14 +530,14 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                           {claim.status === 'Drafting' ? (
                             <button
                               onClick={() => onResume(claim)}
-                              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-sm"
+                              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-xs sm:text-sm"
                             >
                               Build Statement
                             </button>
                           ) : (
                             <button
                               onClick={() => handleViewStatement(claim.id)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-xs sm:text-sm"
                             >
                               View Statement
                             </button>
@@ -545,10 +545,10 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
 
                           {/* Download Button with Format Options */}
                           {claim.status !== 'Drafting' && (
-                            <div className="relative">
+                            <div className="relative w-full sm:w-auto">
                               <button
                                 onClick={() => setShowDownloadMenu(showDownloadMenu === claim.id ? null : claim.id)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2"
                               >
                                 Download
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -557,7 +557,7 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                               </button>
                               
                               {showDownloadMenu === claim.id && (
-                                <div className="absolute top-full mt-1 left-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
+                                <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
                                   <button
                                     onClick={() => handleDownloadStatement(claim, 'txt')}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
@@ -593,7 +593,7 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                           {/* Remove Button */}
                           <button
                             onClick={() => handleRemove(claim.id)}
-                            className="px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-sm"
+                            className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-xs sm:text-sm"
                           >
                             Remove
                           </button>

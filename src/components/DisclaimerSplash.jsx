@@ -76,7 +76,7 @@ function DisclaimerSplash({ onAcknowledge }) {
             <div className="flex flex-col items-center text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <Shield className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
               <span className="text-xs font-medium text-green-800 dark:text-green-200">No Data Sold</span>
-              <span className="text-xs text-green-600 dark:text-green-400">We don't track you</span>
+              <span className="text-xs text-green-600 dark:text-green-400">You're not tracked</span>
             </div>
           </div>
 

@@ -43,7 +43,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ What We Do</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ What This Tool Does</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               This free tool allows veterans to:
             </p>
@@ -57,7 +57,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Our Data Sources</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Data Sources</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               All disability information is sourced directly from official U.S. Government regulations:
             </p>
@@ -67,11 +67,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 how conditions are evaluated and rated
               </li>
               <li>
-                <strong>744 VA Disabilities:</strong> Comprehensive coverage of all body systems (Musculoskeletal, 
+                <strong>748 VA Disabilities:</strong> Comprehensive coverage of all body systems (Musculoskeletal, 
                 Mental Disorders, Cardiovascular, Respiratory, Neurological, etc.)
               </li>
               <li>
-                <strong>100% Rating Criteria Coverage:</strong> All 744 conditions include detailed percentage 
+                <strong>100% Rating Criteria Coverage:</strong> All 748 conditions include detailed percentage 
                 breakdowns from official 38 CFR regulations
               </li>
             </ul>

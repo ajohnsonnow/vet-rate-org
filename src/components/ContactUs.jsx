@@ -191,8 +191,8 @@ const ContactUs = ({ onClose, onReportBug }) => {
               <div>
                 <p className="font-semibold text-gray-800">Q: Is this an official VA website?</p>
                 <p className="text-gray-700 text-sm">
-                  No, Vet-Rate.org is an independent educational tool. We are not affiliated with the U.S. 
-                  Department of Veterans Affairs.
+                  No, Vet-Rate.org is an independent educational tool created by a service-connected disabled 
+                  veteran. This site is not affiliated with the U.S. Department of Veterans Affairs.
                 </p>
               </div>
               <div>

@@ -11,9 +11,15 @@ import {
   copyToClipboard
 } from '../utils/bugReportUtils';
 
+// Developer contact email for bug reports
+const DEVELOPER_EMAIL = 'Anth@StructuredForGrowth.com';
+
 function BugSquasher({ onClose, appState = {} }) {
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [generatedReport, setGeneratedReport] = useState('');
   
   // Form state
@@ -83,6 +89,60 @@ function BugSquasher({ onClose, appState = {} }) {
     setStep(3);
   };
 
+  // Extract report ID from generated report
+  const getReportId = () => {
+    const match = generatedReport.match(/Report ID: (BUG-[A-Z0-9]+)/);
+    return match ? match[1] : 'BUG-UNKNOWN';
+  };
+
+  // Submit bug report via mailto
+  const handleSubmitReport = async () => {
+    setSubmitting(true);
+    setSubmitError('');
+    
+    try {
+      // First, copy the full report to clipboard
+      await copyToClipboard(generatedReport);
+      
+      const reportId = getReportId();
+      const severityLabel = formData.severity?.label || 'Unknown';
+      const subject = encodeURIComponent(`[${reportId}] ${severityLabel} - ${formData.category} Bug Report`);
+      
+      // Create a shorter version for mailto body (URL length limits ~2000 chars)
+      const shortSummary = `
+Bug Report: ${reportId}
+Severity: ${severityLabel}
+Category: ${formData.category}
+Module: ${formData.module}
+
+Description:
+${formData.userDescription}
+
+Steps to Reproduce:
+${formData.stepsToReproduce || '(Not provided)'}
+
+---
+IMPORTANT: The full detailed bug report has been copied to your clipboard.
+Please paste it into this email (Ctrl+V / Cmd+V) to include all technical details.
+---
+      `.trim();
+      
+      const body = encodeURIComponent(shortSummary);
+      
+      // Open mailto link
+      window.location.href = `mailto:${DEVELOPER_EMAIL}?subject=${subject}&body=${body}`;
+      
+      setSubmitted(true);
+      setCopied(true); // Show that clipboard has the full report
+      setSubmitting(false);
+      
+    } catch (error) {
+      console.error('Submit error:', error);
+      setSubmitError('Could not open email client. Please copy the report and email it manually.');
+      setSubmitting(false);
+    }
+  };
+
   const handleCopyReport = async () => {
     const result = await copyToClipboard(generatedReport);
     if (result.success) {
@@ -143,7 +203,7 @@ function BugSquasher({ onClose, appState = {} }) {
             <div className="flex justify-between text-xs text-red-100 mt-2 px-1">
               <span>Classification</span>
               <span className="ml-6">Description</span>
-              <span>Review & Copy</span>
+              <span>Review & Submit</span>
             </div>
           </div>
 
@@ -154,8 +214,8 @@ function BugSquasher({ onClose, appState = {} }) {
               <div className="space-y-6">
                 <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>💡 Tip:</strong> The more details you provide, the faster we can squash this bug! 
-                    We'll automatically capture technical details to help diagnose the issue.
+                    <strong>💡 Tip:</strong> The more details you provide, the faster I can squash this bug! 
+                    Technical details will be automatically captured to help diagnose the issue.
                   </p>
                 </div>
 
@@ -341,62 +401,121 @@ function BugSquasher({ onClose, appState = {} }) {
               </div>
             )}
 
-            {/* Step 3: Review & Copy */}
+            {/* Step 3: Review & Submit */}
             {step === 3 && (
               <div className="space-y-4">
-                <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                      Bug report generated! Copy it below and send to the development team.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    readOnly
-                    value={generatedReport}
-                    className="w-full h-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-mono text-xs resize-none"
-                  />
-                  <button
-                    onClick={handleCopyReport}
-                    className={`absolute top-3 right-3 px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${
-                      copied
-                        ? 'bg-green-600 text-white'
-                        : 'bg-red-600 text-white hover:bg-red-700'
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Success message after submission */}
+                {submitted ? (
+                  <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-600 rounded-lg p-6 text-center">
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                        <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
+                      Email Client Opened! 📧
+                    </h3>
+                    <p className="text-green-700 dark:text-green-300 mb-4">
+                      Your email app should have opened with the bug report. The <strong>full detailed report has been copied to your clipboard</strong>.
+                    </p>
+                    <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
+                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">📋 Complete these steps:</h4>
+                      <ol className="text-sm text-green-700 dark:text-green-300 space-y-1 list-decimal list-inside">
+                        <li>In your email, paste the full report (Ctrl+V or Cmd+V)</li>
+                        <li>Send the email to complete your submission</li>
+                      </ol>
+                    </div>
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      Report ID: <span className="font-mono font-bold">{getReportId()}</span>
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Copy Report
-                      </>
-                    )}
-                  </button>
-                </div>
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Bug report generated! Review it below and click "Submit Report" to send it directly.
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
-                    📋 How to Submit This Bug Report:
-                  </h4>
-                  <ol className="text-sm text-amber-700 dark:text-amber-300 space-y-1 list-decimal list-inside">
-                    <li>Click "Copy Report" above</li>
-                    <li>Paste the report into your preferred communication channel</li>
-                    <li>The development team will use this detailed info to investigate and fix the issue</li>
-                  </ol>
-                </div>
+                    <div className="relative">
+                      <textarea
+                        readOnly
+                        value={generatedReport}
+                        className="w-full h-72 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-mono text-xs resize-none"
+                      />
+                      <button
+                        onClick={handleCopyReport}
+                        className={`absolute top-3 right-3 px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${
+                          copied
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-600 text-white hover:bg-gray-700'
+                        }`}
+                      >
+                        {copied ? (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Submit Error Message */}
+                    {submitError && (
+                      <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-3">
+                        <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
+                      </div>
+                    )}
+
+                    {/* Submit Button - Primary Action */}
+                    <button
+                      onClick={handleSubmitReport}
+                      disabled={submitting}
+                      className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-3 transition-all ${
+                        submitting
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 shadow-lg hover:shadow-xl'
+                      }`}
+                    >
+                      {submitting ? (
+                        <>
+                          <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting Report...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Open Email & Send Report
+                        </>
+                      )}
+                    </button>
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      Opens your email app with report ready to send to {DEVELOPER_EMAIL}
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -404,10 +523,15 @@ function BugSquasher({ onClose, appState = {} }) {
           {/* Footer */}
           <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 flex justify-between items-center">
             <button
-              onClick={step === 1 ? onClose : () => setStep(step - 1)}
-              className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 font-medium transition-colors"
+              onClick={step === 1 ? onClose : (submitted ? onClose : () => setStep(step - 1))}
+              disabled={submitting}
+              className={`px-4 py-2 font-medium transition-colors ${
+                submitting 
+                  ? 'text-gray-400 cursor-not-allowed' 
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'
+              }`}
             >
-              {step === 1 ? 'Cancel' : '← Back'}
+              {step === 1 ? 'Cancel' : (submitted ? 'Close' : '← Back')}
             </button>
 
             {step < 3 ? (

@@ -103,7 +103,7 @@
         },
         {
           "name": "Carpal Tunnel Syndrome",
-          "diagnosticCode": "5224"
+          "diagnosticCode": "8515"
         },
         {
           "name": "Major Depressive Disorder",
@@ -2822,34 +2822,38 @@
     {
       "id": 110,
       "diagnosticCode": "5224",
-      "conditionName": "Carpal Tunnel Syndrome",
+      "conditionName": "Thumb, ankylosis of",
       "aliases": [
-        "CTS",
-        "carpal tunnel",
-        "median nerve compression",
-        "wrist nerve pain"
+        "thumb ankylosis",
+        "ankylosed thumb",
+        "fused thumb joint",
+        "immobile thumb"
       ],
       "searchTerms": [
-        "carpal tunnel syndrome",
-        "CTS",
-        "median nerve",
-        "wrist pain",
-        "hand numbness"
+        "thumb ankylosis",
+        "thumb fusion",
+        "ankylosed thumb",
+        "immobile thumb",
+        "5224"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.71a",
       "ratingSchedule": "38 CFR § 4.71a",
-      "documentationRequirements": "Documentation must include: nerve conduction study/EMG results, clinical findings (Tinel's sign, Phalen's test), symptom severity (pain, numbness, tingling in median nerve distribution), functional limitations with grip/fine motor, treatment history (splinting, injections, surgery), and bilateral involvement if applicable.",
+      "documentationRequirements": "Documentation must include: X-ray evidence of bony fusion or clinical evidence of complete immobility, position of ankylosis (favorable vs unfavorable), range of motion measurements showing no movement, and functional impact on hand use and grip strength.",
       "relatedSecondaryConditions": [
         "Hand weakness",
-        "Thenar muscle atrophy",
-        "Decreased grip strength"
+        "Decreased grip strength",
+        "Degenerative arthritis"
       ],
       "ratingCriteria": {
         "type": "direct",
         "ratings": {
-          "20": "Thumb, ankylosis of: Unfavorable (dominant/non-dominant)",
-          "10": "Favorable (dominant/non-dominant)"
-        }
+          "20": "Unfavorable (dominant or non-dominant hand)",
+          "10": "Favorable (dominant or non-dominant hand)"
+        },
+        "notes": [
+          "Favorable ankylosis is ankylosis at 0 to 15 degrees of flexion at the interphalangeal joint.",
+          "Unfavorable ankylosis is ankylosis at more than 15 degrees of flexion at the interphalangeal joint."
+        ]
       }
     },
     {
@@ -18354,35 +18358,55 @@
     {
       "id": 634,
       "diagnosticCode": "8515",
-      "conditionName": "Median nerve, paralysis of",
+      "conditionName": "Median nerve, paralysis of (includes Carpal Tunnel Syndrome)",
       "aliases": [
-        "median nerve, paralysis of",
+        "median nerve paralysis",
         "MNP",
-        "median nerve paralysis"
+        "carpal tunnel syndrome",
+        "CTS",
+        "carpal tunnel",
+        "median nerve compression",
+        "median nerve entrapment",
+        "wrist nerve pain"
       ],
       "searchTerms": [
-        "median",
+        "median nerve",
         "8515",
-        "median nerve, paralysis of",
-        "neurological nerve brain",
+        "carpal tunnel syndrome",
+        "CTS",
+        "carpal tunnel",
+        "neurological",
         "paralysis",
-        "nerve"
+        "nerve",
+        "hand numbness",
+        "wrist pain",
+        "median nerve compression"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.124a",
       "ratingSchedule": "38 CFR § 4.124a",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": [],
+      "documentationRequirements": "Documentation must include: nerve conduction study/EMG results confirming median nerve involvement, clinical findings (Tinel's sign, Phalen's test for carpal tunnel), symptom severity (pain, numbness, tingling, weakness in median nerve distribution - thumb, index, middle, and radial half of ring finger), functional limitations with grip and fine motor skills, treatment history (splinting, injections, carpal tunnel release surgery if applicable), and whether involvement is unilateral or bilateral.",
+      "relatedSecondaryConditions": [
+        "Hand weakness",
+        "Thenar muscle atrophy",
+        "Decreased grip strength",
+        "Depression secondary to chronic pain"
+      ],
       "ratingCriteria": {
         "type": "direct",
         "ratings": {
-          "70": "Complete paralysis",
-          "60": "Severe; motor loss affecting most of flexor surface of forearm, thenar eminence, and first two fingers with severe sensory loss",
-          "50": "Moderately severe",
-          "40": "Moderate",
-          "30": "Mild",
-          "20": "Incomplete; mild",
-          "10": "Incomplete; slight"
-        }
+          "70": "Complete paralysis: The hand inclined to the ulnar side, the index and middle fingers more extended than normally, considerable atrophy of the muscles of the thenar eminence, the thumb in the plane of the hand (ape hand); pronation incomplete and defective, absence of flexion of index finger and feeble flexion of middle finger, cannot make a fist, index and middle fingers remain extended; cannot flex distal phalanx of thumb, defective opposition and abduction of the thumb, at right angles to palm; flexion of wrist weakened; pain with trophic disturbances (dominant hand)",
+          "60": "Complete paralysis (non-dominant hand)",
+          "50": "Severe incomplete paralysis (dominant hand): Motor loss affecting most of flexor surface of forearm, thenar eminence, and first two fingers with severe sensory loss",
+          "40": "Severe incomplete paralysis (non-dominant hand)",
+          "30": "Moderate incomplete paralysis (dominant hand)",
+          "20": "Moderate incomplete paralysis (non-dominant hand)",
+          "10": "Mild incomplete paralysis (dominant or non-dominant)"
+        },
+        "notes": [
+          "Carpal Tunnel Syndrome is an entrapment neuropathy of the median nerve at the wrist and is rated under this code.",
+          "The term 'incomplete paralysis' indicates a degree of lost or impaired function substantially less than complete paralysis.",
+          "When involvement is wholly sensory, the rating should be for mild, or at most, moderate incomplete paralysis."
+        ]
       }
     },
     {
@@ -21904,7 +21928,7 @@
       "carpal tunnel",
       "wrist injury",
       "5211-5215",
-      "5224"
+      "8515"
     ],
     "hand": [
       "hand pain",
@@ -22520,7 +22544,7 @@
       "CTS",
       "median nerve",
       "wrist pain",
-      "5224"
+      "8515"
     ],
     "cubital tunnel syndrome": [
       "ulnar nerve",

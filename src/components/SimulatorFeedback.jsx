@@ -20,216 +20,271 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPos = 20;
-    const lineHeight = 7;
     const margin = 20;
-    const maxWidth = pageWidth - (margin * 2);
+    const contentWidth = pageWidth - (margin * 2);
+    let yPos = 20;
 
-    // Helper function to add text with word wrap
-    const addText = (text, size = 10, style = 'normal') => {
-      doc.setFontSize(size);
-      doc.setFont('helvetica', style);
-      const lines = doc.splitTextToSize(text, maxWidth);
-      
-      lines.forEach(line => {
-        if (yPos > pageHeight - 30) {
-          doc.addPage();
-          yPos = 20;
-        }
-        doc.text(line, margin, yPos);
-        yPos += lineHeight;
-      });
+    // Helper: Check page break and add new page if needed
+    const checkPageBreak = (requiredSpace = 30) => {
+      if (yPos > pageHeight - requiredSpace) {
+        doc.addPage();
+        yPos = 25;
+        return true;
+      }
+      return false;
     };
 
-    // Title
-    doc.setFillColor(37, 99, 235);
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // Helper: Add section header with consistent styling
+    const addSectionHeader = (title, bgColor = [45, 80, 22]) => {
+      checkPageBreak(40);
+      doc.setFillColor(...bgColor);
+      doc.rect(margin - 5, yPos - 5, contentWidth + 10, 12, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, margin, yPos + 3);
+      doc.setTextColor(0, 0, 0);
+      yPos += 18;
+    };
+
+    // Helper: Add wrapped text with proper line handling
+    const addWrappedText = (text, fontSize = 10, fontStyle = 'normal', indent = 0) => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', fontStyle);
+      const lines = doc.splitTextToSize(text, contentWidth - indent);
+      const lineHeight = fontSize * 0.5;
+      
+      lines.forEach(line => {
+        checkPageBreak(lineHeight + 5);
+        doc.text(line, margin + indent, yPos);
+        yPos += lineHeight;
+      });
+      return lines.length;
+    };
+
+    // ========== TITLE HEADER ==========
+    doc.setFillColor(45, 80, 22); // VA Green
+    doc.rect(0, 0, pageWidth, 45, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('C&P Exam Simulation Results', margin, 15);
-    doc.setFontSize(12);
-    doc.text(`${conditionName} (DC ${diagnosticCode})`, margin, 25);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, 32);
-
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
-    yPos = 50;
-
-    // Predicted Rating
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Predicted Rating', margin, yPos);
-    yPos += 10;
+    doc.text('C&P Exam Simulation Report', margin, 18);
     
-    doc.setFontSize(24);
-    doc.setTextColor(37, 99, 235);
-    doc.text(`${predictedRating}%`, margin, yPos);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(conditionName || 'Disability Condition', margin, 30);
+    
+    doc.setFontSize(10);
+    const dcText = diagnosticCode ? `Diagnostic Code: ${diagnosticCode}` : '';
+    const dateText = `Report Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+    doc.text(`${dcText}${dcText ? '  |  ' : ''}${dateText}`, margin, 40);
+
     doc.setTextColor(0, 0, 0);
-    yPos += 12;
+    yPos = 55;
+
+    // ========== PREDICTED RATING BOX ==========
+    doc.setFillColor(240, 253, 244); // Light green background
+    doc.setDrawColor(45, 80, 22);
+    doc.setLineWidth(1);
+    doc.roundedRect(margin - 5, yPos - 5, contentWidth + 10, 35, 3, 3, 'FD');
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(45, 80, 22);
+    doc.text('PREDICTED RATING', margin, yPos + 5);
+    
+    doc.setFontSize(36);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${predictedRating}%`, margin + contentWidth - 35, yPos + 20);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const rationaleLines = doc.splitTextToSize(ratingRationale, maxWidth);
-    rationaleLines.forEach(line => {
-      if (yPos > pageHeight - 30) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.text(line, margin, yPos);
-      yPos += lineHeight;
+    doc.setTextColor(60, 60, 60);
+    const rationaleLines = doc.splitTextToSize(ratingRationale || '', contentWidth - 60);
+    rationaleLines.slice(0, 2).forEach((line, i) => {
+      doc.text(line, margin, yPos + 15 + (i * 5));
     });
-    yPos += 5;
+    
+    doc.setTextColor(0, 0, 0);
+    yPos += 45;
 
-    // Your Responses
-    if (questions && answers) {
-      yPos += 5;
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Your Responses', margin, yPos);
-      yPos += 10;
-
+    // ========== YOUR RESPONSES SECTION ==========
+    if (questions && questions.length > 0 && answers) {
+      addSectionHeader('YOUR RESPONSES - Questions & Answers', [55, 65, 81]);
+      
       questions.forEach((q, idx) => {
-        if (yPos > pageHeight - 50) {
-          doc.addPage();
-          yPos = 20;
-        }
-
+        checkPageBreak(35);
+        
+        // Question number and text
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Q${idx + 1}: `, margin, yPos);
+        doc.setTextColor(55, 65, 81);
+        doc.text(`Question ${idx + 1}:`, margin, yPos);
+        yPos += 5;
         
         doc.setFont('helvetica', 'normal');
-        const qLines = doc.splitTextToSize(q.question, maxWidth - 10);
-        qLines.forEach((line, i) => {
-          doc.text(line, margin + (i === 0 ? 10 : 0), yPos);
-          yPos += lineHeight;
+        doc.setTextColor(0, 0, 0);
+        const qLines = doc.splitTextToSize(q.question || '', contentWidth - 5);
+        qLines.forEach(line => {
+          checkPageBreak(8);
+          doc.text(line, margin + 5, yPos);
+          yPos += 5;
         });
-
+        
+        // Answer
         const answer = answers[q.id];
         const option = q.options?.find(opt => opt.value === answer);
-        if (option) {
-          doc.setFont('helvetica', 'italic');
-          const aLines = doc.splitTextToSize(`Answer: ${option.label}`, maxWidth);
-          aLines.forEach(line => {
-            doc.text(line, margin, yPos);
-            yPos += lineHeight;
-          });
-        }
-        yPos += 3;
+        const answerText = option?.label || answer || 'No response';
+        
+        doc.setFillColor(226, 232, 240);
+        const answerLines = doc.splitTextToSize(`Your Answer: ${answerText}`, contentWidth - 15);
+        const answerBoxHeight = Math.max(10, answerLines.length * 5 + 4);
+        checkPageBreak(answerBoxHeight + 5);
+        doc.roundedRect(margin + 5, yPos - 2, contentWidth - 10, answerBoxHeight, 2, 2, 'F');
+        
+        doc.setFont('helvetica', 'bolditalic');
+        doc.setTextColor(30, 64, 175);
+        answerLines.forEach((line, i) => {
+          doc.text(line, margin + 10, yPos + 4 + (i * 5));
+        });
+        
+        doc.setTextColor(0, 0, 0);
+        yPos += answerBoxHeight + 8;
       });
     }
 
-    // Warnings
+    // ========== CRITICAL WARNINGS ==========
     if (warnings && warnings.length > 0) {
-      yPos += 5;
-      if (yPos > pageHeight - 50) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Critical Information', margin, yPos);
-      yPos += 10;
-
+      addSectionHeader('CRITICAL INFORMATION', [185, 28, 28]);
+      
       warnings.forEach(warning => {
+        checkPageBreak(20);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        const wLines = doc.splitTextToSize(`• ${warning}`, maxWidth - 5);
+        doc.setTextColor(127, 29, 29);
+        
+        // Use simple bullet instead of emoji which doesn't render in PDF
+        const wLines = doc.splitTextToSize(`>> ${warning}`, contentWidth - 15);
         wLines.forEach(line => {
-          if (yPos > pageHeight - 30) {
-            doc.addPage();
-            yPos = 20;
-          }
+          checkPageBreak(7);
           doc.text(line, margin + 5, yPos);
-          yPos += lineHeight;
+          yPos += 6;
         });
-        yPos += 2;
+        yPos += 4;
       });
+      doc.setTextColor(0, 0, 0);
     }
 
-    // Gap Analysis
+    // ========== GAP ANALYSIS ==========
     if (gaps && gaps.length > 0) {
-      yPos += 5;
-      if (yPos > pageHeight - 50) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Gap Analysis: What You Need to Know', margin, yPos);
-      yPos += 10;
-
+      addSectionHeader('GAP ANALYSIS - Path to Higher Ratings', [124, 58, 237]);
+      
+      doc.setTextColor(0, 0, 0);
       gaps.forEach(gap => {
+        // Skip empty lines/spacers
+        if (!gap || gap.trim() === '') {
+          yPos += 4; // Add spacing for empty lines
+          return;
+        }
+        
+        checkPageBreak(20);
         doc.setFontSize(10);
+        
         if (gap.startsWith('**')) {
+          // Sub-header within gaps - also needs word wrapping
           doc.setFont('helvetica', 'bold');
           const cleanGap = gap.replace(/\*\*/g, '');
-          doc.text(cleanGap, margin, yPos);
-          yPos += lineHeight + 2;
-        } else {
+          const headerLines = doc.splitTextToSize(cleanGap, contentWidth - 5);
+          headerLines.forEach(line => {
+            checkPageBreak(7);
+            doc.text(line, margin, yPos);
+            yPos += 6;
+          });
+          yPos += 2;
+        } else if (gap.startsWith('•')) {
+          // Already has bullet point - use as-is but indent
           doc.setFont('helvetica', 'normal');
-          const gLines = doc.splitTextToSize(`• ${gap}`, maxWidth - 5);
+          const gLines = doc.splitTextToSize(gap, contentWidth - 15);
           gLines.forEach(line => {
-            if (yPos > pageHeight - 30) {
-              doc.addPage();
-              yPos = 20;
-            }
+            checkPageBreak(7);
             doc.text(line, margin + 5, yPos);
-            yPos += lineHeight;
+            yPos += 6;
+          });
+          yPos += 2;
+        } else {
+          // Regular text - add bullet prefix
+          doc.setFont('helvetica', 'normal');
+          const gLines = doc.splitTextToSize(`• ${gap}`, contentWidth - 15);
+          gLines.forEach(line => {
+            checkPageBreak(7);
+            doc.text(line, margin + 5, yPos);
+            yPos += 6;
           });
           yPos += 2;
         }
       });
     }
 
-    // Action Items
+    // ========== PREPARATION CHECKLIST ==========
     if (actionItems && actionItems.length > 0) {
-      yPos += 5;
-      if (yPos > pageHeight - 50) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Preparation Checklist', margin, yPos);
-      yPos += 10;
-
-      actionItems.forEach(item => {
+      addSectionHeader('PREPARATION CHECKLIST', [22, 163, 74]);
+      
+      doc.setTextColor(0, 0, 0);
+      actionItems.forEach((item, idx) => {
+        checkPageBreak(15);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        const iLines = doc.splitTextToSize(`□ ${item}`, maxWidth - 5);
-        iLines.forEach(line => {
-          if (yPos > pageHeight - 30) {
-            doc.addPage();
-            yPos = 20;
-          }
-          doc.text(line, margin + 5, yPos);
-          yPos += lineHeight;
+        
+        // Checkbox
+        doc.setDrawColor(100, 100, 100);
+        doc.setLineWidth(0.5);
+        doc.rect(margin + 2, yPos - 3, 4, 4);
+        
+        const iLines = doc.splitTextToSize(item, contentWidth - 15);
+        iLines.forEach((line, i) => {
+          checkPageBreak(6);
+          doc.text(line, margin + 10, yPos);
+          yPos += 5;
         });
-        yPos += 2;
+        yPos += 3;
       });
     }
 
-    // Disclaimer
-    yPos += 10;
-    if (yPos > pageHeight - 50) {
-      doc.addPage();
-      yPos = 20;
-    }
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin - 5, yPos - 5, pageWidth - (margin * 2) + 10, 40, 'F');
+    // ========== DISCLAIMER FOOTER ==========
+    checkPageBreak(45);
+    yPos += 5;
+    doc.setFillColor(243, 244, 246);
+    doc.setDrawColor(156, 163, 175);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin - 5, yPos - 3, contentWidth + 10, 38, 2, 2, 'FD');
+    
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    const disclaimer = 'Disclaimer: This is a training and preparation tool, not legal advice. It does not guarantee any specific rating outcome. Always consult with an accredited VSO or VA-accredited attorney for personalized advice. The information provided is based on 38 CFR Part 4 as of January 2026.';
-    const dLines = doc.splitTextToSize(disclaimer, maxWidth);
-    dLines.forEach(line => {
-      doc.text(line, margin, yPos);
-      yPos += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(75, 85, 99);
+    doc.text('IMPORTANT DISCLAIMER', margin, yPos + 4);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    const disclaimer = 'This C&P Exam Simulation Report is an educational and preparation tool only. It does NOT constitute legal advice, medical advice, or a guarantee of any specific VA disability rating. The information provided is based on 38 CFR Part 4 criteria as of January 2026. Individual results will vary based on medical evidence, examiner findings, and VA adjudication. Always consult with an accredited Veterans Service Organization (VSO), VA-accredited claims agent, or VA-accredited attorney for personalized guidance on your specific claim.';
+    const dLines = doc.splitTextToSize(disclaimer, contentWidth);
+    dLines.forEach((line, i) => {
+      doc.text(line, margin, yPos + 10 + (i * 4));
     });
 
+    // ========== FOOTER WITH PAGE NUMBERS ==========
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(128, 128, 128);
+      doc.text(`VetRate.org - C&P Exam Preparation Tool`, margin, pageHeight - 10);
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 20, pageHeight - 10);
+    }
+
     // Save PDF
-    const fileName = `CP_Exam_Results_${conditionName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+    const safeName = (conditionName || 'Condition').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `CP_Exam_Report_${safeName}_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(fileName);
   };
 
@@ -311,13 +366,17 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
             </div>
           </div>
           
-          <div className="space-y-3 pl-9">
+          <div className="space-y-2 pl-9">
             {gaps.map((gap, index) => (
-              <div key={index} className="text-gray-700">
+              <div key={index} className="text-gray-700 dark:text-gray-300">
                 {gap.startsWith('**') ? (
-                  <p className="font-bold text-lg text-purple-800 mt-4 mb-2">
+                  <p className="font-bold text-lg text-purple-800 dark:text-purple-300 mt-4 mb-2">
                     {gap.replace(/\*\*/g, '')}
                   </p>
+                ) : gap.startsWith('•') ? (
+                  <p className="ml-4 whitespace-pre-wrap text-gray-600 dark:text-gray-400">{gap}</p>
+                ) : gap.trim() === '' ? (
+                  <div className="h-2" /> /* Spacer for empty lines */
                 ) : (
                   <p className="ml-4 whitespace-pre-wrap">{gap}</p>
                 )}
