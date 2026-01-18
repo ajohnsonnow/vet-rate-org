@@ -564,7 +564,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       ]
     },
     {
-      name: 'Women Veteran - MST Survivor',
+      name: 'Female Veteran - MST Survivor',
       description: 'Military Sexual Trauma with related mental health and physical conditions',
       conditions: [
         'PTSD (Post-Traumatic Stress Disorder)',
@@ -592,8 +592,8 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       ]
     },
     {
-      name: 'Women Veteran - Musculoskeletal Focus',
-      description: 'Common conditions in women veterans from physical demands',
+      name: 'Female Veteran - Musculoskeletal Focus',
+      description: 'Common conditions in female veterans from physical demands',
       conditions: [
         'Lumbar Spine Degenerative Disc Disease',
         'Cervical Spine Degenerative Disc Disease',
@@ -782,6 +782,51 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
         'Right Ankle Arthritis',
         'Peripheral Neuropathy (Idiopathic)'
       ]
+    },
+    {
+      name: 'LGBTQ+ Veteran',
+      description: 'Common conditions in LGBTQ+ veterans - higher rates due to stigma, stress, and discrimination per VA research',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Substance Use Disorder (in remission)',
+        'Sleep Apnea (Obstructive)',
+        'Chronic Pain Syndrome',
+        'HIV-Related Illness',
+        'Hepatitis C'
+      ],
+      note: 'VA provides LGBTQ+ Veteran Care Coordinators at every facility. If discharged for sexual orientation, you may now be eligible for VA benefits.'
+    },
+    {
+      name: 'LGBTQ+ Veteran - Mental Health Focus',
+      description: 'Mental health conditions more prevalent in LGBTQ+ veterans due to minority stress and discrimination',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Panic Disorder with or without Agoraphobia',
+        'Social Anxiety Disorder',
+        'Adjustment Disorders',
+        'Insomnia Disorder',
+        'Substance Use Disorder (in remission)'
+      ],
+      note: 'LGBTQ+ veterans face unique stressors including concealment during service under past policies. VA research shows higher risk for suicide in this population.'
+    },
+    {
+      name: 'Transgender Veteran',
+      description: 'Conditions common in transgender veterans, including gender dysphoria and related health impacts',
+      conditions: [
+        'PTSD (Post-Traumatic Stress Disorder)',
+        'Major Depressive Disorder',
+        'Generalized Anxiety Disorder',
+        'Endocrine System Conditions',
+        'Sleep Apnea (Obstructive)',
+        'Chronic Pain Syndrome',
+        'Substance Use Disorder (in remission)',
+        'HIV-Related Illness'
+      ],
+      note: 'VA provides gender-affirming care. Contact your LGBTQ+ Veteran Care Coordinator for support navigating VA services.'
     }
   ];
 
@@ -1242,6 +1287,14 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                           </span>
                         )}
                       </div>
+                      {profile.note && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                          <p className="text-xs text-purple-700 dark:text-purple-300 flex items-start gap-1">
+                            <span className="shrink-0">💡</span>
+                            <span>{profile.note}</span>
+                          </p>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>

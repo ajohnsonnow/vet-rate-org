@@ -226,6 +226,22 @@ const VAResources = ({ onClose, onReportBug }) => {
           description: 'Advocacy and outreach for minority Veterans'
         },
         {
+          name: 'LGBTQ+ Veteran Care Program',
+          url: 'https://www.patientcare.va.gov/lgbt/',
+          description: 'Health care and support for LGBTQ+ Veterans with dedicated coordinators at every VA facility',
+          important: true
+        },
+        {
+          name: 'Find Your LGBTQ+ Veteran Care Coordinator',
+          url: 'https://www.patientcare.va.gov/LGBT/VAFacilities.asp',
+          description: 'Connect with a dedicated LGBTQ+ VCC at your local VA - available at every medical center'
+        },
+        {
+          name: 'Discharge Upgrade for LGBTQ+ Veterans',
+          url: 'https://www.va.gov/resources/discharge-upgrade-for-lgbtq-veterans/',
+          description: 'If discharged due to sexual orientation or gender identity, you may qualify for a discharge upgrade and full benefits'
+        },
+        {
           name: 'Adaptive Sports & Special Events',
           url: 'https://department.va.gov/veteran-sports/',
           description: 'Paralympic sports, events, and recreation programs'
