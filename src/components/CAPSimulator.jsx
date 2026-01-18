@@ -692,32 +692,148 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
     
     const avgWeight = totalWeight / Object.keys(answers).length;
     const ratings = condition.ratingCriteria?.ratings || {};
-    const ratingKeys = Object.keys(ratings).map(k => parseInt(k)).sort((a, b) => b - a);
+    const ratingKeys = Object.keys(ratings).map(k => parseInt(k)).filter(k => !isNaN(k)).sort((a, b) => b - a);
+    const conditionNameLower = (condition.conditionName || condition.condition_name || '').toLowerCase();
     
+    // Map average weight to rating - handle different numbers of rating levels
     let predictedRating = 0;
-    if (avgWeight >= 3.5) predictedRating = ratingKeys[0] || 100;
-    else if (avgWeight >= 2.5) predictedRating = ratingKeys[1] || 50;
-    else if (avgWeight >= 1.5) predictedRating = ratingKeys[2] || 30;
-    else if (avgWeight >= 0.5) predictedRating = ratingKeys[3] || 10;
+    
+    // Special case: Tinnitus is always max 10% per 38 CFR § 4.87a
+    if (conditionNameLower.includes('tinnitus')) {
+      // If any answer indicates recurrent tinnitus, it's 10%; otherwise 0%
+      const hasTinnitus = Object.values(answers).some(v => 
+        v === 'constant' || v === 'recurrent' || v === 'severe' || v === 'moderate'
+      );
+      predictedRating = hasTinnitus ? 10 : 0;
+    } else if (ratingKeys.length === 0) {
+      // No ratings defined - fall back to generic scale
+      if (avgWeight >= 3.5) predictedRating = 100;
+      else if (avgWeight >= 2.5) predictedRating = 50;
+      else if (avgWeight >= 1.5) predictedRating = 30;
+      else if (avgWeight >= 0.5) predictedRating = 10;
+    } else if (ratingKeys.length === 1) {
+      // Only one rating level available
+      predictedRating = avgWeight >= 1 ? ratingKeys[0] : 0;
+    } else {
+      // Multiple rating levels - distribute based on weight
+      // avgWeight ranges from 0-4, map to available rating levels
+      const numLevels = ratingKeys.length;
+      const percentile = avgWeight / 4; // 0 to 1 scale (0=lowest severity, 1=highest)
+      const levelIndex = Math.min(
+        Math.floor((1 - percentile) * numLevels), 
+        numLevels - 1
+      );
+      predictedRating = ratingKeys[levelIndex] || 0;
+    }
     
     const ratingText = ratings[predictedRating] || 'Condition present';
     
+    // Build comprehensive gap analysis
+    const gaps = [];
+    const higherRatings = ratingKeys.filter(r => r > predictedRating);
+    
+    if (higherRatings.length > 0) {
+      gaps.push('**Understanding the Gap to Higher Ratings:**');
+      gaps.push('Your current answers suggest symptom severity at the ' + predictedRating + '% level. To qualify for a higher rating, the VA requires documented evidence of more severe impairment.');
+      gaps.push('');
+      
+      // Only show next 1-2 higher ratings (most actionable)
+      const relevantHigherRatings = higherRatings.slice(-2).reverse();
+      
+      relevantHigherRatings.forEach(higherRating => {
+        const higherCriteria = ratings[higherRating] || '';
+        gaps.push(`**What ${higherRating}% Requires:**`);
+        gaps.push(higherCriteria);
+        gaps.push('');
+        
+        // Add specific actionable guidance based on the rating difference
+        if (higherRating >= 70) {
+          gaps.push('• This rating level typically requires evidence of severe occupational impairment - document any job losses, demotions, or inability to work');
+          gaps.push('• Gather statements from employers, coworkers, or supervisors about work limitations');
+          gaps.push('• Document any hospitalizations, emergency visits, or intensive treatments');
+        } else if (higherRating >= 50) {
+          gaps.push('• This rating level requires more than occasional symptoms - document frequency and duration of flare-ups');
+          gaps.push('• Track days missed from work or activities you can no longer perform');
+          gaps.push('• Bring treatment records showing regular/ongoing medical care');
+        } else if (higherRating >= 30) {
+          gaps.push('• This rating level requires regular impairment - keep a symptom diary showing daily or weekly impact');
+          gaps.push('• Document how the condition affects routine daily activities');
+          gaps.push('• Note any assistive devices, medications, or accommodations you need');
+        }
+        gaps.push('');
+      });
+      
+      gaps.push('**Key Questions to Ask Yourself:**');
+      gaps.push('• Are my symptoms worse on "bad days" than what I described? If so, describe your WORST days to the examiner');
+      gaps.push('• Do I have additional symptoms I didn\'t mention? List ALL symptoms, even ones you think are minor');
+      gaps.push('• Is my condition getting worse over time? Document any progression of symptoms');
+    } else {
+      // At max rating
+      gaps.push('**You are at the maximum rating for this condition.**');
+      gaps.push('Your answers align with the highest available rating. Focus on maintaining documentation of your condition\'s severity and any secondary conditions that may have developed.');
+    }
+    
+    // Build comprehensive, actionable items specific to the condition type
+    const actionItems = [];
+    
+    // Generic high-value action items
+    actionItems.push('Request and bring copies of ALL medical records related to this condition (treatment notes, imaging, lab results)');
+    actionItems.push('Prepare a written "bad day" statement describing your symptoms at their WORST - give this to the examiner');
+    actionItems.push('List all medications you take for this condition and note any side effects');
+    
+    // Add condition-type specific guidance
+    if (conditionNameLower.includes('pain') || conditionNameLower.includes('arthritis') || conditionNameLower.includes('joint')) {
+      actionItems.push('During ROM testing: STOP at the point of pain - do NOT push through to show effort');
+      actionItems.push('Mention morning stiffness: how long until you can move normally?');
+      actionItems.push('Bring any assistive devices you use (brace, cane, walker)');
+    } else if (conditionNameLower.includes('mental') || conditionNameLower.includes('ptsd') || conditionNameLower.includes('depression') || conditionNameLower.includes('anxiety')) {
+      actionItems.push('Bring buddy statements from family/friends who witness your symptoms');
+      actionItems.push('Document any work problems: missed days, poor reviews, conflicts with coworkers');
+      actionItems.push('Mention any suicidal thoughts, panic attacks, or isolation behaviors - these are key criteria');
+    } else if (conditionNameLower.includes('respiratory') || conditionNameLower.includes('lung') || conditionNameLower.includes('asthma')) {
+      actionItems.push('Bring pulmonary function test (PFT) results if available');
+      actionItems.push('Document use of inhalers, nebulizers, or supplemental oxygen');
+      actionItems.push('Note any hospitalizations or ER visits for breathing issues');
+    } else if (conditionNameLower.includes('heart') || conditionNameLower.includes('cardiac')) {
+      actionItems.push('Bring any cardiac testing results (EKG, echocardiogram, stress test)');
+      actionItems.push('Document your exercise tolerance in METs if known');
+      actionItems.push('Note any work restrictions from your cardiologist');
+    } else if (conditionNameLower.includes('diabetes')) {
+      actionItems.push('Document your A1C levels over the past year');
+      actionItems.push('List all medications including insulin dosages');
+      actionItems.push('Note any secondary complications (neuropathy, retinopathy, nephropathy)');
+    } else if (conditionNameLower.includes('sleep') || conditionNameLower.includes('apnea')) {
+      actionItems.push('Bring your sleep study results');
+      actionItems.push('Document CPAP compliance data if available');
+      actionItems.push('Note daytime symptoms: fatigue, concentration problems, falling asleep inappropriately');
+    }
+    
+    // Always add these universal items
+    actionItems.push('Write down your questions before the exam - you may forget in the moment');
+    actionItems.push('If today is a "good day," tell the examiner and describe what a typical or bad day is like');
+    
+    // Build condition-specific warnings using actual data
+    const diagnosticCode = condition.diagnosticCode || '';
+    const ratingSchedule = condition.ratingSchedule || '38 CFR Part 4';
+    const conditionName = condition.conditionName || condition.condition_name || 'this condition';
+    
+    const warnings = [
+      `Rating based on ${ratingSchedule}, Diagnostic Code ${diagnosticCode} (${conditionName}).`,
+      'Your actual rating will depend on the C&P examiner\'s objective medical findings and ALL evidence in your claim file.',
+      'Consider requesting a copy of your C&P exam report after the exam to verify accuracy.'
+    ];
+    
+    // Add any condition-specific notes from the data
+    if (condition.ratingCriteria?.notes && condition.ratingCriteria.notes.length > 0) {
+      warnings.push(`CFR Note: ${condition.ratingCriteria.notes[0]}`);
+    }
+    
     return {
       predictedRating,
-      ratingRationale: `Based on your responses, your symptoms align with a ${predictedRating}% rating. Rating criteria: ${ratingText}`,
-      gaps: ratingKeys.filter(r => r > predictedRating).map(higherRating => 
-        `**For ${higherRating}% rating:** ${ratings[higherRating]}`
-      ),
-      actionItems: [
-        'Ensure your C&P examiner documents all symptoms you described',
-        'Bring medical records showing treatment history',
-        'Describe your worst days, not your best days',
-        'Be specific about how symptoms affect daily activities and work'
-      ],
-      warnings: [
-        'This is a general simulation. For precise ratings, review the specific criteria in 38 CFR Part 4.',
-        'Your actual rating will depend on the C&P examiner\'s medical findings and your complete claim file.'
-      ]
+      ratingRationale: `Based on your responses, your symptoms align with a ${predictedRating}% rating under ${ratingSchedule}, DC ${diagnosticCode}. Rating criteria: ${ratingText}`,
+      gaps,
+      actionItems,
+      warnings
     };
   };
 
@@ -1694,14 +1810,14 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
 
               {/* Definition (if available) */}
               {currentQuestion.definition && (
-                <div className="bg-purple-50 border-l-4 border-purple-400 p-4 mb-4">
+                <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-400 dark:border-purple-500 p-4 mb-4">
                   <div className="flex items-start gap-2">
-                    <BookOpen className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <BookOpen className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-purple-900 text-sm mb-1">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-200 text-sm mb-1">
                         CFR Definition:
                       </h4>
-                      <p className="text-purple-800 text-sm">
+                      <p className="text-purple-800 dark:text-purple-300 text-sm">
                         {currentQuestion.definition}
                       </p>
                     </div>
@@ -1712,28 +1828,28 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
 
             {/* Answer Options */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-gray-700 mb-2">Select your answer:</h4>
+              <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Select your answer:</h4>
               {currentQuestion.options.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleAnswer(currentQuestion.id, option.value)}
                   className={`w-full text-left p-4 rounded-lg border-2 transition ${
                     currentAnswer === option.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
                       currentAnswer === option.value
                         ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
+                        : 'border-gray-300 dark:border-gray-500'
                     }`}>
                       {currentAnswer === option.value && (
                         <div className="w-full h-full rounded-full bg-white scale-50" />
                       )}
                     </div>
-                    <span className="text-gray-700 font-medium">{option.label}</span>
+                    <span className="text-gray-700 dark:text-gray-200 font-medium">{option.label}</span>
                   </div>
                 </button>
               ))}
@@ -1746,7 +1862,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                 disabled={currentQuestionIndex === 0}
                 className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
                   currentQuestionIndex === 0
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-gray-600 text-white hover:bg-gray-700'
                 }`}
               >
@@ -1759,7 +1875,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
                 disabled={!canProceed}
                 className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
                   !canProceed
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
@@ -1776,6 +1892,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
   // Results screen
   if (mode === 'results' && simulationResult) {
     const conditionName = currentCondition?.condition_name || selectedCondition?.conditionName;
+    const diagnosticCode = currentCondition?.diagnostic_code || selectedCondition?.diagnosticCode;
     
     return (
       <div 
@@ -1784,10 +1901,10 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
         aria-modal="true"
         aria-label="C&P Exam Simulation Results"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 z-10"
+            className="absolute top-4 right-4 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white z-10"
             aria-label="Close"
           >
             <X className="h-6 w-6" />
@@ -1797,7 +1914,11 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             <SimulatorFeedback
               result={simulationResult}
               conditionName={conditionName}
+              diagnosticCode={diagnosticCode}
+              answers={answers}
+              questions={currentQuestions}
               onRestart={handleRestart}
+              onClose={onClose}
             />
           </div>
         </div>
