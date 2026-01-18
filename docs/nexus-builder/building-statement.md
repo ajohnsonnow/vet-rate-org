@@ -224,9 +224,42 @@ Before generating, review all sections:
 
 Click **"Edit"** next to any section to make changes.
 
+### ✨ AI Enhancement (Optional)
+
+**New Feature!** You can optionally enhance your statement with AI:
+
+1. Click the **"✨ Enhance with AI"** button
+2. Review the privacy disclosure showing what data will be shared
+3. Click **"I Understand, Enhance with AI"** to proceed
+4. The AI generates a professionally-written version
+5. Use the toggle to switch between Standard and AI versions
+6. Edit further if needed
+
+!!! info "AI is Optional"
+    The standard template is excellent for most claims. AI enhancement is available for those who want additional polish, but it's never required.
+
+### What AI Improves
+
+- Professional VA-appropriate language
+- Clear, logical structure
+- Focus on functional impairment (what the VA looks for)
+- Complete coverage of all key points
+
+### Privacy Note
+
+When using AI enhancement:
+
+- ✅ Condition names and descriptions are shared
+- ❌ Your name is NOT shared
+- ❌ Your SSN is NOT shared  
+- ❌ Specific dates and locations are NOT shared
+- ❌ No personally identifying information is ever shared
+
+[Full AI privacy details →](../privacy/ai-assistant/)
+
 ### Generate Statement
 
-Click **"Generate Statement"** to create your document.
+Click **"Generate Statement"** to create your document (or use the AI-enhanced version).
 
 ### Preview
 

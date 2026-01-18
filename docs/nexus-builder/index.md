@@ -116,9 +116,45 @@ A pre-existing condition:
 <strong>Generate statement</strong> — Professional document created
 </div>
 <div class="step">
+<strong>✨ AI Enhancement (Optional)</strong> — Let AI polish your statement
+</div>
+<div class="step">
 <strong>Download</strong> — PDF and Doctor's Cheat Sheet
 </div>
 </div>
+
+---
+
+## ✨ AI Statement Assistant
+
+**New!** The Nexus Builder now includes an optional AI-powered assistant that can help you write a more professional statement.
+
+### How It Works
+
+1. Complete the statement wizard with your information
+2. On the review screen, click **"✨ Enhance with AI"**
+3. Review the privacy disclosure showing what data will be shared
+4. Click **"I Understand, Enhance with AI"** to proceed
+5. The AI generates a professionally-written version of your statement
+6. Review, edit if needed, and download
+
+### Privacy First
+
+- **You control when AI is used** — It only runs when you click the button
+- **Explicit consent required** — You see exactly what's shared before confirming  
+- **No personal info sent** — Names, SSN, dates, and addresses are never shared
+- **Optional feature** — Standard templates work great without AI
+
+[Learn more about AI privacy →](../privacy/ai-assistant/)
+
+### What AI Improves
+
+| Aspect | How AI Helps |
+|--------|--------------|
+| **Professional tone** | VA-appropriate language and formatting |
+| **Clear structure** | Logical flow of information |
+| **Effective wording** | Focus on functional impairment |
+| **Completeness** | Ensures all key points are covered |
 
 ---
 

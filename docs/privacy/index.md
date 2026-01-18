@@ -36,6 +36,12 @@ We believe veterans' personal information deserves the highest level of protecti
 <a href="security-practices/" class="doc-button">Learn More →</a>
 </div>
 
+<div class="feature-card">
+<h3>✨ AI Assistant Privacy</h3>
+<p>How the optional AI feature handles your data.</p>
+<a href="ai-assistant/" class="doc-button">Learn More →</a>
+</div>
+
 ---
 
 ## Privacy at a Glance
@@ -62,6 +68,18 @@ We believe veterans' personal information deserves the highest level of protecti
 | **No Accounts** | No registration required |
 | **No Tracking** | No analytics or tracking scripts |
 | **Open Information** | Disability data from public sources |
+
+### Optional AI Feature
+
+| Aspect | Details |
+|--------|---------|
+| **Provider** | Google Gemini (free tier) |
+| **When Used** | Only when you click "Enhance with AI" |
+| **What's Sent** | Condition names and symptom descriptions |
+| **What's NOT Sent** | Names, SSN, dates, addresses, or any PII |
+| **Your Control** | Explicit consent required each time |
+
+[Learn more about AI privacy →](ai-assistant/)
 
 ---
 
