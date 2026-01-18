@@ -3,6 +3,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } fro
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 /**
  * NexusBuilder Component
@@ -10,6 +11,9 @@ import BuyMeCoffee from './BuyMeCoffee';
  * Customizes questions based on whether the claim is primary or secondary
  */
 const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingStatement = null, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState(existingStatement?.answers || {
     // Timeline
@@ -308,13 +312,13 @@ Sincerely,
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="nexus-builder-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-va-blue to-green-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -349,7 +353,7 @@ Sincerely,
                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-sm text-blue-800 dark:text-blue-300">
+                <span className="text-sm text-blue-800 dark:text-blue-100">
                   <strong>Editing Mode:</strong> Your previous answers have been loaded. Make changes as needed.
                 </span>
               </div>

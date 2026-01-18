@@ -1,0 +1,475 @@
+{
+  "title": "38 CFR Title 38 - Pensions, Bonuses, and Veterans' Relief",
+  "description": "Key regulations from Title 38 of the Code of Federal Regulations relevant to VA disability compensation, appeals, and pension benefits.",
+  "ecfrBaseUrl": "https://www.ecfr.gov/current/title-38",
+  "revisionInfo": {
+    "displayDate": "1/15/2026",
+    "lastAmended": "1/09/2026",
+    "source": "eCFR - Title 38: Pensions, Bonuses, and Veterans' Relief",
+    "disclaimer": "This is a summary for informational purposes. Always refer to the official eCFR for authoritative text."
+  },
+  "lastUpdated": "2026-01-17",
+  "parts": [
+    {
+      "part": "Part 3",
+      "title": "Adjudication",
+      "description": "Claims processing, service connection, ratings, and review procedures",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-3",
+      "relevance": "high",
+      "note": "See cfr3Regulations.json for detailed Part 3 content"
+    },
+    {
+      "part": "Part 4",
+      "title": "Schedule for Rating Disabilities",
+      "description": "The diagnostic codes and rating criteria for evaluating disabilities",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "relevance": "high",
+      "note": "Core rating schedule - integrated throughout the webapp"
+    },
+    {
+      "part": "Part 19",
+      "title": "Board of Veterans' Appeals: Legacy Appeals Regulations",
+      "description": "Regulations governing appeals under the legacy appeals system (pre-AMA)",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-19",
+      "relevance": "medium",
+      "note": "Applies to appeals filed before February 19, 2019"
+    },
+    {
+      "part": "Part 20",
+      "title": "Board of Veterans' Appeals: Rules of Practice",
+      "description": "Current rules for appeals to the Board of Veterans' Appeals under AMA",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-20",
+      "relevance": "high",
+      "note": "Critical for understanding Board appeals"
+    }
+  ],
+  "bvaAppeals": {
+    "title": "Board of Veterans' Appeals (Parts 19 & 20)",
+    "description": "The Board of Veterans' Appeals (BVA) is the highest level of appeal within the VA system. Understanding these rules is critical if your claim is denied.",
+    "icon": "⚖️",
+    "categories": [
+      {
+        "id": "bva-overview",
+        "title": "Understanding BVA Appeals",
+        "icon": "🏛️",
+        "description": "What the Board is and how it works",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/subpart-A",
+        "regulations": [
+          {
+            "section": "§20.1",
+            "title": "Rule 1 - Board of Veterans' Appeals",
+            "summary": "The Board of Veterans' Appeals is the component of VA that decides appeals. Board members are attorneys appointed by the Secretary of Veterans Affairs.",
+            "keyPoints": [
+              "BVA members are attorneys experienced in veterans law",
+              "Board decisions carry the same legal weight as VA regional office decisions",
+              "The Board reviews the entire record, not just new evidence",
+              "Board hearings allow you to present your case directly"
+            ],
+            "veteranTip": "A BVA appeal is your chance to have an attorney-level review of your entire case. If you've been denied multiple times at the regional office, the Board often sees things differently."
+          },
+          {
+            "section": "§20.2",
+            "title": "Rule 2 - Board Jurisdiction",
+            "summary": "The Board has jurisdiction to decide all questions of law and fact necessary to decide appeals properly before it.",
+            "keyPoints": [
+              "Board can overturn regional office decisions",
+              "Board decides both factual and legal questions",
+              "Board can remand cases back to the regional office for more development",
+              "Board decisions can be appealed to the Court of Appeals for Veterans Claims"
+            ],
+            "veteranTip": "Unlike Higher-Level Review, the Board can consider NEW evidence and hold hearings. This is often your best option for complex cases."
+          }
+        ]
+      },
+      {
+        "id": "appeal-dockets",
+        "title": "Appeal Docket Options (AMA)",
+        "icon": "📋",
+        "description": "The three dockets available when appealing to the Board",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/subpart-C",
+        "regulations": [
+          {
+            "section": "§20.200",
+            "title": "Rule 200 - Notice of Disagreement",
+            "summary": "To initiate a Board appeal, you must file a Notice of Disagreement (NOD) on VA Form 10182 within one year of the decision you're appealing.",
+            "keyPoints": [
+              "Must use VA Form 10182 (Decision Review Request: Board Appeal)",
+              "Must be filed within 1 year of the decision",
+              "Must select one of three docket options",
+              "Can specify which issues you're appealing"
+            ],
+            "veteranTip": "When filing a Board appeal, you must choose your docket at the time of filing. Choose carefully - each has different advantages."
+          },
+          {
+            "section": "§20.202-204",
+            "title": "Three Docket Options",
+            "summary": "Under the Appeals Modernization Act (AMA), you choose one of three dockets when filing a Board appeal.",
+            "keyPoints": [
+              "Direct Review: Fastest, based only on existing record, no new evidence",
+              "Evidence Submission: Submit additional evidence within 90 days, no hearing",
+              "Hearing Request: Present testimony to a Board member, submit evidence"
+            ],
+            "veteranTip": "Hearing Request is often best for complex cases where you can explain your situation. Direct Review is fastest if you believe the evidence already proves your case.",
+            "docketDetails": [
+              {
+                "name": "Direct Review Docket",
+                "description": "Board reviews existing record only. No new evidence, no hearing.",
+                "avgWait": "Fastest - typically under 1 year",
+                "bestFor": "Clear cases where evidence already supports claim but was misread",
+                "limitation": "Cannot add ANY new evidence after filing"
+              },
+              {
+                "name": "Evidence Submission Docket",
+                "description": "Submit additional evidence within 90 days of NOD. No hearing.",
+                "avgWait": "Moderate - typically 1-2 years",
+                "bestFor": "Cases where you have specific new evidence to submit",
+                "limitation": "Must submit all evidence within 90 days"
+              },
+              {
+                "name": "Hearing Request Docket",
+                "description": "Testify before a Veterans Law Judge. Can submit evidence at hearing.",
+                "avgWait": "Longest - typically 2-4 years",
+                "bestFor": "Complex cases, credibility issues, or cases needing explanation",
+                "limitation": "Longer wait times"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "board-hearings",
+        "title": "Board Hearings",
+        "icon": "🎤",
+        "description": "Your right to testify before a Veterans Law Judge",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/subpart-H",
+        "regulations": [
+          {
+            "section": "§20.700",
+            "title": "Rule 700 - General Hearing Rules",
+            "summary": "A hearing on appeal is a proceeding where you present your case to a Veterans Law Judge. You may appear in person or via video conference.",
+            "keyPoints": [
+              "Hearings are optional but can be very helpful",
+              "In-person hearings held at VA Central Office in Washington, D.C.",
+              "Video hearings available at local VA regional offices",
+              "Virtual tele-hearings available from your home",
+              "You may bring witnesses to testify"
+            ],
+            "veteranTip": "Video and virtual hearings are just as effective as in-person hearings. The judge focuses on your testimony, not where you're sitting."
+          },
+          {
+            "section": "§20.701",
+            "title": "Rule 701 - Right to a Hearing",
+            "summary": "You have the right to a hearing before the Board decides your appeal. The hearing must be requested when filing the NOD.",
+            "keyPoints": [
+              "Must request hearing on VA Form 10182",
+              "Can submit written statement instead of hearing",
+              "Witnesses can testify on your behalf",
+              "Hearing transcript becomes part of the record"
+            ],
+            "veteranTip": "If you're good at explaining your symptoms and their impact on your life, a hearing can be very persuasive. Judges often grant claims after hearing testimony directly from veterans."
+          },
+          {
+            "section": "§20.717",
+            "title": "Rule 717 - Submitting Evidence",
+            "summary": "At a Board hearing, you may submit additional evidence. Evidence submitted at the hearing is automatically accepted into the record.",
+            "keyPoints": [
+              "Can submit new evidence at the hearing",
+              "Evidence must be relevant to the issues on appeal",
+              "Board member may ask questions about the evidence",
+              "Written brief summarizing your case is helpful"
+            ],
+            "veteranTip": "Bring organized copies of your key evidence to the hearing. A brief written statement summarizing your argument helps the judge understand your case."
+          }
+        ]
+      },
+      {
+        "id": "board-decisions",
+        "title": "Board Decisions & What Happens Next",
+        "icon": "📜",
+        "description": "Understanding Board decisions and further appeal options",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/subpart-I",
+        "regulations": [
+          {
+            "section": "§20.800-806",
+            "title": "Board Decision Outcomes",
+            "summary": "The Board can grant your appeal, deny it, or remand it back to the regional office for additional action.",
+            "keyPoints": [
+              "Grant: Board rules in your favor - you win",
+              "Denial: Board upholds the original decision",
+              "Remand: Board sends case back for more development or new exam",
+              "Partial Grant/Denial: Some issues granted, others denied"
+            ],
+            "veteranTip": "A remand is NOT a denial. It means the Board found problems with how VA handled your case. Remands often lead to grants after the regional office fixes the errors."
+          },
+          {
+            "section": "§20.904",
+            "title": "Rule 904 - Reconsideration",
+            "summary": "You may request the Board reconsider its decision if there was obvious error or if you have new evidence that could change the outcome.",
+            "keyPoints": [
+              "File motion for reconsideration with the Board",
+              "Must show obvious error in the decision",
+              "New evidence can support reconsideration",
+              "No time limit, but file promptly"
+            ],
+            "veteranTip": "Reconsideration is rare but can work if the Board clearly made a factual or legal mistake in your decision."
+          },
+          {
+            "section": "CAVC Appeal",
+            "title": "Appeal to Court of Appeals for Veterans Claims",
+            "summary": "If the Board denies your appeal, you can appeal to the U.S. Court of Appeals for Veterans Claims (CAVC) within 120 days.",
+            "keyPoints": [
+              "Must file Notice of Appeal within 120 DAYS (strict deadline)",
+              "CAVC reviews legal errors, not factual disputes",
+              "Can represent yourself or hire an attorney",
+              "Many cases settled through Joint Motion for Remand"
+            ],
+            "veteranTip": "The 120-day deadline for CAVC appeals is ABSOLUTE - there are almost no exceptions. If you're considering CAVC, consult an accredited attorney immediately.",
+            "importantWarning": "The 120-day CAVC deadline is one of the strictest in all of federal law. Missing it by even one day means you cannot appeal."
+          }
+        ]
+      }
+    ],
+    "keyForms": [
+      {
+        "form": "VA Form 10182",
+        "name": "Decision Review Request: Board Appeal (Notice of Disagreement)",
+        "use": "File an appeal to the Board of Veterans' Appeals",
+        "url": "https://www.va.gov/find-forms/about-form-10182/",
+        "critical": true
+      },
+      {
+        "form": "VA Form 20-0996",
+        "name": "Decision Review Request: Higher-Level Review",
+        "use": "Request higher-level review (alternative to Board appeal)",
+        "url": "https://www.va.gov/find-forms/about-form-20-0996/"
+      },
+      {
+        "form": "VA Form 20-0995",
+        "name": "Decision Review Request: Supplemental Claim",
+        "use": "File supplemental claim with new evidence (alternative to Board appeal)",
+        "url": "https://www.va.gov/find-forms/about-form-20-0995/"
+      }
+    ],
+    "appealTimelines": [
+      {
+        "deadline": "1 Year from Decision",
+        "description": "File Board Appeal (NOD on VA Form 10182)",
+        "consequence": "Miss this and you'll need to file a supplemental claim with new evidence instead"
+      },
+      {
+        "deadline": "90 Days from NOD",
+        "description": "Submit evidence if you chose Evidence Submission docket",
+        "consequence": "Evidence submitted after 90 days may not be considered"
+      },
+      {
+        "deadline": "120 Days from Board Decision",
+        "description": "Appeal to Court of Appeals for Veterans Claims (CAVC)",
+        "consequence": "This deadline is ABSOLUTE - missing it means no further appeal is possible"
+      }
+    ]
+  },
+  "pension": {
+    "title": "VA Pension Benefits (38 CFR Part 3 Subpart D)",
+    "description": "Non-service-connected pension benefits for wartime veterans with limited income and permanent total disability.",
+    "icon": "💰",
+    "note": "Pension is DIFFERENT from disability compensation. It's for veterans who are disabled (not from service) and have financial need.",
+    "categories": [
+      {
+        "id": "pension-basics",
+        "title": "Pension Eligibility Basics",
+        "icon": "📋",
+        "description": "Who qualifies for VA pension benefits",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/subpart-D",
+        "regulations": [
+          {
+            "section": "§3.3",
+            "title": "Pension Overview",
+            "summary": "VA pension is a needs-based benefit for wartime veterans who have limited income and are either 65+ or permanently and totally disabled (not necessarily from service).",
+            "keyPoints": [
+              "NOT the same as disability compensation",
+              "Based on financial need, not service connection",
+              "Requires wartime service (specific periods defined)",
+              "Must be permanently and totally disabled OR age 65+",
+              "Income and net worth limits apply"
+            ],
+            "veteranTip": "If you have disabilities that aren't service-connected but still prevent you from working, pension may provide monthly income even without proving service connection."
+          },
+          {
+            "section": "§3.2(e)-(i)",
+            "title": "Wartime Service Periods",
+            "summary": "To qualify for pension, you must have served during a recognized wartime period.",
+            "keyPoints": [
+              "World War II: Dec 7, 1941 - Dec 31, 1946",
+              "Korean Conflict: June 27, 1950 - Jan 31, 1955",
+              "Vietnam Era: Feb 28, 1961 - May 7, 1975 (varies by location)",
+              "Gulf War: Aug 2, 1990 - date to be determined (ongoing)"
+            ],
+            "veteranTip": "You don't need to have served IN the war zone - just during the wartime period. Many veterans don't realize they qualify as 'wartime veterans.'"
+          },
+          {
+            "section": "§3.314",
+            "title": "Basic Pension Entitlement",
+            "summary": "A veteran meets the service requirements for pension if they served 90 days or more during wartime (or were discharged for service-connected disability before 90 days).",
+            "keyPoints": [
+              "Minimum 90 days of active service during wartime",
+              "At least one day of wartime service required",
+              "Discharge under conditions other than dishonorable",
+              "Exception for service-connected disability discharge"
+            ],
+            "veteranTip": "If you served even one day during a wartime period with at least 90 days total service, you may meet the wartime service requirement."
+          }
+        ]
+      },
+      {
+        "id": "pension-rates",
+        "title": "Aid & Attendance and Housebound",
+        "icon": "🏥",
+        "description": "Enhanced pension rates for veterans needing assistance",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.351",
+        "regulations": [
+          {
+            "section": "§3.351",
+            "title": "Aid and Attendance (A&A)",
+            "summary": "Veterans receiving pension may qualify for additional Aid and Attendance benefits if they need help with daily activities like bathing, dressing, or eating.",
+            "keyPoints": [
+              "Higher pension rate for those needing daily assistance",
+              "Includes help with activities of daily living (ADLs)",
+              "Can also qualify if blind or in nursing home",
+              "Significantly increases monthly pension amount"
+            ],
+            "veteranTip": "If you receive pension and need help from another person for daily tasks, apply for Aid & Attendance. It can increase your monthly benefit by over $1,000."
+          },
+          {
+            "section": "§3.351(d)",
+            "title": "Housebound Benefits",
+            "summary": "Veterans who are substantially confined to their home due to disability may qualify for housebound pension rate.",
+            "keyPoints": [
+              "Lower rate than A&A but still increases pension",
+              "For veterans substantially confined to home",
+              "Can qualify with single permanent disability rated 100%",
+              "Also requires additional disability(ies) rated 60%+"
+            ],
+            "veteranTip": "Housebound is easier to qualify for than Aid & Attendance. If you rarely leave home due to your disabilities, you may qualify."
+          }
+        ]
+      },
+      {
+        "id": "pension-income",
+        "title": "Income and Net Worth Limits",
+        "icon": "💵",
+        "description": "Financial requirements for pension eligibility",
+        "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.271",
+        "regulations": [
+          {
+            "section": "§3.271-3.272",
+            "title": "Countable Income",
+            "summary": "Pension is reduced dollar-for-dollar by countable income. Certain medical expenses can be deducted from income.",
+            "keyPoints": [
+              "Most income counts: Social Security, retirement, wages",
+              "Unreimbursed medical expenses reduce countable income",
+              "Pension = Maximum Rate minus Countable Income",
+              "If income exceeds maximum rate, no pension payable"
+            ],
+            "veteranTip": "Keep ALL receipts for medical expenses - medications, doctor visits, medical equipment, health insurance premiums. These reduce your countable income and increase your pension."
+          },
+          {
+            "section": "§3.274",
+            "title": "Net Worth Limitation",
+            "summary": "VA considers your net worth (assets) when determining pension eligibility. Excessive net worth can disqualify you even if income is low.",
+            "keyPoints": [
+              "Net worth limit is approximately $150,538 (adjusted annually)",
+              "Primary residence excluded from net worth",
+              "Personal property and one vehicle generally excluded",
+              "Look-back period for asset transfers"
+            ],
+            "veteranTip": "Your house and one car don't count toward net worth. If you're close to the limit, consult with an accredited attorney about legal ways to become eligible."
+          }
+        ]
+      }
+    ],
+    "comparisonChart": {
+      "title": "Disability Compensation vs. Pension",
+      "columns": ["Feature", "Disability Compensation", "Pension"],
+      "rows": [
+        ["Requires Service Connection", "Yes - must be caused by service", "No - disability doesn't need to be from service"],
+        ["Income Limits", "No income limits", "Yes - needs-based benefit"],
+        ["Net Worth Limits", "No net worth limits", "Yes - approximately $150,538"],
+        ["Wartime Service Required", "No - any service", "Yes - must be wartime veteran"],
+        ["Age Requirement", "None", "65+ OR permanently disabled"],
+        ["Can Receive Both", "Yes, if eligible for both", "Yes, but pension reduced by compensation amount"]
+      ]
+    }
+  },
+  "quickReference": {
+    "title": "Title 38 Quick Reference",
+    "mostImportantRegulations": [
+      {
+        "section": "§3.102",
+        "name": "Benefit of the Doubt",
+        "summary": "When evidence is 50/50, the tie goes to the veteran"
+      },
+      {
+        "section": "§3.159",
+        "name": "Duty to Assist",
+        "summary": "VA must help gather evidence for your claim"
+      },
+      {
+        "section": "§3.303",
+        "name": "Service Connection",
+        "summary": "Requirements for establishing service connection"
+      },
+      {
+        "section": "§3.310",
+        "name": "Secondary Service Connection",
+        "summary": "Conditions caused by service-connected disabilities"
+      },
+      {
+        "section": "§3.344",
+        "name": "Rating Stabilization",
+        "summary": "Protected ratings after 5+ years"
+      },
+      {
+        "section": "§4.3",
+        "name": "Resolution of Reasonable Doubt",
+        "summary": "Rating doubt resolved in veteran's favor"
+      },
+      {
+        "section": "§4.7",
+        "name": "Higher of Two Evaluations",
+        "summary": "If between two ratings, assign the higher one"
+      },
+      {
+        "section": "§20.200",
+        "name": "Notice of Disagreement",
+        "summary": "How to file a Board appeal"
+      }
+    ],
+    "criticalDeadlines": [
+      {
+        "deadline": "1 Year",
+        "action": "Appeal any VA decision",
+        "form": "Varies by review lane"
+      },
+      {
+        "deadline": "1 Year",
+        "action": "File complete claim after Intent to File",
+        "form": "VA Form 21-526EZ"
+      },
+      {
+        "deadline": "120 Days",
+        "action": "Appeal Board decision to CAVC",
+        "form": "Notice of Appeal to CAVC"
+      },
+      {
+        "deadline": "90 Days",
+        "action": "Submit evidence after Board appeal filing",
+        "form": "Evidence Submission Docket"
+      },
+      {
+        "deadline": "60 Days",
+        "action": "Respond to proposed reduction",
+        "form": "Written response"
+      }
+    ]
+  }
+}

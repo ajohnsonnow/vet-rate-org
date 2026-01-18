@@ -1,6 +1,6 @@
 # Security Configuration
 
-This document outlines security best practices and configurations for the Veteran Disability Search application.
+This document outlines security best practices and configurations for Vet-Rate.org.
 
 ## Data Privacy & Protection
 

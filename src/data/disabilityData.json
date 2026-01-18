@@ -3279,11 +3279,19 @@
     {
       "id": 124,
       "diagnosticCode": "5242",
-      "conditionName": "Degenerative arthritis of spine",
+      "conditionName": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome",
       "aliases": [
         "degenerative arthritis spine",
         "DAS",
-        "degenerative arthritis of spine"
+        "degenerative arthritis of spine",
+        "cervical spondylosis",
+        "spondylosis",
+        "lumbar spondylosis",
+        "thoracic spondylosis",
+        "spinal arthritis",
+        "degenerative disc disease",
+        "DDD",
+        "spinal DDD"
       ],
       "searchTerms": [
         "musculoskeletal",
@@ -3602,46 +3610,98 @@
     {
       "id": 135,
       "diagnosticCode": "5258",
-      "conditionName": "Cartilage, semilunar, dislocated",
+      "conditionName": "Cartilage, Semilunar, Dislocated (Meniscus Tear)",
       "aliases": [
-        "CSD",
-        "cartilage, semilunar, dislocated",
-        "cartilage semilunar dislocated"
+        "dislocated meniscus",
+        "meniscus tear",
+        "torn cartilage knee",
+        "medial meniscus tear",
+        "lateral meniscus tear"
       ],
       "searchTerms": [
-        "musculoskeletal",
-        "semilunar",
+        "meniscus",
         "cartilage",
-        "cartilage, semilunar, dislocated",
-        "5258",
-        "dislocated"
+        "dislocated",
+        "knee locking",
+        "knee effusion",
+        "5258"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.71a",
       "ratingSchedule": "38 CFR § 4.71a",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": []
+      "documentationRequirements": "Documentation must include: MRI showing meniscus tear, documented episodes of locking and giving way, evidence of joint effusion on examination, treatment history including any surgical interventions, and functional limitations.",
+      "relatedSecondaryConditions": [
+        {
+          "name": "Knee Osteoarthritis",
+          "diagnosticCode": "5003"
+        },
+        {
+          "name": "Limitation of Knee Flexion",
+          "diagnosticCode": "5260"
+        },
+        {
+          "name": "Limitation of Knee Extension",
+          "diagnosticCode": "5261"
+        }
+      ],
+      "ratingCriteria": {
+        "type": "direct",
+        "ratings": {
+          "20": "With frequent episodes of locking, pain, and effusion into the joint"
+        },
+        "notes": [
+          "This is the maximum and only rating available under DC 5258",
+          "May be combined with limitation of motion ratings if symptoms are distinct",
+          "Consider DC 5259 if cartilage has been surgically removed"
+        ]
+      }
     },
     {
       "id": 136,
       "diagnosticCode": "5259",
-      "conditionName": "Cartilage, semilunar, removal",
+      "conditionName": "Cartilage, Semilunar, Removal of (Meniscectomy)",
       "aliases": [
-        "cartilage, semilunar, removal",
-        "cartilage semilunar removal",
-        "CSR"
+        "meniscectomy",
+        "meniscus removal",
+        "partial meniscectomy",
+        "total meniscectomy",
+        "cartilage removal knee"
       ],
       "searchTerms": [
-        "musculoskeletal",
-        "semilunar",
-        "removal",
-        "cartilage",
-        "cartilage, semilunar, removal",
+        "meniscectomy",
+        "meniscus removal",
+        "cartilage removal",
+        "knee surgery",
         "5259"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.71a",
       "ratingSchedule": "38 CFR § 4.71a",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": []
+      "documentationRequirements": "Documentation must include: surgical records confirming meniscectomy (partial or total), current symptoms such as pain, swelling, or instability, any subsequent degenerative changes, and functional impact assessment.",
+      "relatedSecondaryConditions": [
+        {
+          "name": "Knee Osteoarthritis",
+          "diagnosticCode": "5003"
+        },
+        {
+          "name": "Limitation of Knee Flexion",
+          "diagnosticCode": "5260"
+        },
+        {
+          "name": "Limitation of Knee Extension",
+          "diagnosticCode": "5261"
+        }
+      ],
+      "ratingCriteria": {
+        "type": "direct",
+        "ratings": {
+          "10": "Symptomatic (with residual pain, swelling, or functional impairment)"
+        },
+        "notes": [
+          "This is the maximum and only rating available under DC 5259",
+          "Applies when semilunar cartilage (meniscus) has been surgically removed",
+          "May be combined with limitation of motion ratings if symptoms are distinct",
+          "Meniscectomy often leads to accelerated knee osteoarthritis - consider secondary condition"
+        ]
+      }
     },
     {
       "id": 137,
@@ -9659,15 +9719,17 @@
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
       "relatedSecondaryConditions": [],
       "ratingCriteria": {
-        "type": "direct",
+        "type": "formula",
+        "formula": "Rate using FEV-1, FEV-1/FVC ratio, or DLCO based on pulmonary function testing",
         "ratings": {
-          "50": "With incapacitation where prolonged use of respiratory-assist device is required during daytime hours (CPAP, BiPAP)",
-          "30": "With chronic daytime hypersomnolence not controlled by treatment",
-          "0": "Asymptomatic, or controlled by treatment with nighttime CPAP/BiPAP only"
+          "100": "FEV-1 less than 40% predicted, or FEV-1/FVC less than 40%, or DLCO less than 40% predicted, or maximum exercise capacity less than 15 ml/kg/min oxygen consumption with cardiorespiratory limitation, or cor pulmonale (right heart failure), or pulmonary hypertension, or requires outpatient oxygen therapy",
+          "60": "FEV-1 of 40-55% predicted, or FEV-1/FVC of 40-55%, or DLCO of 40-55% predicted, or maximum oxygen consumption of 15 to 20 ml/kg/min with cardiorespiratory limitation",
+          "30": "FEV-1 of 56-70% predicted, or FEV-1/FVC of 56-70%, or DLCO of 56-65% predicted",
+          "10": "FEV-1 of 71-80% predicted, or FEV-1/FVC of 71-80%, or DLCO of 66-80% predicted"
         },
         "notes": [
-          "Rating based on use of breathing assistance device required by obstructive, central, or mixed sleep apnea",
-          "Daytime device use indicates more severe impairment"
+          "Rating based on pulmonary function test results",
+          "Use post-bronchodilator results when available"
         ]
       }
     },
@@ -10174,14 +10236,18 @@
         }
       ],
       "ratingCriteria": {
-        "type": "formula",
-        "formula": "Rate using FEV-1, FEV-1/FVC ratio, or DLCO based on pulmonary function testing",
+        "type": "direct",
         "ratings": {
-          "100": "FEV-1 less than 40% predicted, or DLCO less than 40%, or chronic respiratory failure",
-          "60": "FEV-1 of 40-55% predicted, or DLCO of 40-55%",
-          "30": "FEV-1 of 56-70% predicted, or DLCO of 56-70%",
-          "10": "FEV-1 of 71-80% predicted, or DLCO of 71-80%"
-        }
+          "100": "Chronic respiratory failure with carbon dioxide retention or cor pulmonale, or requires tracheostomy",
+          "50": "Requires use of breathing assistance device such as continuous airway pressure (CPAP) machine",
+          "30": "Persistent day-time hypersomnolence",
+          "0": "Asymptomatic but with documented sleep disorder breathing"
+        },
+        "notes": [
+          "Rating based on use of breathing assistance device required for obstructive, central, or mixed sleep apnea",
+          "CPAP/BiPAP use during sleep warrants 50% rating",
+          "Chronic respiratory failure indicates 100% rating"
+        ]
       }
     },
     {
@@ -10351,27 +10417,30 @@
     {
       "id": 369,
       "diagnosticCode": "7005",
-      "conditionName": "Hypertension (Arteriosclerotic Heart Disease)",
+      "conditionName": "Arteriosclerotic Heart Disease (Coronary Artery Disease)",
       "aliases": [
-        "high blood pressure",
-        "hypertension",
-        "HTN",
-        "elevated BP"
+        "coronary artery disease",
+        "CAD",
+        "ischemic heart disease",
+        "IHD",
+        "atherosclerotic heart disease",
+        "ASHD"
       ],
       "searchTerms": [
-        "hypertension",
-        "high blood pressure",
-        "HTN",
-        "cardiovascular disease",
-        "heart disease"
+        "coronary artery disease",
+        "CAD",
+        "ischemic heart disease",
+        "heart disease",
+        "arteriosclerotic",
+        "atherosclerotic"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.114#p-4.114(HeartDiseases)",
-      "ratingSchedule": "38 CFR § 4.114",
-      "documentationRequirements": "Documentation must include: blood pressure readings over time (home log, clinic visits), medications used and compliance, target organ damage evidence (LVH on echo, proteinuria), functional limitations if present, and any complications such as angina or heart failure.",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.104",
+      "ratingSchedule": "38 CFR § 4.104",
+      "documentationRequirements": "Documentation must include: cardiac catheterization or angiogram results, stress test with METs level achieved, echocardiogram with ejection fraction (LVEF), documented history of myocardial infarction or coronary interventions (stents, CABG), current medications, and functional limitations.",
       "relatedSecondaryConditions": [
         {
-          "name": "Coronary Artery Disease",
-          "diagnosticCode": "7005"
+          "name": "Hypertension",
+          "diagnosticCode": "7101"
         },
         {
           "name": "Congestive Heart Failure",
@@ -10382,22 +10451,24 @@
           "diagnosticCode": "8007"
         },
         {
-          "name": "Chronic Kidney Disease",
-          "diagnosticCode": "7502"
+          "name": "Peripheral Arterial Disease",
+          "diagnosticCode": "7114"
         }
       ],
       "ratingCriteria": {
-        "type": "direct",
+        "type": "formula",
+        "formula": "General Rating Formula for Diseases of the Heart - Rate based on METs workload and cardiac symptoms",
         "ratings": {
-          "60": "With diastolic pressure predominantly 130 or more, with evidence of target organ damage (heart, kidney, eye, brain)",
-          "40": "With diastolic pressure predominantly 120 or more",
-          "20": "With diastolic pressure predominantly 110 or more, or systolic pressure predominantly 200 or more",
-          "10": "With diastolic pressure predominantly 100 or more"
+          "100": "Workload of 3 METs or less results in dyspnea, fatigue, angina, dizziness, or syncope; or left ventricular dysfunction with ejection fraction less than 30%",
+          "60": "Workload of greater than 3 METs but not greater than 5 METs results in dyspnea, fatigue, angina, dizziness, or syncope; or left ventricular dysfunction with ejection fraction of 30-50%",
+          "30": "Workload of greater than 5 METs but not greater than 7 METs results in dyspnea, fatigue, angina, dizziness, or syncope; or evidence of cardiac hypertrophy or dilatation on echocardiogram",
+          "10": "Workload of greater than 7 METs but not greater than 10 METs results in dyspnea, fatigue, angina, dizziness, or syncope; or continuous medication required"
         },
         "notes": [
-          "Use average of two or more diastolic readings taken on at least three different days",
-          "Rate based on blood pressure despite continuous medication",
-          "Rate cardiac, renal, or neurological complications separately"
+          "One MET (metabolic equivalent) is the energy cost of standing quietly at rest and represents an oxygen uptake of 3.5 ml/kg/min",
+          "If METs testing cannot be done for medical reasons, estimate based on specific activities (e.g., slow stair climbing = 4 METs)",
+          "Agent Orange presumptive condition for Vietnam Veterans",
+          "Evaluate hypertension separately under DC 7101"
         ]
       }
     },
@@ -10765,26 +10836,58 @@
     {
       "id": 382,
       "diagnosticCode": "7101",
-      "conditionName": "Hypertensive vascular disease",
+      "conditionName": "Hypertensive Vascular Disease (Hypertension)",
       "aliases": [
-        "hypertensive vascular disease",
-        "HVD"
+        "hypertension",
+        "high blood pressure",
+        "HTN",
+        "elevated BP",
+        "essential hypertension"
       ],
       "searchTerms": [
-        "disease",
-        "hypertensive vascular disease",
-        "vascular",
+        "hypertension",
+        "high blood pressure",
+        "HTN",
         "hypertensive",
-        "7101",
-        "cardiovascular heart"
+        "blood pressure",
+        "7101"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.104",
       "ratingSchedule": "38 CFR § 4.104",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": [],
+      "documentationRequirements": "Documentation must include: blood pressure readings taken two or more times on at least three different days, current antihypertensive medications, evidence of target organ damage if present (LVH on echo, proteinuria, retinopathy), and treatment compliance history.",
+      "relatedSecondaryConditions": [
+        {
+          "name": "Coronary Artery Disease",
+          "diagnosticCode": "7005"
+        },
+        {
+          "name": "Hypertensive Heart Disease",
+          "diagnosticCode": "7007"
+        },
+        {
+          "name": "Cerebrovascular Accident (Stroke)",
+          "diagnosticCode": "8007"
+        },
+        {
+          "name": "Chronic Kidney Disease",
+          "diagnosticCode": "7502"
+        }
+      ],
       "ratingCriteria": {
-        "type": "rated-as",
-        "ratedUnder": "Rate hypertensive vascular disease under diagnostic code 7005 (hypertension)."
+        "type": "direct",
+        "ratings": {
+          "60": "Diastolic pressure predominantly 130 or more",
+          "40": "Diastolic pressure predominantly 120 or more",
+          "20": "Diastolic pressure predominantly 110 or more, or systolic pressure predominantly 200 or more",
+          "10": "Diastolic pressure predominantly 100 or more, or systolic pressure predominantly 160 or more, or minimum evaluation for individual with history of diastolic pressure predominantly 100 or more who requires continuous medication for control"
+        },
+        "notes": [
+          "Hypertension must be confirmed by readings taken two or more times on at least three different days",
+          "Hypertension means diastolic blood pressure is predominantly 90mm or greater",
+          "Isolated systolic hypertension means systolic pressure predominantly 160mm or greater with diastolic less than 90mm",
+          "Evaluate hypertension separately from hypertensive heart disease and other types of heart disease",
+          "Agent Orange presumptive condition (added by PACT Act)"
+        ]
       }
     },
     {

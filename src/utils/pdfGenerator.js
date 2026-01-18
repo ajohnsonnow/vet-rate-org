@@ -926,6 +926,101 @@ export const generatePDF = (result, searchTerm) => {
       yPosition += descLines.length * 4.5 + 4;
     });
 
+    // 38 CFR Part 3 - Claims Process Rights
+    doc.addPage();
+    yPosition = margin + 10;
+    addHeading('Your Rights Under 38 CFR Part 3', 1);
+    addInfoBox(
+      '38 CFR Part 3 governs HOW the VA processes your claim. These regulations establish your procedural rights, evidence standards, and appeal options. Know these rules - they protect you!',
+      [254, 243, 199],
+      [217, 119, 6]
+    );
+
+    const claimsRights = [
+      {
+        name: '§3.102 - Benefit of the Doubt',
+        description: 'When the evidence is in "approximate balance" (50/50), the benefit of the doubt goes to YOU. The tie goes to the veteran. VA cannot deny a claim simply because it lacks certainty.',
+      },
+      {
+        name: '§3.159 - Duty to Assist',
+        description: 'VA MUST help you gather evidence, including obtaining medical and service records. If VA denies based on missing evidence they could have obtained, that is an error you can appeal.',
+      },
+      {
+        name: '§3.155(b) - Intent to File',
+        description: 'Filing an Intent to File (ITF) protects your effective date for up to 1 year while you gather evidence. This can mean thousands of dollars in back-pay if your claim is approved.',
+      },
+      {
+        name: '§3.344 - Rating Stabilization',
+        description: 'Ratings in effect for 5+ years are "stabilized" and cannot be reduced without sustained improvement shown by the full body of evidence. 20+ years = permanent.',
+      },
+      {
+        name: '§3.400 - Effective Date Rules',
+        description: 'Generally, the effective date is the date VA received your claim OR the date entitlement arose, whichever is LATER. This is why filing an Intent to File early matters!',
+      },
+      {
+        name: '§3.2500 - Review Options (AMA)',
+        description: 'After a decision, you have 3 review lanes: Supplemental Claim (new evidence), Higher-Level Review (same evidence, new reviewer), or Board Appeal. You have 1 year to choose.',
+      },
+      {
+        name: '§3.103 - Procedural Due Process',
+        description: 'You have the right to a hearing, to representation, to see all evidence used against you, and to submit evidence in response. VA must give you notice before reducing benefits.',
+      },
+      {
+        name: '§3.310 - Secondary Service Connection',
+        description: 'A disability that is caused OR aggravated by a service-connected condition can also be service-connected. Example: Knee injury causes hip problems = both are service-connected.',
+      },
+    ];
+
+    claimsRights.forEach((right, index) => {
+      checkPageBreak(22);
+      
+      doc.setFillColor(index % 2 === 0 ? 254 : 255, index % 2 === 0 ? 249 : 251, index % 2 === 0 ? 217 : 235);
+      const descLines = doc.splitTextToSize(right.description, contentWidth - 10);
+      const boxHeight = descLines.length * 4.5 + 10;
+      doc.roundedRect(margin, yPosition - 4, contentWidth, boxHeight, 1, 1, 'F');
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(...colors.vaBlue);
+      doc.text(`> ${right.name}`, margin + 3, yPosition);
+      yPosition += 6;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.darkGray);
+      doc.text(descLines, margin + 5, yPosition);
+      doc.setTextColor(0, 0, 0);
+      yPosition += descLines.length * 4.5 + 4;
+    });
+
+    // Critical Deadlines Box
+    checkPageBreak(55);
+    yPosition += 5;
+    addHeading('Critical Deadlines to Remember', 2);
+    
+    doc.setFillColor(254, 226, 226);
+    doc.setDrawColor(239, 68, 68);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, yPosition - 2, contentWidth, 42, 2, 2, 'FD');
+    yPosition += 4;
+    
+    const deadlines = [
+      '• Intent to File: Good for 1 year - file your complete claim before it expires',
+      '• Appeal Deadline: 1 year from decision date - or the decision becomes final',
+      '• Supplemental Claim: File within 1 year to preserve original effective date',
+      '• Notice of Disagreement: 1 year to file if contesting a rating decision',
+      '• CUE Claims: No time limit - can fix clear errors in past decisions anytime',
+    ];
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...colors.warningRed);
+    deadlines.forEach(deadline => {
+      doc.text(deadline, margin + 4, yPosition);
+      yPosition += 6;
+    });
+    doc.setTextColor(0, 0, 0);
+    yPosition += 8;
+
     // Legal Disclosures
     doc.addPage();
     yPosition = margin + 10;

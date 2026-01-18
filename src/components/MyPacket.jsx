@@ -19,7 +19,9 @@ import {
   importClaims,
   importStatements
 } from '../utils/claimsStorage';
-import { exportPacketData, importPacketData, downloadPacketBackup } from '../utils/packetBackup';
+import { exportPacketData, importPacketData, downloadPacketBackup, exportCompletePacket, importCompletePacket } from '../utils/packetBackup';
+import { getSavedForms, deleteSavedForm, getVeteranProfile } from '../utils/veteranProfile';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
 
@@ -33,10 +35,31 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
   const [showImportConfirm, setShowImportConfirm] = useState(null);
   const [backupCreated, setBackupCreated] = useState(false);
   const fileInputRef = useRef(null);
+  
+  // Tab state for Claims vs Forms view
+  const [activeTab, setActiveTab] = useState('claims');
+  const [savedForms, setSavedForms] = useState([]);
+  const [viewingForm, setViewingForm] = useState(null);
+
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
 
   useEffect(() => {
     loadClaims();
+    loadSavedForms();
   }, []);
+  
+  const loadSavedForms = () => {
+    const forms = getSavedForms();
+    setSavedForms(forms);
+  };
+  
+  const handleRemoveForm = (formId) => {
+    if (window.confirm('Are you sure you want to remove this form from your packet?')) {
+      deleteSavedForm(formId);
+      loadSavedForms();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -69,14 +92,16 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
     }
   };
 
-  // Backup packet to JSON file
+  // Backup COMPLETE packet to JSON file (includes profile and forms)
   const handleBackupPacket = () => {
     const statements = getAllStatements();
-    const exportData = exportPacketData(claims, statements);
-    downloadPacketBackup(exportData);
-    setImportStatus({ type: 'success', message: `Backup created with ${claims.length} claims` });
+    const veteranProfile = getVeteranProfile();
+    const forms = getSavedForms();
+    const exportData = exportCompletePacket(claims, statements, veteranProfile, forms);
+    downloadPacketBackup(exportData, `vet-rate-complete-backup-${new Date().toISOString().split('T')[0]}.json`);
+    setImportStatus({ type: 'success', message: `Complete backup created with ${claims.length} claims, ${forms.length} forms, and your profile` });
     setBackupCreated(true);
-    setTimeout(() => setImportStatus(null), 3000);
+    setTimeout(() => setImportStatus(null), 4000);
   };
 
   // Trigger file input for restore
@@ -105,7 +130,8 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = importPacketData(e.target.result);
+      // Use complete import to handle profile and forms too
+      const result = importCompletePacket(e.target.result);
       
       if (!result.success) {
         setImportStatus({ type: 'error', message: result.error });
@@ -129,17 +155,47 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
     event.target.value = '';
   };
 
-  // Confirm and execute import
+  // Confirm and execute import (handles complete backups with profile and forms)
   const handleConfirmImport = (mergeMode) => {
     const { data } = showImportConfirm;
     
     const claimSuccess = importClaims(data.claims, mergeMode);
     const statementSuccess = importStatements(data.statements, mergeMode);
     
+    // Import veteran profile if present
+    if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0) {
+      try {
+        localStorage.setItem('vet_rate_veteran_profile', JSON.stringify(data.veteranProfile));
+      } catch (e) {
+        console.error('Error importing profile:', e);
+      }
+    }
+    
+    // Import saved forms if present
+    if (data.savedForms && Array.isArray(data.savedForms) && data.savedForms.length > 0) {
+      try {
+        if (mergeMode === 'merge') {
+          const existingForms = getSavedForms();
+          const existingIds = new Set(existingForms.map(f => f.id));
+          const newForms = data.savedForms.filter(f => !existingIds.has(f.id));
+          localStorage.setItem('vet_rate_saved_forms', JSON.stringify([...existingForms, ...newForms]));
+        } else {
+          localStorage.setItem('vet_rate_saved_forms', JSON.stringify(data.savedForms));
+        }
+        loadSavedForms();
+      } catch (e) {
+        console.error('Error importing forms:', e);
+      }
+    }
+    
     if (claimSuccess && statementSuccess) {
+      const parts = [`${data.claims.length} claims`];
+      if (data.savedForms?.length) parts.push(`${data.savedForms.length} forms`);
+      if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0) parts.push('profile');
+      
       setImportStatus({ 
         type: 'success', 
-        message: `Successfully ${mergeMode === 'merge' ? 'merged' : 'restored'} ${data.claims.length} claims` 
+        message: `Successfully ${mergeMode === 'merge' ? 'merged' : 'restored'} ${parts.join(', ')}` 
       });
       loadClaims();
     } else {
@@ -147,7 +203,7 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
     }
     
     setShowImportConfirm(null);
-    setTimeout(() => setImportStatus(null), 3000);
+    setTimeout(() => setImportStatus(null), 4000);
   };
 
   const handleStatusChange = (claimId, newStatus) => {
@@ -348,11 +404,11 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Drafting':
-        return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-100 border-yellow-300 dark:border-yellow-700';
       case 'Statement Generated':
-        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-700';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 border-blue-300 dark:border-blue-700';
       case 'Filed':
-        return 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700';
+        return 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-100 border-green-300 dark:border-green-700';
       default:
         return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600';
     }
@@ -360,13 +416,13 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="my-packet-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -451,8 +507,8 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
           {importStatus && (
             <div className={`mx-6 mt-4 px-4 py-3 rounded-lg flex items-center gap-2 ${
               importStatus.type === 'success' 
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
-                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-100' 
+                : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-100'
             }`}>
               <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 {importStatus.type === 'success' ? (
@@ -465,29 +521,125 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
             </div>
           )}
 
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6">
+            <nav className="flex gap-4" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('claims')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'claims'
+                    ? 'border-va-blue text-va-blue dark:border-va-gold dark:text-va-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  📋 Claims <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{claims.length}</span>
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab('forms')}
+                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'forms'
+                    ? 'border-va-blue text-va-blue dark:border-va-gold dark:text-va-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  📄 Saved Forms <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{savedForms.length}</span>
+                </span>
+              </button>
+            </nav>
+          </div>
+
           <div className="p-6">
-            {claims.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📂 No Saved Claims</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Start by exploring the Secondary Scout to find potential claims
-                </p>
-                <button
-                  onClick={onClose}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
-                >
-                  Explore Secondary Scout
-                </button>
-              </div>
-            ) : (
+            {/* FORMS TAB */}
+            {activeTab === 'forms' && (
               <>
-                {/* Claims List */}
-                <div className="space-y-4 mb-6">
-                  {claims.map((claim) => (
-                    <div
+                {savedForms.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📄 No Saved Forms</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Use the Forms Helper to create and save VA forms like buddy statements, personal statements, and more!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {savedForms.map((form) => (
+                      <div
+                        key={form.id}
+                        className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-purple-300 dark:hover:border-purple-500 transition-all"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
+                                {form.title || form.formName || 'Untitled Form'}
+                              </h3>
+                              <span className="px-2 sm:px-3 py-1 text-xs font-semibold rounded-full border bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-100 border-purple-300 dark:border-purple-700 whitespace-nowrap">
+                                {form.formNumber || form.formType || 'Form'}
+                              </span>
+                            </div>
+                            
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              {form.formName}
+                            </p>
+                            
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Saved: {new Date(form.dateSaved).toLocaleDateString()}
+                              {form.dateUpdated && ` • Updated: ${new Date(form.dateUpdated).toLocaleDateString()}`}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setViewingForm(form)}
+                              className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleRemoveForm(form.id)}
+                              className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* CLAIMS TAB */}
+            {activeTab === 'claims' && (
+              <>
+                {claims.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📂 No Saved Claims</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Start by exploring the Secondary Scout to find potential claims
+                    </p>
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                    >
+                      Explore Secondary Scout
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Claims List */}
+                    <div className="space-y-4 mb-6">
+                      {claims.map((claim) => (
+                        <div
                       key={claim.id}
                       className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden"
                     >
@@ -612,7 +764,68 @@ const MyPacket = ({ onResume, onClose, onReportBug }) => {
                     Clear All Claims (Privacy Reset)
                   </button>
                 </div>
+                  </>
+                )}
               </>
+            )}
+
+            {/* Form Viewer Modal */}
+            {viewingForm && (
+              <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
+                <div className="min-h-screen px-4 py-8">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
+                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold">{viewingForm.title || viewingForm.formName}</h3>
+                        <p className="text-purple-200 text-sm">{viewingForm.formNumber}</p>
+                      </div>
+                      <button
+                        onClick={() => setViewingForm(null)}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="p-6">
+                      {viewingForm.generatedContent && (
+                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-auto">
+                          <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
+                            {viewingForm.generatedContent}
+                          </pre>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-end gap-3 mt-4">
+                        <button
+                          onClick={() => {
+                            const blob = new Blob([viewingForm.generatedContent], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${viewingForm.formNumber || 'form'}-${viewingForm.title || 'draft'}.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                        >
+                          Download .TXT
+                        </button>
+                        <button
+                          onClick={() => setViewingForm(null)}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

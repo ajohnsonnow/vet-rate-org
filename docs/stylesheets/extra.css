@@ -1,0 +1,343 @@
+/* =========================================
+   Vet-Rate.org User Manual - Custom Styles
+   Brand Colors and Professional Styling
+   ========================================= */
+
+/* Brand Color Variables */
+:root {
+  --vetrate-green: #2d5016;
+  --vetrate-green-dark: #1e3a10;
+  --vetrate-green-light: #3d6b1f;
+  --vetrate-gold: #88b04b;
+  --vetrate-gold-light: #a4c76a;
+  --vetrate-cream: #e9e9e3;
+  --vetrate-gray: #3d453d;
+  --crisis-red: #dc2626;
+}
+
+/* Custom Color Scheme */
+[data-md-color-scheme="vetrate"] {
+  --md-primary-fg-color: var(--vetrate-green);
+  --md-primary-fg-color--light: var(--vetrate-green-light);
+  --md-primary-fg-color--dark: var(--vetrate-green-dark);
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: var(--vetrate-gold);
+  --md-accent-fg-color--transparent: rgba(136, 176, 75, 0.1);
+}
+
+/* Header styling */
+.md-header {
+  background-color: var(--vetrate-green);
+}
+
+.md-header__title {
+  font-weight: 700;
+}
+
+/* Navigation tabs */
+.md-tabs {
+  background-color: var(--vetrate-green-dark);
+}
+
+/* Sidebar styling */
+.md-nav__title {
+  color: var(--vetrate-green);
+  font-weight: 600;
+}
+
+.md-nav__item--active > .md-nav__link {
+  color: var(--vetrate-green);
+  font-weight: 600;
+}
+
+.md-nav__link:hover {
+  color: var(--vetrate-gold);
+}
+
+/* Content styling */
+.md-content {
+  max-width: 1200px;
+}
+
+/* Headings */
+.md-typeset h1 {
+  color: var(--vetrate-green);
+  font-weight: 700;
+  border-bottom: 3px solid var(--vetrate-gold);
+  padding-bottom: 0.5rem;
+}
+
+.md-typeset h2 {
+  color: var(--vetrate-green);
+  font-weight: 600;
+}
+
+.md-typeset h3 {
+  color: var(--vetrate-gray);
+  font-weight: 600;
+}
+
+/* Custom admonition for Crisis Line */
+.md-typeset .admonition.crisis,
+.md-typeset details.crisis {
+  border-color: var(--crisis-red);
+}
+
+.md-typeset .crisis > .admonition-title,
+.md-typeset .crisis > summary {
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: var(--crisis-red);
+}
+
+.md-typeset .crisis > .admonition-title::before,
+.md-typeset .crisis > summary::before {
+  background-color: var(--crisis-red);
+  -webkit-mask-image: var(--md-admonition-icon--warning);
+  mask-image: var(--md-admonition-icon--warning);
+}
+
+/* Custom admonition for Tips */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: var(--vetrate-gold);
+}
+
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(136, 176, 75, 0.1);
+  border-color: var(--vetrate-gold);
+}
+
+.md-typeset .tip > .admonition-title::before,
+.md-typeset .tip > summary::before {
+  background-color: var(--vetrate-gold);
+}
+
+/* Custom admonition for Important VA Info */
+.md-typeset .admonition.va-info,
+.md-typeset details.va-info {
+  border-color: var(--vetrate-green);
+}
+
+.md-typeset .va-info > .admonition-title,
+.md-typeset .va-info > summary {
+  background-color: rgba(45, 80, 22, 0.1);
+  border-color: var(--vetrate-green);
+}
+
+/* Feature cards */
+.feature-card {
+  background: linear-gradient(135deg, rgba(45, 80, 22, 0.05), rgba(136, 176, 75, 0.05));
+  border: 1px solid rgba(136, 176, 75, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.feature-card h3 {
+  color: var(--vetrate-green);
+  margin-top: 0;
+}
+
+/* Step-by-step instructions */
+.step-container {
+  counter-reset: step-counter;
+}
+
+.step {
+  counter-increment: step-counter;
+  position: relative;
+  padding-left: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.step::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--vetrate-green);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* Screenshot styling */
+.screenshot {
+  border: 2px solid var(--vetrate-cream);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+.screenshot-caption {
+  text-align: center;
+  font-style: italic;
+  color: var(--vetrate-gray);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Button styling for documentation */
+.doc-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--vetrate-green);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.doc-button:hover {
+  background-color: var(--vetrate-green-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+}
+
+.doc-button.secondary {
+  background-color: var(--vetrate-gold);
+  color: var(--vetrate-green);
+}
+
+.doc-button.secondary:hover {
+  background-color: var(--vetrate-gold-light);
+}
+
+/* Keyboard shortcut styling */
+kbd {
+  background-color: var(--vetrate-cream);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Table styling */
+.md-typeset table:not([class]) {
+  border: 1px solid var(--vetrate-cream);
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--vetrate-green);
+  color: white;
+}
+
+.md-typeset table:not([class]) tr:nth-child(even) {
+  background-color: rgba(136, 176, 75, 0.05);
+}
+
+/* Footer */
+.md-footer {
+  background-color: var(--vetrate-green-dark);
+}
+
+/* Warning box for legal/disclaimer content */
+.legal-warning {
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.legal-warning h4 {
+  color: #92400e;
+  margin-top: 0;
+}
+
+/* Privacy badge */
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--vetrate-green), var(--vetrate-green-dark));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Crisis line banner */
+.crisis-banner {
+  background-color: var(--crisis-red);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.crisis-banner a {
+  color: white;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+/* Modal documentation styling */
+.modal-doc {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.modal-doc h4 {
+  color: var(--vetrate-green);
+  margin-top: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Icon styling */
+.icon-inline {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .feature-card {
+    padding: 1rem;
+  }
+  
+  .step {
+    padding-left: 2.5rem;
+  }
+  
+  .step::before {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Print-specific overrides */
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer {
+    display: none !important;
+  }
+  
+  .md-content {
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+}

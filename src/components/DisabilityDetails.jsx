@@ -178,7 +178,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
         {/* Rating Schedule */}
         <div className="mb-8 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
           <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-bold text-va-blue dark:text-blue-300">📊 Rating Schedule:</span> {result.ratingSchedule}
+            <span className="font-bold text-va-blue dark:text-blue-100">📊 Rating Schedule:</span> {result.ratingSchedule}
           </p>
         </div>
 
@@ -224,7 +224,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
                 {/* Rated-As Instructions */}
                 {result.ratingCriteria.ratedUnder && (
                   <div className="p-4 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-700">
-                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-300 mb-2">⚠️ Rating Instructions:</p>
+                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2">⚠️ Rating Instructions:</p>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">{result.ratingCriteria.ratedUnder}</p>
                   </div>
                 )}
@@ -232,7 +232,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
                 {/* Formula */}
                 {result.ratingCriteria.formula && (
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-700">
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">📋 Formula:</p>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">📋 Formula:</p>
                     <p className="text-gray-700 dark:text-gray-300 text-sm font-mono">{result.ratingCriteria.formula}</p>
                   </div>
                 )}
@@ -240,7 +240,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
                 {/* Special Instructions */}
                 {result.ratingCriteria.specialInstructions && (
                   <div className="p-4 bg-purple-50 dark:bg-purple-900/30 border-b border-purple-200 dark:border-purple-700">
-                    <p className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">ℹ️ Special Instructions:</p>
+                    <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">ℹ️ Special Instructions:</p>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">{result.ratingCriteria.specialInstructions}</p>
                   </div>
                 )}
@@ -282,7 +282,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
                 {/* Notes */}
                 {result.ratingCriteria.notes && (
                   <div className="p-4 bg-green-50 dark:bg-green-900/30 border-t border-green-200 dark:border-green-700">
-                    <p className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">📝 Important Notes:</p>
+                    <p className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">📝 Important Notes:</p>
                     <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed pl-4 border-l-2 border-green-400 dark:border-green-600">
                       {typeof result.ratingCriteria.notes === 'string' ? (
                         <p>{result.ratingCriteria.notes}</p>
@@ -408,7 +408,7 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
 
           {/* Emergency Support */}
           <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded">
-            <h4 className="font-bold text-red-800 dark:text-red-300 mb-3">🚨 EMERGENCY & CRISIS SUPPORT</h4>
+            <h4 className="font-bold text-red-800 dark:text-red-100 mb-3">🚨 EMERGENCY & CRISIS SUPPORT</h4>
             <ul className="space-y-2">
               {VAResources.emergency.map((resource, idx) => (
                 <li key={idx} className="text-gray-700 dark:text-gray-300">

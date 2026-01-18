@@ -1,10 +1,10 @@
-# Contributing to Veteran Disability Search
+# Contributing to Vet-Rate.org
 
 Thank you for considering contributing to this project! This guide explains how to contribute effectively.
 
 ## 🎯 Our Mission
 
-Provide veterans with accurate, accessible information about disability ratings and benefits using official eCFR data.
+Provide veterans with accurate, accessible information about disability ratings and benefits using official eCFR data from 38 CFR Parts 3 & 4.
 
 ## 💖 Ways to Contribute
 
@@ -43,9 +43,9 @@ Help expand our database of disabilities. See [Database Contributions](#database
 ### Fork & Clone
 ```bash
 # Fork on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/vet-disability-search.git
-cd vet-disability-search
-git remote add upstream https://github.com/ORIGINAL_OWNER/vet-disability-search.git
+git clone https://github.com/YOUR_USERNAME/vet-rate-org.git
+cd vet-rate-org
+git remote add upstream https://github.com/ajohnsonnow/vet-rate-org.git
 ```
 
 ### Setup Development Environment
@@ -56,7 +56,7 @@ npm install
 # Create feature branch
 git checkout -b feature/your-feature-name
 
-# Start development server
+# Start development server (runs at http://localhost:3000)
 npm run dev
 ```
 

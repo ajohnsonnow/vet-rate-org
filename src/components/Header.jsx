@@ -3,7 +3,7 @@ import AccessibilityMenu from './AccessibilityMenu';
 import FundingModal from './FundingModal';
 import { useTheme } from '../contexts/ThemeContext';
 
-function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick }) {
+function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, onVAResourcesClick, onFormsHelperClick, onUserManualClick }) {
   const { isDark, toggleTheme } = useTheme();
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
@@ -111,7 +111,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
             <div>
               <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap">Vet-Rate.org</h1>
               <p className="text-green-100 dark:text-gray-300 text-sm md:text-base whitespace-nowrap">
-                VA Disability Rating Schedule | 38 CFR Part 4
+                Free VA Claims Toolkit for Veterans
               </p>
             </div>
           </div>
@@ -140,6 +140,22 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
               aria-label="Open My Packet to view your saved claims"
             >
               📁 My Packet
+            </button>
+            <button
+              onClick={onFormsHelperClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              title="Forms Helper - Get help with VA forms"
+              aria-label="Open Forms Helper for guided assistance with VA claim forms"
+            >
+              📋 Forms Helper
+            </button>
+            <button
+              onClick={onUserManualClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              title="User Manual - Documentation & Help"
+              aria-label="Open User Manual for documentation and help"
+            >
+              📖 Help
             </button>
             
             {/* Veteran Resources Dropdown */}
@@ -173,7 +189,7 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                       }}
                       className="w-full text-left block px-3 py-2 rounded-md transition-colors bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border-l-4 border-green-600 mb-2"
                     >
-                      <span className="font-medium text-green-700 dark:text-green-300">
+                      <span className="font-medium text-green-700 dark:text-green-100">
                         🌐 VA Resources Hub
                       </span>
                       <p className="text-xs mt-0.5 text-green-600 dark:text-green-400">
@@ -199,9 +215,9 @@ function Header({ onSecondaryScoutClick, onMyPacketClick, onCAPSimulatorClick, o
                       >
                         <span className={`font-medium ${
                           resource.urgent 
-                            ? 'text-red-700 dark:text-red-300' 
+                            ? 'text-red-700 dark:text-red-100' 
                             : resource.highlight
-                            ? 'text-amber-700 dark:text-amber-300'
+                            ? 'text-amber-700 dark:text-amber-100'
                             : 'text-gray-800 dark:text-gray-200'
                         }`}>
                           {resource.name}

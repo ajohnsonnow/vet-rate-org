@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import ReportBugLink from './ReportBugLink';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const ContactUs = ({ onClose, onReportBug }) => {
+  // Lock body scroll when modal is open
+  useBodyScrollLock(true);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -37,12 +41,12 @@ const ContactUs = ({ onClose, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="contact-us-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 modal-content">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
           <h2 id="contact-us-title" className="text-2xl font-bold text-gray-900">📧 Contact Us</h2>
           <div className="flex items-center gap-3">
