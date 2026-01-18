@@ -14,7 +14,7 @@ import {
   getConnectionTypeColors,
   getPathfinderPrivacyDisclosure 
 } from '../utils/pathfinderEngine';
-import { getAllClaims } from '../utils/claimsStorage';
+import { getSavedClaims } from '../utils/claimsStorage';
 
 // Icons
 const CompassIcon = () => (
@@ -288,7 +288,7 @@ export default function Pathfinder({ onNavigate }) {
   
   const loadFromPacket = () => {
     try {
-      const claims = getAllClaims();
+      const claims = getSavedClaims();
       if (claims && claims.length > 0) {
         // Filter for primary claims (conditions that would be service-connected)
         const loadedRatings = claims.map(claim => ({
