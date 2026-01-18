@@ -1720,7 +1720,7 @@ const CAPSimulator = ({ onClose, onReportBug }) => {
             </div>
 
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
-              <p className="text-green-900 text-sm">
+              <p className="text-green-900 dark:text-green-100 text-sm">
                 <strong>📚 Study Tip:</strong> Focus on terms relevant to YOUR conditions first. If you have a back condition, master ROM, flexion, flare-ups, and functional loss. If you have PTSD, focus on occupational/social impairment and the specific symptoms in the rating criteria.
               </p>
             </div>
