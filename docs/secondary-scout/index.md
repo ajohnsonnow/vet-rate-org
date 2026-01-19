@@ -1,4 +1,4 @@
-# Secondary Scout
+﻿# Secondary Scout
 
 Secondary Scout is a powerful tool that helps you discover conditions that may be **secondarily connected** to your existing service-connected disabilities under **38 CFR § 3.310**.
 
@@ -59,19 +59,19 @@ These may qualify as **secondary** to your PTSD.
 
 <div class="step-container">
 <div class="step">
-<strong>Enter your conditions</strong> — List your current service-connected disabilities
+<strong>Enter your conditions</strong> - List your current service-connected disabilities
 </div>
 <div class="step">
-<strong>Scout analyzes connections</strong> — Searches the medical nexus database
+<strong>Scout analyzes connections</strong> - Searches the medical nexus database
 </div>
 <div class="step">
-<strong>Review suggestions</strong> — See potential secondary conditions with mechanisms
+<strong>Review suggestions</strong> - See potential secondary conditions with mechanisms
 </div>
 <div class="step">
-<strong>Learn the nexus</strong> — Understand how conditions connect medically
+<strong>Learn the nexus</strong> - Understand how conditions connect medically
 </div>
 <div class="step">
-<strong>Save to packet</strong> — Add promising claims to your evidence packet
+<strong>Save to packet</strong> - Add promising claims to your evidence packet
 </div>
 </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import { FocusToggle } from '../contexts/FocusModeContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { searchVSOs, isAIAvailable } from '../utils/aiStatementHelper';
 
@@ -150,7 +151,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+          <div className="bg-gradient-to-r from-sky-600 via-cyan-600 to-sky-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -169,8 +170,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="VSO Finder" />}
+              <div className="flex items-center gap-2">                <FocusToggle variant="light" />                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="VSO Finder" />}
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -235,7 +235,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
                 {/* Official VA Database Search */}
                 <button
                   onClick={handleOfficialSearch}
-                  className="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-lg font-bold text-base hover:from-blue-800 hover:to-indigo-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  className="px-6 py-4 bg-gradient-to-r from-sky-700 to-cyan-700 text-white rounded-lg font-bold text-base hover:from-sky-800 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
                   <span>🏛️</span>
                   <span>Search Official VA Database</span>
@@ -248,7 +248,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
                 <button
                   onClick={handleAISearch}
                   disabled={isLoading || zipCode.length !== 5}
-                  className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-bold text-base hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="px-6 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold text-base hover:from-sky-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

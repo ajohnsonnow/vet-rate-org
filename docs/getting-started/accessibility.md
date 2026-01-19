@@ -1,4 +1,4 @@
-# Accessibility Settings
+﻿# Accessibility Settings
 
 Vet-Rate.org is committed to accessibility and complies with **WCAG 2.1 AA** and **Section 508** standards. This guide covers all available accessibility options.
 
@@ -9,7 +9,7 @@ Vet-Rate.org is committed to accessibility and complies with **WCAG 2.1 AA** and
 To access accessibility settings:
 
 1. **Click the Accessibility button** (♿) in the header
-2. Or use **keyboard navigation** — Tab to the button and press Enter
+2. Or use **keyboard navigation** - Tab to the button and press Enter
 
 The accessibility menu opens as a dropdown panel.
 
@@ -141,11 +141,11 @@ For screen reader users, a **"Skip to main content"** link appears when you firs
 
 Vet-Rate.org is optimized for screen readers:
 
-- ✅ **Semantic HTML** — Proper heading hierarchy
-- ✅ **ARIA labels** — Descriptive labels on all interactive elements
-- ✅ **Role attributes** — Clear indication of component types
-- ✅ **Focus management** — Focus moves appropriately when modals open/close
-- ✅ **Live regions** — Dynamic content changes are announced
+- ✅ **Semantic HTML** - Proper heading hierarchy
+- ✅ **ARIA labels** - Descriptive labels on all interactive elements
+- ✅ **Role attributes** - Clear indication of component types
+- ✅ **Focus management** - Focus moves appropriately when modals open/close
+- ✅ **Live regions** - Dynamic content changes are announced
 
 ### Tested Screen Readers
 
@@ -162,10 +162,10 @@ Vet-Rate.org is optimized for screen readers:
 
 All focusable elements have visible focus indicators:
 
-- **Buttons** — Ring outline with offset
-- **Links** — Underline and color change
-- **Form inputs** — Border color change and ring
-- **Cards** — Shadow and border enhancement
+- **Buttons** - Ring outline with offset
+- **Links** - Underline and color change
+- **Form inputs** - Border color change and ring
+- **Cards** - Shadow and border enhancement
 
 Focus indicators meet **WCAG 2.1 AA contrast requirements** (minimum 3:1 ratio).
 
@@ -200,8 +200,8 @@ If you encounter an accessibility barrier:
 
 Vet-Rate.org strives to conform to:
 
-- **WCAG 2.1 Level AA** — Web Content Accessibility Guidelines
-- **Section 508** — U.S. federal accessibility requirements
-- **ADA** — Americans with Disabilities Act compliance principles
+- **WCAG 2.1 Level AA** - Web Content Accessibility Guidelines
+- **Section 508** - U.S. federal accessibility requirements
+- **ADA** - Americans with Disabilities Act compliance principles
 
 We continuously test and improve accessibility with both automated tools and manual testing with assistive technologies.

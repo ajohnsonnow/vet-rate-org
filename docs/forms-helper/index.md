@@ -1,4 +1,4 @@
-# Forms Helper
+﻿# Forms Helper
 
 The **Forms Helper** is a comprehensive forms assistant that guides you through completing essential VA claims forms with step-by-step instructions and pre-filled templates.
 
@@ -12,12 +12,12 @@ The **Forms Helper** is a comprehensive forms assistant that guides you through 
 
 Forms Helper simplifies the process of completing VA forms by:
 
-- ✅ **Explaining each field** — Plain language descriptions
-- ✅ **Providing examples** — Sample answers for each field
-- ✅ **Pre-filling information** — Uses your saved profile data
-- ✅ **Step-by-step guidance** — Wizard-style completion
-- ✅ **Export options** — Download completed forms
-- ✨ **AI Enhancement** — Optional AI-powered statement improvement
+- ✅ **Explaining each field** - Plain language descriptions
+- ✅ **Providing examples** - Sample answers for each field
+- ✅ **Pre-filling information** - Uses your saved profile data
+- ✅ **Step-by-step guidance** - Wizard-style completion
+- ✅ **Export options** - Download completed forms
+- ✨ **AI Enhancement** - Optional AI-powered statement improvement
 
 !!! tip "AI Statement Assistant"
     After generating a statement, you can optionally enhance it with AI using the "Three Pillars" approach. This helps create more professional and compelling statements while keeping your personal information private. [Learn more about AI privacy →](../privacy/ai-assistant/)
@@ -88,19 +88,19 @@ Click the **"📄 Forms Helper"** feature card.
 
 <div class="step-container">
 <div class="step">
-<strong>Select a form</strong> — Choose from the available forms list
+<strong>Select a form</strong> - Choose from the available forms list
 </div>
 <div class="step">
-<strong>Enter your information</strong> — Follow the guided wizard
+<strong>Enter your information</strong> - Follow the guided wizard
 </div>
 <div class="step">
-<strong>Review field-by-field</strong> — Check each entry
+<strong>Review field-by-field</strong> - Check each entry
 </div>
 <div class="step">
-<strong>Preview the form</strong> — See the completed version
+<strong>Preview the form</strong> - See the completed version
 </div>
 <div class="step">
-<strong>Download</strong> — Export as PDF or save to packet
+<strong>Download</strong> - Export as PDF or save to packet
 </div>
 </div>
 
@@ -121,10 +121,10 @@ Save your information once, use it everywhere:
 
 Each field includes:
 
-- **Plain language description** — What the field is asking
-- **Why it matters** — How it affects your claim
-- **Examples** — Sample entries
-- **Tips** — Best practices
+- **Plain language description** - What the field is asking
+- **Why it matters** - How it affects your claim
+- **Examples** - Sample entries
+- **Tips** - Best practices
 
 ### Smart Defaults
 

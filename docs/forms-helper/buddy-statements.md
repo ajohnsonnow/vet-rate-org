@@ -1,4 +1,4 @@
-# Buddy Statements
+﻿# Buddy Statements
 
 Create supporting statements from fellow veterans, family members, or others who can attest to your condition.
 
@@ -136,12 +136,12 @@ Witness certifies the statement is true under penalty of perjury.
 
 !!! tip "Strong Buddy Statements Include:"
     
-    - **Specific details** — Dates, locations, events
-    - **First-hand observations** — "I saw..." not "I heard..."
-    - **Concrete examples** — Specific incidents
-    - **Time comparisons** — Before vs. after service
-    - **Frequency information** — How often symptoms occur
-    - **Impact descriptions** — How it affects your life
+    - **Specific details** - Dates, locations, events
+    - **First-hand observations** - "I saw..." not "I heard..."
+    - **Concrete examples** - Specific incidents
+    - **Time comparisons** - Before vs. after service
+    - **Frequency information** - How often symptoms occur
+    - **Impact descriptions** - How it affects your life
 
 ### Example: Service Buddy
 
@@ -220,20 +220,20 @@ to the best of my knowledge.
 
 !!! tip "For the Veteran"
     
-    1. **Explain what you need** — Tell them what to focus on
-    2. **Provide the form** — Give them VA 21-10210 or the PDF from Forms Helper
-    3. **Share your timeline** — When did things happen?
-    4. **Be specific** — Tell them what examples would help
-    5. **Don't pressure** — Let them write honestly
-    6. **Thank them** — Appreciate their support
+    1. **Explain what you need** - Tell them what to focus on
+    2. **Provide the form** - Give them VA 21-10210 or the PDF from Forms Helper
+    3. **Share your timeline** - When did things happen?
+    4. **Be specific** - Tell them what examples would help
+    5. **Don't pressure** - Let them write honestly
+    6. **Thank them** - Appreciate their support
 
 !!! tip "For the Witness"
     
-    1. **Only write what you observed** — First-hand knowledge only
-    2. **Be specific** — Dates, events, details
-    3. **Be honest** — Don't exaggerate
-    4. **Sign and date** — Required for the form
-    5. **Keep a copy** — For your records
+    1. **Only write what you observed** - First-hand knowledge only
+    2. **Be specific** - Dates, events, details
+    3. **Be honest** - Don't exaggerate
+    4. **Sign and date** - Required for the form
+    5. **Keep a copy** - For your records
 
 ---
 

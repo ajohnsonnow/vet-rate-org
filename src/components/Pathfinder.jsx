@@ -15,6 +15,7 @@ import {
   getPathfinderPrivacyDisclosure 
 } from '../utils/pathfinderEngine';
 import { getSavedClaims } from '../utils/claimsStorage';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 // Icons
 const CompassIcon = () => (
@@ -117,7 +118,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
             value={rating.condition}
             onChange={(e) => onUpdate(index, 'condition', e.target.value)}
             placeholder="Enter condition name..."
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
           />
         ) : (
           <select
@@ -130,7 +131,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
                 onUpdate(index, 'condition', e.target.value);
               }
             }}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
           >
             <option value="">Select condition...</option>
             {COMMON_CONDITIONS.map(c => (
@@ -143,7 +144,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
         <select
           value={rating.rating}
           onChange={(e) => onUpdate(index, 'rating', e.target.value)}
-          className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
         >
           <option value="">%</option>
           {RATING_OPTIONS.map(r => (
@@ -201,8 +202,8 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
       </p>
       
       {opportunity.evidence_needed && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
-          <p className="text-xs text-blue-800 dark:text-blue-300">
+        <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-3 mb-3">
+          <p className="text-xs text-teal-800 dark:text-teal-300">
             <strong>Evidence Needed:</strong> {opportunity.evidence_needed}
           </p>
         </div>
@@ -225,7 +226,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
         </button>
         <button
           onClick={() => onPracticeExam(opportunity)}
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+          className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm"
         >
           Practice Exam <ArrowRightIcon />
         </button>
@@ -364,8 +365,11 @@ export default function Pathfinder({ onNavigate }) {
     <div className="max-w-5xl mx-auto p-4 sm:p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg">
-          <span className="text-3xl">🧭</span>
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl shadow-lg">
+            <span className="text-3xl">🧭</span>
+          </div>
+          <FocusToggle variant="light" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">The Pathfinder</h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -378,7 +382,7 @@ export default function Pathfinder({ onNavigate }) {
       {!hasConsented ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full mb-3">
               <TargetIcon />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Privacy First</h2>
@@ -393,7 +397,7 @@ export default function Pathfinder({ onNavigate }) {
           
           <button
             onClick={handleConsent}
-            className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+            className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
           >
             <CheckIcon /> I Understand, Continue
           </button>
@@ -442,14 +446,14 @@ export default function Pathfinder({ onNavigate }) {
               </h2>
               <button
                 onClick={loadFromPacket}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 flex items-center gap-1"
+                className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
               >
                 Load from My Packet
               </button>
             </div>
             
             {loadedFromPacket && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm p-2 rounded-lg mb-4">
+              <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
                 ✓ Loaded conditions from your saved packet. Add rating percentages if known.
               </div>
             )}
@@ -468,7 +472,7 @@ export default function Pathfinder({ onNavigate }) {
             
             <button
               onClick={addRating}
-              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:border-teal-500 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
             >
               <PlusIcon /> Add Another Rating
             </button>
@@ -482,7 +486,7 @@ export default function Pathfinder({ onNavigate }) {
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
                 placeholder="Symptoms you experience, medications you take, or any other relevant information..."
-                className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
               />
             </div>
             
@@ -497,7 +501,7 @@ export default function Pathfinder({ onNavigate }) {
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !apiKey}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isAnalyzing ? (
                   <>
@@ -530,26 +534,26 @@ export default function Pathfinder({ onNavigate }) {
           {results && results.success && (
             <div className="space-y-6">
               {/* Strategy Overview */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-6">
+              <div className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white rounded-2xl p-6">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-white/20 rounded-xl">
                     <ChartIcon />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">Strategy Analysis</h3>
-                    <p className="text-blue-100">{results.data.strategy_analysis}</p>
+                    <p className="text-white">{results.data.strategy_analysis}</p>
                     
                     {(results.data.current_estimated_combined || results.data.potential_combined) && (
                       <div className="flex gap-6 mt-4">
                         {results.data.current_estimated_combined && (
                           <div>
-                            <div className="text-sm text-blue-200">Current Estimated</div>
+                            <div className="text-sm text-white/80">Current Estimated</div>
                             <div className="text-2xl font-bold">{results.data.current_estimated_combined}</div>
                           </div>
                         )}
                         {results.data.potential_combined && (
                           <div>
-                            <div className="text-sm text-blue-200">Potential With Opportunities</div>
+                            <div className="text-sm text-white/80">Potential With Opportunities</div>
                             <div className="text-2xl font-bold flex items-center gap-2">
                               {results.data.potential_combined}
                               <TrendingUpIcon />
@@ -657,7 +661,7 @@ export default function Pathfinder({ onNavigate }) {
               <div className="text-center">
                 <button
                   onClick={() => setResults(null)}
-                  className="px-6 py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors font-medium"
+                  className="px-6 py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors font-medium"
                 >
                   Analyze Different Ratings
                 </button>

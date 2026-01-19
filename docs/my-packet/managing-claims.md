@@ -1,4 +1,4 @@
-# Managing Claims
+﻿# Managing Claims
 
 Learn how to add, organize, and track your claimed conditions in My Packet.
 
@@ -126,8 +126,8 @@ Secondary service connection claims:
 
 When adding a secondary condition, specify:
 
-- **Primary Condition** — What it's secondary to
-- **Connection Type** — How they're related
+- **Primary Condition** - What it's secondary to
+- **Connection Type** - How they're related
 
 ---
 
@@ -174,19 +174,19 @@ Status updates <strong>immediately</strong>
 
 Sort your conditions by:
 
-- **Date Added** — Newest or oldest first
-- **Name** — Alphabetically
-- **Status** — By claim progress
-- **Type** — Primary vs. Secondary
+- **Date Added** - Newest or oldest first
+- **Name** - Alphabetically
+- **Status** - By claim progress
+- **Type** - Primary vs. Secondary
 
 ### Filtering
 
 Filter to show:
 
-- **All** — Every condition
-- **Primary Only** — Direct service connection
-- **Secondary Only** — Secondary service connection
-- **By Status** — Specific status only
+- **All** - Every condition
+- **Primary Only** - Direct service connection
+- **Secondary Only** - Secondary service connection
+- **By Status** - Specific status only
 
 ### Searching
 
@@ -301,9 +301,9 @@ Notes <strong>save automatically</strong>
 
 !!! tip "Managing Claims Effectively"
     
-    1. **Add conditions early** — As soon as you're researching
-    2. **Update statuses regularly** — Know where each claim stands
-    3. **Use notes liberally** — Document everything
-    4. **Build statements before filing** — Be prepared
-    5. **Link secondary to primary** — Keep connections clear
-    6. **Backup before removing** — Protect your work
+    1. **Add conditions early** - As soon as you're researching
+    2. **Update statuses regularly** - Know where each claim stands
+    3. **Use notes liberally** - Document everything
+    4. **Build statements before filing** - Be prepared
+    5. **Link secondary to primary** - Keep connections clear
+    6. **Backup before removing** - Protect your work

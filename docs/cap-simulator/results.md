@@ -1,4 +1,4 @@
-# C&P Simulator - Understanding Results
+﻿# C&P Simulator - Understanding Results
 
 After completing the simulation, you'll receive an estimated rating and detailed gap analysis.
 
@@ -8,11 +8,11 @@ After completing the simulation, you'll receive an estimated rating and detailed
 
 The results screen contains:
 
-1. **Estimated Rating** — Percentage based on your answers
-2. **Rating Breakdown** — How your answers mapped to criteria
-3. **Gap Analysis** — What separates you from higher ratings
-4. **Recommendations** — Preparation tips for your actual exam
-5. **Action Buttons** — Next steps you can take
+1. **Estimated Rating** - Percentage based on your answers
+2. **Rating Breakdown** - How your answers mapped to criteria
+3. **Gap Analysis** - What separates you from higher ratings
+4. **Recommendations** - Preparation tips for your actual exam
+5. **Action Buttons** - Next steps you can take
 
 ---
 
@@ -100,10 +100,10 @@ The gap analysis shows what would be needed for higher ratings:
 
 ### How to Use Gap Analysis
 
-1. **Review the criteria** — Understand what higher ratings require
-2. **Honestly assess** — Do you actually experience these symptoms?
-3. **Document evidence** — If you do experience them, ensure they're documented
-4. **Prepare to discuss** — Know how to articulate these during your exam
+1. **Review the criteria** - Understand what higher ratings require
+2. **Honestly assess** - Do you actually experience these symptoms?
+3. **Document evidence** - If you do experience them, ensure they're documented
+4. **Prepare to discuss** - Know how to articulate these during your exam
 
 !!! tip "Documentation is Key"
     The gap analysis shows what you'd need to document to potentially qualify for higher ratings. If you genuinely experience these symptoms:
@@ -199,13 +199,13 @@ Based on your results, you'll receive personalized recommendations:
 
 !!! tip "Maximize Your Preparation"
     
-    1. **Compare to your records** — Do your medical records reflect your answers?
-    2. **Identify gaps** — What's not documented that should be?
-    3. **Practice articulation** — Can you explain your symptoms clearly?
-    4. **Review gap analysis** — Understand what higher ratings need
-    5. **Don't exaggerate** — Be accurate about your actual experience
-    6. **Don't minimize** — Also don't understate your symptoms
-    7. **Take multiple times** — Practice builds confidence
+    1. **Compare to your records** - Do your medical records reflect your answers?
+    2. **Identify gaps** - What's not documented that should be?
+    3. **Practice articulation** - Can you explain your symptoms clearly?
+    4. **Review gap analysis** - Understand what higher ratings need
+    5. **Don't exaggerate** - Be accurate about your actual experience
+    6. **Don't minimize** - Also don't understate your symptoms
+    7. **Take multiple times** - Practice builds confidence
 
 ---
 
@@ -213,9 +213,9 @@ Based on your results, you'll receive personalized recommendations:
 
 After reviewing your results:
 
-1. **Review the gap analysis** — Understand your current level
-2. **Document appropriately** — Ensure records reflect reality
-3. **Practice articulation** — Be ready to describe symptoms
-4. **Gather evidence** — Buddy statements, medical records
-5. **Consult a VSO** — Get professional guidance
-6. **Schedule your exam** — When you're ready
+1. **Review the gap analysis** - Understand your current level
+2. **Document appropriately** - Ensure records reflect reality
+3. **Practice articulation** - Be ready to describe symptoms
+4. **Gather evidence** - Buddy statements, medical records
+5. **Consult a VSO** - Get professional guidance
+6. **Schedule your exam** - When you're ready

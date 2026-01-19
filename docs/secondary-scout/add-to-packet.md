@@ -1,4 +1,4 @@
-# Adding to My Packet
+﻿# Adding to My Packet
 
 Learn how to save promising secondary conditions from Secondary Scout to your claims packet for tracking and evidence building.
 
@@ -8,10 +8,10 @@ Learn how to save promising secondary conditions from Secondary Scout to your cl
 
 Saving secondary conditions to My Packet helps you:
 
-- **Track potential claims** — Organize your secondary claim ideas
-- **Build evidence** — Generate nexus statements for each
-- **Prepare systematically** — Work through conditions one at a time
-- **Backup your work** — Export and restore your packet
+- **Track potential claims** - Organize your secondary claim ideas
+- **Build evidence** - Generate nexus statements for each
+- **Prepare systematically** - Work through conditions one at a time
+- **Backup your work** - Export and restore your packet
 
 ---
 
@@ -21,16 +21,16 @@ Saving secondary conditions to My Packet helps you:
 
 <div class="step-container">
 <div class="step">
-<strong>Find a promising suggestion</strong> — Review the Secondary Scout results
+<strong>Find a promising suggestion</strong> - Review the Secondary Scout results
 </div>
 <div class="step">
-<strong>Expand the card</strong> — Click to see details
+<strong>Expand the card</strong> - Click to see details
 </div>
 <div class="step">
-<strong>Click "Save to Packet"</strong> — Button in the card actions
+<strong>Click "Save to Packet"</strong> - Button in the card actions
 </div>
 <div class="step">
-<strong>Confirmation</strong> — Button changes to "Saved ✓"
+<strong>Confirmation</strong> - Button changes to "Saved ✓"
 </div>
 </div>
 
@@ -56,19 +56,19 @@ When you save a secondary condition, the following information is stored:
 
 <div class="step-container">
 <div class="step">
-<strong>Select conditions</strong> — Check the boxes on desired cards
+<strong>Select conditions</strong> - Check the boxes on desired cards
 </div>
 <div class="step">
-<strong>Or click "Select All"</strong> — Selects all unsaved suggestions
+<strong>Or click "Select All"</strong> - Selects all unsaved suggestions
 </div>
 <div class="step">
-<strong>Review selection</strong> — Floating bar shows count
+<strong>Review selection</strong> - Floating bar shows count
 </div>
 <div class="step">
-<strong>Click "Add to Packet"</strong> — On the floating action bar
+<strong>Click "Add to Packet"</strong> - On the floating action bar
 </div>
 <div class="step">
-<strong>Confirmation</strong> — Alert shows how many were added
+<strong>Confirmation</strong> - Alert shows how many were added
 </div>
 </div>
 
@@ -83,8 +83,8 @@ When conditions are selected:
 ```
 
 - Shows count of selected items
-- **Add to Packet** — Saves all selected
-- **X** — Clears selection
+- **Add to Packet** - Saves all selected
+- **X** - Clears selection
 
 ---
 
@@ -171,12 +171,12 @@ If you decide not to pursue a secondary condition:
 
 !!! tip "Recommended Workflow"
     
-    1. **Start with High probability** — Focus on strongest connections
-    2. **Research each one** — Read the nexus theory and citations
-    3. **Prioritize** — You can't file everything at once
-    4. **Build evidence** — Use Nexus Builder for each
-    5. **Consult professionals** — Talk to VSO before filing
-    6. **File strategically** — Consider filing in batches
+    1. **Start with High probability** - Focus on strongest connections
+    2. **Research each one** - Read the nexus theory and citations
+    3. **Prioritize** - You can't file everything at once
+    4. **Build evidence** - Use Nexus Builder for each
+    5. **Consult professionals** - Talk to VSO before filing
+    6. **File strategically** - Consider filing in batches
 
 ---
 

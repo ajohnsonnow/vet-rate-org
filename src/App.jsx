@@ -48,17 +48,59 @@ import WitnessBench from './components/WitnessBench';
 import RiskAssessment from './components/RiskAssessment';
 import TDIUBuilder from './components/TDIUBuilder';
 import PACTActNavigator from './components/PACTActNavigator';
+import TermsOfServiceModal from './components/TermsOfServiceModal';
+import TermsOfServicePage from './components/TermsOfServicePage';
 import FOIAGenerator from './components/FOIAGenerator';
 import MillionDollarDashboard from './components/MillionDollarDashboard';
 import MOSHazardMatcher from './components/MOSHazardMatcher';
 import WebOfConditions from './components/WebOfConditions';
+import LegislativeWatchdog from './components/LegislativeWatchdog';
+import BackupManager from './components/BackupManager';
+import TimeMachine from './components/TimeMachine';
+import CommandersChecklist from './components/CommandersChecklist';
+import TheTribunal from './components/TheTribunal';
+import ConsistencyEngine from './components/ConsistencyEngine';
+import WhatIfSandbox from './components/WhatIfSandbox';
+import CrisisModal from './components/CrisisModal';
+import UpdateBanner from './components/UpdateBanner';
+import WhatsNewModal from './components/WhatsNewModal';
+import ToastContainer, { useToast } from './components/Toast';
+import StatementAnalyzer from './components/StatementAnalyzer';
+import ClaimProgress from './components/ClaimProgress';
+import PWAInstallButton from './components/PWAInstallButton';
+import DenialDecoder from './components/DenialDecoder';
+import ZonkButton from './components/ZonkButton';
+import LoadingBunker from './components/LoadingBunker';
+import BodyMapSelector from './components/BodyMapSelector';
+import ClaimStressTest from './components/ClaimStressTest';
+import EvidenceTimeline from './components/EvidenceTimeline';
+import ExamPrepRoom from './components/ExamPrepRoom';
+import RecordSearch from './components/RecordSearch';
+import CloudSyncManager from './components/CloudSyncManager';
+import BootCampTour from './components/BootCampTour';
+import DemoDataLoader from './components/DemoDataLoader';
+import MissionProtocol from './components/MissionProtocol';
+import { HelperModeProvider } from './contexts/HelperModeContext';
+import { FocusModeProvider } from './contexts/FocusModeContext';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import { saveStatement, getSavedClaims, getStatement } from './utils/claimsStorage';
 import { initializeErrorCapture } from './utils/bugReportUtils';
+import { setupBeforeUnloadWarning } from './utils/dataPersistence';
+import { migrateUserData } from './utils/migrationManager';
+import { startUpdateChecker, stopUpdateChecker, applyUpdate } from './utils/updateChecker';
+import { createDebugDumpHandler } from './utils/debugDump';
+import { APP_VERSION, LAST_SEEN_VERSION_KEY } from './utils/version';
+import { needsMigration, migrateFromLocalStorage } from './utils/storage';
 import disabilityData from './data/disabilityData.json';
+import changelogData from './data/changelog.json';
 import './index.css';
 
 function App() {
+  console.log('🚀 App component mounting...');
+  
+  // Toast notification system
+  const { toasts, onClose, onAction } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
@@ -68,6 +110,7 @@ function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showAboutUs, setShowAboutUs] = useState(false);
   const [showContactUs, setShowContactUs] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showSecondaryScoutLauncher, setShowSecondaryScoutLauncher] = useState(false);
   const [showSecondaryScout, setShowSecondaryScout] = useState(false);
   const [userConditions, setUserConditions] = useState([]);
@@ -98,14 +141,201 @@ function App() {
   const [showMillionDollarDashboard, setShowMillionDollarDashboard] = useState(false);
   const [showMOSHazardMatcher, setShowMOSHazardMatcher] = useState(false);
   const [showWebOfConditions, setShowWebOfConditions] = useState(false);
+  const [showLegislativeWatchdog, setShowLegislativeWatchdog] = useState(false);
+  const [showBackupManager, setShowBackupManager] = useState(false);
+  const [showTimeMachine, setShowTimeMachine] = useState(false);
+  const [showTheTribunal, setShowTheTribunal] = useState(false);
+  const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
+  const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
+  
+  // NEW DIAMOND-TIER FEATURES
+  const [showDenialDecoder, setShowDenialDecoder] = useState(false);
+  const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
+  const [showClaimStressTest, setShowClaimStressTest] = useState(false);
+  const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
+  const [showExamPrepRoom, setShowExamPrepRoom] = useState(false);
+  
+  // FORCE MULTIPLIER FEATURES
+  const [showRecordSearch, setShowRecordSearch] = useState(false);
+  const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
+  
+  // CLEAR COAT: Onboarding & Trust Features
+  const [showMissionProtocol, setShowMissionProtocol] = useState(false);
+  
+  // SAFETY-CRITICAL: Crisis Intervention State
+  const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [crisisSeverity, setCrisisSeverity] = useState('high');
+  
+  // LIVE OPS: Update management state
+  const [updateAvailable, setUpdateAvailable] = useState(null);
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [currentChangelog, setCurrentChangelog] = useState([]);
+  
+  // KILL SWITCH: Maintenance mode state
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
+  
+  // IndexedDB Migration State
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationComplete, setMigrationComplete] = useState(false);
+  
   const [capSimulatorResults, setCapSimulatorResults] = useState([]);
   const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
     () => localStorage.getItem('vetrate-disclaimer-acknowledged') === 'true'
   );
+  
+  // LIVE OPS: Debug dump handler (Easter egg)
+  const debugDumpHandler = createDebugDumpHandler();
+  
+  // LIVE OPS: Update management handlers
+  const handleApplyUpdate = () => {
+    applyUpdate(); // Force hard reload
+  };
+  
+  const handleDismissUpdateBanner = () => {
+    setShowUpdateBanner(false);
+  };
+  
+  const handleCloseWhatsNew = () => {
+    setShowWhatsNew(false);
+  };
 
   // Initialize error capture for bug reports
   useEffect(() => {
     initializeErrorCapture();
+  }, []);
+  
+  // Setup beforeunload warning for unsaved changes
+  useEffect(() => {
+    setupBeforeUnloadWarning();
+  }, []);
+  
+  // LIVE OPS: Data migration and update checking
+  useEffect(() => {
+    // Step 0A: KILL SWITCH - Check maintenance mode FIRST
+    const checkMaintenanceMode = async () => {
+      try {
+        const response = await fetch('/version.json?t=' + Date.now());
+        const data = await response.json();
+        
+        if (data.maintenance_mode === true) {
+          console.warn('🚨 MAINTENANCE MODE ACTIVE - App disabled');
+          setMaintenanceMode(true);
+          setMaintenanceMessage(data.maintenance_message || 'System maintenance in progress. Please check back later.');
+          return true; // Stop all other initialization
+        }
+        return false;
+      } catch (error) {
+        console.error('⚠️ Could not check maintenance mode:', error);
+        return false; // If check fails, allow app to continue (fail-open)
+      }
+    };
+    
+    // Step 0B: IndexedDB Migration (CRITICAL - runs FIRST before everything)
+    const runStorageMigration = async () => {
+      try {
+        const shouldMigrate = await needsMigration();
+        
+        if (shouldMigrate) {
+          console.log('🔄 IndexedDB Migration: Migrating data from localStorage...');
+          setIsMigrating(true);
+          
+          const migrationResult = await migrateFromLocalStorage();
+          
+          if (migrationResult.success) {
+            console.log('✅ IndexedDB Migration: Successfully migrated', migrationResult.itemsMigrated, 'items');
+            console.log('   Migrated keys:', migrationResult.keysProcessed);
+          } else {
+            console.error('⚠️ IndexedDB Migration: Failed', migrationResult.errors);
+          }
+          
+          setIsMigrating(false);
+          setMigrationComplete(true);
+        } else {
+          console.log('✅ IndexedDB Migration: Already complete, using IndexedDB');
+          setMigrationComplete(true);
+        }
+      } catch (error) {
+        console.error('❌ IndexedDB Migration: Critical error', error);
+        setIsMigrating(false);
+        setMigrationComplete(true); // Continue anyway
+      }
+    };
+    
+    const initializeApp = async () => {
+      // CRITICAL: Check maintenance mode before anything else
+      const inMaintenanceMode = await checkMaintenanceMode();
+      if (inMaintenanceMode) {
+        return; // Stop all initialization if in maintenance mode
+      }
+      
+      // Continue with normal initialization
+      await runStorageMigration();
+      
+      // Step 1: Migrate user data if needed (CRITICAL - runs after IndexedDB migration)
+      console.log('🛡️ LIVE OPS: Initializing protection systems...');
+      const migrationResult = migrateUserData();
+    
+    if (migrationResult.migrationsRun.length > 0) {
+      console.log(`✅ Ran ${migrationResult.migrationsRun.length} migration(s):`, migrationResult.migrationsRun);
+    }
+    
+    if (!migrationResult.success) {
+      console.error('⚠️ Some migrations failed:', migrationResult.errors);
+      // Could show a warning to user, but app should still function
+    }
+    
+    // Step 2: Check if user should see "What's New" modal
+    const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
+    const currentVersion = APP_VERSION;
+    
+    if (lastSeenVersion !== currentVersion) {
+      // User hasn't seen this version's changelog yet
+      console.log(`📰 New version detected: ${currentVersion} (last seen: ${lastSeenVersion || 'none'})`);
+      
+      // Find changelog for current version
+      const versionUpdate = changelogData.updates.find(u => u.version === currentVersion);
+      if (versionUpdate && versionUpdate.changelog.length > 0) {
+        setCurrentChangelog(versionUpdate.changelog);
+        setShowWhatsNew(true);
+      }
+      
+      // Mark this version as seen
+      localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
+    }
+    
+    // Step 3: Start update checker
+    startUpdateChecker((updateInfo) => {
+      console.log('🆕 Update available:', updateInfo);
+      setUpdateAvailable(updateInfo);
+      setShowUpdateBanner(true);
+    });
+    };
+    
+    // Run initialization
+    initializeApp();
+    
+    // Cleanup
+    return () => {
+      stopUpdateChecker();
+    };
+  }, []);
+
+  // SAFETY-CRITICAL: Listen for crisis events from any component
+  useEffect(() => {
+    const handleCrisisEvent = (event) => {
+      const { severity, source } = event.detail || {};
+      console.warn('🚨 Crisis detected:', { severity, source });
+      setCrisisSeverity(severity || 'high');
+      setShowCrisisModal(true);
+    };
+
+    window.addEventListener('vetrate:crisis', handleCrisisEvent);
+    
+    return () => {
+      window.removeEventListener('vetrate:crisis', handleCrisisEvent);
+    };
   }, []);
 
   const handleLaunchSecondaryScout = (conditions) => {
@@ -316,8 +546,55 @@ function App() {
     showMillionDollarDashboard, showMOSHazardMatcher, showWebOfConditions
   ]);
 
+  // Show migration loading screen if migrating
+  if (isMigrating) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingBunker size="large" message="Migrating to Enhanced Storage..." />
+          <p className="text-gray-400 mt-4 text-sm">
+            Upgrading your data storage. This only happens once.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // KILL SWITCH: If maintenance mode is active, show static maintenance page
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-gray-800 border-2 border-yellow-500 rounded-lg p-8 text-center">
+          <div className="mb-6">
+            <span className="text-6xl">🛠️</span>
+          </div>
+          <h1 className="text-3xl font-bold text-yellow-400 mb-4">
+            Maintenance Mode
+          </h1>
+          <p className="text-gray-300 text-lg mb-6">
+            {maintenanceMessage}
+          </p>
+          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4 text-sm text-gray-300">
+            <p className="font-semibold text-yellow-400 mb-2">What does this mean?</p>
+            <p>
+              Vet-Rate.org has been temporarily taken offline to protect your data and ensure system integrity. 
+              This is a precautionary measure and your saved claims are safe.
+            </p>
+          </div>
+          <div className="mt-6 text-gray-400 text-sm">
+            <p>Having an emergency? Contact the Veterans Crisis Line:</p>
+            <p className="text-xl font-bold text-red-400 mt-2">988 (Press 1)</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-emerald-950 flex flex-col transition-colors duration-200">
+      {/* Toast Notification System */}
+      <ToastContainer toasts={toasts} onClose={onClose} onAction={onAction} />
+      
       {/* Disclaimer Splash - shows on first visit */}
       <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
       
@@ -334,6 +611,7 @@ function App() {
         // Discover
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
+        onExamPrepRoomClick={() => setShowExamPrepRoom(true)}
         onPathfinderClick={() => setShowPathfinder(true)}
         // Evidence
         onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
@@ -358,6 +636,20 @@ function App() {
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
         onStateBenefitHunterClick={() => setShowStateBenefitHunter(true)}
+        // Legislative Watchdog
+        onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
+        // Quality of Life Features
+        onBackupManagerClick={() => setShowBackupManager(true)}
+        onTimeMachineClick={() => setShowTimeMachine(true)}
+        // Gold Standard Features
+        onTheTribunalClick={() => setShowTheTribunal(true)}
+        onConsistencyEngineClick={() => setShowConsistencyEngine(true)}
+        onWhatIfSandboxClick={() => setShowWhatIfSandbox(true)}
+        // Diamond-Tier Features
+        onDenialDecoderClick={() => setShowDenialDecoder(true)}
+        // Force Multiplier Features
+        onRecordSearchClick={() => setShowRecordSearch(true)}
+        onCloudSyncClick={() => setShowCloudSyncManager(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
@@ -379,7 +671,7 @@ function App() {
 
         {/* SEARCH BAR - Prominent Position */}
         <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-gray-600 p-6">
+          <div id="tour-search-section" className="bg-white dark:bg-emerald-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-emerald-600 p-6">
             <SearchBar
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -389,62 +681,60 @@ function App() {
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
               💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or keyword — covers all 15 body systems from 38 CFR Part 4
             </p>
+            
+            {/* Demo Data Loader - "Gold Standard" Example */}
+            <div className="text-center mt-4">
+              <DemoDataLoader 
+                onDataLoaded={() => setShowMyPacket(true)} 
+                variant="link"
+              />
+            </div>
           </div>
+          
+          {/* SEARCH RESULTS - Directly under search bar */}
+          {error && (
+            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg" role="alert">
+              <p className="text-yellow-800 dark:text-yellow-200">
+                <strong>Info:</strong> {error}
+              </p>
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="flex justify-center my-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-va-blue border-t-va-gold"></div>
+            </div>
+          )}
+
+          {!isLoading && results.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+                ✅ Search Results ({results.length} found)
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {results.map((result) => (
+                  <SearchResultCard
+                    key={result.id}
+                    result={result}
+                    onSelect={() => setSelectedResult(result)}
+                    isSelected={selectedResult?.id === result.id}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!isLoading && searchTerm.trim() !== '' && results.length === 0 && !error && (
+            <div className="text-center py-8">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">No matching disabilities found.</p>
+            </div>
+          )}
         </div>
 
-        {/* Quick Condition Picker - Prominent Position */}
-        <div className="max-w-4xl mx-auto mb-8">
+        {/* Quick Condition Picker - Below Search Results */}
+        <div id="tour-quick-picker" className="max-w-4xl mx-auto mb-8">
           <QuickConditionPicker onViewPacket={() => setShowMyPacket(true)} />
         </div>
-
-        {error && (
-          <div className="max-w-4xl mx-auto mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg" role="alert">
-            <p className="text-yellow-800 dark:text-yellow-200">
-              <strong>Info:</strong> {error}
-            </p>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="flex justify-center my-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-va-blue border-t-va-gold"></div>
-          </div>
-        )}
-
-        {!isLoading && results.length > 0 && (
-          <div className="mt-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              ✅ Search Results ({results.length} found)
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {results.slice(0, 3).map((result) => (
-                <SearchResultCard
-                  key={result.id}
-                  result={result}
-                  onSelect={() => setSelectedResult(result)}
-                  isSelected={selectedResult?.id === result.id}
-                />
-              ))}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-              {results.slice(3).map((result) => (
-                <SearchResultCard
-                  key={result.id}
-                  result={result}
-                  onSelect={() => setSelectedResult(result)}
-                  isSelected={selectedResult?.id === result.id}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!isLoading && searchTerm.trim() !== '' && results.length === 0 && !error && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No matching disabilities found.</p>
-          </div>
-        )}
 
         {selectedResult && (
           <DisabilityDetails
@@ -478,7 +768,7 @@ function App() {
                 
                 <div className="flex-1 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                    <h3 className="text-2xl font-bold">Tactical Calculator</h3>
+                    <h3 className="text-3xl font-bold">Tactical Calculator</h3>
                     <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-pulse">CORE FEATURE</span>
                   </div>
                   <p className="text-blue-100 max-w-xl">
@@ -501,67 +791,66 @@ function App() {
             </div>
           </div>
 
-          {/* SECTION 2: DISCOVER YOUR CLAIMS - Find What to Claim */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🔍 Discover Your Claims</h2>
+          {/* SECTION 2: DISCOVER YOUR CLAIMS - Teal Theme */}
+          <h2 className="text-2xl font-bold text-teal-700 dark:text-teal-300 text-center mb-2 mt-12">🔍 Discover Your Claims</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find secondary conditions, practice for exams, and strategize your approach</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Secondary Scout CTA */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 border border-emerald-200 dark:border-emerald-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="bg-emerald-100 dark:bg-emerald-800/50 rounded-lg p-2">
-                  <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 border-2 border-teal-300 dark:border-teal-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl p-3 shadow-lg flex-shrink-0">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Secondary Scout
-                    <span className="px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">NEW</span>
                   </h3>
+                  <span className="inline-block px-2 py-0.5 bg-teal-500 text-white text-xs font-bold rounded-full">INSTANT</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 Discover <strong>secondary claims</strong> linked to your service-connected disabilities — powered by our comprehensive nexus database and 38 CFR § 3.310.
               </p>
               <button
                 onClick={() => setShowSecondaryScoutLauncher(true)}
-                className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                className="w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
               >
                 🚀 Launch Secondary Scout
               </button>
             </div>
 
             {/* C&P Simulator CTA */}
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/40 dark:to-yellow-900/40 border border-amber-200 dark:border-amber-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="bg-amber-100 dark:bg-amber-800/50 rounded-lg p-2">
-                  <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/40 dark:to-cyan-900/40 border-2 border-teal-300 dark:border-teal-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl p-3 shadow-lg flex-shrink-0">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                     C&P Exam Simulator
-                    <span className="px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">NEW</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 Practice for your <strong>C&P exam</strong> with condition-specific questions, DBQ-aligned scenarios, and real-time feedback to maximize your rating.
               </p>
               <button
                 onClick={() => setShowCAPSimulator(true)}
-                className="w-full px-4 py-2.5 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors"
+                className="w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg"
               >
                 🎯 Launch C&P Simulator
               </button>
             </div>
           </div>
 
-          {/* Pathfinder CTA - Full Width Featured */}
+          {/* Pathfinder CTA - Full Width Featured - Teal Theme for Discover Section */}
           <div className="mt-6">
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
+            <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
@@ -578,7 +867,7 @@ function App() {
                     <h3 className="text-xl font-bold">The Pathfinder</h3>
                     <span className="px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI STRATEGY</span>
                   </div>
-                  <p className="text-blue-100 max-w-2xl">
+                  <p className="text-teal-100 max-w-2xl">
                     <strong>Your personal claims strategist.</strong> Enter your current ratings and let AI analyze your profile to suggest 
                     <strong> high-probability secondary claims</strong> you may be missing, with direct links to build your case. Like having a VSO in your pocket.
                   </p>
@@ -587,7 +876,7 @@ function App() {
                 <div className="flex-shrink-0">
                   <button
                     onClick={() => setShowPathfinder(true)}
-                    className="px-6 py-3 bg-white text-indigo-700 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="px-6 py-3 bg-white text-teal-700 rounded-lg font-bold text-lg hover:bg-teal-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
                   >
                     <span>📊</span>
                     <span>Analyze My Strategy</span>
@@ -597,24 +886,24 @@ function App() {
             </div>
           </div>
 
-          {/* SECTION 3: BUILD YOUR EVIDENCE - Documentation & Medical Records */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">📋 Build Your Evidence</h2>
+          {/* SECTION 3: BUILD YOUR EVIDENCE - Violet Theme */}
+          <h2 className="text-2xl font-bold text-violet-700 dark:text-violet-300 text-center mb-2 mt-12">📋 Build Your Evidence</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Gather medical records, fill out forms, and create supporting statements</p>
 
           {/* C-File Analyzer CTA - Full Width - Featured */}
-          <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-fuchsia-900/40 border-2 border-pink-300 dark:border-pink-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden mb-6">
+          <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-violet-50 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-violet-900/40 border-2 border-violet-300 dark:border-violet-700 rounded-xl p-6 hover:shadow-xl transition-all mb-6">
             {/* Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse"></div>
             
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4 relative">
               <div className="flex items-center gap-3 flex-1">
-                <div className="bg-pink-100 dark:bg-pink-800/50 rounded-lg p-3">
+                <div className="bg-violet-100 dark:bg-violet-800/50 rounded-xl p-3 flex-shrink-0">
                   <span className="text-3xl">🔬</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
                     C-File AI Analyzer
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">BETA</span>
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">AI</span>
                     <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -625,7 +914,7 @@ function App() {
               </div>
               <button
                 onClick={() => setShowCFileAnalyzer(true)}
-                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
               >
                 🚀 Analyze My C-File
               </button>
@@ -634,54 +923,49 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Blue Button X-Ray CTA */}
-            <div className="bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 dark:from-cyan-900/40 dark:via-blue-900/40 dark:to-indigo-900/40 border-2 border-cyan-300 dark:border-cyan-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">📋</span>
+            <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-violet-50 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-violet-900/40 border-2 border-violet-300 dark:border-violet-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">📋</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Blue Button X-Ray
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">INSTANT</span>
-                  </h3>
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">AI</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Instant Evidence Mining.</strong> Upload your <strong>Blue Button</strong> from MyHealtheVet (instant download!) and find <strong>unclaimed diagnoses</strong> hiding in your records.
               </p>
               <button
                 onClick={() => setShowBlueButtonXRay(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:from-cyan-700 hover:to-blue-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔬 Scan My Records
               </button>
             </div>
 
             {/* Witness Bench CTA */}
-            <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-fuchsia-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">👥</span>
+            <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-fuchsia-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">👥</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                     Witness Bench
                     <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
                     <span className="px-2 py-0.5 bg-amber-500 text-black text-xs font-bold rounded-full">AI</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Buddy Letter Wizard.</strong> Hand off to your <strong>spouse, friend, or battle buddy</strong>. AI asks the RIGHT questions to capture powerful <strong>witness evidence</strong>.
               </p>
               <button
                 onClick={() => setShowWitnessBench(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ✍️ Create Buddy Statement
               </button>
@@ -689,7 +973,7 @@ function App() {
           </div>
 
           {/* Forms Helper CTA - Full Width */}
-          <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40 border border-purple-200 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
+          <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <div className="flex items-center gap-3 flex-1">
                 <div className="bg-purple-100 dark:bg-purple-800/50 rounded-lg p-2">
@@ -709,150 +993,163 @@ function App() {
               </div>
               <button
                 onClick={() => setShowFormsHelper(true)}
-                className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 📝 Open Forms Helper
               </button>
             </div>
           </div>
 
-          {/* SECTION 4: QUALITY CONTROL - Check Before You Submit */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">✅ Quality Control</h2>
+          {/* SECTION 4: QUALITY CONTROL - Rose Theme */}
+          <h2 className="text-2xl font-bold text-rose-700 dark:text-rose-300 text-center mb-2 mt-12">✅ Quality Control</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Review your work, decode VA decisions, and protect yourself from scams</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Red Team CTA */}
-            <div className="bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 dark:from-red-900/40 dark:via-orange-900/40 dark:to-amber-900/40 border-2 border-red-300 dark:border-red-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-red-500 to-orange-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🎖️</span>
+            <div className="bg-gradient-to-br from-rose-50 via-red-50 to-rose-50 dark:from-rose-900/40 dark:via-red-900/40 dark:to-rose-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-rose-500 to-red-600 rounded-xl p-3 shadow-lg flex-shrink-0">
+                  <span className="text-3xl">🎖️</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Red Team
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
                   </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-red-500 text-white text-xs font-bold rounded-full">AI</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Statement Stress Test.</strong> Find weak language that's <strong>hurting your claim</strong> before the VA does. "Tough guy" language = denials.
               </p>
               <button
                 onClick={() => setShowRedTeam(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg font-bold hover:from-red-700 hover:to-orange-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
-                🔍 Stress Test My Statement
+                🔍 Stress Test
               </button>
             </div>
 
             {/* Decision Decoder CTA */}
-            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🔓</span>
+            <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-rose-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-rose-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl p-3 shadow-lg flex-shrink-0">
+                  <span className="text-3xl">🔓</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Decision Decoder
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
                   </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold rounded-full">AI</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Denial Translator.</strong> Got a confusing VA letter? Paste it in and get <strong>plain English</strong> + what's missing + next steps.
               </p>
               <button
                 onClick={() => setShowDecisionDecoder(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold hover:from-amber-600 hover:to-orange-600 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
-                🔓 Decode My Decision
+                🔓 Decode Decision
+              </button>
+            </div>
+
+            {/* Time Machine CTA */}
+            <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-rose-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-rose-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">⏰</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    Time Machine
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold rounded-full">NEW</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Intent to File Tracker.</strong> Don't lose your effective date! Countdown timer + backpay calculator for your ITF deadline.
+              </p>
+              <button
+                onClick={() => setShowTimeMachine(true)}
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                ⏰ Track Deadline
               </button>
             </div>
 
             {/* Shark Radar CTA */}
-            <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/40 dark:to-orange-900/40 border border-red-200 dark:border-red-700 rounded-xl p-5 hover:shadow-lg transition-shadow">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="bg-red-100 dark:bg-red-800/50 rounded-lg p-2">
-                  <span className="text-2xl">🦈</span>
+            <div className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900/40 dark:to-red-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-rose-500 to-red-600 rounded-xl p-3 shadow-lg flex-shrink-0">
+                  <span className="text-3xl">🦈</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Shark Radar
-                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">NEW</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Before you sign ANYTHING!</strong> Paste contract or email text from "VA consultants" to scan for 
                 <strong> illegal fees, predatory practices, and scams</strong> based on 38 CFR § 14.636.
               </p>
               <button
                 onClick={() => setShowSharkRadar(true)}
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-colors"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔍 Scan Contract
               </button>
             </div>
           </div>
 
-          {/* SECTION 5: ADVANCED STRATEGY - Power User Tools */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🚀 Advanced Strategy</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Power tools for maximizing your rating and protecting what you have</p>
+          {/* SECTION 5: MAXIMIZE YOUR RATING - Amber Theme */}
+          <h2 className="text-2xl font-bold text-amber-700 dark:text-amber-300 text-center mb-2 mt-12">💰 Maximize Your Rating</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Get every dollar you deserve—TDIU, PACT Act, and strategic claims</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* TDIU Work Impact Builder CTA */}
-            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/40 dark:via-emerald-900/40 dark:to-teal-900/40 border-2 border-green-300 dark:border-green-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">💼</span>
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">💼</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     TDIU Builder
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded-full">💰 100%</span>
-                  </h3>
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full">💰 100%</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>The 100% Backdoor.</strong> Translate your symptoms into <strong>vocational language</strong> for VA Form 21-8940. Get paid at 100% even with a 60-70% rating.
               </p>
               <button
                 onClick={() => setShowTDIUBuilder(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 📝 Build My TDIU Case
               </button>
             </div>
 
             {/* Poke the Bear Calculator CTA */}
-            <div className="bg-gradient-to-br from-orange-50 via-red-50 to-rose-50 dark:from-orange-900/40 dark:via-red-900/40 dark:to-rose-900/40 border-2 border-orange-300 dark:border-orange-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🐻</span>
+            <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-900/40 dark:via-orange-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🐻</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Risk Calculator
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full">DEFENSE</span>
-                  </h3>
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">DEFENSE</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Don't Poke the Bear!</strong> Check 5-Year, 20-Year, and P&T protections <strong>BEFORE</strong> you file. Sharks push frivolous claims that <strong>trigger rating reductions</strong>.
               </p>
               <button
                 onClick={() => setShowRiskAssessment(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg font-bold hover:from-orange-700 hover:to-red-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 ⚖️ Check My Risk
               </button>
@@ -861,234 +1158,348 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             {/* Symptom Logger CTA */}
-            <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-900/40 dark:via-violet-900/40 dark:to-fuchsia-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">📊</span>
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">📊</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Symptom Logger
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-violet-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs font-bold rounded-full">50%</span>
-                  </h3>
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full">50%</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
-                <strong>The 50% Maker.</strong> Track <strong>migraines/IBS frequency</strong> for your C&P exam. Export PDF proof of "prostrating attacks per month."
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>The 50% Maker.</strong> Track symptoms with <strong>frequency, location, and severity</strong>. Export professional PDF evidence for your C&P exam.
               </p>
               <button
                 onClick={() => setShowSymptomLogger(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-violet-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 📝 Log My Symptoms
               </button>
             </div>
 
             {/* PACT Act Navigator CTA */}
-            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-violet-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🔥</span>
+            <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-900/40 dark:via-orange-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🔥</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     PACT Act Navigator
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded-full">PRESUMPTIVE</span>
-                  </h3>
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">HOT</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Skip the Nexus Letter.</strong> Check if your condition is <strong>presumptive</strong> under PACT Act—Agent Orange, burn pits, Gulf War, radiation. <strong>No proof needed.</strong>
               </p>
               <button
                 onClick={() => setShowPACTActNavigator(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🗺️ Check My Presumptives
               </button>
             </div>
 
             {/* FOIA Keysmith CTA */}
-            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🔑</span>
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🔑</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                     The Keysmith
                     <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">NEW</span>
                     <span className="px-2 py-0.5 bg-gray-700 text-white text-xs font-bold rounded-full">FOIA</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Unlock Your C-File.</strong> Generate a <strong>FOIA request</strong> for your complete VA claims file. See what VA used—and <strong>what they ignored</strong>.
               </p>
               <button
                 onClick={() => setShowFOIAGenerator(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🔓 Generate FOIA Request
               </button>
             </div>
           </div>
 
-          {/* SECTION 6: SUPPORT & RESOURCES - Get Free Help */}
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2 mt-12">🤝 Support & Resources</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation and unlock state-specific benefits</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* VSO Finder CTA */}
-            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-purple-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-              {/* Decorative element */}
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">🤝</span>
+
+          {/* SECTION 6: FORCE MULTIPLIERS - Slate Theme */}
+          <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300 text-center mb-2 mt-12">⚔️ Force Multipliers</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Advanced simulators and interactive tools that transform how you build your claim</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Somatic Target - Body Map CTA */}
+            <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-slate-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🎯</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
-                    VSO Finder
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">FREE HELP</span>
-                  </h3>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    Somatic Target
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white text-xs font-bold rounded-full">MAP</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Click, Don't Type.</strong> Interactive body map that translates your clicks into <strong>exact medical terminology</strong>. Turn "My back hurts" into proper diagnosis language.
+              </p>
+              <button
+                onClick={() => setShowBodyMapSelector(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                🎯 Map My Pain
+              </button>
+            </div>
+
+            {/* War Game - Red Team Simulator CTA */}
+            <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-slate-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">⚔️</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    The War Game
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-slate-600 to-gray-700 text-white text-xs font-bold rounded-full">AI</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Red Team Your Claim.</strong> AI adopts a <strong>Skeptical C&P Examiner</strong> persona. Find weaknesses <strong>before</strong> the VA does. Practice tough questions now.
+              </p>
+              <button
+                onClick={() => setShowClaimStressTest(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                ⚔️ Stress Test My Claim
+              </button>
+            </div>
+
+            {/* Continuity Thread - Timeline CTA */}
+            <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-slate-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🧵</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    Continuity Thread
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white text-xs font-bold rounded-full">TIMELINE</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Visualize Your Nexus.</strong> Timeline shows evidence from service to now. Automatically flags <strong>dangerous gaps > 5 years</strong>. Fill them before it's too late.
+              </p>
+              <button
+                onClick={() => setShowEvidenceTimeline(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                🧵 Build My Timeline
+              </button>
+            </div>
+
+            {/* The Tribunal CTA */}
+            <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-slate-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">⚖️</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    The Tribunal
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-slate-600 to-gray-600 text-white text-xs font-bold rounded-full">VOICE</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Mock BVA Hearing.</strong> Voice-interactive simulator with AI judge asking tough questions. Practice before the real Board of Veterans' Appeals.
+              </p>
+              <button
+                onClick={() => setShowTheTribunal(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                ⚖️ Start Mock Hearing
+              </button>
+            </div>
+          </div>
+
+          {/* SECTION 7: SUPPORT & RESOURCES - Sky Theme */}
+          <h2 className="text-2xl font-bold text-sky-700 dark:text-sky-300 text-center mb-2 mt-12">🤝 Support & Resources</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation, track VA rule changes, and unlock state-specific benefits</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* VSO Finder CTA */}
+            <div className="bg-gradient-to-br from-sky-50 via-cyan-50 to-sky-50 dark:from-sky-900/40 dark:via-cyan-900/40 dark:to-sky-900/40 border-2 border-sky-300 dark:border-sky-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              {/* Decorative element */}
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🤝</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    VSO Finder
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full">FREE HELP</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>The Honest Broker.</strong> Find <strong>FREE, Accredited</strong> representation near you. 
                 Connect with County VSOs, DAV, VFW, and avoid <strong>"Claim Sharks"</strong> forever.
               </p>
               <button
                 onClick={() => setShowVSOFinder(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
-                🔍 Find Free Help Near Me
+                🔍 Find Free Help
               </button>
             </div>
 
             {/* State Benefit Hunter CTA */}
-            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/40 dark:via-emerald-900/40 dark:to-teal-900/40 border-2 border-green-300 dark:border-green-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
+            <div className="bg-gradient-to-br from-sky-50 via-cyan-50 to-sky-50 dark:from-sky-900/40 dark:via-cyan-900/40 dark:to-sky-900/40 border-2 border-sky-300 dark:border-sky-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               {/* Decorative shimmer */}
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-full -translate-y-10 translate-x-10"></div>
-              
-              <div className="flex items-start gap-3 mb-3 relative">
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-3 shadow-lg">
-                  <span className="text-2xl">💰</span>
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">💰</span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                     State Benefit Hunter
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-pulse">$$$</span>
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full animate-pulse">$$$</span>
                   </h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                 <strong>Money on the Table!</strong> Discover state-specific benefits many veterans miss: 
                 <strong> property tax exemptions, free vehicle registration, education grants,</strong> and more.
               </p>
               <button
                 onClick={() => setShowStateBenefitHunter(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-colors shadow-md hover:shadow-lg"
+                className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🎯 Find My State Benefits
               </button>
             </div>
+
+            {/* Legislative Watchdog CTA */}
+            <div className="bg-gradient-to-br from-sky-50 via-cyan-50 to-sky-50 dark:from-sky-900/40 dark:via-cyan-900/40 dark:to-sky-900/40 border-2 border-sky-300 dark:border-sky-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">📡</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    Legislative Watchdog
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full">NEW</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Track Rule Changes.</strong> Monitor Federal Register for updates to 38 CFR that affect your claim. Never miss a new presumptive condition.
+              </p>
+              <button
+                onClick={() => setShowLegislativeWatchdog(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                📡 Watch Regulations
+              </button>
+            </div>
           </div>
 
-          {/* SECTION 7: PREMIUM VISUALIZATIONS - Shock & Awe */}
+          {/* SECTION 8: PREMIUM VISUALIZATIONS - Shock & Awe */}
           <div className="mt-8">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-black bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 bg-clip-text text-transparent">
                 💎 SHOCK & AWE TOOLS 💎
               </h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Premium visualizations that make you say "Whoa"</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Million Dollar Dashboard */}
-              <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-emerald-900/40 dark:via-green-900/40 dark:to-teal-900/40 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              {/* Million Dollar Dashboard - Gold/Yellow Theme */}
+              <div className="relative bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/40 dark:via-amber-900/40 dark:to-yellow-900/40 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
                 
-                <div className="flex items-start gap-3 mb-3 relative">
-                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg p-3 shadow-lg">
-                    <span className="text-2xl">💰</span>
+                <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                  <div className="bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                    <span className="text-3xl">💰</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                       Million Dollar Dashboard
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-bold rounded-full animate-pulse">WOW</span>
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold rounded-full animate-pulse">WOW</span>
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                   <strong>Your rating is worth MORE than you think.</strong> See your <strong>lifetime value</strong>—VA pay, property tax savings, education benefits, healthcare. Watch the number climb.
                 </p>
                 <button
                   onClick={() => setShowMillionDollarDashboard(true)}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg font-bold hover:from-emerald-700 hover:to-green-700 transition-colors shadow-md hover:shadow-lg"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 text-black rounded-lg font-bold hover:from-yellow-600 hover:to-amber-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   💵 Show Me The Money
                 </button>
               </div>
 
-              {/* MOS Hazard Matcher */}
-              <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-zinc-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-slate-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              {/* MOS Hazard Matcher - Gold/Yellow Theme */}
+              <div className="relative bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
                 
-                <div className="flex items-start gap-3 mb-3 relative">
-                  <div className="bg-gradient-to-br from-slate-600 to-gray-700 rounded-lg p-3 shadow-lg">
-                    <span className="text-2xl">🎖️</span>
+                <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                  <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                    <span className="text-3xl">🎖️</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                       MOS Hazard Matcher
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-slate-500 to-gray-600 text-white text-xs font-bold rounded-full">JOB→INJURY</span>
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full">JOB→INJURY</span>
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                   <strong>Your MOS broke your body.</strong> Enter your job code, see <strong>what injuries that job causes</strong>. Hearing loss? Back pain? <strong>It's not just you—it's the job.</strong>
                 </p>
                 <button
                   onClick={() => setShowMOSHazardMatcher(true)}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-colors shadow-md hover:shadow-lg"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black rounded-lg font-bold hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   🔍 Match My MOS
                 </button>
               </div>
 
-              {/* Web of Conditions */}
-              <div className="bg-gradient-to-br from-purple-50 via-indigo-50 to-violet-50 dark:from-purple-900/40 dark:via-indigo-900/40 dark:to-violet-900/40 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-5 hover:shadow-lg transition-shadow relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-300/20 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              {/* Web of Conditions - Gold/Yellow Theme */}
+              <div className="relative bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/40 dark:via-amber-900/40 dark:to-orange-900/40 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
                 
-                <div className="flex items-start gap-3 mb-3 relative">
-                  <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg p-3 shadow-lg">
-                    <span className="text-2xl">🕸️</span>
+                <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                  <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                    <span className="text-3xl">🕸️</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
                       Web of Conditions
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full">INTERACTIVE</span>
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold rounded-full">INTERACTIVE</span>
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 relative">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
                   <strong>See how conditions connect.</strong> Interactive node map—click a condition, watch secondaries <strong>orbit around it</strong>. Click a link, see the medical nexus.
                 </p>
                 <button
                   onClick={() => setShowWebOfConditions(true)}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-bold hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black rounded-lg font-bold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   🗺️ Explore The Web
                 </button>
@@ -1110,7 +1521,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                The most comprehensive free VA claims arsenal—28 professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
+                The most comprehensive free VA claims arsenal—40+ professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -1133,9 +1544,15 @@ function App() {
             </div>
             <div>
               <h4 className="font-bold mb-3">⚖️ Legal Notice</h4>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm mb-3">
                 This tool is for educational purposes only. It does not constitute legal or medical advice. Consult with VA officials or qualified professionals for specific guidance.
               </p>
+              <button
+                onClick={() => setShowTermsOfService(true)}
+                className="text-va-gold hover:underline text-sm font-semibold"
+              >
+                Terms of Service →
+              </button>
             </div>
           </div>
 
@@ -1156,10 +1573,24 @@ function App() {
               </button>
               <span className="text-gray-600">|</span>
               <button
+                onClick={() => setShowMissionProtocol(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                🎖️ Our Promise
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
                 onClick={() => setShowContactUs(true)}
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 Contact Us
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowTermsOfService(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                Terms of Service
               </button>
               <span className="text-gray-600">|</span>
               <button
@@ -1194,7 +1625,14 @@ function App() {
               </button>
             </div>
             <p className="text-center text-gray-400 text-sm">
-              &copy; 2024-2026 Vet-Rate.org — Your Complete VA Claims Toolkit. Data sourced from{' '}
+              <span 
+                onClick={debugDumpHandler}
+                className="cursor-default select-none"
+                title="Copyright Notice"
+              >
+                &copy; 2024-2026 Vet-Rate.org
+              </span>
+              {' '}— Your Complete VA Claims Toolkit. Data sourced from{' '}
               <a
                 href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
                 target="_blank"
@@ -1204,6 +1642,9 @@ function App() {
                 38 CFR Part 4
               </a>
             </p>
+            <p className="text-center text-gray-500 text-xs mt-3 border-t border-gray-800 pt-3">
+              <strong>Important:</strong> Vet-Rate.org is a private, veteran-built project and is <strong>not affiliated with, endorsed by, or a part of the Department of Veterans Affairs or the United States Government.</strong>
+            </p>
           </div>
         </div>
       </footer>
@@ -1212,6 +1653,7 @@ function App() {
       {showPrivacyPolicy && <PrivacyPolicy onClose={() => setShowPrivacyPolicy(false)} onReportBug={() => setShowBugSquasher(true)} />}
       {showAboutUs && <AboutUs onClose={() => setShowAboutUs(false)} onReportBug={() => setShowBugSquasher(true)} />}
       {showContactUs && <ContactUs onClose={() => setShowContactUs(false)} onReportBug={() => setShowBugSquasher(true)} />}
+      {showTermsOfService && <TermsOfServicePage onClose={() => setShowTermsOfService(false)} />}
       
       {/* Secondary Scout Launcher */}
       {showSecondaryScoutLauncher && (
@@ -1226,12 +1668,12 @@ function App() {
       {showSecondaryScout && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
           <div className="min-h-screen px-4 py-8">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-7xl mx-auto">
+            <div className="bg-white dark:bg-emerald-950 rounded-lg shadow-xl max-w-7xl mx-auto">
               <div className="sticky top-0 bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 z-10 rounded-t-lg">
                 {/* Mobile: Stack vertically, Desktop: Side by side */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl sm:text-2xl font-bold truncate">🔍 Secondary Scout Results</h2>
+                    <h2 className="text-xl sm:text-3xl font-bold truncate">🔍 Secondary Scout Results</h2>
                     <p className="text-sm text-blue-100 mt-1">
                       Based on {userConditions.length} service-connected condition{userConditions.length !== 1 ? 's' : ''}
                     </p>
@@ -1343,30 +1785,36 @@ function App() {
       
       {/* Shark Radar */}
       {showSharkRadar && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="min-h-screen">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSharkRadar(false)}></div>
-            <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-              <div className="sticky top-0 z-10 bg-gradient-to-r from-red-600 to-orange-500 p-4 shadow-lg">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🦈</span>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">Shark Radar</h2>
-                      <p className="text-sm text-red-100">Contract & Email Scanner</p>
-                    </div>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+          onClick={() => setShowSharkRadar(false)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🦈</span>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Shark Radar</h2>
+                    <p className="text-sm text-rose-100">Contract & Email Scanner</p>
                   </div>
-                  <button
-                    onClick={() => setShowSharkRadar(false)}
-                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label="Close"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                 </div>
+                <button
+                  onClick={() => setShowSharkRadar(false)}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+            </div>
+            <div className="p-4">
               <SharkRadar />
             </div>
           </div>
@@ -1375,30 +1823,36 @@ function App() {
       
       {/* Pathfinder */}
       {showPathfinder && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="min-h-screen">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPathfinder(false)}></div>
-            <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-              <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shadow-lg">
-                <div className="max-w-5xl mx-auto flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🧭</span>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">The Pathfinder</h2>
-                      <p className="text-sm text-blue-100">Strategic Claims Analysis</p>
-                    </div>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+          onClick={() => setShowPathfinder(false)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🧭</span>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">The Pathfinder</h2>
+                    <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
                   </div>
-                  <button
-                    onClick={() => setShowPathfinder(false)}
-                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                    aria-label="Close"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                 </div>
+                <button
+                  onClick={() => setShowPathfinder(false)}
+                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+            </div>
+            <div className="p-4">
               <Pathfinder onNavigate={handlePathfinderNavigate} />
             </div>
           </div>
@@ -1606,14 +2060,197 @@ function App() {
         />
       )}
       
+      {/* Legislative Watchdog - Rule Change Radar */}
+      {showLegislativeWatchdog && (
+        <LegislativeWatchdog
+          onClose={() => setShowLegislativeWatchdog(false)}
+          onReportBug={() => {
+            setShowLegislativeWatchdog(false);
+            setShowBugSquasher(true);
+          }}
+        />
+      )}
+      
+      {/* Backup Manager - The Bunker */}
+      {showBackupManager && (
+        <BackupManager
+          onClose={() => setShowBackupManager(false)}
+        />
+      )}
+      
+      {/* Time Machine - ITF Countdown */}
+      {showTimeMachine && (
+        <TimeMachine
+          onClose={() => setShowTimeMachine(false)}
+        />
+      )}
+      
+      {/* The Tribunal - Mock Hearing Simulator */}
+      {showTheTribunal && (
+        <TheTribunal
+          onClose={() => setShowTheTribunal(false)}
+        />
+      )}
+      
+      {/* The Consistency Engine - Data Auditor */}
+      {showConsistencyEngine && (
+        <ConsistencyEngine
+          onClose={() => setShowConsistencyEngine(false)}
+        />
+      )}
+      
+      {/* The What-If Sandbox - Scenario Planner */}
+      {showWhatIfSandbox && (
+        <WhatIfSandbox
+          onClose={() => setShowWhatIfSandbox(false)}
+        />
+      )}
+      
+      {/* DIAMOND-TIER: The Denials Decoder - OCR + AI Simplifier */}
+      {showDenialDecoder && (
+        <DenialDecoder
+          onClose={() => setShowDenialDecoder(false)}
+        />
+      )}
+      
+      {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map */}
+      {showBodyMapSelector && (
+        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
+          <div className="min-h-screen px-4 py-8">
+            <div className="max-w-6xl mx-auto">
+              <BodyMapSelector 
+                onClose={() => setShowBodyMapSelector(false)}
+                onLogToSymptomLogger={() => {
+                  setShowBodyMapSelector(false);
+                  setShowSymptomLogger(true);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
+      {showClaimStressTest && (
+        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
+          <div className="min-h-screen px-4 py-8">
+            <div className="max-w-5xl mx-auto">
+              <ClaimStressTest onClose={() => setShowClaimStressTest(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
+      {showEvidenceTimeline && (
+        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
+          <div className="min-h-screen">
+            <EvidenceTimeline onClose={() => setShowEvidenceTimeline(false)} />
+          </div>
+        </div>
+      )}
+      
+      {/* DIAMOND-TIER: The Open Book Test - DBQ Exam Prep */}
+      {showExamPrepRoom && (
+        <ExamPrepRoom
+          onClose={() => setShowExamPrepRoom(false)}
+          preselectedCondition={selectedResult?.diagnosticCode}
+        />
+      )}
+      
+      {/* FORCE MULTIPLIER: The Needle in the Haystack - PDF Keyword Search */}
+      {showRecordSearch && (
+        <RecordSearch
+          onClose={() => setShowRecordSearch(false)}
+        />
+      )}
+      
+      {/* FORCE MULTIPLIER: The Off-Site Bunker - Cloud Sync */}
+      {showCloudSyncManager && (
+        <CloudSyncManager
+          onClose={() => setShowCloudSyncManager(false)}
+        />
+      )}
+      
+      {/* DIAMOND-TIER: PWA Install Prompt */}
+      <PWAInstallButton />
+      
+      {/* Commander's Checklist - Gamified Progress (Fixed Widget) */}
+      <CommandersChecklist
+        isWidget={true}
+        onToolSelect={(toolName) => {
+          // Handle tool navigation from checklist
+          if (toolName === 'veteran-profile') setShowFormsHelper(true);
+          else if (toolName === 'conditions-search') setHasSearched(false);
+          else if (toolName === 'cfile-analyzer') setShowCFileAnalyzer(true);
+          else if (toolName === 'symptom-logger') setShowSymptomLogger(true);
+          else if (toolName === 'my-packet') setShowMyPacket(true);
+          else if (toolName === 'nexus-builder') setShowNexusBuilder(true);
+          else if (toolName === 'secondary-scout') setShowSecondaryScoutLauncher(true);
+          else if (toolName === 'tactical-calculator') setShowTacticalCalculator(true);
+          else if (toolName === 'forms-helper') setShowFormsHelper(true);
+        }}
+      />
+      
       {/* Funding Modal */}
       <FundingModal 
         show={showFundingModal} 
         onClose={() => setShowFundingModal(false)} 
       />
+      
+      {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
+      <TermsOfServiceModal />
+      
+      {/* LIVE OPS: Update notification banner */}
+      {showUpdateBanner && updateAvailable && (
+        <UpdateBanner
+          onApplyUpdate={handleApplyUpdate}
+          onDismiss={handleDismissUpdateBanner}
+          updateInfo={updateAvailable}
+        />
+      )}
+      
+      {/* LIVE OPS: What's New changelog modal */}
+      {showWhatsNew && currentChangelog.length > 0 && (
+        <WhatsNewModal
+          changelog={currentChangelog}
+          version={APP_VERSION}
+          onClose={handleCloseWhatsNew}
+        />
+      )}
+      
+      {/* CLEAR COAT: Mission Protocol - Trust Beacon */}
+      {showMissionProtocol && (
+        <MissionProtocol onClose={() => setShowMissionProtocol(false)} />
+      )}
+      
+      {/* CLEAR COAT: Boot Camp Tour - Only starts after all initial screens are dismissed */}
+      {disclaimerAcknowledged && !showWhatsNew && (
+        <BootCampTour />
+      )}
+      
+      {/* SAFETY-CRITICAL: Crisis Modal - Highest z-index, blocks all other UI */}
+      {showCrisisModal && (
+        <CrisisModal 
+          severity={crisisSeverity} 
+          source="app"
+        />
+      )}
+      
+      {/* FORCE MULTIPLIER: Focus Mode Toggle for TBI/ADHD users - Now integrated into modal headers */}
     </div>
   );
 }
 
-export default App;
+// Wrap App with HelperModeProvider and FocusModeProvider
+function AppWrapper() {
+  return (
+    <FocusModeProvider>
+      <HelperModeProvider>
+        <App />
+      </HelperModeProvider>
+    </FocusModeProvider>
+  );
+}
 
+export default AppWrapper;

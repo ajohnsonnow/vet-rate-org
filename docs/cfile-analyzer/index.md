@@ -1,8 +1,8 @@
-# C-File AI Analyzer
+﻿# C-File AI Analyzer
 
 ## Overview
 
-The **C-File AI Analyzer** is Vet-Rate.org's most powerful feature—analyzing thousands of pages of VA claims records in seconds using artificial intelligence. What competitors charge $500+ for, you can do for free.
+The **C-File AI Analyzer** is Vet-Rate.org's most powerful feature-analyzing thousands of pages of VA claims records in seconds using artificial intelligence. What competitors charge $500+ for, you can do for free.
 
 !!! warning "Beta Feature"
     The C-File Analyzer is currently in beta. Results should be verified against your actual records.
@@ -31,7 +31,7 @@ Your C-File PDF is processed **entirely in your browser**:
 
 ### 2. AI Analysis
 
-The extracted text is analyzed by **Google Gemini 1.5 Flash**, which has a 1 million token context window—enough to process ~2,000 pages in a single analysis.
+The extracted text is analyzed by **Google Gemini 1.5 Flash**, which has a 1 million token context window-enough to process ~2,000 pages in a single analysis.
 
 The AI looks for **"The Big Three"**:
 
@@ -70,7 +70,7 @@ Request your C-File from the VA:
 4. Copy the key for use in the analyzer
 
 !!! tip "Free Tier"
-    Gemini 1.5 Flash has a generous free tier—enough for multiple C-File analyses per month.
+    Gemini 1.5 Flash has a generous free tier-enough for multiple C-File analyses per month.
 
 ### Step 3: Upload and Analyze
 
@@ -182,7 +182,7 @@ Keep the browser tab open during processing.
 ## Best Practices
 
 1. **Verify findings** - Always cross-reference AI findings with your actual records
-2. **Use page numbers** - The AI provides page citations—use them to locate evidence
+2. **Use page numbers** - The AI provides page citations-use them to locate evidence
 3. **Take action** - Follow up on the "Action Items" with your VSO or attorney
 4. **Save results** - Screenshot or note important findings before closing
 

@@ -1,4 +1,4 @@
-# C&P Simulator - Taking the Simulation
+﻿# C&P Simulator - Taking the Simulation
 
 Walk through the simulation process and understand how to answer each question type.
 
@@ -8,10 +8,10 @@ Walk through the simulation process and understand how to answer each question t
 
 Once you've selected a condition, the simulation begins with:
 
-1. **Condition Introduction** — Overview of what will be evaluated
-2. **Sequential Questions** — Based on your condition's body system
-3. **Progress Tracking** — Shows current question and total
-4. **Results Summary** — After completing all questions
+1. **Condition Introduction** - Overview of what will be evaluated
+2. **Sequential Questions** - Based on your condition's body system
+3. **Progress Tracking** - Shows current question and total
+4. **Results Summary** - After completing all questions
 
 ---
 
@@ -161,11 +161,11 @@ These weights help estimate where your symptoms fall on the rating schedule.
 
 For joint/muscle conditions, remember the DeLuca factors:
 
-- **Pain on movement** — Does it hurt to move?
-- **Weakness** — Is the limb/area weak?
-- **Fatigability** — Does it tire easily?
-- **Incoordination** — Difficulty with coordination?
-- **Flare-ups** — Periodic worsening?
+- **Pain on movement** - Does it hurt to move?
+- **Weakness** - Is the limb/area weak?
+- **Fatigability** - Does it tire easily?
+- **Incoordination** - Difficulty with coordination?
+- **Flare-ups** - Periodic worsening?
 
 !!! tip "Sharp v. Shulkin"
     The examiner MUST estimate additional range of motion loss during flare-ups, even if you're not currently having one. Answer flare-up questions based on your actual flare-up experiences.
@@ -208,9 +208,9 @@ You can go back to any previous question using the Back button.
 
 !!! tip "During the Simulation"
     
-    1. **Take your time** — No time limit, read carefully
-    2. **Be honest** — Answer based on actual experience
-    3. **Consider the full picture** — Include good and bad days
-    4. **Remember flare-ups** — Don't forget worse periods
-    5. **Think functionally** — How does it affect your life?
-    6. **Don't compare to others** — Focus on your own experience
+    1. **Take your time** - No time limit, read carefully
+    2. **Be honest** - Answer based on actual experience
+    3. **Consider the full picture** - Include good and bad days
+    4. **Remember flare-ups** - Don't forget worse periods
+    5. **Think functionally** - How does it affect your life?
+    6. **Don't compare to others** - Focus on your own experience

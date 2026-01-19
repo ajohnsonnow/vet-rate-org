@@ -605,7 +605,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
       {disabilities.length > 0 && (
         <button
           onClick={() => setStep(2)}
-          className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all"
+          className="w-full px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all"
         >
           Continue to Work History →
         </button>
@@ -708,7 +708,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
         <button
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isGenerating ? (
             <>
@@ -732,7 +732,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
   const renderResultsStep = () => (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Success Banner */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-center gap-4">
           <div className="bg-white/20 rounded-full p-3">
             <span className="text-4xl">💼</span>
@@ -884,37 +884,39 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
   );
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-green-600 to-emerald-600 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">💼</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">TDIU Work Impact Builder</h2>
-                  <p className="text-sm text-green-100">The 100% Backdoor - Vocational Statement Generator</p>
-                </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">💼</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">TDIU Work Impact Builder</h2>
+                <p className="text-sm text-amber-100">The 100% Backdoor - Vocational Statement Generator</p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          
+        </div>
+        
+        <div className="p-4">
           {/* Progress Steps */}
-          <div className="max-w-4xl mx-auto px-6 pt-6">
+          <div className="max-w-4xl mx-auto pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">
               {[1, 2, 3].map(s => (
                 <div key={s} className="flex items-center">
@@ -949,9 +951,8 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             {step === 3 && renderResultsStep()}
             
             {/* Support CTA on results page */}
-            {step === 3 && generatedStatement && (
-              <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 rounded-2xl p-6 border border-green-700/50 mt-6">
-                <div className="flex items-center gap-4">
+            {step === 3 && vocationalAnalysis && (
+              <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">\n                <div className="flex items-center gap-4">
                   <img 
                     src="/images/Anth.jpg" 
                     alt="Anthony - Vet-Rate Developer"
@@ -972,15 +973,15 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             )}
           </div>
         </div>
+        
+        {/* BuyMeCoffee - shows after generating statement */}
+        <BuyMeCoffee 
+          show={step === 3 && vocationalAnalysis !== null} 
+          trigger="tdiu" 
+          context={{ impact: disabilities.length > 0 }}
+          componentKey="tdiu-builder"
+        />
       </div>
-      
-      {/* BuyMeCoffee - shows after generating statement */}
-      <BuyMeCoffee 
-        show={step === 3 && generatedStatement !== ''} 
-        trigger="tdiu" 
-        context={{ impact: disabilities.length > 0 }}
-        componentKey="tdiu-builder"
-      />
     </div>
   );
 }

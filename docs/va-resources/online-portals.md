@@ -1,4 +1,4 @@
-# Online Portals
+﻿# Online Portals
 
 Essential VA websites and online portals for managing your benefits.
 
@@ -69,9 +69,9 @@ Manage your VA healthcare:
 
 **Account Levels:**
 
-- Basic — Limited access
-- Advanced — More features
-- Premium — Full access (verify identity)
+- Basic - Limited access
+- Advanced - More features
+- Premium - Full access (verify identity)
 
 ---
 
@@ -145,8 +145,8 @@ Full text of VA regulations:
 
 Key sections:
 
-- **Part 3** — Adjudication
-- **Part 4** — Schedule for Rating Disabilities
+- **Part 3** - Adjudication
+- **Part 4** - Schedule for Rating Disabilities
 
 ### Board of Veterans' Appeals
 
@@ -193,9 +193,9 @@ To get Premium access:
 
 Options:
 
-- **In-Person** — At VA facility with ID
-- **Online** — Through Login.gov or ID.me
-- **Video Call** — Virtual identity proofing
+- **In-Person** - At VA facility with ID
+- **Online** - Through Login.gov or ID.me
+- **Video Call** - Virtual identity proofing
 
 ---
 

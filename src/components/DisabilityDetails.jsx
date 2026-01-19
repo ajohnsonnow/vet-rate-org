@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PDFButton from './PDFButton';
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
 import { PACTActInfoCard, PACTActBadge } from './PACTActIndicator';
+import StaleDataIndicator from './StaleDataIndicator';
 import FundingModal from './FundingModal';
 
 function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSecondaryConditionClick }) {
@@ -88,11 +89,12 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
       <div className="bg-gradient-to-r from-va-blue to-green-900 text-white p-8">
         <div className="flex justify-between items-start gap-4 mb-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h2 className="text-3xl md:text-4xl font-bold">
                 {result.conditionName}
               </h2>
               <PACTActBadge diagnosticCode={result.diagnosticCode} showTooltip={false} />
+              <StaleDataIndicator disability={result} variant="compact" />
             </div>
             <p className="text-blue-100 text-lg">
               Diagnostic Code: <span className="font-bold">{result.diagnosticCode}</span>

@@ -1,4 +1,4 @@
-# Reference
+﻿# Reference
 
 Quick reference materials for using Vet-Rate.org and understanding VA disability claims.
 
@@ -47,9 +47,9 @@ Rounded:       70% (rounds to nearest 10)
 
 To establish service connection:
 
-1. **Current Diagnosis** — You have the condition now
-2. **In-Service Event** — Something happened in service
-3. **Nexus** — Medical link between them
+1. **Current Diagnosis** - You have the condition now
+2. **In-Service Event** - Something happened in service
+3. **Nexus** - Medical link between them
 
 ### Evidence Standard
 

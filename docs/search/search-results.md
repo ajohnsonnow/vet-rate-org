@@ -1,4 +1,4 @@
-# Search Results
+﻿# Search Results
 
 After searching, results are displayed in a card-based grid layout. This guide explains how to interpret and interact with search results.
 
@@ -26,14 +26,14 @@ Each result card contains the following elements:
 
 ### Card Header
 
-- **Condition Name** — The official VA condition name
-- **PACT Act Badge** — (if applicable) Orange badge indicating presumptive status
+- **Condition Name** - The official VA condition name
+- **PACT Act Badge** - (if applicable) Orange badge indicating presumptive status
 
 ### Card Body
 
-- **Diagnostic Code** — 4-digit code in a badge
-- **Body System** — Category tag (e.g., "Mental Disorders", "Musculoskeletal")
-- **Rating Schedule** — CFR reference (e.g., "38 CFR § 4.130")
+- **Diagnostic Code** - 4-digit code in a badge
+- **Body System** - Category tag (e.g., "Mental Disorders", "Musculoskeletal")
+- **Rating Schedule** - CFR reference (e.g., "38 CFR § 4.130")
 
 ### Rating Badges
 
@@ -45,7 +45,7 @@ Available rating percentages shown as gold badges:
 
 ### Card Action
 
-- **Click anywhere on the card** — Opens the disability details view
+- **Click anywhere on the card** - Opens the disability details view
 
 ---
 
@@ -55,16 +55,16 @@ Available rating percentages shown as gold badges:
 
 When you click a card:
 
-- **Border changes** — Highlighted border color
-- **Shadow increases** — More prominent shadow
-- **Details panel opens** — Expanded view appears below
+- **Border changes** - Highlighted border color
+- **Shadow increases** - More prominent shadow
+- **Details panel opens** - Expanded view appears below
 
 ### PACT Act Indicator
 
 Conditions covered under the PACT Act show:
 
-- **Orange "PACT Act" badge** — In the card header
-- **Presumptive status** — No nexus letter typically needed
+- **Orange "PACT Act" badge** - In the card header
+- **Presumptive status** - No nexus letter typically needed
 
 ### Body System Colors
 
@@ -86,17 +86,17 @@ Each body system has a distinct color tag:
 
 ### With Mouse/Touch
 
-1. **Scroll through results** — Results grid scrolls with the page
-2. **Click a card** — Opens detailed view
-3. **Click another card** — Switches to new selection
-4. **Click close (X)** — Closes details view
+1. **Scroll through results** - Results grid scrolls with the page
+2. **Click a card** - Opens detailed view
+3. **Click another card** - Switches to new selection
+4. **Click close (X)** - Closes details view
 
 ### With Keyboard
 
-1. <kbd>Tab</kbd> — Move focus between cards
-2. <kbd>Enter</kbd> — Select focused card
-3. <kbd>Tab</kbd> to close button — Navigate to close
-4. <kbd>Enter</kbd> — Close details
+1. <kbd>Tab</kbd> - Move focus between cards
+2. <kbd>Enter</kbd> - Select focused card
+3. <kbd>Tab</kbd> to close button - Navigate to close
+4. <kbd>Enter</kbd> - Close details
 
 ---
 
@@ -150,10 +150,10 @@ The gold percentage badges show all possible ratings for this condition:
 
 Results are ordered by **relevance**:
 
-1. **Exact matches** — Conditions matching search term exactly
-2. **Starting matches** — Conditions starting with search term
-3. **Contains matches** — Conditions containing search term
-4. **Synonym matches** — Conditions with matching synonyms
+1. **Exact matches** - Conditions matching search term exactly
+2. **Starting matches** - Conditions starting with search term
+3. **Contains matches** - Conditions containing search term
+4. **Synonym matches** - Conditions with matching synonyms
 
 ---
 
@@ -203,6 +203,6 @@ From any result card, you can:
 !!! tip "Search Strategies"
     
     - **Search specific codes** if you already know the diagnosis
-    - **Use common names** — "PTSD" works better than "Post-Traumatic Stress Disorder"
-    - **Try multiple terms** — Different searches may reveal different conditions
-    - **Check related conditions** — Look at secondary conditions in details
+    - **Use common names** - "PTSD" works better than "Post-Traumatic Stress Disorder"
+    - **Try multiple terms** - Different searches may reveal different conditions
+    - **Check related conditions** - Look at secondary conditions in details

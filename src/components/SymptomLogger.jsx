@@ -3,6 +3,7 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 /**
  * SymptomLogger Component - "The 50% Maker"
@@ -72,6 +73,143 @@ const SYMPTOM_TYPES = {
       triggers: 'What triggered it?',
     },
   },
+  pain: {
+    label: 'Pain Flare-Up',
+    emoji: '⚡',
+    color: 'red',
+    ratingCriteria: [
+      { rating: 40, description: 'Constant or near-constant pain with severe functional impairment' },
+      { rating: 20, description: 'Frequent episodes with moderate functional impairment' },
+      { rating: 10, description: 'Intermittent pain with mild functional impairment' },
+      { rating: 0, description: 'Occasional pain not requiring frequent treatment' },
+    ],
+    durationOptions: [
+      '< 1 hour',
+      '1-4 hours',
+      '4-8 hours',
+      '8-12 hours',
+      '12-24 hours',
+      'Multiple days',
+      'Constant',
+    ],
+    questions: {
+      prostrating: 'Did the pain prevent normal activities?',
+      medication: 'Did you take pain medication?',
+      triggers: 'What triggered the pain?',
+    },
+  },
+  fatigue: {
+    label: 'Fatigue Episode',
+    emoji: '😴',
+    color: 'orange',
+    ratingCriteria: [
+      { rating: 100, description: 'Bed/couch-bound, unable to perform basic self-care' },
+      { rating: 60, description: 'Severely limited activity, frequent rest periods required' },
+      { rating: 40, description: 'Moderate limitation, reduced work capacity' },
+      { rating: 10, description: 'Mild fatigue with minimal impact' },
+    ],
+    durationOptions: [
+      'Few hours',
+      'Half day',
+      'Full day',
+      'Multiple days',
+      'Week or more',
+    ],
+    questions: {
+      prostrating: 'Were you unable to complete normal activities?',
+      medication: 'Did you take any medication/supplements?',
+      triggers: 'What preceded this fatigue?',
+    },
+  },
+  sleep: {
+    label: 'Sleep Disorder',
+    emoji: '😵',
+    color: 'indigo',
+    ratingCriteria: [
+      { rating: 50, description: 'Chronic sleep impairment with total occupational and social impairment' },
+      { rating: 30, description: 'Persistent difficulty falling or staying asleep affecting daily function' },
+      { rating: 10, description: 'Occasional sleep disturbance with mild impairment' },
+      { rating: 0, description: 'Rare sleep issues' },
+    ],
+    durationOptions: [
+      'One night',
+      'Few nights',
+      'Full week',
+      'Multiple weeks',
+      'Chronic/ongoing',
+    ],
+    questions: {
+      prostrating: 'Did lack of sleep impair your next-day function?',
+      medication: 'Did you use sleep aids?',
+      triggers: 'What affected your sleep?',
+    },
+  },
+  digestive: {
+    label: 'Digestive Issue',
+    emoji: '🫃',
+    color: 'amber',
+    ratingCriteria: [
+      { rating: 30, description: 'Severe/constant distress requiring frequent medical management' },
+      { rating: 10, description: 'Frequent episodes requiring dietary restrictions' },
+      { rating: 0, description: 'Occasional episodes with mild symptoms' },
+    ],
+    durationOptions: [
+      '< 1 hour',
+      '1-4 hours',
+      '4-12 hours',
+      'Full day',
+      'Multiple days',
+    ],
+    questions: {
+      prostrating: 'Did it prevent work/normal activities?',
+      medication: 'Did you take medication for relief?',
+      triggers: 'Food/stress/other triggers?',
+    },
+  },
+  mental: {
+    label: 'Mental Health Episode',
+    emoji: '🧠',
+    color: 'teal',
+    ratingCriteria: [
+      { rating: 70, description: 'Severe impairment in most areas of life' },
+      { rating: 50, description: 'Significant impairment in work and social functioning' },
+      { rating: 30, description: 'Moderate symptoms with occasional impairment' },
+      { rating: 10, description: 'Mild symptoms with minimal impairment' },
+    ],
+    durationOptions: [
+      'Few hours',
+      'Half day',
+      'Full day',
+      'Multiple days',
+      'Week or more',
+    ],
+    questions: {
+      prostrating: 'Were you unable to function normally?',
+      medication: 'Did you take medication as needed?',
+      triggers: 'What triggered this episode?',
+    },
+  },
+  general: {
+    label: 'Body Issue/Symptom',
+    emoji: '📍',
+    color: 'slate',
+    ratingCriteria: [
+      { rating: 'varies', description: 'Track any symptoms to document frequency and severity patterns' },
+    ],
+    durationOptions: [
+      'Brief (< 1 hour)',
+      'Few hours',
+      'Half day',
+      'Full day',
+      'Multiple days',
+      'Ongoing',
+    ],
+    questions: {
+      prostrating: 'Did it limit your normal activities?',
+      medication: 'Did you take any medication?',
+      triggers: 'What might have caused this?',
+    },
+  },
 };
 
 const SymptomLogger = ({ onClose, onReportBug }) => {
@@ -88,9 +226,14 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
     time: new Date().toTimeString().slice(0, 5),
     severity: 5,
     duration: '',
+    bodyLocation: '', // NEW: Track where the symptom occurred
+    painScale: 5, // NEW: For pain-specific tracking (0-10)
+    activityImpact: '', // NEW: What activities were affected
     prostrating: false,
     medication: false,
     triggers: '',
+    weather: '', // NEW: Weather conditions
+    stressLevel: 5, // NEW: Stress level (0-10)
     notes: '',
   });
 
@@ -103,6 +246,27 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       } catch (e) {
         console.error('Failed to parse symptom logs:', e);
         setLogs([]);
+      }
+    }
+    
+    // Check for prefilled data from Somatic Target
+    const prefillData = localStorage.getItem('vetrate_symptom_prefill');
+    if (prefillData) {
+      try {
+        const data = JSON.parse(prefillData);
+        // Set the symptom type and prefill form
+        if (data.type) setSymptomType(data.type);
+        setNewLog(prev => ({
+          ...prev,
+          bodyLocation: data.bodyPart || '',
+          notes: data.notes || '',
+        }));
+        // Clear the prefill data after using it
+        localStorage.removeItem('vetrate_symptom_prefill');
+        // Switch to log tab to show the prefilled form
+        setActiveTab('log');
+      } catch (e) {
+        console.error('Failed to parse prefill data:', e);
       }
     }
   }, []);
@@ -180,9 +344,14 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       time: new Date().toTimeString().slice(0, 5),
       severity: 5,
       duration: '',
+      bodyLocation: '',
+      painScale: 5,
+      activityImpact: '',
       prostrating: false,
       medication: false,
       triggers: '',
+      weather: '',
+      stressLevel: 5,
       notes: '',
     });
     
@@ -280,6 +449,24 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       doc.text(`   Severity: ${log.severity}/10 | Duration: ${log.duration} | Prostrating: ${log.prostrating ? 'YES' : 'No'}`, margin, y);
       y += 5;
       
+      if (log.bodyLocation) {
+        doc.text(`   Body Location: ${log.bodyLocation}`, margin, y);
+        y += 5;
+      }
+      
+      if (log.activityImpact) {
+        doc.text(`   Activities Affected: ${log.activityImpact}`, margin, y);
+        y += 5;
+      }
+      
+      if (log.weather || log.stressLevel !== undefined) {
+        let envInfo = '   Environmental: ';
+        if (log.weather) envInfo += `Weather: ${log.weather} | `;
+        if (log.stressLevel !== undefined) envInfo += `Stress Level: ${log.stressLevel}/10`;
+        doc.text(envInfo, margin, y);
+        y += 5;
+      }
+      
       if (log.triggers) {
         doc.text(`   Triggers: ${log.triggers}`, margin, y);
         y += 5;
@@ -320,6 +507,42 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       border: 'border-blue-200 dark:border-blue-700',
       text: 'text-blue-700 dark:text-blue-300',
     },
+    red: {
+      bg: 'bg-red-600',
+      bgLight: 'bg-red-50 dark:bg-red-900/30',
+      border: 'border-red-200 dark:border-red-700',
+      text: 'text-red-700 dark:text-red-300',
+    },
+    orange: {
+      bg: 'bg-orange-600',
+      bgLight: 'bg-orange-50 dark:bg-orange-900/30',
+      border: 'border-orange-200 dark:border-orange-700',
+      text: 'text-orange-700 dark:text-orange-300',
+    },
+    indigo: {
+      bg: 'bg-indigo-600',
+      bgLight: 'bg-indigo-50 dark:bg-indigo-900/30',
+      border: 'border-indigo-200 dark:border-indigo-700',
+      text: 'text-indigo-700 dark:text-indigo-300',
+    },
+    amber: {
+      bg: 'bg-amber-600',
+      bgLight: 'bg-amber-50 dark:bg-amber-900/30',
+      border: 'border-amber-200 dark:border-amber-700',
+      text: 'text-amber-700 dark:text-amber-300',
+    },
+    teal: {
+      bg: 'bg-teal-600',
+      bgLight: 'bg-teal-50 dark:bg-teal-900/30',
+      border: 'border-teal-200 dark:border-teal-700',
+      text: 'text-teal-700 dark:text-teal-300',
+    },
+    slate: {
+      bg: 'bg-slate-600',
+      bgLight: 'bg-slate-50 dark:bg-slate-900/30',
+      border: 'border-slate-200 dark:border-slate-700',
+      text: 'text-slate-700 dark:text-slate-300',
+    },
   };
   const colors = colorClasses[config.color];
 
@@ -333,7 +556,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
-          <div className={`bg-gradient-to-r ${symptomType === 'migraine' ? 'from-purple-600 via-purple-700 to-indigo-600' : 'from-blue-600 via-blue-700 to-cyan-600'} text-white px-6 py-6 rounded-t-lg relative overflow-hidden`}>
+          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             
             <div className="relative flex items-start justify-between">
@@ -351,6 +574,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <FocusToggle variant="light" />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Symptom Logger" />}
                 <button
                   onClick={onClose}
@@ -367,23 +591,34 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
 
           {/* Symptom Type Selector */}
           <div className="px-6 py-4 border-b dark:border-gray-700">
-            <div className="flex gap-2">
-              {Object.entries(SYMPTOM_TYPES).map(([key, typeConfig]) => (
-                <button
-                  key={key}
-                  onClick={() => setSymptomType(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    symptomType === key
-                      ? key === 'migraine'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <span>{typeConfig.emoji}</span>
-                  <span>{typeConfig.label}</span>
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(SYMPTOM_TYPES).map(([key, typeConfig]) => {
+                const isActive = symptomType === key;
+                const colorMap = {
+                  migraine: 'bg-purple-600',
+                  ibs: 'bg-blue-600',
+                  pain: 'bg-red-600',
+                  fatigue: 'bg-orange-600',
+                  sleep: 'bg-indigo-600',
+                  digestive: 'bg-amber-600',
+                  mental: 'bg-teal-600',
+                  general: 'bg-slate-600',
+                };
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSymptomType(key)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      isActive
+                        ? `${colorMap[key]} text-white shadow-lg`
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span>{typeConfig.emoji}</span>
+                    <span className="whitespace-nowrap">{typeConfig.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -492,6 +727,102 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                           {option}
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Body Location - NEW FIELD */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      📍 Body Location (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newLog.bodyLocation}
+                      onChange={(e) => setNewLog(prev => ({ ...prev, bodyLocation: e.target.value }))}
+                      placeholder="e.g., Lower back, Left knee, Head/neck, Stomach..."
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      💡 Tip: Use the Somatic Target tool to select precise body locations
+                    </p>
+                  </div>
+
+                  {/* Pain Scale - Show for pain type */}
+                  {symptomType === 'pain' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        🔥 Pain Scale: {newLog.painScale}/10
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        value={newLog.painScale}
+                        onChange={(e) => setNewLog(prev => ({ ...prev, painScale: parseInt(e.target.value) }))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0 - No pain</span>
+                        <span>5 - Moderate</span>
+                        <span>10 - Worst possible</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Activity Impact - NEW FIELD */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      🎯 Activities Affected (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newLog.activityImpact}
+                      onChange={(e) => setNewLog(prev => ({ ...prev, activityImpact: e.target.value }))}
+                      placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  {/* Weather Conditions - NEW FIELD */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      🌤️ Weather (optional)
+                    </label>
+                    <select
+                      value={newLog.weather}
+                      onChange={(e) => setNewLog(prev => ({ ...prev, weather: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Select weather</option>
+                      <option value="Clear/Sunny">Clear/Sunny</option>
+                      <option value="Cloudy">Cloudy</option>
+                      <option value="Rainy">Rainy</option>
+                      <option value="Stormy">Stormy</option>
+                      <option value="Hot">Hot</option>
+                      <option value="Cold">Cold</option>
+                      <option value="Humid">Humid</option>
+                      <option value="Windy">Windy</option>
+                      <option value="Pressure Change">Barometric Pressure Change</option>
+                    </select>
+                  </div>
+
+                  {/* Stress Level - NEW FIELD */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      😰 Stress Level: {newLog.stressLevel}/10
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={newLog.stressLevel}
+                      onChange={(e) => setNewLog(prev => ({ ...prev, stressLevel: parseInt(e.target.value) }))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0 - Calm</span>
+                      <span>5 - Moderate</span>
+                      <span>10 - Extreme</span>
                     </div>
                   </div>
 
@@ -627,14 +958,30 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                                   <span className="text-gray-500 dark:text-gray-400">💊 Medication</span>
                                 )}
                               </div>
+                              {log.bodyLocation && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                  <strong>📍 Location:</strong> {log.bodyLocation}
+                                </p>
+                              )}
+                              {log.activityImpact && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  <strong>🎯 Activities Affected:</strong> {log.activityImpact}
+                                </p>
+                              )}
+                              {(log.weather || log.stressLevel !== undefined) && (
+                                <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                  {log.weather && <span>🌤️ {log.weather}</span>}
+                                  {log.stressLevel !== undefined && <span>😰 Stress: {log.stressLevel}/10</span>}
+                                </div>
+                              )}
                               {log.triggers && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                  <strong>Triggers:</strong> {log.triggers}
+                                  <strong>⚡ Triggers:</strong> {log.triggers}
                                 </p>
                               )}
                               {log.notes && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                  <strong>Notes:</strong> {log.notes}
+                                  <strong>📝 Notes:</strong> {log.notes}
                                 </p>
                               )}
                             </div>

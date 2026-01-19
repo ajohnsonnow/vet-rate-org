@@ -14,7 +14,7 @@ export const PROJECT_STATS = {
   linesOfCode: 93401,
   appSizeMB: 43.41,
   components: 52,
-  majorTools: 28,
+  majorTools: 40,
   supportingComponents: 24,
   utilities: 19,
   disabilitiesValidated: 748,

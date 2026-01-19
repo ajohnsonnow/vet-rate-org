@@ -1,4 +1,4 @@
-# Download Options
+﻿# Download Options
 
 Export your Statement in Support of Claim and related documents.
 
@@ -48,10 +48,10 @@ Save to your device
 
 ### PDF Features
 
-- **Professional formatting** — Clean, official appearance
-- **Print-ready** — Standard letter size
-- **Signature line** — Space for your signature
-- **Date field** — Space for signing date
+- **Professional formatting** - Clean, official appearance
+- **Print-ready** - Standard letter size
+- **Signature line** - Space for your signature
+- **Date field** - Space for signing date
 
 ---
 

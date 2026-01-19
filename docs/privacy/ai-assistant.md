@@ -1,4 +1,4 @@
-# AI Assistant Privacy
+﻿# AI Assistant Privacy
 
 Understanding how the AI Statement Assistant works and what data is shared.
 
@@ -14,12 +14,12 @@ Vet-Rate.org offers an **optional** AI-powered statement assistant that helps ve
 
 The AI assistant is available in:
 
-- ✨ **Nexus Builder** — For secondary claim statements
-- ✨ **Forms Helper** — For buddy statements, PTSD stressor statements, and personal statements
-- ✨ **My Packet** — When resuming saved claims
-- ✨ **Secondary Scout** — When building statements for discovered conditions
-- ✨ **Disability Details** — When building statements for primary conditions
-- 🔬 **C-File AI Analyzer** — For analyzing your entire Claims File (see dedicated section below)
+- ✨ **Nexus Builder** - For secondary claim statements
+- ✨ **Forms Helper** - For buddy statements, PTSD stressor statements, and personal statements
+- ✨ **My Packet** - When resuming saved claims
+- ✨ **Secondary Scout** - When building statements for discovered conditions
+- ✨ **Disability Details** - When building statements for primary conditions
+- 🔬 **C-File AI Analyzer** - For analyzing your entire Claims File (see dedicated section below)
 
 !!! warning "AI is Optional"
     The AI assistant is completely optional. You can always use the standard template that processes everything locally on your device with no external data sharing.
@@ -245,10 +245,10 @@ The C-File Analyzer is a special case that deserves its own privacy explanation 
 
 ### Protections in Place
 
-1. **Your PDF stays local** — The actual file is NEVER uploaded
-2. **You provide your own API key** — We never see your key or your data
-3. **Explicit consent required** — You must acknowledge the privacy notice
-4. **No Vet-Rate storage** — We don't save any part of your C-File or analysis
+1. **Your PDF stays local** - The actual file is NEVER uploaded
+2. **You provide your own API key** - We never see your key or your data
+3. **Explicit consent required** - You must acknowledge the privacy notice
+4. **No Vet-Rate storage** - We don't save any part of your C-File or analysis
 
 ### Google's Handling of C-File Data
 
@@ -260,10 +260,10 @@ When you use your personal Gemini API key, the extracted text is subject to [Goo
 
 ### Recommendations
 
-1. **Use a dedicated Google account** — Create a separate Google account for the API key if desired
-2. **Only analyze on secure devices** — Don't use public computers
-3. **Review results carefully** — Verify AI findings against original documents
-4. **Clear browser data after** — If you want extra privacy, clear your browser cache
+1. **Use a dedicated Google account** - Create a separate Google account for the API key if desired
+2. **Only analyze on secure devices** - Don't use public computers
+3. **Review results carefully** - Verify AI findings against original documents
+4. **Clear browser data after** - If you want extra privacy, clear your browser cache
 
 ---
 

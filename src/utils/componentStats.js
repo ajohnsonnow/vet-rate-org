@@ -161,7 +161,7 @@ export const COMPONENT_STATS = {
     name: 'User Manual',
     hours: 100,
     lines: 1800,
-    description: 'Complete documentation for all 28 tools'
+    description: 'Complete documentation for all 40+ tools'
   },
   // Database and infrastructure
   'data-validation': {

@@ -89,7 +89,7 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+          <div className="bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             
             <div className="relative flex items-start justify-between">
@@ -101,7 +101,7 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
                   <h2 id="decoder-title" className="text-2xl sm:text-3xl font-bold">
                     Decision Decoder
                   </h2>
-                  <p className="text-amber-100 text-sm sm:text-base mt-1">
+                  <p className="text-rose-100 text-sm sm:text-base mt-1">
                     The Denial Translator • VA Legalese → Plain English
                   </p>
                 </div>

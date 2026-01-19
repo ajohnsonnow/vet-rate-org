@@ -1,4 +1,4 @@
-# Understanding the Interface
+﻿# Understanding the Interface
 
 This guide provides a complete tour of the Vet-Rate.org interface, covering every element you'll encounter.
 
@@ -8,12 +8,12 @@ This guide provides a complete tour of the Vet-Rate.org interface, covering ever
 
 The Vet-Rate.org interface is organized into these main sections:
 
-1. **Crisis Line Banner** — Always visible at the very top
-2. **Header** — Logo, navigation, and accessibility settings
-3. **Hero Section** — Welcome text and search bar
-4. **Feature CTAs** — Quick access to main tools
-5. **Search Results** — Displayed after searching
-6. **Footer** — Links, legal info, and support options
+1. **Crisis Line Banner** - Always visible at the very top
+2. **Header** - Logo, navigation, and accessibility settings
+3. **Hero Section** - Welcome text and search bar
+4. **Feature CTAs** - Quick access to main tools
+5. **Search Results** - Displayed after searching
+6. **Footer** - Links, legal info, and support options
 
 ---
 
@@ -36,9 +36,9 @@ The header contains the following elements:
 
 ### Logo and Title
 
-- **Vet-Rate.org Logo** — Circular logo on the left
-- **Site Name** — "Vet-Rate.org"
-- **Tagline** — "Free VA Claims Toolkit for Veterans"
+- **Vet-Rate.org Logo** - Circular logo on the left
+- **Site Name** - "Vet-Rate.org"
+- **Tagline** - "Free VA Claims Toolkit for Veterans"
 
 ### Primary Navigation
 
@@ -57,20 +57,20 @@ The header includes these navigation buttons:
 
 Clicking "Vet Resources" reveals a dropdown with:
 
-- 🌐 **VA Resources Hub** — Comprehensive guide to VA benefits
-- 🆘 **Veterans Crisis Line** — Emergency support
-- ⚠️ **PACT Act Benefits** — New presumptive conditions
-- 🧪 **Toxic Exposure Assessment** — Free MEEA evaluations
-- 🏠 **Homeless Veterans** — Housing assistance
-- 🧠 **Mental Health & PTSD** — Treatment resources
-- 🏥 **VA Health Care** — Health benefits
-- 👩 **Women Veterans** — Specialized resources
-- 💼 **Veteran Jobs** — Employment programs
-- 🎓 **GI Bill Benefits** — Education assistance
-- 🏡 **VA Home Loans** — Housing loans
-- 👨‍👩‍👧‍👦 **Caregiver Support** — Caregiver programs
-- ⚖️ **Board of Veterans Appeals** — Appeals information
-- 📚 **National Resource Directory** — Comprehensive database
+- 🌐 **VA Resources Hub** - Comprehensive guide to VA benefits
+- 🆘 **Veterans Crisis Line** - Emergency support
+- ⚠️ **PACT Act Benefits** - New presumptive conditions
+- 🧪 **Toxic Exposure Assessment** - Free MEEA evaluations
+- 🏠 **Homeless Veterans** - Housing assistance
+- 🧠 **Mental Health & PTSD** - Treatment resources
+- 🏥 **VA Health Care** - Health benefits
+- 👩 **Women Veterans** - Specialized resources
+- 💼 **Veteran Jobs** - Employment programs
+- 🎓 **GI Bill Benefits** - Education assistance
+- 🏡 **VA Home Loans** - Housing loans
+- 👨‍👩‍👧‍👦 **Caregiver Support** - Caregiver programs
+- ⚖️ **Board of Veterans Appeals** - Appeals information
+- 📚 **National Resource Directory** - Comprehensive database
 
 ---
 
@@ -84,17 +84,17 @@ The main content area starts with:
 
 With the description:
 
-> Search **748 rated disabilities** with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet—all in one place.
+> Search **748 rated disabilities** with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet-all in one place.
 
 ### Search Bar
 
 The large search bar is the centerpiece of the interface:
 
-- **Full-width design** — Easy to find and use
-- **Placeholder text** — Shows example searches
-- **Clear button** — Appears when text is entered
-- **Auto-suggestions** — Appears as you type (2+ characters)
-- **Keyboard accessible** — Full keyboard navigation support
+- **Full-width design** - Easy to find and use
+- **Placeholder text** - Shows example searches
+- **Clear button** - Appears when text is entered
+- **Auto-suggestions** - Appears as you type (2+ characters)
+- **Keyboard accessible** - Full keyboard navigation support
 
 !!! tip "Search Tips"
     The search bar accepts:
@@ -169,7 +169,7 @@ The footer is divided into three columns:
 
 ### Copyright
 
-> © 2024-2026 Vet-Rate.org — Your Complete VA Claims Toolkit
+> © 2024-2026 Vet-Rate.org - Your Complete VA Claims Toolkit
 
 With a link to 38 CFR Part 4 on eCFR.
 
@@ -180,8 +180,8 @@ With a link to 38 CFR Part 4 on eCFR.
 In the **bottom-right corner** of every page, you'll see a floating bug button:
 
 - 🐛 **Red circular button**
-- **Always visible** — Stays in position as you scroll
-- **Click to report** — Opens the Bug Squasher form
+- **Always visible** - Stays in position as you scroll
+- **Click to report** - Opens the Bug Squasher form
 
 ---
 
@@ -189,11 +189,11 @@ In the **bottom-right corner** of every page, you'll see a floating bug button:
 
 Throughout Vet-Rate.org, various features open in **modal windows** (overlay popups):
 
-- **Semi-transparent backdrop** — Dims the main content
-- **Centered content** — Modal appears in the center
-- **Close button** — X in the top-right corner
-- **Escape key** — Press Escape to close
-- **Scroll lock** — Prevents background scrolling
+- **Semi-transparent backdrop** - Dims the main content
+- **Centered content** - Modal appears in the center
+- **Close button** - X in the top-right corner
+- **Escape key** - Press Escape to close
+- **Scroll lock** - Prevents background scrolling
 
 All modals are:
 
@@ -231,6 +231,6 @@ The interface adapts to different screen sizes:
 
 Now that you understand the interface, explore:
 
-- [Accessibility Settings](accessibility.md) — Customize your experience
-- [How to Search](../search/how-to-search.md) — Learn search techniques
-- [Secondary Scout](../secondary-scout/index.md) — Discover secondary conditions
+- [Accessibility Settings](accessibility.md) - Customize your experience
+- [How to Search](../search/how-to-search.md) - Learn search techniques
+- [Secondary Scout](../secondary-scout/index.md) - Discover secondary conditions

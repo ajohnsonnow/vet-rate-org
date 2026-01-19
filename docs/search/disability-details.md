@@ -1,4 +1,4 @@
-# Disability Details
+﻿# Disability Details
 
 When you click a search result card, a comprehensive details panel opens showing all information about the selected condition.
 
@@ -8,13 +8,13 @@ When you click a search result card, a comprehensive details panel opens showing
 
 The details panel expands below the search results and contains:
 
-1. **Header Section** — Condition name, code, and action buttons
-2. **PACT Act Info** — (if applicable) Presumptive condition information
-3. **Rating Schedule** — CFR reference for this condition
-4. **Rating Criteria** — Expandable table with all percentage criteria
-5. **Secondary Conditions** — Related conditions that may qualify
-6. **Documentation Tips** — Evidence guidance for your claim
-7. **VA Resources** — Direct links to relevant VA services
+1. **Header Section** - Condition name, code, and action buttons
+2. **PACT Act Info** - (if applicable) Presumptive condition information
+3. **Rating Schedule** - CFR reference for this condition
+4. **Rating Criteria** - Expandable table with all percentage criteria
+5. **Secondary Conditions** - Related conditions that may qualify
+6. **Documentation Tips** - Evidence guidance for your claim
+7. **VA Resources** - Direct links to relevant VA services
 
 ---
 
@@ -22,9 +22,9 @@ The details panel expands below the search results and contains:
 
 ### Title Area
 
-- **Condition Name** — Large, bold heading
-- **PACT Act Badge** — Orange badge if presumptive condition
-- **Diagnostic Code** — Displayed below the name
+- **Condition Name** - Large, bold heading
+- **PACT Act Badge** - Orange badge if presumptive condition
+- **Diagnostic Code** - Displayed below the name
 
 ### Action Buttons
 
@@ -50,10 +50,10 @@ If the condition is covered under the PACT Act:
 
 The info card includes:
 
-- **What it means** — Explanation of presumptive status
-- **Eligibility** — Who may qualify
-- **Next steps** — How to file a claim
-- **Resources** — Links to PACT Act information
+- **What it means** - Explanation of presumptive status
+- **Eligibility** - Who may qualify
+- **Next steps** - How to file a claim
+- **Resources** - Links to PACT Act information
 
 ---
 
@@ -117,9 +117,9 @@ The main rating table shows:
 
 Additional notes may appear at the bottom:
 
-- **Notes** — Important clarifications
-- **Considerations** — Factors the examiner should evaluate
-- **Combined ratings** — How multiple conditions interact
+- **Notes** - Important clarifications
+- **Considerations** - Factors the examiner should evaluate
+- **Combined ratings** - How multiple conditions interact
 
 ---
 
@@ -151,10 +151,10 @@ Expandable section with guidance on documenting your condition:
 
 ### What This Section Covers
 
-- **Medical evidence needed** — Types of documentation
-- **Service connection tips** — How to establish nexus
-- **C&P exam preparation** — What to expect and how to prepare
-- **Common mistakes** — Pitfalls to avoid
+- **Medical evidence needed** - Types of documentation
+- **Service connection tips** - How to establish nexus
+- **C&P exam preparation** - What to expect and how to prepare
+- **Common mistakes** - Pitfalls to avoid
 
 ---
 

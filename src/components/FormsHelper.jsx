@@ -5,6 +5,7 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
 import VoiceInputButton, { isSpeechRecognitionSupported } from './VoiceInput';
+import { FocusToggle } from '../contexts/FocusModeContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { fillAndDownloadForm } from '../utils/pdfFormFiller';
 import { isAIAvailable, enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
@@ -3355,16 +3356,17 @@ Phone: 1-202-461-7699
       <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden">
           {/* Header */}
-          <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-800 dark:from-gray-800 dark:to-gray-900 text-white px-6 py-4 z-10">
+          <div className="sticky top-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📋</span>
                 <div>
                   <h2 className="text-xl font-bold">VA Forms Helper</h2>
-                  <p className="text-blue-100 text-sm">Guided help for VA claim forms</p>
+                  <p className="text-violet-100 text-sm">Guided help for VA claim forms</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <FocusToggle variant="light" />
                 <ReportBugLink onClick={onReportBug} variant="light" moduleName="Forms Helper" />
                 <button
                   onClick={onClose}

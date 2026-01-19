@@ -1,4 +1,4 @@
-# Saved Forms
+﻿# Saved Forms
 
 Access and manage your saved forms and statements within My Packet.
 
@@ -247,10 +247,10 @@ These appear in a "General" section.
 
 !!! tip "Best Practices"
     
-    1. **Download promptly** — Save copies to your device
-    2. **Name files clearly** — Use descriptive filenames
-    3. **Organize by condition** — Create folders on your device
-    4. **Backup regularly** — Export your entire packet
-    5. **Update before filing** — Review and refresh
-    6. **Delete outdated versions** — Free up storage space
-    7. **Keep submission copies** — Save final versions you submit
+    1. **Download promptly** - Save copies to your device
+    2. **Name files clearly** - Use descriptive filenames
+    3. **Organize by condition** - Create folders on your device
+    4. **Backup regularly** - Export your entire packet
+    5. **Update before filing** - Review and refresh
+    6. **Delete outdated versions** - Free up storage space
+    7. **Keep submission copies** - Save final versions you submit

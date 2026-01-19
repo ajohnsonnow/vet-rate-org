@@ -1,4 +1,4 @@
-# Legal Information
+﻿# Legal Information
 
 Legal documents and disclaimers for Vet-Rate.org.
 
@@ -69,9 +69,9 @@ Nothing on Vet-Rate.org constitutes medical advice. For medical matters:
 
 Vet-Rate.org is:
 
-- **Independent** — Not affiliated with the VA
-- **Unofficial** — Not an official VA resource
-- **Educational** — For informational purposes only
+- **Independent** - Not affiliated with the VA
+- **Unofficial** - Not an official VA resource
+- **Educational** - For informational purposes only
 
 ### No Guarantees
 

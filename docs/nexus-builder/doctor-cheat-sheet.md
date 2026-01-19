@@ -1,4 +1,4 @@
-# Doctor's Cheat Sheet
+﻿# Doctor's Cheat Sheet
 
 Generate a reference document to help your healthcare provider write a medical nexus opinion.
 
@@ -122,22 +122,22 @@ Save or print the <strong>PDF document</strong>
 
 ### Before Your Appointment
 
-1. **Print the cheat sheet** — Have a physical copy
-2. **Review it yourself** — Know what it contains
-3. **Gather your records** — Medical records to share
+1. **Print the cheat sheet** - Have a physical copy
+2. **Review it yourself** - Know what it contains
+3. **Gather your records** - Medical records to share
 
 ### At Your Appointment
 
-1. **Explain your request** — "I'm filing a VA claim and need a nexus letter"
-2. **Provide the cheat sheet** — "This explains what the VA needs"
-3. **Share your records** — Give them relevant documentation
-4. **Discuss your case** — Answer their questions
+1. **Explain your request** - "I'm filing a VA claim and need a nexus letter"
+2. **Provide the cheat sheet** - "This explains what the VA needs"
+3. **Share your records** - Give them relevant documentation
+4. **Discuss your case** - Answer their questions
 
 ### After Your Appointment
 
-1. **Follow up** — Make sure they're working on it
-2. **Review the letter** — Check it includes required elements
-3. **Request changes if needed** — Ensure proper language is used
+1. **Follow up** - Make sure they're working on it
+2. **Review the letter** - Check it includes required elements
+3. **Request changes if needed** - Ensure proper language is used
 
 ---
 
@@ -169,12 +169,12 @@ Save or print the <strong>PDF document</strong>
 
 !!! tip "Getting a Good Nexus Letter"
     
-    1. **Choose the right provider** — Primary care, specialist, or IMO doctor
-    2. **Bring documentation** — Medical records, service records
-    3. **Give them time** — Don't rush the process
-    4. **Offer to pay** — Some providers charge for letters
-    5. **Review before submitting** — Ensure it meets VA standards
-    6. **Get multiple if needed** — Specialist opinions carry more weight
+    1. **Choose the right provider** - Primary care, specialist, or IMO doctor
+    2. **Bring documentation** - Medical records, service records
+    3. **Give them time** - Don't rush the process
+    4. **Offer to pay** - Some providers charge for letters
+    5. **Review before submitting** - Ensure it meets VA standards
+    6. **Get multiple if needed** - Specialist opinions carry more weight
 
 ---
 
@@ -192,9 +192,9 @@ Some doctors may decline. Options:
 
 If the letter says:
 
-- ❌ "Possibly related" — Too weak
-- ❌ "May be related" — Too weak
-- ❌ "Could be related" — Too weak
+- ❌ "Possibly related" - Too weak
+- ❌ "May be related" - Too weak
+- ❌ "Could be related" - Too weak
 
 Request revision to:
 

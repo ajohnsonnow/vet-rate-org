@@ -1,27 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { PROJECT_STATS, FORMATTED_STATS, formatNumber } from '../data/projectStats';
+import { useColorSchemas } from '../hooks/useColorSchemas';
 
 const AboutUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Get color schemas
+  const { getModalClasses, getColorClass, colors } = useColorSchemas();
+  const modalClasses = getModalClasses();
+  
+  // Easter egg state
+  const [showZonkMessage, setShowZonkMessage] = useState(false);
+  
+  const handleZonk = () => {
+    setShowZonkMessage(true);
+    // Play sound if available (optional)
+    try {
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjKM0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+mdvyzHotBSZ6yPHhlUQLFlm16+unVBELSKXh8bllHAU2kdXz0oQ0Bxx0w/DijUgNCk+r5vCxXxgIPJXa88x9LgUke8fy4JRDC0ZRr+Hxs2AYCDqT1vPSgjQGHHTD8OKMSAwJT6vm8LFeFwtDl9rx0H8wBSZ7yPLgk0ULEl6259+yfyYPRaHg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRNC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQs=');
+      audio.play().catch(() => {});
+    } catch (e) {
+      // Silent fail if audio doesn't work
+    }
+    setTimeout(() => setShowZonkMessage(false), 3000);
+  };
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className={modalClasses.backdrop}
       role="dialog"
       aria-modal="true"
       aria-labelledby="about-us-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full my-8 modal-content">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
-          <h2 id="about-us-title" className="text-2xl font-bold text-gray-900 dark:text-gray-100">ℹ️ About Vet-Rate.org</h2>
+      <div className={`${modalClasses.content} max-w-4xl my-8`}>
+        <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
+          <h2 id="about-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>ℹ️ About Vet-Rate.org</h2>
           <div className="flex items-center gap-3">
             {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="About Us" />}
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-3xl font-bold leading-none"
+              className={`text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
               aria-label="Close"
             >
               ×
@@ -30,6 +50,49 @@ const AboutUs = ({ onClose, onReportBug }) => {
         </div>
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+          
+          {/* THE VET-RATE PROMISE - Trust Beacon */}
+          <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">
+            <div className="text-center mb-4">
+              <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ The Vet-Rate Promise</h3>
+              <div className="w-20 h-1 bg-va-gold mx-auto rounded"></div>
+            </div>
+            
+            <div className="font-mono text-gray-300 space-y-4 text-sm leading-relaxed">
+              <p className="text-center text-lg text-white font-semibold">
+                "Built by a Veteran, For Veterans."
+              </p>
+              
+              <p>
+                I am <strong className="text-white">Anthony Johnson</strong>, an instructor and developer 
+                based in Portland, OR. I built Vet-Rate because I believe you shouldn't need a law degree—or 
+                pay thousands to a "claim shark"—to get the benefits you earned.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-green-500/30">
+                  <span className="text-3xl block mb-2">💵</span>
+                  <span className="text-green-400 font-bold">ZERO COST</span>
+                  <p className="text-xs text-gray-400 mt-1">No subscriptions. No hidden fees. Ever.</p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-blue-500/30">
+                  <span className="text-3xl block mb-2">🛡️</span>
+                  <span className="text-blue-400 font-bold">100% PRIVATE</span>
+                  <p className="text-xs text-gray-400 mt-1">Your data stays on YOUR device.</p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-red-500/30">
+                  <span className="text-3xl block mb-2">🚫</span>
+                  <span className="text-red-400 font-bold">NO TRACKING</span>
+                  <p className="text-xs text-gray-400 mt-1">No analytics. No selling data.</p>
+                </div>
+              </div>
+              
+              <p className="text-center italic text-gray-400 mt-4 text-xs">
+                This is a tool to empower you to tell your own story.
+              </p>
+            </div>
+          </section>
+          
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 My Mission</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
@@ -121,7 +184,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
             
             <div className="mt-4 bg-gradient-to-r from-va-gold/20 to-green-600/20 border-l-4 border-va-gold rounded p-3">
               <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                🎖️ That's 28 professional-grade tools—completely free. What claim sharks charge thousands for.
+                🎖️ That's 40+ professional-grade tools—completely free. What claim sharks charge thousands for.
               </p>
             </div>
           </section>
@@ -244,6 +307,14 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
                         />
                         <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">Supervising the code 💻</p>
+                      </div>
+                      <div>
+                        <img 
+                          src="/images/NaptimeLuna.jpg" 
+                          alt="Luna taking a well-deserved nap" 
+                          className="w-full h-auto rounded-lg shadow-md border-2 border-pink-200 dark:border-pink-700"
+                        />
+                        <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-xs">Quality assurance testing 😴</p>
                       </div>
                     </div>
                   </details>
@@ -463,7 +534,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 How This Project Is Funded</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Building and maintaining 28 professional-grade tools with hosting costs, AI capabilities, and continuous development 
+              Building and maintaining 40+ professional-grade tools with hosting costs, AI capabilities, and continuous development 
               requires resources. To keep this comprehensive platform free for all veterans, this project relies entirely on voluntary 
               support from the veteran community:
             </p>
@@ -524,7 +595,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
               I am committed to:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
-              <li>✅ Keeping all <strong>28 professional tools 100% free</strong> forever—no paywalls, ever</li>
+              <li>✅ Keeping all <strong>40+ professional tools 100% free</strong> forever—no paywalls, ever</li>
               <li>✅ Protecting your <strong>privacy</strong> - no ads, no tracking, no data collection, no claim sharks</li>
               <li>✅ Providing <strong>accurate, up-to-date</strong> information from official 38 CFR sources</li>
               <li>✅ Continuously <strong>adding new tools</strong> and improving features based on veteran feedback</li>
@@ -544,7 +615,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mt-6">
             <p className="text-sm text-green-800 dark:text-green-200">
               <strong>Thank You for Your Service</strong><br />
-              Every veteran who navigates their claim successfully with these 28 tools—instead of paying thousands 
+              Every veteran who navigates their claim successfully with these 40+ tools—instead of paying thousands 
               to predatory services—is a victory. I'm honored to serve my fellow veterans by making this comprehensive 
               professional arsenal freely available to all who served.
             </p>
@@ -552,14 +623,45 @@ const AboutUs = ({ onClose, onReportBug }) => {
         </div>
 
         <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
-          <button
-            onClick={onClose}
-            className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Close
-          </button>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="flex items-center gap-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Version {PROJECT_STATS.version} • Built with ❤️ for Veterans
+              </p>
+              
+              {/* The Zonk Button - Easter Egg */}
+              <button
+                onClick={handleZonk}
+                className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-sm"
+                title="Zonk! (Click me)"
+              >
+                Dismissed
+              </button>
+            </div>
+            
+            <button
+              onClick={onClose}
+              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Zonk Message Overlay */}
+      {showZonkMessage && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
+          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-8 py-6 rounded-xl shadow-2xl transform animate-bounce">
+            <div className="text-6xl mb-2 text-center">🎖️</div>
+            <div className="text-3xl font-bold text-center mb-2">ZONK!</div>
+            <div className="text-lg text-center">You're dismissed! Get outta here! 😄</div>
+            <div className="text-sm text-center mt-2 text-white/80">
+              (Just kidding, thanks for using Vet-Rate!)
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

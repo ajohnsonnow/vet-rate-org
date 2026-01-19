@@ -1,4 +1,4 @@
-# C&P Simulator - Flashcard Mode
+﻿# C&P Simulator - Flashcard Mode
 
 Learn medical terminology and rating criteria with interactive flashcards.
 
@@ -8,10 +8,10 @@ Learn medical terminology and rating criteria with interactive flashcards.
 
 Flashcard Mode is an educational feature that helps you understand:
 
-- **Medical terminology** — Terms used in C&P exams
-- **Rating criteria language** — What each level means
-- **VA-specific concepts** — How the VA evaluates conditions
-- **DBQ elements** — What examiners document
+- **Medical terminology** - Terms used in C&P exams
+- **Rating criteria language** - What each level means
+- **VA-specific concepts** - How the VA evaluates conditions
+- **DBQ elements** - What examiners document
 
 ---
 
@@ -170,10 +170,10 @@ The system tracks:
 
 ### Review Sessions
 
-- **Quick Review** — 10 random cards
-- **Difficult Cards** — Only flagged cards
-- **Full Review** — All cards in category
-- **Mixed Review** — Cards from all categories
+- **Quick Review** - 10 random cards
+- **Difficult Cards** - Only flagged cards
+- **Full Review** - All cards in category
+- **Mixed Review** - Cards from all categories
 
 ---
 

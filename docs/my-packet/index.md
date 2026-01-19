@@ -1,6 +1,6 @@
-# My Packet
+﻿# My Packet
 
-**My Packet** is your personal claims management hub — a secure, locally-stored workspace where you can organize conditions, track progress, save statements, and manage your entire VA claims journey.
+**My Packet** is your personal claims management hub - a secure, locally-stored workspace where you can organize conditions, track progress, save statements, and manage your entire VA claims journey.
 
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
@@ -12,11 +12,11 @@
 
 My Packet serves as your:
 
-- **Claims Organizer** — Track conditions you're researching or claiming
-- **Statement Repository** — Store generated nexus statements
-- **Progress Tracker** — Monitor claim status
-- **Evidence Manager** — Organize your documentation
-- **Backup System** — Export and restore your work
+- **Claims Organizer** - Track conditions you're researching or claiming
+- **Statement Repository** - Store generated nexus statements
+- **Progress Tracker** - Monitor claim status
+- **Evidence Manager** - Organize your documentation
+- **Backup System** - Export and restore your work
 
 ---
 
@@ -124,19 +124,19 @@ From My Packet, you can:
 
 <div class="step-container">
 <div class="step">
-<strong>Add conditions</strong> — Save conditions from search or Secondary Scout
+<strong>Add conditions</strong> - Save conditions from search or Secondary Scout
 </div>
 <div class="step">
-<strong>Research</strong> — Review rating criteria and requirements
+<strong>Research</strong> - Review rating criteria and requirements
 </div>
 <div class="step">
-<strong>Build statements</strong> — Generate nexus statements for each
+<strong>Build statements</strong> - Generate nexus statements for each
 </div>
 <div class="step">
-<strong>Track progress</strong> — Update status as you work
+<strong>Track progress</strong> - Update status as you work
 </div>
 <div class="step">
-<strong>Export</strong> — Download your documents when ready
+<strong>Export</strong> - Download your documents when ready
 </div>
 </div>
 
@@ -144,10 +144,10 @@ From My Packet, you can:
 
 Add conditions from:
 
-- **Search Results** — Click "Save to Packet" on any condition
-- **Disability Details** — Click "Save to Packet" in details panel
-- **Secondary Scout** — Add suggested secondary conditions
-- **Manual Entry** — Add conditions directly in My Packet
+- **Search Results** - Click "Save to Packet" on any condition
+- **Disability Details** - Click "Save to Packet" in details panel
+- **Secondary Scout** - Add suggested secondary conditions
+- **Manual Entry** - Add conditions directly in My Packet
 
 ---
 
@@ -187,10 +187,10 @@ Your packet will be cleared if you:
 
 !!! tip "My Packet Tips"
     
-    1. **Start with Intent to File** — Protect your effective date
-    2. **Add conditions as you discover them** — Don't lose track
-    3. **Build statements for each** — Be prepared
-    4. **Update statuses** — Know where you are
-    5. **Backup regularly** — Protect your work
-    6. **Export before filing** — Have records of everything
-    7. **Keep notes** — Document your research and decisions
+    1. **Start with Intent to File** - Protect your effective date
+    2. **Add conditions as you discover them** - Don't lose track
+    3. **Build statements for each** - Be prepared
+    4. **Update statuses** - Know where you are
+    5. **Backup regularly** - Protect your work
+    6. **Export before filing** - Have records of everything
+    7. **Keep notes** - Document your research and decisions

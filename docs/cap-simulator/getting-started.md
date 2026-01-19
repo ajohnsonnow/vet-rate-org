@@ -1,4 +1,4 @@
-# C&P Simulator - Getting Started
+﻿# C&P Simulator - Getting Started
 
 Learn the basics of the C&P Exam Simulator and how to begin practicing.
 
@@ -22,9 +22,9 @@ When you open the simulator, you'll see the introduction screen with:
 
 ### Overview
 
-- **What the simulator does** — Prepares you for your C&P exam
-- **How it works** — Question-based practice
-- **What you'll learn** — Rating criteria and tipping points
+- **What the simulator does** - Prepares you for your C&P exam
+- **How it works** - Question-based practice
+- **What you'll learn** - Rating criteria and tipping points
 
 ### Mode Selection
 
@@ -43,16 +43,16 @@ The primary practice experience:
 
 <div class="step-container">
 <div class="step">
-<strong>Select condition</strong> — Choose from your packet or search
+<strong>Select condition</strong> - Choose from your packet or search
 </div>
 <div class="step">
-<strong>Answer questions</strong> — Respond to DBQ-aligned questions
+<strong>Answer questions</strong> - Respond to DBQ-aligned questions
 </div>
 <div class="step">
-<strong>Get feedback</strong> — Understand each answer
+<strong>Get feedback</strong> - Understand each answer
 </div>
 <div class="step">
-<strong>See results</strong> — Estimated rating and gap analysis
+<strong>See results</strong> - Estimated rating and gap analysis
 </div>
 </div>
 
@@ -60,11 +60,11 @@ The primary practice experience:
 
 Questions are designed around actual C&P exam criteria:
 
-- **Symptoms** — What you experience
-- **Severity** — How bad symptoms get
-- **Frequency** — How often symptoms occur
-- **Functional Impact** — How symptoms affect daily life
-- **Treatment** — What you've done to address it
+- **Symptoms** - What you experience
+- **Severity** - How bad symptoms get
+- **Frequency** - How often symptoms occur
+- **Functional Impact** - How symptoms affect daily life
+- **Treatment** - What you've done to address it
 
 ---
 
@@ -72,9 +72,9 @@ Questions are designed around actual C&P exam criteria:
 
 Educational mode for learning terminology:
 
-- **Medical terms** — Definitions and explanations
-- **Rating criteria** — What each level means
-- **DBQ concepts** — What examiners evaluate
+- **Medical terms** - Definitions and explanations
+- **Rating criteria** - What each level means
+- **DBQ concepts** - What examiners evaluate
 
 ### Flashcard Features
 
@@ -136,10 +136,10 @@ Question 3 of 8
 
 Each question shows:
 
-- **Question text** — What's being asked
-- **Intent explanation** — Why this matters for your rating
-- **Definition** — Medical term definitions
-- **Answer options** — Multiple choice responses
+- **Question text** - What's being asked
+- **Intent explanation** - Why this matters for your rating
+- **Definition** - Medical term definitions
+- **Answer options** - Multiple choice responses
 
 ---
 
@@ -160,10 +160,10 @@ Each question shows:
 
 ### Question Types
 
-- **Multiple choice** — Select one answer
-- **Scale questions** — Rate severity 1-5
-- **Yes/No questions** — Simple binary choices
-- **Multi-select** — Choose all that apply
+- **Multiple choice** - Select one answer
+- **Scale questions** - Rate severity 1-5
+- **Yes/No questions** - Simple binary choices
+- **Multi-select** - Choose all that apply
 
 ### Time Investment
 

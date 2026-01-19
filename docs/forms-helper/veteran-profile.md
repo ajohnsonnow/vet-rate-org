@@ -1,4 +1,4 @@
-# Veteran Profile
+﻿# Veteran Profile
 
 Save your information for faster form completion across all Forms Helper tools.
 
@@ -229,9 +229,9 @@ If using a shared computer:
 
 !!! tip "Profile Best Practices"
     
-    1. **Complete all fields** — More data = more convenience
-    2. **Keep it current** — Update when information changes
-    3. **Verify accuracy** — Match your official records
-    4. **Back up regularly** — Use My Packet export
-    5. **Secure your device** — Protect your information
-    6. **Review on forms** — Always double-check pre-filled data
+    1. **Complete all fields** - More data = more convenience
+    2. **Keep it current** - Update when information changes
+    3. **Verify accuracy** - Match your official records
+    4. **Back up regularly** - Use My Packet export
+    5. **Secure your device** - Protect your information
+    6. **Review on forms** - Always double-check pre-filled data

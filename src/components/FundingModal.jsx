@@ -1,5 +1,6 @@
 import React from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useColorSchemas } from '../hooks/useColorSchemas';
 
 /**
  * FundingModal - Modal with multiple ways to support Vet-Rate.org
@@ -11,6 +12,10 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 function FundingModal({ show, onClose, componentStats = null }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(show);
+  
+  // Get color schemas
+  const { getModalClasses, getColorClass, colors } = useColorSchemas();
+  const modalClasses = getModalClasses();
 
   if (!show) return null;
 
@@ -55,17 +60,17 @@ function FundingModal({ show, onClose, componentStats = null }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
+      className={modalClasses.backdrop}
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 relative modal-content"
+        className={`${modalClasses.content} max-w-md p-6`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className={`absolute top-3 right-3 ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)} transition-colors`}
           aria-label="Close"
         >
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -82,17 +87,17 @@ function FundingModal({ show, onClose, componentStats = null }) {
               className="w-16 h-16 rounded-full object-cover border-4 border-va-gold shadow-lg"
             />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className={`text-2xl font-bold mb-2 ${getColorClass(colors.text.primary)}`}>
             💚 Back the Mission
           </h2>
           
           {/* Component-specific stats */}
           {componentStats && (
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg p-3 mb-3 border border-blue-200 dark:border-blue-700">
-              <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1">
+            <div className={`rounded-lg p-3 mb-3 border ${getColorClass(colors.status.info.bg)} ${getColorClass(colors.status.info.border)}`}>
+              <p className={`text-sm font-bold mb-1 ${getColorClass(colors.text.primary)}`}>
                 {componentStats.name}
               </p>
-              <div className="flex justify-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+              <div className={`flex justify-center gap-4 text-xs ${getColorClass(colors.text.tertiary)}`}>
                 <div>
                   <span className="font-semibold">⏱️ {componentStats.hours} hrs</span> to build
                 </div>
@@ -101,14 +106,14 @@ function FundingModal({ show, onClose, componentStats = null }) {
                 </div>
               </div>
               {componentStats.description && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 italic">
+                <p className={`text-xs mt-2 italic ${getColorClass(colors.text.secondary)}`}>
                   {componentStats.description}
                 </p>
               )}
             </div>
           )}
           
-          <p className="text-gray-600 dark:text-gray-300 text-sm">
+          <p className={`text-sm ${getColorClass(colors.text.secondary)}`}>
             100% of contributions go toward keeping Vet-Rate.org free for all veterans.
             No ads, no tracking, no data selling - just vets helping vets.
           </p>
@@ -137,7 +142,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
         </div>
 
         {/* Footer message */}
-        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
+        <p className={`text-center text-xs mt-4 ${getColorClass(colors.text.muted)}`}>
           Thank you for supporting veteran-built tools! 💚
         </p>
       </div>

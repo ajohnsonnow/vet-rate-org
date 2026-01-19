@@ -1000,95 +1000,99 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
   );
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🔑</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">The Keysmith</h2>
-                  <p className="text-sm text-amber-100">FOIA / C-File Request Generator</p>
-                </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🔑</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">The Keysmith</h2>
+                <p className="text-sm text-amber-100">FOIA / C-File Request Generator</p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
-          </div>
-          
-          {/* Progress Steps */}
-          <div className="max-w-4xl mx-auto px-6 pt-6">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              {[1, 2, 3].map(s => (
-                <div key={s} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                    step >= s ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {step > s ? '✓' : s}
-                  </div>
-                  {s < 3 && (
-                    <div className={`w-16 h-1 ${step > s ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
-              <span className={step === 1 ? 'font-bold text-amber-500' : ''}>Your Info</span>
-              <span className={step === 2 ? 'font-bold text-amber-500' : ''}>Select Records</span>
-              <span className={step === 3 ? 'font-bold text-amber-500' : ''}>Download</span>
-            </div>
-          </div>
-          
-          {/* Main Content */}
-          <div className="max-w-4xl mx-auto p-6 pt-0">
-            {step === 1 && renderPersonalInfo()}
-            {step === 2 && renderRecordSelection()}
-            {step === 3 && renderReviewDownload()}
-            
-            {/* Support CTA on download page */}
-            {step === 3 && (
-              <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src="/images/Anth.jpg" 
-                    alt="Anthony - Vet-Rate Developer"
-                    className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
-                  />
-                  <div className="flex-1">
-                    <p className="text-amber-200 font-semibold mb-1">
-                      🔐 Knowledge is power - now you're unlocking yours
-                    </p>
-                    <p className="text-amber-300/70 text-sm">
-                      Your C-File contains everything VA used to decide your claim - and everything 
-                      they may have "overlooked." This tool helps every veteran see their own file. 
-                      Transparency tools like this take time to build. Help keep them free.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
+        
+        {/* Progress Steps */}
+        <div className="px-6 pt-6">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            {[1, 2, 3].map(s => (
+              <div key={s} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                  step >= s ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                }`}>
+                  {step > s ? '✓' : s}
+                </div>
+                {s < 3 && (
+                  <div className={`w-16 h-1 ${step > s ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <span className={step === 1 ? 'font-bold text-amber-500' : ''}>Your Info</span>
+            <span className={step === 2 ? 'font-bold text-amber-500' : ''}>Select Records</span>
+            <span className={step === 3 ? 'font-bold text-amber-500' : ''}>Download</span>
+          </div>
+        </div>
+        
+        {/* Main Content */}
+        <div className="p-6 pt-0">
+          {step === 1 && renderPersonalInfo()}
+          {step === 2 && renderRecordSelection()}
+          {step === 3 && renderReviewDownload()}
+          
+          {/* Support CTA on download page */}
+          {step === 3 && (
+            <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
+              <div className="flex items-center gap-4">
+                <img 
+                  src="/images/Anth.jpg" 
+                  alt="Anthony - Vet-Rate Developer"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <p className="text-amber-200 font-semibold mb-1">
+                    🔐 Knowledge is power - now you're unlocking yours
+                  </p>
+                  <p className="text-amber-300/70 text-sm">
+                    Your C-File contains everything VA used to decide your claim - and everything 
+                    they may have "overlooked." This tool helps every veteran see their own file. 
+                    Transparency tools like this take time to build. Help keep them free.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* BuyMeCoffee - shows on download page */}
+        {step === 3 && (
+          <div className="p-6 pt-0">
+            <BuyMeCoffee 
+              show={true} 
+              trigger="foia" 
+            />
+          </div>
+        )}
       </div>
-      
-      {/* BuyMeCoffee - shows on download page */}
-      <BuyMeCoffee 
-        show={step === 3} 
-        trigger="foia" 
-      />
     </div>
   );
 }

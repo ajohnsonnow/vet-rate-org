@@ -1,4 +1,4 @@
-# CFR Reference
+﻿# CFR Reference
 
 Guide to relevant Code of Federal Regulations sections for VA disability claims.
 
@@ -158,8 +158,8 @@ The General Rating Formula for Mental Disorders:
 
 Additional factors for musculoskeletal ratings:
 
-- **§ 4.40** — Functional loss
-- **§ 4.45** — The joints
+- **§ 4.40** - Functional loss
+- **§ 4.45** - The joints
 - Pain on movement
 - Weakness
 - Fatigability

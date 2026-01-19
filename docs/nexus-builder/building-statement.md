@@ -1,4 +1,4 @@
-# Building Your Statement
+﻿# Building Your Statement
 
 Step-by-step guide through the Nexus Builder wizard to create your Statement in Support of Claim.
 
@@ -79,22 +79,22 @@ The condition you're claiming:
 
 Select one:
 
-- **☐ Direct** — Condition started in service
-- **☐ Secondary** — Caused by another service-connected condition
-- **☐ Aggravation** — Pre-existing condition worsened in service
+- **☐ Direct** - Condition started in service
+- **☐ Secondary** - Caused by another service-connected condition
+- **☐ Aggravation** - Pre-existing condition worsened in service
 
 ### For Secondary Claims
 
 If secondary:
 
-- **Primary Condition** — What it's secondary to
-- **How Connected** — Brief explanation
+- **Primary Condition** - What it's secondary to
+- **How Connected** - Brief explanation
 
 ### Current Diagnosis
 
-- **Diagnosis Date** — When diagnosed
-- **Diagnosing Provider** — Who diagnosed you
-- **Diagnosis Method** — Exam, imaging, testing, etc.
+- **Diagnosis Date** - When diagnosed
+- **Diagnosing Provider** - Who diagnosed you
+- **Diagnosis Method** - Exam, imaging, testing, etc.
 
 ---
 
@@ -286,5 +286,5 @@ Review the generated statement before downloading.
     - Use both medical terms and plain language
 
 !!! tip "Impact"
-    - Be concrete — specific examples are better than general statements
+    - Be concrete - specific examples are better than general statements
     - Include financial impact if relevant (lost wages, etc.)

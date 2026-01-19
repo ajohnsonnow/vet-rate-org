@@ -6,7 +6,7 @@ Thank you for considering contributing to this project! This guide explains how 
 
 Provide veterans with accurate, accessible information about disability ratings and benefits using official eCFR data from 38 CFR Parts 3 & 4.
 
-## ðŸ’– Ways to Contribute
+## ðŸ’- Ways to Contribute
 
 ### 1. Report Bugs
 Found an issue? Open a GitHub issue with:

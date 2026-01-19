@@ -1,4 +1,4 @@
-# Data Privacy
+﻿# Data Privacy
 
 Detailed information about how your data is handled in Vet-Rate.org.
 
@@ -24,7 +24,7 @@ No registration, logins, or identity verification.
 
 ### 5. You Own Your Data
 
-You control everything — export, delete, or keep as you wish.
+You control everything - export, delete, or keep as you wish.
 
 ---
 
@@ -118,11 +118,11 @@ When you click external links (like VA.gov):
 
 Since data is stored in your browser:
 
-1. **Use a personal device** — Avoid shared computers
-2. **Use a secure browser** — Keep it updated
-3. **Don't use public computers** — Data could remain
-4. **Consider private browsing** — For extra privacy
-5. **Backup your data** — Protect against loss
+1. **Use a personal device** - Avoid shared computers
+2. **Use a secure browser** - Keep it updated
+3. **Don't use public computers** - Data could remain
+4. **Consider private browsing** - For extra privacy
+5. **Backup your data** - Protect against loss
 
 ### If Using Shared Devices
 
@@ -201,7 +201,7 @@ Service-related information you enter:
 - Duty stations
 - In-service events
 
-Same protections apply — never leaves your device.
+Same protections apply - never leaves your device.
 
 ---
 

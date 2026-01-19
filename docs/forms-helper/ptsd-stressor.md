@@ -1,4 +1,4 @@
-# PTSD Stressor Statement
+﻿# PTSD Stressor Statement
 
 Document traumatic events that caused or contributed to your PTSD using VA Form 21-0781.
 
@@ -73,7 +73,7 @@ After completing the PTSD stressor statement wizard, you can optionally enhance 
 5. Download your preferred version
 
 !!! warning "Sensitive Content"
-    The AI is designed to handle PTSD statements sensitively. Only general categories (e.g., "combat exposure") are shared—never specific details that could identify you or others.
+    The AI is designed to handle PTSD statements sensitively. Only general categories (e.g., "combat exposure") are shared-never specific details that could identify you or others.
 
 ---
 
@@ -149,11 +149,11 @@ The most critical section:
 
 !!! tip "Writing Your Statement"
     
-    - **Be specific** — Details help verify the event
-    - **Be honest** — Accuracy matters more than drama
-    - **Include sensory details** — What you saw, heard, smelled
-    - **Describe your reaction** — How you felt during/after
-    - **Approximate if needed** — "On or about..." is acceptable
+    - **Be specific** - Details help verify the event
+    - **Be honest** - Accuracy matters more than drama
+    - **Include sensory details** - What you saw, heard, smelled
+    - **Describe your reaction** - How you felt during/after
+    - **Approximate if needed** - "On or about..." is acceptable
 
 Example structure:
 
@@ -206,13 +206,13 @@ If you experienced multiple traumatic events:
 
 !!! tip "PTSD Stressor Statement Best Practices"
     
-    1. **Focus on verifiable details** — Dates, locations, unit
-    2. **Be consistent** — Match your other statements and records
-    3. **Include witnesses** — Even if just unit members who may remember
-    4. **Describe the impact** — How it changed you
-    5. **Don't minimize** — Describe the true nature of the event
-    6. **Get help if needed** — VSOs and therapists can assist
-    7. **Take breaks** — This can be emotionally difficult
+    1. **Focus on verifiable details** - Dates, locations, unit
+    2. **Be consistent** - Match your other statements and records
+    3. **Include witnesses** - Even if just unit members who may remember
+    4. **Describe the impact** - How it changed you
+    5. **Don't minimize** - Describe the true nature of the event
+    6. **Get help if needed** - VSOs and therapists can assist
+    7. **Take breaks** - This can be emotionally difficult
 
 ---
 

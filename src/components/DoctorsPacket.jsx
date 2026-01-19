@@ -253,24 +253,27 @@ Vet-Rate.org - Helping Veterans Win Claims`;
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-purple-500/20">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-gradient-to-r from-purple-900/30 to-indigo-900/30">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-violet-700 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
+            <div className="p-2 bg-white/20 rounded-lg">
               <SparklesIcon />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Doctor's Packet Generator</h2>
-              <p className="text-sm text-gray-400">AI-powered medical nexus research</p>
+              <p className="text-sm text-violet-100">AI-powered medical nexus research</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <FocusToggle variant="light" />
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:text-gray-200 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         
         {/* Content */}

@@ -731,40 +731,38 @@ export default function RiskAssessment({ onClose, onReportBug }) {
   };
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
-          onClick={onClose}
-        ></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-orange-600 to-red-600 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🐻</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Poke the Bear Calculator</h2>
-                  <p className="text-sm text-orange-100">Risk Assessment Before Filing</p>
-                </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-orange-600 to-red-600 p-4 shadow-lg rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🐻</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">Poke the Bear Calculator</h2>
+                <p className="text-sm text-orange-100">Risk Assessment Before Filing</p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          
-          {/* Main Content */}
-          <div className="max-w-4xl mx-auto p-6">
+        </div>
+        
+        {/* Main Content */}
+        <div className="p-6">
             {/* Educational Banner */}
             {!showResults && (
               <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
@@ -781,9 +779,8 @@ export default function RiskAssessment({ onClose, onReportBug }) {
               </div>
             )}
             
-            {/* Content */}
-            {showResults ? renderResults() : renderInputForm()}
-          </div>
+          {/* Content */}
+          {showResults ? renderResults() : renderInputForm()}
         </div>
       </div>
     </div>

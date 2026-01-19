@@ -1,4 +1,4 @@
-# How to Search
+﻿# How to Search
 
 Learn all the ways to search Vet-Rate.org's comprehensive disability database.
 
@@ -15,10 +15,10 @@ The search bar is located prominently in the center of the main page.
 <strong>Click in the search bar</strong> or press <kbd>Tab</kbd> to focus it
 </div>
 <div class="step">
-<strong>Type your search term</strong> — condition name, code, or keyword
+<strong>Type your search term</strong> - condition name, code, or keyword
 </div>
 <div class="step">
-<strong>View auto-suggestions</strong> — appear after 2+ characters
+<strong>View auto-suggestions</strong> - appear after 2+ characters
 </div>
 <div class="step">
 <strong>Press Enter</strong> or click a suggestion to search
@@ -76,19 +76,19 @@ As you type, auto-suggestions appear below the search bar:
 
 ### How Suggestions Work
 
-1. **Minimum 2 characters** — Suggestions appear after typing 2+ letters
-2. **Up to 8 suggestions** — The most relevant matches are shown
-3. **Click to select** — Click any suggestion to search
-4. **Keyboard navigation** — Use arrow keys to navigate
+1. **Minimum 2 characters** - Suggestions appear after typing 2+ letters
+2. **Up to 8 suggestions** - The most relevant matches are shown
+3. **Click to select** - Click any suggestion to search
+4. **Keyboard navigation** - Use arrow keys to navigate
 
 ### Suggestion Priority
 
 Suggestions are ranked by:
 
-1. **Exact matches** — Condition names starting with your text
-2. **Contains matches** — Condition names containing your text
-3. **Code matches** — Diagnostic codes matching your text
-4. **Synonym matches** — Alternative names and keywords
+1. **Exact matches** - Condition names starting with your text
+2. **Contains matches** - Condition names containing your text
+3. **Code matches** - Diagnostic codes matching your text
+4. **Synonym matches** - Alternative names and keywords
 
 ---
 
@@ -96,9 +96,9 @@ Suggestions are ranked by:
 
 To clear the current search:
 
-- **Click the X button** — Appears in the search bar when text is entered
-- **Delete all text** — Manually clear the search bar
-- **Press Escape** — Closes suggestions (doesn't clear text)
+- **Click the X button** - Appears in the search bar when text is entered
+- **Delete all text** - Manually clear the search bar
+- **Press Escape** - Closes suggestions (doesn't clear text)
 
 When cleared:
 
@@ -131,19 +131,19 @@ The search bar validates input for security:
 
 After searching, results appear below the search bar:
 
-- **Results count** — "✅ Search Results (X found)"
-- **Result cards** — Grid layout showing matching conditions
-- **No results message** — Helpful suggestions if nothing matches
+- **Results count** - "✅ Search Results (X found)"
+- **Result cards** - Grid layout showing matching conditions
+- **No results message** - Helpful suggestions if nothing matches
 
 ### Result Card Layout
 
 Each result card shows:
 
-- **Condition name** — Primary title
-- **Diagnostic code** — 4-digit code
-- **Body system** — Category tag
-- **Rating schedule** — CFR reference
-- **Available ratings** — Percentage badges
+- **Condition name** - Primary title
+- **Diagnostic code** - 4-digit code
+- **Body system** - Category tag
+- **Rating schedule** - CFR reference
+- **Available ratings** - Percentage badges
 
 ---
 
@@ -159,10 +159,10 @@ or diagnostic code (e.g., "9411", "5002").
 
 **What to try:**
 
-1. **Check spelling** — Ensure correct spelling
-2. **Use synonyms** — Try alternative terms
-3. **Broaden search** — Use general terms like "knee" instead of specific
-4. **Search by code** — If you know the diagnostic code
+1. **Check spelling** - Ensure correct spelling
+2. **Use synonyms** - Try alternative terms
+3. **Broaden search** - Use general terms like "knee" instead of specific
+4. **Search by code** - If you know the diagnostic code
 
 ---
 

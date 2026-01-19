@@ -1,26 +1,31 @@
 import React from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useColorSchemas } from '../hooks/useColorSchemas';
 
 const PrivacyPolicy = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Get color schemas
+  const { getModalClasses, getColorClass, colors } = useColorSchemas();
+  const modalClasses = getModalClasses();
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className={modalClasses.backdrop}
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-policy-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full my-8 modal-content">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
-          <h2 id="privacy-policy-title" className="text-2xl font-bold text-gray-900">🔒 Privacy Policy</h2>
+      <div className={`${modalClasses.content} max-w-4xl my-8`}>
+        <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
+          <h2 id="privacy-policy-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>🔒 Privacy Policy</h2>
           <div className="flex items-center gap-3">
-            {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Privacy Policy" />}
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="auto" moduleName="Privacy Policy" />}
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
+              className={`text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
               aria-label="Close"
             >
               ×
@@ -29,7 +34,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
         </div>
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-          <p className="text-sm text-gray-600 mb-6">
+          <p className={`text-sm mb-6 ${getColorClass(colors.text.secondary)}`}>
             <strong>Last Updated:</strong> January 15, 2026
           </p>
 
@@ -109,7 +114,36 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">7. Children's Privacy</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">7. AI Processing & Data Retention</h3>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-3">
+              <p className="text-gray-700 mb-2">
+                <strong>Optional AI Features:</strong> When you choose to use AI-powered features (such as statement enhancement), your text is processed by third-party AI providers (Google Gemini or Anthropic Claude).
+              </p>
+              <p className="text-gray-700 mb-2">
+                <strong>What This Means:</strong>
+              </p>
+              <ul className="list-disc list-inside text-gray-700 mb-2 ml-4">
+                <li>Data is processed solely for text generation purposes</li>
+                <li>Vet-Rate.org does not store this data on our servers</li>
+                <li>AI providers may process data according to their own policies</li>
+                <li>You control what information you send to AI features</li>
+              </ul>
+              <p className="text-gray-700 text-sm">
+                <strong>Transparency:</strong> Before using AI features, please review{' '}
+                <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  Google's Gemini API Terms
+                </a>{' '}
+                and{' '}
+                <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  Anthropic's Privacy Policy
+                </a>.
+                We strive to use zero-retention settings where available.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-3">8. Children's Privacy</h3>
             <p className="text-gray-700 mb-3">
               This website is not intended for children under the age of 13. No information is knowingly collected 
               from children under 13. If you believe any such information has been inadvertently collected, 
@@ -118,7 +152,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">8. Security</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">9. Security</h3>
             <p className="text-gray-700 mb-3">
               This application operates entirely client-side and does not transmit or store PII. Your 
               searches and interactions remain private on your device. No third-party 
@@ -127,7 +161,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">9. Changes to This Privacy Policy</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">10. Changes to This Privacy Policy</h3>
             <p className="text-gray-700 mb-3">
               This Privacy Policy may be updated from time to time. Changes will be posted on this page with 
               an updated "Last Updated" date. Your continued use of the website after changes constitutes 
@@ -136,7 +170,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-3">10. Contact</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">11. Contact</h3>
             <p className="text-gray-700 mb-3">
               If you have questions about this Privacy Policy, please reach out via the Contact page.
             </p>

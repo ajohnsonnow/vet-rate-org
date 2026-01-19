@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useColorSchemas } from '../hooks/useColorSchemas';
 
 const ContactUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Get color schemas
+  const { getModalClasses, getColorClass, colors } = useColorSchemas();
+  const modalClasses = getModalClasses();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -41,19 +46,19 @@ const ContactUs = ({ onClose, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className={modalClasses.backdrop}
       role="dialog"
       aria-modal="true"
       aria-labelledby="contact-us-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 modal-content">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10">
-          <h2 id="contact-us-title" className="text-2xl font-bold text-gray-900">📧 Contact Us</h2>
+      <div className={`${modalClasses.content} max-w-2xl my-8`}>
+        <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
+          <h2 id="contact-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>📧 Contact Us</h2>
           <div className="flex items-center gap-3">
-            {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Contact Us" />}
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="auto" moduleName="Contact Us" />}
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none"
+              className={`text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
               aria-label="Close"
             >
               ×

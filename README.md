@@ -6,49 +6,60 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ## 🎯 Features - Your Complete Claims Arsenal
 
-### 🎖️ Core Intelligence Tools
-- **Smart Search**: Find disabilities by condition name, diagnostic code, or synonyms across 748 rated conditions
-- **748 VA Disabilities**: Complete coverage of all body systems from 38 CFR Part 4
+### �-️ Core Intelligence Tools
+- **Smart Search**: Find disabilities by condition name, diagnostic code, or synonyms across 751 validated conditions
+- **751 VA Disabilities**: Complete coverage of all body systems from 38 CFR Part 4 (eCFR validated Jan 2026)
 - **Rating Criteria**: Detailed percentage breakdowns for every condition (0%-100%)
-- **PACT Act Navigator**: 🌟 Identify toxic exposure presumptive conditions and eligibility
-- **Web of Conditions**: 🕸️ Interactive visualization of connected disabilities
+- **PACT Act Navigator**: ☢️ Identify toxic exposure presumptive conditions and eligibility
+- **Web of Conditions**: 🕸️ Interactive force-directed graph visualization of connected disabilities
 
 ### 💰 Rating & Benefits Calculators
-- **Tactical Calculator**: 🎯 Advanced combined rating calculator with bilateral factors, dependents, and 2026 pay rates
-- **Million Dollar Dashboard**: 📊 Calculate lifetime benefit value and retirement projections
+- **Tactical Calculator**: 🧮 Advanced combined rating calculator with bilateral factors, dependents, and 2026 pay rates
+- **Million Dollar Dashboard**: 💰 Calculate lifetime benefit value ($1-2.5M+) and retirement projections
 - **TDIU Builder**: 💼 Evaluate Total Disability Individual Unemployability eligibility
-- **State Benefit Hunter**: 🗺️ Discover state-level veteran benefits by location
+- **State Benefit Hunter**: �-�️ Discover state-level veteran benefits by location (all 50 states + DC)
+- **What-If Sandbox**: 🔄 Drag-and-drop rating scenario planner
 
 ### 🔍 Discovery & Research Tools
-- **Secondary Scout**: Discover 500+ medically-recognized secondary conditions with probability ratings
-- **MOS Hazard Matcher**: 🎖️ Link military occupational specialties to exposures and conditions
-- **Pathfinder**: 🧭 Strategic roadmap from initial claim to appeal
-- **Risk Assessment**: ⚠️ Identify potential claim weaknesses before filing
+- **Secondary Scout**: 🔍 Discover 500+ medically-recognized secondary conditions with probability ratings
+- **C&P Exam Simulator**: ✅ Practice with DBQ-aligned questions and get percentage predictions
+- **Exam Prep Room**: 📋 🆕 See the actual DBQ questions BEFORE your C&P exam
+- **MOS Hazard Matcher**: �-️ Link military occupational specialties to exposures and conditions
+- **Pathfinder**: 🧭 AI-powered strategic roadmap from initial claim to appeal
+- **Risk Assessment**: ⚠️ "Poke the Bear" calculator - identify potential claim risks before filing
 
 ### 📝 Evidence Building Suite
-- **C&P Exam Simulator**: Practice with DBQ-aligned questions and get percentage predictions
-- **Nexus Builder**: Generate medical nexus statements with optional AI enhancement
-- **Forms Helper**: Guided assistance for 16+ VA forms including buddy statements and PTSD stressors
-- **Witness Bench**: 👥 Interactive buddy statement builder with smart questioning
-- **Symptom Logger**: 📅 Track daily symptoms for evidence documentation
-- **AI Statement Assistant**: ✨ Optional AI-powered statement enhancement using "Three Pillars" approach
+- **C-File AI Analyzer**: 🔬 Upload your Claims File PDF-AI finds evidence in thousands of pages ($500+ value)
+- **Blue Button X-Ray**: 💙 Parse VA health records for claim-relevant diagnoses
+- **PDF Evidence Finder**: 🔍 🆕 Search 2,000+ page STRs for keywords ("The Needle")
+- **Witness Bench**: 👥 AI-assisted buddy statement generator with smart interview questions
+- **Nexus Builder**: �- Generate medical nexus statements with optional AI enhancement
+- **Forms Helper**: ✏️ Guided assistance for 16+ VA forms with Auto-Scribe PDF filling
+- **Symptom Logger**: 📝 Track daily symptoms with body map selector for evidence documentation
+- **Evidence Timeline**: 📊 🆕 Visual continuity tracker with automatic gap detection
 
-### 🔬 Advanced Analysis Tools (What Others Charge $500+)
-- **C-File AI Analyzer**: Upload your Claims File PDF—AI finds evidence in thousands of pages (processed locally)
-- **Decision Decoder**: 📄 AI analysis of VA decision letters to find appeal opportunities
-- **Blue Button X-Ray**: 🏥 Analyze VA medical records for claim-relevant evidence
-- **Red Team**: 🔴 Simulate VA examiner review to strengthen your claim
-
-### 🛡️ Protection & Compliance Tools
+### 🎯 Quality Control Tools
+- **Red Team**: 🔴 AI devil's advocate - finds weak language before the VA does
+- **Decision Decoder**: 📄 AI translation of VA decision letters to plain English
+- **Denials Decoder**: 🔍 🆕 OCR scan denial letters + AI analysis (camera or upload)
 - **Shark Radar**: 🦈 Identify predatory claim services and avoid scams
-- **VSO Finder**: 🔍 Locate accredited Veterans Service Officers
-- **FOIA Generator**: 📋 Create Freedom of Information Act requests for military records
+- **Consistency Engine**: 🔍 🆕 Auto-detect contradictions in your statements
+- **Statement Analyzer**: 📝 🆕 Remove emotional/hostile language that hurts claims
+- **Claim Stress Test**: 🎯 🆕 Adversarial review - find weaknesses before the VA does
 
-### 📁 Organization & Resources
-- **My Packet**: Save and manage all your claims evidence in one place
+### ⚡ Advanced Strategy Tools
+- **The Tribunal**: �-️ 🆕 Voice-interactive mock BVA hearing simulator
+- **Legislative Watchdog**: 📡 Track VA rule changes in the Federal Register
+- **Time Machine**: ⏰ 🆕 Intent to File countdown with backpay tracking
+- **FOIA Keysmith**: 🔑 Generate FOIA requests for military and VA records
+
+### 🤝 Support & Resources
+- **VSO Finder**: 🔍 Locate free, accredited Veterans Service Officers
+- **The Bunker**: 🏰 🆕 Export/import all your data - never lose your work
+- **Cloud Sync**: ☁️ 🆕 Back up to YOUR Google Drive (encrypted)
+- **My Packet**: 📁 Save and manage all your claims evidence in one place
 - **VA Resources Hub**: Direct links to official VA programs, crisis support, and benefits
 - **User Manual**: Comprehensive guide to using every feature
-- **PDF Reports**: Download detailed condition guides with rating criteria
 
 ### Privacy & Security
 - **100% Client-Side**: All core processing happens in your browser
@@ -103,7 +114,7 @@ npm run preview
 ```
 vet-rate-org/
 ├── src/
-│   ├── components/           # 52 React components (28 major tools + 24 supporting)
+│   ├── components/           # 65+ React components (40+ major tools + supporting)
 │   │   ├── TacticalCalculator.jsx    # Combined rating calculator
 │   │   ├── MillionDollarDashboard.jsx # Lifetime benefit calculator
 │   │   ├── CAPSimulator.jsx          # C&P Exam practice
@@ -213,7 +224,7 @@ This comprehensive platform represents significant development effort to create 
 - **Lines of Code**: 93,401 lines
 - **Total Files**: 978 project files
 - **App Size**: 43.41 MB
-- **Components**: 52 React components (28 major tools + 24 supporting)
+- **Components**: 65+ React components (40+ major tools + supporting)
 - **Utilities**: 19 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR
 
@@ -238,7 +249,7 @@ This comprehensive platform represents significant development effort to create 
   - Jan 18: 15 commits (~8-10 hours)
 
 ### The Reality of Modern Development
-The **5,800-hour estimate** represents the **traditional development cost and complexity** of building this from scratch—the true value veterans receive for free. The **actual 40-45 hours** represents the power of **2026 AI-assisted development** (GitHub Copilot, Claude, ChatGPT, Gemini) combined with modern frameworks (React 18, Vite, Tailwind CSS). This 130x productivity multiplier is why we can offer professional-grade tools that others charge $500+ per use or 30% of backpay.
+The **5,800-hour estimate** represents the **traditional development cost and complexity** of building this from scratch-the true value veterans receive for free. The **actual 40-45 hours** represents the power of **2026 AI-assisted development** (GitHub Copilot, Claude, ChatGPT, Gemini) combined with modern frameworks (React 18, Vite, Tailwind CSS). This 130x productivity multiplier is why we can offer professional-grade tools that others charge $500+ per use or 30% of backpay.
 
 ### Major Component Development Hours
 
@@ -274,7 +285,7 @@ The **5,800-hour estimate** represents the **traditional development cost and co
 
 **Plus**: 200 hours validating 15,000 lines of disability data against 38 CFR
 
-**This level of development** is why similar tools cost $500+ per use, charge 30% of backpay, or require monthly subscriptions. We keep it free through veteran support—not data sales, ads, or predatory pricing.
+**This level of development** is why similar tools cost $500+ per use, charge 30% of backpay, or require monthly subscriptions. We keep it free through veteran support-not data sales, ads, or predatory pricing.
 
 ## ✨ AI Statement Assistant
 
@@ -285,20 +296,79 @@ Vet-Rate.org includes an optional AI-powered statement assistant that helps vete
 - **Explicit consent required** before any data is sent
 - **No PII shared** - only condition names and symptom descriptions
 - **Completely optional** - standard templates always available
+- **🚨 Crisis Interceptor** - Automatically detects self-harm language and provides immediate crisis resources before any AI interaction
 
-### Setup (Optional)
+### Setup Options
+
+#### Option 1: Bring Your Own Key (BYOK) - Recommended
 1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Copy `.env.example` to `.env.local`
-3. Add your key: `VITE_GEMINI_API_KEY=your_key_here`
-4. Restart the dev server
+2. In the app, go to **Settings** (gear icon in header)
+3. Paste your key in the "AI Features (BYOK)" section
+4. Your key is stored locally in your browser only
 
-### Privacy
-- Users must explicitly consent before each AI use
-- No names, SSN, dates, or addresses are ever sent
-- Google's free tier doesn't use prompts for model training
-- Full disclosure shown before any data transmission
+**Why BYOK?**
+- ✅ **Your wallet, your control** - No risk of developers' API keys being exploited
+- ✅ **Zero cost sharing** - Google's Gemini API has a generous free tier
+- ✅ **Maximum privacy** - Key never leaves your browser
+- ✅ **No backend server needed** - True client-side architecture
+
+#### Option 2: Environment Variable (Legacy/Dev)
+1. Copy `.env.example` to `.env.local`
+2. Add your key: `VITE_GEMINI_API_KEY=your_key_here`
+3. Restart the dev server
+
+**⚠️ Security Warning:** Never commit `.env.local` to version control. Never embed API keys in client-side code for production. For production deployments, use BYOK model or implement a secure backend proxy.
+
+### Safety & Privacy
+
+#### Crisis Intervention
+- **Pre-flight screening**: All text is checked for self-harm language BEFORE being sent to AI
+- **Automatic intervention**: If crisis language is detected, the app immediately displays Veterans Crisis Line resources (988-1) and blocks the AI call
+- **No AI therapy**: The AI never attempts to respond to crisis situations - only trained human counselors do
+
+#### PII Protection  
+- **Input scrubbing**: Users are warned not to enter SSN, full names, or addresses
+- **Output protection**: AI is instructed to redact any PII that slips through, replacing with placeholders
+- **No retention**: Google's free tier doesn't use prompts for model training
+- **Full disclosure**: Users must explicitly consent before each AI use
 
 See [AI Privacy Documentation](docs/privacy/ai-assistant.md) for complete details.
+
+## ☁️ Cloud Sync Setup (Optional)
+
+Vet-Rate.org includes optional Google Drive backup for automatic cloud sync. **Your data goes to YOUR Google Drive, not our servers.**
+
+### Quick Setup
+
+1. **Get OAuth Credentials** from Google Cloud Console:
+   - Go to: https://console.cloud.google.com/apis/credentials
+   - Create a new project (or select existing)
+   - Enable the **Google Drive API**
+   - Create **OAuth 2.0 Client ID** (Web application type)
+   - Add authorized origins: `http://localhost:3000` (dev) and `https://vet-rate.org` (production)
+   - Copy your Client ID
+
+2. **Configure Environment**:
+   ```bash
+   # Copy example env file
+   cp .env.example .env.local
+   
+   # Add your OAuth Client ID
+   VITE_GOOGLE_DRIVE_CLIENT_ID=your_client_id_here.apps.googleusercontent.com
+   ```
+
+3. **Required OAuth Scope**:
+   - `https://www.googleapis.com/auth/drive.file` (ONLY files created by app)
+   - This scope does NOT allow access to existing Drive files
+   - Maximum privacy - app only sees its own backup files
+
+4. **How It Works**:
+   - Click "Connect Drive" in The Bunker (Backup Manager)
+   - Authorize Vet-Rate.org via Google OAuth popup
+   - Your encrypted backup is uploaded to YOUR Google Drive
+   - Access backups from any device by signing in
+
+**Privacy Note**: We never see your Google Drive data. The OAuth token stays in your browser session only. All Drive API calls happen directly from your browser to Google's servers.
 
 ## 🚀 Deployment
 

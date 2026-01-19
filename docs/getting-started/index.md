@@ -1,4 +1,4 @@
-# Getting Started
+﻿# Getting Started
 
 Welcome to Vet-Rate.org! This section will help you get familiar with the platform and make the most of all available features.
 
@@ -12,12 +12,12 @@ Welcome to Vet-Rate.org! This section will help you get familiar with the platfo
 
 Vet-Rate.org is a **free, comprehensive VA claims toolkit** designed specifically for veterans by a fellow service-disabled veteran. The platform helps you:
 
-- 🔍 **Research** — Search 748 VA-rated disabilities with official criteria
-- 📊 **Understand** — Learn exact rating percentages from 38 CFR Part 4
-- 🔗 **Discover** — Find secondary conditions linked to your disabilities
-- 📋 **Prepare** — Practice for C&P exams with condition-specific questions
-- ✍️ **Build** — Generate nexus statements and buddy statement templates
-- 📁 **Organize** — Save and manage your claims evidence packet
+- 🔍 **Research** - Search 748 VA-rated disabilities with official criteria
+- 📊 **Understand** - Learn exact rating percentages from 38 CFR Part 4
+- 🔗 **Discover** - Find secondary conditions linked to your disabilities
+- 📋 **Prepare** - Practice for C&P exams with condition-specific questions
+- ✍️ **Build** - Generate nexus statements and buddy statement templates
+- 📁 **Organize** - Save and manage your claims evidence packet
 
 ---
 
@@ -46,10 +46,10 @@ Vet-Rate.org is a **free, comprehensive VA claims toolkit** designed specificall
 ## Quick Tips for New Users
 
 !!! tip "Start Here"
-    1. **Use the Search Bar** — It's front and center on the home page
-    2. **Try Common Searches** — "PTSD", "tinnitus", "back pain", or diagnostic codes like "9411"
-    3. **Click Results** — Each card expands to show full rating criteria
-    4. **Save to Packet** — Build your evidence collection over time
+    1. **Use the Search Bar** - It's front and center on the home page
+    2. **Try Common Searches** - "PTSD", "tinnitus", "back pain", or diagnostic codes like "9411"
+    3. **Click Results** - Each card expands to show full rating criteria
+    4. **Save to Packet** - Build your evidence collection over time
 
 ---
 
@@ -65,7 +65,7 @@ Vet-Rate.org works in any modern web browser:
 | Edge | 90+ |
 
 !!! info "No Installation Required"
-    Vet-Rate.org is a web application — simply visit [vet-rate.org](https://vet-rate.org) in your browser. No downloads, plugins, or account creation needed.
+    Vet-Rate.org is a web application - simply visit [vet-rate.org](https://vet-rate.org) in your browser. No downloads, plugins, or account creation needed.
 
 ---
 

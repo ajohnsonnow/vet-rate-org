@@ -182,6 +182,8 @@ const useForceSimulation = (nodes, links, width, height) => {
   const [positions, setPositions] = useState({});
   const velocities = useRef({});
   const animationRef = useRef();
+  const frameCount = useRef(0);
+  const lastUpdate = useRef(0);
   
   useEffect(() => {
     // Initialize positions in a circle
@@ -204,11 +206,21 @@ const useForceSimulation = (nodes, links, width, height) => {
     setPositions(initialPositions);
     velocities.current = initialVelocities;
     
-    // Physics simulation
-    const simulate = () => {
+    // Physics simulation with throttling
+    const simulate = (timestamp) => {
+      // Throttle to 30fps instead of 60fps for better performance
+      if (timestamp - lastUpdate.current < 33) {
+        animationRef.current = requestAnimationFrame(simulate);
+        return;
+      }
+      lastUpdate.current = timestamp;
+      
+      frameCount.current++;
+      
       setPositions(prev => {
         const newPos = { ...prev };
         const newVel = { ...velocities.current };
+        let totalMotion = 0;
         
         // Repulsion between all nodes
         nodes.forEach(nodeA => {
@@ -282,15 +294,30 @@ const useForceSimulation = (nodes, links, width, height) => {
           // Bounds
           pos.x = Math.max(50, Math.min(width - 50, pos.x));
           pos.y = Math.max(50, Math.min(height - 50, pos.y));
+          
+          // Track total motion for auto-stop
+          totalMotion += Math.abs(vel.vx) + Math.abs(vel.vy);
         });
         
         velocities.current = newVel;
+        
+        // Auto-stop simulation when motion is minimal
+        if (frameCount.current > 120 && totalMotion < 0.1) {
+          if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
+          }
+          return prev;
+        }
+        
         return newPos;
       });
       
       animationRef.current = requestAnimationFrame(simulate);
     };
     
+    frameCount.current = 0;
+    lastUpdate.current = 0;
     animationRef.current = requestAnimationFrame(simulate);
     
     return () => {
@@ -397,17 +424,19 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
     return Array.from(cats);
   }, []);
   
-  // Handle node click
-  const handleNodeClick = (node) => {
-    setSelectedNode(node.id === selectedNode ? null : node.id);
+  // Handle node click (memoized)
+  const handleNodeClick = useCallback((node) => {
+    setSelectedNode(prevSelected => node.id === prevSelected ? null : node.id);
     setSelectedLink(null);
-  };
+  }, []);
   
-  // Handle link click
-  const handleLinkClick = (link) => {
-    setSelectedLink(selectedLink?.source === link.source && selectedLink?.target === link.target ? null : link);
+  // Handle link click (memoized)
+  const handleLinkClick = useCallback((link) => {
+    setSelectedLink(prevSelected => 
+      prevSelected?.source === link.source && prevSelected?.target === link.target ? null : link
+    );
     setSelectedNode(null);
-  };
+  }, []);
   
   // Get connections for selected node
   const connections = useMemo(() => {
@@ -430,13 +459,13 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
       {/* Modal Content */}
       <div className="relative h-full flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-900 p-4 shadow-lg">
+        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 p-4 shadow-lg">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🕸️</span>
               <div>
-                <h2 className="text-xl font-bold text-white">Web of Conditions</h2>
-                <p className="text-sm text-purple-300">Interactive Secondary Condition Map</p>
+                <h2 className="text-xl font-bold text-black">Web of Conditions</h2>
+                <p className="text-sm text-yellow-800">Interactive Secondary Condition Map</p>
               </div>
             </div>
             <button
@@ -502,7 +531,8 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
               </defs>
               
               {/* Links */}
-              {links.map((link, i) => {
+              {/* Links - Memoized */}
+              {useMemo(() => links.map((link, i) => {
                 const sourcePos = positions[link.source];
                 const targetPos = positions[link.target];
                 if (!sourcePos || !targetPos) return null;
@@ -542,10 +572,10 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
                     />
                   </g>
                 );
-              })}
+              }), [links, positions, selectedNode, selectedLink, handleLinkClick])}
               
-              {/* Nodes */}
-              {nodes.map(node => {
+              {/* Nodes - Memoized */}
+              {useMemo(() => nodes.map(node => {
                 const pos = positions[node.id];
                 if (!pos) return null;
                 
@@ -612,7 +642,7 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
                     )}
                   </g>
                 );
-              })}
+              }), [nodes, positions, selectedNode, connections, hoveredNode, handleNodeClick])}
             </svg>
             
             {/* Instructions overlay */}

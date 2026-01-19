@@ -1,6 +1,6 @@
-# VA Resources
+﻿# VA Resources
 
-Quick access to essential VA resources, portals, phone numbers, and helpful links — all in one convenient location.
+Quick access to essential VA resources, portals, phone numbers, and helpful links - all in one convenient location.
 
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
@@ -158,9 +158,9 @@ Free claims assistance:
 
 !!! tip "Getting the Most from VA Resources"
     
-    1. **Create accounts** — Register on VA.gov and My HealtheVet
-    2. **Verify identity** — Complete identity verification for full access
-    3. **Keep records** — Document all interactions
-    4. **Use secure messaging** — Communicate with providers online
-    5. **Check status online** — Track claims through VA.gov
-    6. **Get VSO help** — Free assistance with claims
+    1. **Create accounts** - Register on VA.gov and My HealtheVet
+    2. **Verify identity** - Complete identity verification for full access
+    3. **Keep records** - Document all interactions
+    4. **Use secure messaging** - Communicate with providers online
+    5. **Check status online** - Track claims through VA.gov
+    6. **Get VSO help** - Free assistance with claims

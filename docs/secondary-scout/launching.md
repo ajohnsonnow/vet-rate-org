@@ -1,4 +1,4 @@
-# Launching Secondary Scout
+﻿# Launching Secondary Scout
 
 Learn how to start using Secondary Scout to discover potential secondary conditions.
 
@@ -30,19 +30,19 @@ When you open Secondary Scout, you'll see the **Launcher Modal**:
 
 <div class="step-container">
 <div class="step">
-<strong>Enter a condition</strong> — Type your service-connected disability
+<strong>Enter a condition</strong> - Type your service-connected disability
 </div>
 <div class="step">
-<strong>Select from suggestions</strong> — Choose from the autocomplete dropdown
+<strong>Select from suggestions</strong> - Choose from the autocomplete dropdown
 </div>
 <div class="step">
-<strong>Add to list</strong> — Click "Add" or press Enter
+<strong>Add to list</strong> - Click "Add" or press Enter
 </div>
 <div class="step">
-<strong>Repeat</strong> — Add all your service-connected conditions
+<strong>Repeat</strong> - Add all your service-connected conditions
 </div>
 <div class="step">
-<strong>Launch</strong> — Click "Scout Secondary Conditions"
+<strong>Launch</strong> - Click "Scout Secondary Conditions"
 </div>
 </div>
 
@@ -50,18 +50,18 @@ When you open Secondary Scout, you'll see the **Launcher Modal**:
 
 The input field includes:
 
-- **Text input** — Type condition names
-- **Autocomplete** — Suggestions appear as you type
-- **Add button** — Adds condition to your list
-- **Enter key** — Also adds condition
+- **Text input** - Type condition names
+- **Autocomplete** - Suggestions appear as you type
+- **Add button** - Adds condition to your list
+- **Enter key** - Also adds condition
 
 ### Your Conditions List
 
 Below the input, you'll see your added conditions:
 
 - Each condition appears as a **tag/chip**
-- **X button** — Remove a condition
-- **Clear all** — Remove all conditions
+- **X button** - Remove a condition
+- **Clear all** - Remove all conditions
 
 ---
 
@@ -97,9 +97,9 @@ Enter conditions exactly as they appear on your **VA rating decision letter**:
 
 For faster access, the **Quick Condition Picker** on the main page lets you:
 
-1. **Select from common conditions** — Pre-populated checkboxes
-2. **Add custom conditions** — Free-text input
-3. **One-click launch** — Go directly to results
+1. **Select from common conditions** - Pre-populated checkboxes
+2. **Add custom conditions** - Free-text input
+3. **One-click launch** - Go directly to results
 
 ### Common Conditions in Quick Picker
 
@@ -118,8 +118,8 @@ For faster access, the **Quick Condition Picker** on the main page lets you:
 ## Minimum Requirements
 
 - **At least 1 condition** required to launch
-- **No maximum** — Add as many as you have
-- **Must be valid** — Conditions must match the database
+- **No maximum** - Add as many as you have
+- **Must be valid** - Conditions must match the database
 
 ---
 
@@ -127,10 +127,10 @@ For faster access, the **Quick Condition Picker** on the main page lets you:
 
 After clicking "Scout Secondary Conditions":
 
-1. **Launcher closes** — Modal disappears
-2. **Analysis begins** — System searches nexus database
-3. **Results panel opens** — Full-screen results view
-4. **Suggestions display** — Cards showing potential secondary conditions
+1. **Launcher closes** - Modal disappears
+2. **Analysis begins** - System searches nexus database
+3. **Results panel opens** - Full-screen results view
+4. **Suggestions display** - Cards showing potential secondary conditions
 
 ---
 

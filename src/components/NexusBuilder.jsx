@@ -6,8 +6,15 @@ import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
 import DoctorsPacket from './DoctorsPacket';
 import VoiceInputButton, { isSpeechRecognitionSupported } from './VoiceInput';
+import DraftWatermark from './DraftWatermark';
+import AIWarningBanner from './AIWarningBanner';
+import NexusDisclaimerFooter from './NexusDisclaimerFooter';
+import CertificationCheckbox from './CertificationCheckbox';
+import StatementAnalyzer from './StatementAnalyzer';
+import ClaimProgress from './ClaimProgress';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from '../utils/aiStatementHelper';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 /**
  * NexusBuilder Component
@@ -38,6 +45,7 @@ const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingSt
   });
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [nexusDownloaded, setNexusDownloaded] = useState(false);
+  const [isCertified, setIsCertified] = useState(false); // Certification checkbox state
   
   // AI Enhancement state
   const [showAIConsent, setShowAIConsent] = useState(false);
@@ -412,18 +420,19 @@ Sincerely,
       <div className="min-h-screen px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto modal-content">
           {/* Header */}
-          <div className="bg-gradient-to-r from-va-blue to-green-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0 pr-10 sm:pr-0">
                 <h2 id="nexus-builder-title" className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">
                   {existingStatement ? 'Edit Statement' : '📝 Nexus Builder'}
                 </h2>
-                <p className="text-green-200 text-sm sm:text-base">
+                <p className="text-violet-100 text-sm sm:text-base">
                   {existingStatement ? 'Updating' : 'Statement'} for: <strong className="block sm:inline truncate">{condition}</strong>
                   {isSecondary && <span className="block sm:inline text-xs sm:text-sm"> (Secondary to {primaryCondition})</span>}
                 </p>
               </div>
               <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
+                <FocusToggle variant="light" className="hidden sm:flex" />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Nexus Builder" />}
                 <button
                   onClick={onClose}
@@ -572,6 +581,17 @@ Sincerely,
                       </div>
                     )}
                   </div>
+                  {/* The Diplomat - Tone Analysis */}
+                  {answers.aggravationExplanation && (
+                    <div className="mt-3">
+                      <StatementAnalyzer
+                        text={answers.aggravationExplanation}
+                        onApplySuggestion={(original, rewrite) => {
+                          updateAnswer('aggravationExplanation', answers.aggravationExplanation.replace(original, rewrite));
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -610,6 +630,17 @@ Sincerely,
                       </div>
                     )}
                   </div>
+                  {/* The Diplomat - Tone Analysis */}
+                  {answers.specificIncident && (
+                    <div className="mt-3">
+                      <StatementAnalyzer
+                        text={answers.specificIncident}
+                        onApplySuggestion={(original, rewrite) => {
+                          updateAnswer('specificIncident', answers.specificIncident.replace(original, rewrite));
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -655,6 +686,17 @@ Sincerely,
                       </div>
                     )}
                   </div>
+                  {/* The Diplomat - Tone Analysis */}
+                  {answers.workImpact && (
+                    <div className="mt-3">
+                      <StatementAnalyzer
+                        text={answers.workImpact}
+                        onApplySuggestion={(original, rewrite) => {
+                          updateAnswer('workImpact', answers.workImpact.replace(original, rewrite));
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -693,6 +735,17 @@ Sincerely,
                       </div>
                     )}
                   </div>
+                  {/* The Diplomat - Tone Analysis */}
+                  {answers.socialImpact && (
+                    <div className="mt-3">
+                      <StatementAnalyzer
+                        text={answers.socialImpact}
+                        onApplySuggestion={(original, rewrite) => {
+                          updateAnswer('socialImpact', answers.socialImpact.replace(original, rewrite));
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -731,6 +784,17 @@ Sincerely,
                       </div>
                     )}
                   </div>
+                  {/* The Diplomat - Tone Analysis */}
+                  {answers.specificExamples && (
+                    <div className="mt-3">
+                      <StatementAnalyzer
+                        text={answers.specificExamples}
+                        onApplySuggestion={(original, rewrite) => {
+                          updateAnswer('specificExamples', answers.specificExamples.replace(original, rewrite));
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -823,7 +887,14 @@ Sincerely,
                   </div>
                 )}
                 
+                {/* AI Warning Banner */}
+                {(useAIVersion && aiEnhancedStatement) && (
+                  <AIWarningBanner />
+                )}
+                
+                {/* Draft Watermark and Statement Display */}
                 <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <DraftWatermark variant="banner" />
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gray-900 dark:text-gray-100">Statement in Support of Claim (VA Form 21-4138)</h4>
                     {useAIVersion && aiEnhancedStatement && (
@@ -839,6 +910,7 @@ Sincerely,
                   </div>
                 </div>
 
+                {/* Doctor's Cheat Sheet with Medical Disclaimer */}
                 <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Doctor's Cheat Sheet</h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Hand this to your healthcare provider to help them document the nexus</p>
@@ -847,6 +919,9 @@ Sincerely,
                       {generateDoctorNote()}
                     </pre>
                   </div>
+                  
+                  {/* Medical Disclaimer Footer */}
+                  <NexusDisclaimerFooter className="mt-4" />
                 </div>
                 
                 {/* Doctor's Packet - AI Research Brief for Secondary Claims */}
@@ -904,10 +979,20 @@ Sincerely,
                 
                 {step === totalSteps && (
                   <>
+                    {/* Certification Checkbox */}
+                    <div className="w-full sm:w-auto mb-3 sm:mb-0">
+                      <CertificationCheckbox 
+                        checked={isCertified}
+                        onChange={setIsCertified}
+                      />
+                    </div>
+                    
                     <div className="relative">
                       <button
                         onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                        className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                        disabled={!isCertified}
+                        title={!isCertified ? 'Please certify that you have reviewed this document first' : ''}
+                        className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <span className="hidden sm:inline">Download </span>Statement
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -915,7 +1000,7 @@ Sincerely,
                         </svg>
                       </button>
                       
-                      {showDownloadMenu && (
+                      {showDownloadMenu && isCertified && (
                         <div className="absolute bottom-full mb-1 left-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[180px]">
                           <button
                             onClick={() => handleDownload('txt')}
@@ -949,7 +1034,9 @@ Sincerely,
                     </div>
                     <button
                       onClick={handleFinish}
-                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base"
+                      disabled={!isCertified}
+                      title={!isCertified ? 'Please certify that you have reviewed this document first' : ''}
+                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Save to Packet
                     </button>
