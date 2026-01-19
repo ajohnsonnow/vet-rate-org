@@ -39,6 +39,7 @@ const LOCAL_FORM_PATHS = {
   '21P-8416': '/forms/VBA-21P-8416-ARE.pdf',  // Medical Expense Report
   '21-22': '/forms/VBA-21-22-ARE.pdf',        // VSO Appointment
   '21-22a': '/forms/VBA-21-22A-ARE.pdf',      // Individual Representative
+  '21-4192': '/forms/VBA-21-4192-ARE.pdf',    // Request for Employment Information (TDIU)
 };
 
 /**

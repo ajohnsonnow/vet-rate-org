@@ -15,7 +15,10 @@ import {
   getPathfinderPrivacyDisclosure 
 } from '../utils/pathfinderEngine';
 import { getSavedClaims } from '../utils/claimsStorage';
-import { FocusToggle } from '../contexts/FocusModeContext';
+import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
+import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
+import VAGovRatingPaster from './VAGovRatingPaster';
 
 // Icons
 const CompassIcon = () => (
@@ -107,7 +110,10 @@ const RATING_OPTIONS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
  * Rating Input Row Component
  */
 const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
-  const [isCustom, setIsCustom] = useState(!COMMON_CONDITIONS.includes(rating.condition) && rating.condition !== '');
+  // Ensure we always have defined values for controlled inputs
+  const conditionValue = rating.condition || '';
+  const ratingValue = rating.rating || '';
+  const [isCustom, setIsCustom] = useState(!COMMON_CONDITIONS.includes(conditionValue) && conditionValue !== '');
   
   return (
     <div className="flex flex-col sm:flex-row gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
@@ -115,14 +121,14 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
         {isCustom ? (
           <input
             type="text"
-            value={rating.condition}
+            value={conditionValue}
             onChange={(e) => onUpdate(index, 'condition', e.target.value)}
             placeholder="Enter condition name..."
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
           />
         ) : (
           <select
-            value={rating.condition}
+            value={conditionValue}
             onChange={(e) => {
               if (e.target.value === 'Other (type below)') {
                 setIsCustom(true);
@@ -142,7 +148,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
       </div>
       <div className="flex gap-2">
         <select
-          value={rating.rating}
+          value={ratingValue}
           onChange={(e) => onUpdate(index, 'rating', e.target.value)}
           className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
         >
@@ -238,7 +244,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
 /**
  * Main Pathfinder Component
  */
-export default function Pathfinder({ onNavigate }) {
+export default function Pathfinder({ onNavigate, onOpenAISettings }) {
   const [ratings, setRatings] = useState([{ condition: '', rating: '' }]);
   const [additionalContext, setAdditionalContext] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -248,8 +254,10 @@ export default function Pathfinder({ onNavigate }) {
   const [apiKey, setApiKey] = useState('');
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
   
-  // Load API key and check for saved claims
+  // Load API key, check consent, and monitor AI status
   useEffect(() => {
     const storedKey = localStorage.getItem('vetrate_gemini_key');
     if (storedKey) {
@@ -259,6 +267,13 @@ export default function Pathfinder({ onNavigate }) {
     if (consent === 'true') {
       setHasConsented(true);
     }
+    
+    // Update AI status periodically
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   const handleSaveKey = (key) => {
@@ -284,6 +299,40 @@ export default function Pathfinder({ onNavigate }) {
   const removeRating = (index) => {
     if (ratings.length > 1) {
       setRatings(ratings.filter((_, i) => i !== index));
+    }
+  };
+  
+  // Handle pasted ratings from VA.gov
+  const handlePastedRatings = (parsedRatings) => {
+    // Save each rating to veteranProfile for use across app
+    parsedRatings.forEach(rating => {
+      addRating(rating);
+    });
+    
+    // Convert to Pathfinder format - ensure all values are defined
+    const formattedRatings = parsedRatings.map(r => ({
+      condition: r.condition || '',
+      rating: r.rating !== null && r.rating !== undefined ? r.rating.toString() : '',
+    }));
+    
+    // Only set ratings if we have valid data
+    if (formattedRatings.length > 0) {
+      setRatings(formattedRatings);
+    }
+    setShowVAGovPaster(false);
+  };
+  
+  // Load ratings from veteranProfile
+  const handleLoadMyRatings = () => {
+    const savedRatings = getMyRatings();
+    if (savedRatings && savedRatings.length > 0) {
+      const formatted = savedRatings.map(r => ({
+        condition: r.condition,
+        rating: r.rating !== null ? r.rating.toString() : ''
+      }));
+      setRatings(formatted);
+    } else {
+      alert('No saved ratings found. Use "Paste from VA.gov" or enter ratings in Secondary Scout first.');
     }
   };
   
@@ -315,8 +364,10 @@ export default function Pathfinder({ onNavigate }) {
       return;
     }
     
-    if (!apiKey) {
-      setError('Please enter your Gemini API key first');
+    // Check if ANY AI is available (Cloud or Local)
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setShowAISettings(true);
       return;
     }
     
@@ -369,7 +420,7 @@ export default function Pathfinder({ onNavigate }) {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl shadow-lg">
             <span className="text-3xl">🧭</span>
           </div>
-          <FocusToggle variant="light" />
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">The Pathfinder</h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -404,37 +455,19 @@ export default function Pathfinder({ onNavigate }) {
         </div>
       ) : (
         <>
-          {/* API Key Section */}
-          {!apiKey && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-6">
-              <h3 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">API Key Required</h3>
-              <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
-                Get your free Gemini API key from{' '}
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" 
-                   className="underline hover:text-amber-900 dark:hover:text-amber-200">
-                  Google AI Studio
-                </a>
-              </p>
-              <input
-                type="password"
-                placeholder="Paste your Gemini API key..."
-                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg focus:ring-2 focus:ring-amber-500"
-                onChange={(e) => handleSaveKey(e.target.value)}
-              />
-            </div>
-          )}
-          
-          {apiKey && (
-            <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-3 mb-6">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
-                <CheckIcon /> API Key saved
+          {/* AI Setup Message */}
+          {!isAnyAIAvailable() && (
+            <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">💡</span>
+                <div className="text-sm text-amber-900 dark:text-amber-100">
+                  <p className="font-semibold mb-1">AI Required for Analysis</p>
+                  <p className="text-amber-800 dark:text-amber-200">
+                    Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                    (100% private) or enter your Gemini API key.
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={() => { localStorage.removeItem('vetrate_gemini_key'); setApiKey(''); }}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Change key
-              </button>
             </div>
           )}
           
@@ -444,12 +477,28 @@ export default function Pathfinder({ onNavigate }) {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Your Current Service-Connected Ratings
               </h2>
-              <button
-                onClick={loadFromPacket}
-                className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
-              >
-                Load from My Packet
-              </button>
+              <div className="flex items-center gap-2">
+                {hasMyRatings() && (
+                  <button
+                    onClick={handleLoadMyRatings}
+                    className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
+                  >
+                    📊 Load My Ratings
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowVAGovPaster(true)}
+                  className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                >
+                  📋 Paste from VA.gov
+                </button>
+                <button
+                  onClick={loadFromPacket}
+                  className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
+                >
+                  Load from My Packet
+                </button>
+              </div>
             </div>
             
             {loadedFromPacket && (
@@ -500,7 +549,7 @@ export default function Pathfinder({ onNavigate }) {
               </button>
               <button
                 onClick={handleAnalyze}
-                disabled={isAnalyzing || !apiKey}
+                disabled={isAnalyzing || !isAnyAIAvailable() || ratings.filter(r => r.condition && r.condition.trim()).length === 0}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isAnalyzing ? (
@@ -683,6 +732,15 @@ export default function Pathfinder({ onNavigate }) {
             </div>
           )}
         </>
+      )}
+
+      {/* VA.gov Rating Paster Modal */}
+      {showVAGovPaster && (
+        <VAGovRatingPaster
+          onRatingsParsed={handlePastedRatings}
+          onClose={() => setShowVAGovPaster(false)}
+          showExample={true}
+        />
       )}
     </div>
   );

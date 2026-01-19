@@ -13,6 +13,9 @@ import {
   formatDoctorLetter,
   getNexusLogicPrivacyDisclosure 
 } from '../utils/nexusLogicGenerator';
+import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
+import ToolCardButton from './ToolCardButton';
 
 // Icons
 const BrainIcon = () => (
@@ -90,7 +93,8 @@ export default function DoctorsPacket({
   primaryCondition: initialPrimary = '',
   secondaryCondition: initialSecondary = '',
   existingMechanism = null,
-  existingCitations = null
+  existingCitations = null,
+  onOpenAISettings
 }) {
   // State
   const [step, setStep] = useState('consent'); // consent, input, loading, result, error
@@ -101,6 +105,7 @@ export default function DoctorsPacket({
   const [hasConsented, setHasConsented] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
   
   // Load API key and set initial values
   useEffect(() => {
@@ -117,6 +122,13 @@ export default function DoctorsPacket({
         setStep('input');
       }
     }
+    
+    // Update AI status periodically
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    
+    return () => clearInterval(interval);
   }, [initialPrimary, initialSecondary]);
   
   // Update conditions when props change
@@ -145,8 +157,10 @@ export default function DoctorsPacket({
       return;
     }
     
-    if (!apiKey) {
-      setError('Please enter your Gemini API key');
+    // Check if ANY AI is available (Cloud or Local)
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setShowAISettings(true);
       return;
     }
     
@@ -263,8 +277,8 @@ Vet-Rate.org - Helping Veterans Win Claims`;
               <p className="text-sm text-violet-100">AI-powered medical nexus research</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <FocusToggle variant="light" />
+          <div className="flex items-center gap-3">
+            <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
             <button
               onClick={onClose}
               className="p-2 text-white hover:text-gray-200 hover:bg-white/20 rounded-lg transition-colors"
@@ -367,12 +381,9 @@ Vet-Rate.org - Helping Veterans Win Claims`;
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={handleConsent}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-                >
+                <ToolCardButton className="flex-1" type="button" onClick={handleConsent}>
                   <CheckIcon /> I Understand, Continue
-                </button>
+                </ToolCardButton>
               </div>
             </div>
           )}
@@ -380,36 +391,19 @@ Vet-Rate.org - Helping Veterans Win Claims`;
           {/* Step: Input */}
           {step === 'input' && (
             <div className="space-y-6">
-              {/* API Key */}
-              {!apiKey && (
-                <div className="p-4 bg-amber-900/20 rounded-xl border border-amber-500/20">
-                  <h4 className="font-semibold text-amber-300 mb-3">API Key Required</h4>
-                  <p className="text-sm text-gray-300 mb-3">
-                    Get your free Gemini API key from{' '}
-                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                      Google AI Studio
-                    </a>
-                  </p>
-                  <input
-                    type="password"
-                    placeholder="Paste your Gemini API key..."
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    onChange={(e) => handleSaveKey(e.target.value)}
-                  />
-                </div>
-              )}
-              
-              {apiKey && (
-                <div className="p-4 bg-green-900/20 rounded-xl border border-green-500/20 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-green-300">
-                    <CheckIcon /> API Key saved
+              {/* AI Setup Message */}
+              {!isAnyAIAvailable() && (
+                <div className="p-4 bg-amber-900/30 rounded-xl border border-amber-600/50">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">💡</span>
+                    <div className="text-sm text-amber-100">
+                      <p className="font-semibold mb-1">AI Required</p>
+                      <p className="text-amber-200">
+                        Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                        (100% private) or enter your Gemini API key.
+                      </p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => { localStorage.removeItem('vetrate_gemini_key'); setApiKey(''); }}
-                    className="text-xs text-gray-400 hover:text-gray-300"
-                  >
-                    Change key
-                  </button>
                 </div>
               )}
               
@@ -460,13 +454,14 @@ Vet-Rate.org - Helping Veterans Win Claims`;
                 >
                   Cancel
                 </button>
-                <button
+                <ToolCardButton
+                  className="flex-1"
+                  type="button"
                   onClick={handleGenerate}
                   disabled={!apiKey || !primaryCondition.trim() || !secondaryCondition.trim()}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <SparklesIcon /> Generate Doctor's Packet
-                </button>
+                </ToolCardButton>
               </div>
             </div>
           )}
@@ -510,12 +505,9 @@ Vet-Rate.org - Helping Veterans Win Claims`;
                 >
                   Close
                 </button>
-                <button
-                  onClick={() => { setError(null); setStep('input'); }}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg font-medium transition-all"
-                >
+                <ToolCardButton className="flex-1" type="button" onClick={() => { setError(null); setStep('input'); }}>
                   Try Different Conditions
-                </button>
+                </ToolCardButton>
               </div>
             </div>
           )}

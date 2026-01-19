@@ -79,7 +79,8 @@
           "Mayer et al., 'Gut-brain axis in health and disease,' Gastroenterology 2015"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "anxiety": {
     "name": "Generalized Anxiety Disorder",
@@ -124,7 +125,8 @@
           "Suvinen et al., 'Psychophysical subtypes of TMD pain,' Eur J Pain 2005"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "depression": {
     "name": "Major Depressive Disorder",
@@ -159,7 +161,8 @@
           "Fishbain et al., 'Chronic pain-associated depression,' Clin J Pain 1997"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "tinnitus": {
     "name": "Tinnitus (Ringing in Ears)",
@@ -218,7 +221,8 @@
           "Levine, 'Somatic (craniocervical) tinnitus and TMJ dysfunction,' Int Tinnitus J 1999"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "hearing_loss": {
     "name": "Hearing Loss (Sensorineural)",
@@ -253,20 +257,31 @@
           "Nakashima et al., 'Meniere's disease diagnostic criteria,' Acta Otolaryngol 2016"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "knee_right": {
     "name": "Right Knee Condition (Degenerative/Injury)",
     "potential_secondaries": [
       {
-        "condition": "Left Knee Degenerative Arthritis",
+        "condition": "Left Knee Pain and Instability",
         "probability": "High",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected right knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral left knee joint. The asymmetric loading pattern creates abnormal contact pressures on the left knee articular cartilage, accelerating degenerative changes. The altered kinematics affect the entire lower extremity kinetic chain, causing the left knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates osteoarthritis in the left knee.",
+        "nexus_theory": "The veteran's service-connected right knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral left knee joint. The asymmetric loading pattern creates abnormal contact pressures on the left knee, causing pain, ligamentous strain, and functional instability. The altered kinematics affect the entire lower extremity kinetic chain, causing the left knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates left knee pain and instability through compensatory overuse.",
         "medical_citations": [
           "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
           "Thorp et al., 'Biomechanical gait alterations and contralateral knee OA,' Clin Biomech 2007",
           "Henriksen et al., 'Knee OA and gait compensations,' Gait Posture 2010"
+        ]
+      },
+      {
+        "condition": "Left Knee Compensatory Bursitis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right knee disability necessitates compensatory biomechanical alterations that place excessive stress on the contralateral left knee bursa (pes anserine, prepatellar, or infrapatellar). The antalgic gait pattern increases friction and repetitive trauma to left knee bursae, causing inflammation. The asymmetric loading and altered gait mechanics create abnormal pressure on left knee bursae during ambulation. This chronic mechanical irritation proximately causes or aggravates left knee bursitis as a direct compensatory consequence of right knee disability.",
+        "medical_citations": [
+          "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
+          "Williams & Cohen, 'Bursitis and tendinitis,' Arthritis Rheum 2009"
         ]
       },
       {
@@ -300,19 +315,30 @@
           "Amin et al., 'Association of knee OA with lower extremity joint OA,' Osteoarthritis Cartilage 2008"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "knee_left": {
     "name": "Left Knee Condition (Degenerative/Injury)",
     "potential_secondaries": [
       {
-        "condition": "Right Knee Degenerative Arthritis",
+        "condition": "Right Knee Pain and Instability",
         "probability": "High",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected left knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral right knee joint. The asymmetric loading pattern creates abnormal contact pressures on the right knee articular cartilage, accelerating degenerative changes. The altered kinematics affect the entire lower extremity kinetic chain, causing the right knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates osteoarthritis in the right knee.",
+        "nexus_theory": "The veteran's service-connected left knee disability necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral right knee joint. The asymmetric loading pattern creates abnormal contact pressures on the right knee, causing pain, ligamentous strain, and functional instability. The altered kinematics affect the entire lower extremity kinetic chain, causing the right knee to bear supraphysiological loads during stance and gait phases. This chronic mechanical overload proximately causes or aggravates right knee pain and instability through compensatory overuse.",
         "medical_citations": [
           "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
           "Thorp et al., 'Biomechanical gait alterations and contralateral knee OA,' Clin Biomech 2007"
+        ]
+      },
+      {
+        "condition": "Right Knee Compensatory Bursitis",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected left knee disability necessitates compensatory biomechanical alterations that place excessive stress on the contralateral right knee bursa (pes anserine, prepatellar, or infrapatellar). The antalgic gait pattern increases friction and repetitive trauma to right knee bursae, causing inflammation. The asymmetric loading and altered gait mechanics create abnormal pressure on right knee bursae during ambulation. This chronic mechanical irritation proximately causes or aggravates right knee bursitis as a direct compensatory consequence of left knee disability.",
+        "medical_citations": [
+          "Shakoor et al., 'Asymmetric knee loading and contralateral knee OA,' Arthritis Rheum 2011",
+          "Williams & Cohen, 'Bursitis and tendinitis,' Arthritis Rheum 2009"
         ]
       },
       {
@@ -334,28 +360,29 @@
           "Sharma et al., 'Knee OA and risk of contiguous joint OA,' Osteoarthritis Cartilage 2011"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "lumbar_spine": {
     "name": "Lumbar Spine / Lower Back Condition",
     "potential_secondaries": [
       {
-        "condition": "Right Knee Degenerative Arthritis",
+        "condition": "Bilateral Knee Pain and Limited Range of Motion",
         "probability": "High",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations and postural adjustments to minimize back pain. This altered biomechanics places abnormal mechanical stress on the right knee joint. Lumbar spine pathology causes shortened stride length, reduced lumbar lordosis, and asymmetric weight distribution, which increase knee joint contact forces. The compensatory movement patterns required to protect the lumbar spine force the right knee to absorb greater impact forces and operate outside its normal biomechanical parameters, proximately causing or aggravating right knee osteoarthritis.",
+        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations and postural adjustments to minimize back pain. This altered biomechanics places abnormal mechanical stress on both knee joints. Lumbar spine pathology causes shortened stride length, reduced lumbar lordosis, and asymmetric weight distribution, which increase knee joint contact forces and restrict normal knee range of motion. The compensatory movement patterns required to protect the lumbar spine force both knees to absorb greater impact forces and operate outside their normal biomechanical parameters, proximately causing or aggravating bilateral knee pain and limited range of motion.",
         "medical_citations": [
           "Creamer et al., 'Determinants of pain severity in knee OA,' Ann Rheum Dis 1998",
           "van der Pas et al., 'Multi-joint OA and disability,' Ann Rheum Dis 2013"
         ]
       },
       {
-        "condition": "Left Knee Degenerative Arthritis",
-        "probability": "High",
+        "condition": "Bilateral Knee Compensatory Bursitis",
+        "probability": "Medium",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations and postural adjustments to minimize back pain. This altered biomechanics places abnormal mechanical stress on the left knee joint. Lumbar spine pathology causes shortened stride length, reduced lumbar lordosis, and asymmetric weight distribution, which increase knee joint contact forces. The compensatory movement patterns required to protect the lumbar spine force the left knee to absorb greater impact forces and operate outside its normal biomechanical parameters, proximately causing or aggravating left knee osteoarthritis.",
+        "nexus_theory": "The veteran's service-connected lumbar spine disability necessitates compensatory gait alterations that place excessive stress on bilateral knee bursae (pes anserine, prepatellar, or infrapatellar). The altered gait pattern to protect the lumbar spine increases friction and repetitive trauma to knee bursae bilaterally, causing inflammation. The shortened stride and altered weight distribution create abnormal pressure on knee bursae during ambulation. This chronic mechanical irritation proximately causes or aggravates bilateral knee bursitis as a direct compensatory consequence of lumbar spine disability.",
         "medical_citations": [
-          "Creamer et al., 'Determinants of pain severity in knee OA,' Ann Rheum Dis 1998",
+          "Williams & Cohen, 'Bursitis and tendinitis,' Arthritis Rheum 2009",
           "van der Pas et al., 'Multi-joint OA and disability,' Ann Rheum Dis 2013"
         ]
       },
@@ -389,7 +416,8 @@
           "Sostres et al., 'Adverse effects of NSAIDs on the GI tract,' Gastroenterol Res Pract 2010"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "shoulder_right": {
     "name": "Right Shoulder Condition (Rotator Cuff/Arthritis)",
@@ -424,7 +452,8 @@
           "Cryer & Feldman, 'Effects of NSAIDs on GI tract,' Am J Med 1998"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "hip_right": {
     "name": "Right Hip Condition (Degenerative/Injury)",
@@ -440,24 +469,45 @@
         ]
       },
       {
-        "condition": "Left Hip Degenerative Arthritis",
+        "condition": "Left Hip Pain and Limited Range of Motion",
         "probability": "Medium",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected right hip disability necessitates compensatory overload on the contralateral left hip joint. The antalgic gait pattern shifts weight-bearing preferentially to the left hip, creating asymmetric and excessive mechanical stress. This chronic overload accelerates degenerative changes in the left hip articular cartilage. The altered gait mechanics place the left hip outside its normal biomechanical parameters, causing or aggravating left hip osteoarthritis.",
+        "nexus_theory": "The veteran's service-connected right hip disability necessitates compensatory overload on the contralateral left hip joint. The antalgic gait pattern shifts weight-bearing preferentially to the left hip, creating asymmetric and excessive mechanical stress. This chronic overload causes pain, muscle strain, and functional limitation in the left hip. The altered gait mechanics place the left hip outside its normal biomechanical parameters, causing or aggravating left hip pain and limited range of motion through compensatory overuse.",
         "medical_citations": [
           "Shakoor et al., 'Asymmetric loading in OA,' Arthritis Rheum 2011"
         ]
       },
       {
-        "condition": "Right Knee Degenerative Arthritis",
+        "condition": "Left Hip Trochanteric Bursitis",
         "probability": "High",
         "mechanism": "Altered Gait",
-        "nexus_theory": "The veteran's service-connected right hip disability alters the biomechanics of the entire right lower extremity kinetic chain. Hip pathology changes knee joint loading patterns, increases knee adduction moments, and places abnormal stress on knee articular cartilage. The kinematic coupling between hip and knee means that hip dysfunction transfers excessive and abnormal forces to the knee joint, accelerating degenerative changes and causing or aggravating right knee osteoarthritis.",
+        "nexus_theory": "The veteran's service-connected right hip disability necessitates compensatory gait alterations that place excessive stress on the left hip trochanteric bursa. The antalgic gait pattern increases friction between the iliotibial band and the greater trochanter of the left hip, causing bursal inflammation. The asymmetric loading and altered gait mechanics create repetitive trauma to the left hip bursa. This chronic mechanical irritation proximately causes or aggravates left hip trochanteric bursitis as a direct compensatory consequence of right hip disability.",
+        "medical_citations": [
+          "Williams & Cohen, 'Bursitis and tendinitis,' Arthritis Rheum 2009",
+          "Shakoor et al., 'Asymmetric loading in OA,' Arthritis Rheum 2011"
+        ]
+      },
+      {
+        "condition": "Right Knee Pain and Instability",
+        "probability": "High",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right hip disability alters the biomechanics of the entire right lower extremity kinetic chain. Hip pathology changes knee joint loading patterns, increases knee adduction moments, and places abnormal stress on knee ligaments and supporting structures. The kinematic coupling between hip and knee means that hip dysfunction transfers excessive and abnormal forces to the knee joint, causing pain and functional instability. The altered gait mechanics necessitated by right hip pathology proximately cause or aggravate right knee pain and instability.",
         "medical_citations": [
           "Sharma et al., 'Hip OA and knee OA association,' Osteoarthritis Cartilage 2011"
         ]
+      },
+      {
+        "condition": "Right Knee Compensatory Bursitis",
+        "probability": "Medium",
+        "mechanism": "Altered Gait",
+        "nexus_theory": "The veteran's service-connected right hip disability alters the biomechanics of the right lower extremity, placing excessive stress on the right knee bursa (pes anserine, prepatellar, or infrapatellar). The compensatory gait pattern necessitated by hip pathology increases friction and repetitive trauma to right knee bursae. The altered kinetic chain from the hip transfers abnormal forces to the knee, creating inflammation in knee bursae. This chronic mechanical irritation proximately causes or aggravates right knee bursitis.",
+        "medical_citations": [
+          "Williams & Cohen, 'Bursitis and tendinitis,' Arthritis Rheum 2009",
+          "Sharma et al., 'Hip OA and knee OA association,' Osteoarthritis Cartilage 2011"
+        ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "chronic_pain_nsaid": {
     "name": "Chronic Pain Requiring NSAID Use",
@@ -504,7 +554,8 @@
           "Johnson et al., 'NSAIDs and hypertension,' Arch Intern Med 1994"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "ankle_right": {
     "name": "Right Ankle Condition (Instability/Arthritis)",
@@ -528,7 +579,8 @@
           "Nuesch et al., 'Ankle OA affects gait and function,' Gait Posture 2012"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
   },
   "peripheral_neuropathy": {
     "name": "Peripheral Neuropathy",
@@ -553,6 +605,57 @@
           "Singh et al., 'Preventing foot ulcers in diabetic neuropathy,' JAMA 2005"
         ]
       }
-    ]
+    ],
+    "last_updated": "2026-01-18"
+  },
+  "prostate_chronic": {
+    "name": "Chronic Prostatitis / Prostate Condition",
+    "potential_secondaries": [
+      {
+        "condition": "Erectile Dysfunction",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected chronic prostatitis directly causes or aggravates erectile dysfunction through multiple pathophysiological mechanisms. Chronic prostatic inflammation disrupts the neurovascular bundle adjacent to the prostate, impairing erectile nerve function. Prostatic pathology causes pelvic floor muscle dysfunction and chronic pelvic pain, which psychologically and physiologically inhibit sexual arousal and erectile response. The chronic inflammatory state affects local blood flow and nitric oxide availability necessary for erectile function. Additionally, medications used to treat prostate conditions (alpha-blockers, 5-alpha-reductase inhibitors) independently contribute to erectile dysfunction.",
+        "medical_citations": [
+          "Liang et al., 'Chronic prostatitis and erectile dysfunction,' Urology 2004",
+          "Trinchieri et al., 'Chronic prostatitis syndrome,' Eur Urol 2007",
+          "Pontari & Ruggieri, 'Chronic prostatitis,' Curr Opin Urol 2008"
+        ]
+      },
+      {
+        "condition": "Depression and Anxiety",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected chronic prostatitis causes or aggravates depression and anxiety through chronic pain and quality of life impairment. Persistent pelvic pain, urinary symptoms, and sexual dysfunction characteristic of chronic prostatitis create continuous psychological distress. The unpredictable nature of symptom flares and the impact on intimate relationships precipitate depressive and anxiety symptoms. Chronic pain conditions activate stress response pathways and alter neurotransmitter systems (serotonin, norepinephrine) implicated in mood disorders. The functional limitations and reduced quality of life resulting from chronic prostatitis proximately cause or aggravate depression and anxiety disorders.",
+        "medical_citations": [
+          "Tripp et al., 'Prevalence and correlates of depression in chronic prostatitis,' J Urol 2004",
+          "Ku et al., 'Association between chronic prostatitis and depression,' Korean J Urol 2015",
+          "Magistro et al., 'Contemporary management of chronic prostatitis,' Curr Opin Urol 2016"
+        ]
+      },
+      {
+        "condition": "Urinary Incontinence / Bladder Dysfunction",
+        "probability": "Medium",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected chronic prostatitis causes or aggravates urinary incontinence and bladder dysfunction through prostatic inflammation and pelvic floor dysfunction. Chronic prostatic inflammation causes bladder outlet obstruction, detrusor instability, and urinary urgency. The inflammatory process extends to the bladder neck and urethra, causing irritative voiding symptoms including frequency, urgency, and urge incontinence. Chronic prostatitis disrupts normal bladder-prostate coordination, leading to incomplete emptying, overflow incontinence, and progressive bladder dysfunction. The pelvic floor muscle dysfunction associated with chronic prostatitis further impairs urinary control.",
+        "medical_citations": [
+          "Nickel et al., 'Chronic prostatitis and bladder symptoms,' J Urol 2007",
+          "Shoskes et al., 'Chronic prostatitis/chronic pelvic pain syndrome,' Urology 2002",
+          "Anderson et al., 'Integration of myofascial trigger point release in prostatitis,' J Urol 2005"
+        ]
+      },
+      {
+        "condition": "Chronic Pelvic Pain Syndrome",
+        "probability": "High",
+        "mechanism": "Direct",
+        "nexus_theory": "The veteran's service-connected chronic prostatitis directly causes or is part of chronic pelvic pain syndrome through central and peripheral sensitization mechanisms. Chronic prostatic inflammation sensitizes pelvic pain pathways, creating a state of chronic pain that extends beyond the prostate to involve the entire pelvic floor, perineum, and lower abdomen. The chronic pain state involves neuroplastic changes in spinal cord and brain pain processing centers, creating persistent pain even when acute inflammation subsides. Pelvic floor muscle dysfunction and myofascial trigger points perpetuate the pain syndrome. The chronic nature of prostatic pathology proximately causes a complex regional pain syndrome affecting the entire pelvis.",
+        "medical_citations": [
+          "Pontari & Ruggieri, 'Chronic prostatitis/chronic pelvic pain syndrome,' J Urol 2004",
+          "Shoskes et al., 'Phenotypic characterization of chronic pelvic pain,' J Urol 2009",
+          "Anderson et al., 'Myofascial trigger points in chronic prostatitis,' J Urol 2009"
+        ]
+      }
+    ],
+    "last_updated": "2026-01-18"
   }
 }

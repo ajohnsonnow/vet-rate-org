@@ -35,7 +35,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           <p className={`text-sm mb-6 ${getColorClass(colors.text.secondary)}`}>
-            <strong>Last Updated:</strong> January 15, 2026
+            <strong>Last Updated:</strong> January 19, 2026
           </p>
 
           <section className="mb-6">

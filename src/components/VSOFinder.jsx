@@ -4,6 +4,8 @@ import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { searchVSOs, isAIAvailable } from '../utils/aiStatementHelper';
+import { generateAI } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 /**
  * VSOFinder Component
@@ -23,6 +25,10 @@ const VSOFinder = ({ onClose, onReportBug }) => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiQuestion, setAIQuestion] = useState('');
+  const [aiResponse, setAIResponse] = useState(null);
+  const [isAIThinking, setIsAIThinking] = useState(false);
 
   const handleZipCodeChange = (e) => {
     // Only allow numbers and limit to 5 digits
@@ -64,6 +70,47 @@ const VSOFinder = ({ onClose, onReportBug }) => {
       setError('An error occurred. Please try the official VA search instead.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAIQuestion = async () => {
+    if (!aiQuestion.trim()) return;
+    
+    if (!isAIAvailable()) {
+      setError('AI features require an API key. Please configure AI in Settings.');
+      return;
+    }
+
+    setIsAIThinking(true);
+    setAIResponse(null);
+
+    try {
+      const prompt = `You are a knowledgeable Veterans Service Officer (VSO) advisor helping veterans understand their representation options.
+
+Veteran's Question: "${aiQuestion}"
+
+Provide a clear, helpful answer about:
+- What VSOs do and how they help veterans
+- The difference between County VSOs, State VA offices, and National VSOs (DAV, VFW, etc.)
+- How to choose the right type of representation
+- What to expect from VSO services
+- How to verify accreditation
+- Red flags for "claim sharks" (anyone charging fees for initial claims)
+
+Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
+
+      const response = await generateAI(prompt);
+      
+      if (response) {
+        setAIResponse(response);
+      } else {
+        setError('Failed to get AI response.');
+      }
+    } catch (err) {
+      console.error('AI consultation error:', err);
+      setError('An error occurred during AI consultation.');
+    } finally {
+      setIsAIThinking(false);
     }
   };
 
@@ -170,7 +217,9 @@ const VSOFinder = ({ onClose, onReportBug }) => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">                <FocusToggle variant="light" />                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="VSO Finder" />}
+              <div className="flex items-center gap-2">
+                <AIStatusBadge onClick={() => setShowAISettings(!showAISettings)} />
+                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="VSO Finder" />}
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -270,6 +319,61 @@ const VSOFinder = ({ onClose, onReportBug }) => {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
                 The Official VA Database is the authoritative source. AI results should be verified.
               </p>
+            </div>
+
+            {/* AI Consultation */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 mb-6 border border-purple-200 dark:border-purple-700">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🤖</span>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Ask AI About VSO Representation
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Have questions about VSOs, accreditation, or how to choose representation? Ask our AI advisor.
+              </p>
+              
+              <div className="space-y-3">
+                <textarea
+                  value={aiQuestion}
+                  onChange={(e) => setAIQuestion(e.target.value)}
+                  placeholder="Example: What's the difference between a County VSO and a National VSO like DAV?"
+                  className="w-full px-4 py-3 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                  rows={3}
+                />
+                <button
+                  onClick={handleAIQuestion}
+                  disabled={isAIThinking || !aiQuestion.trim()}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isAIThinking ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                      <span>Consulting AI...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💬</span>
+                      <span>Get AI Advice</span>
+                    </>
+                  )}
+                </button>
+
+                {aiResponse && (
+                  <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-xl">💡</span>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">AI Advisor Response:</h4>
+                    </div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {aiResponse}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Error Display */}
@@ -423,7 +527,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
                 </p>
                 <p>
                   <strong>Why use a VSO?</strong> They know the VA system, can access your records, attend 
-                  hearings with you, and help ensure you get the benefits you've earned — all at <strong>NO COST</strong>.
+                  hearings with you, and help ensure you get the benefits you've earned - all at <strong>NO COST</strong>.
                 </p>
               </div>
             </div>

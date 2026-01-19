@@ -14,7 +14,8 @@ import StatementAnalyzer from './StatementAnalyzer';
 import ClaimProgress from './ClaimProgress';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from '../utils/aiStatementHelper';
-import { FocusToggle } from '../contexts/FocusModeContext';
+import { AIStatusBadge } from './AIModeSelector';
+import { getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
 
 /**
  * NexusBuilder Component
@@ -22,7 +23,7 @@ import { FocusToggle } from '../contexts/FocusModeContext';
  * Customizes questions based on whether the claim is primary or secondary
  * Now with optional AI enhancement powered by Google Gemini
  */
-const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingStatement = null, onReportBug }) => {
+const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingStatement = null, onReportBug, onOpenAISettings }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
@@ -432,7 +433,7 @@ Sincerely,
                 </p>
               </div>
               <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
-                <FocusToggle variant="light" className="hidden sm:flex" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Nexus Builder" />}
                 <button
                   onClick={onClose}
@@ -805,8 +806,13 @@ Sincerely,
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Review Your Statement</h3>
                   
-                  {/* AI Enhancement Button */}
-                  {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
+                  {/* AI Mode Display and Enhancement Button */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {isAIAvailable() && (
+                      <AIStatusBadge showLabel={true} className="text-xs" />
+                    )}
+                    
+                    {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
                     <button
                       onClick={handleRequestAIEnhance}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
@@ -817,6 +823,7 @@ Sincerely,
                       ✨ Enhance with AI
                     </button>
                   )}
+                  </div>
                   
                   {/* Loading state */}
                   {isEnhancing && (
@@ -1071,6 +1078,7 @@ Sincerely,
         onClose={() => setShowDoctorsPacket(false)}
         primaryCondition={primaryCondition || ''}
         secondaryCondition={condition}
+        onOpenAISettings={onOpenAISettings}
       />
     </div>
   );

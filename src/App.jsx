@@ -74,12 +74,19 @@ import LoadingBunker from './components/LoadingBunker';
 import BodyMapSelector from './components/BodyMapSelector';
 import ClaimStressTest from './components/ClaimStressTest';
 import EvidenceTimeline from './components/EvidenceTimeline';
-import ExamPrepRoom from './components/ExamPrepRoom';
+// ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
-import CloudSyncManager from './components/CloudSyncManager';
+import MultiCloudManager from './components/MultiCloudManager';
+import AISettingsModal from './components/AISettingsModal';
+import LocalAIPanel, { LocalAIProvider } from './components/LocalAIPanel';
 import BootCampTour from './components/BootCampTour';
 import DemoDataLoader from './components/DemoDataLoader';
 import MissionProtocol from './components/MissionProtocol';
+import EvidenceGapVisualizer from './components/EvidenceGapVisualizer';
+import RetroPayHunter from './components/RetroPayHunter';
+import PainPainter from './components/PainPainter';
+import VAAITransparency from './components/VAAITransparency';
+import ShareButton, { PIISensitive } from './components/ShareButton';
 import { HelperModeProvider } from './contexts/HelperModeContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
@@ -91,6 +98,7 @@ import { startUpdateChecker, stopUpdateChecker, applyUpdate } from './utils/upda
 import { createDebugDumpHandler } from './utils/debugDump';
 import { APP_VERSION, LAST_SEEN_VERSION_KEY } from './utils/version';
 import { needsMigration, migrateFromLocalStorage } from './utils/storage';
+import { generateWhatsNewChangelog } from './utils/changelogGenerator';
 import disabilityData from './data/disabilityData.json';
 import changelogData from './data/changelog.json';
 import './index.css';
@@ -147,17 +155,25 @@ function App() {
   const [showTheTribunal, setShowTheTribunal] = useState(false);
   const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
   const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
+  const [showVAAITransparency, setShowVAAITransparency] = useState(false);
   
   // NEW DIAMOND-TIER FEATURES
   const [showDenialDecoder, setShowDenialDecoder] = useState(false);
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
   const [showClaimStressTest, setShowClaimStressTest] = useState(false);
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
-  const [showExamPrepRoom, setShowExamPrepRoom] = useState(false);
+  // ExamPrepRoom state removed - functionality merged into CAPSimulator
   
   // FORCE MULTIPLIER FEATURES
   const [showRecordSearch, setShowRecordSearch] = useState(false);
   const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [showLocalAIPanel, setShowLocalAIPanel] = useState(false);
+  
+  // WOW FEATURES: Evidence Gap, Retro Pay, Pain Painter
+  const [showEvidenceGapVisualizer, setShowEvidenceGapVisualizer] = useState(false);
+  const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
+  const [showPainPainter, setShowPainPainter] = useState(false);
   
   // CLEAR COAT: Onboarding & Trust Features
   const [showMissionProtocol, setShowMissionProtocol] = useState(false);
@@ -294,11 +310,20 @@ function App() {
       // User hasn't seen this version's changelog yet
       console.log(`📰 New version detected: ${currentVersion} (last seen: ${lastSeenVersion || 'none'})`);
       
-      // Find changelog for current version
-      const versionUpdate = changelogData.updates.find(u => u.version === currentVersion);
-      if (versionUpdate && versionUpdate.changelog.length > 0) {
-        setCurrentChangelog(versionUpdate.changelog);
+      // Use dynamic changelog generator (preferred) with JSON fallback
+      const dynamicChangelog = generateWhatsNewChangelog();
+      if (dynamicChangelog && dynamicChangelog.changelog.length > 0) {
+        console.log('📋 Using dynamic changelog generator');
+        setCurrentChangelog(dynamicChangelog.changelog);
         setShowWhatsNew(true);
+      } else {
+        // Fallback to JSON file
+        const versionUpdate = changelogData.updates.find(u => u.version === currentVersion);
+        if (versionUpdate && versionUpdate.changelog.length > 0) {
+          console.log('📋 Using JSON changelog fallback');
+          setCurrentChangelog(versionUpdate.changelog);
+          setShowWhatsNew(true);
+        }
       }
       
       // Mark this version as seen
@@ -608,48 +633,48 @@ function App() {
         onVAResourcesClick={() => setShowVAResources(true)}
         // Calculate
         onTacticalCalculatorClick={() => setShowTacticalCalculator(true)}
+        onMillionDollarDashboardClick={() => setShowMillionDollarDashboard(true)}
+        onWhatIfSandboxClick={() => setShowWhatIfSandbox(true)}
+        onRetroPayHunterClick={() => setShowRetroPayHunter(true)}
+        onTimeMachineClick={() => setShowTimeMachine(true)}
         // Discover
         onSecondaryScoutClick={() => setShowSecondaryScoutLauncher(true)}
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
-        onExamPrepRoomClick={() => setShowExamPrepRoom(true)}
+        // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
         onPathfinderClick={() => setShowPathfinder(true)}
-        // Evidence
+        onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
+        onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
+        onWebOfConditionsClick={() => setShowWebOfConditions(true)}
+        // Build Evidence
         onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
+        onRecordSearchClick={() => setShowRecordSearch(true)}
         onWitnessBenchClick={() => setShowWitnessBench(true)}
         onNexusBuilderClick={() => setShowNexusBuilder(true)}
         onFormsHelperClick={() => setShowFormsHelper(true)}
+        onSymptomLoggerClick={() => setShowSymptomLogger(true)}
+        onPainPainterClick={() => setShowPainPainter(true)}
+        onEvidenceTimelineClick={() => setShowEvidenceTimeline(true)}
+        onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
         // Quality Control
         onRedTeamClick={() => setShowRedTeam(true)}
+        onClaimStressTestClick={() => setShowClaimStressTest(true)}
         onDecisionDecoderClick={() => setShowDecisionDecoder(true)}
+        onDenialDecoderClick={() => setShowDenialDecoder(true)}
         onSharkRadarClick={() => setShowSharkRadar(true)}
-        // Advanced Strategy
-        onTDIUBuilderClick={() => setShowTDIUBuilder(true)}
+        onConsistencyEngineClick={() => setShowConsistencyEngine(true)}
+        onEvidenceGapVisualizerClick={() => setShowEvidenceGapVisualizer(true)}
         onRiskAssessmentClick={() => setShowRiskAssessment(true)}
-        onSymptomLoggerClick={() => setShowSymptomLogger(true)}
-        onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
-        onFOIAGeneratorClick={() => setShowFOIAGenerator(true)}
-        // Shock & Awe
-        onMillionDollarDashboardClick={() => setShowMillionDollarDashboard(true)}
-        onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
-        onWebOfConditionsClick={() => setShowWebOfConditions(true)}
+        // Maximize Your Rating
+        onTDIUBuilderClick={() => setShowTDIUBuilder(true)}
+        onStateBenefitHunterClick={() => setShowStateBenefitHunter(true)}
+        onTheTribunalClick={() => setShowTheTribunal(true)}
+        onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
-        onStateBenefitHunterClick={() => setShowStateBenefitHunter(true)}
-        // Legislative Watchdog
-        onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
-        // Quality of Life Features
         onBackupManagerClick={() => setShowBackupManager(true)}
-        onTimeMachineClick={() => setShowTimeMachine(true)}
-        // Gold Standard Features
-        onTheTribunalClick={() => setShowTheTribunal(true)}
-        onConsistencyEngineClick={() => setShowConsistencyEngine(true)}
-        onWhatIfSandboxClick={() => setShowWhatIfSandbox(true)}
-        // Diamond-Tier Features
-        onDenialDecoderClick={() => setShowDenialDecoder(true)}
-        // Force Multiplier Features
-        onRecordSearchClick={() => setShowRecordSearch(true)}
         onCloudSyncClick={() => setShowCloudSyncManager(true)}
+        onAISettingsClick={() => setShowAISettings(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
@@ -665,7 +690,7 @@ function App() {
             🛡️ Your VA Claims Command Center
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-6">
-            Search <strong>748 rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet—all in one place.
+            Search <strong>751 rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet - all in one place.
           </p>
         </div>
 
@@ -679,7 +704,7 @@ function App() {
               isLoading={isLoading}
             />
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
-              💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or keyword — covers all 15 body systems from 38 CFR Part 4
+              💡 <strong>Tip:</strong> Search by condition name, diagnostic code, or keyword - covers all 15 body systems from 38 CFR Part 4
             </p>
             
             {/* Demo Data Loader - "Gold Standard" Example */}
@@ -750,7 +775,7 @@ function App() {
         <div className="mt-12 max-w-4xl mx-auto">
           {/* SECTION 1: ESSENTIAL TOOLS - What Everyone Needs First */}
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-2">⚡ Essential Tools</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Start here — calculate your rating and organize your claims</p>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Start here - calculate your rating and organize your claims</p>
           
           {/* TACTICAL CALCULATOR - THE Core Feature */}
           <div className="mb-6">
@@ -812,7 +837,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                Discover <strong>secondary claims</strong> linked to your service-connected disabilities — powered by our comprehensive nexus database and 38 CFR § 3.310.
+                Discover <strong>secondary claims</strong> linked to your service-connected disabilities - powered by our comprehensive nexus database and 38 CFR § 3.310.
               </p>
               <button
                 onClick={() => setShowSecondaryScoutLauncher(true)}
@@ -831,9 +856,10 @@ function App() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     C&P Exam Simulator
                   </h3>
+                  <span className="inline-block px-2 py-0.5 bg-teal-500 text-white text-xs font-bold rounded-full">PRACTICE</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
@@ -908,7 +934,7 @@ function App() {
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                     <strong>What competitors charge $500+ for.</strong> Upload your C-File (Claims File) and let AI analyze thousands of pages to find 
-                    <strong> in-service events, diagnoses, and nexus evidence</strong>—all processed locally in your browser for maximum privacy.
+                    <strong> in-service events, diagnoses, and nexus evidence</strong> - all processed locally in your browser for maximum privacy.
                   </p>
                 </div>
               </div>
@@ -984,10 +1010,11 @@ function App() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     📋 Forms Helper
-                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">16 FORMS</span>
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs rounded-full">AUTO-FILL</span>
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Get guided help filling out VA forms, especially <strong>buddy statements</strong> – one of the most powerful but hardest-to-get forms of evidence!
+                    Get guided help filling out VA forms, especially <strong>buddy statements</strong> - one of the most powerful but hardest-to-get forms of evidence!
                   </p>
                 </div>
               </div>
@@ -1023,9 +1050,9 @@ function App() {
               </p>
               <button
                 onClick={() => setShowRedTeam(true)}
-                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
+                className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
-                🔍 Stress Test
+                🔍 Stress Test Statement
               </button>
             </div>
 
@@ -1047,7 +1074,7 @@ function App() {
               </p>
               <button
                 onClick={() => setShowDecisionDecoder(true)}
-                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
+                className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 🔓 Decode Decision
               </button>
@@ -1063,7 +1090,7 @@ function App() {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Time Machine
                     </h3>
-                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold rounded-full">NEW</span>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold rounded-full">ITF DEADLINE</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
@@ -1071,7 +1098,7 @@ function App() {
               </p>
               <button
                 onClick={() => setShowTimeMachine(true)}
-                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
+                className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 ⏰ Track Deadline
               </button>
@@ -1087,6 +1114,7 @@ function App() {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Shark Radar
                   </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-red-500 text-white text-xs font-bold rounded-full">SCAM ALERT</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
@@ -1095,16 +1123,55 @@ function App() {
               </p>
               <button
                 onClick={() => setShowSharkRadar(true)}
-                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto"
+                className="w-full px-4 py-3 min-h-[68px] bg-gradient-to-r from-rose-600 to-red-600 text-white rounded-lg font-bold hover:from-rose-700 hover:to-red-700 transition-all shadow-md hover:shadow-lg mt-auto flex items-center justify-center"
               >
                 🔍 Scan Contract
               </button>
             </div>
           </div>
 
+          {/* Evidence Gap Visualizer - Full Width Rose theme continuation */}
+          <div className="mt-6">
+            {/* Evidence Gap Visualizer CTA - Full Width */}
+            <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-rose-50 dark:from-rose-900/40 dark:via-pink-900/40 dark:to-rose-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl p-4 shadow-lg">
+                    <span className="text-4xl">🔗</span>
+                  </div>
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      Evidence Gap Finder
+                    </h3>
+                    <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="inline-block px-2 py-0.5 bg-rose-600 text-white text-xs font-bold rounded-full">CHECKLIST</span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                    <strong>The Missing Link.</strong> See exactly what evidence you're <strong>missing</strong> for higher ratings. Interactive completeness gauge shows your gaps - fill them <strong>before</strong> submission. Now saves directly to My Packet!
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    <span className="px-3 py-1 bg-rose-200 dark:bg-rose-800 text-rose-800 dark:text-rose-200 text-sm font-semibold rounded-full">📋 Visual Checklist</span>
+                    <span className="px-3 py-1 bg-rose-200 dark:bg-rose-800 text-rose-800 dark:text-rose-200 text-sm font-semibold rounded-full">📦 Save to Packet</span>
+                    <span className="px-3 py-1 bg-rose-200 dark:bg-rose-800 text-rose-800 dark:text-rose-200 text-sm font-semibold rounded-full">🎯 Target Rating</span>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setShowEvidenceGapVisualizer(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:from-rose-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    🔗 Find My Gaps
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* SECTION 5: MAXIMIZE YOUR RATING - Amber Theme */}
           <h2 className="text-2xl font-bold text-amber-700 dark:text-amber-300 text-center mb-2 mt-12">💰 Maximize Your Rating</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Get every dollar you deserve—TDIU, PACT Act, and strategic claims</p>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Get every dollar you deserve - TDIU, PACT Act, and strategic claims</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* TDIU Work Impact Builder CTA */}
@@ -1156,30 +1223,48 @@ function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            {/* Symptom Logger CTA */}
-            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
-              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
-                <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
-                  <span className="text-3xl">📊</span>
+          {/* FEATURED: Symptom Logger - Prominent Full-Width Card */}
+          <div className="mt-6 mb-6">
+            <div className="relative bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-100 dark:from-amber-900/60 dark:via-yellow-900/50 dark:to-orange-900/60 border-2 border-amber-400 dark:border-amber-600 rounded-2xl p-8 hover:shadow-2xl transition-all overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-300/30 to-transparent rounded-full -translate-y-32 translate-x-32 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-yellow-300/20 to-transparent rounded-full translate-y-24 -translate-x-24 pointer-events-none"></div>
+              
+              <div className="relative flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 shadow-xl">
+                    <span className="text-5xl">📊</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                    Symptom Logger
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100">
+                      Symptom Logger
                     </h3>
-                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full">50%</span>
+                    <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full animate-pulse">⭐ KEY TOOL</span>
+                  </div>
+                  <p className="text-lg text-gray-700 dark:text-gray-200 mb-4 leading-relaxed">
+                    <strong className="text-amber-700 dark:text-amber-400">The 50% Maker.</strong> Ratings for migraines, IBS, and GERD depend on <strong>frequency</strong>. Track every attack with severity, duration, and triggers. Export <strong>professional PDF evidence</strong> that proves your rating.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
+                    <span className="px-3 py-1 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-sm font-semibold rounded-full">📅 Date/Time Tracking</span>
+                    <span className="px-3 py-1 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-sm font-semibold rounded-full">📈 Severity Charts</span>
+                    <span className="px-3 py-1 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-sm font-semibold rounded-full">📄 PDF Export</span>
+                    <span className="px-3 py-1 bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-sm font-semibold rounded-full">🎯 C&P Ready</span>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setShowSymptomLogger(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    📝 Start Logging
+                  </button>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                <strong>The 50% Maker.</strong> Track symptoms with <strong>frequency, location, and severity</strong>. Export professional PDF evidence for your C&P exam.
-              </p>
-              <button
-                onClick={() => setShowSymptomLogger(true)}
-                className="w-full px-4 py-3 min-h-[52px] bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg mt-auto"
-              >
-                📝 Log My Symptoms
-              </button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* PACT Act Navigator CTA */}
             <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-900/40 dark:via-orange-900/40 dark:to-amber-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
@@ -1195,7 +1280,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                <strong>Skip the Nexus Letter.</strong> Check if your condition is <strong>presumptive</strong> under PACT Act—Agent Orange, burn pits, Gulf War, radiation. <strong>No proof needed.</strong>
+                <strong>Skip the Nexus Letter.</strong> Check if your condition is <strong>presumptive</strong> under PACT Act - Agent Orange, burn pits, Gulf War, radiation. <strong>No proof needed.</strong>
               </p>
               <button
                 onClick={() => setShowPACTActNavigator(true)}
@@ -1220,7 +1305,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                <strong>Unlock Your C-File.</strong> Generate a <strong>FOIA request</strong> for your complete VA claims file. See what VA used—and <strong>what they ignored</strong>.
+                <strong>Unlock Your C-File.</strong> Generate a <strong>FOIA request</strong> for your complete VA claims file. See what VA used - and <strong>what they ignored</strong>.
               </p>
               <button
                 onClick={() => setShowFOIAGenerator(true)}
@@ -1230,6 +1315,8 @@ function App() {
               </button>
             </div>
           </div>
+
+
 
 
 
@@ -1255,7 +1342,7 @@ function App() {
                 <strong>Click, Don't Type.</strong> Interactive body map that translates your clicks into <strong>exact medical terminology</strong>. Turn "My back hurts" into proper diagnosis language.
               </p>
               <button
-                onClick={() => setShowBodyMapSelector(true)}
+                onClick={() => setShowPainPainter(true)}
                 className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-lg font-bold hover:from-slate-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 🎯 Map My Pain
@@ -1300,7 +1387,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                <strong>Visualize Your Nexus.</strong> Timeline shows evidence from service to now. Automatically flags <strong>dangerous gaps > 5 years</strong>. Fill them before it's too late.
+                <strong>Visualize Your Nexus.</strong> Timeline shows evidence from service to now. Automatically flags <strong>dangerous gaps over 5 years</strong>. Fill them before it's too late.
               </p>
               <button
                 onClick={() => setShowEvidenceTimeline(true)}
@@ -1337,9 +1424,9 @@ function App() {
 
           {/* SECTION 7: SUPPORT & RESOURCES - Sky Theme */}
           <h2 className="text-2xl font-bold text-sky-700 dark:text-sky-300 text-center mb-2 mt-12">🤝 Support & Resources</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation, track VA rule changes, and unlock state-specific benefits</p>
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation, track VA rule changes, understand VA's AI systems, and unlock state-specific benefits</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* VSO Finder CTA */}
             <div className="bg-gradient-to-br from-sky-50 via-cyan-50 to-sky-50 dark:from-sky-900/40 dark:via-cyan-900/40 dark:to-sky-900/40 border-2 border-sky-300 dark:border-sky-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               {/* Decorative element */}
@@ -1402,7 +1489,8 @@ function App() {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                     Legislative Watchdog
                     </h3>
-                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full">NEW</span>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full">38 CFR</span>
+                  <span className="inline-block px-2 py-0.5 bg-sky-600 text-white text-xs font-bold rounded-full">LIVE</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
@@ -1413,6 +1501,31 @@ function App() {
                 className="w-full px-4 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-bold hover:from-sky-700 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg mt-auto"
               >
                 📡 Watch Regulations
+              </button>
+            </div>
+
+            {/* VA AI Transparency Hub CTA */}
+            <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-50 dark:from-indigo-900/40 dark:via-blue-900/40 dark:to-indigo-900/40 border-2 border-indigo-300 dark:border-indigo-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">🤖</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    VA AI Transparency
+                    </h3>
+                  <span className="inline-block px-2 py-0.5 bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold rounded-full">227 SYSTEMS</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                <strong>Know How AI Affects You.</strong> Learn about VA's 227 AI systems: fraud detection, 
+                faster claims, health diagnostics, and your privacy protections.
+              </p>
+              <button
+                onClick={() => setShowVAAITransparency(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg font-bold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg mt-auto"
+              >
+                🧠 Understand VA AI
               </button>
             </div>
           </div>
@@ -1426,7 +1539,7 @@ function App() {
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Premium visualizations that make you say "Whoa"</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Million Dollar Dashboard - Gold/Yellow Theme */}
               <div className="relative bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/40 dark:via-amber-900/40 dark:to-yellow-900/40 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
@@ -1443,7 +1556,7 @@ function App() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                  <strong>Your rating is worth MORE than you think.</strong> See your <strong>lifetime value</strong>—VA pay, property tax savings, education benefits, healthcare. Watch the number climb.
+                  <strong>Your rating is worth MORE than you think.</strong> See your <strong>lifetime value</strong> - VA pay, property tax savings, education benefits, healthcare. Watch the number climb.
                 </p>
                 <button
                   onClick={() => setShowMillionDollarDashboard(true)}
@@ -1469,7 +1582,7 @@ function App() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                  <strong>Your MOS broke your body.</strong> Enter your job code, see <strong>what injuries that job causes</strong>. Hearing loss? Back pain? <strong>It's not just you—it's the job.</strong>
+                  <strong>Your MOS broke your body.</strong> Enter your job code, see <strong>what injuries that job causes</strong>. Hearing loss? Back pain? <strong>It's not just you - it's the job.</strong>
                 </p>
                 <button
                   onClick={() => setShowMOSHazardMatcher(true)}
@@ -1495,13 +1608,39 @@ function App() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                  <strong>See how conditions connect.</strong> Interactive node map—click a condition, watch secondaries <strong>orbit around it</strong>. Click a link, see the medical nexus.
+                  <strong>See how conditions connect.</strong> Interactive node map - click a condition, watch secondaries <strong>orbit around it</strong>. Click a link, see the medical nexus.
                 </p>
                 <button
                   onClick={() => setShowWebOfConditions(true)}
                   className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black rounded-lg font-bold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg mt-auto"
                 >
                   🗺️ Explore The Web
+                </button>
+              </div>
+
+              {/* Retro Pay Hunter - Gold/Yellow Theme */}
+              <div className="relative bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/40 dark:to-orange-900/40 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
+                
+                <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                  <div className="bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                    <span className="text-3xl">⏰</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
+                      Retro Pay Hunter
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full animate-pulse">💰 MONEY</span>
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
+                  <strong>The Time Machine.</strong> Find missed back pay from <strong>rating history errors</strong>. Check for CUE claims, missing bilateral factors, and underpayments.
+                </p>
+                <button
+                  onClick={() => setShowRetroPayHunter(true)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black rounded-lg font-bold hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md hover:shadow-lg mt-auto"
+                >
+                  💰 Hunt My Back Pay
                 </button>
               </div>
             </div>
@@ -1521,7 +1660,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                The most comprehensive free VA claims arsenal—40+ professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
+                The most comprehensive free VA claims arsenal - 40+ professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -1632,7 +1771,7 @@ function App() {
               >
                 &copy; 2024-2026 Vet-Rate.org
               </span>
-              {' '}— Your Complete VA Claims Toolkit. Data sourced from{' '}
+              {' '}- Your Complete VA Claims Toolkit. Data sourced from{' '}
               <a
                 href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
                 target="_blank"
@@ -1722,6 +1861,7 @@ function App() {
                     setShowSecondaryScout(false);
                     setShowMyPacket(true);
                   }}
+                  onOpenAISettings={() => setShowAISettings(true)}
                 />
               </div>
             </div>
@@ -1738,6 +1878,7 @@ function App() {
           onClose={() => setShowNexusBuilder(false)}
           onSave={handleSaveStatement}
           onReportBug={() => setShowBugSquasher(true)}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -1748,6 +1889,7 @@ function App() {
           onClose={() => setShowMyPacket(false)}
           onReportBug={() => setShowBugSquasher(true)}
           onAnalyzeStrategy={() => { setShowMyPacket(false); setShowPathfinder(true); }}
+          onOpenGoogleDriveSync={() => { setShowMyPacket(false); setShowCloudSync(true); }}
         />
       )}
       
@@ -1773,6 +1915,7 @@ function App() {
         <FormsHelper
           onClose={() => setShowFormsHelper(false)}
           onReportBug={() => setShowBugSquasher(true)}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -1780,6 +1923,7 @@ function App() {
       {showCFileAnalyzer && (
         <CFileAnalyzer
           onClose={() => setShowCFileAnalyzer(false)}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -1799,8 +1943,11 @@ function App() {
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🦈</span>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Shark Radar</h2>
-                    <p className="text-sm text-rose-100">Contract & Email Scanner</p>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      Shark Radar
+                      <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI</span>
+                    </h2>
+                    <p className="text-sm text-rose-100">Contract & Email Scanner • AI-Powered Analysis</p>
                   </div>
                 </div>
                 <button
@@ -1853,7 +2000,10 @@ function App() {
               </div>
             </div>
             <div className="p-4">
-              <Pathfinder onNavigate={handlePathfinderNavigate} />
+              <Pathfinder 
+                onNavigate={handlePathfinderNavigate}
+                onOpenAISettings={() => setShowAISettings(true)}
+              />
             </div>
           </div>
         </div>
@@ -1960,6 +2110,7 @@ function App() {
             setShowBlueButtonXRay(false);
             setSearchTerm(conditionName);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -1971,6 +2122,7 @@ function App() {
             setShowWitnessBench(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2070,6 +2222,13 @@ function App() {
           }}
         />
       )}
+
+      {/* VA AI Transparency Hub */}
+      {showVAAITransparency && (
+        <VAAITransparency
+          onClose={() => setShowVAAITransparency(false)}
+        />
+      )}
       
       {/* Backup Manager - The Bunker */}
       {showBackupManager && (
@@ -2110,10 +2269,11 @@ function App() {
       {showDenialDecoder && (
         <DenialDecoder
           onClose={() => setShowDenialDecoder(false)}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
-      {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map */}
+      {/* FORCE MULTIPLIER: Somatic Target - Visual Pain Map (Legacy BodyMapSelector) */}
       {showBodyMapSelector && (
         <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
           <div className="min-h-screen px-4 py-8">
@@ -2128,6 +2288,36 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* WOW FEATURE: Pain Painter - Interactive Body Map 2.0 */}
+      {showPainPainter && (
+        <PainPainter
+          onClose={() => setShowPainPainter(false)}
+          onLogToSymptomLogger={(data) => {
+            setShowPainPainter(false);
+            setShowSymptomLogger(true);
+          }}
+        />
+      )}
+      
+      {/* WOW FEATURE: Evidence Gap Visualizer */}
+      {showEvidenceGapVisualizer && (
+        <EvidenceGapVisualizer
+          onClose={() => setShowEvidenceGapVisualizer(false)}
+        />
+      )}
+      
+      {/* WOW FEATURE: Retro Pay Hunter */}
+      {showRetroPayHunter && (
+        <RetroPayHunter
+          onClose={() => setShowRetroPayHunter(false)}
+          onReportBug={() => {
+            setShowRetroPayHunter(false);
+            setShowBugReporter(true);
+          }}
+          onAISettingsClick={() => setShowAISettings(true)}
+        />
       )}
       
       {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
@@ -2150,13 +2340,7 @@ function App() {
         </div>
       )}
       
-      {/* DIAMOND-TIER: The Open Book Test - DBQ Exam Prep */}
-      {showExamPrepRoom && (
-        <ExamPrepRoom
-          onClose={() => setShowExamPrepRoom(false)}
-          preselectedCondition={selectedResult?.diagnosticCode}
-        />
-      )}
+      {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}
       
       {/* FORCE MULTIPLIER: The Needle in the Haystack - PDF Keyword Search */}
       {showRecordSearch && (
@@ -2165,10 +2349,28 @@ function App() {
         />
       )}
       
-      {/* FORCE MULTIPLIER: The Off-Site Bunker - Cloud Sync */}
+      {/* FORCE MULTIPLIER: The Redundant Bunker Network - Multi-Cloud Sync */}
       {showCloudSyncManager && (
-        <CloudSyncManager
+        <MultiCloudManager
           onClose={() => setShowCloudSyncManager(false)}
+        />
+      )}
+      
+      {/* AI Settings Modal - Global AI configuration */}
+      {showAISettings && (
+        <AISettingsModal
+          onClose={() => setShowAISettings(false)}
+          onOpenLocalAI={() => {
+            setShowAISettings(false);
+            setShowLocalAIPanel(true);
+          }}
+        />
+      )}
+      
+      {/* Local AI Panel - WebGPU-based local AI setup */}
+      {showLocalAIPanel && (
+        <LocalAIPanel
+          onClose={() => setShowLocalAIPanel(false)}
         />
       )}
       
@@ -2242,14 +2444,16 @@ function App() {
   );
 }
 
-// Wrap App with HelperModeProvider and FocusModeProvider
+// Wrap App with HelperModeProvider, FocusModeProvider, and LocalAIProvider
 function AppWrapper() {
   return (
-    <FocusModeProvider>
-      <HelperModeProvider>
-        <App />
-      </HelperModeProvider>
-    </FocusModeProvider>
+    <LocalAIProvider>
+      <FocusModeProvider>
+        <HelperModeProvider>
+          <App />
+        </HelperModeProvider>
+      </FocusModeProvider>
+    </LocalAIProvider>
   );
 }
 

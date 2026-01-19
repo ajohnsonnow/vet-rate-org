@@ -10,31 +10,57 @@
  * 
  * Shows changelog after an update.
  * Only appears once per version.
+ * 
+ * DEPLOYMENT UPDATE PROCESS:
+ * 1. Edit src/utils/changelogGenerator.js
+ * 2. Add new features to the curatedChangelog array
+ * 3. Update the APP_VERSION in src/utils/version.js
+ * 4. Deploy - modal will automatically show for users
  */
 
-import React from 'react';
-import { X, Sparkles, CheckCircle, Wrench, Shield, Zap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Sparkles, CheckCircle, Wrench, Shield, Zap, Star, Rocket, Gift } from 'lucide-react';
+import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
 
-const WhatsNewModal = ({ changelog, version, onClose }) => {
+const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose }) => {
+  // Use dynamic changelog if not provided via props
+  const [dynamicData, setDynamicData] = useState(null);
+  
+  useEffect(() => {
+    if (!propChangelog || propChangelog.length === 0) {
+      const data = generateWhatsNewChangelog();
+      setDynamicData(data);
+    }
+  }, [propChangelog]);
+  
+  const changelog = propChangelog?.length > 0 ? propChangelog : (dynamicData?.changelog || []);
+  const version = propVersion || dynamicData?.version || '1.0.0';
+  
+  // Separate NEW features from existing
+  const newFeatures = changelog.filter(item => item.isNew);
+  const existingFeatures = changelog.filter(item => !item.isNew);
+  
   // Icon mapping for different update types
-  const getIcon = (type) => {
+  const getIcon = (type, isNew) => {
+    if (isNew) return <Rocket className="w-5 h-5 text-emerald-500" />;
     switch (type) {
       case 'feature':
-        return <Sparkles className="w-5 h-5 text-green-600" />;
+        return <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />;
       case 'fix':
-        return <Wrench className="w-5 h-5 text-blue-600" />;
+        return <Wrench className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       case 'security':
-        return <Shield className="w-5 h-5 text-red-600" />;
+        return <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />;
       case 'improvement':
-        return <Zap className="w-5 h-5 text-yellow-600" />;
+        return <Zap className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />;
       default:
-        return <CheckCircle className="w-5 h-5 text-gray-600" />;
+        return <CheckCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />;
     }
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (type, isNew) => {
+    if (isNew) return '🆕 NEW';
     const labels = {
-      feature: 'New Feature',
+      feature: 'Feature',
       fix: 'Bug Fix',
       security: 'Security',
       improvement: 'Improvement',
@@ -42,19 +68,38 @@ const WhatsNewModal = ({ changelog, version, onClose }) => {
     };
     return labels[type] || 'Update';
   };
+  
+  const getTypeBadgeColor = (type, isNew) => {
+    if (isNew) return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white';
+    const colors = {
+      feature: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+      fix: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+      security: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+      improvement: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-          <div className="flex items-start justify-between">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header - Fancy gradient */}
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 rounded-t-2xl relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+          
+          <div className="flex items-start justify-between relative">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-6 h-6" />
-                <h2 className="text-2xl font-bold">What's New</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur">
+                  <Gift className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">What's New in Vet-Rate.org</h2>
+                  <p className="text-emerald-100 text-sm">Version {version} • Fresh Intel</p>
+                </div>
               </div>
-              <p className="text-blue-100">Version {version}</p>
             </div>
             <button
               onClick={onClose}
@@ -66,45 +111,98 @@ const WhatsNewModal = ({ changelog, version, onClose }) => {
           </div>
         </div>
 
-        {/* Changelog Content */}
-        <div className="p-6">
-          {changelog && changelog.length > 0 ? (
-            <div className="space-y-4">
-              {changelog.map((item, index) => (
-                <div 
-                  key={index}
-                  className="flex gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getIcon(item.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                        {getTypeLabel(item.type)}
-                      </span>
+        {/* Changelog Content - Scrollable */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          
+          {/* NEW FEATURES SECTION */}
+          {newFeatures.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="w-5 h-5 text-emerald-500" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Just Deployed 🚀
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {newFeatures.map((item, index) => (
+                  <div 
+                    key={`new-${index}`}
+                    className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:shadow-md transition-all"
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getIcon(item.type, true)}
                     </div>
-                    <p className="text-gray-900 font-medium mb-1">
-                      {item.title}
-                    </p>
-                    {item.description && (
-                      <p className="text-sm text-gray-600">
-                        {item.description}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, true)}`}>
+                          {getTypeLabel(item.type, true)}
+                        </span>
+                      </div>
+                      <p className="text-gray-900 dark:text-white font-semibold mb-1">
+                        {item.title}
                       </p>
-                    )}
+                      {item.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          ) : (
+          )}
+          
+          {/* EXISTING FEATURES SECTION */}
+          {existingFeatures.length > 0 && (
+            <div>
+              {newFeatures.length > 0 && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-gray-500" />
+                  <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                    Platform Highlights
+                  </h3>
+                </div>
+              )}
+              <div className="space-y-3">
+                {existingFeatures.map((item, index) => (
+                  <div 
+                    key={`existing-${index}`}
+                    className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getIcon(item.type, false)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getTypeBadgeColor(item.type, false)}`}>
+                          {getTypeLabel(item.type, false)}
+                        </span>
+                      </div>
+                      <p className="text-gray-900 dark:text-white font-medium mb-1">
+                        {item.title}
+                      </p>
+                      {item.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {changelog.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No changelog available for this version.</p>
             </div>
           )}
 
           {/* Footer Message */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-900">
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+            <p className="text-sm text-emerald-900 dark:text-emerald-100">
               <strong>💪 Mission Ready:</strong> Your app has been updated and is ready to continue serving you. 
               All your saved data has been preserved.
             </p>
@@ -114,9 +212,9 @@ const WhatsNewModal = ({ changelog, version, onClose }) => {
           <div className="mt-6 text-center">
             <button
               onClick={onClose}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              Great, Let's Get to Work! 🎯
+              Roger That, Let's Go! 🎯
             </button>
           </div>
         </div>

@@ -295,7 +295,7 @@ const VAResources = ({ onClose, onReportBug }) => {
         },
         {
           name: 'My HealtheVet',
-          url: 'https://www.va.gov/my-health/',
+          url: 'https://www.va.gov/health-care/manage-health/',
           description: 'Manage your health care and prescriptions online'
         }
       ],

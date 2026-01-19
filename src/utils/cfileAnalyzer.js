@@ -3,9 +3,12 @@
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
- * Integration with Google Gemini 1.5 Flash for C-File analysis
- * Uses 1M token context window to analyze entire claims files
+ * AI-powered C-File analysis using 1M token context window
+ * 
+ * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
+
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
 
 // The specialized system prompt for C-File analysis
 const CFILE_SYSTEM_PROMPT = `You are a highly specialized VA Claims Auditor and Medical Record Analyst. Your sole purpose is to review the provided text, which has been extracted from a veteran's Military Service Records (C-File) and Medical Records.
@@ -101,15 +104,17 @@ CRITICAL RULES:
 8. MENTAL HEALTH SENSITIVITY: Pay special attention to mental health indicators, even subtle ones.`;
 
 /**
- * Analyze a C-File using Gemini 1.5 Flash
- * @param {string} apiKey - User's Gemini API key
+ * Analyze a C-File using Unified AI Service
+ * Seamlessly works with both Cloud (Gemini) and Local (WebLLM) AI
+ * @param {string} apiKey - User's Gemini API key (optional if using Local AI)
  * @param {string} fullText - Extracted text from the C-File with page markers
  * @param {Function} onProgress - Progress callback
  * @returns {Promise<Object>} - Structured analysis results
  */
 export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
-  if (!apiKey) {
-    throw new Error('API key is required');
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please set up an API key or enable Local AI.');
   }
   
   if (!fullText || fullText.trim().length < 100) {
@@ -118,85 +123,19 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
   
   onProgress('Preparing analysis request...');
   
-  // Use Gemini 1.5 Flash with large context window
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: `${CFILE_SYSTEM_PROMPT}\n\n--- BEGIN C-FILE TEXT ---\n\n${fullText}\n\n--- END C-FILE TEXT ---\n\nAnalyze this C-File and return ONLY the JSON object as specified. No additional text or formatting.`
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.2, // Low temperature for accuracy
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 32768, // Allow large response for comprehensive analysis
-      responseMimeType: "application/json"
-    },
-    safetySettings: [
-      {
-        category: "HARM_CATEGORY_HARASSMENT",
-        threshold: "BLOCK_NONE"
-      },
-      {
-        category: "HARM_CATEGORY_HATE_SPEECH",
-        threshold: "BLOCK_NONE"
-      },
-      {
-        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        threshold: "BLOCK_NONE"
-      },
-      {
-        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-        threshold: "BLOCK_NONE"
-      }
-    ]
-  };
+  const userPrompt = `${CFILE_SYSTEM_PROMPT}\n\n--- BEGIN C-FILE TEXT ---\n\n${fullText}\n\n--- END C-FILE TEXT ---\n\nAnalyze this C-File and return ONLY the JSON object as specified. No additional text or formatting.`;
   
   onProgress('Sending to AI for analysis (this may take 1-3 minutes)...');
   
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
+    // Use unified AI service - automatically chooses Cloud or Local
+    const content = await generateAI(userPrompt, {
+      temperature: 0.2,
+      maxTokens: 32768,
+      expectJSON: true
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      // Handle specific error cases
-      if (response.status === 400) {
-        if (errorData.error?.message?.includes('API key')) {
-          throw new Error('Invalid API key. Please check your Gemini API key and try again.');
-        }
-        throw new Error(`Request error: ${errorData.error?.message || 'Bad request'}`);
-      }
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again, or check your API quota.');
-      }
-      
-      if (response.status === 403) {
-        throw new Error('API access denied. Ensure your API key has access to Gemini 1.5 Flash.');
-      }
-      
-      throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
     onProgress('Processing AI response...');
-    
-    const data = await response.json();
-    
-    // Extract the text content from the response
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       throw new Error('No analysis content received from AI');
@@ -238,7 +177,7 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
       metadata: {
         analyzedAt: new Date().toISOString(),
         textLength: fullText.length,
-        model: 'gemini-1.5-flash'
+        aiMode: getAIStatus().effectiveMode
       }
     };
     
@@ -280,10 +219,31 @@ export async function validateApiKey(apiKey) {
 
 /**
  * Get the privacy disclosure for C-File analysis
+ * Now AI-mode aware - shows different info for Cloud vs Local
  * @returns {string}
  */
 export function getCFilePrivacyDisclosure() {
-  return `⚠️ IMPORTANT PRIVACY INFORMATION
+  const status = getAIStatus();
+  
+  if (status.effectiveMode === AI_MODES.LOCAL) {
+    return `🔒 LOCAL AI MODE - MAXIMUM PRIVACY
+
+When you use the C-File Analyzer:
+
+1. YOUR FILE STAYS LOCAL: Your PDF is read directly in your browser. It is NEVER uploaded anywhere.
+
+2. 100% LOCAL PROCESSING: The extracted text is analyzed ENTIRELY ON YOUR DEVICE by the Local AI model.
+
+3. ZERO DATA TRANSMISSION: Nothing is sent over the internet. All processing happens in your browser using WebGPU.
+
+4. NO STORAGE: We do not save any part of your C-File or analysis results. Everything exists only in your browser session.
+
+5. SENSITIVE DATA: C-Files contain highly sensitive information. Even with local processing, use this tool on a private, secure device.
+
+✅ This is the most private way to analyze your C-File.`;
+  }
+  
+  return `☁️ CLOUD AI MODE (Google Gemini)
 
 When you use the C-File Analyzer:
 
@@ -298,6 +258,8 @@ When you use the C-File Analyzer:
 5. GOOGLE'S POLICY: The text sent to Gemini is subject to Google's privacy policy and data handling practices.
 
 6. SENSITIVE DATA: C-Files contain highly sensitive medical and personal information. Only use this tool on a private, secure device.
+
+💡 TIP: For 100% privacy, switch to Local AI in settings (requires WebGPU-compatible browser).
 
 By proceeding, you acknowledge that:
 - You are voluntarily sending extracted text to Google's AI service

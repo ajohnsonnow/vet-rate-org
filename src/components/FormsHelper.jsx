@@ -5,10 +5,12 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import AIConsentModal from './AIConsentModal';
 import VoiceInputButton, { isSpeechRecognitionSupported } from './VoiceInput';
-import { FocusToggle } from '../contexts/FocusModeContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { fillAndDownloadForm } from '../utils/pdfFormFiller';
-import { isAIAvailable, enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
+import { enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
+import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
+import ShareButton, { PIISensitive } from './ShareButton';
 import { 
   getVeteranProfile, 
   saveVeteranProfile, 
@@ -24,8 +26,18 @@ import {
  * Comprehensive forms wizard to help veterans fill out VA forms,
  * especially buddy/lay statements which are notoriously difficult to get.
  */
-const FormsHelper = ({ onClose, onReportBug }) => {
+const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   useBodyScrollLock(true);
+  
+  // AI Status monitoring
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   
   const [selectedForm, setSelectedForm] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -40,6 +52,7 @@ const FormsHelper = ({ onClose, onReportBug }) => {
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
   const fileInputRef = useRef(null);
+  const formsContentRef = useRef(null);
 
   // AI Enhancement State
   const [showAIConsent, setShowAIConsent] = useState(false);
@@ -310,6 +323,135 @@ const FormsHelper = ({ onClose, onReportBug }) => {
         'Attorneys may charge fees only AFTER initial claim decision',
         'VA limits fees to 33.3% of past-due benefits',
         'Verify your representative at VA.gov accreditation search'
+      ]
+    },
+    // === ADDITIONAL FORMS (9 more to complete 17 total) ===
+    {
+      id: 'third-party-authorization',
+      formNumber: 'VA Form 21-0845',
+      name: 'Third Party Authorization',
+      icon: '🔐',
+      description: 'Authorize a third party (family member, caregiver, or other individual) to receive information about your VA claim or benefits.',
+      difficulty: 'Privacy Control',
+      difficultyColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+      link: 'https://www.va.gov/find-forms/about-form-21-0845/',
+      tips: [
+        'Use when you want someone else to communicate with VA on your behalf',
+        'Specify exactly what information they can receive',
+        'Can be limited to specific claims or all VA matters',
+        'You can revoke authorization at any time'
+      ]
+    },
+    {
+      id: 'personal-records-request',
+      formNumber: 'VA Form 20-10206',
+      name: 'Freedom of Information Act (FOIA) Request',
+      icon: '📂',
+      description: 'Request copies of your VA records under the Freedom of Information Act or Privacy Act. Get your C-file, medical records, or other VA documents.',
+      difficulty: 'Records Request',
+      difficultyColor: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+      link: 'https://www.va.gov/find-forms/about-form-20-10206/',
+      tips: [
+        'Use to request your complete C-file (claims file)',
+        'Can request medical records, rating decisions, and more',
+        'Processing can take 30-90+ days depending on request complexity',
+        'Helpful for understanding past VA decisions or preparing appeals'
+      ]
+    },
+    {
+      id: 'alternate-signer',
+      formNumber: 'VA Form 21-0972',
+      name: 'Alternate Signer Certification',
+      icon: '✍️',
+      description: 'Authorize someone else to sign VA forms on your behalf if you are unable to sign due to physical or mental conditions.',
+      difficulty: 'Accessibility',
+      difficultyColor: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+      link: 'https://www.va.gov/find-forms/about-form-21-0972/',
+      tips: [
+        'Use when the veteran cannot physically sign documents',
+        'Alternate signer must be 18+ and not a VA employee handling the claim',
+        'Requires documentation of why veteran cannot sign',
+        'Common for hospitalized, incapacitated, or disabled veterans'
+      ]
+    },
+    {
+      id: 'nursing-home-info',
+      formNumber: 'VA Form 21-0779',
+      name: 'Nursing Home Information',
+      icon: '🏠',
+      description: 'Provide information about nursing home residence for Aid & Attendance or Housebound benefits. Required for veterans in nursing facilities.',
+      difficulty: 'A&A/Housebound',
+      difficultyColor: 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200',
+      link: 'https://www.va.gov/find-forms/about-form-21-0779/',
+      tips: [
+        'Required for Aid & Attendance claims if in a nursing home',
+        'Nursing home must complete parts of this form',
+        'Includes facility information and level of care',
+        'Critical for pension with Aid & Attendance claims'
+      ]
+    },
+    {
+      id: 'substitution-request',
+      formNumber: 'VA Form 21P-0847',
+      name: 'Request for Substitution',
+      icon: '🔄',
+      description: 'Request to continue a deceased veteran\'s pending claim. Allows eligible survivors to step into the veteran\'s claim.',
+      difficulty: 'Survivors',
+      difficultyColor: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+      link: 'https://www.va.gov/find-forms/about-form-21p-0847/',
+      tips: [
+        'Must be filed within 1 year of veteran\'s death',
+        'Only applies to claims pending at time of death',
+        'Eligible substitutes: spouse, child, or dependent parent',
+        'Allows continuation of claim without starting over'
+      ]
+    },
+    {
+      id: 'income-asset-statement',
+      formNumber: 'VA Form 21P-0969',
+      name: 'Income & Asset Statement',
+      icon: '💰',
+      description: 'Report income and assets for VA pension benefits. Required for pension claims to determine eligibility and benefit amount.',
+      difficulty: 'Pension Claims',
+      difficultyColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+      link: 'https://www.va.gov/find-forms/about-form-21p-0969/',
+      tips: [
+        'Required for VA pension and survivors pension claims',
+        'Report all income sources: Social Security, retirement, etc.',
+        'List all assets: bank accounts, property, investments',
+        'Medical expenses can be deducted from countable income'
+      ]
+    },
+    {
+      id: 'medical-expense-report',
+      formNumber: 'VA Form 21P-8416',
+      name: 'Medical Expense Report',
+      icon: '🧾',
+      description: 'Report unreimbursed medical expenses for pension benefit calculations. These expenses reduce countable income and may increase your pension.',
+      difficulty: 'Pension Claims',
+      difficultyColor: 'bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200',
+      link: 'https://www.va.gov/find-forms/about-form-21p-8416/',
+      tips: [
+        'Submit with pension claims or as annual update',
+        'Include: prescriptions, doctor visits, medical equipment, insurance premiums',
+        'Care costs (nursing home, in-home care) count as medical expenses',
+        'Keep receipts - VA may request documentation'
+      ]
+    },
+    {
+      id: 'employment-info',
+      formNumber: 'VA Form 21-4192',
+      name: 'Request for Employment Information',
+      icon: '💼',
+      description: 'Request employment verification from employers. Critical for TDIU (Total Disability Individual Unemployability) claims.',
+      difficulty: 'TDIU Claims',
+      difficultyColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+      link: 'https://www.va.gov/find-forms/about-form-21-4192/',
+      tips: [
+        'Essential for TDIU claims - proves employment limitations',
+        'Send to your last employer(s) for completion',
+        'Employer documents work accommodations, missed days, job loss reasons',
+        'Strengthens claim that disabilities prevent substantial employment'
       ]
     }
   ];
@@ -985,6 +1127,607 @@ Include specific dates, amounts, and documentation you can provide.`,
     }
   ];
 
+  // Third Party Authorization (21-0845) wizard steps
+  const thirdPartyAuthSteps = [
+    {
+      title: 'Your Information (Veteran/Claimant)',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Last 4 of Social Security Number', type: 'text', required: true, placeholder: '1234' },
+        { name: 'vaFileNumber', label: 'VA File Number (if different from SSN)', type: 'text', required: false, placeholder: 'Optional' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true }
+      ]
+    },
+    {
+      title: 'Your Contact Information',
+      fields: [
+        { name: 'phone', label: 'Telephone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' },
+        { name: 'email', label: 'Email Address', type: 'email', required: false, placeholder: 'veteran@email.com' },
+        { name: 'street', label: 'Street Address', type: 'text', required: true, placeholder: '123 Main Street' },
+        { name: 'city', label: 'City', type: 'text', required: true, placeholder: 'Anytown' },
+        { name: 'state', label: 'State', type: 'text', required: true, placeholder: 'CA' },
+        { name: 'zip', label: 'ZIP Code', type: 'text', required: true, placeholder: '12345' }
+      ]
+    },
+    {
+      title: 'Authorized Third Party Information',
+      fields: [
+        { name: 'thirdPartyName', label: 'Full Name of Authorized Person', type: 'text', required: true, placeholder: 'Jane Smith' },
+        { name: 'thirdPartyRelationship', label: 'Relationship to You', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select relationship...' },
+            { value: 'spouse', label: 'Spouse' },
+            { value: 'child', label: 'Adult Child' },
+            { value: 'parent', label: 'Parent' },
+            { value: 'sibling', label: 'Sibling' },
+            { value: 'caregiver', label: 'Caregiver' },
+            { value: 'friend', label: 'Friend' },
+            { value: 'other', label: 'Other' }
+          ]
+        },
+        { name: 'thirdPartyPhone', label: 'Third Party Phone', type: 'tel', required: true, placeholder: '(555) 987-6543' },
+        { name: 'thirdPartyEmail', label: 'Third Party Email', type: 'email', required: false, placeholder: 'helper@email.com' },
+        { name: 'thirdPartyAddress', label: 'Third Party Address', type: 'text', required: true, placeholder: '456 Oak Street, Anytown, CA 12345' }
+      ]
+    },
+    {
+      title: 'Authorization Scope',
+      fields: [
+        { name: 'authorizationScope', label: 'What can this person do on your behalf?', type: 'checklist', required: true,
+          options: [
+            'Receive information about my VA claim status',
+            'Discuss my benefits and payment information',
+            'Receive copies of correspondence from VA',
+            'Discuss medical records related to my claim',
+            'Schedule and discuss C&P exams'
+          ]
+        },
+        { name: 'authorizationDuration', label: 'How long should this authorization last?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select duration...' },
+            { value: '6-months', label: '6 months' },
+            { value: '1-year', label: '1 year' },
+            { value: '2-years', label: '2 years' },
+            { value: 'until-revoked', label: 'Until I revoke it' }
+          ]
+        },
+        { name: 'limitToSpecificClaim', label: 'Limit to a specific claim?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'no', label: 'No - authorize for ALL my VA matters' },
+            { value: 'yes', label: 'Yes - only for a specific claim' }
+          ]
+        },
+        { name: 'specificClaimDetails', label: 'If limited, specify which claim:', type: 'textarea', required: false, placeholder: 'e.g., PTSD claim filed January 2026' }
+      ]
+    }
+  ];
+
+  // FOIA/Privacy Act Request (20-10206) wizard steps
+  const foiaRequestSteps = [
+    {
+      title: 'Your Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number (if known)', type: 'text', required: false, placeholder: 'Optional' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true },
+        { name: 'branchOfService', label: 'Branch of Service', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select branch...' },
+            { value: 'army', label: 'Army' },
+            { value: 'navy', label: 'Navy' },
+            { value: 'air-force', label: 'Air Force' },
+            { value: 'marines', label: 'Marine Corps' },
+            { value: 'coast-guard', label: 'Coast Guard' },
+            { value: 'space-force', label: 'Space Force' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Contact Information',
+      fields: [
+        { name: 'phone', label: 'Telephone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' },
+        { name: 'email', label: 'Email Address', type: 'email', required: false, placeholder: 'veteran@email.com' },
+        { name: 'street', label: 'Street Address', type: 'text', required: true, placeholder: '123 Main Street' },
+        { name: 'city', label: 'City', type: 'text', required: true, placeholder: 'Anytown' },
+        { name: 'state', label: 'State', type: 'text', required: true, placeholder: 'CA' },
+        { name: 'zip', label: 'ZIP Code', type: 'text', required: true, placeholder: '12345' }
+      ]
+    },
+    {
+      title: 'Records Requested',
+      fields: [
+        { name: 'recordsRequested', label: 'What records do you want?', type: 'checklist', required: true,
+          options: [
+            'Complete C-file (claims file)',
+            'Rating decision letters',
+            'Medical records from VA treatment',
+            'C&P exam reports',
+            'Service treatment records (if in VA possession)',
+            'Award letters',
+            'Correspondence sent to/from VA',
+            'Vocational rehabilitation records',
+            'Education benefits records'
+          ]
+        },
+        { name: 'dateRange', label: 'Date range for records (if applicable)', type: 'text', required: false, placeholder: 'e.g., January 2020 - Present, or "All records"' },
+        { name: 'specificConditions', label: 'Specific conditions or claims (optional)', type: 'textarea', required: false, placeholder: 'e.g., Records related to my PTSD claim, knee injury, etc.' }
+      ]
+    },
+    {
+      title: 'Delivery Preferences',
+      fields: [
+        { name: 'deliveryMethod', label: 'How do you want to receive records?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select delivery method...' },
+            { value: 'mail', label: 'Mail to my address' },
+            { value: 'email', label: 'Email (if available)' },
+            { value: 'pickup', label: 'Pick up at VA Regional Office' }
+          ]
+        },
+        { name: 'expediteReason', label: 'Do you need expedited processing?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'no', label: 'No - standard processing is fine' },
+            { value: 'appeal-deadline', label: 'Yes - I have an appeal deadline' },
+            { value: 'legal-matter', label: 'Yes - For legal proceedings' },
+            { value: 'other', label: 'Yes - Other urgent reason' }
+          ]
+        },
+        { name: 'expediteDetails', label: 'If expedited, explain why:', type: 'textarea', required: false, placeholder: 'e.g., Appeal deadline is March 15, 2026' }
+      ]
+    }
+  ];
+
+  // Alternate Signer Certification (21-0972) wizard steps
+  const alternateSignerSteps = [
+    {
+      title: 'Veteran Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'Veteran First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Veteran Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Last 4 of SSN', type: 'text', required: true, placeholder: '1234' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true }
+      ]
+    },
+    {
+      title: 'Why Alternate Signer is Needed',
+      fields: [
+        { name: 'unableToSignReason', label: 'Reason veteran cannot sign', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select reason...' },
+            { value: 'physical-disability', label: 'Physical disability prevents signing' },
+            { value: 'hospitalized', label: 'Veteran is hospitalized' },
+            { value: 'cognitive-impairment', label: 'Cognitive impairment' },
+            { value: 'vision-impairment', label: 'Vision impairment' },
+            { value: 'paralysis', label: 'Paralysis or mobility limitation' },
+            { value: 'other', label: 'Other medical condition' }
+          ]
+        },
+        { name: 'conditionDetails', label: 'Please describe the condition in detail:', type: 'textarea', required: true, placeholder: 'Explain why the veteran is unable to physically sign documents...' },
+        { name: 'isPermanent', label: 'Is this condition permanent?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'yes', label: 'Yes - Permanent condition' },
+            { value: 'no', label: 'No - Temporary condition' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Alternate Signer Information',
+      fields: [
+        { name: 'altSignerName', label: 'Alternate Signer Full Name', type: 'text', required: true, placeholder: 'Jane A. Smith' },
+        { name: 'altSignerRelationship', label: 'Relationship to Veteran', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select relationship...' },
+            { value: 'spouse', label: 'Spouse' },
+            { value: 'adult-child', label: 'Adult Child' },
+            { value: 'parent', label: 'Parent' },
+            { value: 'sibling', label: 'Sibling' },
+            { value: 'legal-guardian', label: 'Legal Guardian' },
+            { value: 'court-appointed', label: 'Court-Appointed Representative' },
+            { value: 'other', label: 'Other' }
+          ]
+        },
+        { name: 'altSignerPhone', label: 'Phone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' },
+        { name: 'altSignerEmail', label: 'Email', type: 'email', required: false, placeholder: 'signer@email.com' },
+        { name: 'altSignerAddress', label: 'Address', type: 'text', required: true, placeholder: '123 Main St, City, State ZIP' }
+      ]
+    },
+    {
+      title: 'Certification & Acknowledgment',
+      fields: [
+        { name: 'certifications', label: 'The alternate signer certifies:', type: 'checklist', required: true,
+          options: [
+            'I am at least 18 years of age',
+            'I am not a VA employee involved in processing this claim',
+            'I am signing on behalf of the veteran at their request or due to their inability',
+            'I understand that signing for the veteran makes me responsible for the accuracy of information',
+            'I have witnessed that the veteran is unable to sign due to the stated condition'
+          ]
+        },
+        { name: 'witnessStatement', label: 'Additional witness statement (optional):', type: 'textarea', required: false, placeholder: 'Describe your observations of why the veteran cannot sign...' }
+      ]
+    }
+  ];
+
+  // Nursing Home Information (21-0779) wizard steps
+  const nursingHomeSteps = [
+    {
+      title: 'Veteran Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true }
+      ]
+    },
+    {
+      title: 'Nursing Home Facility Information',
+      fields: [
+        { name: 'facilityName', label: 'Nursing Home Name', type: 'text', required: true, placeholder: 'Sunny Valley Care Center' },
+        { name: 'facilityAddress', label: 'Facility Street Address', type: 'text', required: true, placeholder: '100 Care Drive' },
+        { name: 'facilityCity', label: 'City', type: 'text', required: true, placeholder: 'Anytown' },
+        { name: 'facilityState', label: 'State', type: 'text', required: true, placeholder: 'CA' },
+        { name: 'facilityZip', label: 'ZIP Code', type: 'text', required: true, placeholder: '12345' },
+        { name: 'facilityPhone', label: 'Facility Phone', type: 'tel', required: true, placeholder: '(555) 123-4567' },
+        { name: 'facilityType', label: 'Type of Facility', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select type...' },
+            { value: 'skilled-nursing', label: 'Skilled Nursing Facility (SNF)' },
+            { value: 'nursing-home', label: 'Nursing Home' },
+            { value: 'assisted-living', label: 'Assisted Living Facility' },
+            { value: 'va-clc', label: 'VA Community Living Center' },
+            { value: 'state-veterans-home', label: 'State Veterans Home' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Admission & Care Details',
+      fields: [
+        { name: 'admissionDate', label: 'Date of Admission', type: 'date', required: true },
+        { name: 'expectedStay', label: 'Expected Length of Stay', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'short-term', label: 'Short-term rehabilitation (less than 90 days)' },
+            { value: 'long-term', label: 'Long-term care (90 days or more)' },
+            { value: 'permanent', label: 'Permanent placement' },
+            { value: 'unknown', label: 'Unknown at this time' }
+          ]
+        },
+        { name: 'levelOfCare', label: 'Level of Care Provided', type: 'checklist', required: true,
+          options: [
+            'Assistance with daily activities (bathing, dressing, eating)',
+            '24-hour nursing supervision',
+            'Medication management',
+            'Physical therapy',
+            'Memory care / dementia care',
+            'Hospice care'
+          ]
+        },
+        { name: 'medicaidStatus', label: 'Medicaid Status', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'not-receiving', label: 'Not receiving Medicaid' },
+            { value: 'receiving', label: 'Currently receiving Medicaid' },
+            { value: 'pending', label: 'Medicaid application pending' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Benefit Purpose',
+      fields: [
+        { name: 'benefitRequested', label: 'What benefit are you requesting?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select benefit...' },
+            { value: 'aid-attendance', label: 'Aid & Attendance' },
+            { value: 'housebound', label: 'Housebound Benefits' },
+            { value: 'pension', label: 'VA Pension' },
+            { value: 'dic', label: 'Dependency and Indemnity Compensation (DIC)' }
+          ]
+        },
+        { name: 'currentlyReceiving', label: 'Are you currently receiving VA benefits?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'no', label: 'No - This is a new claim' },
+            { value: 'compensation', label: 'Yes - Disability Compensation' },
+            { value: 'pension', label: 'Yes - VA Pension' },
+            { value: 'both', label: 'Yes - Both Compensation and Pension' }
+          ]
+        },
+        { name: 'additionalInfo', label: 'Additional information about care needs:', type: 'textarea', required: false, placeholder: 'Describe any special circumstances or care requirements...' }
+      ]
+    }
+  ];
+
+  // Request for Substitution (21P-0847) wizard steps
+  const substitutionRequestSteps = [
+    {
+      title: 'Deceased Veteran Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'Veteran First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Veteran Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'veteranSSN', label: 'Veteran Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'veteranDOB', label: 'Veteran Date of Birth', type: 'date', required: true },
+        { name: 'dateOfDeath', label: 'Date of Death', type: 'date', required: true }
+      ]
+    },
+    {
+      title: 'Substitute (Your) Information',
+      fields: [
+        { name: 'substituteFirstName', label: 'Your First Name', type: 'text', required: true, placeholder: 'Jane' },
+        { name: 'substituteMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'A' },
+        { name: 'substituteLastName', label: 'Your Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'substituteSSN', label: 'Your Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'substituteDOB', label: 'Your Date of Birth', type: 'date', required: true },
+        { name: 'relationshipToVeteran', label: 'Your Relationship to Veteran', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select relationship...' },
+            { value: 'spouse', label: 'Surviving Spouse' },
+            { value: 'child', label: 'Child of Veteran' },
+            { value: 'parent', label: 'Dependent Parent' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Contact Information',
+      fields: [
+        { name: 'phone', label: 'Phone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' },
+        { name: 'email', label: 'Email Address', type: 'email', required: false, placeholder: 'email@example.com' },
+        { name: 'street', label: 'Street Address', type: 'text', required: true, placeholder: '123 Main Street' },
+        { name: 'city', label: 'City', type: 'text', required: true, placeholder: 'Anytown' },
+        { name: 'state', label: 'State', type: 'text', required: true, placeholder: 'CA' },
+        { name: 'zip', label: 'ZIP Code', type: 'text', required: true, placeholder: '12345' }
+      ]
+    },
+    {
+      title: 'Pending Claim Information',
+      fields: [
+        { name: 'pendingClaimType', label: 'Type of pending claim', type: 'checklist', required: true,
+          options: [
+            'Disability Compensation claim',
+            'Pension claim',
+            'Dependency and Indemnity Compensation (DIC)',
+            'Appeal of previous decision',
+            'Supplemental claim',
+            'Other benefit claim'
+          ]
+        },
+        { name: 'claimDetails', label: 'Describe the pending claim:', type: 'textarea', required: true, placeholder: 'Describe what the veteran was claiming when they passed...' },
+        { name: 'claimFiledDate', label: 'Approximate date claim was filed:', type: 'date', required: false },
+        { name: 'acknowledgments', label: 'I understand:', type: 'checklist', required: true,
+          options: [
+            'This request must be filed within 1 year of the veteran\'s death',
+            'I am eligible to substitute as the surviving spouse, child, or dependent parent',
+            'I will receive any benefits that would have been due to the veteran',
+            'I may need to provide proof of my relationship (marriage certificate, birth certificate, etc.)'
+          ]
+        }
+      ]
+    }
+  ];
+
+  // Income and Asset Statement (21P-0969) wizard steps
+  const incomeAssetSteps = [
+    {
+      title: 'Veteran/Claimant Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true },
+        { name: 'maritalStatus', label: 'Marital Status', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'single', label: 'Single/Never Married' },
+            { value: 'married', label: 'Married' },
+            { value: 'divorced', label: 'Divorced' },
+            { value: 'widowed', label: 'Widowed' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Monthly Income',
+      fields: [
+        { name: 'socialSecurityIncome', label: 'Social Security (monthly)', type: 'text', required: true, placeholder: '$1,500' },
+        { name: 'militaryRetirement', label: 'Military Retirement Pay (monthly)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'civilServiceRetirement', label: 'Civil Service/Federal Retirement', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherRetirement', label: 'Other Pension/Retirement', type: 'text', required: false, placeholder: '$0' },
+        { name: 'wages', label: 'Wages/Salary (if working)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'interestDividends', label: 'Interest and Dividends', type: 'text', required: false, placeholder: '$0' },
+        { name: 'rentalIncome', label: 'Rental Income', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherIncome', label: 'Any Other Income', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherIncomeSource', label: 'If other income, describe source:', type: 'text', required: false, placeholder: 'e.g., Annuity, royalties, etc.' }
+      ]
+    },
+    {
+      title: 'Assets',
+      fields: [
+        { name: 'bankAccounts', label: 'Bank Accounts (total all checking/savings)', type: 'text', required: true, placeholder: '$5,000' },
+        { name: 'stocks', label: 'Stocks, Bonds, Mutual Funds', type: 'text', required: false, placeholder: '$0' },
+        { name: 'ira401k', label: 'IRA, 401k, Retirement Accounts', type: 'text', required: false, placeholder: '$25,000' },
+        { name: 'realEstate', label: 'Real Estate (other than primary home)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'vehicles', label: 'Vehicles (fair market value)', type: 'text', required: false, placeholder: '$8,000' },
+        { name: 'otherAssets', label: 'Other Assets', type: 'text', required: false, placeholder: '$0' },
+        { name: 'primaryHomeValue', label: 'Primary Home Value (for reference only)', type: 'text', required: false, placeholder: '$150,000 - typically excluded' }
+      ]
+    },
+    {
+      title: 'Medical Expenses (Deductible)',
+      fields: [
+        { name: 'healthInsurancePremiums', label: 'Health Insurance Premiums (monthly)', type: 'text', required: false, placeholder: '$200' },
+        { name: 'medicarePartB', label: 'Medicare Part B Premium', type: 'text', required: false, placeholder: '$175' },
+        { name: 'prescriptions', label: 'Prescription Medications (monthly avg)', type: 'text', required: false, placeholder: '$50' },
+        { name: 'doctorVisits', label: 'Doctor Visits (monthly avg)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'nursingHomeCost', label: 'Nursing Home / Assisted Living (monthly)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'inHomeCare', label: 'In-Home Care Costs (monthly)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'medicalEquipment', label: 'Medical Equipment (monthly avg)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherMedical', label: 'Other Medical Expenses', type: 'text', required: false, placeholder: '$0' },
+        { name: 'medicalExpenseNote', label: 'Note about medical expenses:', type: 'textarea', required: false, placeholder: 'Medical expenses reduce your countable income, which may increase your pension benefit.' }
+      ]
+    }
+  ];
+
+  // Medical Expense Report (21P-8416) wizard steps
+  const medicalExpenseSteps = [
+    {
+      title: 'Your Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'phone', label: 'Phone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' }
+      ]
+    },
+    {
+      title: 'Reporting Period',
+      fields: [
+        { name: 'reportingYear', label: 'Year being reported', type: 'text', required: true, placeholder: '2025' },
+        { name: 'reportPeriodStart', label: 'Period Start Date', type: 'date', required: true },
+        { name: 'reportPeriodEnd', label: 'Period End Date', type: 'date', required: true },
+        { name: 'reportType', label: 'Type of Report', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'annual', label: 'Annual report of all medical expenses' },
+            { value: 'initial', label: 'Initial claim - listing ongoing expenses' },
+            { value: 'update', label: 'Update/correction to previous report' }
+          ]
+        }
+      ]
+    },
+    {
+      title: 'Insurance & Care Costs',
+      fields: [
+        { name: 'healthInsurance', label: 'Health Insurance Premiums (total for period)', type: 'text', required: false, placeholder: '$2,400' },
+        { name: 'medicarePartB', label: 'Medicare Part B (total for period)', type: 'text', required: false, placeholder: '$2,100' },
+        { name: 'medicareSupplement', label: 'Medicare Supplement / Medigap', type: 'text', required: false, placeholder: '$0' },
+        { name: 'prescriptionPlan', label: 'Prescription Drug Plan Premium', type: 'text', required: false, placeholder: '$0' },
+        { name: 'nursingHome', label: 'Nursing Home / Assisted Living', type: 'text', required: false, placeholder: '$0' },
+        { name: 'adultDayCare', label: 'Adult Day Care', type: 'text', required: false, placeholder: '$0' },
+        { name: 'homeHealthAide', label: 'Home Health Aide / In-Home Care', type: 'text', required: false, placeholder: '$0' }
+      ]
+    },
+    {
+      title: 'Out-of-Pocket Medical Costs',
+      fields: [
+        { name: 'prescriptions', label: 'Prescription Medications (out of pocket)', type: 'text', required: false, placeholder: '$600' },
+        { name: 'doctorCopays', label: 'Doctor Visit Copays', type: 'text', required: false, placeholder: '$200' },
+        { name: 'hospitalCopays', label: 'Hospital / ER Copays', type: 'text', required: false, placeholder: '$0' },
+        { name: 'dentalExpenses', label: 'Dental Expenses', type: 'text', required: false, placeholder: '$500' },
+        { name: 'visionExpenses', label: 'Vision / Eye Care', type: 'text', required: false, placeholder: '$200' },
+        { name: 'hearingAids', label: 'Hearing Aids / Hearing Care', type: 'text', required: false, placeholder: '$0' },
+        { name: 'medicalEquipment', label: 'Medical Equipment / Supplies', type: 'text', required: false, placeholder: '$0' },
+        { name: 'transportation', label: 'Medical Transportation (mileage, etc.)', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherMedical', label: 'Other Medical Expenses', type: 'text', required: false, placeholder: '$0' },
+        { name: 'otherDescription', label: 'If other, describe:', type: 'textarea', required: false, placeholder: 'List any other medical expenses not covered above...' }
+      ]
+    }
+  ];
+
+  // Employment Information Request (21-4192) wizard steps
+  const employmentInfoSteps = [
+    {
+      title: 'Veteran Information',
+      fields: [
+        { name: 'veteranFirstName', label: 'First Name', type: 'text', required: true, placeholder: 'John' },
+        { name: 'veteranMiddleInitial', label: 'Middle Initial', type: 'text', required: false, placeholder: 'M' },
+        { name: 'veteranLastName', label: 'Last Name', type: 'text', required: true, placeholder: 'Smith' },
+        { name: 'ssn', label: 'Social Security Number', type: 'text', required: true, placeholder: '123-45-6789' },
+        { name: 'vaFileNumber', label: 'VA File Number', type: 'text', required: false, placeholder: 'If different from SSN' },
+        { name: 'dob', label: 'Date of Birth', type: 'date', required: true },
+        { name: 'phone', label: 'Phone Number', type: 'tel', required: true, placeholder: '(555) 123-4567' }
+      ]
+    },
+    {
+      title: 'Employer Information',
+      fields: [
+        { name: 'employerName', label: 'Employer/Company Name', type: 'text', required: true, placeholder: 'ABC Company Inc.' },
+        { name: 'employerAddress', label: 'Employer Street Address', type: 'text', required: true, placeholder: '500 Business Park Drive' },
+        { name: 'employerCity', label: 'City', type: 'text', required: true, placeholder: 'Anytown' },
+        { name: 'employerState', label: 'State', type: 'text', required: true, placeholder: 'CA' },
+        { name: 'employerZip', label: 'ZIP Code', type: 'text', required: true, placeholder: '12345' },
+        { name: 'employerPhone', label: 'Employer Phone Number', type: 'tel', required: true, placeholder: '(555) 555-1000' },
+        { name: 'supervisorName', label: 'Supervisor / HR Contact Name', type: 'text', required: false, placeholder: 'Jane Manager' }
+      ]
+    },
+    {
+      title: 'Employment Details',
+      fields: [
+        { name: 'jobTitle', label: 'Job Title / Position', type: 'text', required: true, placeholder: 'Warehouse Associate' },
+        { name: 'startDate', label: 'Employment Start Date', type: 'date', required: true },
+        { name: 'endDate', label: 'Employment End Date (if no longer employed)', type: 'date', required: false },
+        { name: 'stillEmployed', label: 'Are you still employed here?', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'yes', label: 'Yes - Still employed' },
+            { value: 'no', label: 'No - No longer employed' }
+          ]
+        },
+        { name: 'hoursPerWeek', label: 'Hours Worked Per Week', type: 'text', required: true, placeholder: '40' },
+        { name: 'earnings', label: 'Earnings (hourly rate or annual salary)', type: 'text', required: true, placeholder: '$15/hour or $45,000/year' }
+      ]
+    },
+    {
+      title: 'Disability Impact on Employment',
+      fields: [
+        { name: 'reasonForLeaving', label: 'If no longer employed, reason for leaving:', type: 'select', required: false,
+          options: [
+            { value: '', label: 'Select if applicable...' },
+            { value: 'disability', label: 'Left due to disability' },
+            { value: 'laid-off', label: 'Laid off / Position eliminated' },
+            { value: 'terminated', label: 'Terminated' },
+            { value: 'resigned', label: 'Resigned for other reasons' },
+            { value: 'retired', label: 'Retired' }
+          ]
+        },
+        { name: 'accommodations', label: 'What accommodations were made for your disability?', type: 'checklist', required: false,
+          options: [
+            'Reduced work hours',
+            'Modified job duties',
+            'Special equipment provided',
+            'Frequent breaks allowed',
+            'Work from home / Remote work',
+            'Reassignment to less demanding position',
+            'No accommodations were made',
+            'No accommodations were needed'
+          ]
+        },
+        { name: 'missedWork', label: 'Time missed from work due to disability:', type: 'select', required: true,
+          options: [
+            { value: '', label: 'Select...' },
+            { value: 'none', label: 'Rarely missed work' },
+            { value: 'occasional', label: '1-5 days per month' },
+            { value: 'frequent', label: '6-10 days per month' },
+            { value: 'very-frequent', label: 'More than 10 days per month' },
+            { value: 'unable-to-work', label: 'Unable to work at all' }
+          ]
+        },
+        { name: 'impactDescription', label: 'Describe how your disability affected your work:', type: 'textarea', required: true, placeholder: 'Explain specific ways your service-connected disabilities impacted your ability to perform your job, maintain attendance, or led to leaving employment...' }
+      ]
+    }
+  ];
+
   // Get steps for selected form
   const getFormSteps = () => {
     switch (selectedForm?.id) {
@@ -1004,6 +1747,23 @@ Include specific dates, amounts, and documentation you can provide.`,
         return vsoAppointmentSteps;
       case 'vso-appointment-individual':
         return individualRepSteps;
+      // New forms
+      case 'third-party-authorization':
+        return thirdPartyAuthSteps;
+      case 'personal-records-request':
+        return foiaRequestSteps;
+      case 'alternate-signer':
+        return alternateSignerSteps;
+      case 'nursing-home-info':
+        return nursingHomeSteps;
+      case 'substitution-request':
+        return substitutionRequestSteps;
+      case 'income-asset-statement':
+        return incomeAssetSteps;
+      case 'medical-expense-report':
+        return medicalExpenseSteps;
+      case 'employment-info':
+        return employmentInfoSteps;
       default:
         return [];
     }
@@ -2231,6 +2991,528 @@ Phone: 1-202-461-7699
     return statement;
   };
 
+  // Third Party Authorization generator
+  const generateThirdPartyAuth = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const relationshipLabels = {
+      'spouse': 'Spouse', 'child': 'Adult Child', 'parent': 'Parent', 'sibling': 'Sibling',
+      'caregiver': 'Caregiver', 'friend': 'Friend', 'other': 'Other'
+    };
+    const durationLabels = {
+      '6-months': '6 Months', '1-year': '1 Year', '2-years': '2 Years', 'until-revoked': 'Until Revoked'
+    };
+
+    return `THIRD PARTY AUTHORIZATION INFORMATION
+VA Form 21-0845
+
+================================================================================
+
+VETERAN/CLAIMANT INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+Last 4 of SSN: XXX-XX-${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+
+Contact:
+Phone: ${formData.phone || '____'}
+Email: ${formData.email || '____'}
+Address: ${formData.street || '____'}, ${formData.city || '____'}, ${formData.state || '__'} ${formData.zip || '_____'}
+
+================================================================================
+
+AUTHORIZED THIRD PARTY
+
+Name: ${formData.thirdPartyName || '____'}
+Relationship: ${relationshipLabels[formData.thirdPartyRelationship] || formData.thirdPartyRelationship || '____'}
+Phone: ${formData.thirdPartyPhone || '____'}
+Email: ${formData.thirdPartyEmail || '____'}
+Address: ${formData.thirdPartyAddress || '____'}
+
+================================================================================
+
+AUTHORIZATION DETAILS
+
+Duration: ${durationLabels[formData.authorizationDuration] || '____'}
+
+This person is authorized to:
+${Array.isArray(formData.authorizationScope) ? formData.authorizationScope.map(s => `[X] ${s}`).join('\n') : '[  ] See form for authorizations'}
+
+Limited to specific claim: ${formData.limitToSpecificClaim === 'yes' ? 'YES' : 'NO'}
+${formData.specificClaimDetails ? `Claim Details: ${formData.specificClaimDetails}` : ''}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
+
+================================================================================
+`;
+  };
+
+  // FOIA Request generator
+  const generateFOIARequest = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const branchLabels = {
+      'army': 'U.S. Army', 'navy': 'U.S. Navy', 'air-force': 'U.S. Air Force',
+      'marines': 'U.S. Marine Corps', 'coast-guard': 'U.S. Coast Guard', 'space-force': 'U.S. Space Force'
+    };
+
+    return `FREEDOM OF INFORMATION ACT / PRIVACY ACT REQUEST
+VA Form 20-10206
+
+================================================================================
+
+REQUESTOR INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+Branch of Service: ${branchLabels[formData.branchOfService] || '____'}
+
+Contact:
+Phone: ${formData.phone || '____'}
+Email: ${formData.email || '____'}
+Address: ${formData.street || '____'}, ${formData.city || '____'}, ${formData.state || '__'} ${formData.zip || '_____'}
+
+================================================================================
+
+RECORDS REQUESTED
+
+${Array.isArray(formData.recordsRequested) ? formData.recordsRequested.map(r => `[X] ${r}`).join('\n') : '[  ] See form for records requested'}
+
+Date Range: ${formData.dateRange || 'All available records'}
+
+Specific Conditions/Claims: ${formData.specificConditions || 'All conditions on file'}
+
+================================================================================
+
+DELIVERY PREFERENCES
+
+Method: ${formData.deliveryMethod === 'mail' ? 'Mail to my address' : formData.deliveryMethod === 'email' ? 'Email' : 'Pick up at VARO'}
+Expedited Processing: ${formData.expediteReason !== 'no' ? 'YES - ' + (formData.expediteDetails || formData.expediteReason) : 'No'}
+
+================================================================================
+
+IMPORTANT NOTES:
+- Processing typically takes 30-90+ days
+- Expedited requests require justification
+- Some records may require redaction of third-party information
+- There is no fee for veterans requesting their own records
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
+
+================================================================================
+`;
+  };
+
+  // Alternate Signer generator
+  const generateAlternateSigner = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const reasonLabels = {
+      'physical-disability': 'Physical Disability', 'hospitalized': 'Hospitalized',
+      'cognitive-impairment': 'Cognitive Impairment', 'vision-impairment': 'Vision Impairment',
+      'paralysis': 'Paralysis/Mobility Limitation', 'other': 'Other Medical Condition'
+    };
+    const relationLabels = {
+      'spouse': 'Spouse', 'adult-child': 'Adult Child', 'parent': 'Parent', 'sibling': 'Sibling',
+      'legal-guardian': 'Legal Guardian', 'court-appointed': 'Court-Appointed Representative', 'other': 'Other'
+    };
+
+    return `ALTERNATE SIGNER CERTIFICATION
+VA Form 21-0972
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+Last 4 of SSN: XXX-XX-${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+
+================================================================================
+
+REASON FOR ALTERNATE SIGNER
+
+Reason: ${reasonLabels[formData.unableToSignReason] || formData.unableToSignReason || '____'}
+Permanent Condition: ${formData.isPermanent === 'yes' ? 'YES' : 'NO'}
+
+Description:
+${formData.conditionDetails || '____'}
+
+================================================================================
+
+ALTERNATE SIGNER INFORMATION
+
+Name: ${formData.altSignerName || '____'}
+Relationship to Veteran: ${relationLabels[formData.altSignerRelationship] || '____'}
+Phone: ${formData.altSignerPhone || '____'}
+Email: ${formData.altSignerEmail || '____'}
+Address: ${formData.altSignerAddress || '____'}
+
+================================================================================
+
+CERTIFICATIONS
+
+The alternate signer certifies:
+${Array.isArray(formData.certifications) ? formData.certifications.map(c => `[X] ${c}`).join('\n') : '[  ] See form for certifications'}
+
+${formData.witnessStatement ? `Additional Statement: ${formData.witnessStatement}` : ''}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
+
+================================================================================
+`;
+  };
+
+  // Nursing Home Information generator
+  const generateNursingHome = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const facilityTypes = {
+      'skilled-nursing': 'Skilled Nursing Facility', 'nursing-home': 'Nursing Home',
+      'assisted-living': 'Assisted Living', 'va-clc': 'VA Community Living Center',
+      'state-veterans-home': 'State Veterans Home'
+    };
+    const stayLabels = {
+      'short-term': 'Short-term (< 90 days)', 'long-term': 'Long-term (90+ days)',
+      'permanent': 'Permanent', 'unknown': 'Unknown'
+    };
+
+    return `NURSING HOME INFORMATION
+VA Form 21-0779
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+
+================================================================================
+
+NURSING HOME FACILITY
+
+Name: ${formData.facilityName || '____'}
+Type: ${facilityTypes[formData.facilityType] || '____'}
+Address: ${formData.facilityAddress || '____'}, ${formData.facilityCity || '____'}, ${formData.facilityState || '__'} ${formData.facilityZip || '_____'}
+Phone: ${formData.facilityPhone || '____'}
+
+================================================================================
+
+ADMISSION DETAILS
+
+Admission Date: ${formData.admissionDate || '____'}
+Expected Stay: ${stayLabels[formData.expectedStay] || '____'}
+
+Level of Care:
+${Array.isArray(formData.levelOfCare) ? formData.levelOfCare.map(l => `[X] ${l}`).join('\n') : '[  ] See form for care details'}
+
+Medicaid Status: ${formData.medicaidStatus === 'receiving' ? 'Currently Receiving' : formData.medicaidStatus === 'pending' ? 'Application Pending' : 'Not Receiving'}
+
+================================================================================
+
+BENEFIT REQUESTED
+
+Benefit Type: ${formData.benefitRequested === 'aid-attendance' ? 'Aid & Attendance' : formData.benefitRequested === 'housebound' ? 'Housebound' : formData.benefitRequested === 'pension' ? 'VA Pension' : formData.benefitRequested === 'dic' ? 'DIC' : '____'}
+Currently Receiving VA Benefits: ${formData.currentlyReceiving !== 'no' ? 'YES - ' + formData.currentlyReceiving : 'NO'}
+
+${formData.additionalInfo ? `Additional Info: ${formData.additionalInfo}` : ''}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
+
+================================================================================
+`;
+  };
+
+  // Substitution Request generator
+  const generateSubstitutionRequest = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const relationLabels = { 'spouse': 'Surviving Spouse', 'child': 'Child', 'parent': 'Dependent Parent' };
+
+    return `REQUEST FOR SUBSTITUTION OF CLAIMANT
+VA Form 21P-0847
+
+================================================================================
+
+DECEASED VETERAN INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.veteranSSN || '____'}
+Date of Birth: ${formData.veteranDOB || '____'}
+Date of Death: ${formData.dateOfDeath || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+
+================================================================================
+
+SUBSTITUTE CLAIMANT INFORMATION (YOU)
+
+Name: ${formData.substituteFirstName || ''} ${formData.substituteMiddleInitial || ''} ${formData.substituteLastName || ''}
+SSN: ${formData.substituteSSN || '____'}
+Date of Birth: ${formData.substituteDOB || '____'}
+Relationship to Veteran: ${relationLabels[formData.relationshipToVeteran] || '____'}
+
+Contact:
+Phone: ${formData.phone || '____'}
+Email: ${formData.email || '____'}
+Address: ${formData.street || '____'}, ${formData.city || '____'}, ${formData.state || '__'} ${formData.zip || '_____'}
+
+================================================================================
+
+PENDING CLAIM INFORMATION
+
+Type of Pending Claim:
+${Array.isArray(formData.pendingClaimType) ? formData.pendingClaimType.map(t => `[X] ${t}`).join('\n') : '[  ] See form for claim types'}
+
+Claim Details: ${formData.claimDetails || '____'}
+Approximate Filing Date: ${formData.claimFiledDate || 'Unknown'}
+
+================================================================================
+
+ACKNOWLEDGMENTS
+
+${Array.isArray(formData.acknowledgments) ? formData.acknowledgments.map(a => `[X] ${a}`).join('\n') : '[  ] See form for acknowledgments'}
+
+================================================================================
+
+IMPORTANT: Request must be filed within 1 YEAR of the veteran's death.
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
+
+================================================================================
+`;
+  };
+
+  // Income & Asset Statement generator
+  const generateIncomeAsset = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const maritalLabels = { 'single': 'Single', 'married': 'Married', 'divorced': 'Divorced', 'widowed': 'Widowed' };
+
+    return `INCOME AND ASSET STATEMENT
+VA Form 21P-0969
+
+================================================================================
+
+CLAIMANT INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+Marital Status: ${maritalLabels[formData.maritalStatus] || '____'}
+
+================================================================================
+
+MONTHLY INCOME
+
+Social Security:                    ${formData.socialSecurityIncome || '$0'}
+Military Retirement:                ${formData.militaryRetirement || '$0'}
+Civil Service/Federal Retirement:   ${formData.civilServiceRetirement || '$0'}
+Other Pension/Retirement:           ${formData.otherRetirement || '$0'}
+Wages/Salary:                       ${formData.wages || '$0'}
+Interest & Dividends:               ${formData.interestDividends || '$0'}
+Rental Income:                      ${formData.rentalIncome || '$0'}
+Other Income:                       ${formData.otherIncome || '$0'}
+${formData.otherIncomeSource ? `  Source: ${formData.otherIncomeSource}` : ''}
+
+================================================================================
+
+ASSETS
+
+Bank Accounts (total):              ${formData.bankAccounts || '$0'}
+Stocks/Bonds/Mutual Funds:          ${formData.stocks || '$0'}
+IRA/401k/Retirement:                ${formData.ira401k || '$0'}
+Real Estate (not primary home):     ${formData.realEstate || '$0'}
+Vehicles:                           ${formData.vehicles || '$0'}
+Other Assets:                       ${formData.otherAssets || '$0'}
+
+Primary Home (reference):           ${formData.primaryHomeValue || 'N/A - typically excluded'}
+
+================================================================================
+
+DEDUCTIBLE MEDICAL EXPENSES (MONTHLY)
+
+Health Insurance Premiums:          ${formData.healthInsurancePremiums || '$0'}
+Medicare Part B:                    ${formData.medicarePartB || '$0'}
+Prescriptions:                      ${formData.prescriptions || '$0'}
+Doctor Visits:                      ${formData.doctorVisits || '$0'}
+Nursing Home/Assisted Living:       ${formData.nursingHomeCost || '$0'}
+In-Home Care:                       ${formData.inHomeCare || '$0'}
+Medical Equipment:                  ${formData.medicalEquipment || '$0'}
+Other Medical:                      ${formData.otherMedical || '$0'}
+
+${formData.medicalExpenseNote ? `Note: ${formData.medicalExpenseNote}` : ''}
+
+================================================================================
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
+
+================================================================================
+`;
+  };
+
+  // Medical Expense Report generator
+  const generateMedicalExpenseReport = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const reportTypes = { 'annual': 'Annual Report', 'initial': 'Initial Claim', 'update': 'Update/Correction' };
+
+    return `MEDICAL EXPENSE REPORT
+VA Form 21P-8416
+
+================================================================================
+
+CLAIMANT INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.ssn || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+Phone: ${formData.phone || '____'}
+
+================================================================================
+
+REPORTING PERIOD
+
+Year: ${formData.reportingYear || '____'}
+Period: ${formData.reportPeriodStart || '____'} to ${formData.reportPeriodEnd || '____'}
+Report Type: ${reportTypes[formData.reportType] || '____'}
+
+================================================================================
+
+INSURANCE & CARE COSTS (FOR PERIOD)
+
+Health Insurance Premiums:          ${formData.healthInsurance || '$0'}
+Medicare Part B:                    ${formData.medicarePartB || '$0'}
+Medicare Supplement/Medigap:        ${formData.medicareSupplement || '$0'}
+Prescription Drug Plan Premium:     ${formData.prescriptionPlan || '$0'}
+Nursing Home/Assisted Living:       ${formData.nursingHome || '$0'}
+Adult Day Care:                     ${formData.adultDayCare || '$0'}
+Home Health Aide/In-Home Care:      ${formData.homeHealthAide || '$0'}
+
+================================================================================
+
+OUT-OF-POCKET MEDICAL COSTS (FOR PERIOD)
+
+Prescriptions:                      ${formData.prescriptions || '$0'}
+Doctor Visit Copays:                ${formData.doctorCopays || '$0'}
+Hospital/ER Copays:                 ${formData.hospitalCopays || '$0'}
+Dental Expenses:                    ${formData.dentalExpenses || '$0'}
+Vision/Eye Care:                    ${formData.visionExpenses || '$0'}
+Hearing Aids/Care:                  ${formData.hearingAids || '$0'}
+Medical Equipment/Supplies:         ${formData.medicalEquipment || '$0'}
+Medical Transportation:             ${formData.transportation || '$0'}
+Other Medical:                      ${formData.otherMedical || '$0'}
+
+${formData.otherDescription ? `Other Description: ${formData.otherDescription}` : ''}
+
+================================================================================
+
+KEEP YOUR RECEIPTS - VA may request documentation.
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
+
+================================================================================
+`;
+  };
+
+  // Employment Information generator
+  const generateEmploymentInfo = () => {
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const leaveReasons = {
+      'disability': 'Left Due to Disability', 'laid-off': 'Laid Off/Position Eliminated',
+      'terminated': 'Terminated', 'resigned': 'Resigned', 'retired': 'Retired'
+    };
+    const missedLabels = {
+      'none': 'Rarely Missed', 'occasional': '1-5 days/month', 'frequent': '6-10 days/month',
+      'very-frequent': '10+ days/month', 'unable-to-work': 'Unable to Work'
+    };
+
+    return `REQUEST FOR EMPLOYMENT INFORMATION
+VA Form 21-4192
+
+================================================================================
+
+This form is for TDIU (Total Disability Individual Unemployability) claims.
+Send this to your employer(s) for completion.
+
+================================================================================
+
+VETERAN INFORMATION
+
+Name: ${formData.veteranFirstName || ''} ${formData.veteranMiddleInitial || ''} ${formData.veteranLastName || ''}
+SSN: ${formData.ssn || '____'}
+Date of Birth: ${formData.dob || '____'}
+VA File Number: ${formData.vaFileNumber || 'Same as SSN'}
+Phone: ${formData.phone || '____'}
+
+================================================================================
+
+EMPLOYER INFORMATION
+
+Company Name: ${formData.employerName || '____'}
+Address: ${formData.employerAddress || '____'}, ${formData.employerCity || '____'}, ${formData.employerState || '__'} ${formData.employerZip || '_____'}
+Phone: ${formData.employerPhone || '____'}
+Supervisor/HR Contact: ${formData.supervisorName || '____'}
+
+================================================================================
+
+EMPLOYMENT DETAILS
+
+Job Title: ${formData.jobTitle || '____'}
+Start Date: ${formData.startDate || '____'}
+End Date: ${formData.endDate || 'N/A - Still Employed'}
+Still Employed: ${formData.stillEmployed === 'yes' ? 'YES' : 'NO'}
+Hours Per Week: ${formData.hoursPerWeek || '____'}
+Earnings: ${formData.earnings || '____'}
+
+================================================================================
+
+DISABILITY IMPACT ON EMPLOYMENT
+
+${formData.stillEmployed !== 'yes' && formData.reasonForLeaving ? `Reason for Leaving: ${leaveReasons[formData.reasonForLeaving] || formData.reasonForLeaving}` : ''}
+
+Accommodations Made:
+${Array.isArray(formData.accommodations) ? formData.accommodations.map(a => `[X] ${a}`).join('\n') : '[  ] See form for accommodations'}
+
+Time Missed Due to Disability: ${missedLabels[formData.missedWork] || '____'}
+
+Impact Description:
+${formData.impactDescription || '____'}
+
+================================================================================
+
+IMPORTANT FOR TDIU CLAIMS:
+- This form strengthens your claim by documenting employment limitations
+- Send to your last employer(s) with a cover letter
+- Employer should complete the employer section and return to VA
+
+Date: ${currentDate}
+
+Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
+
+================================================================================
+`;
+  };
+
   const generateContent = () => {
     let content;
     switch (selectedForm?.id) {
@@ -2257,6 +3539,31 @@ Phone: 1-202-461-7699
         break;
       case 'vso-appointment-individual':
         content = generateIndividualRepAppointment();
+        break;
+      // New forms
+      case 'third-party-authorization':
+        content = generateThirdPartyAuth();
+        break;
+      case 'personal-records-request':
+        content = generateFOIARequest();
+        break;
+      case 'alternate-signer':
+        content = generateAlternateSigner();
+        break;
+      case 'nursing-home-info':
+        content = generateNursingHome();
+        break;
+      case 'substitution-request':
+        content = generateSubstitutionRequest();
+        break;
+      case 'income-asset-statement':
+        content = generateIncomeAsset();
+        break;
+      case 'medical-expense-report':
+        content = generateMedicalExpenseReport();
+        break;
+      case 'employment-info':
+        content = generateEmploymentInfo();
         break;
       default:
         content = '';
@@ -2557,6 +3864,9 @@ Phone: 1-202-461-7699
         <p className="text-gray-600 dark:text-gray-400">
           Select a form to get guided help filling it out. We'll generate a draft you can review and submit.
         </p>
+        <span className="inline-block mt-2 px-3 py-1 bg-va-blue/10 dark:bg-va-gold/10 text-va-blue dark:text-va-gold text-sm font-medium rounded-full">
+          {forms.length} Forms Available
+        </span>
       </div>
 
       {/* Hidden file input for restore */}
@@ -2863,7 +4173,7 @@ Phone: 1-202-461-7699
             <h3 className="font-bold text-purple-900 dark:text-purple-200">Pro Tip: Buddy Statements Are Powerful!</h3>
             <p className="text-sm text-purple-800 dark:text-purple-300 mt-1">
               Many veterans don't realize that statements from family, friends, and fellow service members can be <strong>critical evidence</strong> for their claim. 
-              These "buddy statements" help prove symptoms, in-service events, and daily impact—especially when medical records are incomplete.
+              These "buddy statements" help prove symptoms, in-service events, and daily impact - especially when medical records are incomplete.
             </p>
           </div>
         </div>
@@ -3096,17 +4406,31 @@ Phone: 1-202-461-7699
         </div>
 
         {/* AI Enhancement Option - Only show for supported form types */}
-        {isAIEnabledFormType() && isAIAvailable() && (
+        {isAIEnabledFormType() && isAnyAIAvailable() && (
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-start gap-3">
                 <span className="text-3xl">✨</span>
                 <div>
-                  <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg">AI Statement Assistant</h3>
+                  <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg flex items-center gap-2">
+                    AI Statement Assistant
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      aiStatus.effectiveMode === AI_MODES.LOCAL 
+                        ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' 
+                        : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                    }`}>
+                      {aiStatus.effectiveMode === AI_MODES.LOCAL ? '🔒 Local AI' : '☁️ Cloud AI'}
+                    </span>
+                  </h3>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
                     Enhance your statement with AI to make it more professional and compelling. 
                     Uses the "Three Pillars" approach for effective VA claim statements.
                   </p>
+                  {aiStatus.effectiveMode === AI_MODES.LOCAL && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      ✅ 100% Private - Your data never leaves your device
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -3115,7 +4439,7 @@ Phone: 1-202-461-7699
                   <button
                     onClick={handleAIEnhanceClick}
                     disabled={isEnhancingWithAI}
-                    className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                    className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                   >
                     {isEnhancingWithAI ? (
                       <>
@@ -3174,6 +4498,29 @@ Phone: 1-202-461-7699
                 {showAIVersion ? '✨ Viewing AI-enhanced version' : '📝 Viewing original template version'}
               </div>
             )}
+          </div>
+        )}
+
+        {/* AI Not Available Message - Show for supported form types when AI is not configured */}
+        {isAIEnabledFormType() && !isAnyAIAvailable() && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">✨</span>
+                <div>
+                  <h3 className="font-bold text-amber-900 dark:text-amber-200">AI Enhancement Available</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    This form can be enhanced with AI to make your statement more professional and compelling using the "Three Pillars" approach.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onOpenAISettings}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
+              >
+                ⚙️ Configure AI
+              </button>
+            </div>
           </div>
         )}
 
@@ -3354,7 +4701,7 @@ Phone: 1-202-461-7699
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center overflow-y-auto">
       <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden">
+        <div ref={formsContentRef} className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden">
           {/* Header */}
           <div className="sticky top-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
             <div className="flex items-center justify-between">
@@ -3366,7 +4713,12 @@ Phone: 1-202-461-7699
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <FocusToggle variant="light" />
+                <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+                <ShareButton 
+                  targetRef={formsContentRef}
+                  filename="va-forms-helper"
+                  variant="icon"
+                />
                 <ReportBugLink onClick={onReportBug} variant="light" moduleName="Forms Helper" />
                 <button
                   onClick={onClose}

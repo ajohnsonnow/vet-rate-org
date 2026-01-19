@@ -29,7 +29,7 @@ export const COMPONENT_STATS = {
     name: 'C-File AI Analyzer',
     hours: 680,
     lines: 9200,
-    description: 'AI analysis of claims files—what others charge $500+ for'
+    description: 'AI analysis of claims files - what others charge $500+ for'
   },
   'nexus-builder': {
     name: 'Nexus Builder',
@@ -155,7 +155,7 @@ export const COMPONENT_STATS = {
     name: 'Smart Search Engine',
     hours: 340,
     lines: 5200,
-    description: '748 conditions with synonym matching and advanced filters'
+    description: '751 conditions with synonym matching and advanced filters'
   },
   'user-manual': {
     name: 'User Manual',
@@ -168,7 +168,7 @@ export const COMPONENT_STATS = {
     name: 'Data Validation & Entry',
     hours: 200,
     lines: 15000,
-    description: '748 disabilities with full rating criteria validated against 38 CFR'
+    description: '751 disabilities with full rating criteria validated against 38 CFR'
   },
   'accessibility': {
     name: 'Accessibility Features',

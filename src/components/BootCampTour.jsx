@@ -228,7 +228,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                   <strong>Let's get you mission-ready.</strong> This quick tour shows you exactly where to start.
                 </p>
                 <p style="color: #9ca3af; font-size: 0.9rem;">
-                  Takes about 60 seconds — then you're in command.
+                  Takes about 60 seconds - then you're in command.
                 </p>
                 <div style="margin-top: 20px; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #fbbf24; font-weight: 600; margin: 0;">
@@ -253,7 +253,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 <li>By diagnostic code: "9411", "6260"</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                We cover <strong>all 748 conditions</strong> from 38 CFR Part 4.
+                We cover <strong>all 751 conditions</strong> from 38 CFR Part 4.
               </p>
             `,
             side: 'bottom',

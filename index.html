@@ -10,16 +10,17 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at blob:;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com data:;
         img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com;
-        connect-src 'self' https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com;
+        connect-src 'self' https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov wasm-unsafe-eval;
         frame-src 'self' https://accounts.google.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
         upgrade-insecure-requests;
+        worker-src 'self' blob:;
       "
     />
     

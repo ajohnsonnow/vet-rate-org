@@ -207,7 +207,7 @@ We will respond within 24-48 hours.
 The application links to:
 - https://www.ecfr.gov - Official eCFR data
 - https://www.va.gov - Official VA website
-- https://www.myhealth.va.gov - VA health portal
+- https://www.va.gov/health-care/manage-health/ - VA health portal
 
 These are trusted government sources.
 

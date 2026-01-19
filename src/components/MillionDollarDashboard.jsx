@@ -14,6 +14,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
+import { calculateVARating } from '../utils/vaCalculator';
 
 /**
  * 2026 VA Disability Pay Rates (Monthly)
@@ -244,6 +246,26 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   const [animatedTotal, setAnimatedTotal] = useState(0);
   const [showBreakdown, setShowBreakdown] = useState(false);
   
+  // Auto-load rating from veteranProfile on mount
+  useEffect(() => {
+    const savedRatings = getMyRatings();
+    if (savedRatings && savedRatings.length > 0) {
+      const result = calculateVARating(savedRatings);
+      setRating(result.combinedRating);
+    }
+  }, []);
+  
+  // Manual load handler
+  const handleLoadMyRatings = () => {
+    const savedRatings = getMyRatings();
+    if (savedRatings && savedRatings.length > 0) {
+      const result = calculateVARating(savedRatings);
+      setRating(result.combinedRating);
+    } else {
+      alert('No saved ratings found. Use Secondary Scout to import your VA ratings first.');
+    }
+  };
+  
   // Calculate values
   const calculation = useMemo(() => 
     calculateLifetimeValue(currentAge, rating, hasSpouse, numChildren, state),
@@ -317,39 +339,47 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   };
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-900 min-h-screen">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="million-dollar-dashboard-title"
+    >
+      <div className="min-h-screen px-4 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">💰</span>
+          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">💰</span>
+                </div>
                 <div>
-                  <h2 className="text-xl font-bold text-black">The Million Dollar Dashboard</h2>
-                  <p className="text-sm text-yellow-800">Lifetime Value Financial Projector</p>
+                  <h2 id="million-dollar-dashboard-title" className="text-2xl sm:text-3xl font-bold text-black">
+                    Million Dollar Dashboard
+                  </h2>
+                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
+                    Lifetime Value Financial Projector
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <FocusToggle variant="dark" />
-                <button
-                  onClick={onClose}
-                  className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+              <button
+                onClick={onClose}
+                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
           
-          <div className="max-w-4xl mx-auto p-6 space-y-8">
+          {/* Content */}
+          <div className="p-6 space-y-6 bg-gray-900">
             {/* THE BIG NUMBER */}
             <div className="text-center py-8">
               <p className="text-gray-400 text-lg mb-2">Your Claim's Total Lifetime Value</p>
@@ -396,6 +426,34 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                     max="80"
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-center text-lg font-bold"
                   />
+                </div>
+                
+                {/* Rating with Load Button */}
+                <div className="col-span-2 md:col-span-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm text-gray-400">VA Rating %</label>
+                    {hasMyRatings() && (
+                      <button
+                        onClick={handleLoadMyRatings}
+                        className="text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                        title="Calculate from your saved ratings"
+                      >
+                        📊 Load
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="10"
+                    value={rating}
+                    onChange={(e) => setRating(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="text-center text-2xl font-bold text-white mt-2">
+                    {rating}%
+                  </div>
                 </div>
                 
                 {/* Rating */}

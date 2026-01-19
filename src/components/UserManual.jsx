@@ -1,4 +1,4 @@
-/**
+﻿/**
  * UserManual.jsx - Integrated User Manual for Vet-Rate.org
  * Comprehensive documentation accessible within the web application
  */
@@ -313,13 +313,13 @@ const documentationContent = {
   home: {
     title: 'Vet-Rate.org User Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** — your complete VA claims toolkit with **40+ powerful tools**.
+Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA claims toolkit with **40+ powerful tools**.
 
 ## About This Manual
 
 This manual covers every feature and function of the Vet-Rate.org platform, designed to help you:
 
-- **Search & understand** 748 VA disability conditions
+- **Search & understand** 751 VA disability conditions
 - **Discover secondary conditions** linked to your service-connected disabilities
 - **Calculate combined ratings** with the Tactical Calculator
 - **Prepare for C&P exams** with our simulator and Exam Prep Room
@@ -336,7 +336,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 ### Core Intelligence Tools
 | Tool | What It Does |
 |------|--------------|
-| **Smart Search** | Find any of 748 rated disabilities |
+| **Smart Search** | Find any of 751 rated disabilities |
 | **PACT Act Navigator** | Identify toxic exposure presumptive conditions |
 | **Web of Conditions** | Interactive visualization of connected disabilities |
 | **Legislative Watchdog** | Track Federal Register changes affecting veterans |
@@ -436,11 +436,11 @@ Get up and running with Vet-Rate.org in minutes.
 
 ## Recommended First Steps
 
-1. **Acknowledge the disclaimer** — Understand this is an educational tool
-2. **Search for a condition** — Try your primary service-connected disability
-3. **Explore Secondary Scout** — Discover potential secondary claims
-4. **Try the C&P Simulator** — Prepare for your exam
-5. **Check Settings** — Adjust display and accessibility options
+1. **Acknowledge the disclaimer** - Understand this is an educational tool
+2. **Search for a condition** - Try your primary service-connected disability
+3. **Explore Secondary Scout** - Discover potential secondary claims
+4. **Try the C&P Simulator** - Prepare for your exam
+5. **Check Settings** - Adjust display and accessibility options
     `,
   },
 
@@ -482,10 +482,10 @@ This shows you the "gold standard" before you start your own.
 
 After acknowledging the disclaimer, you'll see:
 
-1. **Header** — Navigation to main features
-2. **Search Bar** — Search 748 disabilities
-3. **Feature Cards** — Quick access to tools
-4. **Footer** — Links to policies and support
+1. **Header** - Navigation to main features
+2. **Search Bar** - Search 751 disabilities
+3. **Feature Cards** - Quick access to tools
+4. **Footer** - Links to policies and support
 
 ## Try Your First Search
 
@@ -519,9 +519,9 @@ Learn your way around the Vet-Rate.org interface.
 
 ## Main Content Area
 
-- **Search Bar** — Central search functionality
-- **Feature Cards** — Quick-launch tools
-- **Search Results** — Condition cards with key info
+- **Search Bar** - Central search functionality
+- **Feature Cards** - Quick-launch tools
+- **Search Results** - Condition cards with key info
 
 ## Footer
 
@@ -551,10 +551,10 @@ Vet-Rate.org is designed to be accessible to all veterans.
 Reduces eye strain in low-light conditions.
 
 ### Color Blind Modes
-- **Protanopia** — Red-blind friendly
-- **Deuteranopia** — Green-blind friendly  
-- **Tritanopia** — Blue-blind friendly
-- **High Contrast** — Maximum visibility
+- **Protanopia** - Red-blind friendly
+- **Deuteranopia** - Green-blind friendly  
+- **Tritanopia** - Blue-blind friendly
+- **High Contrast** - Maximum visibility
 
 ### Font Size
 Adjustable from small to extra-large.
@@ -564,10 +564,10 @@ Disables animations for vestibular sensitivities.
 
 ## Keyboard Navigation
 
-- **Tab** — Move between elements
-- **Enter** — Activate buttons/links
-- **Escape** — Close modals
-- **/** — Focus search bar
+- **Tab** - Move between elements
+- **Enter** - Activate buttons/links
+- **Escape** - Close modals
+- **/** - Focus search bar
 
 ## Screen Reader Support
 
@@ -584,16 +584,16 @@ Master the search functionality to find any VA disability condition.
 
 ## What You Can Search
 
-- **748 disabilities** from 38 CFR Part 4
+- **751 disabilities** from 38 CFR Part 4
 - **Condition names** (e.g., "PTSD", "tinnitus")
 - **Diagnostic codes** (e.g., "9411", "6260")
 - **Keywords** (e.g., "knee", "back", "anxiety")
 
 ## Search Features
 
-- **Instant results** — As you type
-- **Fuzzy matching** — Handles typos
-- **All body systems** — Complete coverage
+- **Instant results** - As you type
+- **Fuzzy matching** - Handles typos
+- **All body systems** - Complete coverage
 
 ## From Search Results
 
@@ -626,9 +626,9 @@ Find exactly what you're looking for.
 
 ## Advanced Tips
 
-- **Partial matches work** — "anx" finds anxiety
-- **Case insensitive** — "PTSD" = "ptsd"
-- **Multiple words** — "sleep apnea" searches for both
+- **Partial matches work** - "anx" finds anxiety
+- **Case insensitive** - "PTSD" = "ptsd"
+- **Multiple words** - "sleep apnea" searches for both
     `,
   },
 
@@ -647,9 +647,9 @@ Each card shows:
 
 ## Actions
 
-- **Click card** — View full details
-- **View criteria** — See rating percentages
-- **Launch Scout** — Find secondary conditions
+- **Click card** - View full details
+- **View criteria** - See rating percentages
+- **Launch Scout** - Find secondary conditions
 
 ## No Results?
 
@@ -774,9 +774,9 @@ Make sense of your Secondary Scout findings.
 
 ## Result Categories
 
-- **High Connection** — Strong medical link
-- **Moderate Connection** — Established link
-- **Possible Connection** — May require more evidence
+- **High Connection** - Strong medical link
+- **Moderate Connection** - Established link
+- **Possible Connection** - May require more evidence
 
 ## Each Result Shows
 
@@ -857,8 +857,8 @@ Begin your C&P exam preparation.
 
 ## Simulation Modes
 
-- **Full Simulation** — Complete DBQ-style exam
-- **Flashcard Mode** — Quick question review
+- **Full Simulation** - Complete DBQ-style exam
+- **Flashcard Mode** - Quick question review
 
 ## Best Practices
 
@@ -901,10 +901,10 @@ What to expect during the simulation.
 
 ## Question Types
 
-- **Frequency questions** — How often symptoms occur
-- **Severity questions** — How bad symptoms are
-- **Functional impact** — How it affects daily life
-- **Treatment questions** — What treatments you've tried
+- **Frequency questions** - How often symptoms occur
+- **Severity questions** - How bad symptoms are
+- **Functional impact** - How it affects daily life
+- **Treatment questions** - What treatments you've tried
 
 ## Answering Questions
 
@@ -994,9 +994,9 @@ A medical connection between your current condition and military service. Requir
 
 ## Types of Statements
 
-- **Personal statements** — Your own words
-- **Doctor's cheat sheet** — For medical providers
-- **Nexus framework** — Connection outline
+- **Personal statements** - Your own words
+- **Doctor's cheat sheet** - For medical providers
+- **Nexus framework** - Connection outline
     `,
   },
 
@@ -1009,15 +1009,15 @@ Understanding the nexus requirement.
 
 To establish service connection, you need:
 
-1. **Current diagnosis** — You have the condition now
-2. **In-service event** — Something happened during service
-3. **Nexus** — Medical link between them
+1. **Current diagnosis** - You have the condition now
+2. **In-service event** - Something happened during service
+3. **Nexus** - Medical link between them
 
 ## Nexus Language
 
 The magic words: **"at least as likely as not"**
 
-This means 50% or greater probability — not certainty.
+This means 50% or greater probability - not certainty.
 
 ## Who Can Provide Nexus?
 
@@ -1027,7 +1027,7 @@ This means 50% or greater probability — not certainty.
 
 ## Why It Matters
 
-Without a nexus, your claim will likely be denied — even with a diagnosis and in-service event.
+Without a nexus, your claim will likely be denied - even with a diagnosis and in-service event.
     `,
   },
 
@@ -1038,11 +1038,11 @@ Create your personal statement step by step.
 
 ## What to Include
 
-1. **Your information** — Name, service dates
-2. **The condition** — What you're claiming
-3. **In-service connection** — What happened
-4. **Current impact** — How it affects you now
-5. **Timeline** — Continuity of symptoms
+1. **Your information** - Name, service dates
+2. **The condition** - What you're claiming
+3. **In-service connection** - What happened
+4. **Current impact** - How it affects you now
+5. **Timeline** - Continuity of symptoms
 
 ## Writing Tips
 
@@ -1096,9 +1096,9 @@ Export your statements and documents.
 
 ## Available Formats
 
-- **PDF** — Print-ready document
-- **Word (.docx)** — Editable format
-- **Text** — Plain text copy
+- **PDF** - Print-ready document
+- **Word (.docx)** - Editable format
+- **Text** - Plain text copy
 
 ## What Gets Downloaded
 
@@ -1122,10 +1122,10 @@ Get help filling out VA forms.
 
 ## Available Forms
 
-- **Buddy Statements** — Third-party support
-- **Intent to File** — Protect your effective date
-- **PTSD Stressor** — Document traumatic events
-- **Veteran Profile** — Your information template
+- **Buddy Statements** - Third-party support
+- **Intent to File** - Protect your effective date
+- **PTSD Stressor** - Document traumatic events
+- **Veteran Profile** - Your information template
 
 ## How It Works
 
@@ -1156,7 +1156,7 @@ Protect your effective date while gathering evidence. Gives you 1 year to comple
 Document the traumatic events related to your PTSD claim.
 
 ## Veteran Profile
-Not a VA form — a personal reference document with your key information.
+Not a VA form - a personal reference document with your key information.
 
 ## Coming Soon
 We're working on adding more forms. Let us know which ones you need!
@@ -1238,7 +1238,7 @@ Document traumatic events for your PTSD claim.
 
 ## What Is It?
 
-VA Form 21-0781 — describes the traumatic event(s) that caused your PTSD.
+VA Form 21-0781 - describes the traumatic event(s) that caused your PTSD.
 
 ## What to Include
 
@@ -1251,7 +1251,7 @@ VA Form 21-0781 — describes the traumatic event(s) that caused your PTSD.
 ## Types of Stressors
 
 - Combat-related
-- Personal assault (MST) — use 21-0781a
+- Personal assault (MST) - use 21-0781a
 - Non-combat trauma
 - Fear of hostile activity
 
@@ -1281,7 +1281,7 @@ A personal reference document with your key information:
 
 ## Not a VA Form
 
-This is for your reference — not submitted to VA.
+This is for your reference - not submitted to VA.
 
 ## Why Use It?
 
@@ -1442,7 +1442,7 @@ Use What-If to:
     content: `
 AI-powered analysis of your VA claims file.
 
-## What Others Charge $500+ For — FREE
+## What Others Charge $500+ For - FREE
 
 The C-File Analyzer uses AI to:
 - Identify favorable evidence
@@ -1527,10 +1527,10 @@ Reading your C-File analysis.
 
 ## What You'll See
 
-- **Favorable Evidence** — Supports your claims
-- **Missing Elements** — What you need
-- **Inconsistencies** — Potential rating errors
-- **Action Items** — Next steps
+- **Favorable Evidence** - Supports your claims
+- **Missing Elements** - What you need
+- **Inconsistencies** - Potential rating errors
+- **Action Items** - Next steps
 
 ## Using the Results
 
@@ -1556,10 +1556,10 @@ Upload your VA decision letter and get:
 
 ## Decision Types
 
-- **Rating Decision** — Initial claim result
-- **Statement of Case** — Appeal response
-- **Supplemental Decision** — New evidence result
-- **Board Decision** — BVA ruling
+- **Rating Decision** - Initial claim result
+- **Statement of Case** - Appeal response
+- **Supplemental Decision** - New evidence result
+- **Board Decision** - BVA ruling
     `,
   },
 
@@ -1621,8 +1621,8 @@ Understanding your appeal choices.
 
 ## Key Deadlines
 
-- **1 Year** — Appeal most decisions
-- **Continuous Pursuit** — Maintain effective date
+- **1 Year** - Appeal most decisions
+- **Continuous Pursuit** - Maintain effective date
 
 ## Decision Decoder Shows
 
@@ -1652,7 +1652,7 @@ Blue Button is the VA's health record download system. X-Ray helps you find the 
 
 ## Why It Matters
 
-Your VA records often contain evidence you didn't know existed — including statements from doctors that support service connection.
+Your VA records often contain evidence you didn't know existed - including statements from doctors that support service connection.
     `,
   },
 
@@ -1663,20 +1663,29 @@ VA's health record download system.
 
 ## Getting Your Records
 
-1. Log into My HealtheVet
-2. Click "Blue Button"
-3. Select date range
-4. Download records
+1. Go to va.gov/my-health/medical-records/download/
+2. Sign in with Login.gov or ID.me
+3. **Step 1:** Select "All Time" date range
+4. **Step 2:** Check "Select all VA records"
+5. **Step 3:** Choose "Text file" format
+6. Click "Download report"
 
-## Record Types
+## Record Types Included
 
-- VA health records
-- DoD military records (if linked)
-- Self-entered data
+- Lab and test results
+- Care summaries and notes
+- Vaccines
+- Allergies and reactions
+- Health conditions
+- Vitals
+- Medications
+- Appointments (last 2 years)
+- VA demographics
+- DOD military service info (1980+)
 
 ## Using with X-Ray
 
-1. Download Blue Button records
+1. Download Blue Button records (text file)
 2. Upload to X-Ray
 3. AI extracts evidence
 4. Review findings
@@ -1690,10 +1699,10 @@ Finding hidden evidence in your records.
 
 ## What X-Ray Looks For
 
-- **Diagnoses** — Condition names and dates
-- **Nexus Language** — "Related to," "caused by," etc.
-- **Symptom Severity** — Frequency, duration, impact
-- **Treatment Records** — Continuity of care
+- **Diagnoses** - Condition names and dates
+- **Nexus Language** - "Related to," "caused by," etc.
+- **Symptom Severity** - Frequency, duration, impact
+- **Treatment Records** - Continuity of care
 
 ## Using Results
 
@@ -1762,9 +1771,9 @@ Understanding Red Team results.
 
 ## Risk Levels
 
-- 🟢 **Low Risk** — Strong evidence
-- 🟡 **Medium Risk** — Needs strengthening
-- 🔴 **High Risk** — Likely denial point
+- 🟢 **Low Risk** - Strong evidence
+- 🟡 **Medium Risk** - Needs strengthening
+- 🔴 **High Risk** - Likely denial point
 
 ## Common Weaknesses
 
@@ -1879,9 +1888,9 @@ Your completed buddy statement.
 
 ## Download Options
 
-- **PDF** — Ready to print/sign
-- **DOCX** — Edit in Word
-- **Copy** — Paste anywhere
+- **PDF** - Ready to print/sign
+- **DOCX** - Edit in Word
+- **Copy** - Paste anywhere
 
 ## Next Steps
 
@@ -1960,8 +1969,8 @@ If your service-connected disabilities prevent you from maintaining "substantial
 
 ## Types
 
-- **Schedular TDIU** — Meet rating requirements
-- **Extraschedular TDIU** — Special circumstances
+- **Schedular TDIU** - Meet rating requirements
+- **Extraschedular TDIU** - Special circumstances
 
 ## Benefits
 
@@ -2073,7 +2082,7 @@ Recording your daily symptoms.
 
 ## Consistency
 
-Log regularly — even good days. It shows the complete picture.
+Log regularly - even good days. It shows the complete picture.
     `,
   },
 
@@ -2084,10 +2093,10 @@ Using your symptom data.
 
 ## Reports Available
 
-- **Summary** — Overview by condition
-- **Trends** — Severity over time
-- **Frequency** — How often symptoms occur
-- **Calendar** — Visual timeline
+- **Summary** - Overview by condition
+- **Trends** - Severity over time
+- **Frequency** - How often symptoms occur
+- **Calendar** - Visual timeline
 
 ## Export Options
 
@@ -2108,10 +2117,10 @@ See the lifetime value of your VA benefits.
 
 ## What It Shows
 
-- **Lifetime Compensation** — Total benefits over time
-- **Healthcare Value** — VA medical savings
-- **Education Benefits** — GI Bill value
-- **Other Benefits** — Insurance, commissary, etc.
+- **Lifetime Compensation** - Total benefits over time
+- **Healthcare Value** - VA medical savings
+- **Education Benefits** - GI Bill value
+- **Other Benefits** - Insurance, commissary, etc.
 
 ## Why "Million Dollar"?
 
@@ -2436,12 +2445,12 @@ Creates a step-by-step plan based on:
 
 ## The Path
 
-1. **Assessment** — Where you are now
-2. **Planning** — What to file and when
-3. **Evidence** — What you need
-4. **Filing** — How to submit
-5. **Exam** — Preparation
-6. **Decision** — Next steps
+1. **Assessment** - Where you are now
+2. **Planning** - What to file and when
+3. **Evidence** - What you need
+4. **Filing** - How to submit
+5. **Exam** - Preparation
+6. **Decision** - Next steps
 
 ## Customized Strategy
 
@@ -2571,9 +2580,9 @@ Download your claims packet.
 
 ## Export Options
 
-- **Full Backup** — All data, restorable
-- **PDF Summary** — Printable overview
-- **Individual Items** — Specific documents
+- **Full Backup** - All data, restorable
+- **PDF Summary** - Printable overview
+- **Individual Items** - Specific documents
 
 ## Full Backup
 
@@ -2602,9 +2611,9 @@ Quick access to official VA resources.
 
 ## Categories
 
-- **Online Portals** — VA.gov, eBenefits, My HealtheVet
-- **Phone Numbers** — Key VA contacts
-- **External Resources** — VSOs, legal help
+- **Online Portals** - VA.gov, eBenefits, My HealtheVet
+- **Phone Numbers** - Key VA contacts
+- **External Resources** - VSOs, legal help
 
 ## Important Numbers
 
@@ -2671,8 +2680,8 @@ Text: 838255
 ## Veterans Service Organizations (VSOs)
 
 Free claims help from accredited representatives:
-- **DAV** — Disabled American Veterans
-- **VFW** — Veterans of Foreign Wars
+- **DAV** - Disabled American Veterans
+- **VFW** - Veterans of Foreign Wars
 - **American Legion**
 - **Vietnam Veterans of America**
 
@@ -2741,10 +2750,10 @@ Make Vet-Rate.org work for you.
 
 ## Color Blind Modes
 
-- **Protanopia** — Red-blind friendly
-- **Deuteranopia** — Green-blind friendly
-- **Tritanopia** — Blue-blind friendly
-- **High Contrast** — Maximum visibility
+- **Protanopia** - Red-blind friendly
+- **Deuteranopia** - Green-blind friendly
+- **Tritanopia** - Blue-blind friendly
+- **High Contrast** - Maximum visibility
 
 ## Font Size
 
@@ -2813,28 +2822,28 @@ Common VA claims terminology.
 
 ## A-C
 
-- **C&P Exam** — Compensation and Pension examination
-- **CFR** — Code of Federal Regulations
-- **Combined Rating** — Total disability percentage using VA math
+- **C&P Exam** - Compensation and Pension examination
+- **CFR** - Code of Federal Regulations
+- **Combined Rating** - Total disability percentage using VA math
 
 ## D-I
 
-- **DBQ** — Disability Benefits Questionnaire
-- **DeLuca Factors** — Additional impairment factors (pain, fatigue, etc.)
-- **IMO** — Independent Medical Opinion
-- **ITF** — Intent to File
+- **DBQ** - Disability Benefits Questionnaire
+- **DeLuca Factors** - Additional impairment factors (pain, fatigue, etc.)
+- **IMO** - Independent Medical Opinion
+- **ITF** - Intent to File
 
 ## N-S
 
-- **Nexus** — Medical connection between condition and service
-- **Secondary Condition** — Disability caused by service-connected condition
-- **Service Connection** — VA recognition that condition is related to service
+- **Nexus** - Medical connection between condition and service
+- **Secondary Condition** - Disability caused by service-connected condition
+- **Service Connection** - VA recognition that condition is related to service
 
 ## T-V
 
-- **TDIU** — Total Disability Individual Unemployability
-- **VA Math** — Method for calculating combined ratings
-- **VSO** — Veterans Service Organization
+- **TDIU** - Total Disability Individual Unemployability
+- **VA Math** - Method for calculating combined ratings
+- **VSO** - Veterans Service Organization
     `,
   },
 
@@ -2843,24 +2852,24 @@ Common VA claims terminology.
     content: `
 Key Code of Federal Regulations sections.
 
-## 38 CFR Part 3 — Adjudication
+## 38 CFR Part 3 - Adjudication
 
-- **§ 3.303** — Principles of service connection
-- **§ 3.310** — Secondary service connection
-- **§ 3.317** — Gulf War presumptives
+- **§ 3.303** - Principles of service connection
+- **§ 3.310** - Secondary service connection
+- **§ 3.317** - Gulf War presumptives
 
-## 38 CFR Part 4 — Rating Schedule
+## 38 CFR Part 4 - Rating Schedule
 
-- **§ 4.71a** — Musculoskeletal system
-- **§ 4.97** — Respiratory system
-- **§ 4.104** — Cardiovascular system
-- **§ 4.124a** — Neurological conditions
-- **§ 4.130** — Mental disorders
+- **§ 4.71a** - Musculoskeletal system
+- **§ 4.97** - Respiratory system
+- **§ 4.104** - Cardiovascular system
+- **§ 4.124a** - Neurological conditions
+- **§ 4.130** - Mental disorders
 
 ## Key Principles
 
-- **§ 4.3** — Reasonable doubt favors veteran
-- **§ 4.7** — Higher rating when between levels
+- **§ 4.3** - Reasonable doubt favors veteran
+- **§ 4.7** - Higher rating when between levels
     `,
   },
 
@@ -2945,7 +2954,7 @@ Check your popup blocker and browser permissions.
 Use the Bug Squasher tool in the footer.
 
 **Where can I get claims help?**
-Contact a VSO — free and accredited assistance.
+Contact a VSO - free and accredited assistance.
 
 ## Crisis Support
 

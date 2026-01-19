@@ -9,6 +9,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import ShareButton, { PIISensitive } from './ShareButton';
+import VAGovRatingPaster from './VAGovRatingPaster';
 import { 
   getSavedClaims, 
   removeClaim, 
@@ -21,7 +23,7 @@ import {
   importStatements
 } from '../utils/claimsStorage';
 import { exportPacketData, importPacketData, downloadPacketBackup, exportCompletePacket, importCompletePacket } from '../utils/packetBackup';
-import { getSavedForms, deleteSavedForm, getVeteranProfile } from '../utils/veteranProfile';
+import { getSavedForms, deleteSavedForm, getVeteranProfile, getMyRatings, removeRating, updateRating, clearMyRatings, addRating, getServiceHistory, addDeployment, removeDeployment, addAward, removeAward, saveDD214Data, clearDD214Data, getTimelineEvents, saveTimelineEvents, clearTimelineEvents, getPainMaps, deletePainMap, clearPainMaps } from '../utils/veteranProfile';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
@@ -29,8 +31,10 @@ import DraftWatermark from './DraftWatermark';
 import CertificationCheckbox from './CertificationCheckbox';
 import NexusDisclaimerFooter from './NexusDisclaimerFooter';
 import ClaimProgress from './ClaimProgress';
+import { generateAI, getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
-const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
+const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync }) => {
   const [claims, setClaims] = useState([]);
   const [stats, setStats] = useState({ total: 0, drafting: 0, statementGenerated: 0, filed: 0 });
   const [viewingStatement, setViewingStatement] = useState(null);
@@ -41,11 +45,33 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
   const [backupCreated, setBackupCreated] = useState(false);
   const [isCertified, setIsCertified] = useState(false); // Certification for downloads
   const fileInputRef = useRef(null);
+  const packetContentRef = useRef(null);
   
-  // Tab state for Claims vs Forms view
+  // Tab state for Claims vs Forms vs Ratings view
   const [activeTab, setActiveTab] = useState('claims');
   const [savedForms, setSavedForms] = useState([]);
   const [viewingForm, setViewingForm] = useState(null);
+  const [myRatings, setMyRatings] = useState([]);
+  const [editingRating, setEditingRating] = useState(null);
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
+  
+  // Service History state
+  const [serviceHistory, setServiceHistory] = useState({ deployments: [], awards: [], dd214Data: null });
+  const [showDeploymentForm, setShowDeploymentForm] = useState(false);
+  const [showAwardForm, setShowAwardForm] = useState(false);
+  const [showDD214Processor, setShowDD214Processor] = useState(false);
+  const [newDeployment, setNewDeployment] = useState({ theater: '', location: '', startDate: '', endDate: '', unit: '', notes: '', hazardous: false, combat: false });
+  const [newAward, setNewAward] = useState({ name: '', abbreviation: '', dateReceived: '', notes: '', isCombat: false });
+  const [dd214Text, setDD214Text] = useState('');
+  const [isProcessingDD214, setIsProcessingDD214] = useState(false);
+  const [aiStatus, setAIStatus] = useState({ available: false });
+  
+  // Timeline Events state (Continuity Thread)
+  const [timelineEvents, setTimelineEvents] = useState([]);
+  
+  // Pain Maps state
+  const [painMaps, setPainMaps] = useState([]);
+  const [viewingPainMap, setViewingPainMap] = useState(null);
 
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
@@ -53,17 +79,193 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
   useEffect(() => {
     loadClaims();
     loadSavedForms();
+    loadMyRatings();
+    loadServiceHistory();
+    loadTimelineEvents();
+    loadPainMaps();
+    checkAIStatus();
   }, []);
+  
+  const checkAIStatus = async () => {
+    const status = await getAIStatus();
+    setAIStatus(status);
+  };
+  
+  const loadServiceHistory = () => {
+    const history = getServiceHistory();
+    setServiceHistory(history);
+  };
+  
+  const loadTimelineEvents = () => {
+    const events = getTimelineEvents();
+    setTimelineEvents(events);
+  };
+  
+  const loadPainMaps = () => {
+    const maps = getPainMaps();
+    setPainMaps(maps);
+  };
+  
+  const handleDeletePainMap = (mapId) => {
+    if (window.confirm('Delete this pain map?')) {
+      deletePainMap(mapId);
+      loadPainMaps();
+    }
+  };
+  
+  const handleClearTimelineEvents = () => {
+    if (window.confirm('Clear all timeline events? This cannot be undone.')) {
+      clearTimelineEvents();
+      loadTimelineEvents();
+    }
+  };
   
   const loadSavedForms = () => {
     const forms = getSavedForms();
     setSavedForms(forms);
   };
   
+  const loadMyRatings = () => {
+    const ratings = getMyRatings();
+    setMyRatings(ratings);
+  };
+  
   const handleRemoveForm = (formId) => {
     if (window.confirm('Are you sure you want to remove this form from your packet?')) {
       deleteSavedForm(formId);
       loadSavedForms();
+    }
+  };
+  
+  const handleRemoveRating = (ratingId) => {
+    if (window.confirm('Are you sure you want to remove this rating?')) {
+      removeRating(ratingId);
+      loadMyRatings();
+    }
+  };
+  
+  const handleUpdateRating = (ratingId, updates) => {
+    updateRating(ratingId, updates);
+    loadMyRatings();
+    setEditingRating(null);
+  };
+  
+  const handleClearAllRatings = () => {
+    if (window.confirm('Are you sure you want to clear all saved ratings? This cannot be undone.')) {
+      clearMyRatings();
+      loadMyRatings();
+    }
+  };
+  
+  const handlePastedRatings = (parsedRatings) => {
+    // Save each rating to veteranProfile
+    parsedRatings.forEach(rating => {
+      addRating(rating);
+    });
+    loadMyRatings();
+    setShowVAGovPaster(false);
+  };
+  
+  // Service History handlers
+  const handleAddDeployment = () => {
+    if (!newDeployment.theater || !newDeployment.location) {
+      alert('Please enter at least theater and location');
+      return;
+    }
+    addDeployment(newDeployment);
+    loadServiceHistory();
+    setNewDeployment({ theater: '', location: '', startDate: '', endDate: '', unit: '', notes: '', hazardous: false, combat: false });
+    setShowDeploymentForm(false);
+  };
+  
+  const handleRemoveDeployment = (depId) => {
+    if (window.confirm('Remove this deployment from your service history?')) {
+      removeDeployment(depId);
+      loadServiceHistory();
+    }
+  };
+  
+  const handleAddAward = () => {
+    if (!newAward.name) {
+      alert('Please enter the award name');
+      return;
+    }
+    addAward(newAward);
+    loadServiceHistory();
+    setNewAward({ name: '', abbreviation: '', dateReceived: '', notes: '', isCombat: false });
+    setShowAwardForm(false);
+  };
+  
+  const handleRemoveAward = (awardId) => {
+    if (window.confirm('Remove this award from your service history?')) {
+      removeAward(awardId);
+      loadServiceHistory();
+    }
+  };
+  
+  const handleProcessDD214 = async () => {
+    if (!dd214Text.trim()) {
+      alert('Please paste your DD214 text first');
+      return;
+    }
+    
+    if (!aiStatus.available) {
+      alert('AI is not configured. Please set up AI in settings to process DD214 automatically.');
+      return;
+    }
+    
+    setIsProcessingDD214(true);
+    
+    try {
+      const response = await generateAI({
+        prompt: `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
+{
+  "branch": "Army/Navy/Air Force/Marines/Coast Guard/Space Force",
+  "mos": "Primary MOS code",
+  "mosTitle": "MOS job title",
+  "entryDate": "YYYY-MM-DD or null",
+  "separationDate": "YYYY-MM-DD or null",
+  "yearsService": number or null,
+  "monthsService": number or null,
+  "separationType": "Honorable/General/Other Than Honorable/etc",
+  "characterOfService": "Honorable/General/etc",
+  "reenlisted": true/false,
+  "foreignService": true/false
+}
+
+DD214 TEXT:
+${dd214Text}
+
+Return ONLY the JSON object, no explanation.`,
+        temperature: 0.3,
+        maxTokens: 512,
+        expectJSON: true
+      });
+      
+      if (response.success && response.data) {
+        saveDD214Data({
+          ...response.data,
+          extractedText: dd214Text.substring(0, 5000) // Store first 5000 chars
+        });
+        loadServiceHistory();
+        setDD214Text('');
+        setShowDD214Processor(false);
+        alert('DD214 information extracted and saved successfully!');
+      } else {
+        alert('Could not extract DD214 information. Please try again or enter manually.');
+      }
+    } catch (error) {
+      console.error('Error processing DD214:', error);
+      alert('Error processing DD214. Please try again.');
+    } finally {
+      setIsProcessingDD214(false);
+    }
+  };
+  
+  const handleClearDD214 = () => {
+    if (window.confirm('Clear all DD214 extracted data?')) {
+      clearDD214Data();
+      loadServiceHistory();
     }
   };
 
@@ -428,7 +630,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
       aria-labelledby="my-packet-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto modal-content">
+        <div ref={packetContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto modal-content">
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -439,6 +641,11 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                 </p>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
+                <ShareButton 
+                  targetRef={packetContentRef}
+                  filename="my-claim-packet"
+                  variant="icon"
+                />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="My Claim Packet" />}
                 <button
                   onClick={onClose}
@@ -484,7 +691,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Backup
+                Local Backup
               </button>
               <button
                 onClick={handleRestoreClick}
@@ -495,10 +702,21 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                 </svg>
                 Restore
               </button>
+              {onOpenGoogleDriveSync && (
+                <button
+                  onClick={onOpenGoogleDriveSync}
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-xs sm:text-sm"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z"/>
+                  </svg>
+                  Google Drive
+                </button>
+              )}
               {onAnalyzeStrategy && (
                 <button
                   onClick={onAnalyzeStrategy}
-                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
+                  className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
                 >
                   <span>🧭</span>
                   Analyze Strategy
@@ -514,7 +732,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-right">
-              💡 Backup to transfer between devices
+              💡 Use Google Drive for automatic cloud backup
             </p>
           </div>
 
@@ -536,37 +754,211 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
             </div>
           )}
 
-          {/* Tab Navigation */}
+          {/* Tab Navigation - Organized by category */}
           <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6">
-            <nav className="flex gap-4" aria-label="Tabs">
+            <nav className="flex gap-1 overflow-x-auto pb-px" aria-label="Tabs">
+              {/* Primary Data */}
               <button
                 onClick={() => setActiveTab('claims')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === 'claims'
-                    ? 'border-va-blue text-va-blue dark:border-va-gold dark:text-va-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                <span className="flex items-center gap-2">
-                  📋 Claims <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{claims.length}</span>
-                </span>
+                📋 <span className="hidden sm:inline">Claims</span>
+                <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">{claims.length}</span>
               </button>
+              
+              <button
+                onClick={() => setActiveTab('ratings')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'ratings'
+                    ? 'border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                📊 <span className="hidden sm:inline">Ratings</span>
+                <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">{myRatings.length}</span>
+              </button>
+              
+              <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+              
+              {/* Service & History */}
+              <button
+                onClick={() => setActiveTab('service')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'service'
+                    ? 'border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                🎖️ <span className="hidden sm:inline">Service</span>
+                <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">{serviceHistory.deployments.length + serviceHistory.awards.length}</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('timeline')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'timeline'
+                    ? 'border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                🧵 <span className="hidden sm:inline">Timeline</span>
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">{timelineEvents.length}</span>
+              </button>
+              
+              <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+              
+              {/* Evidence & Docs */}
+              <button
+                onClick={() => setActiveTab('painmaps')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'painmaps'
+                    ? 'border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                🎨 <span className="hidden sm:inline">Pain Maps</span>
+                <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">{painMaps.length}</span>
+              </button>
+              
               <button
                 onClick={() => setActiveTab('forms')}
-                className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === 'forms'
-                    ? 'border-va-blue text-va-blue dark:border-va-gold dark:text-va-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                    ? 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                <span className="flex items-center gap-2">
-                  📄 Saved Forms <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{savedForms.length}</span>
-                </span>
+                📄 <span className="hidden sm:inline">Forms</span>
+                <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">{savedForms.length}</span>
               </button>
             </nav>
           </div>
 
           <div className="p-6">
+            {/* MY RATINGS TAB */}
+            {activeTab === 'ratings' && (
+              <>
+                {myRatings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📊 No Saved Ratings</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Import your VA ratings to save them here for use across all tools!
+                    </p>
+                    <button
+                      onClick={() => setShowVAGovPaster(true)}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Import from VA.gov
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4 flex justify-between items-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {myRatings.length} rating{myRatings.length !== 1 ? 's' : ''} saved
+                      </p>
+                      <button
+                        onClick={handleClearAllRatings}
+                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {myRatings.map((rating) => (
+                        <div
+                          key={rating.id}
+                          className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-all"
+                        >
+                          {editingRating?.id === rating.id ? (
+                            <div className="space-y-3">
+                              <input
+                                type="text"
+                                value={editingRating.name}
+                                onChange={(e) => setEditingRating({...editingRating, name: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                placeholder="Condition name"
+                              />
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="10"
+                                  value={editingRating.rating}
+                                  onChange={(e) => setEditingRating({...editingRating, rating: parseInt(e.target.value) || 0})}
+                                  className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                />
+                                <button
+                                  onClick={() => handleUpdateRating(rating.id, {name: editingRating.name, rating: editingRating.rating})}
+                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingRating(null)}
+                                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-between items-center">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    {rating.name || rating.condition}
+                                  </h3>
+                                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                    rating.rating >= 70 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                                    rating.rating >= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' :
+                                    rating.rating >= 30 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+                                    'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                  }`}>
+                                    {rating.rating}%
+                                  </span>
+                                </div>
+                                {rating.effectiveDate && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Effective: {new Date(rating.effectiveDate).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setEditingRating({...rating})}
+                                  className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveRating(rating.id)}
+                                  className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
             {/* FORMS TAB */}
             {activeTab === 'forms' && (
               <>
@@ -628,6 +1020,392 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                   </div>
                 )}
               </>
+            )}
+
+            {/* SERVICE HISTORY TAB */}
+            {activeTab === 'service' && (
+              <div className="space-y-6">
+                {/* DD214 Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                      📜 DD214 Information
+                      {aiStatus.available && <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">AI Ready</span>}
+                    </h3>
+                    {!showDD214Processor && !serviceHistory.dd214Data && (
+                      <button
+                        onClick={() => setShowDD214Processor(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        ➕ Process DD214
+                      </button>
+                    )}
+                  </div>
+                  
+                  {showDD214Processor && (
+                    <div className="space-y-4">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Paste the text from your DD214 below. AI will extract key information automatically.
+                        <br/><span className="text-xs text-blue-600 dark:text-blue-400">⚠️ Your DD214 contains sensitive information - data stays on your device only.</span>
+                      </p>
+                      <textarea
+                        value={dd214Text}
+                        onChange={(e) => setDD214Text(e.target.value)}
+                        placeholder="Paste your DD214 text here (copy from PDF or scanned document)..."
+                        rows={6}
+                        className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleProcessDD214}
+                          disabled={isProcessingDD214 || !aiStatus.available}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {isProcessingDD214 ? (
+                            <>
+                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>🤖 Extract with AI</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => { setShowDD214Processor(false); setDD214Text(''); }}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      {!aiStatus.available && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          ⚠️ Configure AI in settings to enable automatic extraction
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {serviceHistory.dd214Data && !showDD214Processor && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Branch</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.branch || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">MOS</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.mos || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">MOS Title</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{serviceHistory.dd214Data.mosTitle || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Entry Date</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.entryDate || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Separation Date</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.separationDate || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Time in Service</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            {serviceHistory.dd214Data.yearsService ? `${serviceHistory.dd214Data.yearsService}y ${serviceHistory.dd214Data.monthsService || 0}m` : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Character of Service</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.characterOfService || 'N/A'}</p>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Foreign Service</p>
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.foreignService ? 'Yes' : 'No'}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => setShowDD214Processor(true)}
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          🔄 Re-process DD214
+                        </button>
+                        <button
+                          onClick={handleClearDD214}
+                          className="text-sm text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          🗑️ Clear DD214 Data
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!serviceHistory.dd214Data && !showDD214Processor && (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      No DD214 data saved. Process your DD214 to auto-fill service information across tools.
+                    </p>
+                  )}
+                </div>
+                
+                {/* Deployments Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      🌍 Deployments
+                    </h3>
+                    {!showDeploymentForm && (
+                      <button
+                        onClick={() => setShowDeploymentForm(true)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                      >
+                        ➕ Add Deployment
+                      </button>
+                    )}
+                  </div>
+                  
+                  {showDeploymentForm && (
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Theater/Operation *</label>
+                          <select
+                            value={newDeployment.theater}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, theater: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          >
+                            <option value="">Select...</option>
+                            <option value="OIF">OIF - Operation Iraqi Freedom</option>
+                            <option value="OEF">OEF - Operation Enduring Freedom</option>
+                            <option value="OND">OND - Operation New Dawn</option>
+                            <option value="OIR">OIR - Operation Inherent Resolve</option>
+                            <option value="OFS">OFS - Operation Freedom's Sentinel</option>
+                            <option value="Gulf War">Gulf War</option>
+                            <option value="Vietnam">Vietnam</option>
+                            <option value="Korea">Korea</option>
+                            <option value="Somalia">Somalia</option>
+                            <option value="Bosnia">Bosnia</option>
+                            <option value="Kosovo">Kosovo</option>
+                            <option value="Europe">Europe (Other)</option>
+                            <option value="Pacific">Pacific</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location *</label>
+                          <input
+                            type="text"
+                            value={newDeployment.location}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, location: e.target.value }))}
+                            placeholder="e.g., Baghdad, Iraq"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            value={newDeployment.startDate}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, startDate: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+                          <input
+                            type="date"
+                            value={newDeployment.endDate}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, endDate: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
+                          <input
+                            type="text"
+                            value={newDeployment.unit}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, unit: e.target.value }))}
+                            placeholder="e.g., 1st Infantry Division"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={newDeployment.combat}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, combat: e.target.checked }))}
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Combat Zone</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={newDeployment.hazardous}
+                            onChange={(e) => setNewDeployment(prev => ({ ...prev, hazardous: e.target.checked }))}
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Hazardous Duty</span>
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleAddDeployment}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                        >
+                          Save Deployment
+                        </button>
+                        <button
+                          onClick={() => { setShowDeploymentForm(false); setNewDeployment({ theater: '', location: '', startDate: '', endDate: '', unit: '', notes: '', hazardous: false, combat: false }); }}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {serviceHistory.deployments.length === 0 && !showDeploymentForm ? (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No deployments added yet. Add your deployments for PACT Act eligibility and exposure tracking.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {serviceHistory.deployments.map(dep => (
+                        <div key={dep.id} className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">{dep.theater}</span>
+                              {dep.combat && <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">Combat</span>}
+                              {dep.hazardous && <span className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Hazardous</span>}
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{dep.location}</p>
+                            {(dep.startDate || dep.endDate) && (
+                              <p className="text-xs text-gray-500 dark:text-gray-500">
+                                {dep.startDate || '?'} - {dep.endDate || 'Present'}
+                              </p>
+                            )}
+                            {dep.unit && <p className="text-xs text-gray-500 dark:text-gray-500">{dep.unit}</p>}
+                          </div>
+                          <button
+                            onClick={() => handleRemoveDeployment(dep.id)}
+                            className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Awards Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      🎖️ Awards & Decorations
+                    </h3>
+                    {!showAwardForm && (
+                      <button
+                        onClick={() => setShowAwardForm(true)}
+                        className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+                      >
+                        ➕ Add Award
+                      </button>
+                    )}
+                  </div>
+                  
+                  {showAwardForm && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 mb-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Award Name *</label>
+                          <input
+                            type="text"
+                            value={newAward.name}
+                            onChange={(e) => setNewAward(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="e.g., Purple Heart"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Abbreviation</label>
+                          <input
+                            type="text"
+                            value={newAward.abbreviation}
+                            onChange={(e) => setNewAward(prev => ({ ...prev, abbreviation: e.target.value }))}
+                            placeholder="e.g., PH"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Received</label>
+                          <input
+                            type="date"
+                            value={newAward.dateReceived}
+                            onChange={(e) => setNewAward(prev => ({ ...prev, dateReceived: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div className="flex items-end pb-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={newAward.isCombat}
+                              onChange={(e) => setNewAward(prev => ({ ...prev, isCombat: e.target.checked }))}
+                              className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">Combat-Related Award</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleAddAward}
+                          className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                        >
+                          Save Award
+                        </button>
+                        <button
+                          onClick={() => { setShowAwardForm(false); setNewAward({ name: '', abbreviation: '', dateReceived: '', notes: '', isCombat: false }); }}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {serviceHistory.awards.length === 0 && !showAwardForm ? (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No awards added yet. Add your awards and decorations for documentation purposes.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {serviceHistory.awards.map(award => (
+                        <div key={award.id} className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <span className="text-amber-700 dark:text-amber-300 font-medium">
+                            🎖️ {award.abbreviation || award.name}
+                          </span>
+                          {award.isCombat && <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">Combat</span>}
+                          <button
+                            onClick={() => handleRemoveAward(award.id)}
+                            className="text-red-400 hover:text-red-600 text-sm"
+                            title={`Remove ${award.name}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Info Banner */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    💡 <strong>Why track this?</strong> Your service history, deployments, and awards can be used by the PACT Act Navigator to determine toxic exposure eligibility, 
+                    and by other tools for auto-filling forms and strengthening your claims.
+                  </p>
+                </div>
+              </div>
             )}
 
             {/* CLAIMS TAB */}
@@ -794,6 +1572,331 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
               </>
             )}
 
+            {/* TIMELINE EVENTS TAB */}
+            {activeTab === 'timeline' && (
+              <>
+                {timelineEvents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">🧵 No Timeline Events</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+                      Use the <strong>Continuity Thread</strong> tool to map your evidence timeline and track treatment gaps. Events you save there will appear here.
+                    </p>
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Go to Continuity Thread
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4 flex justify-between items-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {timelineEvents.length} event{timelineEvents.length !== 1 ? 's' : ''} tracked
+                      </p>
+                      <button
+                        onClick={handleClearTimelineEvents}
+                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    
+                    {/* Timeline Visual */}
+                    <div className="relative">
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-slate-400 via-slate-300 to-slate-200 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700"></div>
+                      
+                      <div className="space-y-4">
+                        {timelineEvents
+                          .sort((a, b) => new Date(b.date) - new Date(a.date))
+                          .map((event, index) => (
+                            <div key={event.id} className="relative flex items-start gap-4 pl-10">
+                              {/* Timeline dot */}
+                              <div className={`absolute left-2.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                                event.type === 'treatment' ? 'bg-blue-500' :
+                                event.type === 'diagnosis' ? 'bg-green-500' :
+                                event.type === 'military' ? 'bg-amber-500' :
+                                event.type === 'symptom' ? 'bg-red-500' :
+                                event.type === 'hospitalization' ? 'bg-purple-500' :
+                                'bg-gray-400'
+                              }`}></div>
+                              
+                              <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex justify-between items-start gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                        event.type === 'treatment' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' :
+                                        event.type === 'diagnosis' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
+                                        event.type === 'military' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' :
+                                        event.type === 'symptom' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' :
+                                        event.type === 'hospitalization' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' :
+                                        'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                      }`}>
+                                        {event.type?.charAt(0).toUpperCase() + event.type?.slice(1) || 'Event'}
+                                      </span>
+                                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                        {new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                      </span>
+                                    </div>
+                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{event.title}</h4>
+                                    {event.description && (
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{event.description}</p>
+                                    )}
+                                    {event.condition && (
+                                      <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                                        Related to: {event.condition}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      const updated = timelineEvents.filter(e => e.id !== event.id);
+                                      setTimelineEvents(updated);
+                                      import('../utils/veteranProfile').then(m => m.saveTimelineEvents(updated));
+                                    }}
+                                    className="text-red-400 hover:text-red-600 transition-colors p-1"
+                                    title="Remove event"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                    
+                    {/* Info Banner */}
+                    <div className="mt-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                      <p className="text-sm text-slate-700 dark:text-slate-300">
+                        💡 <strong>Why track this?</strong> A continuous timeline of treatment and symptoms helps establish service connection and proves your condition has persisted since service. Use Continuity Thread to identify gaps in your evidence.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* PAIN MAPS TAB */}
+            {activeTab === 'painmaps' && (
+              <>
+                {painMaps.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">🎨 No Pain Maps Saved</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+                      Use the <strong>Pain Painter</strong> tool to visually document your pain locations and generate condition-specific nexus language. Maps you save there will appear here.
+                    </p>
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      Go to Pain Painter
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4 flex justify-between items-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {painMaps.length} pain map{painMaps.length !== 1 ? 's' : ''} saved
+                      </p>
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to clear all pain maps? This cannot be undone.')) {
+                            setPainMaps([]);
+                            import('../utils/veteranProfile').then(m => m.clearPainMaps());
+                          }
+                        }}
+                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {painMaps.map((map) => (
+                        <div
+                          key={map.id}
+                          className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group"
+                          onClick={() => setViewingPainMap(map)}
+                        >
+                          {/* Map Preview */}
+                          <div className="aspect-[3/4] bg-gradient-to-b from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 relative flex items-center justify-center">
+                            {map.thumbnail ? (
+                              <img src={map.thumbnail} alt={map.name} className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="text-center p-4">
+                                <span className="text-4xl">🎨</span>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{map.painPoints?.length || 0} pain points</p>
+                              </div>
+                            )}
+                            
+                            {/* Overlay on hover */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-white font-semibold">View Details</span>
+                            </div>
+                          </div>
+                          
+                          {/* Map Info */}
+                          <div className="p-3">
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{map.name || 'Untitled Pain Map'}</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(map.savedAt || map.createdAt).toLocaleDateString()}
+                            </p>
+                            {map.conditions && map.conditions.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {map.conditions.slice(0, 2).map((cond, idx) => (
+                                  <span key={idx} className="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">
+                                    {cond}
+                                  </span>
+                                ))}
+                                {map.conditions.length > 2 && (
+                                  <span className="text-xs text-gray-500">+{map.conditions.length - 2}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Delete button */}
+                          <div className="px-3 pb-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePainMap(map.id);
+                              }}
+                              className="w-full px-3 py-1.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Info Banner */}
+                    <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                      <p className="text-sm text-red-700 dark:text-red-300">
+                        💡 <strong>Why track this?</strong> Pain maps help visualize your symptoms for C&P exams and provide specific location data that supports accurate diagnostic coding. Each map generates nexus language you can use in your claims.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Pain Map Detail Modal */}
+            {viewingPainMap && (
+              <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
+                <div className="min-h-screen px-4 py-8">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
+                    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold">{viewingPainMap.name || 'Pain Map Details'}</h3>
+                        <p className="text-red-100 text-sm">
+                          Saved: {new Date(viewingPainMap.savedAt || viewingPainMap.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setViewingPainMap(null)}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="p-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* Pain Map Image */}
+                        <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 flex items-center justify-center">
+                          {viewingPainMap.thumbnail ? (
+                            <img src={viewingPainMap.thumbnail} alt="Pain Map" className="max-w-full max-h-[400px] object-contain" />
+                          ) : (
+                            <div className="text-center py-12">
+                              <span className="text-6xl">🎨</span>
+                              <p className="text-gray-500 dark:text-gray-400 mt-2">No preview available</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Pain Points List */}
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Pain Points ({viewingPainMap.painPoints?.length || 0})</h4>
+                          {viewingPainMap.painPoints && viewingPainMap.painPoints.length > 0 ? (
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                              {viewingPainMap.painPoints.map((point, idx) => (
+                                <div key={idx} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-3 h-3 rounded-full ${
+                                      point.severity === 'severe' ? 'bg-red-500' :
+                                      point.severity === 'moderate' ? 'bg-orange-500' :
+                                      'bg-yellow-500'
+                                    }`}></span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{point.region || point.bodyPart}</span>
+                                  </div>
+                                  {point.type && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Type: {point.type}</p>
+                                  )}
+                                  {point.notes && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">"{point.notes}"</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-500 dark:text-gray-400">No pain points recorded</p>
+                          )}
+                          
+                          {/* Generated Nexus Language */}
+                          {viewingPainMap.nexusLanguage && (
+                            <div className="mt-4">
+                              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Nexus Language</h4>
+                              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                                <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">{viewingPainMap.nexusLanguage}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-3 mt-6">
+                        <button
+                          onClick={() => {
+                            handleDeletePainMap(viewingPainMap.id);
+                            setViewingPainMap(null);
+                          }}
+                          className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                        >
+                          Delete Map
+                        </button>
+                        <button
+                          onClick={() => setViewingPainMap(null)}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Form Viewer Modal */}
             {viewingForm && (
               <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
@@ -805,7 +1908,6 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                         <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <FocusToggle variant="light" />
                         <button
                           onClick={() => setViewingForm(null)}
                           className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -1001,6 +2103,14 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
         context={{ count: claims.length }}
         onDismiss={() => setBackupCreated(false)}
       />
+      
+      {/* VA.gov Rating Paster Modal */}
+      {showVAGovPaster && (
+        <VAGovRatingPaster
+          onRatingsParsed={handlePastedRatings}
+          onClose={() => setShowVAGovPaster(false)}
+        />
+      )}
     </div>
   );
 };

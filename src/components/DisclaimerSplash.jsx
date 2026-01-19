@@ -41,18 +41,18 @@ function DisclaimerSplash({ onAcknowledge }) {
       <div className={`${modalClasses.content} max-w-2xl rounded-2xl max-h-[90vh]`}>
         {/* Header - Warm Welcome */}
         <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 p-6 text-center">
-          <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden">
+          <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden w-24 h-24">
             <img 
               src="/images/Vet-Rate-org-logo-official.png" 
               alt="Vet-Rate.org Logo" 
-              className="h-20 w-20 object-cover rounded-full"
+              className="h-full w-full object-cover rounded-full"
             />
           </div>
           <h1 id="splash-title" className="text-2xl md:text-3xl font-bold text-white mb-2">
             Welcome, Fellow Veteran 🎖️
           </h1>
           <p className="text-green-100 text-lg">
-            Your complete VA claims toolkit — built by one of your own
+            Your complete VA claims toolkit - built by one of your own
           </p>
         </div>
 
@@ -63,7 +63,7 @@ function DisclaimerSplash({ onAcknowledge }) {
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
               <span className="font-semibold">From one veteran to another:</span> I built this complete claims arsenal because 
               navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>40+ professional-grade tools</strong> covering 
-              everything from initial research through appeals—748 rated conditions, advanced calculators, AI document analysis, C&P exam prep, 
+              everything from initial research through appeals - 751 rated conditions, advanced calculators, AI document analysis, C&P exam prep, 
               and complete evidence builders. All free, no tricks, no sales pitches.
             </p>
             <p className="text-blue-600 dark:text-blue-100 text-xs mt-2 italic">
@@ -98,39 +98,39 @@ function DisclaimerSplash({ onAcknowledge }) {
             <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>748 conditions</strong> with official VA rating criteria from 38 CFR Part 4</span>
+                <span><strong>751 conditions</strong> with official VA rating criteria from 38 CFR Part 4</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Tactical Calculator</strong> — combined ratings with 2026 pay rates & lifetime projections</span>
+                <span><strong>Tactical Calculator</strong> - combined ratings with 2026 pay rates & lifetime projections</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Secondary Scout</strong> — discover 500+ linked conditions to maximize your rating</span>
+                <span><strong>Secondary Scout</strong> - discover 500+ linked conditions to maximize your rating</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>C&P Exam Simulator</strong> — practice with DBQ-aligned questions</span>
+                <span><strong>C&P Exam Simulator</strong> - practice with DBQ-aligned questions</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>C-File AI Analyzer</strong> — what others charge $500+ for, FREE</span>
+                <span><strong>C-File AI Analyzer</strong> - what others charge $500+ for, FREE</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Forms Helper & Evidence Builders</strong> — nexus statements, buddy statements, symptom tracking</span>
+                <span><strong>Forms Helper & Evidence Builders</strong> - nexus statements, buddy statements, symptom tracking</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Strategic Tools</strong> — Pathfinder, Risk Assessment, VSO Finder, State Benefits</span>
+                <span><strong>Strategic Tools</strong> - Pathfinder, Risk Assessment, VSO Finder, State Benefits</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>My Packet</strong> — organize all evidence and track your claims</span>
+                <span><strong>My Packet</strong> - organize all evidence and track your claims</span>
               </li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic text-center">
-              🎖️ 40+ professional tools—everything from research to appeal. All free.
+              🎖️ 40+ professional tools - everything from research to appeal. All free.
             </p>
           </div>
 

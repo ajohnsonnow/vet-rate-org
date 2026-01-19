@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { jsPDF } from 'jspdf';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import ShareButton from './ShareButton';
+import { generateAI, getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
 /**
  * SymptomLogger Component - "The 50% Maker"
@@ -215,10 +218,17 @@ const SYMPTOM_TYPES = {
 const SymptomLogger = ({ onClose, onReportBug }) => {
   useBodyScrollLock(true);
   
+  const symptomLoggerContentRef = useRef(null);
   const [logs, setLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('log'); // 'log', 'history', 'export'
   const [symptomType, setSymptomType] = useState('migraine');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  
+  // AI State
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState({ available: false });
+  const [isAIGenerating, setIsAIGenerating] = useState(null); // null or field name being generated
+  const [aiError, setAIError] = useState('');
   
   // Form state for new log
   const [newLog, setNewLog] = useState({
@@ -236,6 +246,15 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
     stressLevel: 5, // NEW: Stress level (0-10)
     notes: '',
   });
+  
+  // Check AI status on mount
+  useEffect(() => {
+    const checkAI = async () => {
+      const status = await getAIStatus();
+      setAIStatus(status);
+    };
+    checkAI();
+  }, []);
 
   // Load logs from localStorage on mount
   useEffect(() => {
@@ -362,6 +381,190 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
   const handleDeleteLog = (logId) => {
     setLogs(prev => prev.filter(log => log.id !== logId));
     setShowDeleteConfirm(null);
+  };
+  
+  // AI Suggestion Prompts for each symptom type and field
+  const getAISuggestionPrompt = (field) => {
+    const config = SYMPTOM_TYPES[symptomType];
+    const contextData = {
+      symptomType: config.label,
+      severity: newLog.severity,
+      duration: newLog.duration,
+      bodyLocation: newLog.bodyLocation,
+      weather: newLog.weather,
+      stressLevel: newLog.stressLevel,
+      prostrating: newLog.prostrating,
+      medication: newLog.medication,
+    };
+    
+    const symptomPrompts = {
+      migraine: {
+        triggers: `Help a veteran document migraine triggers for VA disability evidence. Current context: severity ${contextData.severity}/10, duration: ${contextData.duration || 'not specified'}, weather: ${contextData.weather || 'not specified'}, stress level: ${contextData.stressLevel}/10.
+        
+Generate 5-7 common migraine triggers relevant to this context. Format as a brief comma-separated list the veteran can select from or use as inspiration. Include triggers like: bright lights, loud noises, strong smells, weather changes, stress, lack of sleep, certain foods, dehydration, screen time, hormonal changes.`,
+        
+        activityImpact: `Help a veteran document how a migraine affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Prostrating: ${contextData.prostrating ? 'Yes - had to stop activities' : 'No'}.
+        
+Generate a brief description of activities typically affected by a migraine of this severity. Focus on work impact, daily tasks, and social activities. Write 2-3 sentences that the veteran can customize.`,
+        
+        notes: `Help a veteran write clinical notes for a migraine episode for VA disability documentation. Context:
+- Severity: ${contextData.severity}/10
+- Duration: ${contextData.duration || 'not specified'}
+- Location: ${contextData.bodyLocation || 'head'}
+- Weather: ${contextData.weather || 'not noted'}
+- Stress: ${contextData.stressLevel}/10
+- Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}
+- Medication: ${contextData.medication ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical-style note describing this episode. Include sensory symptoms (light/sound sensitivity, aura), physical symptoms (nausea, vision changes), and functional impact. Use language suitable for medical documentation.`,
+      },
+      
+      ibs: {
+        triggers: `Help a veteran document IBS triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || 'not specified'}, stress level: ${contextData.stressLevel}/10.
+        
+Generate 5-7 common IBS triggers. Include: specific foods (dairy, gluten, caffeine, spicy foods), stress, anxiety, lack of sleep, irregular eating schedule, medications.`,
+        
+        activityImpact: `Help a veteran document how an IBS episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Prostrating: ${contextData.prostrating ? 'Yes - prevented normal activities' : 'No'}.
+        
+Generate a brief description of activities typically affected. Focus on work interruptions, inability to leave home/bathroom access needs, social/travel limitations. Write 2-3 sentences the veteran can customize.`,
+        
+        notes: `Help a veteran write clinical notes for an IBS episode for VA disability documentation. Context:
+- Severity: ${contextData.severity}/10
+- Duration: ${contextData.duration || 'not specified'}
+- Stress: ${contextData.stressLevel}/10
+- Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}
+- Medication: ${contextData.medication ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical-style note. Include symptoms (cramping, bloating, urgency, frequency), impact on ability to work/function, and any relief measures. Use medical documentation language.`,
+      },
+      
+      pain: {
+        triggers: `Help a veteran document pain flare-up triggers for VA disability evidence. Context: pain scale ${contextData.painScale || contextData.severity}/10, location: ${contextData.bodyLocation || 'not specified'}, weather: ${contextData.weather || 'not specified'}.
+        
+Generate 5-7 common pain triggers relevant to this context. Include: physical activity, prolonged sitting/standing, weather changes, lifting, repetitive motions, stress, poor sleep.`,
+        
+        activityImpact: `Help a veteran document how a pain flare-up affected their daily activities for VA disability evidence. Pain: ${contextData.painScale || contextData.severity}/10, Location: ${contextData.bodyLocation || 'not specified'}, Duration: ${contextData.duration || 'unknown'}, Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}.
+        
+Generate a description of functional limitations. Include specific activities that were difficult/impossible, mobility issues, work impact. Write 2-3 sentences.`,
+        
+        notes: `Help a veteran write clinical notes for a pain flare-up for VA disability documentation. Context:
+- Pain Level: ${contextData.painScale || contextData.severity}/10
+- Location: ${contextData.bodyLocation || 'not specified'}
+- Duration: ${contextData.duration || 'not specified'}
+- Weather: ${contextData.weather || 'not noted'}
+- Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}
+- Medication: ${contextData.medication ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical note describing the pain quality (sharp, dull, radiating, burning), functional limitations, and impact on daily activities. Use medical terminology.`,
+      },
+      
+      mental: {
+        triggers: `Help a veteran document mental health episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
+        
+Generate 5-7 common mental health triggers. Include: specific stressors, anniversary reactions, crowds, loud noises, sleep disturbance, isolation, reminders of service, work stress, family conflict.`,
+        
+        activityImpact: `Help a veteran document how a mental health episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Unable to function normally: ${contextData.prostrating ? 'Yes' : 'No'}.
+        
+Generate a description of functional impact. Include work/social impairment, isolation, inability to complete tasks, relationship effects. Write 2-3 sentences.`,
+        
+        notes: `Help a veteran write clinical notes for a mental health episode for VA disability documentation. Context:
+- Severity: ${contextData.severity}/10
+- Duration: ${contextData.duration || 'not specified'}
+- Stress Level: ${contextData.stressLevel}/10
+- Unable to function: ${contextData.prostrating ? 'Yes' : 'No'}
+- Medication: ${contextData.medication ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical note describing symptoms (anxiety, depression, hypervigilance, avoidance, intrusive thoughts), behavioral changes, and occupational/social impact. Use appropriate clinical language.`,
+      },
+      
+      fatigue: {
+        triggers: `Help a veteran document fatigue episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || 'not specified'}.
+        
+Generate 5-7 common fatigue triggers. Include: poor sleep, physical exertion, stress, medications, weather, chronic pain flares, mental health symptoms.`,
+        
+        activityImpact: `Help a veteran document how fatigue affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Unable to function: ${contextData.prostrating ? 'Yes' : 'No'}.
+        
+Generate a description of functional limitations. Include inability to work, rest requirements, cognitive effects, self-care difficulties. Write 2-3 sentences.`,
+        
+        notes: `Help a veteran write clinical notes for a fatigue episode for VA disability documentation. Context:
+- Severity: ${contextData.severity}/10
+- Duration: ${contextData.duration || 'not specified'}
+- Unable to function: ${contextData.prostrating ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical note describing fatigue severity, physical/cognitive symptoms, rest requirements, and impact on daily functioning.`,
+      },
+      
+      sleep: {
+        triggers: `Help a veteran document sleep disorder triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
+        
+Generate 5-7 common sleep disruption triggers. Include: nightmares, pain, anxiety, medications, caffeine, irregular schedule, environmental factors, sleep apnea symptoms.`,
+        
+        activityImpact: `Help a veteran document how sleep problems affected their next-day activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Impaired next-day function: ${contextData.prostrating ? 'Yes' : 'No'}.
+        
+Generate a description of daytime impairment. Include work performance, cognitive function, safety concerns, mood effects. Write 2-3 sentences.`,
+        
+        notes: `Help a veteran write clinical notes for sleep disturbance for VA disability documentation. Context:
+- Severity: ${contextData.severity}/10
+- Duration: ${contextData.duration || 'not specified'}
+- Impaired function: ${contextData.prostrating ? 'Yes' : 'No'}
+
+Write a 2-3 sentence clinical note describing sleep quality, disturbances (insomnia, nightmares, apnea), and impact on daytime functioning.`,
+      },
+    };
+    
+    // Default prompts for symptom types not specifically defined
+    const defaultPrompts = {
+      triggers: `Help a veteran document ${config.label.toLowerCase()} triggers for VA disability evidence. Severity: ${contextData.severity}/10.
+      
+Generate 5-7 potential triggers or contributing factors that the veteran can select from or customize.`,
+      
+      activityImpact: `Help a veteran document how ${config.label.toLowerCase()} affected their daily activities. Severity: ${contextData.severity}/10, Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}.
+      
+Generate 2-3 sentences describing typical activity limitations for documentation purposes.`,
+      
+      notes: `Help a veteran write clinical notes for a ${config.label.toLowerCase()} episode. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || 'unknown'}, Prostrating: ${contextData.prostrating ? 'Yes' : 'No'}.
+      
+Write a 2-3 sentence clinical-style note suitable for VA disability documentation.`,
+    };
+    
+    return symptomPrompts[symptomType]?.[field] || defaultPrompts[field];
+  };
+  
+  // Generate AI suggestion for a field
+  const generateAISuggestion = async (field) => {
+    if (!aiStatus.available) {
+      setAIError('Please configure AI in settings first');
+      return;
+    }
+    
+    setIsAIGenerating(field);
+    setAIError('');
+    
+    try {
+      const prompt = getAISuggestionPrompt(field);
+      
+      const response = await generateAI({
+        prompt: `${prompt}
+
+IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
+        temperature: 0.7,
+        maxTokens: 300,
+        systemPrompt: 'You are a VA disability documentation assistant helping veterans create accurate, clinical-quality symptom logs. Provide concise, directly usable text that veterans can customize. Use appropriate medical terminology when relevant.'
+      });
+      
+      if (response.success && response.text) {
+        setNewLog(prev => ({
+          ...prev,
+          [field]: prev[field] ? `${prev[field]} ${response.text}` : response.text
+        }));
+      } else {
+        setAIError(response.error || 'Failed to generate suggestion');
+      }
+    } catch (error) {
+      setAIError('AI generation failed. Please try again.');
+    } finally {
+      setIsAIGenerating(null);
+    }
   };
 
   const handleExportPDF = () => {
@@ -554,7 +757,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       aria-labelledby="symptom-logger-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
+        <div ref={symptomLoggerContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
           <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -565,8 +768,9 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                   <span className="text-3xl">{config.emoji}</span>
                 </div>
                 <div>
-                  <h2 id="symptom-logger-title" className="text-2xl sm:text-3xl font-bold">
+                  <h2 id="symptom-logger-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                     Symptom Logger
+                    <AIStatusBadge status={aiStatus} />
                   </h2>
                   <p className="text-white/80 text-sm sm:text-base mt-1">
                     The 50% Maker • Track Frequency for VA Ratings
@@ -574,7 +778,20 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <FocusToggle variant="light" />
+                <button
+                  onClick={() => setShowAISettings(!showAISettings)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    showAISettings ? 'bg-white/30 text-white' : 'hover:bg-white/20 text-white/80'
+                  }`}
+                  title="AI Settings"
+                >
+                  <span className="text-xl">🤖</span>
+                </button>
+                <ShareButton 
+                  targetRef={symptomLoggerContentRef}
+                  filename="symptom-log"
+                  variant="icon"
+                />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Symptom Logger" />}
                 <button
                   onClick={onClose}
@@ -587,6 +804,27 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                 </button>
               </div>
             </div>
+            
+            {/* AI Settings Panel */}
+            {showAISettings && (
+              <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-medium">🤖 AI Assistant</span>
+                  <span className="text-sm text-white/70">
+                    {aiStatus.available ? `Using ${aiStatus.mode}` : 'Not configured'}
+                  </span>
+                </div>
+                <AIModeSelector 
+                  onModeChange={async () => {
+                    const status = await getAIStatus();
+                    setAIStatus(status);
+                  }}
+                />
+                <p className="text-xs text-white/70 mt-2">
+                  ✨ AI can help suggest triggers, activity impact, and clinical-style notes for your symptom entries.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Symptom Type Selector */}
@@ -774,13 +1012,24 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       🎯 Activities Affected (optional)
                     </label>
-                    <input
-                      type="text"
-                      value={newLog.activityImpact}
-                      onChange={(e) => setNewLog(prev => ({ ...prev, activityImpact: e.target.value }))}
-                      placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={newLog.activityImpact}
+                        onChange={(e) => setNewLog(prev => ({ ...prev, activityImpact: e.target.value }))}
+                        placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
+                        className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                      />
+                      {aiStatus.available && (
+                        <button
+                          onClick={() => generateAISuggestion('activityImpact')}
+                          disabled={isAIGenerating === 'activityImpact'}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+                        >
+                          {isAIGenerating === 'activityImpact' ? '...' : '✨ AI'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Weather Conditions - NEW FIELD */}
@@ -868,13 +1117,24 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       ⚡ {config.questions.triggers}
                     </label>
-                    <input
-                      type="text"
-                      value={newLog.triggers}
-                      onChange={(e) => setNewLog(prev => ({ ...prev, triggers: e.target.value }))}
-                      placeholder="e.g., stress, weather, certain foods, loud noise..."
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={newLog.triggers}
+                        onChange={(e) => setNewLog(prev => ({ ...prev, triggers: e.target.value }))}
+                        placeholder="e.g., stress, weather, certain foods, loud noise..."
+                        className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                      />
+                      {aiStatus.available && (
+                        <button
+                          onClick={() => generateAISuggestion('triggers')}
+                          disabled={isAIGenerating === 'triggers'}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+                        >
+                          {isAIGenerating === 'triggers' ? '...' : '✨ AI'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Notes */}
@@ -882,13 +1142,27 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       📝 Additional Notes
                     </label>
-                    <textarea
-                      value={newLog.notes}
-                      onChange={(e) => setNewLog(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Describe what happened, impact on your day, etc."
-                      rows={3}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={newLog.notes}
+                        onChange={(e) => setNewLog(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Describe what happened, impact on your day, etc."
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                      />
+                      {aiStatus.available && (
+                        <button
+                          onClick={() => generateAISuggestion('notes')}
+                          disabled={isAIGenerating === 'notes'}
+                          className="absolute right-2 top-2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+                        >
+                          {isAIGenerating === 'notes' ? '...' : '✨ AI Notes'}
+                        </button>
+                      )}
+                    </div>
+                    {aiError && (
+                      <p className="text-xs text-red-500 mt-1">{aiError}</p>
+                    )}
                   </div>
                 </div>
 
@@ -1095,7 +1369,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
                 <button
                   onClick={handleExportPDF}
                   disabled={logs.filter(l => l.type === symptomType).length === 0}
-                  className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-bold text-lg hover:from-green-700 hover:to-teal-700 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   <span>📄</span>
                   <span>Export PDF for C&P Exam</span>

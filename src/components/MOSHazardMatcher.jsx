@@ -667,21 +667,31 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
   };
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-900 min-h-screen">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mos-hazard-matcher-title"
+    >
+      <div className="min-h-screen px-4 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🎖️</span>
+          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🎖️</span>
+                </div>
                 <div>
-                  <h2 className="text-xl font-bold text-black">MOS Hazard Matcher</h2>
-                  <p className="text-sm text-yellow-800">Your Job → Your Injuries</p>
+                  <h2 id="mos-hazard-matcher-title" className="text-2xl sm:text-3xl font-bold text-black">
+                    MOS Hazard Matcher
+                  </h2>
+                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
+                    Your Job → Your Injuries
+                  </p>
                 </div>
               </div>
               <button
@@ -696,7 +706,8 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
             </div>
           </div>
           
-          <div className="max-w-4xl mx-auto p-6 space-y-6">
+          {/* Content */}
+          <div className="p-6 space-y-6 bg-gray-900">
             {/* Intro */}
             <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
               <p className="text-slate-200 text-center">
@@ -850,7 +861,7 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                         }
                         onClose();
                       }}
-                      className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all"
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
                     >
                       📋 Add to My Claim List
                     </button>

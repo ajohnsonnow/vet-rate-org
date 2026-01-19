@@ -16,7 +16,7 @@ import DoctorsPacket from './DoctorsPacket';
  * Main UI for the Secondary Conditions Scout module
  * Displays potential secondary claims based on user's service-connected disabilities
  */
-const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => {
+const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpenAISettings }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -394,6 +394,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket }) => 
         onClose={() => setShowDoctorsPacket(false)}
         primaryCondition={packetPrimary}
         secondaryCondition={packetSecondary}
+        onOpenAISettings={onOpenAISettings}
       />
     </div>
   );

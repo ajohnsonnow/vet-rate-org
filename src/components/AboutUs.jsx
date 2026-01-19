@@ -1,8 +1,153 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { PROJECT_STATS, FORMATTED_STATS, formatNumber } from '../data/projectStats';
+import { TOOLKIT_CATEGORIES, getTotalToolCount } from '../data/toolkitData';
 import { useColorSchemas } from '../hooks/useColorSchemas';
+import { ChevronUp, Sparkles, Wrench, Shield, Zap, CheckCircle, Rocket } from 'lucide-react';
+import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
+
+// Version DropUp Component - Opens upward for footer placement
+const VersionDropUp = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [changelogData, setChangelogData] = useState(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const data = generateWhatsNewChangelog();
+    setChangelogData(data);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const getIcon = (type, isNew) => {
+    if (isNew) return <Rocket className="w-4 h-4 text-emerald-500" />;
+    switch (type) {
+      case 'feature':
+        return <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'fix':
+        return <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      case 'security':
+        return <Shield className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      case 'improvement':
+        return <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />;
+      default:
+        return <CheckCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+    }
+  };
+
+  const getTypeBadgeColor = (type, isNew) => {
+    if (isNew) return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white';
+    const colors = {
+      feature: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+      fix: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+      security: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+      improvement: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  };
+
+  const getTypeLabel = (type, isNew) => {
+    if (isNew) return '🆕 NEW';
+    const labels = {
+      feature: 'Feature',
+      fix: 'Bug Fix',
+      security: 'Security',
+      improvement: 'Improvement',
+      change: 'Change'
+    };
+    return labels[type] || 'Update';
+  };
+
+  if (!changelogData) {
+    return (
+      <button
+        className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors"
+        title="Loading version information..."
+      >
+        v1.0.0
+      </button>
+    );
+  }
+
+  const { version, changelog } = changelogData;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-500/40 transition-colors flex items-center gap-1"
+        title="View version changelog"
+      >
+        v{version}
+        <ChevronUp className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute bottom-full left-0 mb-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-[100] max-h-[400px] overflow-y-auto">
+          {/* Footer - at top since it's flipped */}
+          <div className="border-b border-gray-200 dark:border-gray-700 p-3 text-center bg-gray-50 dark:bg-gray-900 rounded-t-lg sticky top-0">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              © 2024-2026 Anthony Johnson
+            </p>
+          </div>
+
+          {/* Changelog Items */}
+          <div className="p-3 space-y-3">
+            {changelog.map((item, index) => (
+              <div 
+                key={index}
+                className="border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1"
+              >
+                <div className="flex items-start gap-2 mb-1">
+                  {getIcon(item.type, item.isNew)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getTypeBadgeColor(item.type, item.isNew)}`}>
+                        {getTypeLabel(item.type, item.isNew)}
+                      </span>
+                      {item.category && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {item.category}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-0.5">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Header - at bottom since it's flipped */}
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-4 rounded-b-lg sticky bottom-0">
+            <h3 className="font-bold text-lg">What's New</h3>
+            <p className="text-emerald-100 text-xs">Version {version}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const AboutUs = ({ onClose, onReportBug }) => {
   // Lock body scroll when modal is open
@@ -65,8 +210,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
               
               <p>
                 I am <strong className="text-white">Anthony Johnson</strong>, an instructor and developer 
-                based in Portland, OR. I built Vet-Rate because I believe you shouldn't need a law degree—or 
-                pay thousands to a "claim shark"—to get the benefits you earned.
+                based in Portland, OR. I built Vet-Rate because I believe you shouldn't need a law degree - or 
+                pay thousands to a "claim shark" - to get the benefits you earned.
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
@@ -96,95 +241,41 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 My Mission</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> is the most comprehensive free VA claims toolkit available—28 professional-grade 
+              <strong>Vet-Rate.org</strong> is the most comprehensive free VA claims toolkit available - {getTotalToolCount()}+ professional-grade 
               tools built to empower veterans with everything needed from initial research through appeals. 
               The VA system is complex, but your path through it doesn't have to be. From smart search and rating calculators 
-              to C&P exam prep, AI document analysis, and evidence building, this complete arsenal puts you in command of your claim—giving 
+              to C&P exam prep, AI document analysis, and evidence building, this complete arsenal puts you in command of your claim - giving 
               you what predatory "claim sharks" charge thousands for, <strong>absolutely free</strong>.
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ Complete Claims Arsenal - 25+ Professional Tools</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ Complete Claims Arsenal - {getTotalToolCount()}+ Professional Tools</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               This comprehensive toolkit provides everything you need from initial research through appeals:
             </p>
             
             <div className="space-y-4">
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">🎖️ Core Intelligence (5 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>Smart Search:</strong> 748 rated conditions with official 38 CFR Part 4 criteria</li>
-                  <li><strong>PACT Act Navigator:</strong> Identify toxic exposure presumptive conditions</li>
-                  <li><strong>Web of Conditions:</strong> Interactive visualization of connected disabilities</li>
-                  <li><strong>VA Resources Hub:</strong> Direct access to official VA programs and support</li>
-                  <li><strong>User Manual:</strong> Complete documentation for all features</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">💰 Rating & Benefits Calculators (4 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>Tactical Calculator:</strong> Combined ratings with bilateral factors & 2026 pay rates</li>
-                  <li><strong>Million Dollar Dashboard:</strong> Lifetime benefit value & retirement projections</li>
-                  <li><strong>TDIU Builder:</strong> Total Disability Individual Unemployability evaluation</li>
-                  <li><strong>State Benefit Hunter:</strong> Discover state-level veteran benefits</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">🔍 Discovery & Research Tools (4 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>Secondary Scout:</strong> 500+ medically-recognized secondary conditions</li>
-                  <li><strong>MOS Hazard Matcher:</strong> Link military jobs to exposures and conditions</li>
-                  <li><strong>Pathfinder:</strong> Strategic roadmap from claim to appeal</li>
-                  <li><strong>Risk Assessment:</strong> Identify claim weaknesses before filing</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">📝 Evidence Building Suite (6 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>C&P Exam Simulator:</strong> DBQ-aligned practice with percentage predictions</li>
-                  <li><strong>Nexus Builder:</strong> Medical nexus statements with AI enhancement</li>
-                  <li><strong>Forms Helper:</strong> 16+ VA forms including buddy & PTSD stressor statements</li>
-                  <li><strong>Witness Bench:</strong> Interactive buddy statement builder</li>
-                  <li><strong>Symptom Logger:</strong> Track daily symptoms for documentation</li>
-                  <li><strong>AI Statement Assistant:</strong> "Three Pillars" approach (optional)</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">🔬 Advanced Analysis (What Others Charge $500+) (4 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>C-File AI Analyzer:</strong> Find evidence in thousands of pages (locally processed)</li>
-                  <li><strong>Decision Decoder:</strong> AI analysis of VA letters for appeal opportunities</li>
-                  <li><strong>Blue Button X-Ray:</strong> Extract claim-relevant evidence from medical records</li>
-                  <li><strong>Red Team:</strong> Simulate VA examiner review</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">🛡️ Protection & Compliance (3 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>Shark Radar:</strong> Identify predatory claim services</li>
-                  <li><strong>VSO Finder:</strong> Locate accredited Veterans Service Officers</li>
-                  <li><strong>FOIA Generator:</strong> Request military records</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">📁 Organization Tools (2 tools)</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-                  <li><strong>My Packet:</strong> Save and manage all claims evidence</li>
-                  <li><strong>PDF Reports:</strong> Download comprehensive condition guides</li>
-                </ul>
-              </div>
+              {TOOLKIT_CATEGORIES.map((category) => (
+                <div key={category.id}>
+                  <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2">
+                    {category.emoji} {category.title} ({category.tools.length} tools)
+                  </h4>
+                  <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
+                    {category.tools.map((tool, index) => (
+                      <li key={index}>
+                        <strong>{tool.name}:</strong> {tool.description}
+                        {tool.isNew && <span className="ml-1 px-1.5 py-0.5 bg-green-500 text-white text-xs rounded">NEW</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
             
             <div className="mt-4 bg-gradient-to-r from-va-gold/20 to-green-600/20 border-l-4 border-va-gold rounded p-3">
               <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                🎖️ That's 40+ professional-grade tools—completely free. What claim sharks charge thousands for.
+                🎖️ That's {getTotalToolCount()}+ professional-grade tools - completely free. What claim sharks charge thousands for.
               </p>
             </div>
           </section>
@@ -204,11 +295,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 criteria has been cross-referenced with the official VA Schedule for Rating Disabilities
               </li>
               <li>
-                <strong>748 VA Disabilities - Complete Coverage:</strong> All body systems thoroughly documented 
+                <strong>751 VA Disabilities - Complete Coverage:</strong> All body systems thoroughly documented 
                 (Musculoskeletal System, Organs of Special Sense, Systemic Diseases, Respiratory System, Cardiovascular System, Digestive System, Genitourinary System, Gynecological Conditions, Hemic and Lymphatic Systems, Skin, Endocrine System, Neurological Conditions, Mental Disorders, Dental and Oral Conditions, and Infectious Diseases)
               </li>
               <li>
-                <strong>100% Rating Criteria Validated:</strong> All 748 conditions include detailed percentage 
+                <strong>100% Rating Criteria Validated:</strong> All 751 conditions include detailed percentage 
                 breakdowns verified against current 38 CFR regulations
               </li>
               <li>
@@ -225,15 +316,15 @@ const AboutUs = ({ onClose, onReportBug }) => {
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Why I Built This</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               Too many veterans struggle because the VA system is scattered, technical, and predatory services 
-              charge thousands for basic help. I've been there myself. That's why I built Vet-Rate.org—28 
+              charge thousands for basic help. I've been there myself. That's why I built Vet-Rate.org - {getTotalToolCount()}+ 
               professional-grade tools in one place where you can research your conditions, calculate your ratings, 
               understand what the VA is looking for, practice your C&P exam, analyze documents with AI, find secondary 
               conditions, evaluate strategic options, and build your complete evidence packet. 
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               No expensive consultants. No endless Google searches. No predatory "claim sharks" taking 30% of your 
-              backpay. Just the complete arsenal you need to take charge of your claim—from initial research through 
-              appeals—all in one place.
+              backpay. Just the complete arsenal you need to take charge of your claim - from initial research through 
+              appeals - all in one place.
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
               <strong>This comprehensive platform is 100% free</strong> and runs entirely in your browser - no accounts, 
@@ -504,7 +595,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-600 mt-1">🤖</span>
-                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) powered the code development and implementation</span>
+                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude Sonnet 4, Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) and Google Gemini powered the code development and implementation</span>
                 </li>
               </ul>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">
@@ -595,7 +686,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
               I am committed to:
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
-              <li>✅ Keeping all <strong>40+ professional tools 100% free</strong> forever—no paywalls, ever</li>
+              <li>✅ Keeping all <strong>{getTotalToolCount()}+ professional tools 100% free</strong> forever - no paywalls, ever</li>
               <li>✅ Protecting your <strong>privacy</strong> - no ads, no tracking, no data collection, no claim sharks</li>
               <li>✅ Providing <strong>accurate, up-to-date</strong> information from official 38 CFR sources</li>
               <li>✅ Continuously <strong>adding new tools</strong> and improving features based on veteran feedback</li>
@@ -615,8 +706,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mt-6">
             <p className="text-sm text-green-800 dark:text-green-200">
               <strong>Thank You for Your Service</strong><br />
-              Every veteran who navigates their claim successfully with these 40+ tools—instead of paying thousands 
-              to predatory services—is a victory. I'm honored to serve my fellow veterans by making this comprehensive 
+              Every veteran who navigates their claim successfully with these {getTotalToolCount()}+ tools - instead of paying thousands 
+              to predatory services - is a victory. I'm honored to serve my fellow veterans by making this comprehensive 
               professional arsenal freely available to all who served.
             </p>
           </div>
@@ -625,9 +716,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
         <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="flex items-center gap-4">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Version {PROJECT_STATS.version} • Built with ❤️ for Veterans
-              </p>
+              <VersionDropUp />
+              <span className="text-xs text-gray-500 dark:text-gray-400">• Built with ❤️ for Veterans</span>
               
               {/* The Zonk Button - Easter Egg */}
               <button

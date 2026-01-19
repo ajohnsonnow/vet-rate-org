@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, Check, Lightbulb, Brain } from 'lucide-react';
+import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 // The Diplomat's AI System Prompt
 const TONE_ANALYSIS_PROMPT = `You are a clinical writing coach helping veterans write effective VA disability statements.
@@ -94,43 +96,23 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
   }, [text]);
 
   const analyzeStatement = async () => {
-    // Check if AI is available
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      return; // Silently skip if no API key
+    // Check if AI is available (Cloud or Local)
+    if (!isAnyAIAvailable()) {
+      return; // Silently skip if no AI available
     }
 
     setIsAnalyzing(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: TONE_ANALYSIS_PROMPT + '\n\n' + text
-              }]
-            }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 2000,
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze statement');
-      }
-
-      const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const fullPrompt = TONE_ANALYSIS_PROMPT + '\n\n' + text;
+      
+      // Use unified AI service
+      const aiResponse = await generateAI(fullPrompt, {
+        temperature: 0.3,
+        maxTokens: 2000,
+        expectJSON: true
+      });
 
       // Parse the AI response (should be JSON)
       let parsedSuggestions = [];
@@ -199,14 +181,8 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
     }
   };
 
-  // Get API key from localStorage (BYOK)
-  const getApiKey = () => {
-    return localStorage.getItem('vetrate_gemini_key') || 
-           import.meta.env.VITE_GEMINI_API_KEY || '';
-  };
-
-  // Don't show component if no API key
-  if (!getApiKey()) {
+  // Don't show component if no AI available
+  if (!isAnyAIAvailable()) {
     return null;
   }
 
@@ -216,13 +192,14 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-900">The Diplomat</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">The Diplomat</h3>
+          <AIStatusBadge showLabel={false} />
           {isAnalyzing && (
             <span className="text-sm text-gray-500 italic">Analyzing tone...</span>
           )}
         </div>
         {suggestions.length > 0 && (
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
             {suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''} found
           </span>
         )}
@@ -291,7 +268,7 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
               {!appliedIndices.has(index) && (
                 <button
                   onClick={() => handleApplySuggestion(suggestion, index)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-sm shadow-md hover:shadow-lg"
+                  className="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
                 >
                   Apply This Change
                 </button>

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 
 /**
  * FundingModal - Modal with multiple ways to support Vet-Rate.org
  * Shows context-specific development stats when provided
+ * Features humorous messaging about Luna (treats) and Midnight (hardware upgrades)
  * @param {boolean} show - Whether to show the modal
  * @param {function} onClose - Callback when modal is closed
  * @param {object} componentStats - Optional stats about the component { name, hours, lines, description }
@@ -16,8 +17,28 @@ function FundingModal({ show, onClose, componentStats = null }) {
   // Get color schemas
   const { getModalClasses, getColorClass, colors } = useColorSchemas();
   const modalClasses = getModalClasses();
+  
+  // Track which fun message to show
+  const [showLunaMessage, setShowLunaMessage] = useState(false);
+  const [showMidnightMessage, setShowMidnightMessage] = useState(false);
 
   if (!show) return null;
+
+  // Luna's treat fund messages
+  const lunaMessages = [
+    "Luna says: 'Meow! More treats means more keyboard supervision quality!' 🐱",
+    "Luna's wish list: Fancy Feast, catnip toys, and a warm lap to nap on while dad codes 😸",
+    "Every coffee = 1 treat for Luna. She's been a VERY good keyboard inspector! 🎀",
+    "Luna promises to walk across the keyboard LESS if there are treats involved... maybe 😹",
+  ];
+  
+  // Midnight's upgrade fund messages  
+  const midnightMessages = [
+    "Midnight dreams of: AMD Ryzen 9 9950X3D (a new brain!) and RTX 5090 (another heart!) 🖥️",
+    "Midnight: 'I've compiled 100K+ lines of code! I deserve a 9950X3D brain transplant!' 💻",
+    "Help Midnight grow: 5090 graphics = faster AI, 9950X3D = more veteran tools built! 🚀",
+    "Midnight's upgrade fund: Because 128GB RAM is 'just barely enough' for development 😅",
+  ];
 
   const fundingOptions = [
     {
@@ -139,6 +160,52 @@ function FundingModal({ show, onClose, componentStats = null }) {
               </svg>
             </a>
           ))}
+        </div>
+        
+        {/* Fun Dev Team Funding Goals */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p className={`text-xs text-center mb-2 ${getColorClass(colors.text.muted)}`}>
+            Where does your support go?
+          </p>
+          <div className="flex justify-center gap-4">
+            {/* Luna's Treat Fund */}
+            <button
+              onClick={() => { setShowLunaMessage(!showLunaMessage); setShowMidnightMessage(false); }}
+              className="flex flex-col items-center p-2 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors group"
+              title="Luna's Treat Fund"
+            >
+              <span className="text-2xl group-hover:animate-bounce">🐱</span>
+              <span className="text-xs text-pink-600 dark:text-pink-400 font-medium">Luna's Treats</span>
+            </button>
+            
+            {/* Midnight's Upgrade Fund */}
+            <button
+              onClick={() => { setShowMidnightMessage(!showMidnightMessage); setShowLunaMessage(false); }}
+              className="flex flex-col items-center p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
+              title="Midnight's Upgrade Fund"
+            >
+              <span className="text-2xl group-hover:animate-pulse">🖥️</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Midnight Upgrades</span>
+            </button>
+          </div>
+          
+          {/* Luna Message */}
+          {showLunaMessage && (
+            <div className="mt-3 p-3 bg-pink-50 dark:bg-pink-900/30 rounded-lg border border-pink-200 dark:border-pink-800 animate-fade-in">
+              <p className="text-xs text-pink-700 dark:text-pink-300 text-center">
+                {lunaMessages[Math.floor(Math.random() * lunaMessages.length)]}
+              </p>
+            </div>
+          )}
+          
+          {/* Midnight Message */}
+          {showMidnightMessage && (
+            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 animate-fade-in">
+              <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                {midnightMessages[Math.floor(Math.random() * midnightMessages.length)]}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer message */}

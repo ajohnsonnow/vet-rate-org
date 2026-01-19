@@ -65,7 +65,7 @@ Manage your VA healthcare:
 | **Records** | Blue Button health records |
 | **Labs** | View test results |
 
-**URL:** [myhealth.va.gov](https://www.myhealth.va.gov)
+**URL:** [myhealth.va.gov](https://www.va.gov/health-care/manage-health/)
 
 **Account Levels:**
 
@@ -185,7 +185,7 @@ Choose <strong>Login.gov</strong> or <strong>ID.me</strong>
 
 To get Premium access:
 
-1. Create account at myhealth.va.gov
+1. Create account at va.gov/health-care/manage-health/
 2. Verify identity (online or in-person at VA)
 3. Access full features
 
@@ -232,7 +232,7 @@ View medical images:
     Save these for quick access:
     
     - VA.gov Claim Status: va.gov/claim-or-appeal-status
-    - My HealtheVet: myhealth.va.gov
+    - My HealtheVet: va.gov/health-care/manage-health/
     - VA Forms: va.gov/find-forms
     - Facility Locator: va.gov/find-locations
     - eCFR Part 4: ecfr.gov/current/title-38/part-4

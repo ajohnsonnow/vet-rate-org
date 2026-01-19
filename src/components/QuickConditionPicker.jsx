@@ -5,7 +5,7 @@ import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
 /**
  * QuickConditionPicker Component
  * A compact homepage widget to quickly select conditions and add them to My Packet
- * Dynamically loads all 748 conditions from disabilityData.json
+ * Dynamically loads all 751 conditions from disabilityData.json
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {

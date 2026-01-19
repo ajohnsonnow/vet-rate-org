@@ -59,7 +59,7 @@ Quick access to the most commonly needed VA resources.
 |--------|---------|-----|
 | **VA.gov** | Main VA portal | va.gov |
 | **eBenefits** | Benefits management | ebenefits.va.gov |
-| **My HealtheVet** | Health records | myhealth.va.gov |
+| **My HealtheVet** | Health records | va.gov/health-care/manage-health/ |
 | **AccessVA** | VA applications | access.va.gov |
 
 ### Key Phone Numbers
