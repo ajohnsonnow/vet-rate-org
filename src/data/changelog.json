@@ -1,34 +1,298 @@
 {
-  "version": "1.0.0",
+  "version": "1.2.0",
+  "lastUpdated": "2026-01-19",
+  "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
-      "version": "1.0.0",
-      "date": "2026-01-18",
+      "version": "1.2.0",
+      "date": "2026-01-19",
+      "isFirstRelease": true,
+      "releaseTitle": "The Complete VA Claims Arsenal - v1.2.0",
       "changelog": [
         {
           "type": "feature",
-          "title": "Live Operations Protection System",
-          "description": "Added automatic data migration system to protect your saved data during updates"
+          "category": "Calculate Your Rating",
+          "title": "Tactical Calculator",
+          "description": "Advanced combined rating calculator with VA math, bilateral factors, dependents, and 2026 pay rates"
         },
         {
           "type": "feature",
-          "title": "Update Notifications",
-          "description": "App now checks for updates every 15 minutes and notifies you when a new version is available"
+          "category": "Calculate Your Rating",
+          "title": "Million Dollar Dashboard",
+          "description": "Calculate your lifetime benefit value ($1-2.5M+) including VA pay, property tax savings, education benefits, and healthcare"
         },
         {
           "type": "feature",
-          "title": "What's New Modal",
-          "description": "See exactly what changed in each update with our new changelog system"
+          "category": "Calculate Your Rating",
+          "title": "What-If Sandbox",
+          "description": "Drag-and-drop rating scenario planner with real VA math - see how adding conditions affects your combined rating"
+        },
+        {
+          "type": "feature",
+          "category": "Calculate Your Rating",
+          "title": "Retro Pay Hunter",
+          "description": "Find missed backpay from rating history errors and CUE claims using historical VA pay rates 2020-2026",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Calculate Your Rating",
+          "title": "Time Machine",
+          "description": "Intent to File countdown with backpay tracking - never miss your effective date deadline",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "Secondary Scout",
+          "description": "Discover 500+ medically-recognized secondary conditions with probability ratings and nexus evidence"
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "C&P Exam Simulator",
+          "description": "Practice DBQ-aligned questions, view actual exam questions BEFORE your C&P, and get percentage predictions"
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "Pathfinder",
+          "description": "AI-powered strategic roadmap from initial claim through appeals - personalized claim strategy"
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "MOS Hazard Matcher",
+          "description": "Link military occupational specialties to exposures and conditions - prove your job caused your injuries"
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "PACT Act Navigator",
+          "description": "Identify toxic exposure presumptive conditions - Agent Orange, burn pits, Gulf War, radiation. Skip the nexus letter!"
+        },
+        {
+          "type": "feature",
+          "category": "Discover Your Claims",
+          "title": "Web of Conditions",
+          "description": "Interactive force-directed graph visualization showing how disabilities connect to each other"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "C-File AI Analyzer",
+          "description": "Upload your Claims File PDF - AI finds evidence in thousands of pages. What others charge $500+ for!"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Blue Button X-Ray",
+          "description": "Parse VA health records for claim-relevant diagnoses - extract evidence from your medical records"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "PDF Evidence Finder (The Needle)",
+          "description": "Search 2,000+ page STRs for keywords - find the needle in the haystack",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Witness Bench",
+          "description": "AI-assisted buddy statement generator with smart interview questions for powerful lay evidence"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Nexus Builder",
+          "description": "Generate medical nexus statements with optional AI enhancement - the missing link for service connection"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Forms Helper with Auto-Scribe",
+          "description": "Guided assistance for 16+ VA forms with AI-powered PDF auto-fill - never fill a form wrong again"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Symptom Logger",
+          "description": "Track daily symptoms with body map selector for evidence documentation - build your symptom diary"
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Pain Painter",
+          "description": "Interactive body map with glow effects - paint your symptoms and get diagnostic code suggestions",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "Evidence Timeline",
+          "description": "Visual continuity tracker with automatic gap detection - show continuous symptoms since service",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "FOIA Keysmith",
+          "description": "Generate FOIA requests for military and VA records - unlock your C-File"
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Red Team",
+          "description": "AI devil's advocate - finds weak language before the VA does. Strengthen your statements!"
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Claim Stress Test (The War Game)",
+          "description": "Adversarial review - AI Skeptical Examiner stress-tests your claim before submission",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Decision Decoder",
+          "description": "AI translation of VA decision letters to plain English - understand what VA actually said"
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Denials Decoder",
+          "description": "OCR scan denial letters + AI analysis - upload a photo or PDF of your denial letter",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Shark Radar",
+          "description": "Identify predatory claim services and avoid scams - protect yourself from claim sharks"
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Consistency Engine",
+          "description": "Auto-detect contradictions in your statements - fix inconsistencies before VA finds them",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Evidence Gap Visualizer",
+          "description": "See exactly what evidence is missing for your target rating - completeness gauge shows gaps",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Quality Control",
+          "title": "Risk Assessment (Poke the Bear)",
+          "description": "Check protections before filing - identify what could go wrong with your claim"
+        },
+        {
+          "type": "feature",
+          "category": "Maximize Your Rating",
+          "title": "TDIU Builder",
+          "description": "Total Disability Individual Unemployability - get 100% pay even at lower combined ratings"
+        },
+        {
+          "type": "feature",
+          "category": "Maximize Your Rating",
+          "title": "State Benefit Hunter",
+          "description": "Discover state-level veteran benefits by location - all 50 states + DC covered"
+        },
+        {
+          "type": "feature",
+          "category": "Maximize Your Rating",
+          "title": "The Tribunal",
+          "description": "Voice-interactive mock BVA hearing simulator - practice before your real hearing",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Maximize Your Rating",
+          "title": "Legislative Watchdog",
+          "description": "Track VA rule changes in the Federal Register - never miss a new presumptive condition"
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "VSO Finder",
+          "description": "Locate free, accredited Veterans Service Officers near you - get free professional help"
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "The Bunker (Backup Manager)",
+          "description": "Export/import all your data - never lose your work, even if you clear your browser",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "Cloud Sync",
+          "description": "Back up to YOUR Google Drive (encrypted) - access your data from any device",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "My Packet",
+          "description": "Save and manage all your claims evidence in one place - your personal claims folder"
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "VA Resources Hub",
+          "description": "Direct links to official VA programs, crisis support, and benefits - curated resource library"
+        },
+        {
+          "type": "feature",
+          "category": "Support & Resources",
+          "title": "User Manual",
+          "description": "Comprehensive guide to using every feature - your complete reference"
+        },
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "WebGPU Local AI",
+          "description": "Run AI analysis 100% locally using WebGPU - Faraday Cage Protocol ensures data never leaves your device",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "Sanitize & Share",
+          "description": "Screenshot your results with automatic PII redaction - safe to share on Reddit/Facebook",
+          "isNew": true
         },
         {
           "type": "security",
-          "title": "Version Tracking",
-          "description": "Comprehensive version management ensures compatibility and smooth upgrades"
+          "category": "Privacy",
+          "title": "100% Client-Side Processing",
+          "description": "All processing happens in YOUR browser. No accounts, no tracking, no PII storage. Your data stays yours."
         },
         {
           "type": "improvement",
-          "title": "Cache Busting",
-          "description": "Hard reload when updating ensures you always get the latest code, not cached versions"
+          "category": "Accessibility",
+          "title": "WCAG 2.1 AA Compliance",
+          "description": "Full keyboard navigation, screen reader support, color blindness modes, and adjustable font sizes"
+        },
+        {
+          "type": "improvement",
+          "category": "Data",
+          "title": "751 VA Disabilities Validated",
+          "description": "Complete coverage of all body systems from 38 CFR Part 4, verified against eCFR January 2026"
+        },
+        {
+          "type": "improvement",
+          "category": "Platform",
+          "title": "Dynamic Stats & Updates",
+          "description": "All statistics dynamically update from single source of truth - always accurate numbers",
+          "isNew": true
         }
       ]
     }

@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import ShareButton, { PIISensitive } from './ShareButton';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import VAGovRatingPaster from './VAGovRatingPaster';
 import {
   calculateVARating,
   calculateCompensation,
@@ -33,6 +35,9 @@ import {
 
 const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capSimulatorResults = [], onClearCapResults }) => {
   useBodyScrollLock(true);
+  
+  // Ref for screenshot capture
+  const calculatorContentRef = useRef(null);
   
   // Conditions list (for calculator tab)
   const [conditions, setConditions] = useState(initialConditions);
@@ -71,6 +76,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
     hasMyRatings() ? 'myratings' : 'calculator'
   );
   const [showSteps, setShowSteps] = useState(false);
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
   // Handle incoming C&P Simulator results
   useEffect(() => {
@@ -117,6 +123,26 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   const handleRemoveFromMyRatings = (ratingId) => {
     removeRating(ratingId);
     loadMyRatings();
+  };
+
+  // Handle pasted ratings from VA.gov
+  const handlePastedRatings = (parsedRatings) => {
+    // Convert parsed VA.gov format to our rating format
+    const formattedRatings = parsedRatings.map((r, index) => ({
+      id: Date.now().toString() + index,
+      name: r.condition,
+      bodyPart: 'other', // Default to 'other' since we don't know the body part
+      rating: r.rating || 0,
+      side: 'none',
+      source: 'VA.gov',
+      effectiveDate: r.effectiveDate,
+    }));
+    
+    // Save directly to My Ratings
+    const updated = [...myRatings, ...formattedRatings];
+    saveMyRatings(updated);
+    setMyRatings(updated);
+    setShowVAGovPaster(false);
   };
 
   // Calculate results from My Ratings
@@ -226,7 +252,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
       aria-labelledby="calculator-title"
     >
       <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
+        <div ref={calculatorContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -246,7 +272,11 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <FocusToggle variant="light" />
+                <ShareButton 
+                  targetRef={calculatorContentRef}
+                  filename="vet-rate-calculator"
+                  variant="icon"
+                />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Tactical Calculator" />}
                 <button
                   onClick={onClose}
@@ -342,14 +372,22 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         <span className="text-4xl mb-3 block">📋</span>
                         <p className="text-gray-600 dark:text-gray-400 mb-4">No ratings saved yet</p>
                         <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                          Add your conditions in the Calculator tab, then save them here for quick access.
+                          Paste your ratings directly from VA.gov or add them in the Calculator tab.
                         </p>
-                        <button
-                          onClick={() => setActiveTab('calculator')}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                        >
-                          Go to Calculator
-                        </button>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => setShowVAGovPaster(true)}
+                            className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
+                          >
+                            <span className="text-lg">📋</span> Paste from VA.gov
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('calculator')}
+                            className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                          >
+                            Or Add in Calculator
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -389,15 +427,28 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       </div>
                     )}
 
-                    {/* Save from Calculator Button */}
-                    {conditions.length > 0 && (
-                      <button
-                        onClick={handleSaveAsMyRatings}
-                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span>⭐</span> Save Calculator Conditions as My Ratings
-                      </button>
-                    )}
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      {/* Paste from VA.gov Button - Only show if no ratings exist */}
+                      {myRatings.length === 0 && (
+                        <button
+                          onClick={() => setShowVAGovPaster(true)}
+                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
+                        >
+                          <span>📋</span> Paste from VA.gov
+                        </button>
+                      )}
+
+                      {/* Save from Calculator Button */}
+                      {conditions.length > 0 && (
+                        <button
+                          onClick={handleSaveAsMyRatings}
+                          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <span>⭐</span> Save Calculator Conditions as My Ratings
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* My Ratings Summary */}
@@ -643,7 +694,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         if (onClearCapResults) onClearCapResults();
                         setActiveTab('calculator');
                       }}
-                      className="w-full mt-3 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all"
+                      className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
                     >
                       Add All to Calculator
                     </button>
@@ -1579,6 +1630,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           </div>
         </div>
       </div>
+
+      {/* VA.gov Rating Paster Modal */}
+      {showVAGovPaster && (
+        <VAGovRatingPaster
+          onRatingsParsed={handlePastedRatings}
+          onClose={() => setShowVAGovPaster(false)}
+          showExample={true}
+        />
+      )}
     </div>
   );
 };

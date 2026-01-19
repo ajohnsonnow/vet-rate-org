@@ -7,12 +7,14 @@
  * 2. Translate legalese into plain English
  * 3. Provide actionable next steps
  * 
- * Built by a fellow veteran. "Decode the bureaucracy."
+ * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, FileText, AlertCircle, CheckCircle, Loader, Eye, Lightbulb } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 // AI System Prompt for analyzing denial letters
 const DENIAL_ANALYSIS_PROMPT = `You are a VA claims expert helping veterans understand their denial letters.
@@ -50,16 +52,25 @@ Return ONLY valid JSON (no markdown, no code fences):
 
 Now analyze this denial letter text:`;
 
-const DenialDecoder = ({ onClose, className = '' }) => {
+const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
   const [step, setStep] = useState('upload'); // upload, processing, analyzing, results
   const [extractedText, setExtractedText] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showRawText, setShowRawText] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
   
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  
+  // Monitor AI status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle file upload or camera capture
   const handleImageSelect = async (file) => {
@@ -102,41 +113,22 @@ const DenialDecoder = ({ onClose, className = '' }) => {
 
   const analyzeWithAI = async (text) => {
     // Check if AI is available
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      setError('AI analysis requires an API key. Please configure one in Settings.');
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Please configure an API key or enable Local AI in settings.');
+      setShowAISettings(true);
       setStep('upload');
       return;
     }
 
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: DENIAL_ANALYSIS_PROMPT + '\n\n' + text
-              }]
-            }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 1500,
-            }
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('AI analysis failed');
-      }
-
-      const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const fullPrompt = DENIAL_ANALYSIS_PROMPT + '\n\n' + text;
+      
+      // Use unified AI service
+      const aiResponse = await generateAI(fullPrompt, {
+        temperature: 0.3,
+        maxTokens: 1500,
+        expectJSON: true
+      });
 
       // Parse JSON response
       let parsedAnalysis = null;
@@ -162,10 +154,7 @@ const DenialDecoder = ({ onClose, className = '' }) => {
     }
   };
 
-  const getApiKey = () => {
-    return localStorage.getItem('vetrate_gemini_key') || 
-           import.meta.env.VITE_GEMINI_API_KEY || '';
-  };
+  // handleFileUpload moved below analyzeWithAI
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -200,13 +189,29 @@ const DenialDecoder = ({ onClose, className = '' }) => {
     <div className={`denial-decoder ${className}`}>
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <FileText className="w-8 h-8" />
-          <div>
-            <h2 className="text-2xl font-bold">The Denials Decoder</h2>
-            <p className="text-blue-100 text-sm mt-1">
-              Scan your VA denial letter for plain-English analysis
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileText className="w-8 h-8" />
+            <div>
+              <h2 className="text-2xl font-bold">The Denials Decoder</h2>
+              <p className="text-blue-100 text-sm mt-1">
+                Scan your VA denial letter for plain-English analysis
+              </p>
+          </div>
+        </div>
+          <div className="flex items-center gap-3">
+            <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -223,13 +228,29 @@ const DenialDecoder = ({ onClose, className = '' }) => {
                   <p className="font-semibold mb-1">100% Privacy Protected</p>
                   <p className="text-green-800">
                     OCR processing happens <strong>locally in your browser</strong>. 
-                    Only the extracted text (not the image) is sent to AI for analysis.
+                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                      ? ' AI analysis also runs locally - your data never leaves your device!'
+                      : ' Only the extracted text (not the image) is sent to AI for analysis.'}
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Error Display */}
+            
+            {/* AI Setup Message */}
+            {!isAnyAIAvailable() && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-amber-900">
+                    <p className="font-semibold mb-1">AI Required</p>
+                    <p className="text-amber-800">
+                      Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                      or enter your Gemini API key to analyze denial letters.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">

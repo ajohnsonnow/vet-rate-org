@@ -15,17 +15,23 @@
  * - MAJOR: Breaking changes, data structure overhauls
  * - MINOR: New features, non-breaking additions
  * - PATCH: Bug fixes, small tweaks
+ * 
+ * DEPLOYMENT UPDATE PROCESS:
+ * 1. Update APP_VERSION below
+ * 2. Update src/data/changelog.json with new features
+ * 3. (Optional) Update src/utils/changelogGenerator.js for curated highlights
+ * 4. Deploy - What's New modal will automatically show to users
  */
 
 // Current application version
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.2.0';
 
 // Data schema version for localStorage migration
 // Increment when making changes to how data is stored
 export const SCHEMA_VERSION = '1.0.0';
 
 // Last update date (for changelog display)
-export const LAST_UPDATE_DATE = '2026-01-18';
+export const LAST_UPDATE_DATE = '2026-01-19';
 
 // Update check interval (milliseconds) - 15 minutes
 export const UPDATE_CHECK_INTERVAL = 15 * 60 * 1000;

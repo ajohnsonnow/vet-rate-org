@@ -15,27 +15,15 @@
  * - Direct output for Box 18 of VA Form 21-8940
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import { isAIAvailable } from '../utils/aiStatementHelper';
-
-// API endpoint for Gemini
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
-// LocalStorage key for BYOK
-const STORAGE_KEY = 'vetrate_gemini_key';
-
-/**
- * Get the configured API key
- */
-const getApiKey = () => {
-  const storedKey = localStorage.getItem(STORAGE_KEY);
-  if (storedKey && storedKey.length > 0) return storedKey;
-  return import.meta.env.VITE_GEMINI_API_KEY || '';
-};
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import ShareButton from './ShareButton';
 
 /**
  * Common disability categories for quick selection
@@ -83,12 +71,12 @@ const DISABILITY_CATEGORIES = [
 ];
 
 /**
- * Generate vocational impact analysis using AI
+ * Generate vocational impact analysis using Unified AI Service
  */
 const generateVocationalImpact = async (disabilities) => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('No API key configured');
+  // Check if ANY AI is available
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please configure an API key or enable Local AI.');
   }
   
   const disabilityList = disabilities.map(d => 
@@ -125,24 +113,12 @@ RESPOND IN THIS EXACT JSON FORMAT:
   "job_types_precluded": ["Sedentary", "Light", "Medium", "Heavy"]
 }`;
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 2048
-      }
-    })
+  // Use unified AI service
+  const text = await generateAI(prompt, {
+    temperature: 0.4,
+    maxTokens: 2048,
+    expectJSON: true
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to generate vocational analysis');
-  }
-  
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   
   // Extract JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -224,6 +200,9 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   
+  // Ref for screenshot/share functionality
+  const tdiuContentRef = useRef(null);
+  
   // Wizard state
   const [step, setStep] = useState(1);
   const [showBuyMeCoffee, setShowBuyMeCoffee] = useState(false);
@@ -243,6 +222,16 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
   // AI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  // Monitor AI status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Output state
   const [vocationalAnalysis, setVocationalAnalysis] = useState(null);
@@ -605,7 +594,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
       {disabilities.length > 0 && (
         <button
           onClick={() => setStep(2)}
-          className="w-full px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-amber-700 hover:to-orange-700 transition-all"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-bold transition-colors"
         >
           Continue to Work History →
         </button>
@@ -708,7 +697,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
         <button
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-bold hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
         >
           {isGenerating ? (
             <>
@@ -889,6 +878,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
       onClick={onClose}
     >
       <div 
+        ref={tdiuContentRef}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
         onClick={(e) => e.stopPropagation()}
       >
@@ -902,19 +892,59 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
                 <p className="text-sm text-amber-100">The 100% Backdoor - Vocational Statement Generator</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <AIStatusBadge showLabel={true} />
+              <ShareButton 
+                targetRef={tdiuContentRef}
+                filename="tdiu-vocational-analysis"
+                variant="icon"
+              />
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         
         <div className="p-4">
+          {/* AI Mode Section */}
+          <div className="max-w-4xl mx-auto mb-4">
+            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AIStatusBadge showLabel={true} />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                      ? '🔒 100% Private - runs on your device'
+                      : aiStatus.effectiveMode === AI_MODES.CLOUD 
+                        ? '☁️ Cloud AI - fast & powerful'
+                        : '⚠️ No AI - using templates'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowAISettings(!showAISettings)}
+                  className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+                >
+                  {showAISettings ? 'Hide Settings' : 'AI Settings'}
+                </button>
+              </div>
+              
+              {showAISettings && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <AIModeSelector 
+                    onModeChange={() => setAIStatus(getAIStatus())}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          
           {/* Progress Steps */}
           <div className="max-w-4xl mx-auto pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">

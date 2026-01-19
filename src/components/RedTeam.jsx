@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { stressTestStatement, isAIAvailable } from '../utils/aiStatementHelper';
+import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
 /**
  * RedTeam Component - "The Statement Stress Test"
@@ -21,6 +23,16 @@ const RedTeam = ({ onClose, onReportBug }) => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  // Monitor AI status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStressTest = async () => {
     if (!draftStatement.trim()) {
@@ -150,6 +162,34 @@ const RedTeam = ({ onClose, onReportBug }) => {
 
           {/* Content */}
           <div className="p-6">
+            {/* AI Mode Section */}
+            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AIStatusBadge showLabel={true} />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                      ? '🔒 100% Private - runs on your device'
+                      : '☁️ Cloud AI - fast & powerful'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowAISettings(!showAISettings)}
+                  className="text-sm text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200"
+                >
+                  {showAISettings ? 'Hide Settings' : 'AI Settings'}
+                </button>
+              </div>
+              
+              {showAISettings && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <AIModeSelector 
+                    onModeChange={() => setAIStatus(getAIStatus())}
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Warning Banner */}
             <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-xl">
               <div className="flex items-start gap-3">
@@ -158,7 +198,7 @@ const RedTeam = ({ onClose, onReportBug }) => {
                   <h3 className="font-bold text-amber-800 dark:text-amber-200">Attention, Soldier!</h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                     You were trained to "push through" and "be tough." <strong>That mindset LOSES claims.</strong> 
-                    The VA isn't reading for courage—they're reading for <strong>severity and frequency</strong>. 
+                    The VA isn't reading for courage - they're reading for <strong>severity and frequency</strong>. 
                     Let the Red Team find where you're hurting your own case.
                   </p>
                 </div>
@@ -195,7 +235,7 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
                 <button
                   onClick={handleStressTest}
                   disabled={isLoading || !draftStatement.trim()}
-                  className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   {isLoading ? (
                     <>

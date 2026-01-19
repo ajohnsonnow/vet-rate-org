@@ -452,37 +452,49 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
   }, [selectedNode, links]);
   
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/90" onClick={onClose}></div>
-      
-      {/* Modal Content */}
-      <div className="relative h-full flex flex-col">
-        {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 p-4 shadow-lg">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🕸️</span>
-              <div>
-                <h2 className="text-xl font-bold text-black">Web of Conditions</h2>
-                <p className="text-sm text-yellow-800">Interactive Secondary Condition Map</p>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="web-of-conditions-title"
+    >
+      <div className="min-h-screen px-4 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div className="relative flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🕸️</span>
+                </div>
+                <div>
+                  <h2 id="web-of-conditions-title" className="text-2xl sm:text-3xl font-bold text-black">
+                    Web of Conditions
+                  </h2>
+                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
+                    Interactive Secondary Condition Map
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={onClose}
+                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
-        </div>
-        
-        {/* Category Filters */}
-        <div className="flex-shrink-0 bg-gray-900/90 p-3 border-b border-purple-800/50">
-          <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-2">
+          
+          {/* Content */}
+          <div className="p-6 bg-gray-900">
+            {/* Category Filters */}
+            <div className="mb-6 flex flex-wrap items-center gap-2">
             <span className="text-purple-300 text-sm mr-2">Filter:</span>
             <button
               onClick={() => setFilterCategory(null)}
@@ -832,9 +844,10 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
           </div>
         </div>
       </div>
-      
-      {/* BuyMeCoffee - shows when user clicks a link/nexus */}
-      <BuyMeCoffee 
+    </div>
+    
+    {/* BuyMeCoffee - shows when user clicks a link/nexus */}
+    <BuyMeCoffee 
         show={selectedLink !== null || selectedNode !== null} 
         trigger="web-conditions" 
         context={{ condition: selectedLink?.source || selectedNode }}

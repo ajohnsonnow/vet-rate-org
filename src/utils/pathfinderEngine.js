@@ -5,7 +5,11 @@
  * 
  * AI-powered claims strategy engine that analyzes current ratings
  * and suggests high-probability secondary claims.
+ * 
+ * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
+
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
 
 // The specialized system prompt for strategy analysis
 const PATHFINDER_SYSTEM_PROMPT = `You are a Senior VA Claims Strategist. Your goal is to analyze a veteran's current disability profile and suggest "High Probability" secondary claims based on established medical connections.
@@ -76,29 +80,31 @@ COMMON HIGH-VALUE SECONDARY CONNECTIONS TO CONSIDER:
 - Hearing Loss → Tinnitus, Migraines, Balance disorders`;
 
 /**
- * Generate strategic analysis using Gemini AI
- * @param {string} apiKey - User's Gemini API key
+ * Generate strategic analysis using Unified AI Service
+ * Seamlessly works with both Cloud (Gemini) and Local (WebLLM) AI
+ * @param {string} apiKey - User's Gemini API key (optional if using Local AI)
  * @param {Array} currentRatings - Array of {condition, rating} objects
  * @param {string} additionalContext - Optional symptoms or evidence keywords
  * @returns {Promise<Object>} - Strategy analysis results
  */
 export async function analyzeStrategy(apiKey, currentRatings, additionalContext = '') {
-  if (!apiKey) {
-    throw new Error('API key is required');
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please set up an API key or enable Local AI.');
   }
   
   if (!currentRatings || currentRatings.length === 0) {
     throw new Error('Please add at least one current service-connected condition');
   }
   
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
   // Format current ratings for the prompt
   const ratingsText = currentRatings
     .map(r => `- ${r.condition}${r.rating ? ` (${r.rating}%)` : ''}`)
     .join('\n');
   
-  const userPrompt = `Analyze this veteran's disability profile and suggest strategic opportunities:
+  const userPrompt = `${PATHFINDER_SYSTEM_PROMPT}
+
+Analyze this veteran's disability profile and suggest strategic opportunities:
 
 CURRENT SERVICE-CONNECTED RATINGS:
 ${ratingsText}
@@ -108,57 +114,13 @@ ${additionalContext}` : ''}
 
 Provide a comprehensive strategy analysis with secondary claim opportunities.`;
 
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: `${PATHFINDER_SYSTEM_PROMPT}\n\n${userPrompt}`
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.4, // Balanced for strategy
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 8192,
-      responseMimeType: "application/json"
-    },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ]
-  };
-  
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+    // Use unified AI service - automatically chooses Cloud or Local
+    const content = await generateAI(userPrompt, {
+      temperature: 0.4,
+      maxTokens: 8192,
+      expectJSON: true
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      if (response.status === 400) {
-        if (errorData.error?.message?.includes('API key')) {
-          throw new Error('Invalid API key. Please check your Gemini API key.');
-        }
-        throw new Error(`Request error: ${errorData.error?.message || 'Bad request'}`);
-      }
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-      }
-      
-      throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       throw new Error('No content received from AI');
@@ -193,7 +155,8 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
       success: true,
       data: result,
       inputRatings: currentRatings,
-      analyzedAt: new Date().toISOString()
+      analyzedAt: new Date().toISOString(),
+      aiMode: getAIStatus().effectiveMode // Include which AI mode was used
     };
     
   } catch (error) {
@@ -252,9 +215,32 @@ export function getConnectionTypeColors(type) {
 
 /**
  * Get the privacy disclosure for Pathfinder
+ * Now AI-mode aware - shows different info for Cloud vs Local
  */
 export function getPathfinderPrivacyDisclosure() {
-  return `When you analyze your strategy:
+  const status = getAIStatus();
+  
+  if (status.effectiveMode === AI_MODES.LOCAL) {
+    return `🔒 LOCAL AI MODE - 100% PRIVATE
+
+When you analyze your strategy:
+
+1. WHAT HAPPENS: Your condition names and ratings are processed ENTIRELY ON YOUR DEVICE by the Local AI model.
+
+2. ZERO DATA TRANSMISSION: Nothing is sent over the internet. All processing happens in your browser using WebGPU.
+
+3. COMPLETE PRIVACY: Your information never leaves your device - not even to us.
+
+4. LOCAL RESULTS: Analysis results exist only on your device.
+
+5. EDUCATIONAL ONLY: This tool provides strategic guidance, not medical or legal advice.
+
+✅ This is the most private way to use AI-powered analysis.`;
+  }
+  
+  return `☁️ CLOUD AI MODE (Google Gemini)
+
+When you analyze your strategy:
 
 1. WHAT IS SENT: Only the condition names and ratings you enter are sent to Google's Gemini AI.
 
@@ -265,6 +251,8 @@ export function getPathfinderPrivacyDisclosure() {
 4. LOCAL RESULTS: Analysis results are displayed locally and not stored on any server.
 
 5. EDUCATIONAL ONLY: This tool provides strategic guidance, not medical or legal advice.
+
+💡 TIP: For 100% privacy, switch to Local AI in settings (requires WebGPU-compatible browser).
 
 By proceeding, you acknowledge that all suggestions should be verified with medical professionals and VA-accredited representatives.`;
 }

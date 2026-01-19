@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { AlertCircle, TrendingUp, CheckCircle, Info, FileText, AlertTriangle, Download, ClipboardList, X, Calculator } from 'lucide-react';
 import jsPDF from 'jspdf';
+import ShareButton from './ShareButton';
 
 /**
  * SimulatorFeedback Component
@@ -11,6 +12,8 @@ import jsPDF from 'jspdf';
  * CRITICAL: This is an educational tool, not a guarantee. All feedback based on 38 CFR Part 4.
  */
 const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, questions, onRestart, onClose, onSendToCalculator }) => {
+  const feedbackContentRef = useRef(null);
+  
   if (!result) return null;
 
   const { predictedRating, ratingRationale, gaps, actionItems, warnings } = result;
@@ -300,7 +303,7 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
   const ratingColor = getRatingColor(predictedRating);
 
   return (
-    <div className="space-y-6">
+    <div ref={feedbackContentRef} className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-2">
@@ -440,6 +443,11 @@ const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, que
 
       {/* Buttons */}
       <div className="flex gap-4 justify-center flex-wrap">
+        <ShareButton 
+          targetRef={feedbackContentRef}
+          filename="cap-simulator-results"
+          variant="button"
+        />
         {onSendToCalculator && (
           <button
             onClick={onSendToCalculator}

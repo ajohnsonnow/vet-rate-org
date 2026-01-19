@@ -8,9 +8,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import { getTimelineEvents, saveTimelineEvents, addTimelineEvent, removeTimelineEvent } from '../utils/veteranProfile';
 
 const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
-  const [timelineEvents, setTimelineEvents] = useState(events);
+  // Load persisted events on mount, fallback to props
+  const [timelineEvents, setTimelineEvents] = useState(() => {
+    const persisted = getTimelineEvents();
+    return persisted.length > 0 ? persisted : events;
+  });
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newEvent, setNewEvent] = useState({
     type: 'service',
@@ -211,11 +216,15 @@ const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
     const event = {
       ...newEvent,
       id: Date.now(),
+      title: newEvent.description.substring(0, 50), // For My Packet display
       category: EVENT_TYPES[newEvent.type]?.label || 'Event'
     };
 
     const updated = [...timelineEvents, event];
     setTimelineEvents(updated);
+    
+    // Persist to localStorage
+    saveTimelineEvents(updated);
     
     if (onEventsUpdate) {
       onEventsUpdate(updated);
@@ -235,6 +244,9 @@ const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
     const updated = timelineEvents.filter(e => e.id !== id);
     setTimelineEvents(updated);
     
+    // Persist to localStorage
+    saveTimelineEvents(updated);
+    
     if (onEventsUpdate) {
       onEventsUpdate(updated);
     }
@@ -253,7 +265,6 @@ const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <FocusToggle variant="light" />
             {onClose && (
               <button
                 onClick={onClose}

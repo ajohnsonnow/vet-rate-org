@@ -3,19 +3,71 @@
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
- * "Instant Evidence" - Client-side parser for VA Blue Button Medical Records
+ * "Instant Evidence" - AI-powered parser for VA Blue Button Medical Records
  * Extracts diagnoses from Problem List section without requiring 6-month C-File wait
  * 
- * Privacy: ALL processing happens locally in the browser. No data is ever sent to any server.
+ * Privacy: Text extraction happens locally. AI analysis uses your configured AI (Local or Cloud).
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import * as pdfjsLib from 'pdfjs-dist';
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+/**
+ * AI System Prompt for extracting diagnoses from Blue Button reports
+ * Designed to identify ACTUAL medical conditions, not provider names or admin data
+ */
+const BLUE_BUTTON_AI_PROMPT = `You are a medical records analyst specializing in VA Blue Button health reports. Your task is to extract ONLY actual medical diagnoses/conditions from the provided text.
+
+CRITICAL RULES:
+1. Extract ONLY actual medical conditions, diagnoses, and health problems
+2. DO NOT include:
+   - Provider/doctor names (e.g., "Dr. Smith", "Johnson, MD")
+   - Facility names (e.g., "VA Medical Center", "Clinic")
+   - Administrative entries (e.g., "Referral", "Follow-up", "Screening")
+   - Lab tests or procedures (e.g., "CBC", "X-Ray", "MRI")
+   - Medications (extract conditions, not drug names)
+   - Dates alone without conditions
+   - Vital signs (BP, weight, height)
+   - Vaccination records
+3. Standardize condition names when possible (e.g., "HTN" → "Hypertension")
+4. Include the diagnosis date if available
+5. Flag conditions commonly claimed for VA disability
+
+VA-CLAIMABLE CONDITIONS (flag these as high priority):
+- Mental Health: PTSD, Depression, Anxiety, Bipolar, Insomnia, Sleep Apnea
+- Musculoskeletal: Tinnitus, Hearing Loss, Back conditions (lumbar/cervical), Arthritis, Radiculopathy, Carpal Tunnel
+- Cardiovascular: Hypertension, Heart Disease, Peripheral Artery Disease
+- Respiratory: Asthma, COPD, Sinusitis, Sleep Apnea
+- Gastrointestinal: GERD, IBS, Hiatal Hernia
+- Endocrine: Diabetes, Thyroid conditions
+- Neurological: Migraines, Neuropathy, TBI
+- Skin: Eczema, Psoriasis
+- Other: Erectile Dysfunction, Chronic Fatigue, Gulf War Syndrome
+
+OUTPUT FORMAT (JSON only, no markdown):
+{
+  "conditions": [
+    {
+      "name": "Standardized condition name",
+      "rawText": "Original text from record",
+      "dateFound": "Date if mentioned (or null)",
+      "isClaimable": true/false,
+      "category": "Mental Health|Musculoskeletal|Cardiovascular|Respiratory|GI|Endocrine|Neurological|Skin|Other"
+    }
+  ],
+  "summary": "Brief 1-2 sentence summary of the veteran's major health issues"
+}
+
+IMPORTANT: Return ONLY valid JSON. No explanations or markdown formatting.
+
+Now analyze this Blue Button report text:`;
 
 /**
  * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
@@ -160,9 +212,20 @@ const EXCLUDED_CONDITIONS = [
   'unspecified'
 ];
 
-export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRatingCriteria }) {
+export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRatingCriteria, onOpenAISettings }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  
+  // AI status state
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  // Monitor AI status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   
   // File state
   const [file, setFile] = useState(null);
@@ -367,11 +430,88 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   };
   
   /**
-   * Process the uploaded file
+   * AI-powered extraction of diagnoses from Blue Button text
+   */
+  const analyzeWithAI = async (text) => {
+    // Check if AI is available
+    if (!isAnyAIAvailable()) {
+      throw new Error('No AI available. Please configure AI in settings first.');
+    }
+    
+    // Truncate text if too long (keep first 50k chars for context window)
+    const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '\n[... truncated for AI processing ...]' : text;
+    
+    const fullPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + truncatedText;
+    
+    const aiResponse = await generateAI(fullPrompt, {
+      temperature: 0.2,
+      maxTokens: 8000,
+      expectJSON: true
+    });
+    
+    // Parse the JSON response
+    let parsed;
+    try {
+      // Clean up potential markdown formatting
+      let cleanResponse = aiResponse.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.slice(7);
+      }
+      if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.slice(3);
+      }
+      if (cleanResponse.endsWith('```')) {
+        cleanResponse = cleanResponse.slice(0, -3);
+      }
+      cleanResponse = cleanResponse.trim();
+      
+      parsed = JSON.parse(cleanResponse);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      console.error('Raw response:', aiResponse.substring(0, 500));
+      throw new Error('AI returned invalid format. Please try again.');
+    }
+    
+    if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
+      throw new Error('AI response missing conditions array.');
+    }
+    
+    // Transform AI response into our condition format
+    const conditions = parsed.conditions.map((c, index) => ({
+      id: index + 1,
+      rawName: c.rawText || c.name,
+      standardizedName: c.name,
+      dateFound: c.dateFound || null,
+      isClaimable: c.isClaimable === true,
+      category: c.category || 'Other',
+      selected: false
+    }));
+    
+    // Sort: claimable conditions first, then alphabetically
+    conditions.sort((a, b) => {
+      if (a.isClaimable && !b.isClaimable) return -1;
+      if (!a.isClaimable && b.isClaimable) return 1;
+      return a.standardizedName.localeCompare(b.standardizedName);
+    });
+    
+    return {
+      conditions,
+      summary: parsed.summary || null
+    };
+  };
+  
+  /**
+   * Process the uploaded file using AI
    */
   const handleProcessFile = async () => {
     if (!file) {
       setError('Please select a file first.');
+      return;
+    }
+    
+    // Check AI availability
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Click the AI button in the header to configure Local AI or enter your Gemini API key.');
       return;
     }
     
@@ -392,18 +532,22 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       
       setRawText(text);
       
-      setProcessingStage('Analyzing Problem List...');
-      const conditions = parseBlueButtonText(text);
+      if (text.length < 100) {
+        throw new Error('File appears to be empty or too short. Please upload a valid Blue Button report.');
+      }
       
-      if (conditions.length === 0) {
-        setError('No diagnoses found in this file. This might not be a Blue Button report, or the format is not recognized. You can try viewing the raw text below.');
+      setProcessingStage('AI analyzing diagnoses (this may take 30-60 seconds)...');
+      const result = await analyzeWithAI(text);
+      
+      if (result.conditions.length === 0) {
+        setError('No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.');
       } else {
-        setExtractedConditions(conditions);
+        setExtractedConditions(result.conditions);
       }
       
     } catch (err) {
       console.error('Processing error:', err);
-      setError(`Error processing file: ${err.message}`);
+      setError(`Error: ${err.message}`);
     } finally {
       setIsProcessing(false);
       setProcessingStage('');
@@ -462,11 +606,11 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
               <span className="text-3xl">📋</span>
               <div>
                 <h2 className="text-xl font-bold text-white">Blue Button X-Ray</h2>
-                <p className="text-sm text-violet-100">Instant Evidence Mining from VA Medical Records</p>
+                <p className="text-sm text-violet-100">AI-Powered Evidence Mining from VA Medical Records</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <FocusToggle variant="light" />
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               <button
                 onClick={onClose}
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -490,16 +634,32 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 <div>
                   <h3 className="font-bold text-cyan-800 dark:text-cyan-200">What is the Blue Button Report?</h3>
                   <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-1">
-                    The <strong>Blue Button</strong> is your instant-download VA medical record from <a href="https://www.myhealth.va.gov" target="_blank" rel="noopener noreferrer" className="underline hover:text-cyan-600">MyHealtheVet</a>. 
+                    The <strong>Blue Button</strong> is your instant-download VA medical record from <a href="https://www.va.gov/my-health/medical-records/download/" target="_blank" rel="noopener noreferrer" className="underline hover:text-cyan-600">VA.gov</a>. 
                     Unlike the C-File (which takes 6+ months), you can get this <strong>today</strong>.
                   </p>
                   <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
-                    🔒 <strong>Privacy:</strong> This tool processes your file <strong>100% locally in your browser</strong>. 
-                    Your data is NEVER uploaded to any server.
+                    🤖 <strong>AI-Powered:</strong> Uses your {aiStatus.effectiveMode === AI_MODES.LOCAL ? 'secure Local AI' : 'Cloud AI'} to intelligently extract diagnoses. 
+                    {aiStatus.effectiveMode === AI_MODES.LOCAL && ' Your data never leaves your device!'}
                   </p>
                 </div>
               </div>
             </div>
+            
+            {/* AI Status Warning */}
+            {!isAnyAIAvailable() && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required</h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                      Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                      or enter your Gemini API key to analyze Blue Button reports.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* File Upload Section */}
             {!extractedConditions.length && (
@@ -555,18 +715,27 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 {file && (
                   <button
                     onClick={handleProcessFile}
-                    disabled={isProcessing}
-                    className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-bold hover:from-violet-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled={isProcessing || !isAnyAIAvailable()}
+                    className={`w-full mt-4 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+                      isProcessing || !isAnyAIAvailable()
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
                   >
                     {isProcessing ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                         <span>{processingStage}</span>
                       </>
+                    ) : !isAnyAIAvailable() ? (
+                      <>
+                        <span>⚠️</span>
+                        <span>Configure AI First</span>
+                      </>
                     ) : (
                       <>
-                        <span>🔍</span>
-                        <span>Scan for Diagnoses</span>
+                        <span>🤖</span>
+                        <span>AI Scan for Diagnoses</span>
                       </>
                     )}
                   </button>
@@ -576,11 +745,12 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📥 How to Download Your Blue Button:</h4>
                   <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
-                    <li>Go to <a href="https://www.myhealth.va.gov" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 underline">MyHealtheVet.va.gov</a></li>
+                    <li>Go to <a href="https://www.va.gov/my-health/medical-records/download/" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 underline">VA.gov Medical Records Download</a></li>
                     <li>Sign in with your Login.gov or ID.me account</li>
-                    <li>Click <strong>"Health Records"</strong> → <strong>"Blue Button"</strong></li>
-                    <li>Select <strong>"VA Health Summary"</strong> or <strong>"VA Problem List"</strong></li>
-                    <li>Download as PDF or TXT and upload here</li>
+                    <li><strong>Step 1:</strong> Select date range (choose <strong>"All Time"</strong> for complete history)</li>
+                    <li><strong>Step 2:</strong> Check <strong>"Select all VA records"</strong> (includes all conditions, labs, meds)</li>
+                    <li><strong>Step 3:</strong> Choose <strong>"Text file"</strong> format (works best with X-Ray)</li>
+                    <li>Click <strong>"Download report"</strong> and upload the file here</li>
                   </ol>
                 </div>
               </div>

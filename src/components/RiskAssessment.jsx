@@ -13,8 +13,11 @@
  * - 55+ Age: VA generally exempts from future exams
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import { getMyRatings } from '../utils/veteranProfile';
 
 /**
  * VA Protection Rules per 38 CFR
@@ -152,6 +155,36 @@ export default function RiskAssessment({ onClose, onReportBug }) {
   
   // Result state
   const [showResults, setShowResults] = useState(false);
+  
+  // AI state
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [aiAnalysis, setAIAnalysis] = useState(null);
+  const [isAnalyzingWithAI, setIsAnalyzingWithAI] = useState(false);
+  const [aiError, setAIError] = useState(null);
+  
+  // My Packet integration - load saved rated conditions
+  const [savedRatings, setSavedRatings] = useState([]);
+  const [usePacketRatings, setUsePacketRatings] = useState(false);
+  
+  // Load saved ratings from My Packet on mount
+  useEffect(() => {
+    const ratings = getMyRatings();
+    setSavedRatings(ratings || []);
+    // Auto-populate current conditions if available
+    if (ratings && ratings.length > 0 && !currentConditions) {
+      const conditionsList = ratings.map(r => `${r.name || r.bodyPart} ${r.rating}%`).join(', ');
+      setCurrentConditions(conditionsList);
+    }
+  }, []);
+  
+  // Monitor AI status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   
   /**
    * Calculate risk assessment based on inputs
@@ -307,6 +340,80 @@ export default function RiskAssessment({ onClose, onReportBug }) {
   }, [currentRating, ratingDate, isPermanentTotal, birthYear]);
   
   /**
+   * Generate AI risk analysis
+   */
+  const generateAIRiskAnalysis = async () => {
+    if (!isAnyAIAvailable()) {
+      setAIError('AI is not available. Please configure your API key in settings.');
+      return;
+    }
+    
+    setIsAnalyzingWithAI(true);
+    setAIError(null);
+    
+    const prompt = `You are a VA disability claims expert analyzing the risk of a veteran filing a new claim. Analyze this situation and provide strategic advice.
+
+VETERAN'S SITUATION:
+- Current Combined Rating: ${currentRating}%
+- Rating Effective Date: ${ratingDate}
+- Years Rated: ${riskAssessment.yearsRated.toFixed(1)} years
+- Permanent & Total (P&T): ${isPermanentTotal ? 'Yes' : 'No'}
+- Age: ${riskAssessment.age || 'Not provided'}
+- Current Rated Conditions: ${currentConditions || 'Not specified'}
+- Proposed New Claim: ${proposedClaim || 'Not specified'}
+
+LEGAL PROTECTIONS IDENTIFIED:
+${riskAssessment.protections.map(p => `- ${p.rule.name}: ${p.message}`).join('\n') || 'None identified'}
+
+WARNINGS:
+${riskAssessment.warnings.map(w => `- ${w.severity}: ${w.message}`).join('\n') || 'None'}
+
+RULES TO CONSIDER:
+- 5-Year Rule (38 CFR § 3.344(c)): Ratings under 5 years not stabilized
+- 10-Year Rule (38 CFR § 3.957): Service connection protected after 10 years
+- 20-Year Rule (38 CFR § 3.951(b)): Ratings cannot be reduced after 20 years
+- P&T: Filing can trigger review of ALL conditions
+- 55+ Age: Generally exempt from routine exams
+
+Please provide:
+1. A risk summary (2-3 sentences)
+2. Specific strategic recommendations (3-5 bullet points)
+3. If a new claim is proposed, potential secondary conditions or angles to strengthen it
+4. Any timing considerations (should they wait?)
+
+Respond in this JSON format:
+{
+  "riskSummary": "Your summary here",
+  "recommendations": ["Rec 1", "Rec 2", "Rec 3"],
+  "strengthenClaim": ["Angle 1", "Angle 2"],
+  "timingAdvice": "Advice about timing",
+  "overallVerdict": "PROCEED" | "CAUTION" | "WAIT" | "DO NOT FILE"
+}`;
+
+    try {
+      const response = await generateAI(prompt, {
+        temperature: 0.4,
+        maxTokens: 1024,
+        expectJSON: true
+      });
+      
+      // Extract JSON from response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        setAIAnalysis(analysis);
+      } else {
+        throw new Error('Could not parse AI response');
+      }
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      setAIError('Failed to generate AI analysis. Please try again.');
+    } finally {
+      setIsAnalyzingWithAI(false);
+    }
+  };
+  
+  /**
    * Handle form submission
    */
   const handleAnalyze = () => {
@@ -314,6 +421,7 @@ export default function RiskAssessment({ onClose, onReportBug }) {
       return;
     }
     setShowResults(true);
+    setAIAnalysis(null); // Reset AI analysis for new assessment
   };
   
   /**
@@ -327,6 +435,8 @@ export default function RiskAssessment({ onClose, onReportBug }) {
     setProposedClaim('');
     setCurrentConditions('');
     setShowResults(false);
+    setAIAnalysis(null);
+    setAIError(null);
   };
   
   /**
@@ -524,7 +634,7 @@ export default function RiskAssessment({ onClose, onReportBug }) {
       <button
         onClick={handleAnalyze}
         disabled={!currentRating || !ratingDate}
-        className="w-full px-6 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-bold text-lg hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
       >
         <span>🎯</span>
         <span>Analyze My Risk</span>
@@ -694,6 +804,117 @@ export default function RiskAssessment({ onClose, onReportBug }) {
           </div>
         </div>
         
+        {/* AI Strategic Analysis */}
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-purple-800 dark:text-purple-200 flex items-center gap-2">
+              🤖 AI Strategic Analysis
+            </h3>
+            {!aiAnalysis && !isAnalyzingWithAI && aiStatus?.available && (
+              <button
+                onClick={generateAIRiskAnalysis}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              >
+                ✨ Get AI Analysis
+              </button>
+            )}
+          </div>
+          
+          {!aiStatus?.available && (
+            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+              <p>Configure AI in settings to get strategic analysis</p>
+            </div>
+          )}
+          
+          {isAnalyzingWithAI && (
+            <div className="flex items-center justify-center gap-3 py-8">
+              <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full"></div>
+              <span className="text-purple-600 dark:text-purple-400 font-medium">Analyzing risk factors...</span>
+            </div>
+          )}
+          
+          {aiError && (
+            <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4">
+              <p className="text-red-700 dark:text-red-300 text-sm">{aiError}</p>
+              <button
+                onClick={generateAIRiskAnalysis}
+                className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          
+          {aiAnalysis && (
+            <div className="space-y-4">
+              {/* Overall Verdict */}
+              <div className={`p-4 rounded-lg ${
+                aiAnalysis.overallVerdict?.toLowerCase().includes('proceed') 
+                  ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700'
+                  : aiAnalysis.overallVerdict?.toLowerCase().includes('caution')
+                  ? 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700'
+                  : 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700'
+              }`}>
+                <p className="font-bold text-lg">{aiAnalysis.overallVerdict}</p>
+              </div>
+              
+              {/* Risk Summary */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📋 Risk Assessment</h4>
+                <p className="text-gray-600 dark:text-gray-300">{aiAnalysis.riskSummary}</p>
+              </div>
+              
+              {/* Recommendations */}
+              {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">💡 Recommendations</h4>
+                  <ul className="space-y-2">
+                    {aiAnalysis.recommendations.map((rec, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
+                        <span className="text-purple-500 mt-1">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* Strengthen Your Claim */}
+              {aiAnalysis.strengthenClaim && aiAnalysis.strengthenClaim.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">💪 Strengthen Your Case</h4>
+                  <ul className="space-y-2">
+                    {aiAnalysis.strengthenClaim.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
+                        <span className="text-green-500 mt-1">✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* Timing Advice */}
+              {aiAnalysis.timingAdvice && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">⏰ Timing Considerations</h4>
+                  <p className="text-gray-600 dark:text-gray-300">{aiAnalysis.timingAdvice}</p>
+                </div>
+              )}
+              
+              {/* Regenerate Button */}
+              <div className="text-center pt-2">
+                <button
+                  onClick={generateAIRiskAnalysis}
+                  className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                >
+                  🔄 Regenerate Analysis
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        
         {/* Final Warning for P&T with 100% */}
         {isPermanentTotal && rating >= 100 && (
           <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white">
@@ -749,35 +970,95 @@ export default function RiskAssessment({ onClose, onReportBug }) {
                 <p className="text-sm text-orange-100">Risk Assessment Before Filing</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <AIStatusBadge showLabel={true} />
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         
         {/* Main Content */}
         <div className="p-6">
-            {/* Educational Banner */}
-            {!showResults && (
-              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">📚</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">Know Your Rights</h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      VA ratings have legal protections under <strong>38 CFR</strong>. The longer your rating has been 
-                      in effect, the harder it is to reduce. This tool checks your protection status before you file.
-                    </p>
+          {/* AI Mode Section */}
+          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AIStatusBadge showLabel={true} />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                    ? '🔒 100% Private - runs on your device'
+                    : aiStatus.effectiveMode === AI_MODES.CLOUD 
+                      ? '☁️ Cloud AI - strategic analysis available'
+                      : '⚠️ No AI - basic analysis only'}
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAISettings(!showAISettings)}
+                className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200"
+              >
+                {showAISettings ? 'Hide Settings' : 'AI Settings'}
+              </button>
+            </div>
+            
+            {showAISettings && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <AIModeSelector 
+                  onModeChange={() => setAIStatus(getAIStatus())}
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Educational Banner */}
+          {!showResults && (
+            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">📚</span>
+                <div>
+                  <h3 className="font-bold text-amber-800 dark:text-amber-200">Know Your Rights</h3>
+                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                    VA ratings have legal protections under <strong>38 CFR</strong>. The longer your rating has been 
+                    in effect, the harder it is to reduce. This tool checks your protection status before you file.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* My Packet Integration */}
+          {savedRatings.length > 0 && !showResults && (
+            <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">📦</span>
+                <div className="flex-1">
+                  <h3 className="font-bold text-blue-800 dark:text-blue-200">Loaded from My Packet</h3>
+                  <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                    Found {savedRatings.length} saved ratings. Your conditions have been auto-populated below.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {savedRatings.slice(0, 5).map((r, i) => (
+                      <span key={i} className="px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded">
+                        {r.name || r.bodyPart} {r.rating}%
+                      </span>
+                    ))}
+                    {savedRatings.length > 5 && (
+                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 text-xs rounded">
+                        +{savedRatings.length - 5} more
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
             
           {/* Content */}
           {showResults ? renderResults() : renderInputForm()}

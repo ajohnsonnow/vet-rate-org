@@ -536,6 +536,483 @@ export const getMyTotalRating = () => {
   return Math.round(combined / 10) * 10;
 };
 
+// ============================================================================
+// SERVICE HISTORY STORAGE - Deployments, Awards, DD214 data
+// ============================================================================
+
+const SERVICE_HISTORY_KEY = 'vet_rate_service_history';
+
+/**
+ * Valid deployment locations/theaters
+ */
+const VALID_THEATERS = [
+  'OIF', 'OEF', 'OND', 'OIR', 'OFS', 'Vietnam', 'Korea', 'Gulf War', 
+  'Somalia', 'Bosnia', 'Kosovo', 'Panama', 'Grenada', 'CONUS', 'Europe', 
+  'Pacific', 'Other'
+];
+
+/**
+ * Get service history data
+ * @returns {Object} Service history with deployments, awards, dd214Data
+ */
+export const getServiceHistory = () => {
+  try {
+    const saved = localStorage.getItem(SERVICE_HISTORY_KEY);
+    return saved ? JSON.parse(saved) : {
+      deployments: [],
+      awards: [],
+      dd214Data: null,
+      serviceInfo: null,
+      dateUpdated: null
+    };
+  } catch (error) {
+    console.error('Error reading service history:', error);
+    return { deployments: [], awards: [], dd214Data: null, serviceInfo: null, dateUpdated: null };
+  }
+};
+
+/**
+ * Save the entire service history
+ * @param {Object} history - The service history data
+ * @returns {boolean} Success status
+ */
+export const saveServiceHistory = (history) => {
+  try {
+    const sanitized = {
+      deployments: Array.isArray(history.deployments) ? history.deployments.map(d => ({
+        id: d.id || `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        theater: VALID_THEATERS.includes(d.theater) ? d.theater : 'Other',
+        location: sanitizeString(d.location || '', 200),
+        startDate: d.startDate || null,
+        endDate: d.endDate || null,
+        unit: sanitizeString(d.unit || '', 200),
+        notes: sanitizeString(d.notes || '', 1000),
+        hazardous: !!d.hazardous,
+        combat: !!d.combat,
+        dateAdded: d.dateAdded || new Date().toISOString()
+      })) : [],
+      awards: Array.isArray(history.awards) ? history.awards.map(a => ({
+        id: a.id || `award_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: sanitizeString(a.name || '', 200),
+        abbreviation: sanitizeString(a.abbreviation || '', 50),
+        dateReceived: a.dateReceived || null,
+        notes: sanitizeString(a.notes || '', 500),
+        isCombat: !!a.isCombat,
+        dateAdded: a.dateAdded || new Date().toISOString()
+      })) : [],
+      dd214Data: history.dd214Data ? {
+        branch: sanitizeString(history.dd214Data.branch || '', 100),
+        mos: sanitizeString(history.dd214Data.mos || '', 200),
+        mosTitle: sanitizeString(history.dd214Data.mosTitle || '', 200),
+        entryDate: history.dd214Data.entryDate || null,
+        separationDate: history.dd214Data.separationDate || null,
+        yearsService: history.dd214Data.yearsService || null,
+        monthsService: history.dd214Data.monthsService || null,
+        separationType: sanitizeString(history.dd214Data.separationType || '', 100),
+        characterOfService: sanitizeString(history.dd214Data.characterOfService || '', 100),
+        reenlisted: !!history.dd214Data.reenlisted,
+        foreignService: !!history.dd214Data.foreignService,
+        extractedText: sanitizeString(history.dd214Data.extractedText || '', 10000),
+        dateProcessed: history.dd214Data.dateProcessed || new Date().toISOString()
+      } : null,
+      serviceInfo: history.serviceInfo ? {
+        branch: sanitizeString(history.serviceInfo.branch || '', 100),
+        component: sanitizeString(history.serviceInfo.component || '', 100), // Active, Reserve, Guard
+        rank: sanitizeString(history.serviceInfo.rank || '', 100),
+        mos: sanitizeString(history.serviceInfo.mos || '', 200)
+      } : null,
+      dateUpdated: new Date().toISOString()
+    };
+    
+    localStorage.setItem(SERVICE_HISTORY_KEY, JSON.stringify(sanitized));
+    return true;
+  } catch (error) {
+    console.error('Error saving service history:', error);
+    return false;
+  }
+};
+
+/**
+ * Add a deployment
+ * @param {Object} deployment - Deployment data
+ * @returns {string|null} New deployment ID or null on error
+ */
+export const addDeployment = (deployment) => {
+  try {
+    const history = getServiceHistory();
+    const newDeployment = {
+      id: `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      theater: VALID_THEATERS.includes(deployment.theater) ? deployment.theater : 'Other',
+      location: sanitizeString(deployment.location || '', 200),
+      startDate: deployment.startDate || null,
+      endDate: deployment.endDate || null,
+      unit: sanitizeString(deployment.unit || '', 200),
+      notes: sanitizeString(deployment.notes || '', 1000),
+      hazardous: !!deployment.hazardous,
+      combat: !!deployment.combat,
+      dateAdded: new Date().toISOString()
+    };
+    
+    history.deployments.push(newDeployment);
+    saveServiceHistory(history);
+    return newDeployment.id;
+  } catch (error) {
+    console.error('Error adding deployment:', error);
+    return null;
+  }
+};
+
+/**
+ * Update a deployment
+ * @param {string} deploymentId - The deployment ID
+ * @param {Object} updates - Fields to update
+ * @returns {boolean} Success status
+ */
+export const updateDeployment = (deploymentId, updates) => {
+  try {
+    const history = getServiceHistory();
+    const index = history.deployments.findIndex(d => d.id === deploymentId);
+    if (index === -1) return false;
+    
+    history.deployments[index] = {
+      ...history.deployments[index],
+      ...updates,
+      dateUpdated: new Date().toISOString()
+    };
+    
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error('Error updating deployment:', error);
+    return false;
+  }
+};
+
+/**
+ * Remove a deployment
+ * @param {string} deploymentId - The deployment ID
+ * @returns {boolean} Success status
+ */
+export const removeDeployment = (deploymentId) => {
+  try {
+    const history = getServiceHistory();
+    history.deployments = history.deployments.filter(d => d.id !== deploymentId);
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error('Error removing deployment:', error);
+    return false;
+  }
+};
+
+/**
+ * Add an award
+ * @param {Object} award - Award data
+ * @returns {string|null} New award ID or null on error
+ */
+export const addAward = (award) => {
+  try {
+    const history = getServiceHistory();
+    const newAward = {
+      id: `award_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: sanitizeString(award.name || '', 200),
+      abbreviation: sanitizeString(award.abbreviation || '', 50),
+      dateReceived: award.dateReceived || null,
+      notes: sanitizeString(award.notes || '', 500),
+      isCombat: !!award.isCombat,
+      dateAdded: new Date().toISOString()
+    };
+    
+    history.awards.push(newAward);
+    saveServiceHistory(history);
+    return newAward.id;
+  } catch (error) {
+    console.error('Error adding award:', error);
+    return null;
+  }
+};
+
+/**
+ * Remove an award
+ * @param {string} awardId - The award ID
+ * @returns {boolean} Success status
+ */
+export const removeAward = (awardId) => {
+  try {
+    const history = getServiceHistory();
+    history.awards = history.awards.filter(a => a.id !== awardId);
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error('Error removing award:', error);
+    return false;
+  }
+};
+
+/**
+ * Save DD214 extracted data
+ * @param {Object} dd214Data - Extracted DD214 information
+ * @returns {boolean} Success status
+ */
+export const saveDD214Data = (dd214Data) => {
+  try {
+    const history = getServiceHistory();
+    history.dd214Data = {
+      branch: sanitizeString(dd214Data.branch || '', 100),
+      mos: sanitizeString(dd214Data.mos || '', 200),
+      mosTitle: sanitizeString(dd214Data.mosTitle || '', 200),
+      entryDate: dd214Data.entryDate || null,
+      separationDate: dd214Data.separationDate || null,
+      yearsService: dd214Data.yearsService || null,
+      monthsService: dd214Data.monthsService || null,
+      separationType: sanitizeString(dd214Data.separationType || '', 100),
+      characterOfService: sanitizeString(dd214Data.characterOfService || '', 100),
+      reenlisted: !!dd214Data.reenlisted,
+      foreignService: !!dd214Data.foreignService,
+      extractedText: sanitizeString(dd214Data.extractedText || '', 10000),
+      dateProcessed: new Date().toISOString()
+    };
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error('Error saving DD214 data:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear DD214 data
+ * @returns {boolean} Success status
+ */
+export const clearDD214Data = () => {
+  try {
+    const history = getServiceHistory();
+    history.dd214Data = null;
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error('Error clearing DD214 data:', error);
+    return false;
+  }
+};
+
+/**
+ * Check if user has service history data
+ * @returns {boolean}
+ */
+export const hasServiceHistory = () => {
+  const history = getServiceHistory();
+  return (
+    history.deployments?.length > 0 || 
+    history.awards?.length > 0 || 
+    history.dd214Data !== null
+  );
+};
+
+// ============================================================================
+// CONTINUITY THREAD - Timeline Events Storage
+// ============================================================================
+
+const TIMELINE_EVENTS_KEY = 'vet_rate_timeline_events';
+
+/**
+ * Get all timeline events
+ * @returns {Array} Array of timeline events
+ */
+export const getTimelineEvents = () => {
+  try {
+    const saved = localStorage.getItem(TIMELINE_EVENTS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading timeline events:', error);
+    return [];
+  }
+};
+
+/**
+ * Save all timeline events
+ * @param {Array} events - Array of timeline events
+ * @returns {boolean} Success status
+ */
+export const saveTimelineEvents = (events) => {
+  try {
+    if (!Array.isArray(events)) return false;
+    
+    const sanitizedEvents = events.map(e => ({
+      id: e.id || Date.now(),
+      type: sanitizeString(e.type || 'service', 50),
+      date: e.date || null,
+      description: sanitizeString(e.description || '', 1000),
+      category: sanitizeString(e.category || 'Event', 100),
+      dateAdded: e.dateAdded || new Date().toISOString()
+    }));
+    
+    localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(sanitizedEvents));
+    return true;
+  } catch (error) {
+    console.error('Error saving timeline events:', error);
+    return false;
+  }
+};
+
+/**
+ * Add a timeline event
+ * @param {Object} event - Event data
+ * @returns {number|null} New event ID or null on error
+ */
+export const addTimelineEvent = (event) => {
+  try {
+    const events = getTimelineEvents();
+    const newEvent = {
+      id: Date.now(),
+      type: sanitizeString(event.type || 'service', 50),
+      date: event.date || null,
+      description: sanitizeString(event.description || '', 1000),
+      category: sanitizeString(event.category || 'Event', 100),
+      dateAdded: new Date().toISOString()
+    };
+    
+    events.push(newEvent);
+    localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(events));
+    return newEvent.id;
+  } catch (error) {
+    console.error('Error adding timeline event:', error);
+    return null;
+  }
+};
+
+/**
+ * Remove a timeline event
+ * @param {number} eventId - Event ID
+ * @returns {boolean} Success status
+ */
+export const removeTimelineEvent = (eventId) => {
+  try {
+    const events = getTimelineEvents();
+    const filtered = events.filter(e => e.id !== eventId);
+    localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(filtered));
+    return true;
+  } catch (error) {
+    console.error('Error removing timeline event:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all timeline events
+ * @returns {boolean} Success status
+ */
+export const clearTimelineEvents = () => {
+  try {
+    localStorage.removeItem(TIMELINE_EVENTS_KEY);
+    return true;
+  } catch (error) {
+    console.error('Error clearing timeline events:', error);
+    return false;
+  }
+};
+
+// ============================================================================
+// PAIN PAINTER - Pain Maps Storage
+// ============================================================================
+
+const PAIN_MAPS_KEY = 'vet_rate_pain_maps';
+
+/**
+ * Get all saved pain maps
+ * @returns {Array} Array of pain maps
+ */
+export const getPainMaps = () => {
+  try {
+    const saved = localStorage.getItem(PAIN_MAPS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Error reading pain maps:', error);
+    return [];
+  }
+};
+
+/**
+ * Save a pain map
+ * @param {Object} painMap - Pain map data
+ * @returns {string|null} New map ID or null on error
+ */
+export const savePainMap = (painMap) => {
+  try {
+    const maps = getPainMaps();
+    const newMap = {
+      id: `painmap_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: sanitizeString(painMap.name || 'Pain Map', 200),
+      painPoints: painMap.painPoints || {},
+      modelConfig: painMap.modelConfig || {},
+      notes: sanitizeString(painMap.notes || '', 2000),
+      detectedNexus: painMap.detectedNexus || [],
+      screenshot: painMap.screenshot || null, // Base64 image
+      dateSaved: new Date().toISOString(),
+      dateUpdated: new Date().toISOString()
+    };
+    
+    maps.push(newMap);
+    localStorage.setItem(PAIN_MAPS_KEY, JSON.stringify(maps));
+    return newMap.id;
+  } catch (error) {
+    console.error('Error saving pain map:', error);
+    return null;
+  }
+};
+
+/**
+ * Update a pain map
+ * @param {string} mapId - Map ID
+ * @param {Object} updates - Fields to update
+ * @returns {boolean} Success status
+ */
+export const updatePainMap = (mapId, updates) => {
+  try {
+    const maps = getPainMaps();
+    const index = maps.findIndex(m => m.id === mapId);
+    if (index === -1) return false;
+    
+    maps[index] = {
+      ...maps[index],
+      ...updates,
+      dateUpdated: new Date().toISOString()
+    };
+    
+    localStorage.setItem(PAIN_MAPS_KEY, JSON.stringify(maps));
+    return true;
+  } catch (error) {
+    console.error('Error updating pain map:', error);
+    return false;
+  }
+};
+
+/**
+ * Delete a pain map
+ * @param {string} mapId - Map ID
+ * @returns {boolean} Success status
+ */
+export const deletePainMap = (mapId) => {
+  try {
+    const maps = getPainMaps();
+    const filtered = maps.filter(m => m.id !== mapId);
+    localStorage.setItem(PAIN_MAPS_KEY, JSON.stringify(filtered));
+    return true;
+  } catch (error) {
+    console.error('Error deleting pain map:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear all pain maps
+ * @returns {boolean} Success status
+ */
+export const clearPainMaps = () => {
+  try {
+    localStorage.removeItem(PAIN_MAPS_KEY);
+    return true;
+  } catch (error) {
+    console.error('Error clearing pain maps:', error);
+    return false;
+  }
+};
+
 // Default export - must be at the end after all functions are defined
 export default {
   // Profile functions
@@ -565,5 +1042,28 @@ export default {
   removeRating,
   clearMyRatings,
   hasMyRatings,
-  getMyTotalRating
+  getMyTotalRating,
+  // Service History functions
+  getServiceHistory,
+  saveServiceHistory,
+  addDeployment,
+  updateDeployment,
+  removeDeployment,
+  addAward,
+  removeAward,
+  saveDD214Data,
+  clearDD214Data,
+  hasServiceHistory,
+  // Timeline Events functions
+  getTimelineEvents,
+  saveTimelineEvents,
+  addTimelineEvent,
+  removeTimelineEvent,
+  clearTimelineEvents,
+  // Pain Maps functions
+  getPainMaps,
+  savePainMap,
+  updatePainMap,
+  deletePainMap,
+  clearPainMaps
 };

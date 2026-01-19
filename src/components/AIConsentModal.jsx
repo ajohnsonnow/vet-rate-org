@@ -145,7 +145,7 @@ const AIConsentModal = ({
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-0.5">•</span>
-                This feature is optional — you can always use the standard template instead
+                This feature is optional - you can always use the standard template instead
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 mt-0.5">•</span>

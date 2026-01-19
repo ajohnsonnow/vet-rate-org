@@ -691,7 +691,7 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                 <button
                   onClick={handleImport}
                   disabled={selectedTypes.length === 0}
-                  className="w-full py-4 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-lg font-bold text-lg hover:from-cyan-700 hover:to-teal-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   <span>📊</span>
                   <span>Import {selectedTypes.length} Data Type{selectedTypes.length !== 1 ? 's' : ''}</span>

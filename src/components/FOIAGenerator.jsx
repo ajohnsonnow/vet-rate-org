@@ -595,7 +595,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
       <button
         onClick={() => setStep(2)}
         disabled={!formData.firstName || !formData.lastName || !formData.ssn || !formData.email}
-        className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
       >
         Continue to Record Selection →
       </button>
@@ -808,7 +808,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
         <button
           onClick={() => setStep(3)}
           disabled={selectedRecords.length === 0}
-          className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors"
         >
           Generate Request →
         </button>
@@ -1001,15 +1001,15 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden relative modal-content flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl">
+        {/* Header - Fixed at top */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔑</span>
@@ -1030,68 +1030,71 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
           </div>
         </div>
         
-        {/* Progress Steps */}
-        <div className="px-6 pt-6">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            {[1, 2, 3].map(s => (
-              <div key={s} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                  step >= s ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                }`}>
-                  {step > s ? '✓' : s}
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Progress Steps */}
+          <div className="px-6 pt-6">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              {[1, 2, 3].map(s => (
+                <div key={s} className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                    step >= s ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {step > s ? '✓' : s}
+                  </div>
+                  {s < 3 && (
+                    <div className={`w-16 h-1 ${step > s ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                  )}
                 </div>
-                {s < 3 && (
-                  <div className={`w-16 h-1 ${step > s ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <span className={step === 1 ? 'font-bold text-amber-500' : ''}>Your Info</span>
+              <span className={step === 2 ? 'font-bold text-amber-500' : ''}>Select Records</span>
+              <span className={step === 3 ? 'font-bold text-amber-500' : ''}>Download</span>
+            </div>
           </div>
-          <div className="flex justify-center gap-8 text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <span className={step === 1 ? 'font-bold text-amber-500' : ''}>Your Info</span>
-            <span className={step === 2 ? 'font-bold text-amber-500' : ''}>Select Records</span>
-            <span className={step === 3 ? 'font-bold text-amber-500' : ''}>Download</span>
-          </div>
-        </div>
-        
-        {/* Main Content */}
-        <div className="p-6 pt-0">
-          {step === 1 && renderPersonalInfo()}
-          {step === 2 && renderRecordSelection()}
-          {step === 3 && renderReviewDownload()}
           
-          {/* Support CTA on download page */}
-          {step === 3 && (
-            <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
-              <div className="flex items-center gap-4">
-                <img 
-                  src="/images/Anth.jpg" 
-                  alt="Anthony - Vet-Rate Developer"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <p className="text-amber-200 font-semibold mb-1">
-                    🔐 Knowledge is power - now you're unlocking yours
-                  </p>
-                  <p className="text-amber-300/70 text-sm">
-                    Your C-File contains everything VA used to decide your claim - and everything 
-                    they may have "overlooked." This tool helps every veteran see their own file. 
-                    Transparency tools like this take time to build. Help keep them free.
-                  </p>
+          {/* Main Content */}
+          <div className="p-6 pt-0">
+            {step === 1 && renderPersonalInfo()}
+            {step === 2 && renderRecordSelection()}
+            {step === 3 && renderReviewDownload()}
+            
+            {/* Support CTA on download page */}
+            {step === 3 && (
+              <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/images/Anth.jpg" 
+                    alt="Anthony - Vet-Rate Developer"
+                    className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <p className="text-amber-200 font-semibold mb-1">
+                      🔐 Knowledge is power - now you're unlocking yours
+                    </p>
+                    <p className="text-amber-300/70 text-sm">
+                      Your C-File contains everything VA used to decide your claim - and everything 
+                      they may have "overlooked." This tool helps every veteran see their own file. 
+                      Transparency tools like this take time to build. Help keep them free.
+                    </p>
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
+          
+          {/* BuyMeCoffee - shows on download page */}
+          {step === 3 && (
+            <div className="p-6 pt-0">
+              <BuyMeCoffee 
+                show={true} 
+                trigger="foia" 
+              />
             </div>
           )}
         </div>
-        
-        {/* BuyMeCoffee - shows on download page */}
-        {step === 3 && (
-          <div className="p-6 pt-0">
-            <BuyMeCoffee 
-              show={true} 
-              trigger="foia" 
-            />
-          </div>
-        )}
       </div>
     </div>
   );

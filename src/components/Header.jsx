@@ -3,7 +3,9 @@ import AccessibilityMenu from './AccessibilityMenu';
 import FundingModal from './FundingModal';
 import HelperModeToggle from './HelperModeToggle';
 import KnowledgeBaseStatus from './KnowledgeBaseStatus';
+import VersionDropdown from './VersionDropdown';
 import { ConsistencyBadge } from './ConsistencyEngine';
+import { AIStatusBadge } from './AIModeSelector';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHelperMode } from '../contexts/HelperModeContext';
 import { hasUnsavedChanges } from '../utils/dataPersistence';
@@ -14,50 +16,50 @@ function Header({
   onMyPacketClick, 
   onUserManualClick,
   onVAResourcesClick,
-  // Calculate
+  // Calculate Your Rating (Blue)
   onTacticalCalculatorClick,
-  // Discover  
+  onMillionDollarDashboardClick,
+  onWhatIfSandboxClick,
+  onRetroPayHunterClick,
+  onTimeMachineClick,
+  // Discover Your Claims (Teal)
   onSecondaryScoutClick,
   onCAPSimulatorClick,
-  onExamPrepRoomClick,
+  // ExamPrepRoom merged into CAPSimulator
   onPathfinderClick,
-  // Evidence
+  onMOSHazardMatcherClick,
+  onPACTActNavigatorClick,
+  onWebOfConditionsClick,
+  // Build Your Evidence (Violet)
   onCFileAnalyzerClick,
   onBlueButtonXRayClick,
+  onRecordSearchClick,
   onWitnessBenchClick,
+  onNexusBuilderClick,
   onFormsHelperClick,
-  // Quality Control
+  onSymptomLoggerClick,
+  onPainPainterClick,
+  onEvidenceTimelineClick,
+  onFOIAGeneratorClick,
+  // Quality Control (Rose)
   onRedTeamClick,
+  onClaimStressTestClick,
   onDecisionDecoderClick,
   onDenialDecoderClick,
   onSharkRadarClick,
-  // Advanced Strategy
-  onTDIUBuilderClick,
-  onRiskAssessmentClick,
-  onSymptomLoggerClick,
-  onPACTActNavigatorClick,
-  onFOIAGeneratorClick,
-  // Shock & Awe
-  onMillionDollarDashboardClick,
-  onMOSHazardMatcherClick,
-  onWebOfConditionsClick,
-  // Support & Resources
-  onVSOFinderClick,
-  onStateBenefitHunterClick,
-  // Special
-  onNexusBuilderClick,
-  // Legislative Watchdog
-  onLegislativeWatchdogClick,
-  // Quality of Life Features
-  onBackupManagerClick,
-  onTimeMachineClick,
-  // Gold Standard Features
-  onTheTribunalClick,
   onConsistencyEngineClick,
-  onWhatIfSandboxClick,
-  // Force Multiplier Features
-  onRecordSearchClick,
-  onCloudSyncClick
+  onEvidenceGapVisualizerClick,
+  onRiskAssessmentClick,
+  // Maximize Your Rating (Amber)
+  onTDIUBuilderClick,
+  onStateBenefitHunterClick,
+  onTheTribunalClick,
+  onLegislativeWatchdogClick,
+  // Support & Resources (Sky)
+  onVSOFinderClick,
+  onBackupManagerClick,
+  onCloudSyncClick,
+  onAISettingsClick
 }) {
   const { isDark, toggleTheme } = useTheme();
   const { isHelperMode } = useHelperMode();
@@ -187,11 +189,11 @@ function Header({
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="bg-white rounded-full h-16 w-16 md:h-20 md:w-20 flex items-center justify-center overflow-hidden shadow-md">
+            <div className="rounded-full h-16 w-16 md:h-20 md:w-20 flex-shrink-0 overflow-hidden shadow-md">
               <img 
                 src="/images/Vet-Rate-org-logo-official.png" 
                 alt="Vet-Rate.org Logo" 
-                className="h-full w-full object-contain"
+                className="h-full w-full object-cover"
               />
             </div>
             <div>
@@ -199,8 +201,10 @@ function Header({
               <p className="text-green-100 dark:text-gray-300 text-sm md:text-base whitespace-nowrap">
                 Free VA Claims Toolkit for Veterans
               </p>
-              <div className="mt-2">
+              <div className="mt-2 flex items-center gap-2">
                 <KnowledgeBaseStatus compact />
+                <AIStatusBadge showLabel={false} onClick={onAISettingsClick} />
+                <VersionDropdown />
               </div>
             </div>
           </div>
@@ -256,7 +260,7 @@ function Header({
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onTacticalCalculatorClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40 bg-white/50 dark:bg-emerald-800/50"
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40 bg-white/50 dark:bg-blue-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🧮 Tactical Calculator
@@ -264,6 +268,55 @@ function Header({
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           VA Math calculator with 2026 rates
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onMillionDollarDashboardClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          💰 Million Dollar Dashboard
+                          <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded animate-pulse">WOW</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          See your lifetime benefits value
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onWhatIfSandboxClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🎯 What-If Sandbox
+                          <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">DRAG&DROP</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Scenario planner with real VA math
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onRetroPayHunterClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          ⏰ Retro Pay Hunter
+                          <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">💰</span>
+                          <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Find missed back pay & CUE claims
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onTimeMachineClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          📅 Time Machine
+                          <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">ITF</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Intent to File countdown & backpay tracker
                         </p>
                       </button>
                     </div>
@@ -294,19 +347,7 @@ function Header({
                           ✅ C&P Exam Simulator
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Practice with DBQ-aligned exam questions
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onExamPrepRoomClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📋 Exam Prep Room
-                          <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">NEW</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-teal-700 dark:text-teal-400">
-                          See DBQ questions BEFORE the examiner does
+                          Practice with DBQ-aligned exam questions + Exam Prep
                         </p>
                       </button>
                       <button
@@ -315,10 +356,45 @@ function Header({
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🧭 Pathfinder
-                          <span className="px-1.5 py-0.5 bg-indigo-500 text-white text-[10px] font-bold rounded">AI</span>
+                          <span className="px-1.5 py-0.5 bg-teal-600 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           AI strategy: increases, secondaries & next steps
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onMOSHazardMatcherClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🎖️ MOS Hazard Matcher
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Find injuries linked to your MOS
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onPACTActNavigatorClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40 bg-white/50 dark:bg-teal-800/30"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          ☢️ PACT Act Navigator
+                          <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">HOT</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-teal-700 dark:text-teal-400">
+                          Find your presumptive conditions
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onWebOfConditionsClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🕸️ Web of Conditions
+                          <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">INTERACTIVE</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Visual map of connected conditions
                         </p>
                       </button>
                     </div>
@@ -331,7 +407,7 @@ function Header({
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onCFileAnalyzerClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40 bg-white/50 dark:bg-emerald-800/50"
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40 bg-white/50 dark:bg-violet-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🔬 C-File AI Analyzer
@@ -356,13 +432,13 @@ function Header({
                       </button>
                       <button
                         onClick={() => { setShowToolsMenu(false); onRecordSearchClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40 bg-white/50 dark:bg-emerald-800/50"
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🔍 PDF Evidence Finder
                           <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">NEW</span>
                         </span>
-                        <p className="text-xs mt-0.5 text-violet-600 dark:text-violet-400">
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           Search 2,000+ page STRs for keywords
                         </p>
                       </button>
@@ -395,9 +471,55 @@ function Header({
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           ✏️ Forms Helper
+                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">16+</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Guided assistance for VA forms & statements
+                          Guided VA forms with Auto-Scribe
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onSymptomLoggerClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          📝 Symptom Logger
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Track symptoms with timestamp evidence
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onPainPainterClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🎯 Somatic Target
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Interactive body map selector
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onEvidenceTimelineClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🧵 Evidence Timeline
+                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">NEW</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Visual continuity tracker with gap detection
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onFOIAGeneratorClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🔑 FOIA Keysmith
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Generate FOIA requests for records
                         </p>
                       </button>
                     </div>
@@ -406,7 +528,7 @@ function Header({
                     <div className="bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-rose-700 dark:text-rose-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        🎯 Quality Control
+                        ✅ Quality Control
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onRedTeamClick?.(); }}
@@ -418,6 +540,18 @@ function Header({
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           Devil's advocate for your claims
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onClaimStressTestClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          ⚔️ The War Game
+                          <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded">AI</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Skeptical Examiner stress-tests your claim
                         </p>
                       </button>
                       <button
@@ -434,7 +568,7 @@ function Header({
                       </button>
                       <button
                         onClick={() => { setShowToolsMenu(false); onDenialDecoderClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40 bg-white/50 dark:bg-emerald-800/50"
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40 bg-white/50 dark:bg-rose-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🔍 Denials Decoder
@@ -454,6 +588,42 @@ function Header({
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           Identify and avoid claims predators
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onConsistencyEngineClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🔍 Consistency Engine
+                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">AI</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Auto-detect contradictions before VA finds them
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onEvidenceGapVisualizerClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🔗 Evidence Gap Finder
+                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">NEW</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          See exactly what evidence is missing
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onRiskAssessmentClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🐻 Risk Assessment
+                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">DEFENSE</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Check protections before filing
                         </p>
                       </button>
                     </div>
@@ -477,151 +647,47 @@ function Header({
                         </p>
                       </button>
                       <button
-                        onClick={() => { setShowToolsMenu(false); onRiskAssessmentClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
+                        onClick={() => { setShowToolsMenu(false); onStateBenefitHunterClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40 bg-white/50 dark:bg-amber-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⚠️ Risk Assessment
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Evaluate claim risks & reduction triggers
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onSymptomLoggerClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📝 Symptom Logger
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Track symptoms with timestamp evidence
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onPACTActNavigatorClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ☢️ PACT Act Navigator
-                          <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded">HOT</span>
+                          💵 State Benefit Hunter
+                          <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded animate-pulse">$$$</span>
+                          <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-amber-600 dark:text-amber-400">
-                          Find your presumptive conditions
+                          Find state-specific veteran benefits
                         </p>
                       </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onFOIAGeneratorClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔑 FOIA Keysmith
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Generate FOIA requests for records
-                        </p>
-                      </button>
-                    </div>
-                    
-                    {/* FORCE MULTIPLIERS - Slate Theme */}
-                    <div className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20 rounded-lg p-2 mb-2">
-                      <p className="text-xs text-slate-700 dark:text-slate-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
-                        <span className="w-2 h-2 bg-slate-500 rounded-full"></span>
-                        ⚔️ Force Multipliers
-                      </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onTheTribunalClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/40"
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           ⚖️ The Tribunal
-                          <span className="px-1.5 py-0.5 bg-slate-600 text-white text-[10px] font-bold rounded">VOICE</span>
+                          <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded">VOICE</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           Mock BVA hearing simulator
                         </p>
                       </button>
                       <button
-                        onClick={() => { setShowToolsMenu(false); /* Add Somatic Target handler */ }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/40"
+                        onClick={() => { setShowToolsMenu(false); onLegislativeWatchdogClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎯 Somatic Target
+                          📡 Legislative Watchdog
+                          <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</span>
+                          <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Interactive body map selector
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); /* Add War Game handler */ }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⚔️ The War Game
-                          <span className="px-1.5 py-0.5 bg-slate-600 text-white text-[10px] font-bold rounded">AI</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Red team your claim strategy
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); /* Add Continuity Thread handler */ }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🧵 Continuity Thread
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Evidence timeline visualizer
-                        </p>
-                      </button>
-                    </div>
-                    
-                    {/* SHOCK & AWE - Gold Theme */}
-                    <div className="bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 rounded-lg p-2 mb-2 border border-yellow-200 dark:border-yellow-800">
-                      <p className="text-xs text-yellow-700 dark:text-yellow-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
-                        <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                        💎 Shock & Awe Tools
-                      </p>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onMillionDollarDashboardClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-yellow-100 dark:hover:bg-yellow-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💰 Million Dollar Dashboard
-                          <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded animate-pulse">WOW</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-yellow-700 dark:text-yellow-400">
-                          See your lifetime benefits value
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onMOSHazardMatcherClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-yellow-100 dark:hover:bg-yellow-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎖️ MOS Hazard Matcher
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find injuries linked to your MOS
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onWebOfConditionsClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-yellow-100 dark:hover:bg-yellow-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🕸️ Web of Conditions
-                          <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">INTERACTIVE</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Visual map of connected conditions
+                          Track VA rule changes & new presumptives
                         </p>
                       </button>
                     </div>
                     
                     {/* SUPPORT & RESOURCES - Sky Theme */}
-                    <div className="bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 rounded-lg p-2 mb-2">
+                    <div className="bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 rounded-lg p-2">
                       <p className="text-xs text-sky-700 dark:text-sky-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-sky-500 rounded-full"></span>
                         🤝 Support & Resources
@@ -632,32 +698,11 @@ function Header({
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
                           🤝 VSO Finder
+                          <span className="px-1.5 py-0.5 bg-sky-600 text-white text-[10px] font-bold rounded">FREE</span>
+                          <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           Find free accredited representation
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onStateBenefitHunterClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💰 State Benefit Hunter
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find state-specific veteran benefits
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onLegislativeWatchdogClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📡 Legislative Watchdog
-                          <span className="px-1.5 py-0.5 bg-sky-600 text-white text-[10px] font-bold rounded animate-pulse">ALERTS</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-sky-600 dark:text-sky-400">
-                          Track VA rule changes before they happen
                         </p>
                       </button>
                       <button
@@ -669,7 +714,7 @@ function Header({
                           <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">NEW</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Export/Import your data - never lose it again
+                          Export/Import your data - never lose it
                         </p>
                       </button>
                       <button
@@ -677,87 +722,22 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ☁️ Cloud Sync
+                          📤 Google Drive Backup
                           <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">NEW</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Back up to YOUR Google Drive
-                        </p>
-                      </button>
-                    </div>
-                    
-                    {/* GOLD STANDARD FEATURES - Premium Gradient Theme */}
-                    <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-900/20 dark:via-purple-900/20 dark:to-pink-900/20 rounded-lg p-2 mb-2 border border-purple-200 dark:border-purple-800">
-                      <p className="text-xs bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
-                        <span className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full"></span>
-                        ⭐ Gold Standard Features
-                      </p>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onTheTribunalClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-100 dark:hover:bg-purple-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⚖️ The Tribunal
-                          <span className="px-1.5 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] font-bold rounded animate-pulse">VOICE</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-purple-600 dark:text-purple-400">
-                          Voice-interactive mock BVA hearing simulator
+                          Sync your packet to YOUR Google Drive
                         </p>
                       </button>
                       <button
-                        onClick={() => { setShowToolsMenu(false); onConsistencyEngineClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-100 dark:hover:bg-purple-800/40"
+                        onClick={() => { setShowToolsMenu(false); onUserManualClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔍 Consistency Engine
-                          <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-bold rounded">AI</span>
+                          📖 User Manual
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Auto-detect contradictions before VA finds them
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onWhatIfSandboxClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-purple-100 dark:hover:bg-purple-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎯 What-If Sandbox
-                          <span className="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold rounded">NEW</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Drag-and-drop scenario planner with real VA math
-                        </p>
-                      </button>
-                    </div>
-                    
-                    {/* ADDITIONAL RESOURCES - Sky Theme */}
-                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-lg p-2">
-                      <p className="text-xs text-emerald-700 dark:text-emerald-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                        🏢 Find Help
-                      </p>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onVSOFinderClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-800/40"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🏢 VSO Finder
-                          <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded">FREE</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find Veteran Service Organizations near you
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => { setShowToolsMenu(false); onStateBenefitHunterClick?.(); }}
-                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-800/40 bg-white/50 dark:bg-emerald-800/50"
-                      >
-                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💵 State Benefit Hunter
-                          <span className="px-1.5 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded animate-pulse">$$$</span>
-                        </span>
-                        <p className="text-xs mt-0.5 text-emerald-600 dark:text-emerald-400">
-                          Find state-specific veteran benefits
+                          Complete guide to all features
                         </p>
                       </button>
                     </div>

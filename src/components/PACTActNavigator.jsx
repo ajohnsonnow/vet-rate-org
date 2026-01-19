@@ -744,7 +744,6 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <FocusToggle variant="light" />
               <button
               onClick={onClose}
               className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"

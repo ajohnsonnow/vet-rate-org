@@ -10,27 +10,14 @@
  * This tool asks the RIGHT questions to get powerful buddy statements.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
-import { isAIAvailable } from '../utils/aiStatementHelper';
 import { saveClaim, generateId } from '../utils/claimsStorage';
-
-// API endpoint for Gemini
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
-// LocalStorage key for BYOK (Bring Your Own Key)
-const STORAGE_KEY = 'vetrate_gemini_key';
-
-/**
- * Get the configured API key (localStorage takes priority)
- */
-const getApiKey = () => {
-  const storedKey = localStorage.getItem(STORAGE_KEY);
-  if (storedKey && storedKey.length > 0) return storedKey;
-  return import.meta.env.VITE_GEMINI_API_KEY || '';
-};
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
+import ShareButton from './ShareButton';
 
 /**
  * Relationship types that affect the interview questions
@@ -211,9 +198,9 @@ const getBaseQuestions = (relationship, conditionCategory) => {
  * Generate interview questions using AI based on relationship and condition
  */
 const generateAIQuestions = async (relationship, condition, conditionCategory) => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('No API key configured');
+  // Check if ANY AI is available
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please configure an API key or enable Local AI.');
   }
   
   const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
@@ -250,24 +237,12 @@ Return EXACTLY 4 questions in this JSON format:
   ]
 }`;
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024
-      }
-    })
+  // Use unified AI service
+  const text = await generateAI(prompt, {
+    temperature: 0.7,
+    maxTokens: 1024,
+    expectJSON: true
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to generate questions');
-  }
-  
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   
   // Extract JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -283,9 +258,9 @@ Return EXACTLY 4 questions in this JSON format:
  * Compile answers into a formal buddy statement using AI
  */
 const compileStatementWithAI = async (relationship, condition, answers) => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('No API key configured');
+  // Check if ANY AI is available
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please configure an API key or enable Local AI.');
   }
   
   const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
@@ -315,24 +290,11 @@ INSTRUCTIONS:
 
 Write the complete buddy statement now:`;
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.6,
-        maxOutputTokens: 2048
-      }
-    })
+  // Use unified AI service
+  return await generateAI(prompt, {
+    temperature: 0.6,
+    maxTokens: 2048
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to generate statement');
-  }
-  
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 };
 
 /**
@@ -389,9 +351,12 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   return statement;
 };
 
-export default function WitnessBench({ onClose, onReportBug }) {
+export default function WitnessBench({ onClose, onReportBug, onOpenAISettings }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Ref for screenshot/share functionality
+  const witnessContentRef = useRef(null);
   
   // Wizard state
   const [step, setStep] = useState(1);
@@ -405,8 +370,10 @@ export default function WitnessBench({ onClose, onReportBug }) {
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
-  // AI state
-  const [useAI, setUseAI] = useState(true);
+  // AI state - now checks actual availability
+  const aiAvailable = isAnyAIAvailable();
+  const aiStatus = getAIStatus();
+  const [useAI, setUseAI] = useState(aiAvailable);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isGeneratingStatement, setIsGeneratingStatement] = useState(false);
   const [error, setError] = useState(null);
@@ -472,8 +439,8 @@ export default function WitnessBench({ onClose, onReportBug }) {
     const category = detectConditionCategory(condition);
     setConditionCategory(category);
     
-    // Try AI questions first if available
-    if (useAI && isAIAvailable()) {
+    // Try AI questions first if available and enabled
+    if (useAI && aiAvailable) {
       setIsLoadingQuestions(true);
       try {
         const aiQuestions = await generateAIQuestions(relationship, condition, category);
@@ -501,7 +468,7 @@ export default function WitnessBench({ onClose, onReportBug }) {
       setQuestions(getBaseQuestions(relationship, category));
       setStep(2);
     }
-  }, [relationship, condition, useAI, detectConditionCategory]);
+  }, [relationship, condition, useAI, aiAvailable, detectConditionCategory]);
   
   /**
    * Update answer for current question
@@ -520,7 +487,7 @@ export default function WitnessBench({ onClose, onReportBug }) {
     try {
       let statement;
       
-      if (useAI && isAIAvailable()) {
+      if (useAI && aiAvailable) {
         statement = await compileStatementWithAI(relationship, condition, answers);
       } else {
         statement = compileStatementWithoutAI(relationship, condition, answers);
@@ -683,18 +650,26 @@ export default function WitnessBench({ onClose, onReportBug }) {
         </p>
       </div>
       
-      {/* AI Toggle */}
-      {isAIAvailable() && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-                🤖 AI-Powered Interview
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Generate custom interview questions tailored to the relationship and condition
+      {/* AI Toggle - Always show, but with different states */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              🤖 AI-Powered Interview
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {aiAvailable 
+                ? 'Generate custom interview questions tailored to the relationship and condition'
+                : 'AI not configured - using standard interview questions'
+              }
+            </p>
+            {aiAvailable && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Using: {aiStatus.mode === AI_MODES.LOCAL ? '🔒 Local AI (Private)' : '☁️ Cloud AI (Gemini)'}
               </p>
-            </div>
+            )}
+          </div>
+          {aiAvailable ? (
             <button
               onClick={() => setUseAI(!useAI)}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
@@ -705,9 +680,24 @@ export default function WitnessBench({ onClose, onReportBug }) {
                 useAI ? 'translate-x-7' : 'translate-x-1'
               }`} />
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={onOpenAISettings}
+              className="px-3 py-2 text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/40 transition-colors"
+            >
+              ⚙️ Configure AI
+            </button>
+          )}
         </div>
-      )}
+        {!aiAvailable && (
+          <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              💡 <strong>Standard questions work great!</strong> AI is optional and creates additional 
+              tailored questions based on the specific relationship and condition.
+            </p>
+          </div>
+        )}
+      </div>
       
       {/* Error Display */}
       {error && (
@@ -974,6 +964,7 @@ export default function WitnessBench({ onClose, onReportBug }) {
       onClick={onClose}
     >
       <div 
+        ref={witnessContentRef}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
         onClick={(e) => e.stopPropagation()}
       >
@@ -987,15 +978,24 @@ export default function WitnessBench({ onClose, onReportBug }) {
                 <p className="text-sm text-violet-100">Buddy Letter Wizard (VA Form 21-10210)</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* AI Status Badge */}
+              <AIStatusBadge onClick={onOpenAISettings} />
+              <ShareButton 
+                targetRef={witnessContentRef}
+                filename="witness-statement"
+                variant="icon"
+              />
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         

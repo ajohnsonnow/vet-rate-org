@@ -31,7 +31,7 @@ const VA_RESOURCES = {
       label: 'Download Benefit Summary Letters',
       url: 'https://www.va.gov/records/download-va-letters/',
     },
-    { label: 'Medical Records (MyHealtheVet)', url: 'https://www.myhealth.va.gov/' },
+    { label: 'Medical Records (MyHealtheVet)', url: 'https://www.va.gov/health-care/manage-health/' },
     {
       label: 'VA Home Loans (COE & Assistance)',
       url: 'https://www.va.gov/housing-assistance/',

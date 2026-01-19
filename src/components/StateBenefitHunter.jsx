@@ -3,6 +3,8 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { searchStateBenefits, isAIAvailable } from '../utils/aiStatementHelper';
+import { generateAI } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 /**
  * StateBenefitHunter Component
@@ -179,6 +181,11 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [showAIConsultation, setShowAIConsultation] = useState(false);
+  const [aiQuestion, setAIQuestion] = useState('');
+  const [aiAdvice, setAIAdvice] = useState(null);
+  const [isAIThinking, setIsAIThinking] = useState(false);
 
   const getStateName = (stateCode) => {
     const state = US_STATES.find(s => s.value === stateCode);
@@ -223,6 +230,49 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
       setError('An error occurred while searching. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAIConsultation = async () => {
+    if (!aiQuestion.trim()) return;
+    
+    if (!isAIAvailable()) {
+      setError('AI features require an API key. Please configure AI in Settings.');
+      return;
+    }
+
+    setIsAIThinking(true);
+    setAIAdvice(null);
+
+    try {
+      const prompt = `You are a state veteran benefits expert helping veterans understand and maximize their state-level benefits.
+
+Veteran's Question: "${aiQuestion}"
+${selectedState ? `State Context: ${getStateName(selectedState)}` : ''}
+${selectedRating ? `VA Rating: ${getRatingDisplay()}` : ''}
+
+Provide helpful, specific advice about:
+- State-specific veteran benefits (property tax, vehicle registration, education, recreation)
+- Eligibility requirements for different rating levels
+- How to apply for these benefits
+- Common mistakes veterans make in missing out on state benefits
+- Priority benefits that save the most money
+- Documentation typically needed
+
+Be practical, encouraging, and emphasize these are benefits that "claim sharks" never tell veterans about.`;
+
+      const response = await generateAI(prompt);
+      
+      if (response) {
+        setAIAdvice(response);
+      } else {
+        setAIAdvice('Failed to get AI advice. Please try again.');
+      }
+    } catch (err) {
+      console.error('AI consultation error:', err);
+      setError('An error occurred during AI consultation.');
+    } finally {
+      setIsAIThinking(false);
     }
   };
 
@@ -420,7 +470,7 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
               <button
                 onClick={handleSearch}
                 disabled={isLoading || !selectedState || selectedRating === ''}
-                className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
               >
                 {isLoading ? (
                   <>
@@ -437,6 +487,64 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
                   </>
                 )}
               </button>
+            </div>
+
+            {/* AI Benefits Consultation */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 mb-6 border border-purple-200 dark:border-purple-700">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🤖</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    AI Benefits Advisor
+                  </h3>
+                  <AIStatusBadge onClick={() => setShowAISettings(!showAISettings)} className="mt-1" />
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Have questions about state benefits, eligibility, or how to apply? Get personalized AI guidance.
+              </p>
+              
+              <div className="space-y-3">
+                <textarea
+                  value={aiQuestion}
+                  onChange={(e) => setAIQuestion(e.target.value)}
+                  placeholder="Example: What property tax exemptions am I eligible for with my rating? How do I apply?"
+                  className="w-full px-4 py-3 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                  rows={3}
+                />
+                <button
+                  onClick={handleAIConsultation}
+                  disabled={isAIThinking || !aiQuestion.trim()}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isAIThinking ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                      <span>AI Consulting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💬</span>
+                      <span>Get AI Advice</span>
+                    </>
+                  )}
+                </button>
+
+                {aiAdvice && (
+                  <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-xl">💡</span>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Benefits Advisor:</h4>
+                    </div>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {aiAdvice}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Error Display */}

@@ -7,26 +7,24 @@
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
-import { analyzeCFile, validateApiKey, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
-import { FocusToggle } from '../contexts/FocusModeContext';
+import { analyzeCFile, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
+import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 // Sub-components for the dashboard
 import CFileTimeline from './CFileTimeline';
 import CFileClaimsCards from './CFileClaimsCards';
 
-export default function CFileAnalyzer({ onClose }) {
+export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
   // File upload state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
   
-  // API key state
-  const [apiKey, setApiKey] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKeyValid, setApiKeyValid] = useState(null);
-  const [isValidatingKey, setIsValidatingKey] = useState(false);
+  // AI status state (unified AI service handles API keys internally)
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
   
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,6 +40,14 @@ export default function CFileAnalyzer({ onClose }) {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [extractedText, setExtractedText] = useState(null);
   const [activeTab, setActiveTab] = useState('summary');
+  
+  // Monitor AI status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Handle file drop
   const handleDrop = useCallback((e) => {
@@ -83,33 +89,22 @@ export default function CFileAnalyzer({ onClose }) {
     }
   }, []);
   
-  // Validate API key
-  const handleValidateKey = useCallback(async () => {
-    if (!apiKey.trim()) {
-      setApiKeyValid(false);
-      return;
-    }
-    
-    setIsValidatingKey(true);
-    const result = await validateApiKey(apiKey);
-    setApiKeyValid(result.valid);
-    setIsValidatingKey(false);
-    
-    if (!result.valid) {
-      setError(result.error || 'Invalid API key');
-    } else {
-      setError(null);
-    }
-  }, [apiKey]);
-  
   // Start analysis process
   const handleStartAnalysis = useCallback(() => {
-    if (!file || !apiKey) {
-      setError('Please upload a file and enter your API key.');
+    if (!file) {
+      setError('Please upload a file first.');
       return;
     }
+    
+    // Check if ANY AI is available (Cloud or Local)
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setShowAISettings(true);
+      return;
+    }
+    
     setShowPrivacyConsent(true);
-  }, [file, apiKey]);
+  }, [file]);
   
   // Process the file after consent
   const handleConsentAndProcess = useCallback(async () => {
@@ -142,10 +137,10 @@ export default function CFileAnalyzer({ onClose }) {
       
       setExtractedText(extractionResult);
       
-      // Stage 3: Analyze with AI
+      // Stage 3: Analyze with AI (uses unified AI service - no API key needed here)
       setProcessingStage('Analyzing with AI...');
       const result = await analyzeCFile(
-        apiKey,
+        null, // API key handled by unified AI service
         extractionResult.text,
         (status) => setProcessingStage(status)
       );
@@ -159,7 +154,7 @@ export default function CFileAnalyzer({ onClose }) {
     } finally {
       setIsProcessing(false);
     }
-  }, [file, apiKey]);
+  }, [file]);
   
   // Reset to start over
   const handleReset = useCallback(() => {
@@ -246,66 +241,6 @@ export default function CFileAnalyzer({ onClose }) {
         )}
       </div>
       
-      {/* API Key Input */}
-      <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-          🔑 Your Gemini API Key
-          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-            BYOK - Bring Your Own Key
-          </span>
-        </h3>
-        
-        <div className="flex gap-3 items-center">
-          <div className="flex-1 relative">
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              value={apiKey}
-              onChange={(e) => {
-                setApiKey(e.target.value);
-                setApiKeyValid(null);
-              }}
-              placeholder="Enter your Google Gemini API key"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400"
-            >
-              {showApiKey ? '🙈' : '👁️'}
-            </button>
-          </div>
-          
-          <button
-            onClick={handleValidateKey}
-            disabled={!apiKey.trim() || isValidatingKey}
-            className={`px-4 py-3 rounded-lg font-medium transition-colors ${
-              apiKeyValid === true
-                ? 'bg-green-500 text-white'
-                : apiKeyValid === false
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
-            }`}
-          >
-            {isValidatingKey ? '...' : apiKeyValid === true ? '✓ Valid' : apiKeyValid === false ? '✗ Invalid' : 'Verify'}
-          </button>
-        </div>
-        
-        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Get a free API key from Google AI Studio →
-          </a>
-          <span className="ml-2">
-            (Gemini 1.5 Flash has a generous free tier)
-          </span>
-        </div>
-      </div>
-      
       {/* Error Display */}
       {error && (
         <div className="mt-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -316,12 +251,28 @@ export default function CFileAnalyzer({ onClose }) {
         </div>
       )}
       
+      {/* AI Status Warning */}
+      {!isAnyAIAvailable() && (
+        <div className="mt-6 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">⚠️</span>
+            <div className="text-amber-800 dark:text-amber-200">
+              <p className="font-semibold">AI Required</p>
+              <p className="text-sm mt-1">
+                Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                or enter your Gemini API key to analyze your C-File.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Analyze Button */}
       <div className="mt-8 flex justify-center">
         <button
           onClick={handleStartAnalysis}
-          disabled={!file || !apiKey.trim()}
-          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${file && apiKey.trim()
+          disabled={!file || !isAnyAIAvailable()}
+          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${file && isAnyAIAvailable()
               ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
           }`}
@@ -704,9 +655,13 @@ export default function CFileAnalyzer({ onClose }) {
               <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
                 BETA
               </span>
+              <span className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1" title="VA also uses AI for document classification in claims processing">
+                🤖 VA Uses Similar AI
+              </span>
             </div>
             <div className="flex items-center gap-3">
-              <FocusToggle variant="light" />
+              {/* AI Status Badge - Fully Functional from Main Header */}
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"

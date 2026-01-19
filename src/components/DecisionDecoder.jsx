@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { decodeDecision, isAIAvailable } from '../utils/aiStatementHelper';
+import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
 /**
  * DecisionDecoder Component - "The Denial Translator"
@@ -25,6 +27,16 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  // Monitor AI status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDecode = async () => {
     if (!denialText.trim()) {
@@ -98,8 +110,9 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
                   <span className="text-3xl">🔓</span>
                 </div>
                 <div>
-                  <h2 id="decoder-title" className="text-2xl sm:text-3xl font-bold">
+                  <h2 id="decoder-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                     Decision Decoder
+                    <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI</span>
                   </h2>
                   <p className="text-rose-100 text-sm sm:text-base mt-1">
                     The Denial Translator • VA Legalese → Plain English
@@ -123,6 +136,34 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
 
           {/* Content */}
           <div className="p-6">
+            {/* AI Mode Section */}
+            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AIStatusBadge showLabel={true} />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                      ? '🔒 100% Private - runs on your device'
+                      : '☁️ Cloud AI - fast & powerful'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowAISettings(!showAISettings)}
+                  className="text-sm text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200"
+                >
+                  {showAISettings ? 'Hide Settings' : 'AI Settings'}
+                </button>
+              </div>
+              
+              {showAISettings && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <AIModeSelector 
+                    onModeChange={() => setAIStatus(getAIStatus())}
+                  />
+                </div>
+              )}
+            </div>
+            
             {/* Info Banner */}
             <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-xl">
               <div className="flex items-start gap-3">

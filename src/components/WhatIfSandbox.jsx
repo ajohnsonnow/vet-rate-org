@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
 
 export default function WhatIfSandbox({ onClose }) {
   const [currentConditions, setCurrentConditions] = useState([]);
@@ -85,6 +86,21 @@ export default function WhatIfSandbox({ onClose }) {
       }
     } catch (e) {
       console.error('Failed to load saved claims:', e);
+    }
+  };
+  
+  const handleLoadMyRatings = () => {
+    const savedRatings = getMyRatings();
+    if (savedRatings && savedRatings.length > 0) {
+      const formatted = savedRatings.map(r => ({
+        id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
+        name: r.condition,
+        rating: r.rating,
+        category: 'user'
+      }));
+      setCurrentConditions(formatted);
+    } else {
+      alert('No saved ratings found. Use Secondary Scout to import your VA ratings first.');
     }
   };
 
@@ -330,14 +346,24 @@ export default function WhatIfSandbox({ onClose }) {
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                 🎨 Current Scenario ({currentConditions.length} conditions)
               </h3>
-              {currentConditions.length > 0 && (
-                <button
-                  onClick={clearAll}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
-                >
-                  Clear All
-                </button>
-              )}
+              <div className="flex gap-2">
+                {hasMyRatings() && (
+                  <button
+                    onClick={handleLoadMyRatings}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                  >
+                    📊 Load My Ratings
+                  </button>
+                )}
+                {currentConditions.length > 0 && (
+                  <button
+                    onClick={clearAll}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
 
             {currentConditions.length === 0 ? (

@@ -14,6 +14,8 @@ import {
   getSeverityColor,
   getSharkRadarPrivacyDisclosure 
 } from '../utils/sharkRadar';
+import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
 // Icons
 const SharkIcon = () => (
@@ -115,10 +117,12 @@ export default function SharkRadar() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [hasConsented, setHasConsented] = useState(false);
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
   
-  // Load API key on mount
+  // Load API key and monitor AI status
   useEffect(() => {
     const storedKey = localStorage.getItem('vetrate_gemini_key');
     if (storedKey) {
@@ -128,6 +132,13 @@ export default function SharkRadar() {
     if (consent === 'true') {
       setHasConsented(true);
     }
+    
+    // Update AI status periodically
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   const handleSaveKey = (key) => {
@@ -146,8 +157,10 @@ export default function SharkRadar() {
       return;
     }
     
-    if (!apiKey) {
-      setError('Please enter your Gemini API key first');
+    // Check if ANY AI is available (Cloud or Local)
+    if (!isAnyAIAvailable()) {
+      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setShowAISettings(true);
       return;
     }
     
@@ -201,39 +214,33 @@ export default function SharkRadar() {
         </div>
       ) : (
         <>
-          {/* API Key Section */}
-          {!apiKey && (
-            <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-600 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">API Key Required</h3>
-              <p className="text-sm text-amber-700 dark:text-amber-400 mb-3">
-                Get your free Gemini API key from{' '}
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" 
-                   className="underline hover:text-amber-900 dark:hover:text-amber-200">
-                  Google AI Studio
-                </a>
-              </p>
-              <input
-                type="password"
-                placeholder="Paste your Gemini API key..."
-                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-lg focus:ring-2 focus:ring-amber-500"
-                onChange={(e) => handleSaveKey(e.target.value)}
-              />
-            </div>
-          )}
-          
-          {apiKey && (
-            <div className="flex items-center justify-between bg-green-50/50 dark:bg-green-900/10 border border-green-200 dark:border-green-600 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
-                <CheckIcon /> API Key saved
+          {/* AI Mode Section */}
+          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AIStatusBadge showLabel={true} />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {aiStatus.effectiveMode === AI_MODES.LOCAL 
+                    ? '100% Private - runs on your device'
+                    : 'Cloud AI - fast & powerful'}
+                </span>
               </div>
               <button
-                onClick={() => { localStorage.removeItem('vetrate_gemini_key'); setApiKey(''); }}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                onClick={() => setShowAISettings(!showAISettings)}
+                className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
               >
-                Change key
+                {showAISettings ? 'Hide Settings' : 'AI Settings'}
               </button>
             </div>
-          )}
+            
+            {showAISettings && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <AIModeSelector 
+                  onModeChange={() => setAIStatus(getAIStatus())}
+                />
+              </div>
+            )}
+          </div>
           
           {/* Input Section */}
           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600 mb-4">
@@ -267,7 +274,7 @@ Example red flags to look for:
                 </button>
                 <button
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing || !apiKey || !textInput.trim()}
+                  disabled={isAnalyzing || !isAnyAIAvailable() || !textInput.trim()}
                   className="px-6 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isAnalyzing ? (

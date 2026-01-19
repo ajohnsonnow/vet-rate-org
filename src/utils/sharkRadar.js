@@ -5,7 +5,11 @@
  * 
  * AI-powered contract scanner that detects predatory practices
  * targeting veterans based on 38 U.S.C. § 5901 and 38 CFR § 14.636.
+ * 
+ * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
+
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
 
 // The specialized system prompt for contract analysis
 const SHARK_RADAR_SYSTEM_PROMPT = `You are a VA Compliance Auditor and Legal Contract Analyst. Your job is to scan text (contracts, emails, or marketing copy) for predatory practices targeting veterans.
@@ -57,23 +61,25 @@ TONE: Urgent, protective, and factual. You are protecting veterans from financia
 CRITICAL: If the text appears to be from a VA-accredited attorney or claims agent with proper disclosures, note this as a positive sign but still flag any concerning terms.`;
 
 /**
- * Analyze text for predatory practices using Gemini AI
- * @param {string} apiKey - User's Gemini API key
+ * Analyze text for predatory practices using Unified AI Service
+ * Seamlessly works with both Cloud (Gemini) and Local (WebLLM) AI
+ * @param {string} apiKey - User's Gemini API key (optional if using Local AI)
  * @param {string} textToAnalyze - Contract, email, or marketing text
  * @returns {Promise<Object>} - Analysis results
  */
 export async function analyzeContract(apiKey, textToAnalyze) {
-  if (!apiKey) {
-    throw new Error('API key is required');
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please set up an API key or enable Local AI.');
   }
   
   if (!textToAnalyze || textToAnalyze.trim().length < 50) {
     throw new Error('Please provide more text to analyze (at least 50 characters)');
   }
   
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
-  const userPrompt = `Analyze the following text from a VA claim consulting company for predatory practices:
+  const userPrompt = `${SHARK_RADAR_SYSTEM_PROMPT}
+
+Analyze the following text from a VA claim consulting company for predatory practices:
 
 ---BEGIN TEXT---
 ${textToAnalyze}
@@ -81,57 +87,13 @@ ${textToAnalyze}
 
 Identify all red flags and provide your analysis.`;
 
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: `${SHARK_RADAR_SYSTEM_PROMPT}\n\n${userPrompt}`
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.2, // Very low for accuracy
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 4096,
-      responseMimeType: "application/json"
-    },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ]
-  };
-  
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+    // Use unified AI service - automatically chooses Cloud or Local
+    const content = await generateAI(userPrompt, {
+      temperature: 0.2,
+      maxTokens: 4096,
+      expectJSON: true
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      if (response.status === 400) {
-        if (errorData.error?.message?.includes('API key')) {
-          throw new Error('Invalid API key. Please check your Gemini API key.');
-        }
-        throw new Error(`Request error: ${errorData.error?.message || 'Bad request'}`);
-      }
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-      }
-      
-      throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       throw new Error('No content received from AI');
@@ -160,7 +122,8 @@ Identify all red flags and provide your analysis.`;
     return {
       success: true,
       data: result,
-      analyzedAt: new Date().toISOString()
+      analyzedAt: new Date().toISOString(),
+      aiMode: getAIStatus().effectiveMode
     };
     
   } catch (error) {
@@ -227,9 +190,32 @@ export function getSeverityColor(severity) {
 
 /**
  * Get the privacy disclosure for Shark Radar
+ * Now AI-mode aware - shows different info for Cloud vs Local
  */
 export function getSharkRadarPrivacyDisclosure() {
-  return `When you scan a contract or email:
+  const status = getAIStatus();
+  
+  if (status.effectiveMode === AI_MODES.LOCAL) {
+    return `🔒 LOCAL AI MODE - 100% PRIVATE
+
+When you scan a contract or email:
+
+1. WHAT HAPPENS: The text is processed ENTIRELY ON YOUR DEVICE by the Local AI model.
+
+2. ZERO DATA TRANSMISSION: Nothing is sent over the internet. All processing happens in your browser using WebGPU.
+
+3. COMPLETE PRIVACY: Your contract text never leaves your device - not even to us.
+
+4. LOCAL RESULTS: Analysis results exist only on your device.
+
+5. NOT LEGAL ADVICE: This tool provides educational analysis, not legal advice.
+
+✅ This is the most private way to scan contracts for red flags.`;
+  }
+  
+  return `☁️ CLOUD AI MODE (Google Gemini)
+
+When you scan a contract or email:
 
 1. WHAT IS SENT: Only the text you paste is sent to Google's Gemini AI for analysis.
 
@@ -239,7 +225,9 @@ export function getSharkRadarPrivacyDisclosure() {
 
 4. LOCAL PROCESSING: Results are displayed locally and not stored on any server.
 
-5. NOT LEGAL ADVICE: This tool provides educational analysis, not legal advice. Consult a VA-accredited attorney for legal guidance.
+5. NOT LEGAL ADVICE: This tool provides educational analysis, not legal advice.
+
+💡 TIP: For 100% privacy, switch to Local AI in settings (requires WebGPU-compatible browser).
 
 By proceeding, you acknowledge this is an educational tool to help identify potentially predatory practices.`;
 }

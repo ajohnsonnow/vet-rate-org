@@ -5,8 +5,11 @@
  * 
  * AI-powered medical research assistant that generates "Doctor's Packets"
  * to help veterans get nexus letters from their private physicians.
- * Uses Google Gemini to explain the medical mechanism linking conditions.
+ * 
+ * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
+
+import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
 
 // The specialized system prompt for generating nexus research
 const NEXUS_LOGIC_SYSTEM_PROMPT = `You are a Medical Research Assistant specializing in pathophysiology and VA Disability Law. Your task is to generate a "Medical Nexus Research Brief" for a veteran to present to their private physician.
@@ -54,80 +57,38 @@ CRITICAL RULES:
 6. MEDICATION EFFECTS: If medications are a pathway, mention common medications used for the primary condition.`;
 
 /**
- * Generate a Doctor's Packet using Gemini AI
- * @param {string} apiKey - User's Gemini API key
+ * Generate a Doctor's Packet using Unified AI Service
+ * Seamlessly works with both Cloud (Gemini) and Local (WebLLM) AI
+ * @param {string} apiKey - User's Gemini API key (optional if using Local AI)
  * @param {string} primaryCondition - The service-connected condition
  * @param {string} secondaryCondition - The claimed secondary condition
  * @returns {Promise<Object>} - The generated packet data
  */
 export async function generateDoctorsPacket(apiKey, primaryCondition, secondaryCondition) {
-  if (!apiKey) {
-    throw new Error('API key is required');
+  // Check if ANY AI is available (Cloud or Local)
+  if (!isAnyAIAvailable()) {
+    throw new Error('No AI available. Please set up an API key or enable Local AI.');
   }
   
   if (!primaryCondition || !secondaryCondition) {
     throw new Error('Both primary and secondary conditions are required');
   }
   
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
-  const userPrompt = `Generate a Medical Nexus Research Brief for:
+  const userPrompt = `${NEXUS_LOGIC_SYSTEM_PROMPT}
+
+Generate a Medical Nexus Research Brief for:
 - PRIMARY CONDITION (Service-Connected): ${primaryCondition}
 - SECONDARY CONDITION (Claimed): ${secondaryCondition}
 
 Explain how the primary condition causes or aggravates the secondary condition.`;
 
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: `${NEXUS_LOGIC_SYSTEM_PROMPT}\n\n${userPrompt}`
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.3, // Low for accuracy
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 4096,
-      responseMimeType: "application/json"
-    },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ]
-  };
-  
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
+    // Use unified AI service - automatically chooses Cloud or Local
+    const content = await generateAI(userPrompt, {
+      temperature: 0.3,
+      maxTokens: 4096,
+      expectJSON: true
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      if (response.status === 400) {
-        if (errorData.error?.message?.includes('API key')) {
-          throw new Error('Invalid API key. Please check your Gemini API key.');
-        }
-        throw new Error(`Request error: ${errorData.error?.message || 'Bad request'}`);
-      }
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
-      }
-      
-      throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
-    }
-    
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       throw new Error('No content received from AI');
@@ -168,7 +129,8 @@ Explain how the primary condition causes or aggravates the secondary condition.`
       data: result,
       primaryCondition,
       secondaryCondition,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      aiMode: getAIStatus().effectiveMode
     };
     
   } catch (error) {
@@ -225,9 +187,32 @@ Medical License Number`;
 
 /**
  * Get the privacy disclosure for the Nexus Logic Generator
+ * Now AI-mode aware - shows different info for Cloud vs Local
  */
 export function getNexusLogicPrivacyDisclosure() {
-  return `When you generate a Doctor's Packet:
+  const status = getAIStatus();
+  
+  if (status.effectiveMode === AI_MODES.LOCAL) {
+    return `🔒 LOCAL AI MODE - 100% PRIVATE
+
+When you generate a Doctor's Packet:
+
+1. WHAT HAPPENS: The condition names are processed ENTIRELY ON YOUR DEVICE by the Local AI model.
+
+2. ZERO DATA TRANSMISSION: Nothing is sent over the internet. All processing happens in your browser using WebGPU.
+
+3. COMPLETE PRIVACY: Your condition information never leaves your device.
+
+4. RESEARCH ONLY: The AI generates medical research, NOT a diagnosis or official medical opinion.
+
+5. DOCTOR REQUIRED: This packet must be reviewed and signed by a licensed physician to be valid.
+
+✅ This is the most private way to generate a Doctor's Packet.`;
+  }
+  
+  return `☁️ CLOUD AI MODE (Google Gemini)
+
+When you generate a Doctor's Packet:
 
 1. WHAT IS SENT: Only the condition names you enter (e.g., "PTSD", "Sleep Apnea") are sent to Google's Gemini AI.
 
@@ -238,6 +223,8 @@ export function getNexusLogicPrivacyDisclosure() {
 4. RESEARCH ONLY: The AI generates medical research, NOT a diagnosis or official medical opinion.
 
 5. DOCTOR REQUIRED: This packet must be reviewed and signed by a licensed physician to be valid.
+
+💡 TIP: For 100% privacy, switch to Local AI in settings.
 
 By proceeding, you acknowledge that this tool provides research assistance only and that a qualified physician must review and agree with any medical opinion.`;
 }

@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import disabilityData from '../data/disabilityData.json';
-import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
+import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
+import VAGovRatingPaster from './VAGovRatingPaster';
 
 /**
  * SecondaryScoutLauncher Component
@@ -13,12 +14,13 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
-  const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', or 'myratings'
+  const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', 'myratings', or 'paste'
   const [manualInput, setManualInput] = useState('');
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
   const [expandedSystems, setExpandedSystems] = useState(new Set());
   const [savedRatings, setSavedRatings] = useState([]);
+  const [showVAGovPaster, setShowVAGovPaster] = useState(false);
   
   // Load saved ratings on mount
   useEffect(() => {
@@ -890,6 +892,33 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
     });
   };
 
+  const handlePastedRatings = (ratings) => {
+    // Save each rating to veteranProfile for global access
+    ratings.forEach(rating => {
+      addRating({
+        id: Date.now() + Math.random(),
+        name: rating.condition,
+        rating: rating.rating || 0,
+        effectiveDate: rating.effectiveDate,
+        source: 'VA.gov Import'
+      });
+    });
+
+    // Reload saved ratings
+    const updatedRatings = getMyRatings();
+    setSavedRatings(updatedRatings);
+
+    // Extract just the condition names for Secondary Scout
+    const conditions = ratings.map(r => r.condition);
+    
+    // Launch Secondary Scout with these conditions
+    if (conditions.length > 0) {
+      onLaunch(conditions);
+    }
+    
+    setShowVAGovPaster(false);
+  };
+
   const expandAll = () => {
     setExpandedSystems(new Set(Object.keys(conditionsBySystem)));
   };
@@ -1022,6 +1051,12 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                 <span className="hidden sm:inline">Type </span>Conditions
               </button>
               <button
+                onClick={() => setShowVAGovPaster(true)}
+                className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 border-b-2 border-transparent hover:border-green-600 dark:hover:border-green-400"
+              >
+                📋 Paste from VA
+              </button>
+              <button
                 onClick={() => setInputMethod('checkbox')}
                 className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
                   inputMethod === 'checkbox'
@@ -1065,29 +1100,9 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Enter your service-connected conditions (one per line):
                 </label>
-                <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-100 mb-2">
-                    <strong>💡 Pro Tip:</strong> You can copy/paste directly from your VA.gov rating page!
-                  </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
-                    Go to{' '}
-                    <a 
-                      href="https://www.va.gov/disability/view-disability-rating/rating" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-                    >
-                      VA.gov Rating Page
-                    </a>
-                    , copy your conditions list, and paste it below. The tool will automatically parse lines like:
-                  </p>
-                  <code className="text-xs bg-blue-100 dark:bg-blue-800/50 px-2 py-1 rounded block text-blue-900 dark:text-blue-200">
-                    20% rating for radiculopathy, left lower extremity (femoral)
-                  </code>
-                </div>
                 <textarea
                   className="w-full h-56 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                  placeholder="Paste from VA.gov or type manually:&#10;&#10;20% rating for PTSD&#10;10% rating for tinnitus&#10;&#10;- OR just list conditions: -&#10;&#10;PTSD&#10;Tinnitus&#10;Right Knee Arthritis"
+                  placeholder="Type one condition per line:&#10;&#10;PTSD&#10;Tinnitus&#10;Right Knee Arthritis&#10;Lumbar Spine Strain&#10;Sleep Apnea&#10;&#10;(Need to import from VA.gov? Use 'Paste from VA' tab above)"
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
                 />
@@ -1441,6 +1456,15 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
           </div>
         </div>
       </div>
+
+      {/* VA.gov Rating Paster Modal */}
+      {showVAGovPaster && (
+        <VAGovRatingPaster
+          onRatingsParsed={handlePastedRatings}
+          onClose={() => setShowVAGovPaster(false)}
+          showExample={true}
+        />
+      )}
     </div>
   );
 };

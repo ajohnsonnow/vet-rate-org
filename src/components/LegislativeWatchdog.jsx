@@ -2,6 +2,9 @@
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { isAIAvailable } from '../utils/aiStatementHelper';
+import { generateAI } from '../utils/unifiedAIService';
+import { AIStatusBadge } from './AIModeSelector';
 
 /**
  * LegislativeWatchdog Component - "The Rule Change Radar"
@@ -118,6 +121,9 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'proposed', 'active', 'urgent'
   const [searchTerm, setSearchTerm] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [analyzingDoc, setAnalyzingDoc] = useState(null);
+  const [aiAnalysis, setAIAnalysis] = useState({});
 
   // Fetch from Federal Register API
   const fetchFederalRegister = useCallback(async () => {
@@ -198,6 +204,60 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
     return 'low';
   }
 
+  // AI Analysis Handler
+  const handleAIAnalysis = async (doc) => {
+    if (!isAIAvailable()) {
+      setError('AI features require an API key. Please configure AI in Settings.');
+      return;
+    }
+
+    setAnalyzingDoc(doc.id);
+
+    try {
+      const prompt = `You are a Veterans Affairs policy expert analyzing legislative changes for veterans.
+
+Document Title: ${doc.title}
+Type: ${doc.type}
+Summary: ${doc.summary}
+Publication Date: ${doc.publicationDate || 'N/A'}
+Comment Deadline: ${doc.commentDeadline || 'N/A'}
+
+Provide a clear, veteran-focused analysis:
+
+1. **What's Changing**: Explain what VA rules or benefits this affects in plain language.
+
+2. **Who's Affected**: Which veterans or conditions are impacted? Be specific about disability ratings, service eras, or condition types.
+
+3. **Action Required**: Should veterans:
+   - File NOW before changes take effect?
+   - Submit public comments? 
+   - Simply monitor for updates?
+   - Talk to their VSO?
+
+4. **Timeline**: When do changes take effect? How much time do veterans have?
+
+5. **Bottom Line**: In 1-2 sentences, what should veterans know about this?
+
+Be direct, practical, and emphasize urgency when appropriate. Veterans need to know if they should act NOW.`;
+
+      const response = await generateAI(prompt);
+      
+      if (response) {
+        setAIAnalysis(prev => ({
+          ...prev,
+          [doc.id]: response
+        }));
+      } else {
+        setError('Failed to analyze document.');
+      }
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      setError('An error occurred during AI analysis.');
+    } finally {
+      setAnalyzingDoc(null);
+    }
+  };
+
   // Combine Federal Register docs with curated updates
   const allUpdates = [...CURATED_UPDATES, ...federalRegisterDocs];
 
@@ -251,6 +311,7 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
               </div>
               <div className="flex items-center gap-2">
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Legislative Watchdog" />}
+                <AIStatusBadge />
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -437,6 +498,39 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
                               </span>
                             )}
                           </div>
+                          
+                          {/* AI Analysis Button */}
+                          <div className="mt-4 flex gap-3">
+                            <button
+                              onClick={() => handleAIAnalysis(update)}
+                              disabled={analyzingDoc === update.id || !isAIAvailable()}
+                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all"
+                            >
+                              {analyzingDoc === update.id ? (
+                                <>
+                                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                  Analyzing...
+                                </>
+                              ) : (
+                                <>
+                                  🤖 Analyze with AI
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          
+                          {/* AI Analysis Results */}
+                          {aiAnalysis[update.id] && (
+                            <div className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-lg">🤖</span>
+                                <h4 className="font-bold text-purple-900 dark:text-purple-100">AI Policy Analysis</h4>
+                              </div>
+                              <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-purple-900 dark:prose-headings:text-purple-100 prose-p:text-gray-700 dark:prose-p:text-gray-300">
+                                <div className="whitespace-pre-wrap">{aiAnalysis[update.id]}</div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Link */}

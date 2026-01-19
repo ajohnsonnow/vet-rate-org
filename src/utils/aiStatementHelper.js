@@ -1,10 +1,10 @@
 /**
  * Vet-Rate.org - AI Statement Assistant
- * Powered by Google Gemini API (Free Tier)
+ * Powered by Unified AI Service - Cloud (Gemini) or Local (WebLLM)
  * 
- * PRIVACY NOTE: When AI enhancement is used, the user's statement answers
- * are sent to Google's Gemini API. No personal identifying information
- * is required or sent - only the condition names and symptom descriptions.
+ * PRIVACY NOTE: Users can now choose between:
+ * - Cloud AI: Sends condition names/symptoms to Google's Gemini API
+ * - Local AI: 100% private, runs entirely in browser via WebGPU
  * 
  * Users must explicitly consent before any data is sent to the AI service.
  * 
@@ -14,29 +14,29 @@
  */
 
 import { interceptBeforeAICall } from './crisisInterceptor';
-
-// API endpoint for Gemini
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+import { 
+  generateAI, 
+  isAnyAIAvailable, 
+  isLocalAIReady, 
+  isCloudAIAvailable,
+  getAIStatus,
+  AI_MODES 
+} from './unifiedAIService';
 
 // LocalStorage key for BYOK (Bring Your Own Key)
 const STORAGE_KEY = 'vetrate_gemini_key';
 
 /**
- * Check if AI features are available (API key is configured)
- * Now supports both env variable (legacy) and BYOK (localStorage)
+ * Check if AI features are available (either cloud or local)
+ * Now supports both Cloud AI and Local AI
  */
 export const isAIAvailable = () => {
-  // Check localStorage first (BYOK)
-  const storedKey = localStorage.getItem(STORAGE_KEY);
-  if (storedKey && storedKey.length > 0) return true;
-  
-  // Fallback to env variable (legacy)
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-  return Boolean(envKey && envKey.length > 0);
+  return isAnyAIAvailable();
 };
 
 /**
  * Get the configured API key (localStorage takes priority)
+ * @deprecated Use unified AI service instead
  */
 const getApiKey = () => {
   // Check localStorage first (BYOK)
@@ -312,11 +312,12 @@ const recordAIRequest = () => {
 };
 
 /**
- * Call Gemini API to enhance a statement
+ * Call AI service (Unified - supports both Cloud and Local AI)
  * Now with built-in rate limiting ("The Cooldown") and crisis detection
+ * Seamlessly switches between Cloud (Gemini) and Local (WebLLM) AI
  * @param {string} prompt - The constructed prompt
  * @param {Object} userInput - Original user input (for crisis detection)
- * @returns {Promise<{success: boolean, content?: string, error?: string}>}
+ * @returns {Promise<{success: boolean, content?: string, error?: string, mode?: string}>}
  */
 const callGeminiAPI = async (prompt, userInput = null) => {
   // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
@@ -351,12 +352,11 @@ const callGeminiAPI = async (prompt, userInput = null) => {
     };
   }
   
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
+  // ═══ CHECK IF ANY AI IS AVAILABLE ═══
+  if (!isAnyAIAvailable()) {
     return {
       success: false,
-      error: 'AI features are not configured. Please check back later.'
+      error: 'No AI available. Please configure a Gemini API key or initialize Local AI in settings.'
     };
   }
 
@@ -364,83 +364,53 @@ const callGeminiAPI = async (prompt, userInput = null) => {
   recordAIRequest();
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
-        ]
-      })
+    // ═══ USE UNIFIED AI SERVICE ═══
+    const result = await generateAI(prompt, {
+      systemPrompt: 'You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.',
+      maxTokens: 2048,
+      temperature: 0.7,
+      skipCrisisCheck: true, // Already checked above
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Gemini API error:', errorData);
-      
-      if (response.status === 429) {
-        return {
-          success: false,
-          error: 'AI service is temporarily busy. Please try again in a few moments.'
-        };
-      }
-      
-      return {
-        success: false,
-        error: 'Unable to connect to AI service. Please try again or use the standard template.'
-      };
-    }
-
-    const data = await response.json();
+    const status = getAIStatus();
     
-    // Extract the generated text from Gemini's response
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!generatedText) {
-      return {
-        success: false,
-        error: 'AI returned an empty response. Please try again or use the standard template.'
-      };
-    }
-
     return {
       success: true,
-      content: generatedText.trim()
+      content: result.text.trim(),
+      mode: result.mode,
+      isPrivate: result.mode === AI_MODES.LOCAL,
+      statusText: status.statusText,
     };
 
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('Error calling AI service:', error);
+    
+    if (error.message === 'CRISIS_DETECTED') {
+      return {
+        success: false,
+        error: 'This application has been paused. Please connect with crisis support.',
+        crisisDetected: true
+      };
+    }
+    
+    // Provide helpful error messages
+    if (error.message.includes('API key')) {
+      return {
+        success: false,
+        error: 'Invalid API key. Please check your Gemini API key in settings.'
+      };
+    }
+    
+    if (error.message.includes('Local AI not initialized')) {
+      return {
+        success: false,
+        error: 'Local AI not ready. Please initialize the Neural Engine first, or switch to Cloud AI.'
+      };
+    }
+    
     return {
       success: false,
-      error: 'Network error. Please check your connection and try again.'
+      error: 'AI error: ' + (error.message || 'Please try again or use the standard template.')
     };
   }
 };
@@ -608,12 +578,30 @@ export const enhanceFormStatement = async (formType, formData) => {
 /**
  * Get information about what data is shared with AI (Three Pillars structure)
  * Used for the consent modal
+ * Now AI-mode aware - shows different info for Cloud vs Local AI
  */
 export const getAIDataDisclosure = (statementType) => {
+  const status = getAIStatus();
+  
+  // If using Local AI, show privacy-first message
+  if (status.effectiveMode === AI_MODES.LOCAL) {
+    return {
+      provider: '🔒 Local AI (WebLLM)',
+      purpose: 'To help write a more professional and effective statement using the "Three Pillars" approach',
+      retention: 'ALL PROCESSING HAPPENS ON YOUR DEVICE. No data is sent anywhere.',
+      isPrivate: true,
+      privacyNote: '✅ 100% Private: Your data never leaves your device. The AI model runs entirely in your browser using WebGPU.',
+      dataShared: [],
+      notShared: ['ALL DATA STAYS LOCAL - Nothing is transmitted over the network'],
+    };
+  }
+  
   const baseInfo = {
-    provider: 'Google Gemini',
+    provider: '☁️ Google Gemini (Cloud AI)',
     purpose: 'To help write a more professional and effective statement using the "Three Pillars" approach',
     retention: 'Google does not store prompts from free API tier for training',
+    isPrivate: false,
+    privacyNote: '⚠️ Data is sent to Google servers. For 100% privacy, switch to Local AI in settings.',
   };
 
   const dataByType = {
@@ -792,10 +780,9 @@ export const getAIDataDisclosure = (statementType) => {
  * Helps veterans articulate their symptoms and impacts
  */
 export const generateFieldSuggestion = async (fieldType, condition, primaryCondition = null, currentText = '') => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  // Check if any AI is available via unified service
+  if (!isAnyAIAvailable()) {
+    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
   const prompts = {
@@ -865,28 +852,11 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
   }
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 300
-        }
-      })
+    // Use unified AI service
+    const text = await generateAI(prompt, {
+      temperature: 0.7,
+      maxTokens: 300
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
-      }
-      return { success: false, error: `API error: ${response.status}` };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       return { success: false, error: 'No response generated' };
@@ -895,7 +865,10 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
     return { success: true, content: text.trim() };
   } catch (error) {
     console.error('Field suggestion error:', error);
-    return { success: false, error: 'Network error. Please try again.' };
+    if (error.message?.includes('API key')) {
+      return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+    }
+    return { success: false, error: error.message || 'Network error. Please try again.' };
   }
 };
 
@@ -957,40 +930,20 @@ Important:
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export const searchStateBenefits = async (state, rating) => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  // Check if any AI is available via unified service
+  if (!isAnyAIAvailable()) {
+    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
   const prompt = buildStateBenefitsPrompt(state, rating);
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3, // Lower temperature for more factual responses
-          maxOutputTokens: 2048
-        }
-      })
+    // Use unified AI service
+    const text = await generateAI(prompt, {
+      temperature: 0.3,
+      maxTokens: 2048,
+      expectJSON: true
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
-      }
-      if (response.status === 429) {
-        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
-      }
-      return { success: false, error: `API error: ${response.status}` };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
@@ -1077,10 +1030,9 @@ Focus on providing accurate, helpful information that will connect the veteran w
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export const searchVSOs = async (zipCode) => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  // Check if any AI is available via unified service
+  if (!isAnyAIAvailable()) {
+    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
   // Validate ZIP code format
@@ -1091,31 +1043,12 @@ export const searchVSOs = async (zipCode) => {
   const prompt = buildVSOFinderPrompt(zipCode);
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2048
-        }
-      })
+    // Use unified AI service
+    const text = await generateAI(prompt, {
+      temperature: 0.3,
+      maxTokens: 2048,
+      expectJSON: true
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
-      }
-      if (response.status === 429) {
-        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
-      }
-      return { success: false, error: `API error: ${response.status}` };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
@@ -1204,40 +1137,20 @@ Be helpful but BLUNT. This veteran needs to hear the truth before the VA denies 
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export const stressTestStatement = async (statement) => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  // Check if any AI is available via unified service
+  if (!isAnyAIAvailable()) {
+    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
   const prompt = buildStressTestPrompt(statement);
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 2048
-        }
-      })
+    // Use unified AI service
+    const text = await generateAI(prompt, {
+      temperature: 0.4,
+      maxTokens: 2048,
+      expectJSON: true
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
-      }
-      if (response.status === 429) {
-        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
-      }
-      return { success: false, error: `API error: ${response.status}` };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
@@ -1323,40 +1236,20 @@ Be empathetic but professional. This veteran is confused and possibly upset. Hel
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export const decodeDecision = async (decisionText) => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    return { success: false, error: 'No API key configured. Add your Gemini API key in Settings.' };
+  // Check if any AI is available via unified service
+  if (!isAnyAIAvailable()) {
+    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
   const prompt = buildDecisionDecoderPrompt(decisionText);
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2048
-        }
-      })
+    // Use unified AI service
+    const text = await generateAI(prompt, {
+      temperature: 0.3,
+      maxTokens: 2048,
+      expectJSON: true
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-        return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
-      }
-      if (response.status === 429) {
-        return { success: false, error: 'AI service is busy. Please try again in a few moments.' };
-      }
-      return { success: false, error: `API error: ${response.status}` };
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
@@ -1382,6 +1275,14 @@ export const decodeDecision = async (decisionText) => {
   }
 };
 
+// Re-export unified AI service functions for convenience
+export { 
+  isLocalAIReady, 
+  isCloudAIAvailable, 
+  getAIStatus,
+  AI_MODES 
+} from './unifiedAIService';
+
 export default {
   isAIAvailable,
   enhancePersonalStatement,
@@ -1395,5 +1296,10 @@ export default {
   searchStateBenefits,
   searchVSOs,
   stressTestStatement,
-  decodeDecision
+  decodeDecision,
+  // New unified AI exports
+  isLocalAIReady,
+  isCloudAIAvailable,
+  getAIStatus,
+  AI_MODES
 };
