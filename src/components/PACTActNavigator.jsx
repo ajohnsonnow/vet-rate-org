@@ -18,6 +18,7 @@
 import React, { useState } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 /**
  * COMPREHENSIVE PACT ACT DATA
@@ -724,37 +725,42 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
   };
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🔥</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">PACT Act Navigator</h2>
-                  <p className="text-sm text-blue-100">Presumptive Condition Checker</p>
-                </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🔥</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">PACT Act Navigator</h2>
+                <p className="text-sm text-amber-100">Presumptive Condition Checker</p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <FocusToggle variant="light" />
               <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             </div>
           </div>
-          
+        </div>
+        
+        <div className="p-4">
           {/* Progress Steps */}
-          <div className="max-w-4xl mx-auto px-6 pt-6">
+          <div className="max-w-4xl mx-auto px-2 pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">
               {[1, 2, 3, 4].map(s => (
                 <div key={s} className="flex items-center">
@@ -785,7 +791,7 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
             {step === 4 && renderResults()}
             
             {/* Support CTA on results page */}
-            {step === 4 && results && results.presumptive.length > 0 && (
+            {step === 4 && results && results?.presumptive?.length > 0 && (
               <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 rounded-2xl p-6 border border-blue-700/50 mt-6">
                 <div className="flex items-center gap-4">
                   <img 
@@ -808,14 +814,14 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
             )}
           </div>
         </div>
+        
+        {/* BuyMeCoffee - shows on results page */}
+        <BuyMeCoffee 
+          show={step === 4 && results?.presumptive?.length > 0} 
+          trigger="pact-act" 
+          context={{ condition: results?.presumptive?.[0]?.name }}
+        />
       </div>
-      
-      {/* BuyMeCoffee - shows on results page */}
-      <BuyMeCoffee 
-        show={step === 4 && results?.presumptive?.length > 0} 
-        trigger="pact-act" 
-        context={{ condition: results?.presumptive?.[0]?.name }}
-      />
     </div>
   );
 }

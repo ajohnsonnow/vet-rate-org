@@ -1,4 +1,4 @@
-# Rating Criteria
+﻿# Rating Criteria
 
 Understanding VA rating criteria is essential for preparing your disability claim. This guide explains how to read and interpret the rating criteria tables in Vet-Rate.org.
 
@@ -186,12 +186,12 @@ Some conditions allow separate ratings for different aspects:
 
 !!! tip "Preparation Strategies"
     
-    1. **Know your worst days** — VA rates based on your symptoms, not your best day
-    2. **Document flare-ups** — Keep a symptom journal
-    3. **Get buddy statements** — Witnesses can describe your limitations
-    4. **Review DBQ forms** — See what examiners look for
-    5. **Be specific** — Vague descriptions get lower ratings
-    6. **Don't minimize** — Describe how bad it actually gets
+    1. **Know your worst days** - VA rates based on your symptoms, not your best day
+    2. **Document flare-ups** - Keep a symptom journal
+    3. **Get buddy statements** - Witnesses can describe your limitations
+    4. **Review DBQ forms** - See what examiners look for
+    5. **Be specific** - Vague descriptions get lower ratings
+    6. **Don't minimize** - Describe how bad it actually gets
 
 ---
 
@@ -200,10 +200,10 @@ Some conditions allow separate ratings for different aspects:
 In the Disability Details view:
 
 1. **Click "📊 Rating Schedules & Criteria"** to expand
-2. **Review the rating type** — Percentage, formula, or analogous
-3. **Read any special instructions** — "Rated as" or special rules
-4. **Study the percentage table** — From highest to lowest
-5. **Note any additional instructions** — At the bottom of the section
+2. **Review the rating type** - Percentage, formula, or analogous
+3. **Read any special instructions** - "Rated as" or special rules
+4. **Study the percentage table** - From highest to lowest
+5. **Note any additional instructions** - At the bottom of the section
 
 ---
 
@@ -211,7 +211,7 @@ In the Disability Details view:
 
 All criteria in Vet-Rate.org are sourced from and validated against:
 
-- **eCFR Title 38, Part 4** — [www.ecfr.gov](https://www.ecfr.gov/current/title-38/chapter-I/part-4)
+- **eCFR Title 38, Part 4** - [www.ecfr.gov](https://www.ecfr.gov/current/title-38/chapter-I/part-4)
 - **Last validation:** January 2026
 
 For the most current regulations, always verify with the official eCFR.

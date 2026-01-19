@@ -46,9 +46,9 @@ html:not(.dark) body {
 html.dark {
   --va-blue: #3d6b1f;
   --va-gold: #a4c76a;
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
+  --bg-primary: #0f2919;
+  --bg-secondary: #1a3d2e;
+  --bg-tertiary: #2d5936;
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
@@ -58,7 +58,7 @@ html.dark {
 
 /* Apply theme variables to Tailwind dark mode */
 html.dark body {
-  background-color: #111827; /* gray-900 */
+  background-color: #0f2919; /* forest green-900 */
   color: #f3f4f6; /* gray-100 */
 }
 
@@ -98,6 +98,82 @@ html:not(.dark) .bg-yellow-50 {
 html:not(.dark) .bg-purple-50,
 html:not(.dark) .bg-indigo-50 {
   background-color: #e8e6eb !important;
+}
+
+/* ============================================
+   FOCUS MODE - TBI/ADHD Cognitive Load Reduction
+   Dims distracting elements while keeping core UI visible
+   ============================================ */
+
+/* Base dimming - more targeted approach */
+.focus-mode {
+  --focus-opacity: 0.4;
+  --focus-blur: 0.5px;
+}
+
+/* Dim secondary elements instead of everything */
+.focus-mode .bg-gray-50,
+.focus-mode .bg-gray-100,
+.focus-mode .bg-blue-50,
+.focus-mode .bg-green-50,
+.focus-mode .bg-yellow-50,
+.focus-mode .bg-purple-50,
+.focus-mode .bg-red-50,
+.focus-mode .text-gray-400,
+.focus-mode .text-gray-500 {
+  transition: opacity 0.3s ease;
+  opacity: var(--focus-opacity);
+}
+
+/* Keep essential elements fully visible */
+.focus-mode .focus-exempt,
+.focus-mode .focus-mode-toggle,
+.focus-mode header,
+.focus-mode .modal-content,
+.focus-mode .skip-link,
+.focus-mode .crisis-line,
+.focus-mode button,
+.focus-mode input,
+.focus-mode textarea,
+.focus-mode select,
+.focus-mode label,
+.focus-mode h1,
+.focus-mode h2,
+.focus-mode h3,
+.focus-mode .text-gray-900,
+.focus-mode .text-white {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Enhance focused elements */
+.focus-mode input:focus,
+.focus-mode textarea:focus,
+.focus-mode select:focus,
+.focus-mode button:focus,
+.focus-mode [tabindex]:focus {
+  opacity: 1 !important;
+  filter: none !important;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* Focused containers get enhanced visibility */
+.focus-mode .focus-container:has(input:focus),
+.focus-mode .focus-container:has(textarea:focus),
+.focus-mode .focus-container:has(select:focus) {
+  opacity: 1 !important;
+  filter: none !important;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Toast notifications and modals stay visible */
+.focus-mode .toast-container,
+.focus-mode .modal-overlay,
+.focus-mode .modal-content {
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 /* Text colors - softer contrast */
@@ -488,15 +564,15 @@ html.dark :focus-visible {
    ============================================ */
 
 html.dark .bg-white {
-  background-color: #1f2937 !important; /* gray-800 */
+  background-color: #1a3d2e !important; /* forest green-800 */
 }
 
 html.dark .bg-gray-50 {
-  background-color: #111827 !important; /* gray-900 */
+  background-color: #0f2919 !important; /* forest green-950 */
 }
 
 html.dark .bg-gray-100 {
-  background-color: #1f2937 !important; /* gray-800 */
+  background-color: #1a3d2e !important; /* forest green-800 */
 }
 
 html.dark .text-gray-900:not(.dark\:text-gray-900) {
@@ -644,7 +720,7 @@ html.dark .bg-purple-100 {
 }
 
 html.dark .bg-slate-100 {
-  @apply bg-slate-700;
+  @apply bg-emerald-700;
 }
 
 html.dark .bg-orange-100 {
@@ -842,9 +918,9 @@ html.dark .border-red-200 {
 
 /* Select dropdowns */
 html.dark select {
-  background-color: #374151; /* gray-700 */
+  background-color: #2d5936; /* forest green-700 */
   color: #f3f4f6; /* gray-100 */
-  border-color: #4b5563; /* gray-600 */
+  border-color: #16a34a; /* green-600 */
 }
 
 html.dark select option {
@@ -854,9 +930,9 @@ html.dark select option {
 
 /* Input fields */
 html.dark input:not([type="checkbox"]):not([type="radio"]) {
-  background-color: #374151; /* gray-700 */
+  background-color: #2d5936; /* forest green-700 */
   color: #f3f4f6; /* gray-100 */
-  border-color: #4b5563; /* gray-600 */
+  border-color: #16a34a; /* green-600 */
 }
 
 html.dark input::placeholder {
@@ -865,7 +941,7 @@ html.dark input::placeholder {
 
 /* Textarea */
 html.dark textarea {
-  background-color: #374151; /* gray-700 */
+  background-color: #2d5936; /* forest green-700 */
   color: #f3f4f6; /* gray-100 */
   border-color: #4b5563; /* gray-600 */
 }
@@ -876,11 +952,11 @@ html.dark textarea::placeholder {
 
 /* Border overrides for form elements with specific border colors */
 html.dark .border-gray-300 {
-  border-color: #4b5563 !important; /* gray-600 */
+  border-color: #16a34a !important; /* green-600 */
 }
 
 html.dark .border-gray-200 {
-  border-color: #374151 !important; /* gray-700 */
+  border-color: #2d5936 !important; /* forest green-700 */
 }
 
 /* ============================================
@@ -897,11 +973,11 @@ html.dark .hover\:bg-blue-100:hover {
 }
 
 html.dark .hover\:bg-gray-50:hover {
-  background-color: #374151 !important; /* gray-700 */
+  background-color: #2d5936 !important; /* forest green-700 */
 }
 
 html.dark .hover\:bg-gray-100:hover {
-  background-color: #4b5563 !important; /* gray-600 */
+  background-color: #16a34a !important; /* green-600 */
 }
 
 html.dark .hover\:bg-red-50:hover {
@@ -930,11 +1006,11 @@ html.dark .group:hover .group-hover\:text-indigo-600 {
    ============================================ */
 
 html.dark .bg-gray-100 {
-  background-color: #374151 !important; /* gray-700 */
+  background-color: #2d5936 !important; /* forest green-700 */
 }
 
 html.dark .bg-gray-50 {
-  background-color: #1f2937 !important; /* gray-800 */
+  background-color: #1a3d2e !important; /* forest green-800 */
 }
 
 /* Hover border colors in dark mode */
@@ -1084,6 +1160,172 @@ body.modal-open-with-position {
   animation: pulse-subtle 3s ease-in-out infinite;
 }
 
+/* Pulse glow animation for Bunker Backup button when unsaved changes exist */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 3px rgba(251, 191, 36, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VA GLOSSARY TOOLTIPS - "Jargon Decoder"
+   Automatic tooltips for VA acronyms and terminology
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* VA term styling - dotted underline to indicate tooltip */
+.va-term {
+  position: relative;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: theme('colors.blue.500');
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: help;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.va-term:hover,
+.va-term:focus {
+  text-decoration-color: theme('colors.blue.700');
+  text-decoration-thickness: 2px;
+}
+
+/* Dark mode adjustments */
+.dark .va-term {
+  text-decoration-color: theme('colors.blue.400');
+}
+
+.dark .va-term:hover,
+.dark .va-term:focus {
+  text-decoration-color: theme('colors.blue.300');
+}
+
+/* The tooltip popup */
+.va-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: theme('colors.gray.900');
+  color: theme('colors.white');
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  width: 280px;
+  max-width: 90vw;
+  z-index: 9999;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: tooltip-fade-in 0.15s ease-out;
+}
+
+/* Tooltip arrow */
+.va-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: theme('colors.gray.900');
+}
+
+/* Dark mode tooltip */
+.dark .va-tooltip {
+  background: theme('colors.gray.800');
+  border: 1px solid theme('colors.gray.700');
+}
+
+.dark .va-tooltip::after {
+  border-top-color: theme('colors.gray.800');
+}
+
+/* Tooltip term header */
+.va-tooltip-term {
+  display: block;
+  font-weight: 700;
+  color: theme('colors.blue.400');
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Position adjustments when tooltip is near edges */
+.va-tooltip.tooltip-right {
+  left: 0;
+  transform: translateX(0) translateY(-8px);
+}
+
+.va-tooltip.tooltip-right::after {
+  left: 20px;
+}
+
+.va-tooltip.tooltip-left {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(-8px);
+}
+
+.va-tooltip.tooltip-left::after {
+  left: auto;
+  right: 20px;
+}
+
+.va-tooltip.tooltip-bottom {
+  bottom: auto;
+  top: 100%;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.va-tooltip.tooltip-bottom::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: theme('colors.gray.900');
+}
+
+.dark .va-tooltip.tooltip-bottom::after {
+  border-bottom-color: theme('colors.gray.800');
+}
+
+/* Fade-in animation */
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+/* Accessibility: Show tooltip on focus for keyboard users */
+.va-term:focus .va-tooltip {
+  display: block;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .va-term {
+    text-decoration-thickness: 2px;
+  }
+  
+  .va-tooltip {
+    border: 2px solid theme('colors.blue.500');
+  }
+}
+
 /* Button Hover States */
 button:not(:disabled) {
   @apply transition-all duration-200;
@@ -1149,16 +1391,116 @@ a {
 }
 
 /* Print Styles */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT OPTIMIZATION - "The Paper General"
+   Makes generated documents print like professional legal submissions
+   ═══════════════════════════════════════════════════════════════════════ */
 @media print {
-  .no-print {
-    @apply hidden;
+  /* Hide all UI chrome - navigation, buttons, sidebars */
+  .no-print,
+  header,
+  nav,
+  footer,
+  button,
+  .sidebar,
+  .donate-button,
+  .buy-me-coffee,
+  .modal-close,
+  .tooltip,
+  .va-term,
+  .ai-warning-banner,
+  .draft-watermark,
+  .certification-checkbox,
+  [class*="button"],
+  [class*="btn-"] {
+    @apply hidden !important;
   }
   
+  /* Force professional document styling */
   body {
-    @apply bg-white;
+    @apply bg-white !important;
+    color: #000000 !important;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important; /* Double spacing */
+    margin: 1in !important; /* Standard 1-inch margins */
   }
   
+  /* Print-friendly typography */
+  * {
+    color: #000000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Maintain structure of output containers */
+  .prose,
+  .statement-output,
+  [class*="statement"],
+  [class*="letter"],
+  [class*="document"] {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: #000000 !important;
+  }
+  
+  /* Headers in documents */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Times New Roman", Times, serif !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    page-break-after: avoid !important;
+  }
+  
+  h1 { font-size: 16pt !important; }
+  h2 { font-size: 14pt !important; }
+  h3, h4, h5, h6 { font-size: 12pt !important; }
+  
+  /* Preserve whitespace formatting */
+  pre {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    white-space: pre-wrap !important;
+    color: #000000 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  
+  /* Avoid breaking elements across pages */
+  p, blockquote, ul, ol {
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+  
+  /* Keep critical sections together */
+  .statement-section,
+  .nexus-letter,
+  .doctor-note {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Signature blocks should stay together */
+  .signature-block {
+    page-break-inside: avoid !important;
+    margin-top: 2em !important;
+  }
+  
+  /* Remove shadows from containers */
   .print\:shadow-none {
     @apply shadow-none;
+  }
+  
+  /* Links should look normal on paper */
+  a {
+    color: #000000 !important;
+    text-decoration: underline !important;
+  }
+  
+  a[href]:after {
+    content: none !important; /* Don't print URLs */
   }
 }

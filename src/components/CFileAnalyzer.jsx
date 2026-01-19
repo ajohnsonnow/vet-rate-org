@@ -10,6 +10,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
 import { analyzeCFile, validateApiKey, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 // Sub-components for the dashboard
 import CFileTimeline from './CFileTimeline';
@@ -320,9 +321,8 @@ export default function CFileAnalyzer({ onClose }) {
         <button
           onClick={handleStartAnalysis}
           disabled={!file || !apiKey.trim()}
-          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
-            file && apiKey.trim()
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
+          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${file && apiKey.trim()
+              ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
           }`}
         >
@@ -680,39 +680,48 @@ export default function CFileAnalyzer({ onClose }) {
   );
   
   return (
-    <div className="fixed inset-0 z-40 bg-gray-100 dark:bg-gray-900 overflow-y-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🔬</span>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                C-File Analyzer
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                AI-powered claims evidence discovery
-              </p>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
+          <div className="px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🔬</span>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  C-File Analyzer
+                </h1>
+                <p className="text-sm text-violet-100">
+                  AI-powered claims evidence discovery
+                </p>
+              </div>
+              <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
+                BETA
+              </span>
             </div>
-            <span className="ml-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-              BETA
-            </span>
+            <div className="flex items-center gap-3">
+              <FocusToggle variant="light" />
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                aria-label="Close C-File Analyzer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
-          
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label="Close C-File Analyzer"
-          >
-            <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="px-4 py-8">
+        
+        {/* Main Content */}
+        <div className="p-4">
         {showPrivacyConsent && renderPrivacyConsent()}
         
         {isProcessing ? (
@@ -722,15 +731,16 @@ export default function CFileAnalyzer({ onClose }) {
         ) : (
           renderUploadForm()
         )}
-      </div>
-      
-      {/* Footer Disclaimer */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
-        <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
-          ⚠️ This tool provides general information only and is not legal or medical advice. 
-          AI analysis may contain errors. Always verify findings with your official records and consult with a 
-          VA-accredited representative for claims decisions.
-        </p>
+        </div>
+        
+        {/* Footer Disclaimer */}
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
+            ⚠️ This tool provides general information only and is not legal or medical advice. 
+            AI analysis may contain errors. Always verify findings with your official records and consult with a 
+            VA-accredited representative for claims decisions.
+          </p>
+        </div>
       </div>
     </div>
   );

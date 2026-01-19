@@ -1,4 +1,4 @@
-# Intent to File
+﻿# Intent to File
 
 Establish your claim date to protect your effective date using VA Form 21-0966.
 
@@ -81,9 +81,9 @@ Select the <strong>type of claim</strong>
 
 Select one:
 
-- **☐ Compensation** — Disability benefits
-- **☐ Pension** — Veterans pension
-- **☐ Survivors Pension/DIC** — Benefits for survivors
+- **☐ Compensation** - Disability benefits
+- **☐ Pension** - Veterans pension
+- **☐ Survivors Pension/DIC** - Benefits for survivors
 
 ---
 
@@ -126,9 +126,9 @@ After completing the form:
 
 You'll receive confirmation:
 
-- **Online** — Immediate confirmation number
-- **Mail** — Letter within a few weeks
-- **Phone** — Confirmation number during call
+- **Online** - Immediate confirmation number
+- **Mail** - Letter within a few weeks
+- **Phone** - Confirmation number during call
 
 ### 1-Year Window
 
@@ -209,12 +209,12 @@ If you need more time for some conditions:
 
 !!! tip "Intent to File Best Practices"
     
-    1. **File immediately** — As soon as you consider a claim
-    2. **Document the date** — Save your confirmation
-    3. **Set a reminder** — Calendar reminder before 1-year deadline
-    4. **Track your window** — Know when it expires
-    5. **File before expiration** — Even if claim isn't perfect
-    6. **Keep evidence** — Save confirmation email/letter
+    1. **File immediately** - As soon as you consider a claim
+    2. **Document the date** - Save your confirmation
+    3. **Set a reminder** - Calendar reminder before 1-year deadline
+    4. **Track your window** - Know when it expires
+    5. **File before expiration** - Even if claim isn't perfect
+    6. **Keep evidence** - Save confirmation email/letter
 
 ---
 

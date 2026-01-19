@@ -17,6 +17,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Google OAuth Credentials (SENSITIVE!)
+client_secret*.json
+
 # IDE and Editor
 .vscode/
 .idea/

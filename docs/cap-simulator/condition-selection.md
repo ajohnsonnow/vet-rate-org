@@ -1,4 +1,4 @@
-# C&P Simulator - Condition Selection
+﻿# C&P Simulator - Condition Selection
 
 Choose a condition to practice for your C&P exam preparation.
 
@@ -8,9 +8,9 @@ Choose a condition to practice for your C&P exam preparation.
 
 After choosing Simulation Mode, you'll see the condition selection screen with:
 
-1. **Your Saved Conditions** — From My Packet
-2. **Search All Conditions** — Full database search
-3. **Browse by Category** — Body system categories
+1. **Your Saved Conditions** - From My Packet
+2. **Search All Conditions** - Full database search
+3. **Browse by Category** - Body system categories
 
 ---
 
@@ -43,16 +43,16 @@ Search the full database of 748 conditions:
 
 <div class="step-container">
 <div class="step">
-<strong>Click the search box</strong> — Focus the input
+<strong>Click the search box</strong> - Focus the input
 </div>
 <div class="step">
-<strong>Type condition name or code</strong> — e.g., "PTSD" or "9411"
+<strong>Type condition name or code</strong> - e.g., "PTSD" or "9411"
 </div>
 <div class="step">
-<strong>Review matches</strong> — Results appear below
+<strong>Review matches</strong> - Results appear below
 </div>
 <div class="step">
-<strong>Click to select</strong> — Choose your condition
+<strong>Click to select</strong> - Choose your condition
 </div>
 </div>
 
@@ -105,16 +105,16 @@ When you hover over or select a condition, you see:
 
 ### Condition Information
 
-- **Name** — Official VA condition name
-- **Diagnostic Code** — 4-digit identifier
-- **Body System** — Category
-- **Available Ratings** — Possible percentages
+- **Name** - Official VA condition name
+- **Diagnostic Code** - 4-digit identifier
+- **Body System** - Category
+- **Available Ratings** - Possible percentages
 
 ### Simulation Preview
 
-- **Question Count** — How many questions to expect
-- **Estimated Time** — How long the simulation takes
-- **Difficulty** — Based on rating complexity
+- **Question Count** - How many questions to expect
+- **Estimated Time** - How long the simulation takes
+- **Difficulty** - Based on rating complexity
 
 ---
 
@@ -147,16 +147,16 @@ After selecting a condition:
 
 <div class="step-container">
 <div class="step">
-<strong>Review condition details</strong> — Confirm it's correct
+<strong>Review condition details</strong> - Confirm it's correct
 </div>
 <div class="step">
-<strong>Click "Start Simulation"</strong> — Begin practice
+<strong>Click "Start Simulation"</strong> - Begin practice
 </div>
 <div class="step">
-<strong>Read introduction</strong> — Condition-specific overview
+<strong>Read introduction</strong> - Condition-specific overview
 </div>
 <div class="step">
-<strong>Begin answering</strong> — First question appears
+<strong>Begin answering</strong> - First question appears
 </div>
 </div>
 
@@ -166,7 +166,7 @@ After selecting a condition:
 
 !!! tip "Choosing Wisely"
     
-    - **Start with your most complex condition** — Usually your primary
-    - **Practice conditions before actual exams** — Use realistic timing
-    - **Try conditions you're unsure about** — Learn the criteria
-    - **Practice multiple times** — Different approaches may yield insights
+    - **Start with your most complex condition** - Usually your primary
+    - **Practice conditions before actual exams** - Use realistic timing
+    - **Try conditions you're unsure about** - Learn the criteria
+    - **Practice multiple times** - Different approaches may yield insights

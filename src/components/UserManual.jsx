@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { resetTourState } from './BootCampTour';
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -312,7 +313,7 @@ const documentationContent = {
   home: {
     title: 'Vet-Rate.org User Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** — your complete VA claims toolkit with **28 powerful tools**.
+Welcome to the comprehensive user manual for **Vet-Rate.org** — your complete VA claims toolkit with **40+ powerful tools**.
 
 ## About This Manual
 
@@ -321,63 +322,89 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 - **Search & understand** 748 VA disability conditions
 - **Discover secondary conditions** linked to your service-connected disabilities
 - **Calculate combined ratings** with the Tactical Calculator
-- **Prepare for C&P exams** with our simulator
+- **Prepare for C&P exams** with our simulator and Exam Prep Room
 - **Analyze your C-File** with AI assistance
 - **Build nexus statements** to support your claims
 - **Complete VA forms** with guided assistance
 - **Organize your claims packet** in one place
 - **Find free VSO help** and avoid claim sharks
+- **Track regulatory changes** with Legislative Watchdog
+- **Stress test your claim** before submission
 
-## All 28 Tools
+## All 40+ Tools
 
-### Core Tools
+### Core Intelligence Tools
 | Tool | What It Does |
 |------|--------------|
-| **Search** | Find any of 748 rated disabilities |
-| **Secondary Scout** | Discover potential secondary claims |
-| **C&P Simulator** | Practice for your exam |
-| **Nexus Builder** | Create supporting statements |
-| **Forms Helper** | Fill out 16+ VA forms |
-| **My Packet** | Manage all your claims |
+| **Smart Search** | Find any of 748 rated disabilities |
+| **PACT Act Navigator** | Identify toxic exposure presumptive conditions |
+| **Web of Conditions** | Interactive visualization of connected disabilities |
+| **Legislative Watchdog** | Track Federal Register changes affecting veterans |
+| **VA Resources Hub** | Direct access to official VA programs |
+| **User Manual** | Complete documentation for all features |
 
-### Analysis Tools
+### Rating & Benefits Calculators
 | Tool | What It Does |
 |------|--------------|
-| **Tactical Calculator** | VA combined rating math |
-| **C-File AI Analyzer** | Analyze your claims file |
-| **Decision Decoder** | Understand decision letters |
-| **Blue Button X-Ray** | Extract medical evidence |
-| **Red Team Simulator** | Find claim weaknesses |
-| **Risk Assessment** | Pre-filing risk analysis |
+| **Tactical Calculator** | Combined ratings with bilateral factors & 2026 pay rates |
+| **Million Dollar Dashboard** | Lifetime benefit value & retirement projections |
+| **TDIU Builder** | Total Disability Individual Unemployability evaluation |
+| **State Benefit Hunter** | Discover state-level veteran benefits |
 
-### Evidence Builders
+### Discovery & Research Tools
 | Tool | What It Does |
 |------|--------------|
-| **Witness Bench** | AI buddy statement wizard |
-| **Symptom Logger** | Track symptoms over time |
-| **FOIA Generator** | Request records |
+| **Secondary Scout** | 500+ medically-recognized secondary conditions |
+| **MOS Hazard Matcher** | Link military jobs to exposures and conditions |
+| **Pathfinder** | Strategic roadmap from claim to appeal |
+| **Risk Assessment** | Identify claim weaknesses before filing |
+| **What-If Sandbox** | Model rating scenarios and strategic options |
 
-### Special Programs
+### Evidence Building Suite
 | Tool | What It Does |
 |------|--------------|
-| **TDIU Builder** | Unemployability evaluation |
-| **PACT Act Navigator** | Toxic exposure conditions |
-| **Million Dollar Dashboard** | Lifetime benefit value |
+| **C&P Exam Simulator** | DBQ-aligned practice with percentage predictions |
+| **Exam Prep Room** | DBQ preview and examiner question preparation |
+| **Nexus Builder** | Medical nexus statements with AI enhancement |
+| **Forms Helper** | 16+ VA forms including buddy & PTSD stressor statements |
+| **Witness Bench** | AI-powered buddy statement wizard |
+| **Symptom Logger** | Track daily symptoms for documentation |
+| **Somatic Target** | Interactive body map for pain documentation |
+| **Continuity Thread** | Evidence timeline with gap detection |
+| **FOIA Keysmith** | Generate records requests for military documents |
 
-### Discovery Tools
+### Advanced Analysis
 | Tool | What It Does |
 |------|--------------|
-| **Web of Conditions** | Visual condition map |
-| **MOS Hazard Matcher** | Job-related exposures |
-| **State Benefit Hunter** | State-level benefits |
+| **C-File AI Analyzer** | Find evidence in thousands of pages |
+| **Decision Decoder** | AI analysis of VA letters for appeal opportunities |
+| **Denial Decoder** | OCR scan denial letters to find appeal angles |
+| **Blue Button X-Ray** | Extract claim-relevant evidence from medical records |
+| **PDF Evidence Finder** | Keyword search across uploaded documents |
+| **Red Team Simulator** | Simulate VA examiner review to find weaknesses |
 
-### Support Tools
+### Battle Labs
 | Tool | What It Does |
 |------|--------------|
-| **VSO Finder** | Free accredited help |
-| **Shark Radar** | Avoid predatory services |
-| **Pathfinder** | Strategic claim roadmap |
-| **VA Resources** | Official VA links |
+| **The Tribunal** | Mock BVA hearing simulation |
+| **Consistency Engine** | Detect contradictions across your evidence |
+| **War Game** | Adversarial claim stress testing |
+| **Time Machine** | Intent to File deadline countdown tracker |
+
+### Protection & Support
+| Tool | What It Does |
+|------|--------------|
+| **VSO Finder** | Locate accredited Veterans Service Officers |
+| **Shark Radar** | Identify predatory claim services |
+| **Mission Protocol** | Guided onboarding with mission objectives |
+
+### Data Management
+| Tool | What It Does |
+|------|--------------|
+| **My Packet** | Save and manage all claims evidence |
+| **The Bunker** | Export/import your complete data backup |
+| **Cloud Sync** | Google Drive backup integration |
+| **PDF Reports** | Download comprehensive condition guides |
 
 ## Important Notice
 
@@ -422,6 +449,17 @@ Get up and running with Vet-Rate.org in minutes.
     content: `
 Here's what to expect when you first visit Vet-Rate.org.
 
+## Interactive Tour
+
+First-time visitors automatically see an **interactive tour** that highlights the key features:
+- Where to search
+- How to add conditions
+- Where your saved data lives
+
+**Want to see the tour again?** Click the button below.
+
+<tour-restart-button></tour-restart-button>
+
 ## The Disclaimer
 
 On your first visit, you'll see a disclaimer explaining:
@@ -430,6 +468,15 @@ On your first visit, you'll see a disclaimer explaining:
 - Not legal or medical advice
 
 Click **"I Understand"** to continue.
+
+## Try Demo Data
+
+New and want to see what a complete claim looks like? Use the **"Load Example Data"** link on the main dashboard to load a sample veteran's packet with:
+- Pre-written personal statements
+- Evidence timeline
+- Secondary conditions
+
+This shows you the "gold standard" before you start your own.
 
 ## The Main Interface
 
@@ -3072,6 +3119,27 @@ const renderContent = (content) => {
         }
         listItems.push(match[1]);
       }
+      continue;
+    }
+    
+    // Special: Tour restart button
+    if (line.includes('<tour-restart-button>')) {
+      flushList();
+      flushBlockquote();
+      flushTable();
+      elements.push(
+        <div key={`tour-btn-${i}`} className="my-4">
+          <button
+            onClick={() => {
+              resetTourState();
+              alert('Tour reset! Close this manual and refresh the page to see the tour again.');
+            }}
+            className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+          >
+            🎓 Restart Interactive Tour
+          </button>
+        </div>
+      );
       continue;
     }
     

@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
+import { FocusToggle } from '../contexts/FocusModeContext';
 
 /**
  * 2026 VA Disability Pay Rates (Monthly)
@@ -232,6 +233,7 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   
   // Input state
   const [currentAge, setCurrentAge] = useState(40);
+  const [ageInputValue, setAgeInputValue] = useState('40');
   const [rating, setRating] = useState(100);
   const [hasSpouse, setHasSpouse] = useState(true);
   const [numChildren, setNumChildren] = useState(2);
@@ -323,24 +325,27 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
         {/* Modal Content */}
         <div className="relative bg-gray-900 min-h-screen">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 p-4 shadow-lg">
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 p-4 shadow-lg">
             <div className="max-w-4xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">💰</span>
                 <div>
-                  <h2 className="text-xl font-bold text-white">The Million Dollar Dashboard</h2>
-                  <p className="text-sm text-yellow-100">Lifetime Value Financial Projector</p>
+                  <h2 className="text-xl font-bold text-black">The Million Dollar Dashboard</h2>
+                  <p className="text-sm text-yellow-800">Lifetime Value Financial Projector</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <FocusToggle variant="dark" />
+                <button
+                  onClick={onClose}
+                  className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           
@@ -369,8 +374,26 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                   <label className="block text-sm text-gray-400 mb-1">Current Age</label>
                   <input
                     type="number"
-                    value={currentAge}
-                    onChange={(e) => setCurrentAge(Math.max(18, Math.min(80, parseInt(e.target.value) || 40)))}
+                    value={ageInputValue}
+                    onChange={(e) => {
+                      setAgeInputValue(e.target.value);
+                      const val = parseInt(e.target.value);
+                      if (!isNaN(val) && val >= 18 && val <= 80) {
+                        setCurrentAge(val);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (isNaN(val) || val < 18 || val > 80) {
+                        setAgeInputValue('40');
+                        setCurrentAge(40);
+                      } else {
+                        setAgeInputValue(val.toString());
+                        setCurrentAge(val);
+                      }
+                    }}
+                    min="18"
+                    max="80"
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-center text-lg font-bold"
                   />
                 </div>
@@ -672,9 +695,9 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
       
       {/* BuyMeCoffee - shows after viewing total */}
       <BuyMeCoffee 
-        show={displayedTotal > 0} 
+        show={animatedTotal > 0} 
         trigger="million-dollar" 
-        context={{ total: `$${Math.round(calculation.total).toLocaleString()}` }}
+        context={{ total: `$${Math.round(calculation.grandTotal).toLocaleString()}` }}
       />
     </div>
   );

@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
+import { FocusToggle } from '../contexts/FocusModeContext';
 import { 
   getSavedClaims, 
   removeClaim, 
@@ -24,6 +25,10 @@ import { getSavedForms, deleteSavedForm, getVeteranProfile } from '../utils/vete
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
+import DraftWatermark from './DraftWatermark';
+import CertificationCheckbox from './CertificationCheckbox';
+import NexusDisclaimerFooter from './NexusDisclaimerFooter';
+import ClaimProgress from './ClaimProgress';
 
 const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
   const [claims, setClaims] = useState([]);
@@ -34,6 +39,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
   const [importStatus, setImportStatus] = useState(null);
   const [showImportConfirm, setShowImportConfirm] = useState(null);
   const [backupCreated, setBackupCreated] = useState(false);
+  const [isCertified, setIsCertified] = useState(false); // Certification for downloads
   const fileInputRef = useRef(null);
   
   // Tab state for Claims vs Forms view
@@ -669,6 +675,14 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                             </p>
                           )}
                           
+                          {/* The Readiness Gauge - Claim Completeness Tracker */}
+                          <div className="my-3">
+                            <ClaimProgress
+                              conditionCode={claim.diagnosticCode}
+                              conditionName={claim.conditionName}
+                            />
+                          </div>
+                          
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             Saved: {new Date(claim.dateSaved).toLocaleDateString()}
                             {claim.dateUpdated && ` • Updated: ${new Date(claim.dateUpdated).toLocaleDateString()}`}
@@ -709,7 +723,9 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                             <div className="relative w-full sm:w-auto">
                               <button
                                 onClick={() => setShowDownloadMenu(showDownloadMenu === claim.id ? null : claim.id)}
-                                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2"
+                                disabled={!isCertified}
+                                title={!isCertified ? 'Please open and certify the statement before downloading' : ''}
+                                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs sm:text-sm flex items-center justify-center sm:justify-start gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Download
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -717,7 +733,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                                 </svg>
                               </button>
                               
-                              {showDownloadMenu === claim.id && (
+                              {showDownloadMenu === claim.id && isCertified && (
                                 <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
                                   <button
                                     onClick={() => handleDownloadStatement(claim, 'txt')}
@@ -783,19 +799,22 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
               <div className="fixed inset-0 bg-black bg-opacity-70 z-60 overflow-y-auto">
                 <div className="min-h-screen px-4 py-8">
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
                       <div>
                         <h3 className="text-xl font-bold">{viewingForm.title || viewingForm.formName}</h3>
-                        <p className="text-purple-200 text-sm">{viewingForm.formNumber}</p>
+                        <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
                       </div>
-                      <button
-                        onClick={() => setViewingForm(null)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                      >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <FocusToggle variant="light" />
+                        <button
+                          onClick={() => setViewingForm(null)}
+                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="p-6">
@@ -869,6 +888,9 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
               </div>
               
               <div className="p-6 space-y-6">
+                {/* Draft Watermark */}
+                <DraftWatermark variant="banner" />
+                
                 <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Statement in Support of Claim</h4>
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
@@ -881,6 +903,17 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy }) => {
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
                     {viewingStatement.doctorNote}
                   </pre>
+                  
+                  {/* Medical Disclaimer Footer */}
+                  <NexusDisclaimerFooter className="mt-4" />
+                </div>
+                
+                {/* Certification Checkbox before download */}
+                <div className="border-t pt-4">
+                  <CertificationCheckbox 
+                    checked={isCertified}
+                    onChange={setIsCertified}
+                  />
                 </div>
               </div>
             </div>

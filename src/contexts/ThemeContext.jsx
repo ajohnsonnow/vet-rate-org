@@ -1,4 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  getModalClasses, 
+  getSectionClasses, 
+  getHeaderGradient, 
+  getDropdownClasses,
+  getColorClass,
+  BASE_COLORS,
+  TEXT_COLORS,
+  STATUS_COLORS,
+  BUTTON_COLORS,
+  BORDER_COLORS,
+} from '../utils/colorSchemas';
 
 const ThemeContext = createContext();
 
@@ -16,14 +28,12 @@ export const COLOR_BLIND_MODES = {
 };
 
 export function ThemeProvider({ children }) {
-  // Initialize from localStorage or system preference
+  // Initialize from localStorage or default to dark mode
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('vet-rate-theme');
     if (saved) return saved;
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return THEME_MODES.DARK;
-    }
-    return THEME_MODES.LIGHT;
+    // Default to dark theme instead of checking system preference
+    return THEME_MODES.DARK;
   });
 
   const [colorBlindMode, setColorBlindMode] = useState(() => {
@@ -103,6 +113,20 @@ export function ThemeProvider({ children }) {
     setReducedMotion,
     fontSize,
     setFontSize,
+    // Color utility functions
+    getModalClasses: () => getModalClasses(theme, colorBlindMode),
+    getSectionClasses: () => getSectionClasses(theme, colorBlindMode),
+    getHeaderGradient: (type) => getHeaderGradient(type, theme, colorBlindMode),
+    getDropdownClasses: () => getDropdownClasses(theme, colorBlindMode),
+    getColorClass: (colorObj) => getColorClass(colorObj, theme, colorBlindMode),
+    // Direct color access
+    colors: {
+      base: BASE_COLORS,
+      text: TEXT_COLORS,
+      status: STATUS_COLORS,
+      button: BUTTON_COLORS,
+      border: BORDER_COLORS,
+    },
   };
 
   return (

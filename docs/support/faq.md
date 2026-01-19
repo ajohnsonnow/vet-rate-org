@@ -1,4 +1,4 @@
-# Frequently Asked Questions
+﻿# Frequently Asked Questions
 
 Common questions and answers about Vet-Rate.org.
 
@@ -83,11 +83,11 @@ Suggestions are **educational**. Success depends on individual circumstances and
 
 The AI Statement Assistant is an **optional** feature that uses Google Gemini to help write more professional and effective claim statements. Key points:
 
-- ✅ **Completely optional** — Works without it
-- ✅ **Privacy-first** — No names, SSN, dates, or PII sent
-- ✅ **Consent required** — You approve each AI request
-- ✅ **Toggle versions** — Switch between AI and original
-- ✅ **Free** — No cost for AI features
+- ✅ **Completely optional** - Works without it
+- ✅ **Privacy-first** - No names, SSN, dates, or PII sent
+- ✅ **Consent required** - You approve each AI request
+- ✅ **Toggle versions** - Switch between AI and original
+- ✅ **Free** - No cost for AI features
 
 [Learn more about AI privacy →](../privacy/ai-assistant/)
 
@@ -203,18 +203,18 @@ Use the **Bug Squasher** tool in the footer, or see [Reporting Bugs](reporting-b
 
 ### How do I suggest a feature?
 
-Same process as bugs — use Bug Squasher or Contact Us.
+Same process as bugs - use Bug Squasher or Contact Us.
 
 ### Where can I get help with my VA claim?
 
-- **VSOs** — Free claims assistance
-- **VA Hotline** — 1-800-827-1000
-- **VA.gov** — Official information
+- **VSOs** - Free claims assistance
+- **VA Hotline** - 1-800-827-1000
+- **VA.gov** - Official information
 
 ### What if I'm in crisis?
 
 <div class="crisis-banner">
-🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Chat at VeteransCrisisLine.net — Available 24/7
+🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Chat at VeteransCrisisLine.net - Available 24/7
 </div>
 
 ---

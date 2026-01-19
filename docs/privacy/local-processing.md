@@ -1,4 +1,4 @@
-# Local Processing
+﻿# Local Processing
 
 Understanding how Vet-Rate.org's client-side architecture protects your privacy.
 
@@ -34,19 +34,19 @@ Everything stays on your device.
 
 When you visit Vet-Rate.org:
 
-1. **Static files download** — HTML, CSS, JavaScript
-2. **Application starts** — React app runs in browser
-3. **Data loads** — Disability database loads (public data)
-4. **Ready to use** — Everything runs locally
+1. **Static files download** - HTML, CSS, JavaScript
+2. **Application starts** - React app runs in browser
+3. **Data loads** - Disability database loads (public data)
+4. **Ready to use** - Everything runs locally
 
 ### Your Interactions
 
 When you use the app:
 
-1. **Searches** — Run against local database
-2. **Calculations** — Performed in browser
-3. **Saving** — Written to browser localStorage
-4. **Generation** — PDFs created client-side
+1. **Searches** - Run against local database
+2. **Calculations** - Performed in browser
+3. **Saving** - Written to browser localStorage
+4. **Generation** - PDFs created client-side
 
 ---
 
@@ -199,4 +199,4 @@ If you want to verify:
 
 ### View Source
 
-The application code is viewable in your browser — it's all JavaScript running client-side.
+The application code is viewable in your browser - it's all JavaScript running client-side.

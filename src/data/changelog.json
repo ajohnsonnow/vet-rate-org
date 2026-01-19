@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "updates": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-18",
+      "changelog": [
+        {
+          "type": "feature",
+          "title": "Live Operations Protection System",
+          "description": "Added automatic data migration system to protect your saved data during updates"
+        },
+        {
+          "type": "feature",
+          "title": "Update Notifications",
+          "description": "App now checks for updates every 15 minutes and notifies you when a new version is available"
+        },
+        {
+          "type": "feature",
+          "title": "What's New Modal",
+          "description": "See exactly what changed in each update with our new changelog system"
+        },
+        {
+          "type": "security",
+          "title": "Version Tracking",
+          "description": "Comprehensive version management ensures compatibility and smooth upgrades"
+        },
+        {
+          "type": "improvement",
+          "title": "Cache Busting",
+          "description": "Hard reload when updating ensures you always get the latest code, not cached versions"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# C&P Exam Simulator
+﻿# C&P Exam Simulator
 
 The **C&P Exam Simulator** prepares veterans for their Compensation & Pension examination by simulating condition-specific questions based on the VA's Rating Schedule (38 CFR Part 4).
 
@@ -22,10 +22,10 @@ A **Compensation and Pension (C&P) examination** is a medical evaluation conduct
 
 C&P exams can determine your rating for years. Being prepared helps you:
 
-- ✅ **Understand what's evaluated** — Know the specific criteria
-- ✅ **Communicate effectively** — Describe your worst symptoms accurately
-- ✅ **Avoid common mistakes** — Don't minimize or forget important details
-- ✅ **Know the "tipping points"** — Understand what separates rating levels
+- ✅ **Understand what's evaluated** - Know the specific criteria
+- ✅ **Communicate effectively** - Describe your worst symptoms accurately
+- ✅ **Avoid common mistakes** - Don't minimize or forget important details
+- ✅ **Know the "tipping points"** - Understand what separates rating levels
 
 ---
 
@@ -79,7 +79,7 @@ Questions are tailored to each body system:
 
 ### DBQ-Aligned Scenarios
 
-Questions align with **Disability Benefits Questionnaires (DBQs)** — the forms examiners use to evaluate you.
+Questions align with **Disability Benefits Questionnaires (DBQs)** - the forms examiners use to evaluate you.
 
 ### Real-Time Feedback
 
@@ -103,19 +103,19 @@ See what separates you from higher ratings:
 
 <div class="step-container">
 <div class="step">
-<strong>Select a condition</strong> — From your packet or search
+<strong>Select a condition</strong> - From your packet or search
 </div>
 <div class="step">
-<strong>Answer questions</strong> — Based on your actual symptoms
+<strong>Answer questions</strong> - Based on your actual symptoms
 </div>
 <div class="step">
-<strong>Review feedback</strong> — Understand each answer's impact
+<strong>Review feedback</strong> - Understand each answer's impact
 </div>
 <div class="step">
-<strong>See estimated rating</strong> — Based on your responses
+<strong>See estimated rating</strong> - Based on your responses
 </div>
 <div class="step">
-<strong>Review gap analysis</strong> — Learn what affects your rating
+<strong>Review gap analysis</strong> - Learn what affects your rating
 </div>
 </div>
 
@@ -133,7 +133,7 @@ See what separates you from higher ratings:
 
 !!! tip "Best Approach"
     
-    - **Answer honestly** — Based on your actual experience
-    - **Think of your worst days** — Not your best days
-    - **Consider flare-ups** — Include your worst symptom episodes
-    - **Don't minimize** — Describe actual functional limitations
+    - **Answer honestly** - Based on your actual experience
+    - **Think of your worst days** - Not your best days
+    - **Consider flare-ups** - Include your worst symptom episodes
+    - **Don't minimize** - Describe actual functional limitations

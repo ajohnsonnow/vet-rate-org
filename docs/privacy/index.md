@@ -1,4 +1,4 @@
-# Privacy & Security
+﻿# Privacy & Security
 
 Understanding how Vet-Rate.org protects your privacy and keeps your data secure.
 
@@ -117,7 +117,7 @@ You have complete control over your data:
 
 ### View Your Data
 
-All data is in your browser — you can inspect it anytime using browser developer tools.
+All data is in your browser - you can inspect it anytime using browser developer tools.
 
 ### Export Your Data
 

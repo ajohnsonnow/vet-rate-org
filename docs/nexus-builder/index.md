@@ -1,4 +1,4 @@
-# Nexus Builder
+﻿# Nexus Builder
 
 The **Nexus Builder** is a guided wizard that helps you create a professional **Statement in Support of Claim** that articulates the connection between your condition and military service.
 
@@ -101,25 +101,25 @@ A pre-existing condition:
 
 <div class="step-container">
 <div class="step">
-<strong>Enter basic information</strong> — Name, condition, service dates
+<strong>Enter basic information</strong> - Name, condition, service dates
 </div>
 <div class="step">
-<strong>Describe your condition</strong> — Symptoms, onset, impact
+<strong>Describe your condition</strong> - Symptoms, onset, impact
 </div>
 <div class="step">
-<strong>Explain the connection</strong> — How it relates to service
+<strong>Explain the connection</strong> - How it relates to service
 </div>
 <div class="step">
-<strong>Add supporting details</strong> — Medical treatment, evidence
+<strong>Add supporting details</strong> - Medical treatment, evidence
 </div>
 <div class="step">
-<strong>Generate statement</strong> — Professional document created
+<strong>Generate statement</strong> - Professional document created
 </div>
 <div class="step">
-<strong>✨ AI Enhancement (Optional)</strong> — Let AI polish your statement
+<strong>✨ AI Enhancement (Optional)</strong> - Let AI polish your statement
 </div>
 <div class="step">
-<strong>Download</strong> — PDF and Doctor's Cheat Sheet
+<strong>Download</strong> - PDF and Doctor's Cheat Sheet
 </div>
 </div>
 
@@ -140,10 +140,10 @@ A pre-existing condition:
 
 ### Privacy First
 
-- **You control when AI is used** — It only runs when you click the button
-- **Explicit consent required** — You see exactly what's shared before confirming  
-- **No personal info sent** — Names, SSN, dates, and addresses are never shared
-- **Optional feature** — Standard templates work great without AI
+- **You control when AI is used** - It only runs when you click the button
+- **Explicit consent required** - You see exactly what's shared before confirming  
+- **No personal info sent** - Names, SSN, dates, and addresses are never shared
+- **Optional feature** - Standard templates work great without AI
 
 [Learn more about AI privacy →](../privacy/ai-assistant/)
 
@@ -210,9 +210,9 @@ Your generated statement includes:
 
 !!! tip "Creating Effective Statements"
     
-    - **Be specific** — Dates, events, details matter
-    - **Be honest** — Don't exaggerate, accuracy helps
-    - **Include impacts** — How does it affect your work, relationships, daily life?
-    - **Mention treatment** — Document your medical care history
-    - **Stay factual** — Focus on what happened and current symptoms
-    - **Use medical terms** — But also explain in plain language
+    - **Be specific** - Dates, events, details matter
+    - **Be honest** - Don't exaggerate, accuracy helps
+    - **Include impacts** - How does it affect your work, relationships, daily life?
+    - **Mention treatment** - Document your medical care history
+    - **Stay factual** - Focus on what happened and current symptoms
+    - **Use medical terms** - But also explain in plain language

@@ -7,7 +7,13 @@
  * is required or sent - only the condition names and symptom descriptions.
  * 
  * Users must explicitly consent before any data is sent to the AI service.
+ * 
+ * SAFETY-CRITICAL: All user input is scanned for crisis language BEFORE
+ * being sent to the AI. If self-harm indicators are detected, the AI call
+ * is BLOCKED and the user is immediately redirected to crisis resources.
  */
+
+import { interceptBeforeAICall } from './crisisInterceptor';
 
 // API endpoint for Gemini
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -106,6 +112,15 @@ The statement should be 3-5 paragraphs.
 ${isSecondary ? `Frame this as a SECONDARY claim - ${condition} caused or aggravated by service-connected ${primaryCondition}.` : 'Frame this as a DIRECT service connection claim.'}
 End with a respectful request for a C&P examination.
 
+=== PROTECTION RULES (CRITICAL) ===
+You are FORBIDDEN from outputting:
+- Social Security Numbers (SSN) - Replace with [SSN REDACTED] if present in input
+- Phone numbers - Replace with [PHONE REDACTED]
+- Specific street addresses - Use [ADDRESS] placeholder
+- Email addresses - Replace with [EMAIL REDACTED]
+- Full names of family members or medical providers - Use [NAME REDACTED]
+If the user input contains any of these, you MUST sanitize them in your output.
+
 Write the statement now:`;
 };
 
@@ -142,6 +157,14 @@ Do NOT include specific dates, names, or identifying information (use [Veteran] 
 The statement should be 2-4 paragraphs.
 End with a sincere attestation that the statement is true to the best of your knowledge.
 
+=== PROTECTION RULES (CRITICAL) ===
+You are FORBIDDEN from outputting:
+- Social Security Numbers - Replace with [SSN REDACTED]
+- Phone numbers - Replace with [PHONE REDACTED]
+- Specific street addresses - Use [ADDRESS] placeholder
+- Email addresses or full names - Use [NAME REDACTED] or [Veteran]
+If any PII appears in input, you MUST sanitize it in your output.
+
 Write the statement now:`;
 };
 
@@ -171,6 +194,14 @@ ${pillar3_Impact}
 
 === OUTPUT FORMAT ===
 Write this in the first person ("I").
+=== PROTECTION RULES (CRITICAL) ===
+You are FORBIDDEN from outputting:
+- Social Security Numbers - Replace with [SSN REDACTED]
+- Phone numbers - Replace with [PHONE REDACTED]
+- Specific street addresses - Use [ADDRESS] placeholder
+- Email addresses, full names, unit IDs - Replace with [REDACTED]
+If any PII appears in input, you MUST sanitize it in your output.
+
 Be factual about the traumatic event without unnecessary graphic details.
 Acknowledge that recounting these events is difficult.
 Focus on the emotional/psychological impact and current symptoms.
@@ -182,12 +213,144 @@ End with a note about seeking help and a request for evaluation.
 Write the statement now:`;
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// "THE COOLDOWN" - Built-in Rate Limiting for AI Calls
+// Prevents accidental double-clicks and excessive API usage
+// ═══════════════════════════════════════════════════════════════════════════════
+const RATE_LIMIT_KEY = 'vetrate_ai_ratelimit';
+const COOLDOWN_MS = 10000; // 10 seconds between requests
+const HOURLY_LIMIT = 30;   // Max 30 requests per hour
+const HOURLY_LOCKOUT_MS = 30 * 60 * 1000; // 30 min lockout if exceeded
+
+/**
+ * Get rate limit state from localStorage
+ */
+const getRateLimitState = () => {
+  try {
+    const stored = localStorage.getItem(RATE_LIMIT_KEY);
+    if (!stored) return { timestamps: [], lockoutUntil: null };
+    return JSON.parse(stored);
+  } catch {
+    return { timestamps: [], lockoutUntil: null };
+  }
+};
+
+/**
+ * Save rate limit state to localStorage
+ */
+const setRateLimitState = (state) => {
+  try {
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error('Failed to save rate limit state:', e);
+  }
+};
+
+/**
+ * Check if we can make an AI request
+ * @returns {{ canRequest: boolean, error?: string, waitTime?: number }}
+ */
+const checkRateLimit = () => {
+  const now = Date.now();
+  const state = getRateLimitState();
+  const oneHourAgo = now - (60 * 60 * 1000);
+  
+  // Check for active lockout
+  if (state.lockoutUntil && state.lockoutUntil > now) {
+    const waitTime = Math.ceil((state.lockoutUntil - now) / 1000 / 60);
+    return { 
+      canRequest: false, 
+      error: `AI requests paused. Please wait ${waitTime} minutes before trying again.`,
+      waitTime: state.lockoutUntil - now
+    };
+  }
+  
+  // Clean old timestamps
+  const recentTimestamps = (state.timestamps || []).filter(ts => ts > oneHourAgo);
+  
+  // Check hourly limit
+  if (recentTimestamps.length >= HOURLY_LIMIT) {
+    const lockoutUntil = now + HOURLY_LOCKOUT_MS;
+    setRateLimitState({ timestamps: recentTimestamps, lockoutUntil });
+    return { 
+      canRequest: false, 
+      error: `Hourly AI limit reached (${HOURLY_LIMIT} requests). Please wait 30 minutes and review your drafts.`,
+      waitTime: HOURLY_LOCKOUT_MS
+    };
+  }
+  
+  // Check cooldown from last request
+  if (recentTimestamps.length > 0) {
+    const lastRequest = Math.max(...recentTimestamps);
+    const timeSinceLast = now - lastRequest;
+    if (timeSinceLast < COOLDOWN_MS) {
+      const waitSeconds = Math.ceil((COOLDOWN_MS - timeSinceLast) / 1000);
+      return { 
+        canRequest: false, 
+        error: `AI cooling down... please wait ${waitSeconds} seconds.`,
+        waitTime: COOLDOWN_MS - timeSinceLast
+      };
+    }
+  }
+  
+  return { canRequest: true };
+};
+
+/**
+ * Record that we made an AI request
+ */
+const recordAIRequest = () => {
+  const now = Date.now();
+  const state = getRateLimitState();
+  const oneHourAgo = now - (60 * 60 * 1000);
+  
+  // Clean old timestamps and add current
+  const timestamps = (state.timestamps || []).filter(ts => ts > oneHourAgo);
+  timestamps.push(now);
+  
+  setRateLimitState({ ...state, timestamps });
+};
+
 /**
  * Call Gemini API to enhance a statement
+ * Now with built-in rate limiting ("The Cooldown") and crisis detection
  * @param {string} prompt - The constructed prompt
+ * @param {Object} userInput - Original user input (for crisis detection)
  * @returns {Promise<{success: boolean, content?: string, error?: string}>}
  */
-const callGeminiAPI = async (prompt) => {
+const callGeminiAPI = async (prompt, userInput = null) => {
+  // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
+  if (userInput) {
+    const crisisCheck = interceptBeforeAICall(userInput);
+    if (crisisCheck.shouldBlock) {
+      console.warn('🚨 CRISIS LANGUAGE DETECTED - Blocking AI call and triggering crisis modal');
+      
+      // Dispatch custom event to trigger crisis modal
+      window.dispatchEvent(new CustomEvent('vetrate:crisis', {
+        detail: {
+          severity: crisisCheck.severity,
+          source: 'ai-statement-helper'
+        }
+      }));
+      
+      // Return error that prevents AI engagement
+      return {
+        success: false,
+        error: 'This application has been paused. Please connect with crisis support.',
+        crisisDetected: true
+      };
+    }
+  }
+  
+  // ═══ RATE LIMIT CHECK ═══
+  const rateLimitCheck = checkRateLimit();
+  if (!rateLimitCheck.canRequest) {
+    return {
+      success: false,
+      error: rateLimitCheck.error
+    };
+  }
+  
   const apiKey = getApiKey();
   
   if (!apiKey) {
@@ -196,6 +359,9 @@ const callGeminiAPI = async (prompt) => {
       error: 'AI features are not configured. Please check back later.'
     };
   }
+
+  // Record the request BEFORE making it (prevents double-clicks)
+  recordAIRequest();
 
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
@@ -281,27 +447,30 @@ const callGeminiAPI = async (prompt) => {
 
 /**
  * Enhance a personal statement (Nexus Builder) using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhancePersonalStatement = async (answers, condition, primaryCondition = null) => {
   const claimType = primaryCondition ? 'secondary' : 'primary';
   const prompt = buildStatementPrompt(answers, condition, primaryCondition, claimType);
-  return callGeminiAPI(prompt);
+  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
 };
 
 /**
  * Enhance a buddy/lay statement using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhanceBuddyStatement = async (answers, conditionName) => {
   const prompt = buildBuddyStatementPrompt(answers, conditionName);
-  return callGeminiAPI(prompt);
+  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
 };
 
 /**
  * Enhance a PTSD stressor statement using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhancePTSDStatement = async (answers) => {
   const prompt = buildPTSDStressorPrompt(answers);
-  return callGeminiAPI(prompt);
+  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
 };
 
 /**

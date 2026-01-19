@@ -1,4 +1,4 @@
-# Vet-Rate.org User Manual
+﻿# Vet-Rate.org User Manual
 
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call <a href="tel:988">988</a>, Press 1 | Text 838255 | Chat at <a href="https://www.veteranscrisisline.net/">veteranscrisisline.net</a>
@@ -8,11 +8,11 @@
 
 ## Welcome, Fellow Veteran 🎖️
 
-**Vet-Rate.org** is your complete VA claims arsenal — 28 professional-grade tools built by a fellow service-disabled veteran to help you navigate the VA disability claims process from initial research through appeals. This comprehensive manual covers every feature, setting, and tool available on the platform.
+**Vet-Rate.org** is your complete VA claims arsenal - 40+ professional-grade tools built by a fellow service-disabled veteran to help you navigate the VA disability claims process from initial research through appeals. This comprehensive manual covers every feature, setting, and tool available on the platform.
 
 <div class="feature-card">
 <h3>🛡️ Your Claims Command Center</h3>
-<p>Search <strong>748 rated disabilities</strong> with official rating criteria, calculate combined ratings, discover secondary conditions, practice for C&P exams, analyze documents with AI, and build your complete evidence packet—all in one place. What "claim sharks" charge thousands for, absolutely free.</p>
+<p>Search <strong>748 rated disabilities</strong> with official rating criteria, calculate combined ratings, discover secondary conditions, practice for C&P exams, analyze documents with AI, and build your complete evidence packet-all in one place. What "claim sharks" charge thousands for, absolutely free.</p>
 </div>
 
 ---
@@ -45,13 +45,13 @@ This manual is organized into the following sections:
 
 Vet-Rate.org was built with your privacy as the top priority:
 
-- ✅ **No Login Required** — Use all features without creating an account
-- ✅ **No Data Collection** — Your searches never leave your device
-- ✅ **No Tracking** — No analytics, cookies, or telemetry
-- ✅ **No External Transmission** — All processing happens in your browser
-- ✅ **100% Free** — No hidden fees, subscriptions, or upsells
-- ✨ **AI is Optional** — When using AI features, only non-PII descriptions are shared (with explicit consent)
-- 🔬 **C-File stays local** — Your claims file PDF never leaves your browser; only extracted text goes to AI
+- ✅ **No Login Required** - Use all features without creating an account
+- ✅ **No Data Collection** - Your searches never leave your device
+- ✅ **No Tracking** - No analytics, cookies, or telemetry
+- ✅ **No External Transmission** - All processing happens in your browser
+- ✅ **100% Free** - No hidden fees, subscriptions, or upsells
+- ✨ **AI is Optional** - When using AI features, only non-PII descriptions are shared (with explicit consent)
+- 🔬 **C-File stays local** - Your claims file PDF never leaves your browser; only extracted text goes to AI
 
 ---
 
@@ -59,12 +59,12 @@ Vet-Rate.org was built with your privacy as the top priority:
 
 ### New to Vet-Rate.org?
 
-1. **Read the Welcome Screen** — Understand what the toolkit offers
-2. **Search for a Condition** — Use the search bar to find any of 748 disabilities
-3. **Explore Rating Criteria** — See official VA rating percentages
-4. **Try Secondary Scout** — Discover conditions linked to yours
-5. **Practice with C&P Simulator** — Prepare for your exam
-6. **Build Your Packet** — Save claims and generate statements
+1. **Read the Welcome Screen** - Understand what the toolkit offers
+2. **Search for a Condition** - Use the search bar to find any of 748 disabilities
+3. **Explore Rating Criteria** - See official VA rating percentages
+4. **Try Secondary Scout** - Discover conditions linked to yours
+5. **Practice with C&P Simulator** - Prepare for your exam
+6. **Build Your Packet** - Save claims and generate statements
 
 ---
 
@@ -73,9 +73,9 @@ Vet-Rate.org was built with your privacy as the top priority:
 !!! va-info "Official Sources"
     All data in Vet-Rate.org has been **fully validated against the official eCFR** (Electronic Code of Federal Regulations):
     
-    - **38 CFR Part 3** — Adjudication rules, eligibility, and claims procedures
-    - **38 CFR Part 4** — Every diagnostic code, rating percentage, and evaluation criteria
-    - **748 VA Disabilities** — Complete coverage of all body systems
+    - **38 CFR Part 3** - Adjudication rules, eligibility, and claims procedures
+    - **38 CFR Part 4** - Every diagnostic code, rating percentage, and evaluation criteria
+    - **748 VA Disabilities** - Complete coverage of all body systems
     - **Last Validated:** January 2026
 
 ---
@@ -96,10 +96,10 @@ Vet-Rate.org was built with your privacy as the top priority:
 
 If you need assistance:
 
-- **Bug Reports** — Use the 🐛 bug button in the bottom-right corner
-- **Contact Us** — Available through the footer links
-- **VA Resources** — Access the comprehensive VA Resources Hub
-- **VSO Assistance** — Find an accredited representative at [VA.gov](https://www.va.gov/vso/)
+- **Bug Reports** - Use the 🐛 bug button in the bottom-right corner
+- **Contact Us** - Available through the footer links
+- **VA Resources** - Access the comprehensive VA Resources Hub
+- **VSO Assistance** - Find an accredited representative at [VA.gov](https://www.va.gov/vso/)
 
 ---
 

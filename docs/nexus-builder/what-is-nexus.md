@@ -1,4 +1,4 @@
-# What is a Nexus Statement?
+﻿# What is a Nexus Statement?
 
 Understanding the purpose, components, and importance of a nexus statement in your VA claim.
 
@@ -8,10 +8,10 @@ Understanding the purpose, components, and importance of a nexus statement in yo
 
 A **nexus statement** is a document that establishes the connection between your current medical condition and your military service. It articulates:
 
-- **What** — The condition you have
-- **When** — When it started or worsened
-- **Why** — How it connects to military service
-- **How** — The medical theory supporting the connection
+- **What** - The condition you have
+- **When** - When it started or worsened
+- **Why** - How it connects to military service
+- **How** - The medical theory supporting the connection
 
 ---
 
@@ -36,7 +36,7 @@ A **personal statement** you write:
 - Explains timeline and events
 
 !!! info "What Nexus Builder Creates"
-    The Nexus Builder helps you create a **Statement in Support of Claim** — your personal account that supplements medical evidence.
+    The Nexus Builder helps you create a **Statement in Support of Claim** - your personal account that supplements medical evidence.
 
 ---
 
@@ -200,9 +200,9 @@ _____________________________
 
 !!! tip "Writing Your Statement"
     
-    1. **Be specific with dates** — Approximate if necessary ("On or about...")
-    2. **Use first-person** — "I experienced..." not "The veteran experienced..."
-    3. **Stay factual** — Describe what happened, not what you think happened
-    4. **Include impacts** — How does it affect your work, relationships, activities?
-    5. **Keep it focused** — One condition per statement is clearest
-    6. **Sign and date** — Don't forget!
+    1. **Be specific with dates** - Approximate if necessary ("On or about...")
+    2. **Use first-person** - "I experienced..." not "The veteran experienced..."
+    3. **Stay factual** - Describe what happened, not what you think happened
+    4. **Include impacts** - How does it affect your work, relationships, activities?
+    5. **Keep it focused** - One condition per statement is clearest
+    6. **Sign and date** - Don't forget!

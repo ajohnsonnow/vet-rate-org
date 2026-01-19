@@ -1,4 +1,4 @@
-# Reporting Bugs
+﻿# Reporting Bugs
 
 Help us improve Vet-Rate.org by reporting issues you encounter.
 
@@ -54,19 +54,19 @@ Click **"🐛 Bug Squasher"** in the website footer.
 
 <div class="step-container">
 <div class="step">
-<strong>Description</strong> — What happened?
+<strong>Description</strong> - What happened?
 </div>
 <div class="step">
-<strong>Expected</strong> — What should have happened?
+<strong>Expected</strong> - What should have happened?
 </div>
 <div class="step">
-<strong>Steps</strong> — How to reproduce the issue
+<strong>Steps</strong> - How to reproduce the issue
 </div>
 <div class="step">
-<strong>Browser</strong> — What browser are you using?
+<strong>Browser</strong> - What browser are you using?
 </div>
 <div class="step">
-<strong>Device</strong> — Computer or mobile?
+<strong>Device</strong> - Computer or mobile?
 </div>
 </div>
 
@@ -123,9 +123,9 @@ DEVICE: Windows 10 desktop
 
 Before reporting:
 
-1. **Search documentation** — Answer might be here
-2. **Check FAQ** — Common issues addressed
-3. **Try troubleshooting** — Basic fixes might help
+1. **Search documentation** - Answer might be here
+2. **Check FAQ** - Common issues addressed
+3. **Try troubleshooting** - Basic fixes might help
 
 ---
 
@@ -135,19 +135,19 @@ Before reporting:
 
 <div class="step-container">
 <div class="step">
-<strong>Receive</strong> — We get your report
+<strong>Receive</strong> - We get your report
 </div>
 <div class="step">
-<strong>Review</strong> — We try to reproduce the issue
+<strong>Review</strong> - We try to reproduce the issue
 </div>
 <div class="step">
-<strong>Prioritize</strong> — Based on severity and impact
+<strong>Prioritize</strong> - Based on severity and impact
 </div>
 <div class="step">
-<strong>Fix</strong> — Develop a solution
+<strong>Fix</strong> - Develop a solution
 </div>
 <div class="step">
-<strong>Deploy</strong> — Release the fix
+<strong>Deploy</strong> - Release the fix
 </div>
 </div>
 

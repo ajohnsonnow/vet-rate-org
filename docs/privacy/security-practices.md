@@ -1,4 +1,4 @@
-# Security Practices
+﻿# Security Practices
 
 How Vet-Rate.org maintains security for the platform.
 
@@ -19,10 +19,10 @@ While we don't collect your data (eliminating most security concerns), we still 
 
 ### Code Quality
 
-- **Code Review** — All changes reviewed before deployment
-- **Dependency Management** — Regular updates to dependencies
-- **Vulnerability Scanning** — Automated security scanning
-- **Modern Frameworks** — Using React with security best practices
+- **Code Review** - All changes reviewed before deployment
+- **Dependency Management** - Regular updates to dependencies
+- **Vulnerability Scanning** - Automated security scanning
+- **Modern Frameworks** - Using React with security best practices
 
 ### No Backend Vulnerabilities
 
@@ -40,10 +40,10 @@ Since there's no backend server:
 
 ### Content Security
 
-- **HTTPS Only** — All traffic encrypted
-- **Subresource Integrity** — Verify loaded resources
-- **Content Security Policy** — Prevent XSS attacks
-- **No External Scripts** — No third-party JavaScript
+- **HTTPS Only** - All traffic encrypted
+- **Subresource Integrity** - Verify loaded resources
+- **Content Security Policy** - Prevent XSS attacks
+- **No External Scripts** - No third-party JavaScript
 
 ### Browser Security
 
@@ -84,10 +84,10 @@ When you export backups:
 
 ### Infrastructure
 
-- **Secure hosting provider** — Industry-standard security
-- **HTTPS certificates** — Valid, maintained certificates
-- **DDoS protection** — Platform availability
-- **Regular updates** — Hosting environment maintained
+- **Secure hosting provider** - Industry-standard security
+- **HTTPS certificates** - Valid, maintained certificates
+- **DDoS protection** - Platform availability
+- **Regular updates** - Hosting environment maintained
 
 ### No Server Data
 
@@ -106,10 +106,10 @@ Even at the hosting level:
 
 If you discover a security vulnerability:
 
-1. **Don't disclose publicly** — Give us time to fix
-2. **Report through Bug Squasher** — Or contact us directly
-3. **Provide details** — Help us understand the issue
-4. **We'll respond** — Acknowledge and address
+1. **Don't disclose publicly** - Give us time to fix
+2. **Report through Bug Squasher** - Or contact us directly
+3. **Provide details** - Help us understand the issue
+4. **We'll respond** - Acknowledge and address
 
 ### What We Consider Security Issues
 
@@ -124,9 +124,9 @@ If you discover a security vulnerability:
 
 Since we don't collect data:
 
-- "Data breach" — No data to breach
-- "Account compromise" — No accounts
-- "Unauthorized access to user data" — No server-side user data
+- "Data breach" - No data to breach
+- "Account compromise" - No accounts
+- "Unauthorized access to user data" - No server-side user data
 
 ---
 

@@ -1,4 +1,4 @@
-# Backup & Restore
+﻿# Backup & Restore
 
 Export your packet data and restore from backup files to protect your work.
 
@@ -256,10 +256,10 @@ You can open the JSON file in:
 
 !!! tip "Backup Best Practices"
     
-    1. **Backup regularly** — Don't wait until you need it
-    2. **Store multiple copies** — Local + cloud
-    3. **Name files clearly** — Include date
-    4. **Test restores** — Verify backups work
-    5. **Keep old backups** — Don't overwrite everything
-    6. **Backup before changes** — Major edits, browser updates
-    7. **Secure sensitive data** — Store backups safely
+    1. **Backup regularly** - Don't wait until you need it
+    2. **Store multiple copies** - Local + cloud
+    3. **Name files clearly** - Include date
+    4. **Test restores** - Verify backups work
+    5. **Keep old backups** - Don't overwrite everything
+    6. **Backup before changes** - Major edits, browser updates
+    7. **Secure sensitive data** - Store backups safely

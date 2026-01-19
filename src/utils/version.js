@@ -1,0 +1,36 @@
+/**
+ * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * All Rights Reserved. Proprietary and Confidential.
+ * Unauthorized copying, use, or distribution is strictly prohibited.
+ * See COPYRIGHT.js for full license terms.
+ */
+
+/**
+ * VERSION CONTROL CONSTANTS
+ * 
+ * CRITICAL: This is the single source of truth for app versioning
+ * Update these when pushing changes that affect data structure or features
+ * 
+ * Version Format: MAJOR.MINOR.PATCH
+ * - MAJOR: Breaking changes, data structure overhauls
+ * - MINOR: New features, non-breaking additions
+ * - PATCH: Bug fixes, small tweaks
+ */
+
+// Current application version
+export const APP_VERSION = '1.0.0';
+
+// Data schema version for localStorage migration
+// Increment when making changes to how data is stored
+export const SCHEMA_VERSION = '1.0.0';
+
+// Last update date (for changelog display)
+export const LAST_UPDATE_DATE = '2026-01-18';
+
+// Update check interval (milliseconds) - 15 minutes
+export const UPDATE_CHECK_INTERVAL = 15 * 60 * 1000;
+
+// Storage keys for version tracking
+export const VERSION_STORAGE_KEY = 'vet_rate_app_version';
+export const SCHEMA_STORAGE_KEY = 'vet_rate_data_schema_version';
+export const LAST_SEEN_VERSION_KEY = 'vet_rate_last_seen_version';

@@ -15,6 +15,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import { isAIAvailable } from '../utils/aiStatementHelper';
+import { saveClaim, generateId } from '../utils/claimsStorage';
 
 // API endpoint for Gemini
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -397,6 +398,7 @@ export default function WitnessBench({ onClose, onReportBug }) {
   const [relationship, setRelationship] = useState('');
   const [condition, setCondition] = useState('');
   const [conditionCategory, setConditionCategory] = useState('');
+  const [witnessName, setWitnessName] = useState('');
   
   // Interview state
   const [questions, setQuestions] = useState([]);
@@ -412,6 +414,36 @@ export default function WitnessBench({ onClose, onReportBug }) {
   // Output state
   const [generatedStatement, setGeneratedStatement] = useState('');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [savedToPacket, setSavedToPacket] = useState(false);
+  
+  /**
+   * Save buddy statement to My Packet
+   */
+  const saveToMyPacket = () => {
+    try {
+      const claim = {
+        conditionName: condition,
+        status: 'Evidence Gathered',
+        evidence: [{
+          type: 'Buddy Statement',
+          description: `Lay/Witness Statement (Form 21-10210) from ${RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label}`,
+          statement: generatedStatement,
+          relationship: relationship,
+          witness: witnessName,
+          dateSaved: new Date().toISOString()
+        }],
+        notes: `Buddy statement from ${RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label} regarding observable behaviors and functional impacts.`
+      };
+      
+      const success = saveClaim(claim);
+      if (success) {
+        setSavedToPacket(true);
+        setTimeout(() => setSavedToPacket(false), 3000); // Reset after 3 seconds
+      }
+    } catch (error) {
+      console.error('Error saving to My Packet:', error);
+    }
+  };
   
   /**
    * Determine condition category from condition name
@@ -634,6 +666,23 @@ export default function WitnessBench({ onClose, onReportBug }) {
         </p>
       </div>
       
+      {/* Witness Name */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+          Step 3: Witness Name
+        </h3>
+        <input
+          type="text"
+          value={witnessName}
+          onChange={(e) => setWitnessName(e.target.value)}
+          placeholder="e.g., Jane Smith, John Doe"
+          className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all"
+        />
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          Full name of the person providing this witness statement
+        </p>
+      </div>
+      
       {/* AI Toggle */}
       {isAIAvailable() && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
@@ -670,8 +719,8 @@ export default function WitnessBench({ onClose, onReportBug }) {
       {/* Start Button */}
       <button
         onClick={startInterview}
-        disabled={!relationship || !condition || isLoadingQuestions}
-        className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        disabled={!relationship || !condition || !witnessName || isLoadingQuestions}
+        className="w-full px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-violet-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoadingQuestions ? (
           <>
@@ -710,7 +759,7 @@ export default function WitnessBench({ onClose, onReportBug }) {
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -848,8 +897,18 @@ export default function WitnessBench({ onClose, onReportBug }) {
               {showDownloadMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
                   <button
+                    onClick={() => { saveToMyPacket(); setShowDownloadMenu(false); }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors rounded-t-lg ${
+                      savedToPacket 
+                        ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30' 
+                        : 'text-gray-700 dark:text-gray-200'
+                    }`}
+                  >
+                    {savedToPacket ? '✅ Saved to My Packet' : '📁 Save to My Packet'}
+                  </button>
+                  <button
                     onClick={() => { downloadPDF(); setShowDownloadMenu(false); }}
-                    className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-t-lg transition-colors"
+                    className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     📑 Download as PDF
                   </button>
@@ -910,41 +969,39 @@ export default function WitnessBench({ onClose, onReportBug }) {
   );
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen">
-        {/* Backdrop */}
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
-          onClick={onClose}
-        ></div>
-        
-        {/* Modal Content */}
-        <div className="relative bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-indigo-600 p-4 shadow-lg">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">👥</span>
-                <div>
-                  <h2 className="text-xl font-bold text-white">The Witness Bench</h2>
-                  <p className="text-sm text-purple-100">Buddy Letter Wizard (VA Form 21-10210)</p>
-                </div>
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">👥</span>
+              <div>
+                <h2 className="text-xl font-bold text-white">The Witness Bench</h2>
+                <p className="text-sm text-violet-100">Buddy Letter Wizard (VA Form 21-10210)</p>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          
+        </div>
+        
+        <div className="p-4">
           {/* Main Content */}
-          <div className="max-w-4xl mx-auto p-6">
-            {/* Info Banner */}
+          <div className="max-w-4xl mx-auto">{/* Info Banner */}
             <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 mb-6 rounded-r-lg">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>

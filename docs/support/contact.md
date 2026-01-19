@@ -1,4 +1,4 @@
-# Contact Us
+﻿# Contact Us
 
 How to reach the Vet-Rate.org team.
 
@@ -67,9 +67,9 @@ We prioritize by:
 
 ### Check These First
 
-- **Documentation** — Your answer might be here
-- **FAQ** — Common questions answered
-- **Troubleshooting** — Try basic fixes
+- **Documentation** - Your answer might be here
+- **FAQ** - Common questions answered
+- **Troubleshooting** - Try basic fixes
 
 ### For VA Questions
 
@@ -77,7 +77,7 @@ Contact the VA directly:
 
 - **VA Benefits:** 1-800-827-1000
 - **VA Health:** 1-877-222-8387
-- **VA.gov** — Online resources
+- **VA.gov** - Online resources
 
 ### For Emergencies
 

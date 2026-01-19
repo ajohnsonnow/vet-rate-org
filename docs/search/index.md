@@ -1,4 +1,4 @@
-# Search & Explore
+﻿# Search & Explore
 
 The search functionality is the core of Vet-Rate.org, providing access to **748 VA-rated disabilities** with official criteria from 38 CFR Part 4.
 
@@ -8,10 +8,10 @@ The search functionality is the core of Vet-Rate.org, providing access to **748 
 
 Vet-Rate.org's search system allows you to find disabilities by:
 
-- **Condition name** — PTSD, arthritis, migraines
-- **Diagnostic code** — 9411, 5002, 8100
-- **Synonyms** — "ringing in ears", "back pain", "anxiety attacks"
-- **Body system** — musculoskeletal, mental health, respiratory
+- **Condition name** - PTSD, arthritis, migraines
+- **Diagnostic code** - 9411, 5002, 8100
+- **Synonyms** - "ringing in ears", "back pain", "anxiety attacks"
+- **Body system** - musculoskeletal, mental health, respiratory
 
 ---
 
@@ -86,8 +86,8 @@ All 15 body systems from 38 CFR Part 4 are fully searchable:
 
 !!! tip "Pro Tips for Better Searches"
     
-    1. **Start broad, then narrow** — Search "knee" before "internal derangement of knee"
-    2. **Try multiple terms** — If "back pain" doesn't find it, try "spine" or "lumbar"
-    3. **Use diagnostic codes** — If you know the code, search it directly
-    4. **Check synonyms** — Medical and common names both work
-    5. **Watch suggestions** — Auto-complete often finds what you need
+    1. **Start broad, then narrow** - Search "knee" before "internal derangement of knee"
+    2. **Try multiple terms** - If "back pain" doesn't find it, try "spine" or "lumbar"
+    3. **Use diagnostic codes** - If you know the code, search it directly
+    4. **Check synonyms** - Medical and common names both work
+    5. **Watch suggestions** - Auto-complete often finds what you need

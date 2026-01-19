@@ -1,4 +1,4 @@
-# Understanding Secondary Scout Results
+﻿# Understanding Secondary Scout Results
 
 Learn how to interpret the suggestions, mechanisms, and evidence provided by Secondary Scout.
 
@@ -8,11 +8,11 @@ Learn how to interpret the suggestions, mechanisms, and evidence provided by Sec
 
 After launching Secondary Scout, you'll see a full-screen results view with:
 
-1. **Header** — Title and action buttons
-2. **Statistics Panel** — Summary of findings
-3. **Filter Controls** — Probability filtering
-4. **Suggestion Cards** — Individual secondary condition suggestions
-5. **Disclaimer** — Important legal information
+1. **Header** - Title and action buttons
+2. **Statistics Panel** - Summary of findings
+3. **Filter Controls** - Probability filtering
+4. **Suggestion Cards** - Individual secondary condition suggestions
+5. **Disclaimer** - Important legal information
 
 ---
 
@@ -57,10 +57,10 @@ Each suggestion is displayed as an expandable card.
 
 ### Card Header (Collapsed)
 
-- **Secondary Condition Name** — The potential condition
-- **Primary Condition** — What it's connected to ("Secondary to: [condition]")
-- **Probability Badge** — High (🔥 orange) or Medium (⚡ yellow)
-- **Mechanism Badge** — Type of connection (Direct, Medication, etc.)
+- **Secondary Condition Name** - The potential condition
+- **Primary Condition** - What it's connected to ("Secondary to: [condition]")
+- **Probability Badge** - High (🔥 orange) or Medium (⚡ yellow)
+- **Mechanism Badge** - Type of connection (Direct, Medication, etc.)
 
 ### Card Details (Expanded)
 
@@ -132,10 +132,10 @@ Compensating for one condition stresses other joints:
 
 ### Other Mechanisms
 
-- **Inflammation** — Chronic inflammation spreads
-- **Sleep** — Sleep disruption cascades
-- **Stress** — Chronic stress causes physiological changes
-- **Neurological** — Nerve damage spreads
+- **Inflammation** - Chronic inflammation spreads
+- **Sleep** - Sleep disruption cascades
+- **Stress** - Chronic stress causes physiological changes
+- **Neurological** - Nerve damage spreads
 
 ---
 
@@ -185,8 +185,8 @@ For efficient workflow with multiple suggestions:
 When conditions are selected, a floating bar appears:
 
 - Shows count of selected items
-- **"Add to Packet"** button — Saves all selected
-- **"Clear"** button — Clears selection
+- **"Add to Packet"** button - Saves all selected
+- **"Clear"** button - Clears selection
 
 ---
 
@@ -220,9 +220,9 @@ These connections have:
 
 !!! tip "Maximizing Success"
     
-    1. **Start with High probability** — Best chances of success
-    2. **Read the nexus theory** — Understand the medical connection
-    3. **Check medical citations** — Research the supporting evidence
-    4. **Document your symptoms** — Keep a symptom journal
-    5. **Get a nexus letter** — Medical opinion linking conditions
-    6. **Save promising findings** — Add to My Packet for tracking
+    1. **Start with High probability** - Best chances of success
+    2. **Read the nexus theory** - Understand the medical connection
+    3. **Check medical citations** - Research the supporting evidence
+    4. **Document your symptoms** - Keep a symptom journal
+    5. **Get a nexus letter** - Medical opinion linking conditions
+    6. **Save promising findings** - Add to My Packet for tracking

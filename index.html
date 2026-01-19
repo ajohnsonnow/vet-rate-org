@@ -3,16 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- THE SHIELD - Content Security Policy -->
+    <!-- Strict CSP to prevent XSS, code injection, and prompt injection attacks -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com data:;
+        img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com;
+        connect-src 'self' https://generativelanguage.googleapis.com https://api.anthropic.com https://www.googleapis.com https://vet-rate-org.goatcounter.com;
+        frame-src 'self' https://accounts.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        upgrade-insecure-requests;
+      "
+    />
+    
     <meta
       name="description"
-      content="Vet-Rate.org - Your complete VA claims arsenal. 28 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans."
+      content="Vet-Rate.org - Your complete VA claims arsenal. 40+ professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans."
     />
     <meta name="theme-color" content="#003f87" />
-    <title>Vet-Rate.org | Complete VA Claims Arsenal - 28 Pro Tools · Rating Calculator · AI Analysis · FREE</title>
+    <title>Vet-Rate.org | Complete VA Claims Arsenal - 40+ Pro Tools · Rating Calculator · AI Analysis · FREE</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Google Drive API (for Cloud Sync) -->
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <script data-goatcounter="https://vet-rate-org.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
   </body>

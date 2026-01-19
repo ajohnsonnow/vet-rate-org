@@ -1,4 +1,4 @@
-# Available Forms
+﻿# Available Forms
 
 Overview of all VA forms supported by the Forms Helper.
 
@@ -56,9 +56,9 @@ Overview of all VA forms supported by the Forms Helper.
 
 **Benefits:**
 
-- **Protects your effective date** — Benefits may be backdated to Intent to File date
-- **Gives you time** — 1 year to gather evidence
-- **No commitment** — Doesn't obligate you to file
+- **Protects your effective date** - Benefits may be backdated to Intent to File date
+- **Gives you time** - 1 year to gather evidence
+- **No commitment** - Doesn't obligate you to file
 
 !!! tip "File Early"
     Submit an Intent to File as soon as you're considering a claim. It costs nothing and could mean months of additional back pay.

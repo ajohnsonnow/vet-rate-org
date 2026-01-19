@@ -1,5 +1,6 @@
 import React from 'react';
 import { PACTActBadge } from './PACTActIndicator';
+import StaleDataIndicator from './StaleDataIndicator';
 
 function SearchResultCard({ result, onSelect, isSelected }) {
   return (
@@ -15,10 +16,13 @@ function SearchResultCard({ result, onSelect, isSelected }) {
     >
       <div className="flex justify-between items-start gap-3 mb-2">
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
             {result.conditionName}
           </h3>
-          <PACTActBadge diagnosticCode={result.diagnosticCode} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <PACTActBadge diagnosticCode={result.diagnosticCode} />
+            <StaleDataIndicator disability={result} variant="compact" />
+          </div>
         </div>
         <span className="bg-va-blue text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
           DC {result.diagnosticCode}

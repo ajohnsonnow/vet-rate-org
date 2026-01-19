@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Lock, UserCheck, Sparkles, ExternalLink } from 'lucide-react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useColorSchemas } from '../hooks/useColorSchemas';
 
 function DisclaimerSplash({ onAcknowledge }) {
   const [isVisible, setIsVisible] = useState(false);
 
   // Lock body scroll when modal is visible
   useBodyScrollLock(isVisible);
+  
+  // Get color schemas
+  const { getModalClasses, getColorClass, colors } = useColorSchemas();
+  const modalClasses = getModalClasses();
 
   useEffect(() => {
     // Check if user has already acknowledged
@@ -28,12 +33,12 @@ function DisclaimerSplash({ onAcknowledge }) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gradient-to-br from-va-blue/95 to-green-900/95 backdrop-blur-sm modal-backdrop overscroll-contain"
+      className={`${modalClasses.backdrop} z-[100] bg-gradient-to-br from-va-blue/95 to-green-900/95 backdrop-blur-sm`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="splash-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
+      <div className={`${modalClasses.content} max-w-2xl rounded-2xl max-h-[90vh]`}>
         {/* Header - Warm Welcome */}
         <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 p-6 text-center">
           <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden">
@@ -57,7 +62,7 @@ function DisclaimerSplash({ onAcknowledge }) {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
               <span className="font-semibold">From one veteran to another:</span> I built this complete claims arsenal because 
-              navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>28 professional-grade tools</strong> covering 
+              navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>40+ professional-grade tools</strong> covering 
               everything from initial research through appeals—748 rated conditions, advanced calculators, AI document analysis, C&P exam prep, 
               and complete evidence builders. All free, no tricks, no sales pitches.
             </p>
@@ -125,7 +130,7 @@ function DisclaimerSplash({ onAcknowledge }) {
               </li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic text-center">
-              🎖️ 28 professional tools—everything from research to appeal. All free.
+              🎖️ 40+ professional tools—everything from research to appeal. All free.
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-# Phone Numbers
+﻿# Phone Numbers
 
 Essential VA phone numbers and hotlines for veterans.
 
@@ -25,8 +25,8 @@ For veterans in crisis or supporting someone in crisis. Confidential support fro
 
 ### Emergency Services
 
-- **911** — Local emergency services
-- **VA Emergency** — Contact your local VA Medical Center
+- **911** - Local emergency services
+- **VA Emergency** - Contact your local VA Medical Center
 
 ---
 
@@ -188,13 +188,13 @@ Readjustment counseling services.
 
 !!! tip "Getting Through to the VA"
     
-    1. **Call early** — Shorter wait times early morning
-    2. **Have info ready** — SSN, VA file number, claim number
-    3. **Be patient** — Hold times can be long
-    4. **Take notes** — Document who you spoke with, date/time
-    5. **Get names** — Ask for representative's name
-    6. **Request confirmation** — Ask for confirmation numbers
-    7. **Follow up in writing** — Important requests should be written
+    1. **Call early** - Shorter wait times early morning
+    2. **Have info ready** - SSN, VA file number, claim number
+    3. **Be patient** - Hold times can be long
+    4. **Take notes** - Document who you spoke with, date/time
+    5. **Get names** - Ask for representative's name
+    6. **Request confirmation** - Ask for confirmation numbers
+    7. **Follow up in writing** - Important requests should be written
 
 ---
 

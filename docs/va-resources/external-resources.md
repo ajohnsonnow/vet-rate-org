@@ -1,4 +1,4 @@
-# External Resources
+﻿# External Resources
 
 Veterans Service Organizations, legal resources, and support organizations beyond the VA.
 
@@ -23,11 +23,11 @@ VSOs provide **free** claims assistance from accredited representatives.
 
 ### What VSOs Provide
 
-- **Claims Assistance** — Free help filing claims
-- **Representation** — Advocates with VA
-- **Appeals Help** — Assistance with denied claims
-- **Benefits Counseling** — Explain your options
-- **Local Support** — Community chapters
+- **Claims Assistance** - Free help filing claims
+- **Representation** - Advocates with VA
+- **Appeals Help** - Assistance with denied claims
+- **Benefits Counseling** - Explain your options
+- **Local Support** - Community chapters
 
 ### Finding a VSO Representative
 
@@ -44,9 +44,9 @@ VSOs provide **free** claims assistance from accredited representatives.
 
 For complex claims or appeals:
 
-- **NOVA** — National Organization of Veterans' Advocates
+- **NOVA** - National Organization of Veterans' Advocates
   nova.org
-- **NVLSP** — National Veterans Legal Services Program
+- **NVLSP** - National Veterans Legal Services Program
   nvlsp.org
 
 ### Pro Bono Legal Help

@@ -12,6 +12,7 @@ import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
 import { getCalculatorFunction } from '../utils/capSimulatorLogic';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { FocusToggle } from '../contexts/FocusModeContext';
 import dbqLogicMap from '../data/dbq_logic_map.json';
 import disabilityDataFile from '../data/disabilityData.json';
 
@@ -951,8 +952,9 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
       >
         <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
           {/* Header - Fixed at top */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
+              <FocusToggle variant="light" />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="C&P Exam Simulator" />}
               <button
                 onClick={onClose}

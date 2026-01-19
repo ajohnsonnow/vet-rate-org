@@ -1,4 +1,4 @@
-# Glossary
+﻿# Glossary
 
 Common terms used in VA disability claims.
 
@@ -179,7 +179,7 @@ Measurement of joint movement in degrees.
 VA's determination of your disability percentage.
 
 ### Rating Schedule
-38 CFR Part 4 — criteria for evaluating disabilities.
+38 CFR Part 4 - criteria for evaluating disabilities.
 
 ---
 

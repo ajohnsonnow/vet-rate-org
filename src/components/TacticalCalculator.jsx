@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { FocusToggle } from '../contexts/FocusModeContext';
 import {
   calculateVARating,
   calculateCompensation,
@@ -245,6 +246,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <FocusToggle variant="light" />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Tactical Calculator" />}
                 <button
                   onClick={onClose}
