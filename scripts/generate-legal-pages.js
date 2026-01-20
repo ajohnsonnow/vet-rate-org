@@ -98,6 +98,7 @@ function generateWarningComment() {
 
 /**
  * Check if React component has been modified since last HTML generation
+ * Allows 60 second tolerance to handle git clone timestamp issues
  */
 function needsRegeneration(componentPath, htmlPath) {
   if (!fs.existsSync(htmlPath)) {
@@ -107,7 +108,10 @@ function needsRegeneration(componentPath, htmlPath) {
   const componentStats = fs.statSync(componentPath);
   const htmlStats = fs.statSync(htmlPath);
   
-  return componentStats.mtime > htmlStats.mtime;
+  // Allow 60 second tolerance for git operations and filesystem timing
+  const timeDiffSeconds = (componentStats.mtime - htmlStats.mtime) / 1000;
+  
+  return timeDiffSeconds > 60;
 }
 
 /**
@@ -170,7 +174,10 @@ function checkAndGenerate() {
       }
       
       if (needsRegeneration(check.component, check.html)) {
-        console.log(`   ⚠️  STATUS: Component is newer - HTML needs update!`);
+        const componentStats = fs.statSync(check.component);
+        const htmlStats = fs.statSync(check.html);
+        const timeDiffSeconds = Math.round((componentStats.mtime - htmlStats.mtime) / 1000);
+        console.log(`   ⚠️  STATUS: Component is ${timeDiffSeconds}s newer - HTML needs update!`);
         needsUpdate = true;
       } else {
         console.log(`   ✅ STATUS: HTML is up to date`);
