@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run update-stats && vite build",
+    "build": "npm run update-stats && npm run check-legal-pages && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
     "type-check": "tsc --noEmit",
-    "update-stats": "node scripts/update-stats.js"
+    "update-stats": "node scripts/update-stats.js",
+    "check-legal-pages": "node scripts/generate-legal-pages.js",
+    "legal-sync": "node scripts/generate-legal-pages.js"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.80",
