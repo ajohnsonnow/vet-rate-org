@@ -140,7 +140,9 @@ Provide a veteran-focused analysis covering:
 Be direct, practical, and emphasize that retroactive pay claims have specific time limits and procedures.`;
 
       const response = await generateAI(prompt);
-      setAIAnalysis(response);
+      // generateAI returns { text, mode } object - extract the text content
+      const aiText = response?.text || response;
+      setAIAnalysis(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
       setShowAIAnalysis(true);
     } catch (error) {
       console.error('AI analysis error:', error);

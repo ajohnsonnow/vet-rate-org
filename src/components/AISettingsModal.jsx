@@ -8,10 +8,11 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { AIModeSelector } from './AIModeSelector';
 import { getAIStatus, isCloudAIAvailable, isLocalAIReady, unloadLocalAI } from '../utils/unifiedAIService';
 import ToolCardButton from './ToolCardButton';
+import ReportBugLink from './ReportBugLink';
 
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
-const AISettingsModal = ({ onClose, onOpenLocalAI }) => {
+const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
   useBodyScrollLock(true);
   
   const [apiKey, setApiKey] = useState('');
@@ -78,15 +79,18 @@ const AISettingsModal = ({ onClose, onOpenLocalAI }) => {
               <p className="text-sm text-purple-200">Configure your AI assistant</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="AI Settings" />}
+            <button
+              onClick={onClose}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
@@ -182,6 +186,15 @@ const AISettingsModal = ({ onClose, onOpenLocalAI }) => {
                   </button>
                 </div>
               )}
+              
+              {/* Faraday Cage Button - Always visible */}
+              <button
+                onClick={onOpenLocalAI}
+                className="mt-3 w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-cyan-500/25"
+              >
+                <span className="text-xl">🛡️</span>
+                Open Faraday Cage Protocol
+              </button>
             </div>
             
             <p className="text-xs text-gray-500 dark:text-gray-400">

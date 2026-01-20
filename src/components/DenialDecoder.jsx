@@ -124,16 +124,20 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
       const fullPrompt = DENIAL_ANALYSIS_PROMPT + '\n\n' + text;
       
       // Use unified AI service
-      const aiResponse = await generateAI(fullPrompt, {
+      const response = await generateAI(fullPrompt, {
         temperature: 0.3,
         maxTokens: 1500,
         expectJSON: true
       });
 
+      // generateAI returns { text, mode } object - extract the text content
+      const aiResponse = response?.text || response;
+      const responseStr = typeof aiResponse === 'string' ? aiResponse : JSON.stringify(aiResponse);
+
       // Parse JSON response
       let parsedAnalysis = null;
       try {
-        const cleanedResponse = aiResponse
+        const cleanedResponse = responseStr
           .replace(/```json\n?/g, '')
           .replace(/```\n?/g, '')
           .trim();

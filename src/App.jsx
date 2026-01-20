@@ -105,6 +105,7 @@ import changelogData from './data/changelog.json';
 import { PROJECT_STATS } from './data/projectStats';
 import { getTotalToolCount } from './data/toolkitData';
 import { getSquashedBugCount } from './data/squashedBugs';
+import AnimatedBug from './components/AnimatedBug';
 import './index.css';
 
 function App() {
@@ -700,6 +701,25 @@ function App() {
 
         {/* SEARCH BAR - Prominent Position */}
         <div className="max-w-4xl mx-auto mb-8">
+          {/* Mission Readiness Progress Bar - Embedded */}
+          <div className="mb-6">
+            <CommandersChecklist
+              isEmbedded={true}
+              onToolSelect={(toolName) => {
+                // Handle tool navigation from checklist
+                if (toolName === 'veteran-profile') setShowFormsHelper(true);
+                else if (toolName === 'conditions-search') setHasSearched(false);
+                else if (toolName === 'cfile-analyzer') setShowCFileAnalyzer(true);
+                else if (toolName === 'symptom-logger') setShowSymptomLogger(true);
+                else if (toolName === 'my-packet') setShowMyPacket(true);
+                else if (toolName === 'nexus-builder') setShowNexusBuilder(true);
+                else if (toolName === 'secondary-scout') setShowSecondaryScoutLauncher(true);
+                else if (toolName === 'tactical-calculator') setShowTacticalCalculator(true);
+                else if (toolName === 'forms-helper') setShowFormsHelper(true);
+              }}
+            />
+          </div>
+          
           <div id="tour-search-section" className="bg-white dark:bg-emerald-900 rounded-2xl shadow-lg border-2 border-blue-200 dark:border-emerald-600 p-6">
             <SearchBar
               searchTerm={searchTerm}
@@ -1664,7 +1684,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                The most comprehensive free VA claims arsenal - 39 professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
+                The most comprehensive free VA claims arsenal - {getTotalToolCount()} professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -1756,15 +1776,15 @@ function App() {
               >
                 🐛 Report Bug
                 <span className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full group-hover:bg-green-500 transition-colors" title={`${getSquashedBugCount()} bugs squashed!`}>
-                  {getSquashedBugCount()}🪲✓
+                  {getSquashedBugCount()}<AnimatedBug size="xs" />✓
                 </span>
               </button>
               <span className="text-gray-600">|</span>
               <button
                 onClick={() => setShowFundingModal(true)}
-                className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all hover:scale-105"
+                className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all hover:scale-105 group"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 group-hover:animate-heart-beat" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                 </svg>
                 Back the Mission
@@ -1937,15 +1957,15 @@ function App() {
       {/* Shark Radar */}
       {showSharkRadar && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
           onClick={() => setShowSharkRadar(false)}
         >
           <div 
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
+            <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🦈</span>
@@ -1957,18 +1977,21 @@ function App() {
                     <p className="text-sm text-rose-100">Contract & Email Scanner • AI-Powered Analysis</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowSharkRadar(false)}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <ReportBugLink onClick={() => { setShowSharkRadar(false); setShowBugSquasher(true); }} variant="light" moduleName="Shark Radar" />
+                  <button
+                    onClick={() => setShowSharkRadar(false)}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="p-4">
+            <div className="overflow-y-auto flex-1 p-4">
               <SharkRadar />
             </div>
           </div>
@@ -1978,15 +2001,15 @@ function App() {
       {/* Pathfinder */}
       {showPathfinder && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
           onClick={() => setShowPathfinder(false)}
         >
           <div 
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
+            <div className="flex-shrink-0 bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🧭</span>
@@ -1995,18 +2018,21 @@ function App() {
                     <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowPathfinder(false)}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <ReportBugLink onClick={() => { setShowPathfinder(false); setShowBugSquasher(true); }} variant="light" moduleName="Pathfinder" />
+                  <button
+                    onClick={() => setShowPathfinder(false)}
+                    className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                    aria-label="Close"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="p-4">
+            <div className="overflow-y-auto flex-1 p-4">
               <Pathfinder 
                 onNavigate={handlePathfinderNavigate}
                 onOpenAISettings={() => setShowAISettings(true)}
@@ -2118,6 +2144,10 @@ function App() {
             setSearchTerm(conditionName);
           }}
           onOpenAISettings={() => setShowAISettings(true)}
+          onReportBug={() => {
+            setShowBlueButtonXRay(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2234,6 +2264,10 @@ function App() {
       {showVAAITransparency && (
         <VAAITransparency
           onClose={() => setShowVAAITransparency(false)}
+          onReportBug={() => {
+            setShowVAAITransparency(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2248,6 +2282,10 @@ function App() {
       {showTimeMachine && (
         <TimeMachine
           onClose={() => setShowTimeMachine(false)}
+          onReportBug={() => {
+            setShowTimeMachine(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2255,6 +2293,10 @@ function App() {
       {showTheTribunal && (
         <TheTribunal
           onClose={() => setShowTheTribunal(false)}
+          onReportBug={() => {
+            setShowTheTribunal(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2305,6 +2347,10 @@ function App() {
             setShowPainPainter(false);
             setShowSymptomLogger(true);
           }}
+          onReportBug={() => {
+            setShowPainPainter(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2312,6 +2358,10 @@ function App() {
       {showEvidenceGapVisualizer && (
         <EvidenceGapVisualizer
           onClose={() => setShowEvidenceGapVisualizer(false)}
+          onReportBug={() => {
+            setShowEvidenceGapVisualizer(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2329,20 +2379,30 @@ function App() {
       
       {/* FORCE MULTIPLIER: The War Game - Red Team Simulator */}
       {showClaimStressTest && (
-        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
-          <div className="min-h-screen px-4 py-8">
-            <div className="max-w-5xl mx-auto">
-              <ClaimStressTest onClose={() => setShowClaimStressTest(false)} />
-            </div>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
+          <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <ClaimStressTest 
+              onClose={() => setShowClaimStressTest(false)}
+              onReportBug={() => {
+                setShowClaimStressTest(false);
+                setShowBugSquasher(true);
+              }}
+            />
           </div>
         </div>
       )}
       
       {/* FORCE MULTIPLIER: Continuity Thread - Evidence Timeline */}
       {showEvidenceTimeline && (
-        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
-          <div className="min-h-screen">
-            <EvidenceTimeline onClose={() => setShowEvidenceTimeline(false)} />
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain">
+          <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <EvidenceTimeline 
+              onClose={() => setShowEvidenceTimeline(false)}
+              onReportBug={() => {
+                setShowEvidenceTimeline(false);
+                setShowBugSquasher(true);
+              }}
+            />
           </div>
         </div>
       )}
@@ -2371,6 +2431,10 @@ function App() {
             setShowAISettings(false);
             setShowLocalAIPanel(true);
           }}
+          onReportBug={() => {
+            setShowAISettings(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
@@ -2378,28 +2442,15 @@ function App() {
       {showLocalAIPanel && (
         <LocalAIPanel
           onClose={() => setShowLocalAIPanel(false)}
+          onReportBug={() => {
+            setShowLocalAIPanel(false);
+            setShowBugSquasher(true);
+          }}
         />
       )}
       
       {/* DIAMOND-TIER: PWA Install Prompt */}
       <PWAInstallButton />
-      
-      {/* Commander's Checklist - Gamified Progress (Fixed Widget) */}
-      <CommandersChecklist
-        isWidget={true}
-        onToolSelect={(toolName) => {
-          // Handle tool navigation from checklist
-          if (toolName === 'veteran-profile') setShowFormsHelper(true);
-          else if (toolName === 'conditions-search') setHasSearched(false);
-          else if (toolName === 'cfile-analyzer') setShowCFileAnalyzer(true);
-          else if (toolName === 'symptom-logger') setShowSymptomLogger(true);
-          else if (toolName === 'my-packet') setShowMyPacket(true);
-          else if (toolName === 'nexus-builder') setShowNexusBuilder(true);
-          else if (toolName === 'secondary-scout') setShowSecondaryScoutLauncher(true);
-          else if (toolName === 'tactical-calculator') setShowTacticalCalculator(true);
-          else if (toolName === 'forms-helper') setShowFormsHelper(true);
-        }}
-      />
       
       {/* Funding Modal */}
       <FundingModal 

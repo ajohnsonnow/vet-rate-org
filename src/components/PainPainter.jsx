@@ -17,6 +17,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useScreenshot } from '../hooks/useScreenshot';
 import { getPainMaps, savePainMap } from '../utils/veteranProfile';
+import ReportBugLink from './ReportBugLink';
 
 // Diagnostic codes by body region
 const DIAGNOSTIC_CODES = {
@@ -148,7 +149,7 @@ const PAIN_TYPES = {
   stiffness: { color: '#8b5cf6', name: 'Stiffness', emoji: '🔒' },
 };
 
-const PainPainter = ({ onClose, onExport }) => {
+const PainPainter = ({ onClose, onExport, onReportBug }) => {
   useBodyScrollLock(true);
   
   // View state - Standard Views matching VA DBQ diagrams
@@ -741,30 +742,31 @@ const PainPainter = ({ onClose, onExport }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-5xl mx-auto border border-gray-700">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
-            
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-4xl">🎨</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold">
-                    Pain Painter
-                  </h2>
-                  <p className="text-pink-200 mt-1">
-                    "Translate Grunt to Doctor" • Visual Pain Mapping
-                  </p>
-                </div>
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-700">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
+          
+          <div className="relative flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                <span className="text-4xl">🎨</span>
               </div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold">
+                  Pain Painter
+                </h2>
+                <p className="text-pink-200 mt-1">
+                  "Translate Grunt to Doctor" • Visual Pain Mapping
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Pain Painter" />}
               <button
                 onClick={onClose}
                 className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -776,54 +778,55 @@ const PainPainter = ({ onClose, onExport }) => {
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
-            {/* Tab Navigation */}
-            <div className="flex bg-gray-800 rounded-lg p-1 mb-6">
-              <button
-                onClick={() => setActiveTab('map')}
-                className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === 'map' 
-                    ? 'bg-pink-600 text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <span>🎨</span> Pain Map
-              </button>
-              <button
-                onClick={() => setActiveTab('config')}
-                className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === 'config' 
-                    ? 'bg-purple-600 text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <span>⚙️</span> Body Configuration
-              </button>
-            </div>
-            
-            {/* CONFIGURATION TAB */}
-            {activeTab === 'config' && (
-              <div className="space-y-6">
-                {/* Body Type Presets */}
-                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                  <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                    <span>🧍</span> Body Type Preset
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-4">
-                    Select a body type that best represents your physique. This helps create accurate pain documentation.
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {Object.entries(BODY_PRESETS).map(([key, preset]) => (
-                      <button
-                        key={key}
-                        onClick={() => applyBodyPreset(key)}
-                        className={`p-4 rounded-lg border-2 transition-all text-center ${
-                          bodyType === key
-                            ? 'border-purple-500 bg-purple-900/30'
-                            : 'border-gray-600 hover:border-gray-500 bg-gray-800/30'
-                        }`}
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1 p-6">
+          {/* Tab Navigation */}
+          <div className="flex bg-gray-800 rounded-lg p-1 mb-6">
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'map' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>🎨</span> Pain Map
+            </button>
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'config' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>⚙️</span> Body Configuration
+            </button>
+          </div>
+          
+          {/* CONFIGURATION TAB */}
+          {activeTab === 'config' && (
+            <div className="space-y-6">
+              {/* Body Type Presets */}
+              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <span>🧍</span> Body Type Preset
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Select a body type that best represents your physique. This helps create accurate pain documentation.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Object.entries(BODY_PRESETS).map(([key, preset]) => (
+                    <button
+                      key={key}
+                      onClick={() => applyBodyPreset(key)}
+                      className={`p-4 rounded-lg border-2 transition-all text-center ${
+                        bodyType === key
+                          ? 'border-purple-500 bg-purple-900/30'
+                          : 'border-gray-600 hover:border-gray-500 bg-gray-800/30'
+                      }`}
                       >
                         <span className="text-3xl block mb-2">{preset.icon}</span>
                         <span className="text-white font-medium">{preset.name}</span>
@@ -1231,12 +1234,11 @@ const PainPainter = ({ onClose, onExport }) => {
             )}
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
-            <p className="text-xs text-gray-500 text-center">
-              💡 Pro Tip: Use this map during C&P exams to clearly communicate all affected areas
-            </p>
-          </div>
+        {/* Footer */}
+        <div className="flex-shrink-0 px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
+          <p className="text-xs text-gray-500 text-center">
+            💡 Pro Tip: Use this map during C&P exams to clearly communicate all affected areas
+          </p>
         </div>
       </div>
     </div>

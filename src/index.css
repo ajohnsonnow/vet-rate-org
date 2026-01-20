@@ -1096,6 +1096,24 @@ body.modal-open-with-position {
   overscroll-behavior: contain;
 }
 
+/* Modal content body - scrollable area inside modal */
+.modal-content > div[class*="overflow-y-auto"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Ensure flex modals work correctly */
+.modal-content.flex {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky headers inside modals */
+.modal-content .sticky {
+  position: sticky;
+  z-index: 10;
+}
+
 /* Fix for iOS momentum scrolling issues */
 @supports (-webkit-touch-callout: none) {
   .modal-backdrop {
@@ -1106,6 +1124,11 @@ body.modal-open-with-position {
   body.modal-open {
     position: fixed;
     overflow: hidden;
+  }
+  
+  /* Better iOS scroll behavior in modals */
+  .modal-content > div[class*="overflow-y-auto"] {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -1138,12 +1161,66 @@ body.modal-open-with-position {
   }
 }
 
+/* Sparkle animation for special elements */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+/* Star twinkle effect */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Gentle float animation */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Shimmer effect for badges */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Heart beat for donation/support buttons */
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  35% { transform: scale(0.9); }
+  45% { transform: scale(1.05); }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
 
 .animate-slide-in-right {
   animation: slideInRight 0.4s ease-out;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-gentle-float {
+  animation: gentle-float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-heart-beat {
+  animation: heart-beat 1.5s ease-in-out infinite;
 }
 
 /* Subtle pulse animation for CTA buttons */

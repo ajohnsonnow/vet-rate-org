@@ -16,6 +16,7 @@ import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
 import { calculateVARating } from '../utils/vaCalculator';
+import ReportBugLink from './ReportBugLink';
 
 /**
  * 2026 VA Disability Pay Rates (Monthly)
@@ -340,15 +341,15 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="million-dollar-dashboard-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden flex-shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
             
@@ -366,20 +367,23 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Million Dollar Dashboard" />}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           
-          {/* Content */}
-          <div className="p-6 space-y-6 bg-gray-900">
+          {/* Content - Scrollable */}
+          <div className="p-6 space-y-6 bg-gray-900 overflow-y-auto flex-1 rounded-b-lg">
             {/* THE BIG NUMBER */}
             <div className="text-center py-8">
               <p className="text-gray-400 text-lg mb-2">Your Claim's Total Lifetime Value</p>

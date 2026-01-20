@@ -21,6 +21,7 @@ import React, { useState, useMemo } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { MOS_DATABASE, searchMOS as searchMOSFromDB, getDatabaseStats, CODE_ALIASES } from '../data/mosDatabase';
+import ReportBugLink from './ReportBugLink';
 
 /**
  * Legacy MOS Database (for backwards compatibility)

@@ -98,7 +98,8 @@ function generateWarningComment() {
 
 /**
  * Check if React component has been modified since last HTML generation
- * Allows 60 second tolerance to handle git clone timestamp issues
+ * The HTML file should be newer than (or within tolerance of) the component
+ * after running sync-legal-pages.js
  */
 function needsRegeneration(componentPath, htmlPath) {
   if (!fs.existsSync(htmlPath)) {
@@ -108,10 +109,14 @@ function needsRegeneration(componentPath, htmlPath) {
   const componentStats = fs.statSync(componentPath);
   const htmlStats = fs.statSync(htmlPath);
   
-  // Allow 60 second tolerance for git operations and filesystem timing
+  // Component modification time minus HTML modification time
+  // Positive = component is newer (needs sync)
+  // Negative or zero = HTML is newer or same (already synced)
   const timeDiffSeconds = (componentStats.mtime - htmlStats.mtime) / 1000;
   
-  return timeDiffSeconds > 60;
+  // Allow 120 second tolerance for build pipeline timing
+  // HTML should be same time or newer than component after sync
+  return timeDiffSeconds > 120;
 }
 
 /**

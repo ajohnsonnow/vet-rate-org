@@ -15,6 +15,7 @@ import BuyMeCoffee from './BuyMeCoffee';
 import * as pdfjsLib from 'pdfjs-dist';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import ReportBugLink from './ReportBugLink';
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -212,7 +213,7 @@ const EXCLUDED_CONDITIONS = [
   'unspecified'
 ];
 
-export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRatingCriteria, onOpenAISettings }) {
+export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRatingCriteria, onOpenAISettings, onReportBug }) {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   
@@ -755,15 +756,15 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
+        <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">📋</span>
@@ -774,6 +775,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
             </div>
             <div className="flex items-center gap-3">
               <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Blue Button X-Ray" />}
               <button
                 onClick={onClose}
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -787,7 +789,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="overflow-y-auto flex-1 p-4">
           {/* Main Content */}
           <div className="max-w-4xl mx-auto">
             {/* Info Banner */}

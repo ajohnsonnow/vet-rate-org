@@ -115,7 +115,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 </h3>
                 <p>
                   For complex claims, appeals to the Board of Veterans' Appeals, or cases involving legal nuances, 
-                  we strongly recommend working with an accredited representative. Find one at:{' '}
+                  it is strongly recommended to work with an accredited representative. Find one at:{' '}
                   <a 
                     href="https://www.va.gov/ogc/accreditation.asp" 
                     target="_blank" 
@@ -146,7 +146,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">What These Tools Do:</h3>
-                <p className="mb-2">Our medical-related features are <strong>organizational and educational tools</strong> that:</p>
+                <p className="mb-2">The medical-related features are <strong>organizational and educational tools</strong> that:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Help you articulate symptoms using medically-recognized terminology</li>
                   <li>Identify potential secondary conditions based on VA medical literature</li>
@@ -273,7 +273,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <p className="font-bold text-lg text-orange-900 mb-2">PRIVACY-FIRST ARCHITECTURE:</p>
                 <p className="text-orange-900">
                   Vet-Rate.org is intentionally designed as a <strong>serverless, browser-based application</strong> 
-                  to protect your privacy. We do not store your data on our servers, in cloud databases, or in any 
+                  to protect your privacy. Vet-Rate.org does not store your data on any servers, in cloud databases, or in any 
                   remote location.
                 </p>
               </div>
@@ -372,7 +372,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Factors Beyond Our Control:
+                  Factors Beyond This App's Control:
                 </h3>
                 <p className="mb-2">VA claim outcomes depend on numerous factors including:</p>
                 <div className="grid md:grid-cols-2 gap-3">
@@ -478,7 +478,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Entire Agreement</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  These Terms of Service, together with our Privacy Policy, constitute the entire agreement between 
+                  These Terms of Service, together with the Privacy Policy, constitute the entire agreement between 
                   you and Vet-Rate.org regarding use of this platform and supersede all prior agreements and 
                   understandings.
                 </p>

@@ -9,8 +9,9 @@
 import React, { useState, useEffect } from 'react';
 import { getSavedClaims, getStatement, getAllStatements } from '../utils/claimsStorage';
 import { getVeteranProfile, getSavedForms } from '../utils/veteranProfile';
+import ReportBugLink from './ReportBugLink';
 
-const ClaimStressTest = ({ claimData = {}, onClose }) => {
+const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
   const [testResults, setTestResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [practiceAnswers, setPracticeAnswers] = useState({});
@@ -293,18 +294,21 @@ const ClaimStressTest = ({ claimData = {}, onClose }) => {
 
   return (
     <div className="bg-gray-900 border border-red-500/30 rounded-lg p-6 relative">
-      {/* Close Button */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors z-10"
-          aria-label="Close"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
+      {/* Close Button and Bug Report */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="The War Game" />}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {/* Header */}
       <div className="mb-6 pr-12">

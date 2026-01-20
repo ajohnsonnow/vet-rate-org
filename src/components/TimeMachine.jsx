@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { calculatePaymentEffectiveDate, calculateBackpayMonths } from '../utils/vaCalculator';
+import ReportBugLink from './ReportBugLink';
 
 const ITF_STORAGE_KEY = 'vet_rate_itf_date';
 const ESTIMATED_RATING_KEY = 'vet_rate_estimated_rating';
@@ -31,7 +32,7 @@ const VA_MONTHLY_RATES = {
   100: 3737
 };
 
-export default function TimeMachine({ isWidget = false, onClose = null }) {
+export default function TimeMachine({ isWidget = false, onClose = null, onReportBug }) {
   const [itfDate, setItfDate] = useState('');
   const [estimatedRating, setEstimatedRating] = useState(70);
   const [countdown, setCountdown] = useState(null);
@@ -158,10 +159,10 @@ export default function TimeMachine({ isWidget = false, onClose = null }) {
 
   // Full modal view
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop overscroll-contain">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className={`sticky top-0 text-white p-6 rounded-t-lg ${
+        <div className={`flex-shrink-0 text-white p-6 rounded-t-lg ${
           countdown?.isExpired
             ? 'bg-gradient-to-r from-red-700 to-red-900'
             : countdown?.isCritical
@@ -177,19 +178,22 @@ export default function TimeMachine({ isWidget = false, onClose = null }) {
                 Intent to File Countdown & Financial Impact
               </p>
             </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="text-white hover:text-gray-200 text-2xl font-bold"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="The Time Machine" />}
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 text-2xl font-bold"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="overflow-y-auto flex-1 p-6 space-y-6">
           {/* Input Section */}
           {(!countdown || isEditing) && (
             <div className="border-2 border-blue-300 dark:border-blue-700 rounded-lg p-6 bg-blue-50 dark:bg-blue-900/20">

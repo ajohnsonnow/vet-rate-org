@@ -15,8 +15,9 @@ import {
   analyzeEvidenceGaps 
 } from '../data/evidenceRequirements';
 import { saveClaim } from '../utils/claimsStorage';
+import ReportBugLink from './ReportBugLink';
 
-const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating = null }) => {
+const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating = null, onReportBug }) => {
   useBodyScrollLock(true);
   
   // State
@@ -410,32 +411,33 @@ const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="evidence-gap-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-4xl mx-auto border border-gray-700">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
-            
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-4xl">🔬</span>
-                </div>
-                <div>
-                  <h2 id="evidence-gap-title" className="text-2xl sm:text-3xl font-bold">
-                    Evidence Gap Visualizer
-                  </h2>
-                  <p className="text-purple-200 mt-1">
-                    "The Missing Link" • See exactly what you need
-                  </p>
-                </div>
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-700">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
+          
+          <div className="relative flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                <span className="text-4xl">🔬</span>
               </div>
+              <div>
+                <h2 id="evidence-gap-title" className="text-2xl sm:text-3xl font-bold">
+                  Evidence Gap Visualizer
+                </h2>
+                <p className="text-purple-200 mt-1">
+                  "The Missing Link" • See exactly what you need
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Evidence Gap Visualizer" />}
               <button
                 onClick={onClose}
                 className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -447,9 +449,10 @@ const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="overflow-y-auto flex-1 p-6">
             {/* Condition & Rating Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
@@ -576,12 +579,11 @@ const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating
             )}
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
-            <p className="text-xs text-gray-500 text-center">
-              💡 This analysis is based on 38 CFR requirements. Always consult with a VSO or attorney for specific claim advice.
-            </p>
-          </div>
+        {/* Footer */}
+        <div className="flex-shrink-0 px-6 py-4 bg-gray-800/50 rounded-b-2xl border-t border-gray-700">
+          <p className="text-xs text-gray-500 text-center">
+            💡 This analysis is based on 38 CFR requirements. Always consult with a VSO or attorney for specific claim advice.
+          </p>
         </div>
       </div>
     </div>

@@ -9,8 +9,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import { getTimelineEvents, saveTimelineEvents, addTimelineEvent, removeTimelineEvent } from '../utils/veteranProfile';
+import ReportBugLink from './ReportBugLink';
 
-const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
+const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose, onReportBug }) => {
   // Load persisted events on mount, fallback to props
   const [timelineEvents, setTimelineEvents] = useState(() => {
     const persisted = getTimelineEvents();
@@ -265,6 +266,7 @@ const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="The Continuity Thread" />}
             {onClose && (
               <button
                 onClick={onClose}

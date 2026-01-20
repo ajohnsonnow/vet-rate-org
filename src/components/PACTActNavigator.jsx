@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
+import ReportBugLink from './ReportBugLink';
 
 /**
  * COMPREHENSIVE PACT ACT DATA
@@ -726,15 +727,15 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+        <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔥</span>
@@ -744,6 +745,7 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="PACT Act Navigator" />}
               <button
               onClick={onClose}
               className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -757,7 +759,8 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
           </div>
         </div>
         
-        <div className="p-4">
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1 p-4">
           {/* Progress Steps */}
           <div className="max-w-4xl mx-auto px-2 pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">

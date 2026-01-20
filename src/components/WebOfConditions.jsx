@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
+import ReportBugLink from './ReportBugLink';
 
 /**
  * Secondary Condition Relationships Database
@@ -479,15 +480,18 @@ export default function WebOfConditions({ onClose, onSelectCondition, onReportBu
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="Web of Conditions" />}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+                  aria-label="Close"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           

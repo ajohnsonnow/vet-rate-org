@@ -1011,10 +1011,10 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
       aria-modal="true"
       aria-labelledby="secondary-scout-launcher-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto max-h-[90vh] flex flex-col modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h2 id="secondary-scout-launcher-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">🔍 Secondary Scout</h2>
