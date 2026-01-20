@@ -69,6 +69,7 @@ const AVAILABLE_MODELS = [
     name: 'Llama 3.2 1B (Fastest)',
     size: '0.7 GB',
     description: 'Ultra-fast, good for simple queries',
+    contextInfo: 'Best for: Quick questions and small documents',
     vramRequired: '2 GB',
     recommended: false,
   },
@@ -77,6 +78,7 @@ const AVAILABLE_MODELS = [
     name: 'Llama 3.2 3B (Balanced)',
     size: '1.8 GB',
     description: 'Good balance of speed and quality',
+    contextInfo: 'Best for: Most tasks, including medium-sized medical records',
     vramRequired: '4 GB',
     recommended: true,
   },
@@ -85,6 +87,7 @@ const AVAILABLE_MODELS = [
     name: 'Phi 3.5 Mini (Specialized)',
     size: '2.3 GB',
     description: 'Microsoft model, great for reasoning',
+    contextInfo: 'Best for: Detailed analysis, but splits large documents automatically',
     vramRequired: '4 GB',
     recommended: false,
   },
@@ -93,6 +96,7 @@ const AVAILABLE_MODELS = [
     name: 'Mistral 7B (Powerful)',
     size: '4.1 GB',
     description: 'High quality, requires more VRAM',
+    contextInfo: 'Best for: Complex analysis and longer documents',
     vramRequired: '8 GB',
     recommended: false,
   },
@@ -507,6 +511,27 @@ const LocalAIPanel = ({ onClose }) => {
 
             {webGPUStatus.supported && (
               <>
+                {/* Helpful Info Box */}
+                <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">💡</span>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-blue-300 mb-2">Choosing Your AI Model</h4>
+                      <div className="text-gray-300 text-sm space-y-2">
+                        <p>
+                          <strong>For most veterans:</strong> The recommended model works great for typical tasks.
+                        </p>
+                        <p>
+                          <strong>Large medical records:</strong> Don't worry! All models can handle large Blue Button files. 
+                          The system automatically breaks them into smaller sections if needed.
+                        </p>
+                        <p>
+                          <strong>Need faster results?</strong> Try a smaller model. <strong>Need better quality?</strong> Try a larger one.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {/* Model Selection */}
                 <div className="space-y-3">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -553,6 +578,11 @@ const LocalAIPanel = ({ onClose }) => {
                                 )}
                               </div>
                               <p className="text-gray-400 text-sm mt-1">{model.description}</p>
+                              {model.contextInfo && (
+                                <p className="text-cyan-400/80 text-xs mt-1 italic">
+                                  💡 {model.contextInfo}
+                                </p>
+                              )}
                               <p className="text-gray-500 text-xs mt-1">
                                 Size: {model.size} • VRAM: {model.vramRequired}
                               </p>

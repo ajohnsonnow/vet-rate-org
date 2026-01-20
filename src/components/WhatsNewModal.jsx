@@ -19,7 +19,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, Sparkles, CheckCircle, Wrench, Shield, Zap, Star, Rocket, Gift } from 'lucide-react';
+import { X, Sparkles, CheckCircle, Wrench, Shield, Zap, Star, Rocket, Gift, Bug } from 'lucide-react';
 import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
 
 const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose }) => {
@@ -35,6 +35,8 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
   
   const changelog = propChangelog?.length > 0 ? propChangelog : (dynamicData?.changelog || []);
   const version = propVersion || dynamicData?.version || '1.0.0';
+  const bugFixes = dynamicData?.bugFixes || [];
+  const totalBugsSquashed = dynamicData?.totalBugsSquashed || 0;
   
   // Separate NEW features from existing
   const newFeatures = changelog.filter(item => item.isNew);
@@ -197,6 +199,58 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
           {changelog.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No changelog available for this version.</p>
+            </div>
+          )}
+
+          {/* BUGS SQUASHED SECTION */}
+          {bugFixes.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bug className="w-5 h-5 text-red-500" />
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Bugs Squashed 🪲💀
+                  </h3>
+                </div>
+                <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {totalBugsSquashed} Total
+                </span>
+              </div>
+              <div className="space-y-2">
+                {bugFixes.map((bug, index) => (
+                  <div 
+                    key={`bug-${index}`}
+                    className="flex gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      <Wrench className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {bug.isNew && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
+                            JUST FIXED
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {bug.category}
+                        </span>
+                      </div>
+                      <p className="text-gray-800 dark:text-gray-200 font-medium text-sm">
+                        {bug.title}
+                      </p>
+                      {bug.description && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          {bug.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                🐛 Found a bug? Use the Bug Squasher in the footer to report it!
+              </p>
             </div>
           )}
 

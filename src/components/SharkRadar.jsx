@@ -216,7 +216,7 @@ export default function SharkRadar() {
         <>
           {/* AI Mode Section */}
           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <AIStatusBadge showLabel={true} />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -232,6 +232,12 @@ export default function SharkRadar() {
                 {showAISettings ? 'Hide Settings' : 'AI Settings'}
               </button>
             </div>
+            {isAnyAIAvailable() && (
+              <div className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-2">
+                <span>💡</span>
+                <span><strong>Tip:</strong> All AI models work great for contract scanning - even long documents!</span>
+              </div>
+            )}
             
             {showAISettings && (
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">

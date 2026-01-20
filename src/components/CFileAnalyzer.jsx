@@ -184,6 +184,16 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
         </div>
       </div>
       
+      {/* AI Tip - Compact */}
+      {isAnyAIAvailable() && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
+          <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+            <span>💡</span>
+            <span><strong>Tip:</strong> Large C-Files work great! Gemini can process up to 2,000 pages in one pass.</span>
+          </div>
+        </div>
+      )}
+      
       {/* Drop Zone */}
       <div
         className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${

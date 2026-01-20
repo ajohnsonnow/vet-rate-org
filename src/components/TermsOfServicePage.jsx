@@ -284,7 +284,7 @@ const TermsOfServicePage = ({ onClose }) => {
                   <li>All data is stored in your web browser's <code className="bg-gray-200 px-2 py-1 rounded text-sm">localStorage</code></li>
                   <li>Data remains on your local device only</li>
                   <li>No automatic cloud backups are created</li>
-                  <li>Data is not transmitted to Vet-Rate.org servers (we don't have data servers)</li>
+                  <li>Data is not transmitted to Vet-Rate.org servers (the webapp doesn't have data servers)</li>
                   <li>Export functionality allows you to save data to your own files</li>
                 </ul>
               </div>
@@ -438,7 +438,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
                   THIS SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
                   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-                  PURPOSE, TITLE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, 
+                  PURPOSE, TITLE, AND NON-INFRINGEMENT. THE WEBAPP DOES NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, 
                   ERROR-FREE, SECURE, OR VIRUS-FREE.
                 </p>
               </div>
@@ -488,7 +488,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Modifications to Terms</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  We reserve the right to modify these terms at any time. Material changes will be indicated by 
+                  The webapp reserves the right to modify these terms at any time. Material changes will be indicated by 
                   updating the "Last Updated" date at the top of this document. Continued use of Vet-Rate.org after 
                   changes constitutes acceptance of the modified terms.
                 </p>
@@ -508,8 +508,8 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Accessibility Commitment</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  We strive to make Vet-Rate.org accessible to veterans with disabilities. If you encounter 
-                  accessibility barriers, please contact us so we can work to address them.
+                  I strive to make Vet-Rate.org accessible to veterans with disabilities. If you encounter 
+                  accessibility barriers, please contact me through the app so I can work to address them.
                 </p>
               </div>
             </div>
@@ -524,7 +524,7 @@ const TermsOfServicePage = ({ onClose }) => {
               our support resources.
             </p>
             <p className="text-sm text-blue-800">
-              <strong>Remember:</strong> We cannot provide legal advice about your specific claim. For legal 
+              <strong>Remember:</strong> I cannot provide legal advice about your specific claim. For legal 
               guidance, consult with an accredited VSO or VA-accredited attorney.
             </p>
           </section>
@@ -554,7 +554,7 @@ const TermsOfServicePage = ({ onClose }) => {
               Thank you for using Vet-Rate.org
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              We're honored to serve those who served. Stay safe, document everything, and never give up on your claim.
+              I'm honored to serve those who served. Stay safe, document everything, and never give up on your claim.
             </p>
             <p className="text-xs text-gray-500 mt-4">
               Document Version: 1.0 | Effective: January 18, 2026

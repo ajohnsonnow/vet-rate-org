@@ -10,19 +10,20 @@
 
 export const PROJECT_STATS = {
   // Project Scale
-  totalFiles: 1135,
-  linesOfCode: 111440,
+  totalFiles: 1127,
+  linesOfCode: 138219,
   appSizeMB: 104.05,
-  components: 111,
-  majorTools: 40,
-  supportingComponents: 71,
-  utilities: 47,
+  components: 115,
+  majorTools: 39,
+  supportingComponents: 76,
+  utilities: 49,
   disabilitiesValidated: 751,
   
   // Content Counts (matches README.md)
   vaForms: 16,           // VA forms with Auto-Scribe PDF filling
   secondaryConditions: 500,  // Medically-recognized secondary conditions
   statesCovered: 51,      // All 50 states + DC
+  glossaryTerms: 150,     // VA terminology definitions
   
   // Tool Categories (for dynamic references)
   // Matches categories in toolkitData.js
@@ -37,8 +38,8 @@ export const PROJECT_STATS = {
   
   // Development Time
   traditionalHours: 7200,
-  traditionalYears: 4,
-  actualHours: '50-55',
+  traditionalYears: 3.5,
+  actualHours: '55',
   actualDays: 4.5,
   productivityMultiplier: 131,
   
@@ -58,17 +59,17 @@ export const PROJECT_STATS = {
     firstCommitDate: 'January 15, 2026',
     firstCommitTime: '8:05 PM',
     latestCommitDate: 'January 19, 2026',
-    latestCommitTime: '12:00 PM',
-    totalCommits: 52,
+    latestCommitTime: '11:45 PM',
+    totalCommits: 55,
     activeSessions: 18,
-    linesAdded: 125000,
-    linesRemoved: 13560,
+    linesAdded: 138000,
+    linesRemoved: 14000,
     dailyCommits: {
       'Jan 15': 13,
       'Jan 16': 2,
       'Jan 17': 16,
       'Jan 18': 15,
-      'Jan 19': 6,
+      'Jan 19': 9,
     }
   },
   

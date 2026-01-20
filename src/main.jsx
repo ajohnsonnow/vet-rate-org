@@ -13,6 +13,27 @@ import { checkSystemCapabilities, renderBrowserWarning } from './utils/systemCap
 import './index.css';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Suppress Browser Extension Errors
+// Filter out common extension-related console errors that don't affect the app
+// ═══════════════════════════════════════════════════════════════════════════════
+const originalError = console.error;
+console.error = (...args) => {
+  const errorMessage = args[0]?.toString() || '';
+  
+  // Filter out known extension-related errors
+  if (
+    errorMessage.includes('message channel closed') ||
+    errorMessage.includes('Extension context invalidated') ||
+    errorMessage.includes('asynchronous response')
+  ) {
+    return; // Suppress these errors - they're from browser extensions, not our code
+  }
+  
+  // Log all other errors normally
+  originalError.apply(console, args);
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TECH CHECK - Browser Capability Guard
 // Ensures browser supports Crypto API, IndexedDB, and modern JS before loading app
 // ═══════════════════════════════════════════════════════════════════════════════

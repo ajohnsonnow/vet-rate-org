@@ -102,6 +102,9 @@ import { needsMigration, migrateFromLocalStorage } from './utils/storage';
 import { generateWhatsNewChangelog } from './utils/changelogGenerator';
 import disabilityData from './data/disabilityData.json';
 import changelogData from './data/changelog.json';
+import { PROJECT_STATS } from './data/projectStats';
+import { getTotalToolCount } from './data/toolkitData';
+import { getSquashedBugCount } from './data/squashedBugs';
 import './index.css';
 
 function App() {
@@ -691,7 +694,7 @@ function App() {
             🛡️ Your VA Claims Command Center
           </h1>
           <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-6">
-            Search <strong>751 rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet - all in one place.
+            Search <strong>{PROJECT_STATS.disabilitiesValidated} rated disabilities</strong> with official rating criteria, discover secondary conditions, practice for C&P exams, and build your evidence packet - all in one place.
           </p>
         </div>
 
@@ -1661,7 +1664,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
               <p className="text-gray-400 text-sm mb-3">
-                The most comprehensive free VA claims arsenal - 40+ professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
+                The most comprehensive free VA claims arsenal - 39 professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
               <button
                 onClick={() => setShowAboutUs(true)}
@@ -1749,9 +1752,12 @@ function App() {
               <span className="text-gray-600">|</span>
               <button
                 onClick={() => setShowBugSquasher(true)}
-                className="text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1"
+                className="text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1 group"
               >
                 🐛 Report Bug
+                <span className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full group-hover:bg-green-500 transition-colors" title={`${getSquashedBugCount()} bugs squashed!`}>
+                  {getSquashedBugCount()}🪲✓
+                </span>
               </button>
               <span className="text-gray-600">|</span>
               <button

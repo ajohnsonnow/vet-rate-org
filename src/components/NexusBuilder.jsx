@@ -460,6 +460,14 @@ Sincerely,
                 </span>
               </div>
             )}
+            {!existingStatement && isAnyAIAvailable() && (
+              <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                  <span>💡</span>
+                  <span><strong>Tip:</strong> Click the sparkle ✨ icon next to any field for AI writing suggestions!</span>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Step {step} of {totalSteps}</span>
               <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round((step / totalSteps) * 100)}% Complete</span>

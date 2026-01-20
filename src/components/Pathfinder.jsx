@@ -456,7 +456,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
       ) : (
         <>
           {/* AI Setup Message */}
-          {!isAnyAIAvailable() && (
+          {!isAnyAIAvailable() ? (
             <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
               <div className="flex items-start gap-3">
                 <span className="text-xl">💡</span>
@@ -467,6 +467,13 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                     (100% private) or enter your Gemini API key.
                   </p>
                 </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
+              <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                <span>💡</span>
+                <span><strong>Tip:</strong> All AI models analyze your ratings quickly. Strategy generation takes just seconds!</span>
               </div>
             </div>
           )}

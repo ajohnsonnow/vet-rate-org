@@ -4426,6 +4426,10 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                     Enhance your statement with AI to make it more professional and compelling. 
                     Uses the "Three Pillars" approach for effective VA claim statements.
                   </p>
+                  <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400 mt-2">
+                    <span>💡</span>
+                    <span><strong>Tip:</strong> All AI models work great for statement writing!</span>
+                  </div>
                   {aiStatus.effectiveMode === AI_MODES.LOCAL && (
                     <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                       ✅ 100% Private - Your data never leaves your device

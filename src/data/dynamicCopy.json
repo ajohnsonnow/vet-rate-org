@@ -34,7 +34,7 @@
     ],
     "longForm": {
       "header": "Support Vet-Rate.org",
-      "body": "This project represents {{total_hours}} hours of work ({{years_dev}} years full-time equivalent) that I'm giving away for free. While AI helped me build it in {{actual_hours}} hours, the value remains {{market_value}} worth of veteran-focused tools.\n\nI've spent {{validation_hours}} hours validating {{validation_count}} disabilities and {{research_hours}} hours reading federal regulations. Zero revenue. Zero ads. Zero data collection.\n\nIf this tool saves you from paying ${{competitor_price}}+ to predatory services or helps you secure the rating you deserve, consider buying me a coffee. It's not required—just appreciated.",
+      "body": "This project represents {{total_hours}} hours of work ({{years_dev}} years full-time equivalent) that I'm giving away for free. While AI helped me build it in {{actual_hours}} hours, the value remains {{market_value}} worth of veteran-focused tools.\n\nI've spent {{validation_hours}} hours validating {{validation_count}} disabilities and {{research_hours}} hours reading federal regulations. Zero revenue. Zero ads. Zero data collection.\n\nIf this tool saves you from paying ${{competitor_price}}+ to predatory services or helps you secure the rating you deserve, consider buying me a coffee. It's not required - just appreciated.",
       "cta": "Buy Me a Coffee ☕"
     }
   },

@@ -430,7 +430,90 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   };
   
   /**
+   * Estimate token count from text (rough approximation: 1 token ≈ 4 characters)
+   */
+  const estimateTokens = (text) => {
+    return Math.ceil(text.length / 4);
+  };
+  
+  /**
+   * Extract the Problem List / Active Problems section from Blue Button text
+   * This prioritizes the most relevant section for diagnosis extraction
+   */
+  const extractProblemListSection = (text) => {
+    // Try to find problem list section
+    const problemListStart = text.search(/(?:VA\s*)?Problem\s*List[:\s]*|Active\s*Problems?[:\s]*|(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*/gi);
+    
+    if (problemListStart !== -1) {
+      // Find where this section ends (next major section or 5000 chars, whichever comes first)
+      const afterStart = text.substring(problemListStart);
+      const sectionEndMatch = afterStart.search(/\n(?:Allergies|Medications|Vitals|Immunizations|Notes|Labs|Appointments|Demographics|Health\s*Care\s*Team|Provider|Facility)[:\s]*\n/i);
+      
+      if (sectionEndMatch !== -1) {
+        return afterStart.substring(0, sectionEndMatch);
+      }
+      
+      // If no end marker found, take next 5000 chars
+      return afterStart.substring(0, Math.min(5000, afterStart.length));
+    }
+    
+    // If no problem list found, return first portion of document
+    return text.substring(0, Math.min(5000, text.length));
+  };
+  
+  /**
+   * Split text into chunks that fit within a token limit
+   * Tries to split at natural boundaries (sections, paragraphs)
+   */
+  const chunkText = (text, maxTokensPerChunk = 2500) => {
+    const chunks = [];
+    const maxCharsPerChunk = maxTokensPerChunk * 4; // Rough conversion
+    
+    // First, try to extract problem list section
+    const problemListSection = extractProblemListSection(text);
+    if (problemListSection && estimateTokens(problemListSection) < maxTokensPerChunk) {
+      // If problem list fits in one chunk, use it alone
+      chunks.push(problemListSection);
+      return chunks;
+    }
+    
+    // Otherwise, split the text into chunks
+    let remainingText = text;
+    
+    while (remainingText.length > 0) {
+      if (remainingText.length <= maxCharsPerChunk) {
+        chunks.push(remainingText);
+        break;
+      }
+      
+      // Try to find a good break point (paragraph, section header, or newline)
+      let breakPoint = maxCharsPerChunk;
+      const searchStart = Math.max(0, maxCharsPerChunk - 500);
+      const searchEnd = Math.min(remainingText.length, maxCharsPerChunk + 500);
+      const searchRegion = remainingText.substring(searchStart, searchEnd);
+      
+      // Look for section breaks (double newline)
+      const doubleNewline = searchRegion.lastIndexOf('\n\n');
+      if (doubleNewline !== -1) {
+        breakPoint = searchStart + doubleNewline + 2;
+      } else {
+        // Look for single newline
+        const singleNewline = searchRegion.lastIndexOf('\n');
+        if (singleNewline !== -1) {
+          breakPoint = searchStart + singleNewline + 1;
+        }
+      }
+      
+      chunks.push(remainingText.substring(0, breakPoint));
+      remainingText = remainingText.substring(breakPoint);
+    }
+    
+    return chunks;
+  };
+  
+  /**
    * AI-powered extraction of diagnoses from Blue Button text
+   * Handles large documents by chunking them for models with smaller context windows
    */
   const analyzeWithAI = async (text) => {
     // Check if AI is available
@@ -438,19 +521,92 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       throw new Error('No AI available. Please configure AI in settings first.');
     }
     
-    // Truncate text if too long (keep first 50k chars for context window)
-    const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '\n[... truncated for AI processing ...]' : text;
+    // Calculate prompt overhead (the AI prompt itself takes tokens)
+    const promptTokens = estimateTokens(BLUE_BUTTON_AI_PROMPT);
+    const maxInputTokens = 2800; // Conservative limit for 4096 context window (leaving room for output)
+    const maxTextTokens = maxInputTokens - promptTokens;
+    const textTokens = estimateTokens(text);
     
-    const fullPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + truncatedText;
+    // Determine if we need to chunk
+    const needsChunking = textTokens > maxTextTokens;
     
-    const aiResponse = await generateAI(fullPrompt, {
-      temperature: 0.2,
-      maxTokens: 8000,
-      expectJSON: true
-    });
-    
-    // Parse the JSON response
-    let parsed;
+    if (!needsChunking) {
+      // Text fits in one request - process normally
+      const fullPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + text;
+      
+      const aiResponse = await generateAI(fullPrompt, {
+        temperature: 0.2,
+        maxTokens: 4000,
+        expectJSON: true
+      });
+      
+      const parsed = parseAIResponse(aiResponse);
+      return formatConditionsResponse(parsed);
+      
+    } else {
+      // Text is too large - process in chunks
+      console.log(`📄 Large document detected (${textTokens} tokens). Chunking for processing...`);
+      setProcessingStage(`Large document - processing in multiple parts...`);
+      
+      const chunks = chunkText(text, maxTextTokens);
+      console.log(`Split into ${chunks.length} chunks`);
+      
+      const allConditions = [];
+      const summaries = [];
+      
+      // Process each chunk
+      for (let i = 0; i < chunks.length; i++) {
+        setProcessingStage(`Processing section ${i + 1} of ${chunks.length}...`);
+        
+        const chunkPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + chunks[i];
+        
+        const aiResponse = await generateAI(chunkPrompt, {
+          temperature: 0.2,
+          maxTokens: 4000,
+          expectJSON: true
+        });
+        
+        const parsed = parseAIResponse(aiResponse);
+        
+        if (parsed.conditions && parsed.conditions.length > 0) {
+          allConditions.push(...parsed.conditions);
+        }
+        
+        if (parsed.summary) {
+          summaries.push(parsed.summary);
+        }
+        
+        // Small delay between chunks to avoid rate limiting
+        if (i < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      // Deduplicate conditions (same name = same condition)
+      const uniqueConditions = [];
+      const seenNames = new Set();
+      
+      for (const condition of allConditions) {
+        const normalizedName = condition.name.toLowerCase().trim();
+        if (!seenNames.has(normalizedName)) {
+          seenNames.add(normalizedName);
+          uniqueConditions.push(condition);
+        }
+      }
+      
+      console.log(`Found ${allConditions.length} total conditions, ${uniqueConditions.length} unique`);
+      
+      return formatConditionsResponse({
+        conditions: uniqueConditions,
+        summary: summaries.length > 0 ? summaries.join(' ') : null
+      });
+    }
+  };
+  
+  /**
+   * Parse AI response JSON
+   */
+  const parseAIResponse = (aiResponse) => {
     try {
       // Clean up potential markdown formatting
       let cleanResponse = aiResponse.trim();
@@ -465,17 +621,24 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       }
       cleanResponse = cleanResponse.trim();
       
-      parsed = JSON.parse(cleanResponse);
+      const parsed = JSON.parse(cleanResponse);
+      
+      if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
+        throw new Error('AI response missing conditions array.');
+      }
+      
+      return parsed;
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
       console.error('Raw response:', aiResponse.substring(0, 500));
       throw new Error('AI returned invalid format. Please try again.');
     }
-    
-    if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
-      throw new Error('AI response missing conditions array.');
-    }
-    
+  };
+  
+  /**
+   * Format conditions response into our standard format
+   */
+  const formatConditionsResponse = (parsed) => {
     // Transform AI response into our condition format
     const conditions = parsed.conditions.map((c, index) => ({
       id: index + 1,
@@ -655,6 +818,25 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                     <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
                       Click the <strong>AI button</strong> in the header above to load your secure Local AI 
                       or enter your Gemini API key to analyze Blue Button reports.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Large Document Info */}
+            {isAnyAIAvailable() && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h3 className="font-bold text-blue-800 dark:text-blue-200">Large Files? No Problem!</h3>
+                    <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
+                      Got a big medical record? Don't worry! The system automatically handles large Blue Button files 
+                      by breaking them into smaller sections and combining the results. <strong>You don't need to do anything special.</strong>
+                    </p>
+                    <p className="text-blue-600 dark:text-blue-400 text-xs mt-2">
+                      📄 Files of any size work • ⚡ Processing time depends on file size • 🔄 Multi-part files process automatically
                     </p>
                   </div>
                 </div>

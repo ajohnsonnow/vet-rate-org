@@ -625,7 +625,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 How This Project Is Funded</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Building and maintaining 40+ professional-grade tools with hosting costs, AI capabilities, and continuous development 
+              Building and maintaining 39 professional-grade tools with hosting costs, AI capabilities, and continuous development 
               requires resources. To keep this comprehensive platform free for all veterans, this project relies entirely on voluntary 
               support from the veteran community:
             </p>
