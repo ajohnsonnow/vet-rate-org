@@ -10,6 +10,7 @@
 
 import { APP_VERSION } from './version';
 import { getSquashedBugsForChangelog, getSquashedBugCount, getRecentSquashedBugs } from '../data/squashedBugs';
+import { PROJECT_STATS, getTotalToolCount } from '../data/projectStats';
 
 /**
  * Parse the README.md file and extract features organized by section
@@ -162,12 +163,12 @@ export function generateWhatsNewChangelog() {
     // EXISTING HIGHLIGHTS
     {
       type: 'feature',
-      title: '39 Professional Tools',
+      title: `${getTotalToolCount()} Professional Tools`,
       description: 'Complete VA claims arsenal - C-File Analyzer, C&P Simulator, Secondary Scout, and more'
     },
     {
       type: 'feature',
-      title: '748 Validated Conditions',
+      title: `${PROJECT_STATS.disabilitiesValidated} Validated Conditions`,
       description: 'Every condition from 38 CFR Part 4 with detailed rating criteria and diagnostic codes'
     },
     {
