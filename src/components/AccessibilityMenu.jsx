@@ -318,8 +318,12 @@ export default function AccessibilityMenu() {
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Enter your free Google Gemini API key to enable AI features like statement assistance, contract scanning, and strategy analysis.
-              </p>
-              <div className="space-y-2">
+              </p>              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-2">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <strong>💡 Tip:</strong> Gemini 1.5 Flash can process huge medical records (up to 2,000 pages) in a single pass. 
+                  Perfect for large Blue Button files!
+                </p>
+              </div>              <div className="space-y-2">
                 <div className="relative">
                   <input
                     type={showApiKey ? 'text' : 'password'}

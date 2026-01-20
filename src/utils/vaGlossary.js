@@ -45,6 +45,7 @@ export const VA_GLOSSARY = {
   'Supplemental Claim': 'An appeal lane where you submit new and relevant evidence to reopen a denied claim',
   'De Novo Review': 'A fresh look at your claim by a different reviewer (used in Higher-Level Review)',
   'Remand': 'When the BVA sends a case back to the regional office for additional development',
+  'VCAA': 'Veterans Claims Assistance Act - Law requiring VA to notify veterans of evidence needed and assist in gathering evidence for claims',
   
   // Evidence & Documentation
   'IMO': 'Independent Medical Opinion - A private medical evaluation obtained by the veteran, often a nexus letter',
@@ -161,6 +162,93 @@ export const VA_GLOSSARY = {
   'material fact': 'A fact significant enough to affect the outcome of a claim',
   'competent evidence': 'Evidence from a qualified source (medical evidence from doctors, lay evidence from witnesses)',
   'credible evidence': 'Evidence that is believable and trustworthy',
+  
+  // Appeals & Review Terms (Added January 2026)
+  'VA Form 10182': 'Decision Review Request: Board Appeal - The form to file a Notice of Disagreement and appeal to the Board of Veterans Appeals',
+  'VLJ': 'Veterans Law Judge - An attorney employed by the Board of Veterans Appeals who reviews and decides appeals',
+  'Direct Review Docket': 'Board appeal option where only existing evidence is reviewed with no new evidence or hearing - typically the fastest docket',
+  'Evidence Submission Docket': 'Board appeal option allowing 90 days to submit new evidence after filing the NOD, but no hearing',
+  'Hearing Request Docket': 'Board appeal option to testify before a Veterans Law Judge and submit evidence - longest wait but most thorough review',
+  'Ex Parte': 'The nature of VA proceedings meaning VA is supposed to help develop your claim, not act as an adversary',
+  'Favorable Finding': 'A determination in your favor by VA that becomes binding on future adjudicators and cannot be reversed without CUE',
+  'Rating Decision': 'The official VA document explaining the decision on your claim including ratings assigned and effective dates',
+  'Duty to Notify': 'VA obligation to inform you what evidence is needed to substantiate your claim (38 CFR 3.159(b))',
+  
+  // Evidence & Documentation Terms
+  'Medical Evidence': 'Evidence provided by licensed healthcare professionals including diagnoses, treatment records, and medical opinions',
+  'New and Relevant Evidence': 'Evidence not previously submitted that tends to prove an unestablished element of your claim - required for supplemental claims',
+  'Personal Statement': 'A written account from the veteran describing symptoms, functional impact, and history in their own words',
+  'Private Medical Records': 'Medical records from non-VA healthcare providers that can be submitted as evidence',
+  'VA Treatment Records': 'Medical records from VA healthcare facilities automatically in your claims file',
+  'In-Service Event': 'The incident, injury, illness, or exposure during military service that caused or aggravated your disability',
+  'Stressor': 'A traumatic event during service that caused PTSD - must be documented or corroborated for non-combat PTSD claims',
+  
+  // Rating & Evaluation Terms
+  'VASRD': 'VA Schedule for Rating Disabilities - The rating criteria in 38 CFR Part 4 used to evaluate all disabilities',
+  'Rating Criteria': 'The specific symptoms, findings, or functional limitations listed in 38 CFR Part 4 for each disability rating level',
+  'Functional Impairment': 'How your disability affects your ability to work, perform daily activities, and live your life',
+  'Analogous Rating': 'A rating assigned using a diagnostic code for a similar condition when your specific condition is not listed in the VASRD',
+  'Static Disability': 'A condition that has reached maximum improvement and is unlikely to change - protects against routine reexaminations',
+  'Chronic Disease': 'A disease listed in 38 CFR 3.309 that is presumptively service-connected if it manifests within one year of discharge',
+  'Rating Reduction': 'When VA lowers your disability percentage - subject to due process protections under 38 CFR 3.105(e)',
+  'Proposed Reduction': 'A notice from VA that they intend to reduce your rating - you have 60 days to respond with evidence',
+  'Sustained Improvement': 'Improvement that is maintained in ordinary conditions of life - required to reduce ratings held 5+ years',
+  'Section 4.3': 'Resolution of reasonable doubt in ratings - when disability picture falls between two ratings, assign the higher one',
+  'Section 4.7': 'Higher of two evaluations - assigns the higher rating when symptoms more nearly approximate those criteria',
+  
+  // PACT Act & Toxic Exposure Terms
+  'Toxic Exposure': 'Exposure to hazardous substances during military service including burn pits, Agent Orange, contaminated water, and radiation',
+  'Toxic Exposure Screening': 'Required VA health screening for veterans with potential toxic exposures under the PACT Act',
+  'Airborne Hazards': 'Exposure to smoke, fumes, sand, dust, and particulate matter during deployments - covered by PACT Act',
+  'Particulate Matter': 'Fine particles in the air from burn pits, sand, and dust that can cause respiratory conditions',
+  'Herbicide Exposure': 'Exposure to tactical herbicides like Agent Orange during military service',
+  'Ionizing Radiation': 'Radiation exposure from nuclear weapons testing, occupying Hiroshima/Nagasaki, or other qualifying activities',
+  'Presumptive Period': 'The timeframe after discharge during which certain conditions are presumed service-connected (often 1 year for chronic diseases)',
+  'Multi-Symptom Illness': 'Conditions like chronic fatigue syndrome, fibromyalgia, or functional GI disorders presumptive for Gulf War veterans',
+  'Undiagnosed Illness': 'Medically unexplained chronic symptoms that qualify Gulf War veterans for compensation under 38 CFR 3.317',
+  
+  // Special Compensation Terms
+  'SMC(k)': 'Special Monthly Compensation for loss of use of one hand, foot, eye, or creative organ - paid in addition to schedular rating',
+  'SMC(l)': 'Special Monthly Compensation for veterans needing aid and attendance of another person',
+  'SMC(s)': 'Special Monthly Compensation for being housebound OR having 100% rating plus additional 60% disability',
+  'Loss of Use': 'When a limb or organ has no effective remaining function - qualifies for SMC even without amputation',
+  'Ancillary Benefits': 'Additional benefits automatically considered with your claim like SMC, DEA, and CHAMPVA',
+  
+  // Common Medical Terms & Abbreviations
+  'PFT': 'Pulmonary Function Test - Breathing test that measures lung capacity and function, required for respiratory ratings',
+  'FEV-1': 'Forced Expiratory Volume in 1 Second - A key PFT measurement used in asthma and COPD ratings',
+  'COPD': 'Chronic Obstructive Pulmonary Disease - Progressive lung disease often service-connected from toxic exposures',
+  'CFS': 'Chronic Fatigue Syndrome - Presumptive condition for Gulf War veterans under 38 CFR 3.317',
+  'IBS': 'Irritable Bowel Syndrome - Functional GI disorder presumptive for Gulf War veterans',
+  'Goniometer': 'Device used to measure range of motion in joints during C&P exams - critical for musculoskeletal ratings',
+  'Ankylosis': 'Complete immobility of a joint - typically qualifies for higher ratings than limited motion',
+  'Radiculopathy': 'Nerve damage causing pain, numbness, or weakness radiating from the spine to the extremities',
+  'Peripheral Neuropathy': 'Nerve damage affecting the hands and feet - often secondary to diabetes or herbicide exposure',
+  'OSA': 'Obstructive Sleep Apnea - The most common type of sleep apnea rated under DC 6847',
+  'BiPAP': 'Bilevel Positive Airway Pressure - Breathing device similar to CPAP that can support 50% sleep apnea rating',
+  
+  // Military & Service Terms
+  'EPTS': 'Existed Prior to Service - A condition that existed before military service that may have been aggravated',
+  'LOD': 'Line of Duty - Determination that injury or illness occurred while performing military duties, not due to misconduct',
+  'DD-215': 'Correction to DD-214 - Used to correct or add information to your discharge document',
+  'Wartime Service': 'Service during a designated wartime period - required for VA pension eligibility',
+  'Active Duty': 'Full-time service in the military - required for most VA disability benefits',
+  'Reserve/Guard': 'Part-time military service that may qualify for VA benefits during certain periods of active duty',
+  
+  // Procedural & Timeline Terms
+  'Continuous Pursuit': 'Maintaining your appeal through proper review options to preserve your effective date',
+  'Date of Entitlement': 'The date your condition met the criteria for a particular rating level',
+  'Decision Notice': 'Official VA letter informing you of the decision on your claim and your appeal rights',
+  'Development': 'The process of gathering evidence for your claim - VA has a duty to assist in this process',
+  'Informal Conference': 'Optional phone call during Higher-Level Review to discuss errors in your claim',
+  'Rating Stabilization': 'Protection against reduction for ratings held 5+ years - requires sustained improvement to reduce (38 CFR 3.344)',
+  'Deferred': 'When VA postpones deciding part of your claim pending additional evidence or examination',
+  
+  // Additional VA Forms
+  'VA Form 21-686c': 'Declaration of Status of Dependents - Used to add dependents for additional compensation',
+  'VA Form 21-2680': 'Examination for Housebound Status or Permanent Need for Regular Aid and Attendance',
+  'VA Form 21-534EZ': 'Application for DIC, Death Pension, and Accrued Benefits by Surviving Spouse or Child',
+  'SF-180': 'Request Pertaining to Military Records - Used to request service records from NPRC',
 };
 
 /**

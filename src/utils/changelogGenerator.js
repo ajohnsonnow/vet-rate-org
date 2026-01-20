@@ -9,6 +9,7 @@
  */
 
 import { APP_VERSION } from './version';
+import { getSquashedBugsForChangelog, getSquashedBugCount, getRecentSquashedBugs } from '../data/squashedBugs';
 
 /**
  * Parse the README.md file and extract features organized by section
@@ -126,48 +127,53 @@ export function generateWhatsNewChangelog() {
   // Update this array when deploying new features
   
   const curatedChangelog = [
-    // NEW FEATURES - Add new releases here
+    // NEW FEATURES - Add new releases here (mark with isNew: true)
     {
       type: 'feature',
-      title: 'Evidence Gap Visualizer',
-      description: 'See exactly what evidence you need for higher ratings - completeness gauge shows missing documentation',
-      isNew: true
-    },
-    {
-      type: 'feature',
-      title: 'Sanitize & Share',
-      description: 'Screenshot your results with automatic PII redaction - safe to share on Reddit/Facebook',
-      isNew: true
-    },
-    {
-      type: 'feature',
-      title: 'WebGPU Local AI',
-      description: 'Run AI analysis 100% locally - Faraday Cage Protocol ensures your data never leaves your device',
-      isNew: true
-    },
-    {
-      type: 'feature',
-      title: 'Retroactive Pay Hunter',
+      title: 'Retro Pay Hunter',
       description: 'Find missed backpay using historical VA pay rates from 2020-2026 with CUE pattern detection',
       isNew: true
     },
     {
       type: 'feature',
-      title: 'Pain Painter Body Map',
-      description: 'Interactive body map with glow effects - paint your symptoms and get diagnostic code suggestions',
+      title: 'Time Machine',
+      description: 'Intent to File countdown tracker with backpay projections',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: 'The Tribunal',
+      description: 'Voice-interactive mock BVA hearing simulator with real-time feedback',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: 'The Bunker',
+      description: 'Export/import all your data with optional encrypted Google Drive sync',
+      isNew: true
+    },
+    {
+      type: 'improvement',
+      title: 'Dynamic Stats System',
+      description: 'All stats (tools count, conditions count) now update automatically across the entire app',
       isNew: true
     },
     
     // EXISTING HIGHLIGHTS
     {
       type: 'feature',
-      title: '40+ Professional Tools',
+      title: '39 Professional Tools',
       description: 'Complete VA claims arsenal - C-File Analyzer, C&P Simulator, Secondary Scout, and more'
     },
     {
       type: 'feature',
+      title: '748 Validated Conditions',
+      description: 'Every condition from 38 CFR Part 4 with detailed rating criteria and diagnostic codes'
+    },
+    {
+      type: 'feature',
       title: 'AI-Powered Analysis',
-      description: 'Optional Google Gemini integration for statement enhancement, with explicit consent'
+      description: 'Optional Google Gemini/Anthropic integration for statement enhancement, with explicit consent'
     },
     {
       type: 'security',
@@ -175,21 +181,26 @@ export function generateWhatsNewChangelog() {
       description: 'All processing happens in YOUR browser. No accounts, no tracking, no PII storage'
     },
     {
-      type: 'improvement',
-      title: 'The Bunker - Data Backup',
-      description: 'Export/import all your data. Optional encrypted Google Drive sync available'
+      type: 'feature',
+      title: 'Secondary Scout',
+      description: 'Discover 500+ medically-recognized secondary conditions with probability ratings'
     },
     {
       type: 'feature',
-      title: 'Shock & Awe Visualizations',
-      description: 'Million Dollar Dashboard, Web of Conditions, MOS Hazard Matcher - tools that make you say "Whoa"'
+      title: 'Million Dollar Dashboard',
+      description: 'Calculate lifetime benefit value and retirement projections with 2026 pay rates'
     }
   ];
+
+  // Add recent squashed bugs to changelog
+  const recentBugFixes = getSquashedBugsForChangelog(5);
 
   return {
     version: APP_VERSION,
     date: new Date().toISOString().split('T')[0],
-    changelog: curatedChangelog
+    changelog: curatedChangelog,
+    bugFixes: recentBugFixes,
+    totalBugsSquashed: getSquashedBugCount()
   };
 }
 
@@ -207,5 +218,7 @@ export default {
   parseReadmeForChangelog,
   getHighlightedChangelog,
   generateWhatsNewChangelog,
-  shouldShowWhatsNew
+  shouldShowWhatsNew,
+  getSquashedBugsForChangelog,
+  getSquashedBugCount
 };

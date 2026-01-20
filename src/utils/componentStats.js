@@ -6,6 +6,8 @@
  * Total Project: ~5,800 hours, 91,368 lines
  */
 
+import { getTotalToolCount } from '../data/toolkitData';
+
 export const COMPONENT_STATS = {
   'tactical-calculator': {
     name: 'Tactical Calculator',
@@ -155,13 +157,13 @@ export const COMPONENT_STATS = {
     name: 'Smart Search Engine',
     hours: 340,
     lines: 5200,
-    description: '751 conditions with synonym matching and advanced filters'
+    description: '748 conditions with synonym matching and advanced filters'
   },
   'user-manual': {
     name: 'User Manual',
     hours: 100,
     lines: 1800,
-    description: 'Complete documentation for all 40+ tools'
+    description: `Complete documentation for all ${getTotalToolCount()}+ tools`
   },
   // Database and infrastructure
   'data-validation': {

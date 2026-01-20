@@ -1,10 +1,7 @@
-﻿/**
- * UserManual.jsx - Integrated User Manual for Vet-Rate.org
- * Comprehensive documentation accessible within the web application
- */
-
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { resetTourState } from './BootCampTour';
+import { getTotalToolCount } from '../data/toolkitData';
+import { PROJECT_STATS } from '../data/projectStats';
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -313,7 +310,7 @@ const documentationContent = {
   home: {
     title: 'Vet-Rate.org User Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA claims toolkit with **40+ powerful tools**.
+Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
 
 ## About This Manual
 
@@ -331,12 +328,12 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 - **Track regulatory changes** with Legislative Watchdog
 - **Stress test your claim** before submission
 
-## All 40+ Tools
+## All {getTotalToolCount()}+ Tools
 
 ### Core Intelligence Tools
 | Tool | What It Does |
 |------|--------------|
-| **Smart Search** | Find any of 751 rated disabilities |
+| **Smart Search** | Find any of {PROJECT_STATS.disabilitiesValidated} rated disabilities |
 | **PACT Act Navigator** | Identify toxic exposure presumptive conditions |
 | **Web of Conditions** | Interactive visualization of connected disabilities |
 | **Legislative Watchdog** | Track Federal Register changes affecting veterans |

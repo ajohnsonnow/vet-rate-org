@@ -10,6 +10,8 @@
 import { useEffect, useState } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
+import { getTotalToolCount } from '../data/toolkitData';
+import { PROJECT_STATS } from '../data/projectStats';
 
 const TOUR_SEEN_KEY = 'vetrate-tour-completed';
 
@@ -218,7 +220,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         driverObj.destroy();
       },
       steps: [
-        // Step 1: Welcome
+        // Welcome Intro (no step number)
         {
           popover: {
             title: '🎖️ Welcome to Vet-Rate, Veteran',
@@ -237,7 +239,9 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 </div>
               </div>
             `,
-            popoverClass: 'welcome-step'
+            popoverClass: 'welcome-step',
+            showButtons: ['next'],
+            progressText: ''
           }
         },
         // Step 2: Search Bar
@@ -251,7 +255,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               <ul style="margin: 10px 0; padding-left: 20px;">
                 <li>By name: "PTSD", "tinnitus", "knee"</li>
                 <li>By diagnostic code: "9411", "6260"</li>
-              </ul>
+              </ul>{PROJECT_STATS.disabilitiesValidated}
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
                 We cover <strong>all 751 conditions</strong> from 38 CFR Part 4.
               </p>
@@ -312,7 +316,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
           popover: {
             title: '🛠️ Step 4: Your Claims Toolkit',
             description: `
-              <p><strong>40+ specialized tools at your command:</strong></p>
+              <p><strong>${getTotalToolCount()}+ specialized tools at your command:</strong></p>
               <ul style="margin: 10px 0; padding-left: 20px;">
                 <li>🔍 Secondary Scout - Find linked conditions</li>
                 <li>✅ C&P Exam Simulator - Practice for exams</li>
@@ -348,7 +352,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
             align: 'center'
           }
         },
-        // Step 7: Final CTA
+        // Final page (no step number)
         {
           popover: {
             title: '🚀 You\'re Ready to Roll!',
@@ -365,7 +369,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 </div>
                 
                 <p style="color: #9ca3af; font-size: 0.9rem;">
-                  Need help? The 📖 User Manual has complete documentation for all 40+ tools.
+                  Need help? The 📖 User Manual has complete documentation for all {getTotalToolCount()}+ tools.
                 </p>
                 
                 <p style="color: #c8a961; font-weight: 700; margin-top: 15px; font-size: 1rem;">
@@ -373,7 +377,8 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
                 </p>
               </div>
             `,
-            popoverClass: 'welcome-step'
+            popoverClass: 'welcome-step',
+            progressText: ''
           }
         }
       ]

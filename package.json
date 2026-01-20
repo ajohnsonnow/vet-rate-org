@@ -1,18 +1,29 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run update-stats && npm run check-legal-pages && vite build",
+    "build": "npm run sync-version && npm run update-stats && npm run check-legal-pages && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
     "type-check": "tsc --noEmit",
+    "sync-version": "node scripts/sync-version.js",
     "update-stats": "node scripts/update-stats.js",
     "check-legal-pages": "node scripts/generate-legal-pages.js",
-    "legal-sync": "node scripts/generate-legal-pages.js"
+    "legal-sync": "node scripts/generate-legal-pages.js",
+    "version-bump": "npm version patch && npm run sync-version",
+    "version-auto": "node scripts/smart-version.js",
+    "version-preview": "node scripts/smart-version.js --dry-run",
+    "squash-bug": "node scripts/squash-bug.js",
+    "pre-deploy": "node scripts/pre-deploy-check.js",
+    "pre-deploy:quick": "node scripts/pre-deploy-check.js --skip-build",
+    "push-prep": "node scripts/push-prep.js",
+    "push-prep:patch": "node scripts/push-prep.js --patch",
+    "push-prep:minor": "node scripts/push-prep.js --minor",
+    "push-prep:quick": "node scripts/push-prep.js --skip-checks -y"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.80",
