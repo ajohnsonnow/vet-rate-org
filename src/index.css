@@ -1390,6 +1390,381 @@ a {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE-FIRST OPTIMIZATION - "The Platinum Standard"
+   Optimized for 90% mobile user base (320-440px screens)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Touch-Optimized Interactions */
+@media (max-width: 768px) {
+  /* Minimum touch target size: 48x48px (WCAG AAA) */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Larger tap padding for interactive elements */
+  button, a {
+    padding: 12px 16px;
+  }
+  
+  /* Increase form input sizes */
+  input[type="text"], 
+  input[type="search"], 
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  select, 
+  textarea {
+    min-height: 48px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px 16px;
+  }
+  
+  /* Better spacing for mobile readability */
+  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Optimize modal sizes for mobile */
+  .modal-content {
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  /* Better line height for reading on small screens */
+  p, li {
+    line-height: 1.7;
+  }
+  
+  /* Scrollable tables on mobile */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Progressive Disclosure - Collapsible Sections */
+.mobile-collapse {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.mobile-collapse.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.mobile-collapse.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Mobile-Optimized Cards */
+@media (max-width: 768px) {
+  .tool-card, .card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Stack elements vertically on mobile */
+  .flex-row-mobile {
+    flex-direction: column;
+  }
+  
+  /* Full-width buttons on mobile */
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Smooth Scrolling for Mobile */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal scroll issues */
+body {
+  overflow-x: hidden;
+}
+
+/* Mobile-Friendly Focus States */
+@media (max-width: 768px) {
+  *:focus {
+    outline: 3px solid var(--va-gold);
+    outline-offset: 2px;
+  }
+  
+  /* Remove hover states on mobile (they stick on tap) */
+  @media (hover: none) {
+    button:hover, a:hover {
+      transform: none;
+    }
+  }
+}
+
+/* Bottom Navigation Safe Area (for iOS notch) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-nav, .mobile-footer {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Optimize Grid Layouts for Mobile */
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  /* Single column for tool cards */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile Typography Enhancements */
+@media (max-width: 768px) {
+  /* Optimize reading width */
+  p {
+    max-width: 100%;
+    text-align: left;
+  }
+  
+  /* Better contrast for small screens */
+  .text-gray-600 {
+    color: #4b5563 !important;
+  }
+  
+  html.dark .text-gray-600 {
+    color: #d1d5db !important;
+  }
+}
+
+/* Mobile Loading States */
+@media (max-width: 768px) {
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Swipe Gestures Helper */
+.swipeable {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mobile-Optimized Modals */
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+  
+  .modal-content {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+  }
+  
+  /* Sticky header in modals */
+  .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: inherit;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Pull-to-Refresh Indicator Area */
+@media (max-width: 768px) {
+  body::before {
+    content: '';
+    display: block;
+    height: 20px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   MODAL TAB OPTIMIZATION - "No More Smooshed Tabs"
+   Fixes cramped tabs in all modal components
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbars while maintaining functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tab Navigation - Mobile Optimized */
+@media (max-width: 640px) {
+  /* Tab buttons in modals */
+  nav button[role="tab"],
+  nav button:has(span) {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 70px;
+  }
+  
+  /* Tab containers should scroll smoothly */
+  nav {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Ensure tab text doesn't wrap awkwardly */
+  nav button {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+/* Modal Content Padding - More breathing room on mobile */
+@media (max-width: 768px) {
+  .modal-content > div:not(.modal-header):not(.modal-footer) {
+    padding: 16px;
+  }
+  
+  /* Modal headers - reduce padding on very small screens */
+  .modal-header {
+    padding: 12px 16px;
+  }
+  
+  /* Better spacing in stat grids */
+  .grid-cols-4 > div,
+  .grid-cols-3 > div,
+  .grid-cols-2 > div {
+    padding: 12px 8px;
+  }
+}
+
+/* Form Elements in Modals - Mobile Friendly */
+@media (max-width: 768px) {
+  /* Dropdowns and selects */
+  .modal-content select {
+    font-size: 16px;
+    padding: 12px;
+    background-position: right 8px center;
+  }
+  
+  /* Number inputs */
+  .modal-content input[type="number"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+  
+  /* Radio and checkbox labels */
+  .modal-content label:has(input[type="radio"]),
+  .modal-content label:has(input[type="checkbox"]) {
+    padding: 12px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Tab Badges - Better visibility on mobile */
+@media (max-width: 640px) {
+  nav button span:last-child:not(:only-child) {
+    font-size: 0.625rem;
+    padding: 2px 6px;
+    font-weight: 700;
+  }
+}
+
+/* Stat Cards in Modals - Stack nicely on mobile */
+@media (max-width: 640px) {
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+  }
+  
+  /* Very small screens - single column for clarity */
+  @media (max-width: 360px) {
+    .grid.grid-cols-4,
+    .grid.grid-cols-3 {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}
+
+/* Action Buttons in Modals - Full width stack on mobile */
+@media (max-width: 640px) {
+  .modal-content .flex.gap-2 > button,
+  .modal-content .flex.gap-3 > button {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  /* If too many buttons, stack them */
+  .modal-content .flex.gap-2:has(> button:nth-child(3)),
+  .modal-content .flex.gap-3:has(> button:nth-child(3)) {
+    flex-direction: column;
+  }
+  
+  .modal-content .flex.gap-2:has(> button:nth-child(3)) > button,
+  .modal-content .flex.gap-3:has(> button:nth-child(3)) > button {
+    width: 100%;
+  }
+}
+
+/* Table Responsiveness in Modals */
+@media (max-width: 768px) {
+  .modal-content table {
+    font-size: 0.875rem;
+  }
+  
+  .modal-content th,
+  .modal-content td {
+    padding: 8px 4px;
+  }
+  
+  /* Hide less important columns on small screens */
+  .modal-content table th:last-child,
+  .modal-content table td:last-child {
+    position: sticky;
+    right: 0;
+    background: inherit;
+  }
+}
+
+/* List Items in Modals - Better spacing */
+@media (max-width: 768px) {
+  .modal-content ul > li,
+  .modal-content ol > li {
+    padding: 8px 0;
+    line-height: 1.6;
+  }
+}
+
+/* Progress Bars and Meters - Full width on mobile */
+@media (max-width: 768px) {
+  .modal-content .w-32,
+  .modal-content .w-40,
+  .modal-content .w-48 {
+    width: 100% !important;
+  }
+}
+
+/* Icon Sizes in Tabs - Consistent on mobile */
+@media (max-width: 640px) {
+  nav button svg,
+  nav button [class*="icon"] {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 /* Print Styles */
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT OPTIMIZATION - "The Paper General"

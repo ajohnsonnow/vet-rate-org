@@ -4,7 +4,60 @@
  * 
  * The VA uses "efficiency" math, not simple addition.
  * Each rating reduces the remaining "whole person" efficiency.
+ * 
+ * CRITICAL RULES:
+ * - 38 CFR § 4.14: Pyramiding prohibited (same manifestation cannot be rated twice)
+ * - 38 CFR § 4.26: Bilateral factor for paired extremities (10% boost)
+ * - 38 CFR § 4.66: Amputation special rules (minimum guaranteed ratings)
+ * - 38 CFR § 3.400: Payment effective date is first of month following effective date
  */
+
+/**
+ * Calculate Payment Effective Date per 38 CFR § 3.400
+ * Payment begins the first day of the month following the effective date
+ * 
+ * @param {Date|string} effectiveDate - The effective date of the claim
+ * @returns {Date} - The payment effective date (first of following month)
+ * 
+ * Examples:
+ * - Effective 12/3/2025 → Payment starts 1/1/2026
+ * - Effective 6/30/2024 → Payment starts 7/1/2024
+ * - Effective 3/15/2023 → Payment starts 4/1/2023
+ */
+export const calculatePaymentEffectiveDate = (effectiveDate) => {
+  const date = new Date(effectiveDate);
+  // Move to first day of next month
+  date.setMonth(date.getMonth() + 1);
+  date.setDate(1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+/**
+ * Calculate months of backpay between two dates
+ * Uses payment effective dates (first of month) per 38 CFR § 3.400
+ * 
+ * @param {Date|string} effectiveDate - Original effective date
+ * @param {Date|string} currentDate - Current date (defaults to today)
+ * @returns {Object} - Backpay calculation details
+ */
+export const calculateBackpayMonths = (effectiveDate, currentDate = new Date()) => {
+  const paymentEffectiveDate = calculatePaymentEffectiveDate(effectiveDate);
+  const current = new Date(currentDate);
+  
+  // Calculate full months between payment effective date and current date
+  const yearsDiff = current.getFullYear() - paymentEffectiveDate.getFullYear();
+  const monthsDiff = current.getMonth() - paymentEffectiveDate.getMonth();
+  const totalMonths = Math.max(0, (yearsDiff * 12) + monthsDiff);
+  
+  return {
+    effectiveDate: new Date(effectiveDate),
+    paymentEffectiveDate,
+    currentDate: current,
+    totalMonths,
+    explanation: `Payment starts first of month following effective date (38 CFR § 3.400)`
+  };
+};
 
 // 2026 VA Disability Compensation Rates (Effective Dec 1, 2025)
 // Source: https://www.va.gov/disability/compensation-rates/veteran-rates/
@@ -402,25 +455,182 @@ export const calculateCompensation = (rating, dependents = {}) => {
  * Calculate "What If" scenarios
  * Shows how adding a new rating would change the combined
  */
-export const calculateWhatIf = (currentConditions, newRating, isBilateral = false) => {
-  const current = calculateVARating(currentConditions);
+export const calculateWhatIf = (existingConditions, newRating, isBilateral = false) => {
+  // Current combined rating
+  const current = calculateVARating(existingConditions);
   
+  // New condition
   const newCondition = {
-    name: 'Potential New Rating',
+    name: 'Proposed Condition',
     rating: newRating,
     side: isBilateral ? 'bilateral' : 'none',
-    bodyPart: 'other',
+    bodyPart: isBilateral ? 'knee' : 'other'
   };
   
-  const withNew = calculateVARating([...currentConditions, newCondition]);
+  // Calculate with new condition added
+  const withNew = calculateVARating([...existingConditions, newCondition]);
   
   return {
     currentRating: current.combinedRating,
-    currentRaw: current.rawScore,
     newRating: withNew.combinedRating,
-    newRaw: withNew.rawScore,
-    ratingIncrease: withNew.combinedRating - current.combinedRating,
-    rawIncrease: Math.round((withNew.rawScore - current.rawScore) * 10) / 10,
+    increase: withNew.combinedRating - current.combinedRating,
+    percentageIncrease: ((withNew.combinedRating - current.combinedRating) / current.combinedRating * 100).toFixed(1)
+  };
+};
+
+/**
+ * Pyramiding Detection per 38 CFR § 4.14
+ * Detects when the same disability manifestation may be rated multiple times
+ * 
+ * Pyramiding occurs when:
+ * - Same body part is rated under multiple diagnostic codes
+ * - Same manifestation (pain, ROM limitation, weakness) counted twice
+ * - Nerve injury AND the part it supplies both rated for same symptom
+ * 
+ * @param {Array} conditions - Array of condition objects with bodyPart, manifestations
+ * @returns {Object} - Pyramiding analysis and warnings
+ */
+export const detectPyramiding = (conditions) => {
+  const warnings = [];
+  const bodyPartGroups = {};
+  
+  // Group conditions by body part
+  conditions.forEach((condition, index) => {
+    const bodyPart = condition.bodyPart || 'other';
+    if (!bodyPartGroups[bodyPart]) {
+      bodyPartGroups[bodyPart] = [];
+    }
+    bodyPartGroups[bodyPart].push({ ...condition, index });
+  });
+  
+  // Check each body part for potential pyramiding
+  Object.entries(bodyPartGroups).forEach(([bodyPart, condList]) => {
+    if (condList.length > 1) {
+      // Multiple conditions affecting same body part - potential pyramiding
+      warnings.push({
+        type: 'potential_pyramiding',
+        severity: 'high',
+        bodyPart,
+        conditions: condList.map(c => c.name),
+        message: `Multiple conditions for ${bodyPart}. Verify these rate different manifestations (not the same pain/limitation twice).`,
+        regulation: '38 CFR § 4.14',
+        guidance: 'You cannot rate the same manifestation under different diagnostic codes. For example: cervical pain can only be rated once, not under both strain AND arthritis codes.',
+        indices: condList.map(c => c.index)
+      });
+    }
+  });
+  
+  // Check for nerve + supplied part pyramiding
+  const nerveConditions = conditions.filter(c => 
+    c.name?.toLowerCase().includes('nerve') || 
+    c.name?.toLowerCase().includes('radiculopathy') ||
+    c.name?.toLowerCase().includes('neuropathy')
+  );
+  
+  nerveConditions.forEach((nerveCondition, idx) => {
+    const bodyPart = nerveCondition.bodyPart;
+    const otherInSamePart = conditions.filter((c, i) => 
+      i !== idx && c.bodyPart === bodyPart && !c.name?.toLowerCase().includes('nerve')
+    );
+    
+    if (otherInSamePart.length > 0) {
+      warnings.push({
+        type: 'nerve_pyramiding',
+        severity: 'high',
+        nerveCondition: nerveCondition.name,
+        affectedPart: bodyPart,
+        otherConditions: otherInSamePart.map(c => c.name),
+        message: `Nerve condition (${nerveCondition.name}) and ${bodyPart} condition may be rating same symptoms.`,
+        regulation: '38 CFR § 4.14',
+        guidance: 'You cannot rate both a nerve injury AND the part it supplies for the SAME manifestation (e.g., both radiculopathy and arm weakness from the same nerve damage).',
+        indices: [idx, ...otherInSamePart.map(c => conditions.indexOf(c))]
+      });
+    }
+  });
+  
+  // Check for spine + extremity pyramiding (common issue)
+  const spineConditions = conditions.filter(c =>
+    c.bodyPart === 'cervical-spine' ||
+    c.bodyPart === 'thoracic-spine' ||
+    c.bodyPart === 'lumbar-spine' ||
+    c.name?.toLowerCase().includes('spine') ||
+    c.name?.toLowerCase().includes('cervical') ||
+    c.name?.toLowerCase().includes('lumbar')
+  );
+  
+  if (spineConditions.length > 0) {
+    const extremityConditions = conditions.filter(c =>
+      ['shoulder', 'arm', 'hand', 'hip', 'leg', 'knee', 'foot'].includes(c.bodyPart)
+    );
+    
+    if (extremityConditions.length > 0) {
+      warnings.push({
+        type: 'spine_extremity_warning',
+        severity: 'medium',
+        message: 'You have both spine and extremity conditions. Ensure extremity issues are independent, not just manifestations of spine pathology.',
+        regulation: '38 CFR § 4.14, § 4.71a',
+        guidance: 'Radicular pain (nerve pain radiating down limbs) is rated under spine codes. Separate extremity conditions need independent pathology.',
+        affectedConditions: [...spineConditions.map(c => c.name), ...extremityConditions.map(c => c.name)]
+      });
+    }
+  }
+  
+  return {
+    hasPotentialPyramiding: warnings.length > 0,
+    warnings,
+    summary: warnings.length > 0 
+      ? `Found ${warnings.length} potential pyramiding issue(s). Review to ensure you're not rating the same manifestation twice.`
+      : 'No obvious pyramiding issues detected. Note: This is an automated check - verify with 38 CFR schedules.'
+  };
+};
+
+/**
+ * Amputation Special Rules per 38 CFR § 4.66
+ * Amputations have minimum guaranteed ratings regardless of prosthetic function
+ * 
+ * @param {string} amputationLevel - Level of amputation
+ * @param {string} bodyPart - Which extremity
+ * @returns {Object} - Minimum rating and special rules
+ */
+export const getAmputationMinimumRating = (amputationLevel, bodyPart) => {
+  const amputationRules = {
+    // Upper extremity amputations (DC 5120-5127)
+    'above-elbow': { minimum: 70, dc: '5124', note: 'Amputation above elbow' },
+    'below-elbow': { minimum: 60, dc: '5120', note: 'Amputation below elbow' },
+    'wrist-disarticulation': { minimum: 60, dc: '5121', note: 'Disarticulation at wrist' },
+    'hand': { minimum: 60, dc: '5122', note: 'Amputation through hand' },
+    'all-fingers': { minimum: 50, dc: '5123', note: 'Loss of all fingers' },
+    
+    // Lower extremity amputations (DC 5160-5174)
+    'above-knee': { minimum: 60, dc: '5160', note: 'Amputation above knee (AK)' },
+    'below-knee': { minimum: 40, dc: '5160', note: 'Amputation below knee (BK)' },
+    'ankle-disarticulation': { minimum: 40, dc: '5170', note: 'Disarticulation at ankle' },
+    'foot': { minimum: 40, dc: '5171', note: 'Amputation through foot' },
+    'all-toes': { minimum: 20, dc: '5172', note: 'Loss of all toes' },
+  };
+  
+  const rule = amputationRules[amputationLevel];
+  
+  if (!rule) {
+    return {
+      isAmputation: false,
+      minimumRating: null,
+      note: 'Not an amputation or level not recognized'
+    };
+  }
+  
+  return {
+    isAmputation: true,
+    minimumRating: rule.minimum,
+    diagnosticCode: rule.dc,
+    note: rule.note,
+    regulation: '38 CFR § 4.66',
+    specialRules: [
+      'Minimum rating guaranteed regardless of prosthetic function',
+      'Loss of use is equivalent to amputation for rating purposes',
+      'Bilateral amputations receive bilateral factor (10% boost)',
+      'Cannot rate below minimum even with excellent prosthetic adaptation'
+    ]
   };
 };
 
@@ -451,6 +661,10 @@ export default {
   combineMultipleRatings,
   roundToNearest10,
   calculateBilateralFactor,
+  calculatePaymentEffectiveDate,
+  calculateBackpayMonths,
+  detectPyramiding,
+  getAmputationMinimumRating,
   VA_PAY_RATES_2026,
   BODY_PARTS,
 };

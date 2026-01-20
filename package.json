@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run update-stats && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "update-stats": "node scripts/update-stats.js"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.80",

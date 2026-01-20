@@ -756,7 +756,7 @@ Return ONLY the JSON object, no explanation.`,
 
           {/* Tab Navigation - Organized by category */}
           <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6">
-            <nav className="flex gap-1 overflow-x-auto pb-px" aria-label="Tabs">
+            <nav className="flex gap-1 overflow-x-auto pb-px scrollbar-hide" aria-label="Tabs">
               {/* Primary Data */}
               <button
                 onClick={() => setActiveTab('claims')}

@@ -10,17 +10,23 @@
  * - Noise exposure level
  * - Hazard profile
  * - Direct links to add conditions to your claim
+ * 
+ * Database includes:
+ * - Modern codes (Army MOS, Air Force AFSC, Navy Ratings, Marine MOS, Coast Guard Ratings)
+ * - Historical codes with aliases (for older veterans)
+ * - Data from O*NET, DoD COOL, Naval History, DA PAM 611-21
  */
 
 import React, { useState, useMemo } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
+import { MOS_DATABASE, searchMOS as searchMOSFromDB, getDatabaseStats, CODE_ALIASES } from '../data/mosDatabase';
 
 /**
- * Comprehensive MOS/AFSC/Rate Database
- * Covers Army, Air Force, Navy, Marines, Coast Guard
+ * Legacy MOS Database (for backwards compatibility)
+ * New comprehensive database is in ../data/mosDatabase.js
  */
-const MOS_DATABASE = {
+const LEGACY_MOS_DATABASE = {
   // ================== ARMY MOS ==================
   '11B': {
     branch: 'Army',
@@ -593,30 +599,46 @@ const MOS_DATABASE = {
 };
 
 /**
- * Search the MOS database
+ * Enhanced search combining new comprehensive database with legacy data
+ * Supports historical code aliases for older veterans
  */
 const searchMOS = (query) => {
   if (!query || query.length < 2) return [];
   
-  const searchTermLower = query.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // First, search the new comprehensive database
+  const newDBResults = searchMOSFromDB(query);
   
-  return Object.entries(MOS_DATABASE)
+  // Then search legacy database for any codes not in new DB
+  const searchTermLower = query.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const legacyResults = Object.entries(LEGACY_MOS_DATABASE)
     .filter(([code, data]) => {
       const codeLower = code.toLowerCase().replace(/[^a-z0-9]/g, '');
       const titleLower = data.title.toLowerCase();
-      
       return codeLower.includes(searchTermLower) || 
              searchTermLower.includes(codeLower) ||
              titleLower.includes(searchTermLower);
     })
-    .map(([code, data]) => ({ code, ...data }))
-    .slice(0, 10);
+    .map(([code, data]) => ({ code, ...data, source: 'legacy' }));
+  
+  // Merge results, preferring new DB entries
+  const seenCodes = new Set(newDBResults.map(r => r.code));
+  const mergedResults = [
+    ...newDBResults.map(r => ({
+      ...r,
+      // Normalize field names: commonConditions -> commonInjuries for UI compatibility
+      commonInjuries: r.commonConditions || r.commonInjuries
+    })),
+    ...legacyResults.filter(r => !seenCodes.has(r.code))
+  ];
+  
+  return mergedResults.slice(0, 15);
 };
 
 /**
  * Get noise level color
  */
 const getNoiseColor = (level) => {
+  if (!level) return 'bg-gray-500 text-white';
   if (level.includes('Extreme')) return 'bg-red-600 text-white';
   if (level.includes('Very High')) return 'bg-orange-500 text-white';
   if (level.includes('High')) return 'bg-yellow-500 text-black';
@@ -747,11 +769,24 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                       <div>
                         <span className="font-bold text-amber-400">{result.code}</span>
                         <span className="text-white ml-2">{result.title}</span>
+                        {result.matchType === 'alias' && result.matchedAlias && (
+                          <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">
+                            🕐 Was: {result.matchedAlias}
+                          </span>
+                        )}
+                        {result.timePeriod && result.timePeriod !== 'Active' && (
+                          <span className="ml-2 text-xs text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">
+                            Historical
+                          </span>
+                        )}
                       </div>
                       <span className={`px-2 py-1 rounded text-xs font-bold bg-gradient-to-r ${getBranchColor(result.branch)}`}>
                         {result.branch}
                       </span>
                     </div>
+                    {result.note && (
+                      <p className="text-xs text-gray-400 mt-1">{result.note}</p>
+                    )}
                   </button>
                 ))}
               </div>
@@ -762,7 +797,13 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
               <div className="bg-gray-800/50 rounded-xl p-6 text-center">
                 <p className="text-gray-400">No matching MOS found. Try a different code or job title.</p>
                 <p className="text-gray-500 text-sm mt-2">
-                  Examples: 11B, 68W, 88M (Army) | 2A3X3, 3P0X1 (Air Force) | GM, HM, BM (Navy) | 0311, 0331 (Marines)
+                  <strong>Modern:</strong> 11B, 68W, 88M (Army) | 2A3X3, 3P0X1 (Air Force) | GM, HM, BM (Navy) | 0311, 0331 (Marines)
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Historical:</strong> 91B, 63B (Army) | SK, BT (Navy) | 81130 (Air Force)
+                </p>
+                <p className="text-cyan-400/70 text-xs mt-2">
+                  💡 We support historical codes that have been merged or renamed!
                 </p>
               </div>
             )}
@@ -777,14 +818,35 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                       <p className="text-white/70 text-sm">{selectedMOS.branch} • {selectedMOS.category}</p>
                       <h3 className="text-3xl font-black text-white">{selectedMOS.code}</h3>
                       <p className="text-xl text-white/90">{selectedMOS.title}</p>
+                      {/* Historical aliases */}
+                      {selectedMOS.aliases && selectedMOS.aliases.length > 0 && (
+                        <p className="text-white/60 text-sm mt-2">
+                          🕐 Also known as: {selectedMOS.aliases.join(', ')}
+                        </p>
+                      )}
+                      {selectedMOS.historicalNotes && (
+                        <p className="text-cyan-300/80 text-xs mt-1">
+                          📜 {selectedMOS.historicalNotes}
+                        </p>
+                      )}
+                      {selectedMOS.matchedAlias && (
+                        <p className="text-cyan-300 text-sm mt-2 bg-cyan-900/30 px-2 py-1 rounded inline-block">
+                          ✓ You searched for "{selectedMOS.matchedAlias}" - this is the current designation
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className={`px-3 py-1 rounded-full text-sm font-bold ${getNoiseColor(selectedMOS.noiseExposure)}`}>
-                        🔊 {selectedMOS.noiseExposure}
+                        🔊 {selectedMOS.noiseExposure || 'Varies'}
                       </span>
                       <p className="text-white/70 text-sm mt-2">
-                        Physical: {selectedMOS.physicalDemand}
+                        Physical: {selectedMOS.physicalDemand || 'Varies'}
                       </p>
+                      {selectedMOS.timePeriod && selectedMOS.timePeriod !== 'Active' && (
+                        <span className="mt-2 inline-block px-2 py-1 bg-amber-700/50 text-amber-200 rounded text-xs">
+                          {selectedMOS.timePeriod}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -795,7 +857,7 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                     ⚠️ Job Hazards
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedMOS.hazards.map((hazard, i) => (
+                    {(selectedMOS.hazards || []).map((hazard, i) => (
                       <span key={i} className="px-3 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-200 text-sm">
                         {hazard}
                       </span>
@@ -910,10 +972,30 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                         key={code}
                         onClick={() => {
                           setSearchQuery(code);
-                          const result = MOS_DATABASE[code];
-                          if (result) setSelectedMOS({ code, ...result });
+                          const results = searchMOS(code);
+                          if (results.length > 0) setSelectedMOS(results[0]);
                         }}
                         className="px-3 py-1 bg-slate-700 text-slate-200 rounded-lg text-sm hover:bg-slate-600 transition-colors"
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Historical Code Quick Links */}
+                <div className="bg-cyan-900/20 rounded-xl p-4 mt-4 border border-cyan-700/30">
+                  <p className="text-cyan-400 text-sm text-center mb-3">🕐 Historical/Retired codes (for older veterans):</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {['91B', '63B', 'SK', 'BT', '81130', '76Y'].map(code => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setSearchQuery(code);
+                          const results = searchMOS(code);
+                          if (results.length > 0) setSelectedMOS(results[0]);
+                        }}
+                        className="px-3 py-1 bg-cyan-800/50 text-cyan-200 rounded-lg text-sm hover:bg-cyan-700/50 transition-colors border border-cyan-700/50"
                       >
                         {code}
                       </button>

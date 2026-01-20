@@ -19,6 +19,11 @@ export const PROJECT_STATS = {
   utilities: 47,
   disabilitiesValidated: 751,
   
+  // Content Counts (matches README.md)
+  vaForms: 16,           // VA forms with Auto-Scribe PDF filling
+  secondaryConditions: 500,  // Medically-recognized secondary conditions
+  statesCovered: 51,      // All 50 states + DC
+  
   // Tool Categories (for dynamic references)
   // Matches categories in toolkitData.js
   toolCounts: {
@@ -89,6 +94,9 @@ export const FORMATTED_STATS = {
   appSize: `${PROJECT_STATS.appSizeMB} MB`,
   components: `${PROJECT_STATS.components} React components (${PROJECT_STATS.majorTools} major tools + ${PROJECT_STATS.supportingComponents} supporting)`,
   utilities: `${PROJECT_STATS.utilities} helper modules`,
+  vaForms: `${PROJECT_STATS.vaForms}+ PDF forms ready to download`,
+  secondaryConditions: `${PROJECT_STATS.secondaryConditions}+ medically-linked relationships`,
+  statesCovered: `All ${PROJECT_STATS.statesCovered - 1} states + DC`,
   traditionalHours: `~${formatNumber(PROJECT_STATS.traditionalHours)} hours`,
   traditionalYears: `≈${PROJECT_STATS.traditionalYears} years full-time equivalent`,
   actualTime: `${PROJECT_STATS.actualHours} hours over ${PROJECT_STATS.actualDays} days`,

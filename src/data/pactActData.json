@@ -221,8 +221,9 @@
         "diagnosticCodes": [
           "8045"
         ],
-        "category": "burnPit",
-        "addedBy": "PACT Act"
+        "category": "agentOrange",
+        "addedBy": "PACT Act",
+        "note": "Glioblastoma was added as presumptive for Agent Orange exposure by the PACT Act. It is NOT a standalone 'PACT Act presumptive' - it requires Agent Orange exposure."
       }
     ],
     "burnPitRespiratory": [
@@ -1047,10 +1048,9 @@
         "radiation"
       ],
       "conditions": [
-        "Hypothyroidism",
-        "Thyroid Cancer"
+        "Hypothyroidism"
       ],
-      "claimTip": "Hypothyroidism is presumptive for Agent Orange. Thyroid cancer is presumptive for radiation exposure."
+      "claimTip": "Hypothyroidism is presumptive for Agent Orange exposure under the Blue Water Navy Act (2019), NOT the PACT Act. It is also a radiogenic disease under 38 CFR § 3.311 for radiation exposure."
     },
     "7913": {
       "pactAct": true,
@@ -1077,13 +1077,14 @@
     "8045": {
       "pactAct": true,
       "exposures": [
-        "burnPit"
+        "burnPit",
+        "agentOrange"
       ],
       "conditions": [
         "Brain Cancer",
         "Glioblastoma"
       ],
-      "claimTip": "Brain cancers including glioblastoma are presumptive conditions for burn pit exposure under the PACT Act."
+      "claimTip": "Brain cancers are presumptive for burn pit exposure. Glioblastoma was added as presumptive for Agent Orange exposure by the PACT Act. Service in Vietnam, Thailand, or other AO locations may qualify."
     },
     "8515": {
       "pactAct": true,

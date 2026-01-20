@@ -43,6 +43,12 @@ const WATCH_KEYWORDS = [
   'sleep apnea',
   'mental disorders',
   'musculoskeletal',
+  'neurological',
+  'brain injury',
+  'TBI',
+  'neuropathy',
+  'paralysis',
+  '4.124a',
   'PACT Act',
   'toxic exposure',
 ];

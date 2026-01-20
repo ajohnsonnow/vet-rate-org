@@ -140,14 +140,16 @@
         "osteoarthritis",
         "OA",
         "degenerative joint disease",
-        "arthrosis"
+        "arthrosis",
+        "degenerative arthritis"
       ],
       "searchTerms": [
         "degenerative arthritis",
         "osteoarthritis",
         "OA",
         "joint degeneration",
-        "wear and tear arthritis"
+        "wear and tear arthritis",
+        "5003"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.71a#p-4.71a(DegenerativeArthritis)",
       "ratingSchedule": "38 CFR § 4.71a",
@@ -158,12 +160,24 @@
           "diagnosticCode": "5003"
         },
         {
-          "name": "Limited Range of Motion",
+          "name": "Bursitis",
           "diagnosticCode": "5019"
+        },
+        {
+          "name": "Limited Range of Motion",
+          "diagnosticCode": "5201"
         },
         {
           "name": "Adjacent Joint Arthritis",
           "diagnosticCode": "5003"
+        },
+        {
+          "name": "Radiculopathy (if spine)",
+          "diagnosticCode": "8520"
+        },
+        {
+          "name": "Depression/Chronic Pain",
+          "diagnosticCode": "9434"
         }
       ],
       "ratingCriteria": {
@@ -3215,7 +3229,9 @@
         "neck sprain",
         "cervical sprain",
         "back strain",
-        "thoracolumbar strain"
+        "thoracolumbar strain",
+        "low back pain",
+        "LBP"
       ],
       "searchTerms": [
         "lumbar strain",
@@ -3230,7 +3246,9 @@
         "neck injury",
         "lumbar",
         "lumbosacral",
-        "5237"
+        "5237",
+        "low back",
+        "lower back"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.71a",
       "ratingSchedule": "38 CFR § 4.71a",
@@ -9110,14 +9128,20 @@
         "hay fever",
         "allergies",
         "nasal allergies",
-        "allergic rhinitis"
+        "allergic rhinitis",
+        "chronic rhinitis",
+        "rhinitis"
       ],
       "searchTerms": [
         "allergic rhinitis",
         "hay fever",
         "allergies",
         "nasal allergies",
-        "seasonal allergies"
+        "seasonal allergies",
+        "rhinitis",
+        "chronic rhinitis",
+        "nasal congestion",
+        "6522"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.97",
       "ratingSchedule": "38 CFR § 4.97",
@@ -10577,13 +10601,19 @@
         "sleep apnea",
         "obstructive sleep apnea",
         "OSA",
-        "central sleep apnea"
+        "central sleep apnea",
+        "sleep apnea syndromes",
+        "apnea"
       ],
       "searchTerms": [
         "sleep apnea",
         "obstructive sleep apnea",
         "OSA",
-        "sleep-disordered breathing"
+        "sleep-disordered breathing",
+        "apnea",
+        "sleep",
+        "CPAP",
+        "6847"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.97",
       "ratingSchedule": "38 CFR § 4.97",
@@ -11901,32 +11931,65 @@
       "diagnosticCode": "7206",
       "conditionName": "Gastroesophageal reflux disease (GERD)",
       "aliases": [
-        "GRD(",
-        "gastroesophageal reflux disease (gerd)",
-        "gastroesophageal reflux disease"
+        "GERD",
+        "gastroesophageal reflux disease",
+        "acid reflux",
+        "reflux disease",
+        "heartburn"
       ],
       "searchTerms": [
-        "disease",
+        "gerd",
         "gastroesophageal",
         "reflux",
+        "acid reflux",
+        "heartburn",
         "digestive gastrointestinal",
-        "gerd",
-        "7206",
-        "gastroesophageal reflux disease (gerd)"
+        "7206"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.114",
       "ratingSchedule": "38 CFR § 4.114",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": [],
+      "documentationRequirements": "Documentation must include: endoscopy results, esophageal pH monitoring, barium swallow studies, medication records (PPIs, H2 blockers), symptom diary, and functional limitations.",
+      "relatedSecondaryConditions": [
+        {
+          "name": "Barrett's Esophagus",
+          "diagnosticCode": "7207"
+        },
+        {
+          "name": "Esophageal Stricture",
+          "diagnosticCode": "7203"
+        },
+        {
+          "name": "Hiatal Hernia",
+          "diagnosticCode": "7346"
+        },
+        {
+          "name": "Chronic Cough",
+          "diagnosticCode": "6600"
+        },
+        {
+          "name": "Asthma (GERD-triggered)",
+          "diagnosticCode": "6602"
+        },
+        {
+          "name": "Sleep Disturbance",
+          "diagnosticCode": "6847"
+        }
+      ],
       "ratingCriteria": {
         "type": "direct",
         "ratings": {
           "60": "Symptoms of pain, vomiting, material weight loss and hematemesis or melena with moderate anemia; or other findings consistent with chronic hemorrhage",
           "30": "Persistently recurrent epigastric distress with dysphagia, pyrosis, and regurgitation, accompanied by substernal or arm or shoulder pain",
           "10": "Two or more of the symptoms for the 30 percent evaluation, less pronounced"
-        }
+        },
+        "notes": [
+          "GERD is rated under the same criteria as hiatal hernia (DC 7346)",
+          "Document all symptoms: heartburn, regurgitation, difficulty swallowing, chest pain",
+          "Weight loss must be documented with medical records",
+          "Consider secondary conditions: Barrett's esophagus, esophageal stricture, aspiration pneumonia"
+        ]
       },
-      "lastVerifiedDate": "2026-01-18"
+      "lastVerifiedDate": "2026-01-19"
     },
     {
       "id": 404,
@@ -13953,7 +14016,10 @@
       "aliases": [
         "prostate gland injuries, infections, hypertrophy",
         "PGIIH",
-        "prostate gland injuries"
+        "prostate gland injuries",
+        "prostatitis",
+        "BPH",
+        "benign prostatic hyperplasia"
       ],
       "searchTerms": [
         "infections",
@@ -13963,62 +14029,112 @@
         "7527",
         "hypertrophy",
         "genitourinary kidney bladder",
-        "prostate gland injuries, infections, hypertrophy"
-      ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
-      "ratingSchedule": "38 CFR § 4.115a or § 4.115b",
-      "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
-      "relatedSecondaryConditions": [],
-      "ratingCriteria": {
-        "type": "direct",
-        "ratings": {
-          "10": "Removal of both spermatic cords",
-          "0": "Removal of one spermatic cord"
-        }
-      },
-      "lastVerifiedDate": "2026-01-18"
-    },
-    {
-      "id": 470,
-      "diagnosticCode": "7528",
-      "conditionName": "Prostate Conditions",
-      "aliases": [
-        "BPH",
+        "prostate gland injuries, infections, hypertrophy",
         "prostatitis",
-        "prostate enlargement",
-        "enlarged prostate"
+        "BPH"
       ],
-      "searchTerms": [
-        "prostate",
-        "BPH",
-        "prostatitis",
-        "enlarged prostate",
-        "prostate disease"
-      ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.115b",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.115b#p-4.115b(7527)",
       "ratingSchedule": "38 CFR § 4.115b",
-      "documentationRequirements": "Documentation must include: digital rectal exam findings, PSA levels, urinary symptoms (frequency, urgency, nocturia), urodynamic studies, treatment history, and impact on quality of life.",
+      "documentationRequirements": "Documentation must include: urology records, digital rectal exam findings, PSA levels, urinary symptoms (frequency, urgency, nocturia, hesitancy, weak stream), treatment history, and any voiding dysfunction per 38 CFR 4.115a.",
       "relatedSecondaryConditions": [
-        {
-          "name": "Urinary Frequency",
-          "diagnosticCode": "7542"
-        },
         {
           "name": "Erectile Dysfunction",
           "diagnosticCode": "7522"
         },
         {
-          "name": "Sleep Disorders",
+          "name": "Urinary Frequency",
+          "diagnosticCode": "7542"
+        },
+        {
+          "name": "Urinary Incontinence",
+          "diagnosticCode": "7541"
+        },
+        {
+          "name": "Urinary Tract Obstruction",
+          "diagnosticCode": "7515"
+        },
+        {
+          "name": "Depression/Adjustment Disorder",
           "diagnosticCode": "9434"
+        },
+        {
+          "name": "Sleep Disturbance (nocturia)",
+          "diagnosticCode": "6847"
+        }
+      ],
+      "ratingCriteria": {
+        "type": "rated-as",
+        "ratedUnder": "Rate as voiding dysfunction or urinary tract infection, whichever is predominant, per 38 CFR § 4.115a",
+        "notes": [
+          "Rate based on residuals as voiding dysfunction or urinary tract infection per 38 CFR § 4.115a",
+          "Voiding dysfunction ratings: 60% (requiring use of appliance or wearing absorbent materials changed more than 4 times/day), 40% (wearing absorbent materials changed 2-4 times/day), 20% (wearing absorbent materials changed less than 2 times/day)",
+          "Urinary frequency ratings: 40% (daytime voiding interval less than 1 hour or awakening to void 5+ times/night), 20% (daytime voiding interval 1-2 hours or awakening 3-4 times/night), 10% (daytime voiding interval 2-3 hours or awakening 2 times/night)"
+        ]
+      },
+      "lastVerifiedDate": "2026-01-19"
+    },
+    {
+      "id": 470,
+      "diagnosticCode": "7528",
+      "conditionName": "Malignant neoplasms of the genitourinary system",
+      "aliases": [
+        "prostate cancer",
+        "bladder cancer",
+        "kidney cancer",
+        "testicular cancer",
+        "genitourinary cancer"
+      ],
+      "searchTerms": [
+        "prostate cancer",
+        "prostate",
+        "bladder cancer",
+        "kidney cancer",
+        "testicular cancer",
+        "genitourinary cancer",
+        "7528"
+      ],
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.115b#p-4.115b(7528)",
+      "ratingSchedule": "38 CFR § 4.115b",
+      "documentationRequirements": "Documentation must include: pathology report, staging information, treatment records (surgery, radiation, chemotherapy), PSA levels for prostate cancer, and functional impact assessment.",
+      "relatedSecondaryConditions": [
+        {
+          "name": "Erectile Dysfunction",
+          "diagnosticCode": "7522"
+        },
+        {
+          "name": "Urinary Incontinence",
+          "diagnosticCode": "7541"
+        },
+        {
+          "name": "Voiding Dysfunction",
+          "diagnosticCode": "7542"
+        },
+        {
+          "name": "Depression/Adjustment Disorder",
+          "diagnosticCode": "9434"
+        },
+        {
+          "name": "Chronic Fatigue",
+          "diagnosticCode": "6354"
+        },
+        {
+          "name": "Peripheral Neuropathy (from chemo)",
+          "diagnosticCode": "8520"
         }
       ],
       "ratingCriteria": {
         "type": "direct",
         "ratings": {
-          "10": "Chronic prostatitis with dysuria, frequency, urgency, and bladder pain"
-        }
+          "100": "During active malignancy or antineoplastic treatment - Note: Following cessation of surgical, X-ray, antineoplastic chemotherapy, or other therapeutic procedure, rate on residuals as voiding dysfunction or renal dysfunction, whichever is predominant. Mandatory minimum rating of 100% for 6 months following completion of treatment."
+        },
+        "notes": [
+          "100% rating mandatory during active treatment and for 6 months after cessation of treatment",
+          "After treatment period, rate based on residuals (voiding dysfunction or renal dysfunction)",
+          "Prostate cancer is presumptive for Agent Orange exposure - see 38 CFR 3.309(e)",
+          "If recurrence or metastasis occurs, resume 100% rating"
+        ]
       },
-      "lastVerifiedDate": "2026-01-18"
+      "lastVerifiedDate": "2026-01-19"
     },
     {
       "id": 471,
@@ -16915,45 +17031,44 @@
     {
       "id": 561,
       "diagnosticCode": "7901",
-      "conditionName": "Hyperthyroidism",
+      "conditionName": "Thyroid enlargement, toxic",
       "aliases": [
-        "overactive thyroid",
-        "hyperthyroid",
-        "Graves disease"
+        "toxic thyroid enlargement",
+        "toxic goiter",
+        "toxic nodular goiter",
+        "toxic multinodular goiter"
       ],
       "searchTerms": [
-        "hyperthyroidism",
-        "overactive thyroid",
-        "hyperthyroid",
-        "Graves disease"
+        "toxic thyroid",
+        "toxic goiter",
+        "toxic nodular goiter",
+        "7901"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.119",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.119#p-4.119(7901)",
       "ratingSchedule": "38 CFR § 4.119",
-      "documentationRequirements": "Documentation must include: TSH and free T4/T3 levels, symptoms (palpitations, weight loss, heat intolerance, tremor), treatment (antithyroid meds, radioactive iodine, surgery), and complications.",
+      "documentationRequirements": "Documentation must include: thyroid function tests, imaging showing enlarged thyroid with toxic nodules, symptoms of hyperthyroidism, and treatment history.",
       "relatedSecondaryConditions": [
+        {
+          "name": "Hyperthyroid Heart Disease",
+          "diagnosticCode": "7008"
+        },
         {
           "name": "Atrial Fibrillation",
           "diagnosticCode": "7010"
         },
         {
-          "name": "Osteoporosis",
-          "diagnosticCode": "5250"
-        },
-        {
-          "name": "Graves' Ophthalmopathy",
-          "diagnosticCode": "6066"
+          "name": "Anxiety Disorder",
+          "diagnosticCode": "9400"
         }
       ],
       "ratingCriteria": {
-        "type": "direct",
-        "ratings": {
-          "100": "Pronounced, with a marked impact on the general level of health; cardiac involvement with congestive heart failure; or; eye involvement, such as exophthalmos, marked lid retraction, and limitation of ocular motility",
-          "60": "Severe, with loss of weight, muscular weakness, and increased pulse rate with dyspnea or episodes of palpitations",
-          "30": "Moderate, with increased pulse rate (100-120 bpm) and other evidence of cardiovascular involvement; or; tremor, irritability, heat intolerance, and loss of weight",
-          "10": "Mild, with symptoms such as tremor, heat intolerance, nervousness or muscular weakness, or; continuous medication required for control"
-        }
+        "type": "rated-as",
+        "ratedUnder": "Evaluate as hyperthyroidism under diagnostic code 7900",
+        "notes": [
+          "Per 38 CFR § 4.119, DC 7901 (Thyroid enlargement, toxic) is rated as hyperthyroidism under DC 7900"
+        ]
       },
-      "lastVerifiedDate": "2026-01-18"
+      "lastVerifiedDate": "2026-01-19"
     },
     {
       "id": 562,
@@ -16994,7 +17109,8 @@
         "underactive thyroid",
         "myxedema",
         "low thyroid",
-        "thyroid deficiency"
+        "thyroid deficiency",
+        "hashimoto's thyroiditis"
       ],
       "searchTerms": [
         "hypothyroidism",
@@ -17002,11 +17118,31 @@
         "myxedema",
         "low thyroid",
         "thyroid deficiency",
-        "7903"
+        "7903",
+        "hashimoto",
+        "thyroid"
       ],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.119#p-4.119(7903)",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Documentation must include: TSH and free T4 levels showing elevated TSH and low thyroid hormones; symptoms (fatigue, weight gain, cold intolerance, depression, muscle weakness); medication regimen (levothyroxine dosage); and functional limitations on daily activities.",
+      "presumptiveInfo": {
+        "agentOrange": {
+          "isPresumptive": true,
+          "addedBy": "Blue Water Navy Vietnam Veterans Act (2019)",
+          "statute": "38 CFR § 3.309(e)",
+          "note": "Hypothyroidism is presumptive for Agent Orange exposure under the Blue Water Navy Act, NOT the PACT Act"
+        },
+        "radiation": {
+          "isPresumptive": true,
+          "statute": "38 CFR § 3.311",
+          "note": "Hypothyroidism is a 'radiogenic disease' under 38 CFR § 3.311(b)(2)(xxii) - if you were exposed to ionizing radiation during service and develop hypothyroidism, the VA must consider whether radiation caused the condition"
+        },
+        "oneYear": {
+          "isPresumptive": true,
+          "statute": "38 CFR § 3.309(a)",
+          "note": "Endocrinopathies (including hypothyroidism) are on the chronic disease list in 38 CFR § 3.309(a). If manifested to a compensable degree within ONE YEAR of separation from service, service connection is presumed."
+        }
+      },
       "relatedSecondaryConditions": [
         {
           "name": "Major Depressive Disorder",
@@ -17025,8 +17161,16 @@
           "diagnosticCode": "7399"
         },
         {
-          "name": "Constipation",
+          "name": "Constipation (IBS)",
           "diagnosticCode": "7319"
+        },
+        {
+          "name": "Carpal Tunnel Syndrome",
+          "diagnosticCode": "8515"
+        },
+        {
+          "name": "Peripheral Neuropathy",
+          "diagnosticCode": "8520"
         }
       ],
       "ratingCriteria": {
@@ -17038,10 +17182,11 @@
         "notes": [
           "Note (1): The 100% evaluation shall continue for six months beyond the date that an examining physician has determined crisis stabilization. Thereafter, the residual effects of hypothyroidism shall be rated under the appropriate diagnostic code(s) within the appropriate body system(s) (e.g., eye, digestive, and mental disorders).",
           "Note (2): The 30% evaluation shall continue for six months after initial diagnosis. Thereafter, rate residuals of disease or medical treatment under the most appropriate diagnostic code(s) under the appropriate body system (e.g., eye, digestive, mental disorders).",
-          "Note (3): If eye involvement, such as exophthalmos, corneal ulcer, blurred vision, or diplopia, is also present due to thyroid disease, also separately evaluate under the appropriate diagnostic code(s) in § 4.79."
+          "Note (3): If eye involvement, such as exophthalmos, corneal ulcer, blurred vision, or diplopia, is also present due to thyroid disease, also separately evaluate under the appropriate diagnostic code(s) in § 4.79.",
+          "IMPORTANT: Hypothyroidism is presumptive for Agent Orange exposure (Blue Water Navy Act 2019), NOT the PACT Act. It is also a radiogenic disease under 38 CFR § 3.311. Additionally, as an endocrinopathy, it qualifies for one-year presumptive service connection under 38 CFR § 3.309(a) if manifested to compensable degree within one year of separation."
         ]
       },
-      "lastVerifiedDate": "2026-01-18",
+      "lastVerifiedDate": "2026-01-19",
       "ecfrLastAmended": "2017-11-02"
     },
     {
@@ -22725,6 +22870,10 @@
       "obstructive sleep apnea",
       "OSA",
       "sleep-disordered breathing",
+      "CPAP",
+      "apnea",
+      "sleep",
+      "sleep disorder",
       "6847"
     ],
     "liver": [
@@ -23199,6 +23348,9 @@
     "rhinitis": [
       "nasal inflammation",
       "stuffy nose",
+      "chronic rhinitis",
+      "allergic rhinitis",
+      "nasal congestion",
       "6522"
     ],
     "pneumonia": [

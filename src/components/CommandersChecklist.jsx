@@ -32,8 +32,15 @@ export default function CommandersChecklist({ isWidget = false, onClose = null, 
   const handleMilestoneClick = (milestone) => {
     if (onToolSelect && TOOL_LINKS[milestone.id]) {
       onToolSelect(TOOL_LINKS[milestone.id]);
+      // Close the modal when navigating to a tool
+      setShowModal(false);
       if (onClose) onClose();
     }
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+    if (onClose) onClose();
   };
 
   // Get status message based on percentage
@@ -122,7 +129,7 @@ export default function CommandersChecklist({ isWidget = false, onClose = null, 
         {showModal && (
           <ChecklistModal
             progress={progress}
-            onClose={() => setShowModal(false)}
+            onClose={handleClose}
             onMilestoneClick={handleMilestoneClick}
           />
         )}
@@ -134,7 +141,7 @@ export default function CommandersChecklist({ isWidget = false, onClose = null, 
   return showModal ? (
     <ChecklistModal
       progress={progress}
-      onClose={onClose || (() => setShowModal(false))}
+      onClose={handleClose}
       onMilestoneClick={handleMilestoneClick}
     />
   ) : null;
@@ -152,8 +159,27 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
 
   const completedMilestones = progress.completedMilestones.map(m => m.id);
 
+  // ESC key handler
+  React.useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        // Close if clicking the backdrop (not the modal content)
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className={`bg-gradient-to-r ${

@@ -7,9 +7,12 @@
  * Time Machine - Intent to File Countdown
  * Shows the ticking clock and financial consequences of ITF expiration
  * Critical for preventing backpay loss
+ * 
+ * IMPORTANT: Payment starts first of month FOLLOWING effective date per 38 CFR § 3.400
  */
 
 import React, { useState, useEffect } from 'react';
+import { calculatePaymentEffectiveDate, calculateBackpayMonths } from '../utils/vaCalculator';
 
 const ITF_STORAGE_KEY = 'vet_rate_itf_date';
 const ESTIMATED_RATING_KEY = 'vet_rate_estimated_rating';
@@ -64,17 +67,27 @@ export default function TimeMachine({ isWidget = false, onClose = null }) {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       const daysSinceITF = Math.floor((now - itf) / (1000 * 60 * 60 * 24));
-      const monthsSinceITF = Math.floor(daysSinceITF / 30);
+      
+      // FIXED: Use correct payment effective date calculation per 38 CFR § 3.400
+      // Payment starts FIRST OF FOLLOWING MONTH after effective date (ITF date)
+      const paymentStartDate = calculatePaymentEffectiveDate(itf);
+      const actualBackpayMonths = calculateBackpayMonths(itf, now);
 
       const monthlyRate = VA_MONTHLY_RATES[estimatedRating] || 0;
-      const potentialBackpay = monthlyRate * monthsSinceITF;
-      const atRiskBackpay = monthlyRate * Math.max(0, 12 - monthsSinceITF);
+      const potentialBackpay = monthlyRate * actualBackpayMonths;
+      
+      // Calculate months remaining until 1 year from ITF
+      const maxBackpayDate = new Date(itf);
+      maxBackpayDate.setFullYear(maxBackpayDate.getFullYear() + 1);
+      const maxBackpayMonths = calculateBackpayMonths(itf, maxBackpayDate);
+      const atRiskBackpay = monthlyRate * Math.max(0, maxBackpayMonths - actualBackpayMonths);
 
       setCountdown({
         daysRemaining: diffDays,
         expirationDate,
         daysSinceITF,
-        monthsSinceITF,
+        monthsSinceITF: actualBackpayMonths, // Now accurate with payment effective date
+        paymentStartDate, // Show when payments actually begin
         potentialBackpay,
         atRiskBackpay,
         monthlyRate,
@@ -309,6 +322,13 @@ export default function TimeMachine({ isWidget = false, onClose = null }) {
                       <br />
                       at {estimatedRating}% rating (${countdown.monthlyRate}/mo)
                     </p>
+                    <div className="mt-3 pt-3 border-t border-green-300 dark:border-green-700">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <strong>Payment Start Date:</strong> {countdown.paymentStartDate?.toLocaleDateString() || 'Calculating...'}
+                        <br />
+                        <em>(First of month following effective date per 38 CFR § 3.400)</em>
+                      </p>
+                    </div>
                   </div>
 
                   {/* At Risk */}

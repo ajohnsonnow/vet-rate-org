@@ -65,7 +65,9 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
         probability: suggestion.probability,
         mechanism: suggestion.mechanism,
         nexusTheory: suggestion.nexusTheory,
-        medicalCitations: suggestion.medicalCitations,
+        medicalEvidence: suggestion.medicalEvidence || suggestion.medicalCitations,
+        ecfrDiagnosticCode: suggestion.ecfrDiagnosticCode,
+        evidenceType: suggestion.evidenceType,
         status: 'Drafting'
       });
       
@@ -133,7 +135,9 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
           probability: suggestion.probability,
           mechanism: suggestion.mechanism,
           nexusTheory: suggestion.nexusTheory,
-          medicalCitations: suggestion.medicalCitations,
+          medicalEvidence: suggestion.medicalEvidence || suggestion.medicalCitations,
+          ecfrDiagnosticCode: suggestion.ecfrDiagnosticCode,
+          evidenceType: suggestion.evidenceType,
           status: 'Drafting'
         });
         if (saved) {
@@ -470,6 +474,11 @@ const SecondaryConditionCard = ({
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getMechanismBadgeColor(suggestion.mechanism)}`}>
                 {suggestion.mechanism}
               </span>
+              {suggestion.ecfrDiagnosticCode && (
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-300">
+                  📋 {suggestion.ecfrDiagnosticCode}
+                </span>
+              )}
               {suggestion.warning && (
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
                   ⚠️ Medication-Related
@@ -532,12 +541,15 @@ const SecondaryConditionCard = ({
             </div>
           )}
 
-          {/* Medical Citations */}
-          {suggestion.medicalCitations && suggestion.medicalCitations.length > 0 && (
+          {/* Medical Evidence (Literature Support) */}
+          {(suggestion.medicalEvidence || suggestion.medicalCitations) && (suggestion.medicalEvidence || suggestion.medicalCitations).length > 0 && (
             <div className="mb-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Medical Literature Support</h4>
+              {suggestion.evidenceType && (
+                <p className="text-xs text-gray-500 mb-2 italic">{suggestion.evidenceType}</p>
+              )}
               <ul className="space-y-2">
-                {suggestion.medicalCitations.map((citation, idx) => (
+                {(suggestion.medicalEvidence || suggestion.medicalCitations).map((citation, idx) => (
                   <li key={idx} className="flex items-start text-sm text-gray-700">
                     <svg className="w-4 h-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

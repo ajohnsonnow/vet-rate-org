@@ -31,6 +31,12 @@ export function normalizeCondition(condition) {
     return 'hearing_loss';
   }
   
+  // Sleep Conditions
+  if (normalized.includes('sleep apnea') || normalized.includes('osa') || normalized.includes('obstructive sleep') || 
+      normalized.includes('apnea') || normalized.includes('sleep disorder') && normalized.includes('breathing')) {
+    return 'sleep_apnea';
+  }
+  
   // Knee Conditions (laterality matters)
   if ((normalized.includes('knee') || normalized.includes('patella')) && 
       (normalized.includes('right') || normalized.includes('rt') || normalized.includes('r.'))) {
@@ -163,6 +169,7 @@ export function getDisplayName(slug) {
     'depression': 'Major Depressive Disorder',
     'tinnitus': 'Tinnitus (Ringing in Ears)',
     'hearing_loss': 'Hearing Loss (Sensorineural)',
+    'sleep_apnea': 'Obstructive Sleep Apnea (OSA)',
     'knee_right': 'Right Knee Condition',
     'knee_left': 'Left Knee Condition',
     'shoulder_right': 'Right Shoulder Condition',

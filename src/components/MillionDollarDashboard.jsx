@@ -82,7 +82,7 @@ const STATE_PROPERTY_TAX_EXEMPTIONS = {
   'New York': { exemption: 'Partial', annualValue: 3000 },
   'North Carolina': { exemption: 'First $45k', annualValue: 800 },
   'North Dakota': { exemption: 'Full', annualValue: 2500 },
-  'Ohio': { exemption: 'Full', annualValue: 3000 },
+  'Ohio': { exemption: 'Partial (Homestead Exemption up to $50k)', annualValue: 700 },
   'Oklahoma': { exemption: 'Full', annualValue: 2000 },
   'Oregon': { exemption: 'Up to $24k', annualValue: 3500 },
   'Pennsylvania': { exemption: 'Full', annualValue: 3000 },
@@ -724,6 +724,10 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                 ⚠️ These are estimates for educational purposes only. Actual values depend on individual circumstances, 
                 VA policy changes, state laws, and other factors. COLA rates vary annually. Consult a financial advisor 
                 for personal planning. Property tax exemptions vary by state and locality.
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                <strong>Note:</strong> This calculator shows base VA compensation rates. Veterans receiving Special Monthly Compensation (SMC) 
+                at any level (SMC-K, SMC-L, SMC-S, etc.) will have higher lifetime values not reflected here.
               </p>
             </div>
             

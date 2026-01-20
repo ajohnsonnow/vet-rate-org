@@ -12,6 +12,7 @@
  */
 
 import { interceptBeforeAICall } from './crisisInterceptor';
+import { buildSystemPrompt, validateAIResponse } from './aiSystemPrompts';
 
 // Storage keys
 const AI_MODE_KEY = 'vet_rate_ai_mode'; // 'cloud' | 'local'
@@ -294,11 +295,14 @@ const generateWithLocalAI = async (prompt, options = {}) => {
  * 
  * @param {string} prompt - The user prompt
  * @param {Object} options - Generation options
- * @param {string} options.systemPrompt - System prompt for context
+ * @param {string} options.taskType - Type of task for system prompt (cfile, nexus, statement, etc.)
+ * @param {object} options.context - Additional context for system prompt
+ * @param {string} options.systemPrompt - Override system prompt for context
  * @param {number} options.maxTokens - Maximum tokens to generate
  * @param {number} options.temperature - Temperature for generation
  * @param {function} options.onStream - Callback for streaming (local AI only)
  * @param {boolean} options.skipCrisisCheck - Skip crisis interception (for internal use)
+ * @param {boolean} options.skipValidation - Skip AI response validation
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
 export const generateAI = async (prompt, options = {}) => {
@@ -316,14 +320,41 @@ export const generateAI = async (prompt, options = {}) => {
     throw new Error('No AI available. Please configure a Gemini API key or initialize Local AI.');
   }
 
+  // Build system prompt with anti-hallucination guardrails (unless overridden)
+  const systemPrompt = options.systemPrompt || buildSystemPrompt(options.taskType || 'general', options.context);
+  
+  // Prepend system prompt to user prompt
+  const fullPrompt = systemPrompt 
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${prompt}`
+    : prompt;
+
   try {
+    let text;
+    let usedMode;
+    
     if (effectiveMode === AI_MODES.LOCAL) {
-      const text = await generateWithLocalAI(prompt, options);
-      return { text, mode: AI_MODES.LOCAL };
+      text = await generateWithLocalAI(fullPrompt, options);
+      usedMode = AI_MODES.LOCAL;
     } else {
-      const text = await generateWithCloudAI(prompt, options);
-      return { text, mode: AI_MODES.CLOUD };
+      text = await generateWithCloudAI(fullPrompt, options);
+      usedMode = AI_MODES.CLOUD;
     }
+    
+    // Validate AI response for hallucinations (unless explicitly skipped)
+    if (!options.skipValidation && options.taskType) {
+      const validation = validateAIResponse(text, options.taskType);
+      if (!validation.isValid) {
+        console.warn('⚠️ AI response validation warnings:', validation.warnings);
+        return {
+          text,
+          mode: usedMode,
+          validationWarnings: validation.warnings
+        };
+      }
+    }
+    
+    return { text, mode: usedMode };
+    
   } catch (err) {
     // If preferred mode fails, try fallback
     const fallbackMode = effectiveMode === AI_MODES.LOCAL ? AI_MODES.CLOUD : AI_MODES.LOCAL;
@@ -333,10 +364,10 @@ export const generateAI = async (prompt, options = {}) => {
       console.warn(`Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`, err.message);
       try {
         if (fallbackMode === AI_MODES.LOCAL) {
-          const text = await generateWithLocalAI(prompt, options);
+          const text = await generateWithLocalAI(fullPrompt, options);
           return { text, mode: AI_MODES.LOCAL, fallback: true };
         } else {
-          const text = await generateWithCloudAI(prompt, options);
+          const text = await generateWithCloudAI(fullPrompt, options);
           return { text, mode: AI_MODES.CLOUD, fallback: true };
         }
       } catch (fallbackErr) {
