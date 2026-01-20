@@ -980,7 +980,7 @@ const PainPainter = ({ onClose, onExport }) => {
             {activeTab === 'map' && (
               <>
                 {/* Mode Toggle & Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
                   {/* Standard Views Toggle - WCAG Compliant */}
                   <div 
                     className="flex bg-gray-800 rounded-lg p-1" 
@@ -995,14 +995,14 @@ const PainPainter = ({ onClose, onExport }) => {
                         aria-selected={view === key}
                         aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
                         tabIndex={view === key ? 0 : -1}
-                        className={`px-3 py-2 rounded-md transition-colors flex items-center gap-1.5 ${
+                        className={`px-2 sm:px-3 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-1.5 min-w-[60px] justify-center ${
                           view === key 
                             ? 'bg-blue-600 text-white' 
                             : 'text-gray-400 hover:text-white hover:bg-gray-700'
                         }`}
                       >
-                        <span>{viewData.icon}</span>
-                        <span className="hidden sm:inline text-sm">{viewData.name.split(' ')[0]}</span>
+                        <span className="text-base">{viewData.icon}</span>
+                        <span className="hidden sm:inline text-xs sm:text-sm">{viewData.name.split(' ')[0]}</span>
                       </button>
                     ))}
                   </div>
@@ -1011,23 +1011,23 @@ const PainPainter = ({ onClose, onExport }) => {
                   <div className="flex bg-gray-800 rounded-lg p-1">
                     <button
                       onClick={() => setMode('select')}
-                      className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                      className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
                         mode === 'select' 
                           ? 'bg-green-600 text-white' 
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
-                      <span>👆</span> Select
+                      <span>👆</span> <span className="hidden xs:inline">Select</span>
                     </button>
                     <button
                       onClick={() => setMode('paint')}
-                      className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                      className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm ${
                         mode === 'paint' 
                           ? 'bg-pink-600 text-white' 
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
-                      <span>🎨</span> Paint
+                      <span>🎨</span> <span className="hidden xs:inline">Paint</span>
                     </button>
                   </div>
                   

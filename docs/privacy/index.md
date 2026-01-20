@@ -42,6 +42,24 @@ We believe veterans' personal information deserves the highest level of protecti
 <a href="ai-assistant/" class="doc-button">Learn More →</a>
 </div>
 
+<div class="feature-card">
+<h3>🔍 Security Proof</h3>
+<p>No BS transparency - verify our claims yourself.</p>
+<a href="security-proof/" class="doc-button">Verify Now →</a>
+</div>
+
+<div class="feature-card">
+<h3>❓ Skeptic FAQ</h3>
+<p>Addressing "if it's free, you're the product" concerns.</p>
+<a href="skeptic-faq/" class="doc-button">Read FAQ →</a>
+</div>
+
+<div class="feature-card">
+<h3>📖 Open Source Verification</h3>
+<p>How to audit the code yourself - no programming required.</p>
+<a href="open-source-verification/" class="doc-button">Learn How →</a>
+</div>
+
 ---
 
 ## Privacy at a Glance

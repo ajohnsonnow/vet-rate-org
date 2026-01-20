@@ -87,6 +87,7 @@ import RetroPayHunter from './components/RetroPayHunter';
 import PainPainter from './components/PainPainter';
 import VAAITransparency from './components/VAAITransparency';
 import ShareButton, { PIISensitive } from './components/ShareButton';
+import SecurityBadge from './components/SecurityBadge';
 import { HelperModeProvider } from './contexts/HelperModeContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
@@ -2440,6 +2441,9 @@ function App() {
       )}
       
       {/* FORCE MULTIPLIER: Focus Mode Toggle for TBI/ADHD users - Now integrated into modal headers */}
+      
+      {/* Security Badge - Always visible proof of privacy */}
+      <SecurityBadge />
     </div>
   );
 }

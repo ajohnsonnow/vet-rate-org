@@ -470,12 +470,12 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📦 Core Components</p>
                             <p><strong>React Components:</strong> {FORMATTED_STATS.components}</p>
                             <p><strong>Utility Modules:</strong> {FORMATTED_STATS.utilities}</p>
-                            <p><strong>VA Forms:</strong> 16 PDF forms ready to download</p>
+                            <p><strong>VA Forms:</strong> {FORMATTED_STATS.vaForms}</p>
                           </div>
                           <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🗂️ Data Files</p>
                             <p><strong>Disabilities Database:</strong> {PROJECT_STATS.disabilitiesValidated} rated conditions</p>
-                            <p><strong>Secondary Conditions:</strong> Medically-linked relationships</p>
+                            <p><strong>Secondary Conditions:</strong> {FORMATTED_STATS.secondaryConditions}</p>
                             <p><strong>Regulations:</strong> 38 CFR Parts 3 & 4</p>
                             <p><strong>PACT Act Data:</strong> Toxic exposure coverage</p>
                             <p><strong>DBQ Logic Map:</strong> C&P exam question bank</p>
@@ -595,7 +595,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-600 mt-1">🤖</span>
-                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude Sonnet 4, Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) and Google Gemini powered the code development and implementation</span>
+                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude Sonnet 4, Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) powered the code development and implementation</span>
                 </li>
               </ul>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">

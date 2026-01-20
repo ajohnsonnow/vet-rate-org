@@ -240,11 +240,13 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         const dayOfMonth = effectiveDate.getDate();
         
         // If not the first of the month, might be missing days
+        // NOTE: Effective date is when entitlement began (decision date)
+        // Payment starts first of FOLLOWING month per 38 CFR § 3.400
         if (dayOfMonth !== 1) {
           alerts.push({
             pattern: CUE_PATTERNS.find(p => p.id === 'effective_date_wrong'),
             severity: 'medium',
-            message: `Effective date ${period.effectiveDate} is not the 1st of the month. Consider if an earlier date was warranted.`,
+            message: `Effective date (decision date) ${period.effectiveDate} is not the 1st of the month. Note: Payments begin first of FOLLOWING month per 38 CFR § 3.400. Consider if an earlier effective date was warranted.`,
           });
         }
       });
@@ -521,6 +523,19 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               </div>
             </div>
             
+            {/* Date Terminology Info Box */}
+            <div className="bg-blue-900/30 border-2 border-blue-500 rounded-xl p-4">
+              <h4 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
+                <span>📅</span> Understanding VA Payment Dates
+              </h4>
+              <div className="text-sm text-blue-200 space-y-1">
+                <p><strong>Effective Date:</strong> When your entitlement began (the decision date on your VA letter)</p>
+                <p><strong>Payment Effective Date:</strong> When payments actually start = <strong>first day of month FOLLOWING</strong> effective date</p>
+                <p className="text-xs text-blue-400 mt-2 italic">Per 38 CFR § 3.400: "Payment shall commence on the first day of the month following the month in which the effective date falls."</p>
+                <p className="text-xs text-amber-300 mt-2">💡 Example: Decision effective Jan 15, 2024 → Payments start Feb 1, 2024 (not Jan 15)</p>
+              </div>
+            </div>
+
             {/* Add Rating Period Form */}
             <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -529,8 +544,18 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                     Effective Date *
+                    <span className="group relative">
+                      <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
+                      <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
+                        <strong className="text-amber-400">Effective Date vs Payment Date:</strong>
+                        <br/>• <strong>Effective Date:</strong> When entitlement began (decision date)
+                        <br/>• <strong>Payment Start:</strong> First of FOLLOWING month (38 CFR § 3.400)
+                        <br/><br/>
+                        <em className="text-gray-400">Example: Effective date Feb 15, 2024 → Payments start Mar 1, 2024</em>
+                      </span>
+                    </span>
                   </label>
                   <input
                     type="date"
@@ -539,6 +564,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                   />
+                  <p className="text-xs text-gray-500 mt-1">This is the decision effective date (when entitlement began)</p>
                 </div>
                 
                 <div>

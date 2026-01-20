@@ -59,10 +59,13 @@ export function findSecondaryClaims(userDisabilities) {
             primaryCondition: original,
             primarySlug: slug,
             secondaryCondition: secondary.condition,
+            ecfrDiagnosticCode: secondary.ecfr_diagnostic_code || null,
             probability: secondary.probability,
             mechanism: secondary.mechanism,
             nexusTheory: secondary.nexus_theory,
-            medicalCitations: secondary.medical_citations || [],
+            // Support both old field name (medical_citations) and new field name (medical_evidence)
+            medicalEvidence: secondary.medical_evidence || secondary.medical_citations || [],
+            evidenceType: secondary.evidence_type || 'Medical Literature (for IMO/Nexus purposes)',
             source: 'direct_lookup'
           });
           alreadySuggested.add(secondary.condition);
@@ -106,13 +109,17 @@ export function findSecondaryClaims(userDisabilities) {
           primaryCondition: 'Chronic Pain Requiring NSAIDs',
           primarySlug: 'chronic_pain_nsaid',
           secondaryCondition: secondary.condition,
+          ecfrDiagnosticCode: secondary.condition.includes('GERD') ? 'DC 7206' : 
+                             secondary.condition.includes('Ulcer') ? 'DC 7304' : 
+                             secondary.condition.includes('Kidney') ? 'DC 7530' : null,
           probability: secondary.probability,
           mechanism: secondary.mechanism,
           nexusTheory: secondary.nexusTheory,
-          medicalCitations: [
+          medicalEvidence: [
             'Lanza et al., "Guidelines for prevention of NSAID-related ulcer complications," Am J Gastroenterol 2009',
             'Sostres et al., "Adverse effects of NSAIDs on the gastrointestinal tract," Gastroenterol Res Pract 2010'
           ],
+          evidenceType: 'Medical Literature (for IMO/Nexus purposes)',
           source: 'medication_bridge',
           warning: 'If you take NSAIDs (ibuprofen, naproxen, aspirin) daily or frequently for pain'
         });
@@ -136,13 +143,15 @@ export function findSecondaryClaims(userDisabilities) {
             primaryCondition: original,
             primarySlug: slug,
             secondaryCondition: contralateralDisplay,
+            ecfrDiagnosticCode: 'DC 5260/5261 or DC 5270/5271',
             probability: 'High',
             mechanism: 'Altered Gait',
             nexusTheory: `The veteran's service-connected ${original} necessitates an antalgic gait (pain-avoiding gait) to ambulate. This compensatory biomechanical alteration places disproportionate and excessive mechanical stress on the contralateral joint. The asymmetric loading pattern creates abnormal contact pressures on the articular cartilage, accelerating degenerative changes. This chronic mechanical overload proximately causes or aggravates the contralateral condition.`,
-            medicalCitations: [
+            medicalEvidence: [
               'Shakoor et al., "Asymmetric loading and contralateral joint OA," Arthritis Rheum 2011',
               'Thorp et al., "Biomechanical gait alterations and OA," Clin Biomech 2007'
             ],
+            evidenceType: 'Medical Literature (for IMO/Nexus purposes)',
             source: 'orthopedic_cascade'
           });
           alreadySuggested.add(contralateralDisplay);
@@ -159,13 +168,15 @@ export function findSecondaryClaims(userDisabilities) {
             primaryCondition: original,
             primarySlug: slug,
             secondaryCondition: lumbarDisplay,
+            ecfrDiagnosticCode: 'DC 5237/5242/5243',
             probability: 'High',
             mechanism: 'Altered Gait',
             nexusTheory: `The veteran's service-connected ${original} requires biomechanical compensation through altered gait mechanics, pelvic tilt, and postural adjustments. This asymmetric loading pattern creates abnormal stress distribution on the lumbar spine, particularly affecting the L4-L5 and L5-S1 segments. The altered kinetic chain proximately causes accelerated degenerative disc disease and facet arthropathy in the lumbar spine.`,
-            medicalCitations: [
+            medicalEvidence: [
               'Lewek et al., "OA and trunk kinematics during gait," Gait Posture 2006',
               'Hunt et al., "Biomechanical changes at spine due to lower limb OA," Arthritis Care Res 2011'
             ],
+            evidenceType: 'Medical Literature (for IMO/Nexus purposes)',
             source: 'orthopedic_cascade'
           });
           alreadySuggested.add(lumbarDisplay);

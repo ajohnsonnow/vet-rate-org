@@ -10,6 +10,8 @@ import {
   calculateCompensation,
   calculateWhatIf,
   calculateNeededRating,
+  detectPyramiding,
+  getAmputationMinimumRating,
   BODY_PARTS,
   VA_PAY_RATES_2026,
 } from '../utils/vaCalculator';
@@ -148,10 +150,12 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   // Calculate results from My Ratings
   const myRatingsResults = calculateVARating(myRatings);
   const myRatingsCompensation = calculateCompensation(myRatingsResults.combinedRating, dependents);
+  const myRatingsPyramiding = detectPyramiding(myRatings);
 
   // Calculate results
   const results = calculateVARating(conditions);
   const compensation = calculateCompensation(results.combinedRating, dependents);
+  const pyramiding = detectPyramiding(conditions);
   const whatIfResults = calculateWhatIf(conditions, whatIfRating, whatIfBilateral);
   const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
   const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
@@ -292,28 +296,29 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           </div>
 
           {/* Tab Navigation */}
-          <div className="px-6 pt-4 border-b dark:border-gray-700">
-            <nav className="flex gap-1 overflow-x-auto pb-1">
+          <div className="px-3 sm:px-6 pt-3 sm:pt-4 border-b dark:border-gray-700">
+            <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
-                { id: 'myratings', label: '⭐ My Ratings', icon: '⭐' },
-                ...(capResults.length > 0 ? [{ id: 'capresults', label: '🏥 C&P Results', icon: '🏥', badge: capResults.length }] : []),
-                { id: 'calculator', label: '🧮 Calculator', icon: '🧮' },
-                { id: 'paycheck', label: '💵 Paycheck', icon: '💵' },
-                { id: 'whatif', label: '🎯 What-If', icon: '🎯' },
-                { id: 'rates', label: '📊 2026 Rates', icon: '📊' },
+                { id: 'myratings', label: '⭐ My Ratings', shortLabel: '⭐ Mine', icon: '⭐' },
+                ...(capResults.length > 0 ? [{ id: 'capresults', label: '🏥 C&P Results', shortLabel: '🏥 C&P', icon: '🏥', badge: capResults.length }] : []),
+                { id: 'calculator', label: '🧮 Calculator', shortLabel: '🧮 Calc', icon: '🧮' },
+                { id: 'paycheck', label: '💵 Paycheck', shortLabel: '💵 Pay', icon: '💵' },
+                { id: 'whatif', label: '🎯 What-If', shortLabel: '🎯 If', icon: '🎯' },
+                { id: 'rates', label: '📊 2026 Rates', shortLabel: '📊 Rates', icon: '📊' },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  className={`min-w-[80px] px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 ${
                     activeTab === tab.id
                       ? tab.id === 'capresults' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="inline sm:hidden">{tab.shortLabel}</span>
                   {tab.badge && (
-                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${
+                    <span className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full font-bold ${
                       activeTab === tab.id ? 'bg-white/30' : 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
                     }`}>
                       {tab.badge}
@@ -499,6 +504,30 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                                 <span className="block mt-1">So close to 100%! Use What-If to explore options.</span>
                               )}
                             </p>
+                          </div>
+                        )}
+
+                        {/* Pyramiding Warnings for My Ratings */}
+                        {myRatingsPyramiding.hasPotentialPyramiding && (
+                          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-lg p-4">
+                            <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                              <span>⚠️</span> Pyramiding Alert
+                            </h5>
+                            <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
+                              {myRatingsPyramiding.summary}
+                            </p>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {myRatingsPyramiding.warnings.map((warning, idx) => (
+                                <div key={idx} className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500">
+                                  <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                                    {warning.message}
+                                  </p>
+                                  <p className="text-gray-600 dark:text-gray-400">
+                                    {warning.regulation}: {warning.guidance}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </>
@@ -931,6 +960,51 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       </div>
                     </div>
                   </div>
+
+                  {/* Pyramiding Warnings - NEW */}
+                  {pyramiding.hasPotentialPyramiding && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-xl p-4">
+                      <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-3 flex items-center gap-2">
+                        <span>⚠️</span> Pyramiding Alert
+                      </h4>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
+                        {pyramiding.summary}
+                      </p>
+                      <div className="space-y-2">
+                        {pyramiding.warnings.map((warning, idx) => (
+                          <div key={idx} className={`p-3 rounded-lg border-l-4 ${
+                            warning.severity === 'high' 
+                              ? 'bg-red-50 dark:bg-red-900/30 border-red-500' 
+                              : 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500'
+                          }`}>
+                            <div className="flex items-start justify-between mb-1">
+                              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                {warning.message}
+                              </p>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                warning.severity === 'high' 
+                                  ? 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200' 
+                                  : 'bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200'
+                              }`}>
+                                {warning.severity.toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                              <strong>{warning.regulation}:</strong> {warning.guidance}
+                            </p>
+                            {warning.conditions && (
+                              <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
+                                <strong>Affected conditions:</strong> {warning.conditions.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
+                        Note: This is an automated check. Consult your C-file and 38 CFR schedules to confirm.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Gap Analysis */}
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
