@@ -543,22 +543,27 @@ Write a 2-3 sentence clinical-style note suitable for VA disability documentatio
     try {
       const prompt = getAISuggestionPrompt(field);
       
-      const response = await generateAI({
-        prompt: `${prompt}
+      const response = await generateAI(
+        `${prompt}
 
 IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
-        temperature: 0.7,
-        maxTokens: 300,
-        systemPrompt: 'You are a VA disability documentation assistant helping veterans create accurate, clinical-quality symptom logs. Provide concise, directly usable text that veterans can customize. Use appropriate medical terminology when relevant.'
-      });
+        {
+          temperature: 0.7,
+          maxTokens: 300,
+          systemPrompt: 'You are a VA disability documentation assistant helping veterans create accurate, clinical-quality symptom logs. Provide concise, directly usable text that veterans can customize. Use appropriate medical terminology when relevant.'
+        }
+      );
       
-      if (response.success && response.text) {
+      // generateAI returns { text, mode } object - extract the text content
+      const text = response?.text || response;
+      if (text) {
+        const textStr = typeof text === 'string' ? text : JSON.stringify(text);
         setNewLog(prev => ({
           ...prev,
-          [field]: prev[field] ? `${prev[field]} ${response.text}` : response.text
+          [field]: prev[field] ? `${prev[field]} ${textStr}` : textStr
         }));
       } else {
-        setAIError(response.error || 'Failed to generate suggestion');
+        setAIError('Failed to generate suggestion');
       }
     } catch (error) {
       setAIError('AI generation failed. Please try again.');
@@ -751,82 +756,83 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="symptom-logger-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div ref={symptomLoggerContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-3xl">{config.emoji}</span>
-                </div>
-                <div>
-                  <h2 id="symptom-logger-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-                    Symptom Logger
-                    <AIStatusBadge status={aiStatus} />
-                  </h2>
-                  <p className="text-white/80 text-sm sm:text-base mt-1">
-                    The 50% Maker • Track Frequency for VA Ratings
-                  </p>
-                </div>
+      <div ref={symptomLoggerContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+          
+          <div className="relative flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                <span className="text-3xl">{config.emoji}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowAISettings(!showAISettings)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    showAISettings ? 'bg-white/30 text-white' : 'hover:bg-white/20 text-white/80'
-                  }`}
-                  title="AI Settings"
-                >
-                  <span className="text-xl">🤖</span>
-                </button>
-                <ShareButton 
-                  targetRef={symptomLoggerContentRef}
-                  filename="symptom-log"
-                  variant="icon"
-                />
-                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Symptom Logger" />}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* AI Settings Panel */}
-            {showAISettings && (
-              <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium">🤖 AI Assistant</span>
-                  <span className="text-sm text-white/70">
-                    {aiStatus.available ? `Using ${aiStatus.mode}` : 'Not configured'}
-                  </span>
-                </div>
-                <AIModeSelector 
-                  onModeChange={async () => {
-                    const status = await getAIStatus();
-                    setAIStatus(status);
-                  }}
-                />
-                <p className="text-xs text-white/70 mt-2">
-                  ✨ AI can help suggest triggers, activity impact, and clinical-style notes for your symptom entries.
+              <div>
+                <h2 id="symptom-logger-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+                  Symptom Logger
+                  <AIStatusBadge status={aiStatus} />
+                </h2>
+                <p className="text-white/80 text-sm sm:text-base mt-1">
+                  The 50% Maker • Track Frequency for VA Ratings
                 </p>
               </div>
-            )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAISettings(!showAISettings)}
+                className={`p-2 rounded-lg transition-colors ${
+                  showAISettings ? 'bg-white/30 text-white' : 'hover:bg-white/20 text-white/80'
+                }`}
+                title="AI Settings"
+              >
+                <span className="text-xl">🤖</span>
+              </button>
+              <ShareButton 
+                targetRef={symptomLoggerContentRef}
+                filename="symptom-log"
+                variant="icon"
+              />
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Symptom Logger" />}
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
+          
+          {/* AI Settings Panel */}
+          {showAISettings && (
+            <div className="mt-4 p-4 bg-white/10 backdrop-blur rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium">🤖 AI Assistant</span>
+                <span className="text-sm text-white/70">
+                  {aiStatus.available ? `Using ${aiStatus.mode}` : 'Not configured'}
+                </span>
+              </div>
+              <AIModeSelector 
+                onModeChange={async () => {
+                  const status = await getAIStatus();
+                  setAIStatus(status);
+                }}
+              />
+              <p className="text-xs text-white/70 mt-2">
+                ✨ AI can help suggest triggers, activity impact, and clinical-style notes for your symptom entries.
+              </p>
+            </div>
+          )}
+        </div>
 
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1">
           {/* Symptom Type Selector */}
           <div className="px-6 py-4 border-b dark:border-gray-700">
             <div className="flex flex-wrap gap-2">
@@ -1380,18 +1386,18 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
               </div>
             )}
           </div>
+        </div>
 
-          {/* Footer */}
-          <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <BuyMeCoffee show={logs.length > 0} trigger="symptom-logger" />
-              <button
-                onClick={onClose}
-                className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                Close
-              </button>
-            </div>
+        {/* Footer */}
+        <div className="flex-shrink-0 border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <BuyMeCoffee show={logs.length > 0} trigger="symptom-logger" />
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>

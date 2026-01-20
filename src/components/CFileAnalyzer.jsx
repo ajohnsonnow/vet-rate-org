@@ -12,12 +12,13 @@ import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessi
 import { analyzeCFile, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import ReportBugLink from './ReportBugLink';
 
 // Sub-components for the dashboard
 import CFileTimeline from './CFileTimeline';
 import CFileClaimsCards from './CFileClaimsCards';
 
-export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
+export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }) {
   // File upload state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -642,15 +643,15 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
+        <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
           <div className="px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔬</span>
@@ -672,6 +673,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
             <div className="flex items-center gap-3">
               {/* AI Status Badge - Fully Functional from Main Header */}
               <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="C-File Analyzer" />}
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
@@ -685,8 +687,8 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
           </div>
         </div>
         
-        {/* Main Content */}
-        <div className="p-4">
+        {/* Main Content - Scrollable */}
+        <div className="overflow-y-auto flex-1 p-4">
         {showPrivacyConsent && renderPrivacyConsent()}
         
         {isProcessing ? (
@@ -699,7 +701,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings }) {
         </div>
         
         {/* Footer Disclaimer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
             ⚠️ This tool provides general information only and is not legal or medical advice. 
             AI analysis may contain errors. Always verify findings with your official records and consult with a 

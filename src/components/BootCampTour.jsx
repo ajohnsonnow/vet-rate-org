@@ -208,7 +208,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       stagePadding: 10,
       stageRadius: 8,
       popoverClass: 'vetrate-tour-popover',
-      progressText: 'Step {{current}} of {{total}}',
+      progressText: '',
       nextBtnText: 'Next →',
       prevBtnText: '← Back',
       doneBtnText: 'Start My Claim! 🚀',
@@ -244,7 +244,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
             progressText: ''
           }
         },
-        // Step 2: Search Bar
+        // Step 1: Search Bar
         {
           element: '#tour-search-section',
           popover: {
@@ -255,16 +255,17 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               <ul style="margin: 10px 0; padding-left: 20px;">
                 <li>By name: "PTSD", "tinnitus", "knee"</li>
                 <li>By diagnostic code: "9411", "6260"</li>
-              </ul>{PROJECT_STATS.disabilitiesValidated}
+              </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                We cover <strong>all 751 conditions</strong> from 38 CFR Part 4.
+                Covers <strong>all ${PROJECT_STATS.disabilitiesValidated} conditions</strong> from 38 CFR Part 4.
               </p>
             `,
             side: 'bottom',
-            align: 'center'
+            align: 'center',
+            progressText: 'Step 1 of 5'
           }
         },
-        // Step 3: Quick Condition Picker
+        // Step 2: Quick Condition Picker
         {
           element: '#tour-quick-picker',
           popover: {
@@ -279,7 +280,8 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               </p>
             `,
             side: 'bottom',
-            align: 'center'
+            align: 'center',
+            progressText: 'Step 2 of 5'
           },
           onHighlightStarted: () => {
             // Scroll the Quick Condition Picker into view
@@ -289,7 +291,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
             }
           }
         },
-        // Step 4: My Packet Button (in Header)
+        // Step 3: My Packet Button (in Header)
         {
           element: '#tour-my-packet-btn',
           popover: {
@@ -307,10 +309,11 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               </p>
             `,
             side: 'bottom',
-            align: 'start'
+            align: 'start',
+            progressText: 'Step 3 of 5'
           }
         },
-        // Step 5: Tools Menu
+        // Step 4: Tools Menu
         {
           element: '#tour-tools-dropdown',
           popover: {
@@ -328,10 +331,11 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               </p>
             `,
             side: 'bottom',
-            align: 'center'
+            align: 'center',
+            progressText: 'Step 4 of 5'
           }
         },
-        // Step 6: Help Button
+        // Step 5: Help Button
         {
           element: '#tour-help-btn',
           popover: {
@@ -349,7 +353,8 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
               </p>
             `,
             side: 'bottom',
-            align: 'center'
+            align: 'center',
+            progressText: 'Step 5 of 5'
           }
         },
         // Final page (no step number)

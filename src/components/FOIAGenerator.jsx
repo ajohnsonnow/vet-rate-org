@@ -18,6 +18,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import jsPDF from 'jspdf';
+import ReportBugLink from './ReportBugLink';
 
 /**
  * Record types available for FOIA request
@@ -1018,15 +1019,18 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                 <p className="text-sm text-amber-100">FOIA / C-File Request Generator</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="FOIA Keysmith" />}
+              <button
+                onClick={onClose}
+                className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         

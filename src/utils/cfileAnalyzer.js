@@ -129,7 +129,7 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
   
   try {
     // Use unified AI service - automatically chooses Cloud or Local
-    const content = await generateAI(userPrompt, {
+    const response = await generateAI(userPrompt, {
       temperature: 0.2,
       maxTokens: 32768,
       expectJSON: true
@@ -137,15 +137,21 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
     
     onProgress('Processing AI response...');
     
+    // generateAI returns { text, mode } object - extract the text content
+    const content = response?.text || response;
+    
     if (!content) {
       throw new Error('No analysis content received from AI');
     }
+    
+    // Ensure content is a string before processing
+    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
     
     // Parse the JSON response
     let analysisResult;
     try {
       // Clean up the response in case there's any markdown formatting
-      let cleanContent = content.trim();
+      let cleanContent = contentStr.trim();
       if (cleanContent.startsWith('```json')) {
         cleanContent = cleanContent.slice(7);
       }
@@ -160,7 +166,7 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
       analysisResult = JSON.parse(cleanContent);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      console.error('Raw content:', content.substring(0, 500));
+      console.error('Raw content:', contentStr.substring(0, 500));
       throw new Error('Failed to parse AI response. The AI may have returned an invalid format.');
     }
     

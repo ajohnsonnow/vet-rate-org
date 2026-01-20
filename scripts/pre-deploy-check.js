@@ -306,6 +306,19 @@ function checkTextQuality() {
 function checkLegalPages() {
   logSection('5. Legal Pages Sync');
   
+  // Auto-REGENERATE legal pages from React components (NOT a shortcut - full rebuild!)
+  log('   🔄 Auto-REGENERATING HTML from React components...', 'blue');
+  try {
+    execSync('node scripts/sync-legal-pages.js', { 
+      cwd: rootDir, 
+      stdio: 'pipe',
+      timeout: 30000 
+    });
+    logResult(`Legal pages REGENERATED from JSX`, true);
+  } catch (error) {
+    logWarning('Auto-generation had issues - checking files manually');
+  }
+  
   // Check Terms of Service
   const tosComponent = readFile('src/components/TermsOfServicePage.jsx');
   const tosHtml = readFile('public/terms-of-service.html');

@@ -108,17 +108,21 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
       const fullPrompt = TONE_ANALYSIS_PROMPT + '\n\n' + text;
       
       // Use unified AI service
-      const aiResponse = await generateAI(fullPrompt, {
+      const response = await generateAI(fullPrompt, {
         temperature: 0.3,
         maxTokens: 2000,
         expectJSON: true
       });
 
+      // generateAI returns { text, mode } object - extract the text content
+      const aiResponse = response?.text || response;
+      const responseStr = typeof aiResponse === 'string' ? aiResponse : JSON.stringify(aiResponse);
+
       // Parse the AI response (should be JSON)
       let parsedSuggestions = [];
       try {
         // Remove markdown code fences if present
-        const cleanedResponse = aiResponse
+        const cleanedResponse = responseStr
           .replace(/```json\n?/g, '')
           .replace(/```\n?/g, '')
           .trim();

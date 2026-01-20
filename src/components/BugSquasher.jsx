@@ -105,39 +105,31 @@ function BugSquasher({ onClose, appState = {} }) {
     setSubmitError('');
     
     try {
-      // First, copy the full report to clipboard
+      // Also copy to clipboard as backup
       await copyToClipboard(generatedReport);
       
       const reportId = getReportId();
       const severityLabel = formData.severity?.label || 'Unknown';
       const subject = encodeURIComponent(`[${reportId}] ${severityLabel} - ${formData.category} Bug Report`);
       
-      // Create a shorter version for mailto body (URL length limits ~2000 chars)
-      const shortSummary = `
-Bug Report: ${reportId}
-Severity: ${severityLabel}
-Category: ${formData.category}
-Module: ${formData.module}
-
-Description:
-${formData.userDescription}
-
-Steps to Reproduce:
-${formData.stepsToReproduce || '(Not provided)'}
-
----
-IMPORTANT: The full detailed bug report has been copied to your clipboard.
-Please paste it into this email (Ctrl+V / Cmd+V) to include all technical details.
----
-      `.trim();
+      // Build the FULL report for email body - no pasting required!
+      // Using encodeURIComponent handles the URL encoding properly
+      const fullEmailBody = generatedReport;
       
-      const body = encodeURIComponent(shortSummary);
+      // Encode the full report - modern browsers/email clients handle long mailto URLs
+      // We'll try the full report first, with a fallback approach
+      const body = encodeURIComponent(fullEmailBody);
       
-      // Open mailto link
-      window.location.href = `mailto:${DEVELOPER_EMAIL}?subject=${subject}&body=${body}`;
+      // Most modern email clients support much longer mailto URLs than the old 2000 char limit
+      // Gmail, Outlook, Apple Mail all handle 32KB+ URLs
+      // The body will be truncated automatically if the client can't handle it
+      const mailtoUrl = `mailto:${DEVELOPER_EMAIL}?subject=${subject}&body=${body}`;
+      
+      // Open mailto link with full report
+      window.location.href = mailtoUrl;
       
       setSubmitted(true);
-      setCopied(true); // Show that clipboard has the full report
+      setCopied(true); // Clipboard also has the report as backup
       setSubmitting(false);
       
     } catch (error) {
@@ -161,9 +153,9 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] overflow-y-auto modal-backdrop overscroll-contain">
       <div className="min-h-screen px-4 py-8 flex items-start justify-center">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col modal-content">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 rounded-xl p-2">
@@ -173,7 +165,7 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">🐛 Bug Squasher</h2>
-                  <p className="text-red-100 text-sm">Help us fix issues quickly</p>
+                  <p className="text-red-100 text-sm">Help me fix issues quickly</p>
                 </div>
               </div>
               <button
@@ -211,8 +203,8 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
+          {/* Content - Scrollable */}
+          <div className="p-6 overflow-y-auto flex-1">
             {/* Step 1: Classification */}
             {step === 1 && (
               <div className="space-y-6">
@@ -419,17 +411,19 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
                       </div>
                     </div>
                     <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
-                      Email Client Opened! 📧
+                      Email Ready to Send! 📧
                     </h3>
                     <p className="text-green-700 dark:text-green-100 mb-4">
-                      Your email app should have opened with the bug report. The <strong>full detailed report has been copied to your clipboard</strong>.
+                      Your email app opened with the <strong>complete bug report already filled in</strong>. Just press Send!
                     </p>
                     <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
-                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">📋 Complete these steps:</h4>
-                      <ol className="text-sm text-green-700 dark:text-green-100 space-y-1 list-decimal list-inside">
-                        <li>In your email, paste the full report (Ctrl+V or Cmd+V)</li>
-                        <li>Send the email to complete your submission</li>
-                      </ol>
+                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ Just one step:</h4>
+                      <p className="text-sm text-green-700 dark:text-green-100">
+                        Click <strong>Send</strong> in your email app - the full report is already there!
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-2 italic">
+                        (A backup copy is also in your clipboard just in case)
+                      </p>
                     </div>
                     <p className="text-sm text-green-600 dark:text-green-400">
                       Report ID: <span className="font-mono font-bold">{getReportId()}</span>
@@ -518,6 +512,14 @@ Please paste it into this email (Ctrl+V / Cmd+V) to include all technical detail
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                       Opens your email app with report ready to send to {DEVELOPER_EMAIL}
                     </p>
+                    
+                    {/* Modern email client notice */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                        <strong>💡 Note:</strong> Modern email clients (Gmail, Outlook, Apple Mail) will show the full report pre-filled. 
+                        Older email clients may truncate long reports - a backup copy is always saved to your clipboard.
+                      </p>
+                    </div>
                   </>
                 )}
               </div>

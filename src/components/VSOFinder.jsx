@@ -101,8 +101,10 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
 
       const response = await generateAI(prompt);
       
-      if (response) {
-        setAIResponse(response);
+      // generateAI returns { text, mode } object - extract the text content
+      const aiText = response?.text || response;
+      if (aiText) {
+        setAIResponse(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
       } else {
         setError('Failed to get AI response.');
       }
@@ -190,15 +192,15 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vso-finder-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-sky-600 via-cyan-600 to-sky-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-sky-600 via-cyan-600 to-sky-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden flex-shrink-0">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -233,8 +235,8 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
+          {/* Content - Scrollable */}
+          <div className="p-6 overflow-y-auto flex-1">
             {/* Critical Warning Banner */}
             <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 border-2 border-red-300 dark:border-red-600 rounded-xl">
               <div className="flex items-start gap-3">

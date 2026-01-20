@@ -480,7 +480,7 @@ This shows you the "gold standard" before you start your own.
 After acknowledging the disclaimer, you'll see:
 
 1. **Header** - Navigation to main features
-2. **Search Bar** - Search 751 disabilities
+2. **Search Bar** - Search ${PROJECT_STATS.disabilitiesValidated} disabilities
 3. **Feature Cards** - Quick access to tools
 4. **Footer** - Links to policies and support
 
@@ -581,7 +581,7 @@ Master the search functionality to find any VA disability condition.
 
 ## What You Can Search
 
-- **751 disabilities** from 38 CFR Part 4
+- **${PROJECT_STATS.disabilitiesValidated} disabilities** from 38 CFR Part 4
 - **Condition names** (e.g., "PTSD", "tinnitus")
 - **Diagnostic codes** (e.g., "9411", "6260")
 - **Keywords** (e.g., "knee", "back", "anxiety")

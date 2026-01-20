@@ -250,15 +250,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="calculator-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div ref={calculatorContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div ref={calculatorContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden flex-shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             
             <div className="relative flex items-start justify-between">
@@ -295,8 +295,8 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="px-3 sm:px-6 pt-3 sm:pt-4 border-b dark:border-gray-700">
+          {/* Tab Navigation - Sticky */}
+          <div className="px-3 sm:px-6 pt-3 sm:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
             <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
                 { id: 'myratings', label: '⭐ My Ratings', shortLabel: '⭐ Mine', icon: '⭐' },
@@ -329,8 +329,8 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
             </nav>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
+          {/* Content - Scrollable */}
+          <div className="p-6 overflow-y-auto flex-1">
             {/* My Ratings Tab - Save and manage your actual VA ratings */}
             {activeTab === 'myratings' && (
               <div className="space-y-6">

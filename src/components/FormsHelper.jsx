@@ -4705,9 +4705,9 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center overflow-y-auto">
       <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
-        <div ref={formsContentRef} className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden">
+        <div ref={formsContentRef} className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden flex flex-col max-h-[90vh]">
           {/* Header */}
-          <div className="sticky top-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
+          <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📋</span>
@@ -4737,13 +4737,13 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
+          {/* Content - Scrollable */}
+          <div className="overflow-y-auto flex-1 p-6">
             {renderContent()}
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
             <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
               <p>
                 📌 All data stays in your browser. We never store your personal information.

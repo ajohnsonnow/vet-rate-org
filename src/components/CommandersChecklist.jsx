@@ -25,9 +25,9 @@ const TOOL_LINKS = {
   forms: 'forms-helper'
 };
 
-export default function CommandersChecklist({ isWidget = false, onClose = null, onToolSelect = null }) {
+export default function CommandersChecklist({ isWidget = false, isEmbedded = false, onClose = null, onToolSelect = null }) {
   const progress = useClaimProgress();
-  const [showModal, setShowModal] = useState(!isWidget);
+  const [showModal, setShowModal] = useState(!isWidget && !isEmbedded);
 
   const handleMilestoneClick = (milestone) => {
     if (onToolSelect && TOOL_LINKS[milestone.id]) {
@@ -134,6 +134,95 @@ export default function CommandersChecklist({ isWidget = false, onClose = null, 
           />
         )}
       </div>
+    );
+  }
+
+  // Embedded view (inline in page, not fixed)
+  if (isEmbedded) {
+    return (
+      <>
+        <div
+          onClick={() => setShowModal(true)}
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-blue-200 dark:border-blue-700 p-4 cursor-pointer hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 transition-all"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-xl">🎖️</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 dark:text-white text-lg">
+                  Mission Readiness: {progress.percentage}%
+                </h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {progress.completedMilestones.length} of {progress.totalMilestones} objectives complete • Click to view details
+                </p>
+              </div>
+            </div>
+            <div className="text-right hidden sm:block">
+              <span className={`text-sm font-semibold ${status.color}`}>
+                {status.text}
+              </span>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="relative w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4 overflow-hidden">
+            <div
+              className={`absolute top-0 left-0 h-full transition-all duration-500 ease-out ${
+                progress.percentage === 100
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                  : progress.percentage >= 80
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                  : progress.percentage >= 50
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
+                  : 'bg-gradient-to-r from-orange-500 to-red-500'
+              }`}
+              style={{ width: `${progress.percentage}%` }}
+            >
+              {progress.percentage >= 100 && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+              )}
+            </div>
+            {/* Percentage label inside bar */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs font-bold text-white drop-shadow-md">
+                {progress.percentage}%
+              </span>
+            </div>
+          </div>
+          
+          {/* Quick milestone preview */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(progress.milestones || []).slice(0, 5).map((milestone) => milestone && (
+              <span
+                key={milestone.id}
+                className={`text-xs px-2 py-1 rounded-full ${
+                  milestone.completed
+                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                    : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {milestone.completed ? '✓' : '○'} {(milestone.label || '').split(' ')[0]}
+              </span>
+            ))}
+            {(progress.milestones || []).length > 5 && (
+              <span className="text-xs px-2 py-1 text-blue-600 dark:text-blue-400">
+                +{(progress.milestones || []).length - 5} more
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Modal */}
+        {showModal && (
+          <ChecklistModal
+            progress={progress}
+            onClose={handleClose}
+            onMilestoneClick={handleMilestoneClick}
+          />
+        )}
+      </>
     );
   }
 

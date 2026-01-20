@@ -418,10 +418,10 @@ Sincerely,
       aria-modal="true"
       aria-labelledby="nexus-builder-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0 pr-10 sm:pr-0">
                 <h2 id="nexus-builder-title" className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">
@@ -448,8 +448,8 @@ Sincerely,
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+          {/* Progress Bar - Sticky */}
+          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700 flex-shrink-0">
             {existingStatement && (
               <div className="mb-4 px-4 py-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,7 +480,7 @@ Sincerely,
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 overflow-y-auto flex-1">
             {/* Step 1: Timeline */}
             {step === 1 && (
               <div className="space-y-6">

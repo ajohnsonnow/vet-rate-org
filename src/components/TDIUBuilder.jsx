@@ -18,6 +18,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
+import ReportBugLink from './ReportBugLink';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import { isAIAvailable } from '../utils/aiStatementHelper';
@@ -114,14 +115,18 @@ RESPOND IN THIS EXACT JSON FORMAT:
 }`;
 
   // Use unified AI service
-  const text = await generateAI(prompt, {
+  const response = await generateAI(prompt, {
     temperature: 0.4,
     maxTokens: 2048,
     expectJSON: true
   });
   
+  // generateAI returns { text, mode } object - extract the text content
+  const text = response?.text || response;
+  const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+  
   // Extract JSON from response
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const jsonMatch = textStr.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('Invalid response format');
   }
@@ -874,16 +879,16 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
   
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
       <div 
         ref={tdiuContentRef}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative modal-content"
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col relative modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
+        <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">💼</span>
@@ -899,6 +904,7 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
                 filename="tdiu-vocational-analysis"
                 variant="icon"
               />
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="TDIU Work Impact Builder" />}
               <button
                 onClick={onClose}
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -912,7 +918,8 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
           </div>
         </div>
         
-        <div className="p-4">
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-1 p-4">
           {/* AI Mode Section */}
           <div className="max-w-4xl mx-auto mb-4">
             <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600">

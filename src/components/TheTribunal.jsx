@@ -14,6 +14,7 @@ import { getVeteranProfile } from '../utils/veteranProfile';
 import { getSavedClaims } from '../utils/claimsStorage';
 import { generateAI, getAIStatus } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import ReportBugLink from './ReportBugLink';
 
 // BVA Judge personalities and response patterns
 const JUDGE_PERSONAS = {
@@ -72,7 +73,7 @@ const TRIBUNAL_QUESTIONS = [
   }
 ];
 
-export default function TheTribunal({ onClose }) {
+export default function TheTribunal({ onClose, onReportBug }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -165,7 +166,9 @@ As ${judge.name}, evaluate this response. Was it legally sound? What specific fe
 
       const response = await generateAI(prompt);
       setIsAIProcessing(false);
-      return response;
+      // generateAI returns { text, mode } object - extract the text content
+      const text = response?.text || response;
+      return typeof text === 'string' ? text : JSON.stringify(text);
     } catch (error) {
       console.error('AI Judge error:', error);
       setIsAIProcessing(false);
@@ -206,7 +209,9 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
 
       const response = await generateAI(prompt);
       setIsAIProcessing(false);
-      return response;
+      // generateAI returns { text, mode } object - extract the text content
+      const text = response?.text || response;
+      return typeof text === 'string' ? text : JSON.stringify(text);
     } catch (error) {
       console.error('AI Question error:', error);
       setIsAIProcessing(false);
@@ -625,10 +630,10 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop overscroll-contain">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6">
+        <div className="flex-shrink-0 bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6">
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -639,13 +644,16 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                 Mock Board of Veterans' Appeals Hearing
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-2">
+              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="The Tribunal" />}
+              <button
+                onClick={onClose}
+                className="text-white hover:text-gray-200 text-2xl font-bold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
           </div>
           
           {/* Score Display */}

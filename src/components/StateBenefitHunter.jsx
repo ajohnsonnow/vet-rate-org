@@ -263,8 +263,10 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
       const response = await generateAI(prompt);
       
-      if (response) {
-        setAIAdvice(response);
+      // generateAI returns { text, mode } object - extract the text content
+      const aiText = response?.text || response;
+      if (aiText) {
+        setAIAdvice(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
       } else {
         setAIAdvice('Failed to get AI advice. Please try again.');
       }

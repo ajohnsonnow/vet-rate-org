@@ -853,16 +853,20 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
 
   try {
     // Use unified AI service
-    const text = await generateAI(prompt, {
+    const response = await generateAI(prompt, {
       temperature: 0.7,
       maxTokens: 300
     });
+    
+    // generateAI returns { text, mode } object - extract the text content
+    const text = response?.text || response;
     
     if (!text) {
       return { success: false, error: 'No response generated' };
     }
 
-    return { success: true, content: text.trim() };
+    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+    return { success: true, content: textStr.trim() };
   } catch (error) {
     console.error('Field suggestion error:', error);
     if (error.message?.includes('API key')) {
@@ -939,20 +943,25 @@ export const searchStateBenefits = async (state, rating) => {
 
   try {
     // Use unified AI service
-    const text = await generateAI(prompt, {
+    const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
       expectJSON: true
     });
     
+    // generateAI returns { text, mode } object - extract the text content
+    const text = response?.text || response;
+    
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
     }
 
+    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+
     // Parse the JSON response
     try {
       // Clean up the response - remove any markdown code blocks if present
-      let cleanedText = text.trim();
+      let cleanedText = textStr.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
       } else if (cleanedText.startsWith('```')) {
@@ -962,7 +971,7 @@ export const searchStateBenefits = async (state, rating) => {
       const benefitsData = JSON.parse(cleanedText);
       return { success: true, data: benefitsData };
     } catch (parseError) {
-      console.error('Failed to parse state benefits JSON:', parseError, text);
+      console.error('Failed to parse state benefits JSON:', parseError, textStr);
       return { success: false, error: 'Failed to parse benefits data. Please try again.' };
     }
   } catch (error) {
@@ -1044,19 +1053,24 @@ export const searchVSOs = async (zipCode) => {
 
   try {
     // Use unified AI service
-    const text = await generateAI(prompt, {
+    const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
       expectJSON: true
     });
     
+    // generateAI returns { text, mode } object - extract the text content
+    const text = response?.text || response;
+    
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
     }
 
+    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+
     // Parse the JSON response
     try {
-      let cleanedText = text.trim();
+      let cleanedText = textStr.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
       } else if (cleanedText.startsWith('```')) {
@@ -1066,7 +1080,7 @@ export const searchVSOs = async (zipCode) => {
       const vsoData = JSON.parse(cleanedText);
       return { success: true, data: vsoData };
     } catch (parseError) {
-      console.error('Failed to parse VSO JSON:', parseError, text);
+      console.error('Failed to parse VSO JSON:', parseError, textStr);
       return { success: false, error: 'Failed to parse VSO data. Please try again.' };
     }
   } catch (error) {
@@ -1146,18 +1160,23 @@ export const stressTestStatement = async (statement) => {
 
   try {
     // Use unified AI service
-    const text = await generateAI(prompt, {
+    const response = await generateAI(prompt, {
       temperature: 0.4,
       maxTokens: 2048,
       expectJSON: true
     });
     
+    // generateAI returns { text, mode } object - extract the text content
+    const text = response?.text || response;
+    
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
     }
 
+    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+
     try {
-      let cleanedText = text.trim();
+      let cleanedText = textStr.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
       } else if (cleanedText.startsWith('```')) {
@@ -1167,7 +1186,7 @@ export const stressTestStatement = async (statement) => {
       const analysisData = JSON.parse(cleanedText);
       return { success: true, data: analysisData };
     } catch (parseError) {
-      console.error('Failed to parse stress test JSON:', parseError, text);
+      console.error('Failed to parse stress test JSON:', parseError, textStr);
       return { success: false, error: 'Failed to parse analysis. Please try again.' };
     }
   } catch (error) {
@@ -1245,18 +1264,23 @@ export const decodeDecision = async (decisionText) => {
 
   try {
     // Use unified AI service
-    const text = await generateAI(prompt, {
+    const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
       expectJSON: true
     });
     
+    // generateAI returns { text, mode } object - extract the text content
+    const text = response?.text || response;
+    
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
     }
 
+    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+
     try {
-      let cleanedText = text.trim();
+      let cleanedText = textStr.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
       } else if (cleanedText.startsWith('```')) {
@@ -1266,7 +1290,7 @@ export const decodeDecision = async (decisionText) => {
       const decodedData = JSON.parse(cleanedText);
       return { success: true, data: decodedData };
     } catch (parseError) {
-      console.error('Failed to parse decision decoder JSON:', parseError, text);
+      console.error('Failed to parse decision decoder JSON:', parseError, textStr);
       return { success: false, error: 'Failed to parse decision. Please try again.' };
     }
   } catch (error) {

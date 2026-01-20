@@ -84,20 +84,26 @@ Explain how the primary condition causes or aggravates the secondary condition.`
 
   try {
     // Use unified AI service - automatically chooses Cloud or Local
-    const content = await generateAI(userPrompt, {
+    const response = await generateAI(userPrompt, {
       temperature: 0.3,
       maxTokens: 4096,
       expectJSON: true
     });
     
+    // generateAI returns { text, mode } object - extract the text content
+    const content = response?.text || response;
+    
     if (!content) {
       throw new Error('No content received from AI');
     }
     
+    // Ensure content is a string before processing
+    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+    
     // Parse JSON response
     let result;
     try {
-      let cleanContent = content.trim();
+      let cleanContent = contentStr.trim();
       // Remove markdown formatting if present
       if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
       if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
@@ -105,7 +111,7 @@ Explain how the primary condition causes or aggravates the secondary condition.`
       
       result = JSON.parse(cleanContent.trim());
     } catch (parseError) {
-      console.error('Parse error:', parseError, content.substring(0, 500));
+      console.error('Parse error:', parseError, contentStr.substring(0, 500));
       throw new Error('Failed to parse AI response. Please try again.');
     }
     

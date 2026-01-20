@@ -217,8 +217,8 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
     setIsProcessingDD214(true);
     
     try {
-      const response = await generateAI({
-        prompt: `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
+      const response = await generateAI(
+        `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
 {
   "branch": "Army/Navy/Air Force/Marines/Coast Guard/Space Force",
   "mos": "Primary MOS code",
@@ -237,14 +237,32 @@ DD214 TEXT:
 ${dd214Text}
 
 Return ONLY the JSON object, no explanation.`,
-        temperature: 0.3,
-        maxTokens: 512,
-        expectJSON: true
-      });
+        {
+          temperature: 0.3,
+          maxTokens: 512,
+          expectJSON: true
+        }
+      );
       
-      if (response.success && response.data) {
+      // generateAI returns { text, mode } object - extract the text content
+      const content = response?.text || response;
+      if (content) {
+        const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+        // Parse JSON from response
+        let data;
+        try {
+          let cleanContent = contentStr.trim();
+          if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
+          if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
+          if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
+          data = JSON.parse(cleanContent.trim());
+        } catch (parseError) {
+          console.error('Parse error:', parseError);
+          throw new Error('Could not parse DD214 data');
+        }
+        
         saveDD214Data({
-          ...response.data,
+          ...data,
           extractedText: dd214Text.substring(0, 5000) // Store first 5000 chars
         });
         loadServiceHistory();
@@ -629,10 +647,10 @@ Return ONLY the JSON object, no explanation.`,
       aria-modal="true"
       aria-labelledby="my-packet-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div ref={packetContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl mx-auto modal-content">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg">
+      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
+        <div ref={packetContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col modal-content">
+          {/* Header - Sticky */}
+          <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h2 id="my-packet-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">📁 My Claim Packet</h2>
@@ -755,7 +773,7 @@ Return ONLY the JSON object, no explanation.`,
           )}
 
           {/* Tab Navigation - Organized by category */}
-          <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6">
+          <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
             <nav className="flex gap-1 overflow-x-auto pb-px scrollbar-hide" aria-label="Tabs">
               {/* Primary Data */}
               <button
@@ -838,7 +856,7 @@ Return ONLY the JSON object, no explanation.`,
             </nav>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 overflow-y-auto flex-1">
             {/* MY RATINGS TAB */}
             {activeTab === 'ratings' && (
               <>
