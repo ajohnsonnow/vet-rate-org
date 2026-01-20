@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Vet-Rate.org</title>
+    <meta name="description" content="Vet-Rate.org Privacy Policy - Learn how we protect your privacy with our serverless, browser-based architecture that collects no personal data.">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-bottom: 4px solid #1e3a8a;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .header p {
+            color: #bfdbfe;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            background: white;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 180px);
+        }
+
+        .last-updated {
+            text-align: center;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .last-updated strong {
+            color: #1f2937;
+        }
+
+        section {
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #e5e7eb;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin: 1rem 0 0.75rem 0;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: #374151;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+            line-height: 1.8;
+        }
+
+        ul li {
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .alert {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .alert-blue {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+        }
+
+        .alert-green {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .alert h3, .alert h4 {
+            color: inherit;
+            margin-top: 0;
+        }
+
+        .alert strong {
+            font-weight: 700;
+        }
+
+        .alert ul {
+            margin-bottom: 0;
+        }
+
+        .privacy-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .privacy-badge h3 {
+            color: white;
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+        }
+
+        .privacy-badge p {
+            color: white;
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 2px solid #e5e7eb;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <div>
+                <h1>🔒 Privacy Policy</h1>
+                <p>How Vet-Rate.org Protects Your Information</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="last-updated">
+            <strong>Last Updated:</strong> January 19, 2026
+        </div>
+
+        <!-- Introduction -->
+        <section>
+            <h2>1. Introduction</h2>
+            <p>Welcome to Vet-Rate.org. I'm a service-connected disabled veteran who built this site to help fellow veterans navigate the VA disability rating process. This Privacy Policy explains how information is handled when you visit this website. By using this site, you agree to the practices described in this policy.</p>
+        </section>
+
+        <!-- Information Collection -->
+        <section>
+            <h2>2. Information Collection</h2>
+            
+            <h3>2.1 Personal Information</h3>
+            <div class="alert alert-green">
+                <p style="margin-bottom: 0.75rem;"><strong>This site does NOT collect Personally Identifiable Information (PII).</strong></p>
+                <p style="margin: 0;">The application operates entirely client-side in your browser. No data is stored, transmitted, or processed including:</p>
+            </div>
+            
+            <ul>
+                <li>Names, addresses, or contact information</li>
+                <li>Social Security Numbers or military service records</li>
+                <li>Medical information or disability details</li>
+                <li>Search queries or browsing history</li>
+            </ul>
+
+            <h3>2.2 Automatically Collected Information</h3>
+            <div class="alert alert-blue">
+                <p style="margin: 0;"><strong>This site does not use advertising networks or third-party trackers.</strong> To protect veteran privacy, I have intentionally avoided implementing any tracking technologies that could collect your data. Your searches and browsing activity on this site remain completely private.</p>
+            </div>
+        </section>
+
+        <!-- Cookies and Tracking -->
+        <section>
+            <h2>3. Cookies and Tracking</h2>
+            <p><strong>This site does not use cookies for tracking or advertising purposes.</strong> Any cookies used are strictly for essential functionality (such as saving your preferences locally in your browser). No information is shared with third-party advertisers.</p>
+        </section>
+
+        <!-- How Information Is Used -->
+        <section>
+            <h2>4. How Information Is Used</h2>
+            <p>Since this site does not collect PII or use tracking technologies:</p>
+            <ul>
+                <li>Your search queries remain private in your browser</li>
+                <li>Your disability research is never transmitted to any server</li>
+                <li>Your "My Packet" saved items are stored only in your browser's local storage</li>
+                <li>No advertising profiles are created about you</li>
+            </ul>
+        </section>
+
+        <!-- Data Sharing -->
+        <section>
+            <h2>5. Data Sharing and Disclosure</h2>
+            <div class="alert alert-green">
+                <p style="margin: 0;"><strong>Your personal information is never sold, traded, rented, or shared with anyone.</strong> Since no data is collected, there is nothing to share. Your privacy is protected by design.</p>
+            </div>
+        </section>
+
+        <!-- Privacy Rights -->
+        <section>
+            <h2>6. Your Privacy Rights</h2>
+            <p>Since this site does not collect personal data, your privacy is inherently protected. However, you always have the right to:</p>
+            <ul>
+                <li><strong>Clear Local Storage:</strong> Delete any locally saved preferences from your browser</li>
+                <li><strong>Browse Privately:</strong> Use your browser's private/incognito mode</li>
+                <li><strong>Contact Me:</strong> Ask questions about the privacy practices on this site</li>
+            </ul>
+        </section>
+
+        <!-- AI Processing -->
+        <section>
+            <h2>7. AI Processing & Data Retention</h2>
+            <div class="alert alert-blue">
+                <h4>Optional AI Features:</h4>
+                <p>When you choose to use AI-powered features (such as statement enhancement), your text is processed by third-party AI providers (Google Gemini or Anthropic Claude).</p>
+                
+                <h4>What This Means:</h4>
+                <ul style="margin-bottom: 1rem;">
+                    <li>Data is processed solely for text generation purposes</li>
+                    <li>Vet-Rate.org does not store this data on our servers</li>
+                    <li>AI providers may process data according to their own policies</li>
+                    <li>You control what information you send to AI features</li>
+                </ul>
+                
+                <p style="font-size: 0.9rem; margin: 0;"><strong>Transparency:</strong> Before using AI features, please review <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Google's Gemini API Terms</a> and <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer">Anthropic's Privacy Policy</a>. We strive to use zero-retention settings where available.</p>
+            </div>
+        </section>
+
+        <!-- Children's Privacy -->
+        <section>
+            <h2>8. Children's Privacy</h2>
+            <p>This website is not intended for children under the age of 13. No information is knowingly collected from children under 13. If you believe any such information has been inadvertently collected, please contact me immediately.</p>
+        </section>
+
+        <!-- Security -->
+        <section>
+            <h2>9. Security</h2>
+            <p>This application operates entirely client-side and does not transmit or store PII. Your searches and interactions remain private on your device. No third-party advertising or tracking services are used that could compromise your privacy.</p>
+        </section>
+
+        <!-- Changes to Policy -->
+        <section>
+            <h2>10. Changes to This Privacy Policy</h2>
+            <p>This Privacy Policy may be updated from time to time. Changes will be posted on this page with an updated "Last Updated" date. Your continued use of the website after changes constitutes acceptance of the updated policy.</p>
+        </section>
+
+        <!-- Contact -->
+        <section>
+            <h2>11. Contact</h2>
+            <p>If you have questions about this Privacy Policy, please reach out via the Contact page or support resources within the application.</p>
+        </section>
+
+        <!-- Privacy Badge -->
+        <div class="privacy-badge">
+            <h3>🛡️ Privacy-First Design</h3>
+            <p>Vet-Rate.org is built with veteran privacy as a top priority. This site does not collect, store, or transmit your personal information. No advertising networks or third-party trackers are used. Your searches and disability research remain completely private.</p>
+            <p style="margin-top: 1rem; font-weight: 600;">Zero data collection. Zero tracking. Zero compromises.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="font-size: 1.1rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">Questions About Privacy?</p>
+            <p style="color: #6b7280; margin-bottom: 1rem;">Contact us through the app or visit our support page</p>
+            <a href="/" class="btn">Return to Vet-Rate.org</a>
+        </div>
+    </div>
+</body>
+</html>
