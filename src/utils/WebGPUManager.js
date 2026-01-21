@@ -273,6 +273,7 @@ class GPUDiscoveryEngine {
         const experimentalMode = options.experimental || localStorage.getItem('vet_rate_experimental_webgpu') === 'true';
         if (experimentalMode) {
           console.log('⚡ Experimental WebGPU mode enabled - attempting to use experimental features');
+          console.log('⚡ Available adapter features:', Array.from(availableFeatures).join(', '));
           
           // Try to enable experimental subgroup features if available
           if (availableFeatures.has('chromium-experimental-subgroups')) {
@@ -284,7 +285,10 @@ class GPUDiscoveryEngine {
           if (availableFeatures.has('chromium-experimental-subgroup-uniform-control-flow')) {
             requiredFeatures.push('chromium-experimental-subgroup-uniform-control-flow');
           }
-          // Required for u8 type in WGSL shaders (WebLLM)
+          // Required for u8 type in WGSL shaders (WebLLM) - try both naming conventions
+          if (availableFeatures.has('chromium-experimental-subgroup-matrix')) {
+            requiredFeatures.push('chromium-experimental-subgroup-matrix');
+          }
           if (availableFeatures.has('chromium_experimental_subgroup_matrix')) {
             requiredFeatures.push('chromium_experimental_subgroup_matrix');
           }

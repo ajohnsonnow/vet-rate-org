@@ -677,6 +677,14 @@ export const LocalAIProvider = ({ children }) => {
       // Provide more helpful error messages for common issues
       let errorMessage = err.message || 'Failed to initialize local AI';
       
+      if (err.message?.includes('chromium_experimental_subgroup_matrix')) {
+        errorMessage = `🚨 WGSL Extension Not Enabled\n\nThe 'chromium_experimental_subgroup_matrix' extension is required but not enabled.\n\n✅ FIX: Launch Chrome with:\n--enable-dawn-features=allow_unsafe_apis\n\n📚 See FAQ for detailed instructions (Windows/Mac/Linux)`;
+        setError(errorMessage);
+        setIsLoading(false);
+        setLoadProgress({ progress: 0, text: '' });
+        return;
+      }
+      
       if (err.message?.includes('u8') || err.message?.includes('WGSL') || err.message?.includes('shader')) {
         errorMessage = '⚠️ WebGPU Shader Compatibility Issue\n\n' +
           'Your browser does not support the shader features required by this AI model.\n\n' +
