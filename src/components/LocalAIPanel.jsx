@@ -813,6 +813,12 @@ export const LocalAIProvider = ({ children }) => {
     gpuPreference,
     updateGPUPreference,
     
+    // Experimental Features
+    experimentalMode,
+    setExperimentalMode,
+    showExperimentalWarning,
+    setShowExperimentalWarning,
+    
     // Actions
     initializeEngine,
     generate,
@@ -846,6 +852,10 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     loadedModelId,
     gpuPreference,
     updateGPUPreference,
+    experimentalMode,
+    setExperimentalMode,
+    showExperimentalWarning,
+    setShowExperimentalWarning,
     initializeEngine,
     generate,
     interruptGeneration,
