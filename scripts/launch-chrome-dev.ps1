@@ -132,6 +132,7 @@ try {
     Write-Host ""
     
 } catch {
-    Write-Host "❌ Failed to launch Chrome: $_" -ForegroundColor $Red
+    $errorMsg = $_.Exception.Message
+    Write-Host "Failed to launch Chrome: $errorMsg" -ForegroundColor $Red
     exit 1
 }
