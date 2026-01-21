@@ -2,24 +2,193 @@
 
 Complete instructions for deploying Vet-Rate.org to various hosting platforms.
 
-## Pre-Deployment Checklist
+## Pre-Deployment Checklist (v1.3.2)
+
+### ⚠️ PRE-DEPLOYMENT CHECK - DO NOT PUSH TO GITHUB UNTIL COMPLETE!
+
+**Run automated validation:**
+```bash
+npm run pre-deploy
+```
+
+**If all checks pass, perform manual review:**
+
+---
+
+#### 🖥️ VISUAL REVIEW
+1. `npm run dev` - Visual review in browser
+2. Mobile responsive check (Chrome DevTools - iPhone, iPad, Android)
+3. Dark mode toggle works correctly
+4. Accessibility menu functions (font size, contrast)
+
+---
+
+#### 🔍 CORE FEATURES - Research & Discovery
+5. **Search** - conditions, diagnostic codes, synonyms all return results
+6. **Secondary Scout** - finds medically-connected conditions with probability ratings
+7. **C&P Exam Simulator** - exam flow works, DBQ questions display
+8. **Pathfinder** - AI roadmap generates strategic recommendations
+9. **MOS Hazard Matcher** - links occupations to exposures
+10. **PACT Act Navigator** - identifies presumptive conditions
+11. **Web of Conditions** - force-directed graph visualization renders
+
+---
+
+#### 📊 CALCULATORS & ANALYTICS
+12. **Tactical Calculator** - VA math with bilateral factors, 2026 pay rates
+13. **Million Dollar Dashboard** - lifetime benefit projections calculate
+14. **What-If Sandbox** - drag-and-drop scenario planning works
+15. **Retro Pay Hunter** - backpay calculations from CUE claims
+16. **Time Machine** - Intent to File countdown timer functions
+
+---
+
+#### 📋 EVIDENCE BUILDING TOOLS
+17. **C-File AI Analyzer** - PDF upload parses and finds evidence
+18. **Blue Button X-Ray** - VA health records parse correctly
+19. **PDF Evidence Finder** - keyword search in STRs works ("The Needle")
+20. **Nexus Builder** - generates nexus statements (check AI mode)
+21. **Witness Bench** - buddy statement generator with interview flow
+22. **Forms Helper** - all 16+ VA forms load with Auto-Scribe PDF filling
+23. **Symptom Logger** - daily symptom tracking with body map
+24. **Pain Painter / Somatic Target** - body map clicks translate to medical terms
+25. **Evidence Timeline** - visual tracker shows gaps correctly
+26. **FOIA Keysmith** - generates FOIA request templates
+
+---
+
+#### ✅ QUALITY CONTROL TOOLS
+27. **Red Team** - AI devil's advocate finds weak language
+28. **The War Game (Claim Stress Test)** - adversarial review stress-tests claims
+29. **Decision Decoder** - translates VA letters to plain English
+30. **Denial Decoder** - OCR scan + AI analysis of denial letters
+31. **Consistency Engine** - detects contradictions in statements
+32. **Evidence Gap Finder** - shows missing evidence for target rating
+33. **Shark Radar** - predatory service detection working
+34. **Risk Assessment** - "Poke the Bear" calculator shows protections
+
+---
+
+#### 💰 MAXIMIZE & STRATEGY
+35. **TDIU Builder** - unemployability calculator with forms guidance
+36. **State Benefit Hunter** - all 50 states + DC benefits load
+37. **The Tribunal** - voice-interactive mock BVA hearing works
+38. **Legislative Watchdog** - Federal Register tracking functional
+
+---
+
+#### 🤖 AI FEATURES (Faraday Cage Protocol)
+39. **Local AI** - WebLLM model loads without `ModelNotLoadedError`
+40. **Cloud AI (Gemini)** - generates statements with proper API key
+41. **Device-aware UI** - legacy devices see Cloud AI recommendation
+42. **AI Mode Selector** - toggles between Local/Cloud/Hybrid
+43. **AI Settings Modal** - configuration saves properly
+44. **Error handling** - graceful failures with user-friendly messages
+
+---
+
+#### 🤝 SUPPORT & DATA MANAGEMENT
+45. **VSO Finder** - locates accredited Veterans Service Officers
+46. **The Bunker** - export/import all data works (JSON backup)
+47. **Cloud Sync** - Google Drive backup connects and syncs
+48. **VA.gov Integration** - demo mode shows claims/service history
+49. **My Packet** - saves and retrieves evidence items
+50. **VA Resources Hub** - all external links work
+51. **User Manual** - comprehensive docs accessible
+
+---
+
+#### 📱 CROSS-DEVICE TESTING
+52. Test on Android (if available) - especially Android 10/11
+53. iOS Safari works correctly (WebGPU fallback)
+54. WebGPU detection shows correct status per device
+55. PWA install prompt appears on mobile
+
+---
+
+#### 💰 INTEGRATIONS & MODALS
+56. Review **What's New** modal content matches deployed features
+57. Verify **BuyMeCoffee** messaging is on-brand
+58. **VA API connections** work (if enabled in .env.local)
+59. **Ribbon Rack** - military ribbons render correctly
+60. **DD214 Analyzer** - document parsing functional (PDF/Word/Text/RTF support)
+61. **PDF Import Confirmation** - DD214 analyzer shows review modal before saving to profile
+
+---
+
+#### 🐛 BUG & CRISIS SYSTEMS
+62. **Bug Report Button** - reports generate properly
+63. **Crisis Modal** - 988 hotline triggers on crisis keywords
+64. **Squashed Bugs counter** - displays in footer
+
+---
+
+### 🎨 COLOR SCHEMA COMPLIANCE
+Tool cards and modals must match their category color scheme:
+
+| Category | Color | Tools |
+|----------|-------|-------|
+| Calculate Your Rating | **Blue** | Tactical Calculator, Million Dollar Dashboard, What-If Sandbox, Retro Pay Hunter, Time Machine |
+| Discover Your Claims | **Teal** | Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Navigator, Web of Conditions |
+| Build Your Evidence | **Violet** | C-File Analyzer, Blue Button X-Ray, PDF Finder, Nexus Builder, Witness Bench, Forms Helper, Symptom Logger, Pain Painter, Evidence Timeline, FOIA Keysmith |
+| Quality Control | **Rose** | Red Team, The War Game, Decision Decoder, Denial Decoder, Consistency Engine, Evidence Gap Finder, Shark Radar, Risk Assessment |
+| Maximize Your Rating | **Amber** | TDIU Builder, State Benefit Hunter, The Tribunal, Legislative Watchdog |
+| Support & Resources | **Sky** | VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, VA Resources, User Manual |
+
+**Check each tool:**
+- Card border/accent matches category color
+- Modal header gradient uses category color
+- Icons use category-appropriate color tones
+- Hover states maintain color consistency
+
+---
+
+### 📝 Text & Code Quality Rules
+- No em-dash (—) or en-dash (–), only hyphens (-)
+- All stats must use dynamic imports (`getTotalToolCount`, `PROJECT_STATS`)
+- Version numbers synced across all files (package.json, version.json)
+- No hardcoded "39+ tools" or "751 conditions" - use dynamic values
+- All new tools marked with `isNew: true` in toolkitData.js for What's New
+
+---
+
+### 🔧 Quick Re-check
+If issues found, fix and re-run:
+```bash
+npm run pre-deploy:quick
+```
+
+### 🏗️ Final Clean Build
+```bash
+npm run build
+```
+
+### 🖥️ Start Dev Server for Visual Review
+```powershell
+taskkill /F /IM node.exe 2>$null; Remove-Item -Path "node_modules\.vite" -Recurse -Force -ErrorAction SilentlyContinue; npm run dev
+```
+
+**Ready to deploy when all green!** ✅
+
+---
+
+## One-Command Deployment Prep
+
+For the smoothest deployment experience, use our push-prep script:
 
 ```bash
-# 1. Build production bundle
-npm run build
+# Full prep with smart version bump
+npm run push-prep
 
-# 2. Verify build output
-ls -la dist/
+# Force specific version bumps
+npm run push-prep:patch   # Bug fixes only
+npm run push-prep:minor   # New features
 
-# 3. Run security audit
-npm audit
-
-# 4. Test production build locally
-npm run preview
-
-# 5. Check environment variables
-cat .env.local
+# Quick mode (skip checks, auto-confirm)
+npm run push-prep:quick
 ```
+
+---
 
 ## Platform-Specific Guides
 

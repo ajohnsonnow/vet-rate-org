@@ -64,8 +64,8 @@ function DisclaimerSplash({ onAcknowledge }) {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
               <span className="font-semibold">From one veteran to another:</span> I built this complete claims arsenal because 
-              navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>{getTotalToolCount()}+ professional-grade tools</strong> covering 
-              everything from initial research through appeals - {PROJECT_STATS.disabilitiesValidated} rated conditions, advanced calculators, AI document analysis, C&P exam prep, 
+              navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>{getTotalToolCount()} professional-grade tools</strong> covering 
+              everything from initial research through appeals - <strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} rated conditions</strong>, advanced calculators, AI document analysis, C&P exam prep, 
               and complete evidence builders. All free, no tricks, no sales pitches.
             </p>
             <p className="text-blue-600 dark:text-blue-100 text-xs mt-2 italic">
@@ -100,7 +100,7 @@ function DisclaimerSplash({ onAcknowledge }) {
             <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>{PROJECT_STATS.disabilitiesValidated} conditions</strong> with official VA rating criteria from 38 CFR Part 4</span>
+                <span><strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} conditions</strong> with official VA rating criteria from 38 CFR Part 4</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
@@ -132,7 +132,7 @@ function DisclaimerSplash({ onAcknowledge }) {
               </li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic text-center">
-              🎖️ {getTotalToolCount()}+ professional tools - everything from research to appeal. All free.
+              🎖️ {getTotalToolCount()} professional tools - everything from research to appeal. All free.
             </p>
           </div>
 

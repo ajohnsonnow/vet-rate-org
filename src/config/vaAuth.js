@@ -37,13 +37,26 @@ export const VA_ENDPOINTS = ENDPOINTS[VA_AUTH_CONFIG.environment];
 // offline_access: Enables refresh tokens for long-term access
 // claim.read: Access to VA claims data
 // service_history.read: Access to military service history
+// appealable_issues.read: Access to appealable decisions (DISABLED - may not be approved)
+// appeals_status.read: Access to appeals status (DISABLED - may not be approved)
+
+// NOTE: Only request scopes that were approved when you registered your Client ID!
+// If login fails with "invalid_scope", comment out the unapproved scopes below.
+// Start with minimal scopes and add more as they're approved.
 export const VA_SCOPES = [
   'openid',
   'profile',
-  'offline_access',
-  'claim.read',
-  'service_history.read',
+  // 'offline_access',          // Uncomment if approved for refresh tokens
+  // 'claim.read',              // Uncomment if approved
+  // 'service_history.read',    // Uncomment if approved
+  // 'appealable_issues.read',  // Uncomment if approved
+  // 'appeals_status.read',     // Uncomment if approved
 ].join(' ');
+
+// VA API Keys (separate from OAuth)
+export const VA_FACILITIES_API_KEY = import.meta.env.VITE_VA_API_KEY;
+export const VA_FORMS_API_KEY = import.meta.env.VITE_VA_FORMS_API_KEY;
+export const VA_BENEFITS_REF_API_KEY = import.meta.env.VITE_VA_BENEFITS_REF_API_KEY;
 
 // Storage keys
 export const STORAGE_KEYS = {

@@ -130,6 +130,11 @@ const tourStyles = `
     z-index: 100000 !important;
   }
   
+  /* Ensure Navigator button is visible during tour */
+  #tour-ai-navigator-btn {
+    z-index: 100001 !important;
+  }
+  
   .driver-popover-arrow-side-left,
   .driver-popover-arrow-side-right,
   .driver-popover-arrow-side-top,
@@ -145,6 +150,15 @@ const tourStyles = `
   .driver-popover.welcome-step .driver-popover-title {
     font-size: 1.5rem !important;
     border-bottom: none !important;
+  }
+  
+  /* Navigator step - position on right side so Navigator is visible */
+  .driver-popover.navigator-step {
+    position: fixed !important;
+    right: 50px !important;
+    left: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
   }
 `;
 
@@ -162,6 +176,17 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
     };
   }, []);
 
+  // Listen for manual tour restart event
+  useEffect(() => {
+    const handleRestartTour = () => {
+      // Small delay to allow any modals to close
+      setTimeout(() => startTour(), 500);
+    };
+    
+    window.addEventListener('restartTour', handleRestartTour);
+    return () => window.removeEventListener('restartTour', handleRestartTour);
+  }, []);
+
   useEffect(() => {
     // Check if tour should run
     const hasSeenTour = localStorage.getItem(TOUR_SEEN_KEY);
@@ -172,13 +197,31 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       return;
     }
     
+    // Helper function to start tour when ready
+    const waitForWhatsNewAndStart = () => {
+      // Check if What's New modal is showing (check for the element)
+      const whatsNewModal = document.querySelector('[data-whats-new-modal]');
+      if (whatsNewModal) {
+        // What's New is showing, wait for it to close
+        console.log('🎯 Tour: Waiting for What\'s New to close...');
+        const handleWhatsNewClosed = () => {
+          window.removeEventListener('whatsNewClosed', handleWhatsNewClosed);
+          setTimeout(() => startTour(), 300);
+        };
+        window.addEventListener('whatsNewClosed', handleWhatsNewClosed);
+      } else {
+        // No What's New showing, start tour
+        setTimeout(() => startTour(), 300);
+      }
+    };
+    
     if (!tosAccepted) {
       // TOS modal is still showing, wait and check again
       const checkInterval = setInterval(() => {
         if (localStorage.getItem('vet-rate-tos-accepted')) {
           clearInterval(checkInterval);
-          // Start tour after TOS is accepted
-          setTimeout(() => startTour(), 1000);
+          // TOS accepted, now wait for What's New
+          setTimeout(() => waitForWhatsNewAndStart(), 500);
         }
       }, 500);
       
@@ -191,18 +234,33 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       };
     }
 
-    // TOS already accepted, start tour after a short delay
+    // TOS already accepted, check for What's New and start tour
     const timeout = setTimeout(() => {
       startTour();
-    }, 1500);
+    }, 500);
 
     return () => clearTimeout(timeout);
   }, [forceShow]);
 
   const startTour = () => {
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
+    // Prevent Navigator from auto-opening during tour
+    localStorage.setItem('vet_rate_ai_assistant_used', 'true');
+    
+    // Close AI Assistant if it's open (prevents it from blocking tour elements)
+    const navigatorCloseEvent = new CustomEvent('closeNavigator');
+    window.dispatchEvent(navigatorCloseEvent);
+    
+    // Hide footer during tour to prevent interference
+    const footer = document.querySelector('footer');
+    if (footer) {
+      footer.style.display = 'none';
+    }
+    
+    // Small delay to ensure Navigator is closed before tour starts
+    setTimeout(() => {
+      const driverObj = driver({
+        showProgress: true,
+        animate: true,
       allowClose: true,
       overlayClickNext: false,
       stagePadding: 10,
@@ -214,176 +272,254 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       doneBtnText: 'Start My Claim! 🚀',
       smoothScroll: true,
       onDestroyStarted: () => {
+        // Show footer again when tour ends
+        const footer = document.querySelector('footer');
+        if (footer) {
+          footer.style.display = '';
+        }
         // Mark tour as completed
         localStorage.setItem(TOUR_SEEN_KEY, 'true');
         if (onComplete) onComplete();
         driverObj.destroy();
       },
       steps: [
-        // Welcome Intro (no step number)
+        // Welcome Intro
         {
           popover: {
-            title: '🎖️ Welcome to Vet-Rate, Veteran',
+            title: '🎖️ Welcome to Vet-Rate.org',
             description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>Let's get you mission-ready.</strong> This quick tour shows you exactly where to start.
+                  <strong>Let's show you around!</strong> This quick tour covers the essentials so you know exactly where to start.
                 </p>
-                <p style="color: #9ca3af; font-size: 0.9rem;">
-                  Takes about 60 seconds - then you're in command.
+                <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 15px;">
+                  Takes about 60 seconds. You can skip or exit anytime.
                 </p>
                 <div style="margin-top: 20px; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #fbbf24; font-weight: 600; margin: 0;">
-                    💡 Tip: You can restart this tour anytime from the User Manual.
+                    💡 You can restart this tour anytime from the Help menu.
                   </p>
                 </div>
               </div>
             `,
             popoverClass: 'welcome-step',
-            showButtons: ['next'],
-            progressText: ''
+            showButtons: ['close', 'next']
           }
         },
-        // Step 1: Search Bar
+        // Search Bar
         {
           element: '#tour-search-section',
           popover: {
-            title: '🔍 Step 1: Search Your Condition',
+            title: '🔍 Start With Search',
             description: `
-              <p><strong>This is your starting point.</strong></p>
-              <p style="margin-top: 10px;">Search for any VA-rated condition:</p>
+              <p><strong>This search bar is where most people begin.</strong></p>
+              <p style="margin-top: 10px;">Look up any VA disability condition by:</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>By name: "PTSD", "tinnitus", "knee"</li>
-                <li>By diagnostic code: "9411", "6260"</li>
+                <li>Name: Try "PTSD" or "tinnitus"</li>
+                <li>Body part: "knee" or "shoulder"</li>
+                <li>Diagnostic code: "9411" or "6260"</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                Covers <strong>all ${PROJECT_STATS.disabilitiesValidated} conditions</strong> from 38 CFR Part 4.
+                We cover <strong>all ${PROJECT_STATS.disabilitiesValidated} conditions</strong> from the official VA rating schedule.
               </p>
             `,
             side: 'bottom',
-            align: 'center',
-            progressText: 'Step 1 of 5'
+            align: 'center'
+          },
+          onHighlightStarted: () => {
+            // Scroll to top to ensure search section is visible
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         },
-        // Step 2: Quick Condition Picker
+        // Quick Condition Picker
         {
           element: '#tour-quick-picker',
           popover: {
-            title: '⚡ Step 2: Quick Add Conditions',
+            title: '⚡ Quick Add (Skip the Search)',
             description: `
-              <p><strong>Know your conditions already?</strong></p>
+              <p><strong>Already know what you're claiming?</strong> Use this shortcut!</p>
               <p style="margin-top: 10px;">
-                Use the Quick Picker to add conditions directly to your packet without searching.
+                The Quick Picker lets you add conditions directly to your packet without searching.
               </p>
               <p style="color: #c8a961; margin-top: 10px; font-weight: 600;">
-                Click "Add Condition" → Select body system → Pick your diagnosis
+                Just click → Pick a body system → Select your condition → Done!
               </p>
             `,
-            side: 'bottom',
-            align: 'center',
-            progressText: 'Step 2 of 5'
+            side: 'right',
+            align: 'start'
           },
           onHighlightStarted: () => {
-            // Scroll the Quick Condition Picker into view
+            // Ensure Quick Picker is at the top of viewport
             const element = document.getElementById('tour-quick-picker');
             if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              const rect = element.getBoundingClientRect();
+              const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+              // Position element near top with some padding
+              const targetScroll = scrollTop + rect.top - 100;
+              window.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
             }
           }
         },
-        // Step 3: My Packet Button (in Header)
+        // My Packet Button
         {
           element: '#tour-my-packet-btn',
           popover: {
-            title: '📦 Step 3: Your Command Center',
+            title: '📦 Your Personal Workspace',
             description: `
-              <p><strong>This is "My Packet" - your claims dashboard.</strong></p>
-              <p style="margin-top: 10px;">Everything you save goes here:</p>
+              <p><strong>This is "My Packet" - your claims command center.</strong></p>
+              <p style="margin-top: 10px;">Everything you save appears here:</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Your tracked conditions</li>
-                <li>Generated personal statements</li>
-                <li>Evidence checklist progress</li>
+                <li>All your tracked conditions</li>
+                <li>Personal statements you've written</li>
+                <li>Evidence checklist and progress</li>
+                <li>Documents and notes</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>Think of it as your claim's mission folder.</strong>
+                <strong>Think of it as your claim's home base.</strong>
               </p>
             `,
             side: 'bottom',
-            align: 'start',
-            progressText: 'Step 3 of 5'
+            align: 'start'
+          },
+          onHighlightStarted: () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         },
-        // Step 4: Tools Menu
+        // Workflow Guide
+        {
+          element: '#tour-workflow-guide-btn',
+          popover: {
+            title: '🗺️ Step-by-Step Guides',
+            description: `
+              <p><strong>Not sure what to do first?</strong> This button has you covered.</p>
+              <p style="margin-top: 10px;">The Workflow Guide walks you through:</p>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>📝 Filing your first claim</li>
+                <li>🔄 Appealing a denial</li>
+                <li>⬆️ Increasing an existing rating</li>
+                <li>🎖️ Applying for special benefits (TDIU/SMC)</li>
+              </ul>
+              <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
+                Completely lost? <strong>Start here!</strong>
+              </p>
+            `,
+            side: 'bottom',
+            align: 'center'
+          },
+          onHighlightStarted: () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        },
+        // Tools Menu
         {
           element: '#tour-tools-dropdown',
           popover: {
-            title: '🛠️ Step 4: Your Claims Toolkit',
+            title: '🛠️ Your Claims Toolkit',
             description: `
-              <p><strong>${getTotalToolCount()}+ specialized tools at your command:</strong></p>
+              <p><strong>Ready for the advanced features?</strong> We've got ${getTotalToolCount()}+ specialized tools:</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>🔍 Secondary Scout - Find linked conditions</li>
-                <li>✅ C&P Exam Simulator - Practice for exams</li>
-                <li>🧮 Tactical Calculator - VA math made easy</li>
-                <li>📝 Nexus Builder - Write strong statements</li>
+                <li>🔍 <strong>Secondary Scout</strong> - Discover related conditions</li>
+                <li>✅ <strong>C&P Simulator</strong> - Practice for your exam</li>
+                <li>🧮 <strong>Rating Calculator</strong> - Calculate your total %</li>
+                <li>📝 <strong>Nexus Builder</strong> - Generate medical statements</li>
+                <li>...and 35+ more!</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                Click "Tools" to explore them all!
+                Click "Tools" whenever you need something specific.
               </p>
             `,
             side: 'bottom',
-            align: 'center',
-            progressText: 'Step 4 of 5'
+            align: 'center'
+          },
+          onHighlightStarted: () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         },
-        // Step 5: Help Button
+        // AI Navigator - Show as centered popover with arrow pointing to bottom-left
+        {
+          popover: {
+            title: '🧭 Your AI Assistant',
+            description: `
+              <div style="text-align: center;">
+                <p style="font-size: 2.5rem; margin-bottom: 10px;">↙️</p>
+                <p><strong>Look in the bottom-left corner!</strong></p>
+                <p style="margin-top: 10px;">The 🧭 button opens <strong>The Navigator</strong> - your personal claims guide!</p>
+                <p style="margin-top: 10px;">The Navigator can:</p>
+                <ul style="margin: 10px 0; padding-left: 20px; text-align: left;">
+                  <li>💬 Answer questions about the VA process</li>
+                  <li>📚 Explain confusing regulations in plain English</li>
+                  <li>🤝 Walk you through any tool</li>
+                  <li>🎯 Suggest what to do next</li>
+                </ul>
+                <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
+                  💡 Pro tip: You can drag it anywhere on your screen!
+                </p>
+                <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
+                  We'll open it for you at the end of this tour!
+                </p>
+              </div>
+            `,
+            popoverClass: 'welcome-step'
+          }
+        },
+        // Help Button
         {
           element: '#tour-help-btn',
           popover: {
-            title: '📖 Step 5: Help & Documentation',
+            title: '📖 When You Need Help',
             description: `
-              <p><strong>The User Manual has everything:</strong></p>
+              <p><strong>Stuck? Confused?</strong> The User Manual is your friend.</p>
+              <p style="margin-top: 10px;">Inside you'll find:</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Full tool documentation</li>
-                <li>Step-by-step tutorials</li>
-                <li>FAQ & troubleshooting</li>
-                <li>Restart this tour anytime!</li>
+                <li>Complete documentation for every tool</li>
+                <li>Step-by-step how-to guides</li>
+                <li>Answers to common questions</li>
+                <li>A way to restart this tour</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>💾 Remember to backup your data regularly!</strong>
+                <strong>💾 Don't forget to backup your data regularly!</strong>
               </p>
             `,
             side: 'bottom',
-            align: 'center',
-            progressText: 'Step 5 of 5'
+            align: 'center'
+          },
+          onHighlightStarted: () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         },
-        // Final page (no step number)
+        // Final screen
         {
           popover: {
-            title: '🚀 You\'re Ready to Roll!',
+            title: '🚀 You\'re All Set!',
             description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>That's the essentials.</strong> You're now equipped to build your claim.
+                  <strong>That's the tour!</strong> You now know the essentials.
                 </p>
                 
                 <div style="margin: 20px 0; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #22c55e; font-weight: 600; margin: 0;">
-                    ✅ Pro Tip: Click "Load Example Data" on the dashboard to see a perfect claim template.
+                    ✅ Want to see an example? Click "Load Demo Data" to explore a sample claim with all the features filled out.
                   </p>
                 </div>
                 
-                <p style="color: #9ca3af; font-size: 0.9rem;">
-                  Need help? The 📖 User Manual has complete documentation for all {getTotalToolCount()}+ tools.
+                <p style="color: #9ca3af; font-size: 0.9rem; margin-top: 15px;">
+                  Remember: The 📖 Help menu and 🧭 Navigator are always here if you need guidance.
                 </p>
                 
-                <p style="color: #c8a961; font-weight: 700; margin-top: 15px; font-size: 1rem;">
+                <p style="color: #c8a961; font-weight: 700; margin-top: 20px; font-size: 1rem;">
                   "Built by a Veteran, For Veterans."
                 </p>
               </div>
             `,
-            popoverClass: 'welcome-step',
-            progressText: ''
+            popoverClass: 'welcome-step'
+          },
+          onHighlightStarted: () => {
+            // Open the Navigator on the final step so it's ready when tour ends
+            const navigatorButton = document.getElementById('tour-ai-navigator-btn');
+            if (navigatorButton) {
+              navigatorButton.click();
+            }
           }
         }
       ]
@@ -391,6 +527,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 
     setTourDriver(driverObj);
     driverObj.drive();
+    }, 100); // End of setTimeout delay
   };
 
   // Function to manually start tour (exposed via ref or context if needed)
@@ -404,6 +541,13 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 // Export function to reset tour state (for settings/manual restart)
 export const resetTourState = () => {
   localStorage.removeItem(TOUR_SEEN_KEY);
+};
+
+// Export function to trigger tour restart (dispatches event that BootCampTour listens for)
+export const triggerTourRestart = () => {
+  localStorage.removeItem(TOUR_SEEN_KEY);
+  const event = new CustomEvent('restartTour');
+  window.dispatchEvent(event);
 };
 
 // Export function to check if tour has been seen

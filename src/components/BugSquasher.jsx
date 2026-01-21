@@ -11,9 +11,14 @@ import {
   copyToClipboard
 } from '../utils/bugReportUtils';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { saveBugReport, generateReportId, saveToLocalStorage } from '../utils/bugReportStorage';
+import { createSanitizedReport } from '../utils/bugSanitizer';
 
 // Developer contact email for bug reports
 const DEVELOPER_EMAIL = 'Anth@StructuredForGrowth.com';
+
+// FormSubmit.co endpoint - sends directly to developer's email without opening email client
+const FORMSUBMIT_URL = 'https://formsubmit.co/ajax/Anth@StructuredForGrowth.com';
 
 function BugSquasher({ onClose, appState = {} }) {
   // Lock body scroll when modal is open
@@ -40,7 +45,9 @@ function BugSquasher({ onClose, appState = {} }) {
     includeSystemInfo: true,
     includeAppState: true,
     includeStorageInfo: true,
-    includeConsoleErrors: true
+    includeConsoleErrors: true,
+    saveToMyTickets: true, // Save to My Packet for tracking
+    veteranEmail: '' // Optional email for follow-up
   });
 
   // Auto-detect current module based on app state
@@ -99,42 +106,109 @@ function BugSquasher({ onClose, appState = {} }) {
     return match ? match[1] : 'BUG-UNKNOWN';
   };
 
-  // Submit bug report via mailto
+  // Submit bug report via FormSubmit.co API (no email client needed!) and optionally save locally
   const handleSubmitReport = async () => {
     setSubmitting(true);
     setSubmitError('');
     
     try {
+      const reportId = getReportId();
+      
+      // === SAFE-SQUASH: Save to local database if user wants to track ===
+      if (formData.saveToMyTickets) {
+        try {
+          const systemInfo = formData.includeSystemInfo ? getSystemInfo() : {};
+          const currentAppState = formData.includeAppState ? getAppState(appState) : {};
+          const storageInfo = formData.includeStorageInfo ? getStorageInfo() : {};
+          const consoleErrors = formData.includeConsoleErrors ? getConsoleErrors() : [];
+          
+          // Save to IndexedDB (sanitized automatically)
+          await saveBugReport({
+            report_id: reportId,
+            severity: formData.severity,
+            category: formData.category,
+            module: formData.module,
+            diagnosticCode: formData.diagnosticCode,
+            userDescription: formData.userDescription,
+            stepsToReproduce: formData.stepsToReproduce,
+            expectedBehavior: formData.expectedBehavior,
+            actualBehavior: formData.actualBehavior,
+            additionalContext: formData.additionalContext,
+            veteranEmail: formData.veteranEmail || null,
+            systemInfo,
+            appState: currentAppState,
+            storageInfo,
+            consoleErrors
+          });
+          
+          console.log(`✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`);
+        } catch (storageError) {
+          // Fallback to localStorage if IndexedDB fails
+          console.warn('IndexedDB save failed, using localStorage fallback:', storageError);
+          saveToLocalStorage({
+            report_id: reportId,
+            severity: formData.severity?.value,
+            category: formData.category,
+            module: formData.module,
+            userDescription: formData.userDescription,
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+      // === END SAFE-SQUASH ===
+      
       // Also copy to clipboard as backup
       await copyToClipboard(generatedReport);
       
-      const reportId = getReportId();
+      // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
       const severityLabel = formData.severity?.label || 'Unknown';
-      const subject = encodeURIComponent(`[${reportId}] ${severityLabel} - ${formData.category} Bug Report`);
       
-      // Build the FULL report for email body - no pasting required!
-      // Using encodeURIComponent handles the URL encoding properly
-      const fullEmailBody = generatedReport;
+      const formPayload = {
+        _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
+        _template: 'table',
+        report_id: reportId,
+        severity: severityLabel,
+        category: formData.category,
+        module: formData.module,
+        diagnostic_code: formData.diagnosticCode || 'N/A',
+        description: formData.userDescription,
+        steps_to_reproduce: formData.stepsToReproduce || 'Not provided',
+        expected_behavior: formData.expectedBehavior || 'Not provided',
+        actual_behavior: formData.actualBehavior || 'Not provided',
+        additional_context: formData.additionalContext || 'None',
+        veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
+        submitted_at: new Date().toISOString(),
+        full_report: generatedReport
+      };
+
+      const response = await fetch(FORMSUBMIT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`FormSubmit returned ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      // Encode the full report - modern browsers/email clients handle long mailto URLs
-      // We'll try the full report first, with a fallback approach
-      const body = encodeURIComponent(fullEmailBody);
+      if (result.success) {
+        console.log(`✅ Bug report ${reportId} sent successfully via FormSubmit`);
+        setSubmitted(true);
+        setCopied(true);
+      } else {
+        throw new Error(result.message || 'FormSubmit submission failed');
+      }
       
-      // Most modern email clients support much longer mailto URLs than the old 2000 char limit
-      // Gmail, Outlook, Apple Mail all handle 32KB+ URLs
-      // The body will be truncated automatically if the client can't handle it
-      const mailtoUrl = `mailto:${DEVELOPER_EMAIL}?subject=${subject}&body=${body}`;
-      
-      // Open mailto link with full report
-      window.location.href = mailtoUrl;
-      
-      setSubmitted(true);
-      setCopied(true); // Clipboard also has the report as backup
       setSubmitting(false);
       
     } catch (error) {
       console.error('Submit error:', error);
-      setSubmitError('Could not open email client. Please copy the report and email it manually.');
+      setSubmitError('Could not send report. Your report was saved locally. The report is copied to your clipboard - you can email it manually to ' + DEVELOPER_EMAIL);
       setSubmitting(false);
     }
   };
@@ -151,7 +225,7 @@ function BugSquasher({ onClose, appState = {} }) {
   const canProceedStep2 = formData.userDescription.trim().length >= 10;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] overflow-y-auto modal-backdrop overscroll-contain">
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 modal-backdrop overscroll-contain">
       <div className="min-h-screen px-4 py-8 flex items-start justify-center">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col modal-content">
           {/* Header - Sticky */}
@@ -302,7 +376,14 @@ function BugSquasher({ onClose, appState = {} }) {
                   <textarea
                     value={formData.userDescription}
                     onChange={(e) => handleInputChange('userDescription', e.target.value)}
-                    placeholder="What went wrong? Be as specific as possible..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        const stepsField = document.querySelector('textarea[placeholder*="Steps to reproduce"]');
+                        if (stepsField) stepsField.focus();
+                      }
+                    }}
+                    placeholder="What went wrong? Be as specific as possible... (Ctrl+Enter to next field, Shift+Enter for new line)"
                     rows={4}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   />
@@ -394,6 +475,46 @@ function BugSquasher({ onClose, appState = {} }) {
                     ))}
                   </div>
                 </div>
+
+                {/* Tracking & Follow-up Options */}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 space-y-4">
+                  <h4 className="text-sm font-semibold text-red-800 dark:text-red-200 flex items-center gap-2">
+                    <span>📋</span> Tracking & Follow-up
+                  </h4>
+                  
+                  {/* Save to My Tickets */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.saveToMyTickets}
+                      onChange={(e) => handleInputChange('saveToMyTickets', e.target.checked)}
+                      className="mt-1 w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Save to My Tickets</span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Track this bug report in your My Packet. You'll be notified when it's fixed!
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Optional Email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Email Address (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.veteranEmail}
+                      onChange={(e) => handleInputChange('veteranEmail', e.target.value)}
+                      placeholder="email@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                      We respect your privacy. Leave blank to stay anonymous. Only fill this in if you'd like me to email you when the bug is squashed.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -411,23 +532,27 @@ function BugSquasher({ onClose, appState = {} }) {
                       </div>
                     </div>
                     <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
-                      Email Ready to Send! 📧
+                      Bug Report Sent! 🐛✓
                     </h3>
                     <p className="text-green-700 dark:text-green-100 mb-4">
-                      Your email app opened with the <strong>complete bug report already filled in</strong>. Just press Send!
+                      Your bug report has been <strong>sent directly</strong> - no email app needed!
                     </p>
                     <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
-                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ Just one step:</h4>
-                      <p className="text-sm text-green-700 dark:text-green-100">
-                        Click <strong>Send</strong> in your email app - the full report is already there!
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-2 italic">
-                        (A backup copy is also in your clipboard just in case)
-                      </p>
+                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ What happens next:</h4>
+                      <ul className="text-sm text-green-700 dark:text-green-100 space-y-1">
+                        <li>• I'll investigate this bug personally</li>
+                        {formData.saveToMyTickets && <li>• Check "My Tickets" in My Packet for status updates</li>}
+                        {formData.veteranEmail && <li>• I'll email you when this bug is squashed</li>}
+                      </ul>
                     </div>
                     <p className="text-sm text-green-600 dark:text-green-400">
                       Report ID: <span className="font-mono font-bold">{getReportId()}</span>
                     </p>
+                    {formData.saveToMyTickets && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-2 italic">
+                        Saved to your My Tickets for tracking
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -502,24 +627,16 @@ function BugSquasher({ onClose, appState = {} }) {
                       ) : (
                         <>
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
-                          Open Email & Send Report
+                          Submit Bug Report
                         </>
                       )}
                     </button>
 
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Opens your email app with report ready to send to {DEVELOPER_EMAIL}
+                      Sends directly to the developer - no email app needed!
                     </p>
-                    
-                    {/* Modern email client notice */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
-                      <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
-                        <strong>💡 Note:</strong> Modern email clients (Gmail, Outlook, Apple Mail) will show the full report pre-filled. 
-                        Older email clients may truncate long reports - a backup copy is always saved to your clipboard.
-                      </p>
-                    </div>
                   </>
                 )}
               </div>

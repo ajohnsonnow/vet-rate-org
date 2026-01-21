@@ -7,11 +7,19 @@
  * 2. In-Service Event/Stressor (what happened)
  * 3. Nexus Letter (the link between 1 and 2)
  * 
+ * INTEGRATED with ClaimNavigator - syncs evidence state bidirectionally
+ * 
  * Built by a fellow veteran. "Know when you're ready to file."
  */
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Circle, FileText, Stethoscope, Link as LinkIcon } from 'lucide-react';
+import { CheckCircle, AlertCircle, Circle, FileText, Stethoscope, Link as LinkIcon, Map } from 'lucide-react';
+
+// Integration bridge for ClaimNavigator sync
+import { 
+  getBigThreeStatus, 
+  dispatchNavigatorUpdate 
+} from '../utils/claimIntegration';
 
 const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
   const [completeness, setCompleteness] = useState(0);
@@ -24,6 +32,26 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
 
   useEffect(() => {
     calculateCompleteness();
+    
+    // Listen for updates from ClaimNavigator
+    const handleNavigatorUpdate = (e) => {
+      if (e.detail?.type === 'evidence_sync') {
+        calculateCompleteness();
+      }
+    };
+    
+    // Listen for Big 3 updates from any source
+    const handleBigThreeUpdate = () => {
+      calculateCompleteness();
+    };
+    
+    window.addEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
+    window.addEventListener('bigThreeUpdate', handleBigThreeUpdate);
+    
+    return () => {
+      window.removeEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
+      window.removeEventListener('bigThreeUpdate', handleBigThreeUpdate);
+    };
   }, [conditionCode, conditionName]);
 
   const calculateCompleteness = () => {
@@ -36,20 +64,23 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
     // Check localStorage for saved claim data
     const storageKey = conditionCode || conditionName?.toLowerCase().replace(/\s+/g, '-');
     
+    // First check if ClaimNavigator has Big 3 data via integration bridge
+    const navigatorBig3 = getBigThreeStatus(conditionName || conditionCode);
+    
     // 1. Check for Diagnosis/Medical Description
     const diagnosisKey = `${storageKey}_diagnosis`;
     const medicalDescription = localStorage.getItem(diagnosisKey) || '';
-    const hasDiagnosis = medicalDescription && medicalDescription.trim().length > 50;
+    const hasDiagnosis = navigatorBig3.diagnosis || (medicalDescription && medicalDescription.trim().length > 50);
 
     // 2. Check for In-Service Event/Stressor
     const eventKey = `${storageKey}_event`;
     const inServiceEvent = localStorage.getItem(eventKey) || '';
-    const hasInServiceEvent = inServiceEvent && inServiceEvent.trim().length > 50;
+    const hasInServiceEvent = navigatorBig3.event || (inServiceEvent && inServiceEvent.trim().length > 50);
 
     // 3. Check for Nexus Letter
     const nexusKey = `${storageKey}_nexus`;
     const nexusLetter = localStorage.getItem(nexusKey) || '';
-    const hasNexus = nexusLetter && nexusLetter.trim().length > 100;
+    const hasNexus = navigatorBig3.nexus || (nexusLetter && nexusLetter.trim().length > 100);
 
     // Update checklist
     setChecklist({

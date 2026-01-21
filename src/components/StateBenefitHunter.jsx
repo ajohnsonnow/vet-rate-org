@@ -346,7 +346,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="state-benefit-hunter-title"

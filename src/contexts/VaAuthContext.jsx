@@ -58,6 +58,56 @@ export function VaAuthProvider({ children }) {
   }, []);
 
   /**
+   * Listen for OAuth popup completion messages
+   */
+  useEffect(() => {
+    const handleMessage = (event) => {
+      // Only accept messages from same origin
+      if (event.origin !== window.location.origin) return;
+      
+      const { type, data, error: authErr } = event.data || {};
+      
+      if (type === 'VA_AUTH_SUCCESS' && data) {
+        console.log('[VA Auth] Received success message from popup with token data');
+        
+        // The popup sends us the actual token data since sessionStorage isn't shared
+        const { access_token, refresh_token, expires_in, userInfo: popupUserInfo } = data;
+        
+        if (access_token) {
+          // Calculate expiry time
+          const expiryTime = Date.now() + ((expires_in || 3600) * 1000);
+          
+          // Update React state
+          setAccessToken(access_token);
+          setRefreshToken(refresh_token || null);
+          setTokenExpiry(expiryTime);
+          setUserInfo(popupUserInfo || null);
+          setIsAuthenticated(true);
+          setError(null);
+          
+          // Also store in sessionStorage for persistence
+          sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
+          if (refresh_token) {
+            sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
+          }
+          sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toString());
+          if (popupUserInfo) {
+            sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(popupUserInfo));
+          }
+          
+          console.log('[VA Auth] Authentication state updated from popup');
+        }
+      } else if (type === 'VA_AUTH_ERROR') {
+        console.error('[VA Auth] Received error from popup:', authErr);
+        setError(authErr);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  /**
    * Store authentication tokens
    */
   const setAuth = useCallback((tokens, user = null) => {

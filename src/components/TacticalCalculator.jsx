@@ -250,7 +250,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="calculator-title"
@@ -311,7 +311,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   onClick={() => setActiveTab(tab.id)}
                   className={`min-w-[80px] px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 ${
                     activeTab === tab.id
-                      ? tab.id === 'capresults' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
+                      ? tab.id === 'capresults' ? 'bg-teal-600 text-white' : 'bg-blue-600 text-white'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -319,7 +319,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   <span className="inline sm:hidden">{tab.shortLabel}</span>
                   {tab.badge && (
                     <span className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full font-bold ${
-                      activeTab === tab.id ? 'bg-white/30' : 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                      activeTab === tab.id ? 'bg-white/30' : 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300'
                     }`}>
                       {tab.badge}
                     </span>
@@ -566,14 +566,14 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
             {activeTab === 'capresults' && capResults.length > 0 && (
               <div className="space-y-6">
                 {/* Header Info */}
-                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
+                <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center flex-shrink-0">
                       <span className="text-xl">🏥</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-purple-900 dark:text-purple-100">C&P Simulator Results</h3>
-                      <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                      <h3 className="font-bold text-teal-900 dark:text-teal-100">C&P Simulator Results</h3>
+                      <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
                         These ratings were predicted from your C&P Exam simulations. Add them to your calculator to see the combined rating impact!
                       </p>
                     </div>
@@ -583,7 +583,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         if (onClearCapResults) onClearCapResults();
                         setActiveTab('calculator');
                       }}
-                      className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                      className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
                     >
                       Clear All
                     </button>
@@ -595,7 +595,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {capResults.map((result, index) => (
                     <div 
                       key={result.id || index}
-                      className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-purple-200 dark:border-purple-700 shadow-sm"
+                      className="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-teal-200 dark:border-teal-700 shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -617,7 +617,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                             )}
                           </div>
                         </div>
-                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                        <span className="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full">
                           C&P Sim
                         </span>
                       </div>
@@ -639,7 +639,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                             // Remove from C&P results
                             setCapResults(prev => prev.filter((_, i) => i !== index));
                           }}
-                          className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                         >
                           <span>🧮</span> Add to Calculator
                         </button>
@@ -695,7 +695,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                             <div className="text-xs text-gray-500">Current</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-purple-600">+{capResults.length}</div>
+                            <div className="text-2xl font-bold text-teal-600">+{capResults.length}</div>
                             <div className="text-xs text-gray-500">From C&P</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">

@@ -22,8 +22,8 @@ const packageJsonPath = path.join(rootDir, 'package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const version = packageJson.version;
 
-// Get current date in YYYY-MM-DD format
-const today = new Date().toISOString().split('T')[0];
+// Get current date in YYYY-MM-DD format (LOCAL timezone, not UTC)
+const today = new Date().toLocaleDateString('en-CA'); // 'en-CA' gives YYYY-MM-DD format
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Update public/version.json

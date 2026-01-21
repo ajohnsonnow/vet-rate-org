@@ -1,53 +1,67 @@
-# Security Configuration
+# Security Policy
 
-This document outlines security best practices and configurations for Vet-Rate.org.
+## 🛡️ Our Philosophy: "Trust No One (Not Even Us)"
 
-## Data Privacy & Protection
+Vet-Rate.org is built on a **Zero-Trust, Client-Side Architecture**. We believe that the safest place for veteran data is on the veteran's own device, never on our servers.
 
-### Client-Side Processing
-- All searches and operations are processed in the browser
-- No personal data is sent to external servers
-- Search history is stored only in browser memory (cleared on page refresh)
-- No cookies or local storage of user searches
+Our security model relies on three pillars:
+1. **Client-Side Execution**: Code runs in the browser. We have no backend database to hack.
+2. **Transparency**: Our code is open source (AGPLv3) so it can be audited by anyone.
+3. **Data Isolation**: User data never leaves the current session unless explicitly exported by the user.
 
-### Input Validation
-```javascript
-// Search term validation pattern
-const SEARCH_PATTERN = /^[a-zA-Z0-9\s\-\/]*$/;
-const MAX_SEARCH_LENGTH = 100;
+## 🐛 Reporting a Vulnerability
 
-// Prevents XSS attacks
-validateSearchTerm(term) {
-  return term.length <= MAX_SEARCH_LENGTH && 
-         SEARCH_PATTERN.test(term);
-}
-```
+We take security issues seriously. If you discover a vulnerability, please report it responsibly so we can fix it before bad actors exploit it.
 
-## Content Security Policy
+**DO NOT file a public issue on GitHub.**
 
-Set appropriate CSP headers on your server:
+### How to Report
+Please use the secure **Bug Report / Feedback** tool located directly within the Vet-Rate.org application:
 
-```
-Content-Security-Policy: 
-  default-src 'self'; 
-  script-src 'self' 'unsafe-inline'; 
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data:;
-  font-src 'self';
-  connect-src 'self' https://www.ecfr.gov;
-  frame-ancestors 'none';
-```
+1. Open the application menu.
+2. Select **"Report a Bug"**.
+3. **CRITICAL**: Start your message with the tag `[SECURITY]`.
+4. Describe the vulnerability and steps to reproduce it.
 
-## HTTP Security Headers
+These reports are routed to a private, high-priority channel for immediate review by the lead developer.
 
-Configure these headers on your web server:
+We aim to acknowledge reports within **48 hours** and will provide a timeline for the fix.
 
-```
-# Prevent MIME type sniffing
-X-Content-Type-Options: nosniff
+## 🔒 Security Architecture
 
-# Enable browser XSS protection
-X-XSS-Protection: 1; mode=block
+### 1. Data Residency
+* **Storage**: All user inputs (ratings, medical history, logs) are stored in the browser's `localStorage` or `sessionStorage`.
+* **Encryption**: Sensitive data exported to "The Bunker" (backup files) is AES-encrypted before being generated.
+* **Transmission**: We do not transmit user data to any first-party server.
+
+### 2. AI Safety (Google Gemini & Local LLMs)
+* **Consent**: Users must explicitly enable AI features.
+* **Anonymization**: The application logic strips PII (names, SSNs, addresses) before sending prompts to the Google Gemini API.
+* **Local Option**: Users are encouraged to use the "Local AI" (WebLLM) features, which run entirely on-device with zero network requests after model download.
+
+### 3. Third-Party Services
+We minimize external dependencies. Our only external connections are:
+* **Google Gemini API** (Optional, for Cloud AI features)
+* **Google Drive API** (Optional, for user-managed Cloud Sync)
+* **eCFR.gov** (For fetching updated regulations)
+
+### 4. Content Security Policy (CSP)
+We enforce a strict CSP to prevent Cross-Site Scripting (XSS).
+* `script-src`: 'self' (and necessary analytics if applicable, otherwise strict)
+* `connect-src`: 'self', `generativelanguage.googleapis.com` (Gemini), `www.googleapis.com` (Drive)
+
+## 🚫 Out of Scope
+The following are **not** considered security vulnerabilities:
+* Attacks requiring physical access to the user's unlocked device.
+* Social engineering (phishing) of the user.
+* Vulnerabilities in the user's own browser or operating system.
+* "Self-XSS" (pasting malicious code into the console).
+
+## 📜 Disclosure Policy
+We follow a **90-day disclosure deadline**. We ask that you give us reasonable time to fix the issue before making it public. In return, we commit to being transparent about the fix.
+
+---
+*Last Updated: January 2026*
 
 # Prevent clickjacking
 X-Frame-Options: DENY

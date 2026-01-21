@@ -10,7 +10,9 @@ import { fillAndDownloadForm } from '../utils/pdfFormFiller';
 import { enhanceFormStatement, getAIDataDisclosure } from '../utils/aiStatementHelper';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ShareButton, { PIISensitive } from './ShareButton';
+import { markAsModified, saveOnStepComplete } from '../utils/persistentStorage';
 import { 
   getVeteranProfile, 
   saveVeteranProfile, 
@@ -69,23 +71,47 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
     if (profile && Object.keys(profile).length > 0) {
       setFormData(prev => ({
         ...prev,
+        // Name fields
         veteranName: `${profile.firstName || ''} ${profile.middleInitial || ''} ${profile.lastName || ''}`.trim(),
         veteranFirstName: profile.firstName,
         veteranMiddleInitial: profile.middleInitial,
         veteranLastName: profile.lastName,
+        fullName: profile.fullName || `${profile.firstName || ''} ${profile.middleInitial || ''} ${profile.lastName || ''}`.trim(),
+        
+        // Identification
         ssn: profile.ssn,
+        ssnLast4: profile.ssnLast4 || profile.ssn,
+        ssnFull: profile.ssnFull,
+        vaFileNumber: profile.vaFileNumber,
+        serviceNumber: profile.serviceNumber,
         dob: profile.dob,
+        placeOfBirth: profile.placeOfBirth,
+        
+        // Contact
         email: profile.email,
         phone: profile.phone,
+        alternatePhone: profile.alternatePhone,
+        
+        // Address
         street: profile.street,
         apt: profile.apt,
         city: profile.city,
         state: profile.state,
         zip: profile.zip,
         country: profile.country || 'United States',
+        homeOfRecord: profile.homeOfRecord,
+        
+        // Military Service
         veteranBranch: profile.branch,
-        vaFileNumber: profile.vaFileNumber,
-        serviceNumber: profile.serviceNumber,
+        branch: profile.branch,
+        rankAtDischarge: profile.rankAtDischarge,
+        payGrade: profile.payGrade,
+        mos: profile.mos,
+        mosTitle: profile.mosTitle,
+        serviceStartDate: profile.serviceStartDate,
+        serviceEndDate: profile.serviceEndDate,
+        characterOfService: profile.characterOfService,
+        separationType: profile.separationType,
       }));
     }
   }, []);
@@ -1771,6 +1797,8 @@ Include specific dates, amounts, and documentation you can provide.`,
 
   const handleFieldChange = (fieldName, value) => {
     setFormData(prev => ({ ...prev, [fieldName]: value }));
+    // Trigger auto-save for crash protection
+    markAsModified();
   };
 
   const handleChecklistChange = (fieldName, option, checked) => {
@@ -1780,6 +1808,8 @@ Include specific dates, amounts, and documentation you can provide.`,
     } else {
       setFormData(prev => ({ ...prev, [fieldName]: currentValues.filter(v => v !== option) }));
     }
+    // Trigger auto-save for crash protection
+    markAsModified();
   };
 
   const generateBuddyStatement = () => {
@@ -4128,6 +4158,155 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             </div>
           </div>
 
+          {/* Military Service Section - Collapsible */}
+          <details className="mb-4 border border-blue-200 dark:border-blue-700 rounded-lg">
+            <summary className="cursor-pointer px-4 py-3 bg-blue-100 dark:bg-blue-900/40 rounded-t-lg font-medium text-blue-900 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Military Service Details (for form autofill)
+            </summary>
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Number</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.serviceNumber || ''}
+                    onChange={(e) => handleProfileChange('serviceNumber', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="If different from SSN"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rank at Discharge</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.rankAtDischarge || ''}
+                    onChange={(e) => handleProfileChange('rankAtDischarge', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="e.g., E-5/SGT"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pay Grade</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.payGrade || ''}
+                    onChange={(e) => handleProfileChange('payGrade', e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="e.g., E-5, O-3"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MOS/Rating Code</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.mos || ''}
+                    onChange={(e) => handleProfileChange('mos', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="e.g., 11B, IT2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Start Date</label>
+                  <input
+                    type="date"
+                    value={veteranProfile.serviceStartDate || ''}
+                    onChange={(e) => handleProfileChange('serviceStartDate', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service End Date</label>
+                  <input
+                    type="date"
+                    value={veteranProfile.serviceEndDate || ''}
+                    onChange={(e) => handleProfileChange('serviceEndDate', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Character of Service</label>
+                  <select
+                    value={veteranProfile.characterOfService || ''}
+                    onChange={(e) => handleProfileChange('characterOfService', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                  >
+                    <option value="">Select...</option>
+                    <option value="Honorable">Honorable</option>
+                    <option value="General (Under Honorable)">General (Under Honorable)</option>
+                    <option value="Other Than Honorable">Other Than Honorable</option>
+                    <option value="Bad Conduct">Bad Conduct</option>
+                    <option value="Dishonorable">Dishonorable</option>
+                    <option value="Entry Level Separation">Entry Level Separation</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Place of Birth</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.placeOfBirth || ''}
+                    onChange={(e) => handleProfileChange('placeOfBirth', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="City, State"
+                  />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* Sensitive Data Section - Collapsible with Warning */}
+          <details className="mb-4 border border-amber-200 dark:border-amber-700 rounded-lg">
+            <summary className="cursor-pointer px-4 py-3 bg-amber-100 dark:bg-amber-900/40 rounded-t-lg font-medium text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Sensitive Information (Full SSN - Optional)
+              <span className="ml-auto text-xs text-amber-700 dark:text-amber-400">⚠️ Local storage only</span>
+            </summary>
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-b-lg space-y-4">
+              <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                <strong>⚠️ Privacy Notice:</strong> Full SSN is only needed for certain forms. This data is stored 
+                <strong> locally on your device only</strong> and is never sent to any server. 
+                Clear your browser data to remove this information.
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full SSN (XXX-XX-XXXX)</label>
+                  <input
+                    type="password"
+                    value={veteranProfile.ssnFull || ''}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '').slice(0, 9);
+                      if (val.length > 5) val = val.slice(0, 3) + '-' + val.slice(3, 5) + '-' + val.slice(5);
+                      else if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3);
+                      handleProfileChange('ssnFull', val);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    placeholder="XXX-XX-XXXX"
+                    autoComplete="off"
+                  />
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Only needed for certain VA forms</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Home of Record</label>
+                  <input
+                    type="text"
+                    value={veteranProfile.homeOfRecord || ''}
+                    onChange={(e) => handleProfileChange('homeOfRecord', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
+                    placeholder="City, State at enlistment"
+                  />
+                </div>
+              </div>
+            </div>
+          </details>
+
           <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
             <p className="text-xs text-blue-700 dark:text-blue-400">
               🔒 Your data is stored locally on your device. Nothing is sent to any server.
@@ -4703,7 +4882,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4">
       <div className="min-h-screen w-full py-4 px-4 flex items-start justify-center">
         <div ref={formsContentRef} className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl my-4 overflow-hidden flex flex-col max-h-[90vh]">
           {/* Header */}
@@ -4717,6 +4896,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <LLMRecommendationBadge toolId="forms-helper" />
                 <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
                 <ShareButton 
                   targetRef={formsContentRef}

@@ -128,24 +128,80 @@ export function generateWhatsNewChangelog() {
   // Update this array when deploying new features
   
   const curatedChangelog = [
-    // NEW FEATURES - Add new releases here (mark with isNew: true)
+    // v1.4.1 - LOCAL AI EXPANSION + SMART LLM RECOMMENDATIONS
+    {
+      type: 'feature',
+      title: '🤖 17 Local AI Models - 100% Private',
+      description: 'Expanded from 8 to 17 local AI models! DeepSeek R1, Qwen 3, SmolLM2, Hermes 3, and Phi 3.5 Vision now available. Your data NEVER leaves your device.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: '💡 Smart LLM Recommendations',
+      description: 'Each AI tool now shows the BEST model for that task! Document parsing? DeepSeek R1. Writing nexus letters? Qwen 3 8B. Scanned images? Phi 3.5 Vision.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: '👁️ Phi 3.5 Vision - Read Images Directly',
+      description: 'NEW vision model can analyze scanned DD214s and documents without OCR! The only local model that can "see" images.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: '🧠 DeepSeek R1 - Reasoning Powerhouse',
+      description: 'Chain-of-thought reasoning models excel at complex claim analysis. Think like a VA rater to stress-test your claim.',
+      isNew: true
+    },
+    // v1.4.0 - CRASH-PROOF STORAGE SYSTEM "The Bunker" + GPU SELECTION
+    {
+      type: 'security',
+      title: '🛡️ CRASH-PROOF STORAGE - "The Bunker"',
+      description: 'Your data now survives browser crashes, cache clears, and power outages! Click "💾 Save My Packet" in My Packet to create a crash-proof file on your device.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: '🎮 GPU Selection for Dual-GPU Systems',
+      description: 'Laptops with dual GPUs (integrated + discrete) can now choose which GPU runs Local AI! Force "High Performance" for speed or "Power Saver" for battery life.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: 'Save-As-You-Go Protocol',
+      description: 'Every form field, every claim, every statement now auto-saves within 1.5 seconds. Your work is protected as you type!',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: '📂 Resume Packet Feature',
+      description: 'Coming back tomorrow? Click "Resume Packet" to load your saved file and pick up exactly where you left off.',
+      isNew: true
+    },
+    {
+      type: 'feature',
+      title: 'Mobile Backup Reminders',
+      description: 'On mobile devices, we\'ll remind you to download backups before closing to ensure your data is safe.',
+      isNew: true
+    },
+    // Previous NEW FEATURES
     {
       type: 'feature',
       title: 'Retro Pay Hunter',
       description: 'Find missed backpay using historical VA pay rates from 2020-2026 with CUE pattern detection',
-      isNew: true
+      isNew: false
     },
     {
       type: 'feature',
       title: 'Time Machine',
       description: 'Intent to File countdown tracker with backpay projections',
-      isNew: true
+      isNew: false
     },
     {
       type: 'feature',
       title: 'The Tribunal',
       description: 'Voice-interactive mock BVA hearing simulator with real-time feedback',
-      isNew: true
+      isNew: false
     },
     {
       type: 'feature',

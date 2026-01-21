@@ -1,8 +1,16 @@
-/**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
- * Unauthorized copying, use, or distribution is strictly prohibited.
- * See COPYRIGHT.js for full license terms.
+/*
+ * Vet-Rate.org - VA Disability Claims Command Center
+ * Copyright (C) 2024-2026 Anthony Johnson
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  * 
  * This is the main application component for the VA Disability Calculator.
  * Built by a fellow service-disabled veteran to help veterans navigate the
@@ -30,9 +38,14 @@ import FormsHelper from './components/FormsHelper';
 import CFileAnalyzer from './components/CFileAnalyzer';
 import SharkRadar from './components/SharkRadar';
 import Pathfinder from './components/Pathfinder';
+import ClaimNavigator from './components/ClaimNavigator';
 import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
+import FeatureRequest from './components/FeatureRequest';
+import AdminLogin from './components/AdminLogin';
+import AdminPanel from './components/AdminPanel';
+import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import FundingModal from './components/FundingModal';
 import QuickConditionPicker from './components/QuickConditionPicker';
 import UserManual from './components/UserManual';
@@ -79,15 +92,22 @@ import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
 import AISettingsModal from './components/AISettingsModal';
 import LocalAIPanel, { LocalAIProvider } from './components/LocalAIPanel';
+import DD214Analyzer from './components/DD214Analyzer';
 import BootCampTour from './components/BootCampTour';
 import DemoDataLoader from './components/DemoDataLoader';
 import MissionProtocol from './components/MissionProtocol';
+import WorkflowGuide from './components/WorkflowGuide';
 import EvidenceGapVisualizer from './components/EvidenceGapVisualizer';
 import RetroPayHunter from './components/RetroPayHunter';
 import PainPainter from './components/PainPainter';
 import VAAITransparency from './components/VAAITransparency';
 import ShareButton, { PIISensitive } from './components/ShareButton';
 import SecurityBadge from './components/SecurityBadge';
+import VaIntegrationTest from './components/VaIntegrationTest';
+import VaSandboxTest from './components/VaSandboxTest';
+import DemoDashboard from './components/DemoDashboard';
+import { VaApiStatusBanner } from './components/VaApiStatus';
+import { MobileSaveReminder } from './components/PacketPersistence';
 import { HelperModeProvider } from './contexts/HelperModeContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
@@ -99,6 +119,7 @@ import { startUpdateChecker, stopUpdateChecker, applyUpdate } from './utils/upda
 import { createDebugDumpHandler } from './utils/debugDump';
 import { APP_VERSION, LAST_SEEN_VERSION_KEY } from './utils/version';
 import { needsMigration, migrateFromLocalStorage } from './utils/storage';
+import { initPersistentStorage } from './utils/persistentStorage';
 import { generateWhatsNewChangelog } from './utils/changelogGenerator';
 import disabilityData from './data/disabilityData.json';
 import changelogData from './data/changelog.json';
@@ -106,6 +127,8 @@ import { PROJECT_STATS } from './data/projectStats';
 import { getTotalToolCount } from './data/toolkitData';
 import { getSquashedBugCount } from './data/squashedBugs';
 import AnimatedBug from './components/AnimatedBug';
+import AIAssistant from './components/AIAssistant';
+import { useAIAssistant } from './hooks/useAIAssistant';
 import './index.css';
 
 function App() {
@@ -113,6 +136,9 @@ function App() {
   
   // Toast notification system
   const { toasts, onClose, onAction } = useToast();
+  
+  // AI Assistant (The Navigator)
+  const aiAssistant = useAIAssistant();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
@@ -136,7 +162,9 @@ function App() {
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showSharkRadar, setShowSharkRadar] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
+  const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
+  const [showFeatureRequest, setShowFeatureRequest] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
@@ -161,6 +189,9 @@ function App() {
   const [showConsistencyEngine, setShowConsistencyEngine] = useState(false);
   const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
   const [showVAAITransparency, setShowVAAITransparency] = useState(false);
+  const [showVaIntegrationDemo, setShowVaIntegrationDemo] = useState(false);
+  const [showVaSandboxTest, setShowVaSandboxTest] = useState(false);
+  const [showDemoDashboard, setShowDemoDashboard] = useState(false);
   
   // NEW DIAMOND-TIER FEATURES
   const [showDenialDecoder, setShowDenialDecoder] = useState(false);
@@ -174,6 +205,7 @@ function App() {
   const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [showLocalAIPanel, setShowLocalAIPanel] = useState(false);
+  const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
   
   // WOW FEATURES: Evidence Gap, Retro Pay, Pain Painter
   const [showEvidenceGapVisualizer, setShowEvidenceGapVisualizer] = useState(false);
@@ -182,6 +214,7 @@ function App() {
   
   // CLEAR COAT: Onboarding & Trust Features
   const [showMissionProtocol, setShowMissionProtocol] = useState(false);
+  const [showWorkflowGuide, setShowWorkflowGuide] = useState(false);
   
   // SAFETY-CRITICAL: Crisis Intervention State
   const [showCrisisModal, setShowCrisisModal] = useState(false);
@@ -222,14 +255,99 @@ function App() {
     setShowWhatsNew(false);
   };
 
+  // Listen for TOS acceptance to show What's New
+  useEffect(() => {
+    const handleTosAccepted = () => {
+      // TOS was just accepted, now check if we should show What's New
+      const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
+      const currentVersion = APP_VERSION;
+      
+      if (lastSeenVersion !== currentVersion) {
+        console.log(`📰 TOS accepted - showing What's New for version ${currentVersion}`);
+        const dynamicChangelog = generateWhatsNewChangelog();
+        if (dynamicChangelog && dynamicChangelog.changelog.length > 0) {
+          setCurrentChangelog(dynamicChangelog.changelog);
+          setShowWhatsNew(true);
+        } else {
+          const versionUpdate = changelogData.updates.find(u => u.version === currentVersion);
+          if (versionUpdate && versionUpdate.changelog.length > 0) {
+            setCurrentChangelog(versionUpdate.changelog);
+            setShowWhatsNew(true);
+          }
+        }
+        localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
+      }
+    };
+    
+    window.addEventListener('tosAccepted', handleTosAccepted);
+    return () => window.removeEventListener('tosAccepted', handleTosAccepted);
+  }, []);
+
   // Initialize error capture for bug reports
   useEffect(() => {
     initializeErrorCapture();
   }, []);
   
+  // Helper function to get current tool name for AI Assistant context
+  const getCurrentToolName = () => {
+    if (showMyPacket) return 'My Packet';
+    if (showUserManual) return 'User Manual';
+    if (showTacticalCalculator) return 'Rating Calculator';
+    if (showSecondaryScout) return 'Secondary Scout';
+    if (showCFileAnalyzer) return 'C-File Analyzer';
+    if (showNexusBuilder) return 'Nexus Builder';
+    if (showPACTActNavigator) return 'PACT Act Navigator';
+    if (showTDIUBuilder) return 'TDIU Builder';
+    if (showCAPSimulator) return 'C&P Simulator';
+    if (showFormsHelper) return 'Forms Helper';
+    if (showWitnessBench) return 'Witness Bench';
+    if (showStateBenefitHunter) return 'State Benefits';
+    if (showPathfinder) return 'Pathfinder';
+    if (showClaimNavigator) return 'Claim Navigator';
+    if (showRedTeam) return 'War Game';
+    if (showMillionDollarDashboard) return 'Million Dollar Dashboard';
+    if (showRetroPayHunter) return 'Retro Pay Hunter';
+    if (showWhatIfSandbox) return 'What-If Sandbox';
+    if (showEvidenceTimeline) return 'Evidence Timeline';
+    if (showDenialDecoder) return 'Denial Decoder';
+    if (showBodyMapSelector) return 'Body Map';
+    if (showClaimStressTest) return 'Claim Stress Test';
+    if (showPainPainter) return 'Pain Painter';
+    if (showDD214Analyzer) return 'DD214 Analyzer';
+    if (showBlueButtonXRay) return 'Blue Button X-Ray';
+    if (showDecisionDecoder) return 'Decision Decoder';
+    if (showRiskAssessment) return 'Risk Assessment';
+    if (showVSOFinder) return 'VSO Finder';
+    if (showSharkRadar) return 'Shark Radar';
+    if (showSymptomLogger) return 'Symptom Logger';
+    if (showFOIAGenerator) return 'FOIA Generator';
+    if (showMOSHazardMatcher) return 'MOS Hazard Matcher';
+    if (showWebOfConditions) return 'Web of Conditions';
+    if (showLegislativeWatchdog) return 'Legislative Watchdog';
+    if (showTheTribunal) return 'The Tribunal';
+    if (showVAResources) return 'VA Resources';
+    if (showWorkflowGuide) return 'Workflow Guide';
+    if (selectedResult) return 'Disability Details';
+    return 'Home';
+  };
+  
   // Setup beforeunload warning for unsaved changes
   useEffect(() => {
     setupBeforeUnloadWarning();
+  }, []);
+  
+  // DEMO: Keyboard shortcut to open Demo Dashboard (Ctrl+Shift+D)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setShowDemoDashboard(true);
+      }
+      // NOTE: Admin panel access (Ctrl+Shift+A) is handled by AdminAuthContext
+      // Bug Lookup and Feature Lookup are only accessible via Admin Panel
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
   
   // LIVE OPS: Data migration and update checking
@@ -294,6 +412,17 @@ function App() {
       // Continue with normal initialization
       await runStorageMigration();
       
+      // Initialize crash-proof persistent storage system ("The Bunker")
+      try {
+        const persistentResult = await initPersistentStorage();
+        console.log('🛡️ Persistent Storage: Initialized', persistentResult);
+        if (persistentResult.hasUnsavedChanges) {
+          console.log('⚠️ Found unsaved changes from previous session - will auto-save');
+        }
+      } catch (error) {
+        console.error('⚠️ Persistent Storage: Initialization failed, continuing anyway', error);
+      }
+      
       // Step 1: Migrate user data if needed (CRITICAL - runs after IndexedDB migration)
       console.log('🛡️ LIVE OPS: Initializing protection systems...');
       const migrationResult = migrateUserData();
@@ -308,11 +437,13 @@ function App() {
     }
     
     // Step 2: Check if user should see "What's New" modal
+    // IMPORTANT: Only show if TOS has been accepted (don't show on first visit before TOS)
+    const tosAccepted = localStorage.getItem('vet-rate-tos-accepted');
     const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
     const currentVersion = APP_VERSION;
     
-    if (lastSeenVersion !== currentVersion) {
-      // User hasn't seen this version's changelog yet
+    if (tosAccepted && lastSeenVersion !== currentVersion) {
+      // User has accepted TOS and hasn't seen this version's changelog yet
       console.log(`📰 New version detected: ${currentVersion} (last seen: ${lastSeenVersion || 'none'})`);
       
       // Use dynamic changelog generator (preferred) with JSON fallback
@@ -333,6 +464,8 @@ function App() {
       
       // Mark this version as seen
       localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
+    } else if (!tosAccepted) {
+      console.log('📰 Skipping What\'s New - TOS not yet accepted (first visit)');
     }
     
     // Step 3: Start update checker
@@ -484,6 +617,47 @@ function App() {
     }
   };
 
+  // Handler for Workflow Guide tool navigation
+  const handleToolSelect = (toolId) => {
+    // Close Workflow Guide first
+    setShowWorkflowGuide(false);
+    
+    // Map tool IDs to state setters
+    const toolMap = {
+      'forms-helper': () => setShowFormsHelper(true),
+      'veteran-profile': () => setShowMyPacket(true),
+      'conditions-search': () => {}, // Main search is always visible
+      'tactical-calculator': () => setShowTacticalCalculator(true),
+      'secondary-scout': () => setShowSecondaryScoutLauncher(true),
+      'my-packet': () => setShowMyPacket(true),
+      'nexus-builder': () => setShowNexusBuilder(true),
+      'statement-analyzer': () => setShowStatementAnalyzer(true),
+      'mos-hazard': () => setShowMOSHazardMatcher(true),
+      'timeline-wizard': () => setShowTimelineWizard(true),
+      'dd214-analyzer': () => setShowDD214Analyzer(true),
+      'web-of-conditions': () => setShowWebOfConditions(true),
+      'cap-simulator': () => setShowCAPSimulator(true),
+      'pain-painter': () => setShowPainPainter(true),
+      'evidence-gap': () => setShowEvidenceGapVisualizer(true),
+      'cfile-analyzer': () => setShowCFileAnalyzer(true),
+      'foia-generator': () => setShowFOIAGenerator(true),
+      'retro-pay-hunter': () => setShowRetroPayHunter(true),
+      'tdiu-builder': () => setShowTDIUBuilder(true),
+      'pathfinder': () => setShowPathfinder(true),
+      'million-dollar-dashboard': () => setShowMillionDollarDashboard(true),
+      'vso-finder': () => setShowVSOFinder(true),
+      'witness-bench': () => setShowWitnessBench(true),
+      'claim-navigator': () => setShowClaimNavigator(true),
+      'va-resources': () => setShowVAResources(true),
+      'user-manual': () => setShowUserManual(true)
+    };
+    
+    // Execute the tool opener if it exists
+    if (toolMap[toolId]) {
+      toolMap[toolId]();
+    }
+  };
+
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -628,6 +802,9 @@ function App() {
       {/* Disclaimer Splash - shows on first visit */}
       <DisclaimerSplash onAcknowledge={() => setDisclaimerAcknowledged(true)} />
       
+      {/* VA API Status Banner - shows when VA APIs have issues */}
+      <VaApiStatusBanner />
+      
       {/* Mobile device notice */}
       <MobileNotice />
       
@@ -647,6 +824,7 @@ function App() {
         onCAPSimulatorClick={() => setShowCAPSimulator(true)}
         // ExamPrepRoom merged into CAPSimulator - access via "Exam Prep" button
         onPathfinderClick={() => setShowPathfinder(true)}
+        onClaimNavigatorClick={() => setShowClaimNavigator(true)}
         onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
         onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
         onWebOfConditionsClick={() => setShowWebOfConditions(true)}
@@ -677,9 +855,14 @@ function App() {
         onLegislativeWatchdogClick={() => setShowLegislativeWatchdog(true)}
         // Support & Resources
         onVSOFinderClick={() => setShowVSOFinder(true)}
+        onVaIntegrationDemoClick={() => setShowVaIntegrationDemo(true)}
         onBackupManagerClick={() => setShowBackupManager(true)}
         onCloudSyncClick={() => setShowCloudSyncManager(true)}
         onAISettingsClick={() => setShowAISettings(true)}
+        // Onboarding & Guides
+        onWorkflowGuideClick={() => setShowWorkflowGuide(true)}
+        // Feature Request
+        onFeatureRequestClick={() => setShowFeatureRequest(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
@@ -957,7 +1140,7 @@ function App() {
                     <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    <strong>What competitors charge $500+ for.</strong> Upload your C-File (Claims File) and let AI analyze thousands of pages to find 
+                    <strong>What competitors charge $500+ for.</strong> Drop in your C-File (Claims File) and let AI analyze thousands of pages to find 
                     <strong> in-service events, diagnoses, and nexus evidence</strong> - all processed locally in your browser for maximum privacy.
                   </p>
                 </div>
@@ -986,7 +1169,7 @@ function App() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
-                <strong>Instant Evidence Mining.</strong> Upload your <strong>Blue Button</strong> from MyHealtheVet (instant download!) and find <strong>unclaimed diagnoses</strong> hiding in your records.
+                <strong>Instant Evidence Mining.</strong> Drop in your <strong>Blue Button</strong> from MyHealtheVet (instant download!) and find <strong>unclaimed diagnoses</strong> hiding in your records.
               </p>
               <button
                 onClick={() => setShowBlueButtonXRay(true)}
@@ -1678,6 +1861,32 @@ function App() {
       {/* Floating Bug Report Button */}
       <FloatingBugButton onClick={() => setShowBugSquasher(true)} />
 
+      {/* AI Assistant (The Navigator) - Always available */}
+      {aiAssistant.isOpen && (
+        <AIAssistant 
+          currentTool={getCurrentToolName()} 
+          onClose={aiAssistant.close}
+        />
+      )}
+      
+      {/* AI Assistant Launch Button - Fixed position, bottom-left */}
+      {!aiAssistant.isOpen && (
+        <button
+          id="tour-ai-navigator-btn"
+          onClick={() => aiAssistant.open(getCurrentToolName())}
+          className="fixed bottom-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group"
+          title="Open AI Navigator - Your personal claims guide"
+        >
+          <div className="relative">
+            <span className="text-2xl">🧭</span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
+          </div>
+          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Ask me anything about VA claims! 💬
+          </div>
+        </button>
+      )}
+
       <footer className="bg-gray-900 dark:bg-black text-white py-8 mt-12" role="contentinfo">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
@@ -1740,6 +1949,13 @@ function App() {
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
                 🎖️ Our Promise
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowWorkflowGuide(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                🗺️ Workflow Guide
               </button>
               <span className="text-gray-600">|</span>
               <button
@@ -1917,6 +2133,8 @@ function App() {
           onReportBug={() => setShowBugSquasher(true)}
           onAnalyzeStrategy={() => { setShowMyPacket(false); setShowPathfinder(true); }}
           onOpenGoogleDriveSync={() => { setShowMyPacket(false); setShowCloudSync(true); }}
+          onOpenAISettings={() => setShowAISettings(true)}
+          onOpenDD214Analyzer={() => { setShowMyPacket(false); setShowDD214Analyzer(true); }}
         />
       )}
       
@@ -1950,6 +2168,15 @@ function App() {
       {showCFileAnalyzer && (
         <CFileAnalyzer
           onClose={() => setShowCFileAnalyzer(false)}
+          onOpenAISettings={() => setShowAISettings(true)}
+        />
+      )}
+      
+      {/* DD214 Analyzer */}
+      {showDD214Analyzer && (
+        <DD214Analyzer
+          onClose={() => setShowDD214Analyzer(false)}
+          onReportBug={() => { setShowDD214Analyzer(false); setShowBugSquasher(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
@@ -2014,7 +2241,10 @@ function App() {
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🧭</span>
                   <div>
-                    <h2 className="text-xl font-bold text-white">The Pathfinder</h2>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      The Pathfinder
+                      <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">AI</span>
+                    </h2>
                     <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
                   </div>
                 </div>
@@ -2042,6 +2272,13 @@ function App() {
         </div>
       )}
       
+      {/* Claim Navigator - Mission Control for VA Claims */}
+      {showClaimNavigator && (
+        <ClaimNavigator
+          onClose={() => setShowClaimNavigator(false)}
+        />
+      )}
+      
       {/* Bug Squasher */}
       {showBugSquasher && (
         <BugSquasher
@@ -2049,6 +2286,18 @@ function App() {
           appState={getCurrentAppState()}
         />
       )}
+
+      {/* Feature Request */}
+      {showFeatureRequest && (
+        <FeatureRequest
+          onClose={() => setShowFeatureRequest(false)}
+          appState={getCurrentAppState()}
+        />
+      )}
+
+      {/* Admin Authentication & Panel - Access via Ctrl+Shift+A */}
+      <AdminLogin />
+      <AdminPanel />
       
       {/* User Manual */}
       {showUserManual && (
@@ -2080,6 +2329,27 @@ function App() {
             setShowVSOFinder(false);
             setShowBugSquasher(true);
           }}
+        />
+      )}
+      
+      {/* VA Integration Demo Dashboard (for Production Access Demo) */}
+      {showVaIntegrationDemo && (
+        <VaIntegrationTest
+          onClose={() => setShowVaIntegrationDemo(false)}
+        />
+      )}
+      
+      {/* VA Sandbox Test Dashboard (Comprehensive API Validation) */}
+      {showVaSandboxTest && (
+        <VaSandboxTest
+          onClose={() => setShowVaSandboxTest(false)}
+        />
+      )}
+      
+      {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
+      {showDemoDashboard && (
+        <DemoDashboard
+          onClose={() => setShowDemoDashboard(false)}
         />
       )}
       
@@ -2484,6 +2754,14 @@ function App() {
         <MissionProtocol onClose={() => setShowMissionProtocol(false)} />
       )}
       
+      {/* CLEAR COAT: Workflow Guide - Mission Briefings */}
+      {showWorkflowGuide && (
+        <WorkflowGuide 
+          onClose={() => setShowWorkflowGuide(false)} 
+          onToolSelect={handleToolSelect}
+        />
+      )}
+      
       {/* CLEAR COAT: Boot Camp Tour - Only starts after all initial screens are dismissed */}
       {disclaimerAcknowledged && !showWhatsNew && (
         <BootCampTour />
@@ -2505,16 +2783,18 @@ function App() {
   );
 }
 
-// Wrap App with HelperModeProvider, FocusModeProvider, and LocalAIProvider
+// Wrap App with all required providers including secure admin authentication
 function AppWrapper() {
   return (
-    <LocalAIProvider>
-      <FocusModeProvider>
-        <HelperModeProvider>
-          <App />
-        </HelperModeProvider>
-      </FocusModeProvider>
-    </LocalAIProvider>
+    <AdminAuthProvider>
+      <LocalAIProvider>
+        <FocusModeProvider>
+          <HelperModeProvider>
+            <App />
+          </HelperModeProvider>
+        </FocusModeProvider>
+      </LocalAIProvider>
+    </AdminAuthProvider>
   );
 }
 

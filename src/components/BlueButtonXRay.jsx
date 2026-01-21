@@ -13,12 +13,14 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ReportBugLink from './ReportBugLink';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure PDF.js worker - use bundled worker from npm package for version compatibility
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 /**
  * AI System Prompt for extracting diagnoses from Blue Button reports
@@ -665,7 +667,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   };
   
   /**
-   * Process the uploaded file using AI
+   * Process the dropped in file using AI
    */
   const handleProcessFile = async () => {
     if (!file) {
@@ -697,7 +699,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       setRawText(text);
       
       if (text.length < 100) {
-        throw new Error('File appears to be empty or too short. Please upload a valid Blue Button report.');
+        throw new Error('File appears to be empty or too short. Please drop in a valid Blue Button report.');
       }
       
       setProcessingStage('AI analyzing diagnoses (this may take 30-60 seconds)...');
@@ -769,11 +771,15 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
             <div className="flex items-center gap-3">
               <span className="text-3xl">📋</span>
               <div>
-                <h2 className="text-xl font-bold text-white">Blue Button X-Ray</h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  Blue Button X-Ray
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
+                </h2>
                 <p className="text-sm text-violet-100">AI-Powered Evidence Mining from VA Medical Records</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <LLMRecommendationBadge toolId="blue-button" />
               <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Blue Button X-Ray" />}
               <button
@@ -816,10 +822,10 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">⚠️</span>
                   <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required</h3>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
                     <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI button</strong> in the header above to load your secure Local AI 
-                      or enter your Gemini API key to analyze Blue Button reports.
+                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                      (100% private) or enter your Gemini API key.
                     </p>
                   </div>
                 </div>
@@ -845,11 +851,11 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
               </div>
             )}
             
-            {/* File Upload Section */}
+            {/* File Drop In Section */}
             {!extractedConditions.length && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-                  Step 1: Upload Your Blue Button Report
+                  Step 1: Drop In Your Blue Button Report
                 </h3>
                 
                 {/* Drop Zone */}
@@ -934,7 +940,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                     <li><strong>Step 1:</strong> Select date range (choose <strong>"All Time"</strong> for complete history)</li>
                     <li><strong>Step 2:</strong> Check <strong>"Select all VA records"</strong> (includes all conditions, labs, meds)</li>
                     <li><strong>Step 3:</strong> Choose <strong>"Text file"</strong> format (works best with X-Ray)</li>
-                    <li>Click <strong>"Download report"</strong> and upload the file here</li>
+                    <li>Click <strong>"Download report"</strong> and drop the file in here</li>
                   </ol>
                 </div>
               </div>

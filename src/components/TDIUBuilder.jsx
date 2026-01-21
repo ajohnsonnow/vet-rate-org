@@ -24,6 +24,7 @@ import jsPDF from 'jspdf';
 import { isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ShareButton from './ShareButton';
 
 /**
@@ -651,7 +652,14 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             <textarea
               value={workHistory.reasonLeft}
               onChange={(e) => setWorkHistory(prev => ({ ...prev, reasonLeft: e.target.value }))}
-              placeholder="e.g., Back pain made it impossible to stand for my shifts. I had to take too many sick days."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault();
+                  const nextField = document.querySelector('textarea[placeholder*="tried a desk job"]');
+                  if (nextField) nextField.focus();
+                }
+              }}
+              placeholder="e.g., Back pain made it impossible to stand for my shifts. I had to take too many sick days. (Ctrl+Enter to next field, Shift+Enter for new line)"
               rows={3}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
             />
@@ -683,7 +691,15 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             <textarea
               value={workHistory.triedToWork}
               onChange={(e) => setWorkHistory(prev => ({ ...prev, triedToWork: e.target.value }))}
-              placeholder="e.g., I tried a desk job but couldn't sit for more than 15 minutes without severe pain."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault();
+                  if (disabilities.length > 0 && step === 2) {
+                    handleGenerate();
+                  }
+                }
+              }}
+              placeholder="e.g., I tried a desk job but couldn't sit for more than 15 minutes without severe pain. (Ctrl+Enter to generate analysis, Shift+Enter for new line)"
               rows={3}
               className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
             />
@@ -893,12 +909,16 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             <div className="flex items-center gap-3">
               <span className="text-3xl">💼</span>
               <div>
-                <h2 className="text-xl font-bold text-white">TDIU Work Impact Builder</h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  TDIU Work Impact Builder
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">AI</span>
+                </h2>
                 <p className="text-sm text-amber-100">The 100% Backdoor - Vocational Statement Generator</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <AIStatusBadge showLabel={true} />
+              <LLMRecommendationBadge toolId="tdiu-builder" />
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               <ShareButton 
                 targetRef={tdiuContentRef}
                 filename="tdiu-vocational-analysis"
@@ -920,38 +940,6 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
         
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-1 p-4">
-          {/* AI Mode Section */}
-          <div className="max-w-4xl mx-auto mb-4">
-            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AIStatusBadge showLabel={true} />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
-                      ? '🔒 100% Private - runs on your device'
-                      : aiStatus.effectiveMode === AI_MODES.CLOUD 
-                        ? '☁️ Cloud AI - fast & powerful'
-                        : '⚠️ No AI - using templates'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowAISettings(!showAISettings)}
-                  className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
-                >
-                  {showAISettings ? 'Hide Settings' : 'AI Settings'}
-                </button>
-              </div>
-              
-              {showAISettings && (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <AIModeSelector 
-                    onModeChange={() => setAIStatus(getAIStatus())}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          
           {/* Progress Steps */}
           <div className="max-w-4xl mx-auto pt-2">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -973,6 +961,22 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
               <span className={step === 2 ? 'font-bold text-green-600' : ''}>Work History</span>
               <span className={step === 3 ? 'font-bold text-green-600' : ''}>Results</span>
             </div>
+
+            {/* AI Required Warning */}
+            {!isAnyAIAvailable() && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                      (100% private) or enter your Gemini API key.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Main Content */}

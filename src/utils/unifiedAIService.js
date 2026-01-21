@@ -13,11 +13,15 @@
 
 import { interceptBeforeAICall } from './crisisInterceptor';
 import { buildSystemPrompt, validateAIResponse } from './aiSystemPrompts';
+import { scrubPII, analyzePII } from './piiScrubber';
+import { validateAIResponse as validateHallucinations } from './hallucinationTrap';
+import { isFeatureEnabled } from './featureFlags';
 
 // Storage keys
 const AI_MODE_KEY = 'vet_rate_ai_mode'; // 'cloud' | 'local'
 const GEMINI_KEY = 'vetrate_gemini_key';
 const LOCAL_MODEL_KEY = 'vet_rate_local_ai_model';
+const TOKEN_LIMIT_KEY = 'vetrate_token_limit_config';
 
 // Cloud AI endpoint
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -26,6 +30,139 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 let localAIEngine = null;
 let localAIReady = false;
 let localAIGenerating = false;
+let localAIInitializing = false; // Track if model is currently loading
+let webGPUSupported = null; // Cache WebGPU support check result
+let webGPUCheckPromise = null; // Prevent duplicate checks
+
+/**
+ * Get user-configured token limit (or default to 2048)
+ */
+const getUserTokenLimit = () => {
+  try {
+    const stored = localStorage.getItem(TOKEN_LIMIT_KEY);
+    if (stored) {
+      const config = JSON.parse(stored);
+      return config.value || 2048;
+    }
+  } catch (e) {
+    console.warn('Error loading token limit config:', e);
+  }
+  return 2048; // Default balanced setting
+};
+
+/**
+ * AI Configuration Presets for different use cases
+ * Based on "Platinum Standard" recommendations
+ */
+export const AI_PRESETS = {
+  // For legal/regulatory analysis - Maximum accuracy, zero creativity
+  LEGAL: {
+    label: 'Legal/Regulatory (Jag Advocate)',
+    description: '100% adherence to regulations. Zero creativity.',
+    temperature: 0.1,
+    topK: 1,
+    topP: 0.1,
+    frequencyPenalty: 0.0, // Allow repetition of legal terms
+    useCase: ['C-File Analyzer', 'Decision Decoder', 'PACT Act Navigator', 'TDIU Builder']
+  },
+  
+  // For creative writing - Natural, persuasive, human-sounding
+  CREATIVE: {
+    label: 'Creative/Writing (Empathetic Nexus)',
+    description: 'Natural, persuasive, human-sounding narrative.',
+    temperature: 0.7,
+    topK: 40,
+    topP: 0.9,
+    presencePenalty: 0.3, // Discourage repetitive sentence structures
+    useCase: ['Nexus Builder', 'Witness Bench', 'Personal Statement Helper']
+  },
+  
+  // For adversarial analysis - Critical, skeptical, probing
+  ADVERSARIAL: {
+    label: 'Adversarial (Red Team)',
+    description: 'Critical, skeptical evaluation.',
+    temperature: 0.4,
+    topK: 20,
+    topP: 0.8,
+    presencePenalty: 0.2,
+    useCase: ['The War Game', 'Red Team Simulator']
+  },
+  
+  // Balanced default
+  BALANCED: {
+    label: 'Balanced (Standard)',
+    description: 'Good for most tasks.',
+    temperature: 0.7,
+    topK: 40,
+    topP: 0.95,
+    useCase: ['General purpose']
+  }
+};
+
+/**
+ * Get AI preset by name
+ * @param {string} presetName - Name of preset (LEGAL, CREATIVE, ADVERSARIAL, BALANCED)
+ * @returns {Object} Preset configuration
+ */
+export const getAIPreset = (presetName = 'BALANCED') => {
+  return AI_PRESETS[presetName] || AI_PRESETS.BALANCED;
+};
+
+/**
+ * Check if WebGPU is supported on this device
+ * Cached result for performance
+ * @returns {Promise<{supported: boolean, reason?: string, device?: string}>}
+ */
+export const checkWebGPUSupport = async () => {
+  // Return cached result if available
+  if (webGPUSupported !== null) {
+    return webGPUSupported;
+  }
+  
+  // Prevent duplicate concurrent checks
+  if (webGPUCheckPromise) {
+    return webGPUCheckPromise;
+  }
+  
+  webGPUCheckPromise = (async () => {
+    // Check for navigator.gpu availability
+    if (typeof navigator === 'undefined' || !navigator.gpu) {
+      webGPUSupported = { 
+        supported: false, 
+        reason: 'WebGPU not available. Local AI requires Chrome 113+, Edge 113+, or a compatible browser.' 
+      };
+      return webGPUSupported;
+    }
+    
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (!adapter) {
+        webGPUSupported = { 
+          supported: false, 
+          reason: 'No compatible GPU found. Your device may not support Local AI.' 
+        };
+        return webGPUSupported;
+      }
+      
+      // Verify we can actually get a device
+      await adapter.requestDevice();
+      
+      webGPUSupported = { 
+        supported: true, 
+        device: 'GPU detected' 
+      };
+      return webGPUSupported;
+    } catch (err) {
+      webGPUSupported = { 
+        supported: false, 
+        reason: `WebGPU initialization failed: ${err.message}. Try using Chrome or Edge.` 
+      };
+      return webGPUSupported;
+    }
+  })();
+  
+  return webGPUCheckPromise;
+};
 
 /**
  * AI Mode Types
@@ -56,10 +193,14 @@ export const setAIMode = (mode) => {
 
 /**
  * Register the local AI engine (called by LocalAIProvider)
+ * @param {object} engine - The MLCEngine instance
+ * @param {boolean} ready - Whether the engine is fully ready for inference
+ * @param {boolean} initializing - Whether the engine is currently loading/warming up
  */
-export const registerLocalAIEngine = (engine, ready) => {
+export const registerLocalAIEngine = (engine, ready, initializing = false) => {
   localAIEngine = engine;
   localAIReady = ready;
+  localAIInitializing = initializing;
 };
 
 /**
@@ -86,6 +227,7 @@ export const unloadLocalAI = async () => {
     localAIEngine = null;
     localAIReady = false;
     localAIGenerating = false;
+    localAIInitializing = false;
     
     console.log('✅ Local AI unloaded successfully');
     return true;
@@ -95,6 +237,7 @@ export const unloadLocalAI = async () => {
     localAIEngine = null;
     localAIReady = false;
     localAIGenerating = false;
+    localAIInitializing = false;
     return false;
   }
 };
@@ -103,7 +246,14 @@ export const unloadLocalAI = async () => {
  * Check if local AI is ready
  */
 export const isLocalAIReady = () => {
-  return localAIEngine !== null && localAIReady;
+  return localAIEngine !== null && localAIReady && !localAIInitializing;
+};
+
+/**
+ * Check if local AI is currently initializing/warming up
+ */
+export const isLocalAIInitializing = () => {
+  return localAIInitializing;
 };
 
 /**
@@ -187,38 +337,135 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     throw new Error('Gemini API key not configured');
   }
 
+  // Build comprehensive system prompt if not provided
+  const defaultSystemPrompt = buildSystemPrompt({
+    task: options.taskType || 'general',
+    toolContext: options.toolContext,
+    includeAppContext: true,
+    includeRegulations: true,
+    includeVeteranData: true,
+  });
+
   const {
-    systemPrompt = 'You are a helpful assistant specializing in VA disability claims and veteran benefits.',
-    maxTokens = 2048,
+    systemPrompt = defaultSystemPrompt,
+    maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
+    topK = 40,
+    topP = 0.95,
+    timeout = 60000, // 60 second timeout
+    scrubPIIEnabled = true, // Enable PII scrubbing by default
+    preset = null, // Optional: Use AI_PRESETS (e.g., 'LEGAL', 'CREATIVE')
   } = options;
 
-  const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+  // Apply preset if specified
+  let finalConfig = { temperature, topK, topP, maxTokens };
+  if (preset && AI_PRESETS[preset]) {
+    const presetConfig = AI_PRESETS[preset];
+    finalConfig = {
+      temperature: presetConfig.temperature,
+      topK: presetConfig.topK,
+      topP: presetConfig.topP,
+      maxTokens
+    };
+  }
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: fullPrompt }] }],
-      generationConfig: {
-        temperature,
-        maxOutputTokens: maxTokens,
-      },
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-      ],
-    }),
-  });
+  let fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+
+  // PII Scrubbing (Client-Side Privacy Firewall)
+  if (scrubPIIEnabled) {
+    const piiAnalysis = analyzePII(fullPrompt);
+    
+    if (piiAnalysis.hasPII) {
+      console.warn(`⚠️ PII Detected before AI call:`, piiAnalysis.types);
+      
+      // Scrub the PII
+      const { scrubbedText, details } = scrubPII(fullPrompt, {
+        aggressive: true, // Also scrub DOB and addresses
+        preservePartial: false // Full redaction for safety
+      });
+      
+      fullPrompt = scrubbedText;
+      
+      // Log what was scrubbed (for transparency)
+      console.info(`🛡️ PII Scrubbed:`, details);
+    }
+  }
+
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  let response;
+  try {
+    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          temperature: finalConfig.temperature,
+          maxOutputTokens: finalConfig.maxTokens,
+          topK: finalConfig.topK,
+          topP: finalConfig.topP,
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
+      }),
+    });
+  } catch (fetchError) {
+    clearTimeout(timeoutId);
+    // Handle network errors and timeouts
+    if (fetchError.name === 'AbortError') {
+      throw new Error('Request timed out. The AI is taking too long to respond. Please try again with a shorter prompt, or switch to Local AI.');
+    }
+    if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('NetworkError')) {
+      throw new Error('Network error. Please check your internet connection. If you are offline, try Local AI which works without internet.');
+    }
+    throw new Error(`Connection failed: ${fetchError.message}. If this persists, try switching to Local AI.`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    if (response.status === 400 && errorData.error?.message?.includes('API key')) {
-      throw new Error('Invalid API key. Please check your Gemini API key.');
+    const errorMessage = errorData.error?.message || '';
+    
+    // Handle specific HTTP status codes with user-friendly messages
+    switch (response.status) {
+      case 400:
+        if (errorMessage.includes('API key')) {
+          throw new Error('Invalid API key. Please check your Gemini API key in Settings.');
+        }
+        throw new Error('Bad request. The AI could not process your input. Please try rephrasing.');
+      
+      case 401:
+      case 403:
+        throw new Error('API key unauthorized. Your Gemini API key may be invalid or expired. Please check Settings.');
+      
+      case 404:
+        throw new Error('AI model not found. This may be a temporary issue with Google\'s servers. Please try again in a few minutes.');
+      
+      case 429:
+        throw new Error('Rate limit reached. Too many requests - please wait a minute before trying again, or consider switching to Local AI.');
+      
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        throw new Error('Google\'s AI servers are temporarily unavailable. Please try again in a few minutes, or switch to Local AI.');
+      
+      default:
+        // Check for region/access blocks
+        if (errorMessage.includes('not available') || errorMessage.includes('region') || errorMessage.includes('country')) {
+          throw new Error('Gemini API may not be available in your region. Consider using Local AI for 100% private, offline processing.');
+        }
+        throw new Error(errorMessage || `Cloud AI error (${response.status}). Please try again or switch to Local AI.`);
     }
-    throw new Error(errorData.error?.message || `API error: ${response.status}`);
   }
 
   const data = await response.json();
@@ -235,23 +482,76 @@ const generateWithCloudAI = async (prompt, options = {}) => {
  * Generate text using Local AI (WebLLM)
  */
 const generateWithLocalAI = async (prompt, options = {}) => {
-  if (!localAIEngine || !localAIReady) {
+  // Check for various initialization states and provide helpful error messages
+  if (localAIInitializing) {
+    throw new Error('Local AI is still warming up. Please wait for the model to finish loading before sending messages.');
+  }
+  if (!localAIEngine) {
     throw new Error('Local AI not initialized. Please initialize the Neural Engine first.');
   }
+  if (!localAIReady) {
+    throw new Error('Local AI engine exists but is not ready. This may indicate a failed initialization - please try reloading the model.');
+  }
+
+  // Build comprehensive system prompt if not provided
+  const defaultSystemPrompt = buildSystemPrompt({
+    task: options.taskType || 'general',
+    toolContext: options.toolContext,
+    includeAppContext: true,
+    includeRegulations: true,
+    includeVeteranData: true,
+  });
 
   const {
-    systemPrompt = 'You are a helpful assistant specializing in VA disability claims and veteran benefits. Provide accurate, helpful information.',
-    maxTokens = 1024,
+    systemPrompt = defaultSystemPrompt,
+    maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
+    topK = 40,
+    topP = 0.95,
+    scrubPIIEnabled = true, // Enable PII scrubbing by default
+    preset = null, // Optional: Use AI_PRESETS
     onStream,
   } = options;
+
+  // Apply preset if specified
+  let finalConfig = { temperature, topK, topP, maxTokens };
+  if (preset && AI_PRESETS[preset]) {
+    const presetConfig = AI_PRESETS[preset];
+    finalConfig = {
+      temperature: presetConfig.temperature,
+      topK: presetConfig.topK || 40,
+      topP: presetConfig.topP,
+      maxTokens
+    };
+  }
+
+  // PII Scrubbing (Client-Side Privacy Firewall)
+  let scrubbedPrompt = prompt;
+  if (scrubPIIEnabled) {
+    const piiAnalysis = analyzePII(prompt);
+    
+    if (piiAnalysis.hasPII) {
+      console.warn(`⚠️ PII Detected before Local AI call:`, piiAnalysis.types);
+      
+      // Scrub the PII
+      const { scrubbedText, details } = scrubPII(prompt, {
+        aggressive: true,
+        preservePartial: false
+      });
+      
+      scrubbedPrompt = scrubbedText;
+      
+      // Log what was scrubbed
+      console.info(`🛡️ PII Scrubbed (Local AI):`, details);
+    }
+  }
 
   localAIGenerating = true;
 
   try {
     const messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt },
+      { role: 'user', content: scrubbedPrompt },
     ];
 
     if (onStream) {
@@ -259,8 +559,9 @@ const generateWithLocalAI = async (prompt, options = {}) => {
       let fullResponse = '';
       const chunks = await localAIEngine.chat.completions.create({
         messages,
-        max_tokens: maxTokens,
-        temperature,
+        max_tokens: finalConfig.maxTokens,
+        temperature: finalConfig.temperature,
+        top_p: finalConfig.topP,
         stream: true,
       });
 
@@ -276,8 +577,9 @@ const generateWithLocalAI = async (prompt, options = {}) => {
       // Non-streaming response
       const response = await localAIEngine.chat.completions.create({
         messages,
-        max_tokens: maxTokens,
-        temperature,
+        max_tokens: finalConfig.maxTokens,
+        temperature: finalConfig.temperature,
+        top_p: finalConfig.topP,
       });
 
       localAIGenerating = false;
@@ -285,8 +587,42 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     }
   } catch (err) {
     localAIGenerating = false;
-    throw err;
+    
+    // Provide user-friendly error messages for common Local AI failures
+    const errorMsg = err.message || '';
+    
+    // WebLLM specific errors
+    if (errorMsg.includes('ModelNotLoadedError') || errorMsg.includes('not loaded')) {
+      throw new Error('Local AI model not loaded. Please wait for the model to finish loading, or try reloading.');
+    }
+    if (errorMsg.includes('WebGPU') || errorMsg.includes('GPU')) {
+      throw new Error('GPU error. Your device may not fully support Local AI. Try refreshing the page, or switch to Cloud AI.');
+    }
+    if (errorMsg.includes('out of memory') || errorMsg.includes('OOM')) {
+      throw new Error('GPU out of memory. Try a smaller model (like Llama 3.2 1B), close other browser tabs, or switch to Cloud AI.');
+    }
+    if (errorMsg.includes('aborted') || errorMsg.includes('cancelled')) {
+      throw new Error('Generation was cancelled.');
+    }
+    
+    // Re-throw with context
+    throw new Error(`Local AI error: ${errorMsg}. If this persists, try reloading the model or switching to Cloud AI.`);
   }
+};
+
+/**
+ * Get user's selected AI preset from localStorage
+ */
+const getUserPreset = () => {
+  try {
+    const saved = localStorage.getItem('vetrate_ai_preset');
+    if (saved && AI_PRESETS[saved]) {
+      return saved;
+    }
+  } catch (e) {
+    console.warn('Error loading preset:', e);
+  }
+  return null; // Use function defaults if no preset
 };
 
 /**
@@ -300,12 +636,37 @@ const generateWithLocalAI = async (prompt, options = {}) => {
  * @param {string} options.systemPrompt - Override system prompt for context
  * @param {number} options.maxTokens - Maximum tokens to generate
  * @param {number} options.temperature - Temperature for generation
+ * @param {string} options.preset - AI preset name (LEGAL, CREATIVE, ADVERSARIAL, BALANCED)
  * @param {function} options.onStream - Callback for streaming (local AI only)
  * @param {boolean} options.skipCrisisCheck - Skip crisis interception (for internal use)
  * @param {boolean} options.skipValidation - Skip AI response validation
+ * @param {boolean} options.skipHallucinationCheck - Skip diagnostic code validation
+ * @param {boolean} options.skipFeatureCheck - Skip feature flag check
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
 export const generateAI = async (prompt, options = {}) => {
+  // Feature flag check (unless explicitly skipped)
+  if (!options.skipFeatureCheck) {
+    const aiEnabled = await isFeatureEnabled('ai_enabled');
+    if (!aiEnabled) {
+      throw new Error('AI features are temporarily disabled. Please try again later.');
+    }
+    
+    // Check mode-specific flags
+    const effectiveMode = getEffectiveAIMode();
+    if (effectiveMode === AI_MODES.LOCAL) {
+      const localEnabled = await isFeatureEnabled('local_ai');
+      if (!localEnabled) {
+        throw new Error('Local AI is temporarily disabled. Please use Cloud AI or try again later.');
+      }
+    } else if (effectiveMode === AI_MODES.CLOUD) {
+      const cloudEnabled = await isFeatureEnabled('cloud_ai');
+      if (!cloudEnabled) {
+        throw new Error('Cloud AI is temporarily disabled. Please use Local AI or try again later.');
+      }
+    }
+  }
+
   // Crisis safety check (unless explicitly skipped)
   if (!options.skipCrisisCheck) {
     const crisisResult = await interceptBeforeAICall(prompt);
@@ -323,6 +684,15 @@ export const generateAI = async (prompt, options = {}) => {
   // Build system prompt with anti-hallucination guardrails (unless overridden)
   const systemPrompt = options.systemPrompt || buildSystemPrompt(options.taskType || 'general', options.context);
   
+  // Apply user's saved preset if no preset specified in options
+  const effectivePreset = options.preset || getUserPreset();
+  
+  // Merge options with preset (options take precedence)
+  const enhancedOptions = {
+    ...options,
+    preset: effectivePreset
+  };
+  
   // Prepend system prompt to user prompt
   const fullPrompt = systemPrompt 
     ? `${systemPrompt}\n\n---\n\nUser Request:\n${prompt}`
@@ -333,11 +703,40 @@ export const generateAI = async (prompt, options = {}) => {
     let usedMode;
     
     if (effectiveMode === AI_MODES.LOCAL) {
-      text = await generateWithLocalAI(fullPrompt, options);
+      text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
     } else {
-      text = await generateWithCloudAI(fullPrompt, options);
+      text = await generateWithCloudAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.CLOUD;
+    }
+    
+    // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
+    let hallucinationReport = null;
+    if (!options.skipHallucinationCheck) {
+      try {
+        const validation = validateHallucinations(text);
+        
+        if (validation.rejected && validation.rejected.length > 0) {
+          console.warn('🚫 Hallucination Trap triggered:', validation.rejected);
+          hallucinationReport = {
+            filtered: validation.rejected,
+            valid: validation.safeData,
+            stats: validation.stats
+          };
+          
+          // If the response had structured data that was filtered, optionally reconstruct
+          if (validation.success && validation.safeData) {
+            // For JSON responses, we can return the filtered version
+            if (options.expectJSON) {
+              text = JSON.stringify(validation.safeData, null, 2);
+              console.info('✅ Reconstructed AI response with valid codes only');
+            }
+          }
+        }
+      } catch (hallucinationErr) {
+        // Don't fail the entire request if hallucination check fails
+        console.warn('Hallucination check failed:', hallucinationErr);
+      }
     }
     
     // Validate AI response for hallucinations (unless explicitly skipped)
@@ -348,12 +747,17 @@ export const generateAI = async (prompt, options = {}) => {
         return {
           text,
           mode: usedMode,
-          validationWarnings: validation.warnings
+          validationWarnings: validation.warnings,
+          hallucinationReport
         };
       }
     }
     
-    return { text, mode: usedMode };
+    return { 
+      text, 
+      mode: usedMode,
+      ...(hallucinationReport && { hallucinationReport })
+    };
     
   } catch (err) {
     // If preferred mode fails, try fallback
@@ -384,13 +788,69 @@ export const generateAI = async (prompt, options = {}) => {
  */
 export const getLocalModelName = () => {
   const modelId = localStorage.getItem('vet_rate_local_ai_model');
-  if (!modelId) return 'WebLLM';
+  if (!modelId) return 'Local AI';  // Generic name when no specific model selected
   
   // Extract friendly name from model ID
+  // DeepSeek R1 Reasoning Models (NEW!)
+  if (modelId.includes('DeepSeek-R1-Distill-Qwen-7B')) return 'DeepSeek R1 7B';
+  if (modelId.includes('DeepSeek-R1-Distill-Llama-8B')) return 'DeepSeek R1 8B';
+  if (modelId.includes('DeepSeek')) return 'DeepSeek R1';
+  
+  // Qwen 3 Series (Latest)
+  if (modelId.includes('Qwen3-0.6B')) return 'Qwen 3 0.6B';
+  if (modelId.includes('Qwen3-1.7B')) return 'Qwen 3 1.7B';
+  if (modelId.includes('Qwen3-4B')) return 'Qwen 3 4B';
+  if (modelId.includes('Qwen3-8B')) return 'Qwen 3 8B';
+  
+  // Qwen 2.5 Series
+  if (modelId.includes('Qwen2.5-0.5B')) return 'Qwen 2.5 0.5B';
+  if (modelId.includes('Qwen2.5-1.5B')) return 'Qwen 2.5 1.5B';
+  if (modelId.includes('Qwen2.5-3B')) return 'Qwen 2.5 3B';
+  if (modelId.includes('Qwen2.5-7B')) return 'Qwen 2.5 7B';
+  if (modelId.includes('Qwen')) return 'Qwen';
+  
+  // SmolLM2 Series (Tiny models)
+  if (modelId.includes('SmolLM2-135M')) return 'SmolLM2 135M';
+  if (modelId.includes('SmolLM2-360M')) return 'SmolLM2 360M';
+  if (modelId.includes('SmolLM2-1.7B')) return 'SmolLM2 1.7B';
+  if (modelId.includes('SmolLM2')) return 'SmolLM2';
+  
+  // Hermes Series (Function Calling)
+  if (modelId.includes('Hermes-3-Llama-3.2-3B')) return 'Hermes 3 3B';
+  if (modelId.includes('Hermes-3-Llama-3.1-8B')) return 'Hermes 3 8B';
+  if (modelId.includes('Hermes-2-Pro')) return 'Hermes 2 Pro';
+  if (modelId.includes('Hermes')) return 'Hermes';
+  
+  // Llama Series
   if (modelId.includes('Llama-3.2-1B')) return 'Llama 3.2 1B';
   if (modelId.includes('Llama-3.2-3B')) return 'Llama 3.2 3B';
+  if (modelId.includes('Llama-3.1-8B')) return 'Llama 3.1 8B';
+  if (modelId.includes('Llama')) return 'Llama';
+  
+  // Phi Series (Microsoft)
+  if (modelId.includes('Phi-3.5-vision')) return 'Phi 3.5 Vision';
   if (modelId.includes('Phi-3.5')) return 'Phi 3.5 Mini';
-  return 'WebLLM';
+  if (modelId.includes('Phi')) return 'Phi';
+  
+  // Mistral Series
+  if (modelId.includes('Mistral-7B')) return 'Mistral 7B';
+  if (modelId.includes('Mistral')) return 'Mistral';
+  
+  // Gemma Series (Google)
+  if (modelId.includes('gemma-2-9b')) return 'Gemma 2 9B';
+  if (modelId.includes('gemma-2-2b')) return 'Gemma 2 2B';
+  if (modelId.includes('Gemma') || modelId.includes('gemma')) return 'Gemma';
+  
+  // Fallback: try to extract a readable name from the model ID
+  // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
+  const cleanName = modelId
+    .replace(/-q\d+f\d+.*$/, '')  // Remove quantization suffix
+    .replace(/-MLC$/, '')          // Remove MLC suffix
+    .replace(/-Instruct$/, '')     // Remove Instruct suffix
+    .replace(/-/g, ' ')            // Replace dashes with spaces
+    .trim();
+  
+  return cleanName || 'Local AI';
 };
 
 /**
@@ -406,6 +866,7 @@ export const getAIStatus = () => {
     effectiveMode,
     cloudAvailable: isCloudAIAvailable(),
     localAvailable: isLocalAIReady(),
+    localInitializing: localAIInitializing,
     localGenerating: localAIGenerating,
     anyAvailable: isAnyAIAvailable(),
     isPrivate: effectiveMode === AI_MODES.LOCAL,
@@ -471,12 +932,17 @@ export const getAIDataDisclosure = () => {
 
 export default {
   AI_MODES,
+  AI_PRESETS,
   getAIMode,
   setAIMode,
   getEffectiveAIMode,
+  getAIPreset,
+  getUserPreset,
   isLocalAIReady,
+  isLocalAIInitializing,
   isCloudAIAvailable,
   isAnyAIAvailable,
+  checkWebGPUSupport,
   registerLocalAIEngine,
   generateAI,
   getAIStatus,

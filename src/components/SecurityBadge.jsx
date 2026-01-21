@@ -20,7 +20,7 @@ const SecurityBadge = () => {
       onClick={() => setShowModal(false)}
     >
       <div 
-        className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-gradient-to-r from-green-600 to-blue-600 text-white p-6 rounded-t-lg">
@@ -45,7 +45,7 @@ const SecurityBadge = () => {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 bg-gray-50 px-6">
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6">
           <div className="flex gap-2 overflow-x-auto">
             {[
               { id: 'overview', label: 'Overview', icon: Eye },
@@ -58,8 +58,8 @@ const SecurityBadge = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -69,7 +69,7 @@ const SecurityBadge = () => {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 dark:bg-gray-800">
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'proof' && <ProofTab />}
           {activeTab === 'verify' && <VerifyTab />}
@@ -100,12 +100,12 @@ const SecurityBadge = () => {
 // Overview Tab Content
 const OverviewTab = () => (
   <div className="space-y-6">
-    <div className="bg-green-50 border-l-4 border-green-500 p-4">
-      <h3 className="font-bold text-green-900 mb-2 flex items-center gap-2">
+    <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4">
+      <h3 className="font-bold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
         <CheckCircle className="w-5 h-5" />
         Our Privacy Guarantee
       </h3>
-      <p className="text-green-800">
+      <p className="text-green-800 dark:text-green-200">
         <strong>Your data NEVER leaves your device.</strong> Everything runs in your browser. 
         We don't have servers to collect your information - by design, not by promise.
       </p>
@@ -138,8 +138,8 @@ const OverviewTab = () => (
       />
     </div>
 
-    <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-      <h4 className="font-bold mb-3">What Data Stays Local:</h4>
+    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
+      <h4 className="font-bold mb-3 dark:text-gray-100">What Data Stays Local:</h4>
       <ul className="space-y-2">
         {[
           'Your name, DOB, SSN, service dates',
@@ -150,21 +150,21 @@ const OverviewTab = () => (
           'Your saved packets',
           'Everything you type or create'
         ].map((item, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <li key={i} className="flex items-start gap-2 dark:text-gray-200">
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <span>{item}</span>
           </li>
         ))}
       </ul>
     </div>
 
-    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-      <h4 className="font-bold text-blue-900 mb-2">Optional AI Feature:</h4>
-      <p className="text-sm text-blue-800 mb-2">
+    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 p-4 rounded-lg">
+      <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-2">Optional AI Feature:</h4>
+      <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
         When you click "Enhance with AI" (100% optional), only <strong>condition names and symptoms</strong> are sent 
         to Google Gemini - never your name, SSN, or personal details.
       </p>
-      <p className="text-sm text-blue-800">
+      <p className="text-sm text-blue-800 dark:text-blue-200">
         <strong>You control this:</strong> You provide your own API key (free). We don't even have access to it.
       </p>
     </div>
@@ -174,8 +174,8 @@ const OverviewTab = () => (
 // Technical Proof Tab
 const ProofTab = () => (
   <div className="space-y-6">
-    <div className="prose max-w-none">
-      <h3 className="text-xl font-bold mb-4">Technical Architecture Proof</h3>
+    <div className="prose max-w-none dark:prose-invert">
+      <h3 className="text-xl font-bold mb-4 dark:text-gray-100">Technical Architecture Proof</h3>
       
       <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4">
         <div className="mb-2 text-gray-400">// Our entire stack:</div>
@@ -187,56 +187,56 @@ const ProofTab = () => (
         <div className="mt-2 text-gray-400">// Just static files served to your browser</div>
       </div>
 
-      <h4 className="font-bold mt-6 mb-2">Hosting Model:</h4>
-      <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
-        <p className="text-sm">
+      <h4 className="font-bold mt-6 mb-2 dark:text-gray-100">Hosting Model:</h4>
+      <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4">
+        <p className="text-sm dark:text-yellow-200">
           <strong>Render.com Static Site:</strong> We use Render's static site hosting, which serves pre-built HTML/CSS/JS files. 
           This is NOT a server that can process or store your data - it's like serving files from a USB drive.
         </p>
       </div>
 
-      <h4 className="font-bold mt-6 mb-2">Network Activity You'll See:</h4>
-      <table className="w-full text-sm border-collapse border border-gray-300 mt-2">
-        <thead className="bg-gray-100">
+      <h4 className="font-bold mt-6 mb-2 dark:text-gray-100">Network Activity You'll See:</h4>
+      <table className="w-full text-sm border-collapse border border-gray-300 dark:border-gray-600 mt-2">
+        <thead className="bg-gray-100 dark:bg-gray-700">
           <tr>
-            <th className="border border-gray-300 p-2 text-left">Request</th>
-            <th className="border border-gray-300 p-2 text-left">Purpose</th>
-            <th className="border border-gray-300 p-2 text-left">Your Data?</th>
+            <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">Request</th>
+            <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">Purpose</th>
+            <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">Your Data?</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="dark:bg-gray-800 dark:text-gray-200">
           <tr>
-            <td className="border border-gray-300 p-2">vet-rate.org/assets/...</td>
-            <td className="border border-gray-300 p-2">Loading app files (JS/CSS)</td>
-            <td className="border border-gray-300 p-2 text-green-700 font-bold">❌ No</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">vet-rate.org/assets/...</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">Loading app files (JS/CSS)</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">❌ No</td>
           </tr>
           <tr>
-            <td className="border border-gray-300 p-2">ecfr.gov/...</td>
-            <td className="border border-gray-300 p-2">External link to VA regulations</td>
-            <td className="border border-gray-300 p-2 text-green-700 font-bold">❌ No</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">ecfr.gov/...</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">External link to VA regulations</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">❌ No</td>
           </tr>
           <tr>
-            <td className="border border-gray-300 p-2">generativelanguage.googleapis.com</td>
-            <td className="border border-gray-300 p-2">AI feature (when you click "Enhance")</td>
-            <td className="border border-gray-300 p-2 text-yellow-700">⚠️ Symptoms only</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">generativelanguage.googleapis.com</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">AI feature (when you click "Enhance")</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 text-yellow-700 dark:text-yellow-400">⚠️ Symptoms only</td>
           </tr>
           <tr>
-            <td className="border border-gray-300 p-2"><em>Anything else</em></td>
-            <td className="border border-gray-300 p-2 font-bold">Should NOT exist</td>
-            <td className="border border-gray-300 p-2 text-red-700 font-bold">🚨 Report it!</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2"><em>Anything else</em></td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 font-bold">Should NOT exist</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 text-red-700 dark:text-red-400 font-bold">🚨 Report it!</td>
           </tr>
         </tbody>
       </table>
 
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 mt-4">
-        <p className="font-bold text-red-900">🚨 If you see requests to:</p>
-        <ul className="list-disc ml-5 mt-2 text-red-800 text-sm">
+      <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mt-4">
+        <p className="font-bold text-red-900 dark:text-red-200">🚨 If you see requests to:</p>
+        <ul className="list-disc ml-5 mt-2 text-red-800 dark:text-red-300 text-sm">
           <li>analytics.google.com</li>
           <li>facebook.com/pixel</li>
           <li>Any tracking domain</li>
           <li>Any non-vet-rate.org API</li>
         </ul>
-        <p className="mt-2 text-red-800 font-semibold">
+        <p className="mt-2 text-red-800 dark:text-red-300 font-semibold">
           → Report it immediately via Bug Squasher. That would mean we've been compromised.
         </p>
       </div>
@@ -247,11 +247,11 @@ const ProofTab = () => (
 // Verify Yourself Tab
 const VerifyTab = () => (
   <div className="space-y-6">
-    <div className="prose max-w-none">
-      <h3 className="text-xl font-bold mb-4">Don't Trust - Verify</h3>
+    <div className="prose max-w-none dark:prose-invert">
+      <h3 className="text-xl font-bold mb-4 dark:text-gray-100">Don't Trust - Verify</h3>
       
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-        <p className="font-semibold text-blue-900">
+      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mb-6">
+        <p className="font-semibold text-blue-900 dark:text-blue-200">
           Anyone can claim they're private. Here's how to PROVE we are (or catch us if we're not).
         </p>
       </div>
@@ -322,9 +322,9 @@ const VerifyTab = () => (
         />
       </div>
 
-      <div className="bg-green-50 border border-green-500 p-4 rounded-lg mt-6">
-        <h4 className="font-bold text-green-900 mb-2">✅ What You Should Find:</h4>
-        <ul className="space-y-1 text-sm text-green-800">
+      <div className="bg-green-50 dark:bg-green-900/30 border border-green-500 p-4 rounded-lg mt-6">
+        <h4 className="font-bold text-green-900 dark:text-green-200 mb-2">✅ What You Should Find:</h4>
+        <ul className="space-y-1 text-sm text-green-800 dark:text-green-300">
           <li>• No POST requests with your data</li>
           <li>• No tracking cookies</li>
           <li>• No analytics scripts</li>
@@ -333,9 +333,9 @@ const VerifyTab = () => (
         </ul>
       </div>
 
-      <div className="bg-red-50 border border-red-500 p-4 rounded-lg mt-4">
-        <h4 className="font-bold text-red-900 mb-2">🚨 Red Flags (Report These):</h4>
-        <ul className="space-y-1 text-sm text-red-800">
+      <div className="bg-red-50 dark:bg-red-900/30 border border-red-500 p-4 rounded-lg mt-4">
+        <h4 className="font-bold text-red-900 dark:text-red-200 mb-2">🚨 Red Flags (Report These):</h4>
+        <ul className="space-y-1 text-sm text-red-800 dark:text-red-300">
           <li>• Requests to unknown domains</li>
           <li>• POST requests with form data</li>
           <li>• Tracking pixels loading</li>
@@ -350,7 +350,7 @@ const VerifyTab = () => (
 // FAQ Tab
 const FAQTab = () => (
   <div className="space-y-6">
-    <h3 className="text-xl font-bold mb-4">Addressing Healthy Skepticism</h3>
+    <h3 className="text-xl font-bold mb-4 dark:text-gray-100">Addressing Healthy Skepticism</h3>
 
     <FAQItem
       question="If it's free, I'm the product. Right?"
@@ -454,39 +454,39 @@ const FAQTab = () => (
       answer={
         <div className="space-y-2 text-sm">
           <p><strong>Don't.</strong> Verify. But here's the difference:</p>
-          <table className="w-full border-collapse border border-gray-300 mt-2 text-xs">
-            <thead className="bg-gray-100">
+          <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mt-2 text-xs">
+            <thead className="bg-gray-100 dark:bg-gray-700">
               <tr>
-                <th className="border border-gray-300 p-2">Feature</th>
-                <th className="border border-gray-300 p-2">Typical VA Tools</th>
-                <th className="border border-gray-300 p-2">Vet-Rate.org</th>
+                <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Feature</th>
+                <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Typical VA Tools</th>
+                <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Vet-Rate.org</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="dark:bg-gray-800">
               <tr>
-                <td className="border border-gray-300 p-2">Account Required</td>
-                <td className="border border-gray-300 p-2">✅ Yes</td>
-                <td className="border border-gray-300 p-2">❌ No</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">Account Required</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">✅ Yes</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">❌ No</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 p-2">Email Collection</td>
-                <td className="border border-gray-300 p-2">✅ Yes</td>
-                <td className="border border-gray-300 p-2">❌ No</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">Email Collection</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">✅ Yes</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">❌ No</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 p-2">Data Stored on Servers</td>
-                <td className="border border-gray-300 p-2">✅ Yes</td>
-                <td className="border border-gray-300 p-2">❌ No</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">Data Stored on Servers</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">✅ Yes</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">❌ No</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 p-2">Open Source</td>
-                <td className="border border-gray-300 p-2">❌ No</td>
-                <td className="border border-gray-300 p-2">✅ Yes</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">Open Source</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">❌ No</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">✅ Yes</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 p-2">Verifiable</td>
-                <td className="border border-gray-300 p-2">❌ No</td>
-                <td className="border border-gray-300 p-2">✅ Yes (DevTools)</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">Verifiable</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">❌ No</td>
+                <td className="border border-gray-300 dark:border-gray-600 p-2">✅ Yes (DevTools)</td>
               </tr>
             </tbody>
           </table>
@@ -500,10 +500,10 @@ const FAQTab = () => (
 // Helper Components
 const SecurityFeature = ({ icon: Icon, title, description, color }) => {
   const colorClasses = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-900',
-    purple: 'bg-purple-50 border-purple-200 text-purple-900',
-    green: 'bg-green-50 border-green-200 text-green-900',
-    orange: 'bg-orange-50 border-orange-200 text-orange-900'
+    blue: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100',
+    purple: 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100',
+    green: 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-900 dark:text-green-100',
+    orange: 'bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100'
   };
 
   return (
@@ -517,13 +517,13 @@ const SecurityFeature = ({ icon: Icon, title, description, color }) => {
 
 const VerificationStep = ({ number, title, steps }) => (
   <div className="border-l-4 border-blue-500 pl-4">
-    <h4 className="font-bold text-lg mb-2">
+    <h4 className="font-bold text-lg mb-2 dark:text-gray-100">
       Step {number}: {title}
     </h4>
-    <ul className="space-y-1 text-sm">
+    <ul className="space-y-1 text-sm dark:text-gray-300">
       {steps.map((step, i) => (
         <li key={i} className="flex items-start gap-2">
-          <span className="text-blue-600 font-bold flex-shrink-0">{i + 1}.</span>
+          <span className="text-blue-600 dark:text-blue-400 font-bold flex-shrink-0">{i + 1}.</span>
           <span>{step}</span>
         </li>
       ))}
@@ -532,11 +532,11 @@ const VerificationStep = ({ number, title, steps }) => (
 );
 
 const FAQItem = ({ question, answer }) => (
-  <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-    <h4 className="font-bold text-lg mb-2 text-gray-900">
+  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors dark:bg-gray-800/50">
+    <h4 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">
       ❓ {question}
     </h4>
-    <div className="text-gray-700">
+    <div className="text-gray-700 dark:text-gray-300">
       {answer}
     </div>
   </div>

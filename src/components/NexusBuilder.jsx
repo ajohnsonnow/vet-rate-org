@@ -15,6 +15,7 @@ import ClaimProgress from './ClaimProgress';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from '../utils/aiStatementHelper';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import { getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
 
 /**
@@ -413,7 +414,7 @@ Sincerely,
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="nexus-builder-title"
@@ -433,6 +434,7 @@ Sincerely,
                 </p>
               </div>
               <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
+                <LLMRecommendationBadge toolId="nexus-builder" />
                 <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Nexus Builder" />}
                 <button
@@ -577,9 +579,16 @@ Sincerely,
                   <div className="relative">
                     <textarea
                       className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                      placeholder="Example: My PTSD causes severe anxiety and hypervigilance, which prevents me from falling asleep and staying asleep. The constant state of alertness disrupts my breathing patterns during sleep..."
+                      placeholder="Example: My PTSD causes severe anxiety and hypervigilance, which prevents me from falling asleep and staying asleep. The constant state of alertness disrupts my breathing patterns during sleep... (Ctrl+Enter to next field, Shift+Enter for new line)"
                       value={answers.aggravationExplanation}
                       onChange={(e) => updateAnswer('aggravationExplanation', e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.ctrlKey) {
+                          e.preventDefault();
+                          const nextField = document.querySelector('textarea[placeholder*="Last month, I had a PTSD episode"]');
+                          if (nextField) nextField.focus();
+                        }
+                      }}
                     />
                     {isSpeechRecognitionSupported() && (
                       <div className="absolute right-2 top-2" title="Click to dictate using voice">
@@ -626,9 +635,16 @@ Sincerely,
                   <div className="relative">
                     <textarea
                       className="w-full h-32 px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-gray-100"
-                      placeholder="Example: Last month, I had a PTSD episode triggered by fireworks. That night, my sleep apnea symptoms worsened significantly - I woke up gasping for air multiple times, which my partner witnessed..."
+                      placeholder="Example: Last month, I had a PTSD episode triggered by fireworks. That night, my sleep apnea symptoms worsened significantly - I woke up gasping for air multiple times, which my partner witnessed... (Ctrl+Enter to continue, Shift+Enter for new line)"
                       value={answers.specificIncident}
                       onChange={(e) => updateAnswer('specificIncident', e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.ctrlKey) {
+                          e.preventDefault();
+                          const generateBtn = document.querySelector('button[class*="bg-gradient-to-r from-green-600"]');
+                          if (generateBtn && !generateBtn.disabled) generateBtn.click();
+                        }
+                      }}
                     />
                     {isSpeechRecognitionSupported() && (
                       <div className="absolute right-2 top-2" title="Click to dictate using voice">

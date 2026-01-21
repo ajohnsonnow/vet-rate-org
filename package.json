@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.3.2",
+  "version": "1.4.2",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
@@ -24,7 +24,9 @@
     "push-prep": "node scripts/push-prep.js",
     "push-prep:patch": "node scripts/push-prep.js --patch",
     "push-prep:minor": "node scripts/push-prep.js --minor",
-    "push-prep:quick": "node scripts/push-prep.js --skip-checks -y"
+    "push-prep:quick": "node scripts/push-prep.js --skip-checks -y",
+    "update-forms": "node scripts/fetch-dbqs.js",
+    "fetch-dbqs": "node scripts/fetch-dbqs.js"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.80",
@@ -33,6 +35,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.562.0",
+    "mammoth": "^1.11.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.530",
     "react": "^18.2.0",

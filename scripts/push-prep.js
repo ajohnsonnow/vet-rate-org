@@ -306,7 +306,7 @@ async function main() {
   logStep(++currentStep, totalSteps, 'Creating production build...');
   
   try {
-    exec('vite build');
+    exec('npx vite build');
     logSuccess('Production build complete');
   } catch (error) {
     logError('Build failed!');
@@ -365,7 +365,17 @@ git push origin v${newVersion}  ${colors.cyan}# Push the tag${colors.reset}
   
   console.log('═'.repeat(65));
   log('        🎯 Vet-Rate.org is ready to ship!', 'magenta');
-  console.log('═'.repeat(65) + '\n');
+  console.log('═'.repeat(65));
+  
+  // Community acknowledgment
+  console.log('\n' + '─'.repeat(65));
+  log('        💜 THANK YOU TO OUR COMMUNITY TESTERS', 'magenta');
+  console.log('─'.repeat(65));
+  console.log(`
+   Reddit: ${colors.cyan}r/VAClaims${colors.reset} community`);
+  console.log(`   Facebook: ${colors.cyan}Veteran Claims Assistance Group${colors.reset}`);
+  console.log('\n   Your feedback makes Vet-Rate.org better for all veterans! 🇺🇸');
+  console.log('─'.repeat(65) + '\n');
 }
 
 main().catch(error => {

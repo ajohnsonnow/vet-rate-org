@@ -15,6 +15,7 @@ import { Camera, Upload, FileText, AlertCircle, CheckCircle, Loader, Eye, Lightb
 import { createWorker } from 'tesseract.js';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 
 // AI System Prompt for analyzing denial letters
 const DENIAL_ANALYSIS_PROMPT = `You are a VA claims expert helping veterans understand their denial letters.
@@ -197,13 +198,17 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
           <div className="flex items-center gap-3">
             <FileText className="w-8 h-8" />
             <div>
-              <h2 className="text-2xl font-bold">The Denials Decoder</h2>
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                The Denials Decoder
+                <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">AI</span>
+              </h2>
               <p className="text-blue-100 text-sm mt-1">
                 Scan your VA denial letter for plain-English analysis
               </p>
           </div>
         </div>
           <div className="flex items-center gap-3">
+            <LLMRecommendationBadge toolId="denial-decoder" />
             <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
             {onClose && (
               <button
@@ -264,7 +269,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               </div>
             )}
 
-            {/* Upload Buttons */}
+            {/* Drop In Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Camera Button */}
               <button
@@ -278,14 +283,14 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
                 </div>
               </button>
 
-              {/* File Upload Button */}
+              {/* File Drop In Button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
               >
                 <Upload className="w-12 h-12 text-blue-600" />
                 <div className="text-center">
-                  <p className="font-semibold text-gray-900">Upload Image</p>
+                  <p className="font-semibold text-gray-900">Drop In Image</p>
                   <p className="text-xs text-gray-600 mt-1">Select from files</p>
                 </div>
               </button>

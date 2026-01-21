@@ -6,14 +6,39 @@
 import React, { useState, useEffect } from 'react';
 
 /**
+ * Detect if device is a tablet
+ */
+const isTablet = () => {
+  const ua = navigator.userAgent;
+  
+  // iPad detection (including iPadOS 13+ which reports as Mac)
+  const isIPad = /iPad/i.test(ua) || 
+                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Android tablet detection (Android without "Mobile" keyword)
+  const isAndroidTablet = /Android/i.test(ua) && !/Mobile/i.test(ua);
+  
+  // Surface/Windows tablet detection
+  const isSurfaceTablet = /Windows.*Touch/i.test(ua);
+  
+  // Screen size check for tablets (768px-1366px typical range)
+  const screenWidth = Math.max(window.screen.width, window.screen.height);
+  const isTabletScreenSize = screenWidth >= 768 && screenWidth <= 1366;
+  
+  return isIPad || isAndroidTablet || isSurfaceTablet || 
+         (navigator.maxTouchPoints > 2 && isTabletScreenSize);
+};
+
+/**
  * MobileNotice Component
  * 
- * Displays a friendly, dismissible notice to mobile users that the app
- * works best on larger screens. Remembers dismissal for the session.
+ * Displays a friendly, dismissible notice to mobile/tablet users.
+ * Shows different messages for phones vs tablets.
+ * Remembers dismissal for the session.
  */
 const MobileNotice = () => {
   const [dismissed, setDismissed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [deviceType, setDeviceType] = useState(null); // 'phone', 'tablet', or null
 
   useEffect(() => {
     // Check if already dismissed this session
@@ -23,14 +48,22 @@ const MobileNotice = () => {
       return;
     }
 
-    // Check screen size
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    // Check screen size and device type
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      
+      if (isTablet()) {
+        setDeviceType('tablet');
+      } else if (width < 768) {
+        setDeviceType('phone');
+      } else {
+        setDeviceType(null); // Desktop
+      }
     };
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   const handleDismiss = () => {
@@ -38,19 +71,41 @@ const MobileNotice = () => {
     sessionStorage.setItem('vetrate-mobile-notice-dismissed', 'true');
   };
 
-  if (dismissed || !isMobile) return null;
+  if (dismissed || !deviceType) return null;
 
+  // Different messages for phone vs tablet
+  const isPhone = deviceType === 'phone';
+  
   return (
-    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 text-center relative shadow-lg">
+    <div className={`text-white px-4 py-3 text-center relative shadow-lg ${
+      isPhone 
+        ? 'bg-gradient-to-r from-emerald-600 to-teal-600' 
+        : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+    }`}>
       <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 pr-10">
-        <span className="text-2xl" role="img" aria-label="Mobile optimized">📱</span>
+        <span className="text-2xl" role="img" aria-label={isPhone ? "Mobile optimized" : "Tablet optimized"}>
+          {isPhone ? '📱' : '📱💻'}
+        </span>
         <div className="text-left flex-1">
-          <p className="text-sm font-bold">
-            Mobile-Optimized Experience!
-          </p>
-          <p className="text-xs opacity-90 mt-0.5">
-            90% of veterans use mobile - this app is built for you ✨
-          </p>
+          {isPhone ? (
+            <>
+              <p className="text-sm font-bold">
+                Mobile-Optimized Experience!
+              </p>
+              <p className="text-xs opacity-90 mt-0.5">
+                90% of veterans use mobile - this app is built for you ✨
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-bold">
+                Tablet Mode - Perfect for Detailed Work!
+              </p>
+              <p className="text-xs opacity-90 mt-0.5">
+                Great choice! Tablet screens are ideal for reviewing claims & building your packet 📋
+              </p>
+            </>
+          )}
         </div>
       </div>
       <button

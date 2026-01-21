@@ -1005,12 +1005,12 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   if (mode === 'intro') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-simulator-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col modal-content">
           {/* Header - Fixed at top */}
           <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 rounded-t-lg relative flex-shrink-0">
             <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
@@ -1029,21 +1029,21 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                 C&P Exam Simulator
               </h2>
             </div>
-            <p className="text-amber-100 text-sm sm:text-lg pr-8">
+            <p className="text-emerald-100 text-sm sm:text-lg pr-8">
               Turn the "Black Box" of the C&P Exam into an Open-Book Test
             </p>
           </div>
 
           {/* Content - Scrollable */}
-          <div className="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+          <div className="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
+            <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 What is the C&P Exam Simulator?
               </h3>
-              <p className="text-gray-700 mb-4">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
                 The Compensation & Pension (C&P) exam can feel like a mystery. You walk in not knowing what the doctor will ask, and you walk out not knowing if you said the "right" things. <strong>This tool removes that mystery.</strong>
               </p>
-              <p className="text-gray-700">
+              <p className="text-gray-700 dark:text-gray-300">
                 This simulator uses the <strong>exact rating criteria from 38 CFR Part 4</strong> for your specific condition to present the "tipping point" questions - the questions that determine whether you get 10%, 30%, 50%, or higher.
               </p>
             </div>
@@ -1056,83 +1056,83 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               <div className="flex flex-wrap gap-4 justify-center">
                 <button
                   onClick={() => setMode('select-condition')}
-                  className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+                  className="px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
                 >
                   <ClipboardList className="h-6 w-6" />
                   <div className="text-left">
                     <div>Start Simulation</div>
-                    <div className="text-xs font-normal text-blue-200">Practice DBQ questions</div>
+                    <div className="text-xs font-normal text-teal-200">Practice DBQ questions</div>
                   </div>
                 </button>
                 <button
                   onClick={() => setMode('exam-prep')}
-                  className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+                  className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
                 >
                   <FileText className="h-6 w-6" />
                   <div className="text-left">
                     <div>Exam Prep</div>
-                    <div className="text-xs font-normal text-cyan-200">See actual DBQ questions</div>
+                    <div className="text-xs font-normal text-emerald-200">See actual DBQ questions</div>
                   </div>
                 </button>
                 <button
                   onClick={() => setMode('flashcard')}
-                  className="px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+                  className="px-6 py-4 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white font-bold rounded-xl hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
                 >
                   <BookOpen className="h-6 w-6" />
                   <div className="text-left">
                     <div>Learn Terminology</div>
-                    <div className="text-xs font-normal text-purple-200">Key terms & definitions</div>
+                    <div className="text-xs font-normal text-cyan-200">Key terms & definitions</div>
                   </div>
                 </button>
               </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white border-2 border-green-200 rounded-lg p-5">
-                <div className="text-green-600 mb-3">
+              <div className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
+                <div className="text-teal-600 dark:text-teal-400 mb-3">
                   <ClipboardList className="h-8 w-8" />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2">
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
                   1. Simulation
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   Answer condition-specific questions based on actual DBQ criteria
                 </p>
               </div>
 
-              <div className="bg-white border-2 border-purple-200 rounded-lg p-5">
-                <div className="text-purple-600 mb-3">
+              <div className="bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
+                <div className="text-emerald-600 dark:text-emerald-400 mb-3">
                   <AlertCircle className="h-8 w-8" />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2">
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
                   2. Gap Analysis
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   See exactly what rating your answers align with and what's needed for higher ratings
                 </p>
               </div>
 
-              <div className="bg-white border-2 border-yellow-200 rounded-lg p-5">
-                <div className="text-yellow-600 mb-3">
+              <div className="bg-white dark:bg-gray-800 border-2 border-cyan-200 dark:border-cyan-700 rounded-lg p-5">
+                <div className="text-cyan-600 dark:text-cyan-400 mb-3">
                   <BookOpen className="h-8 w-8" />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2">
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
                   3. Preparation
                 </h4>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   Get specific action items: what documents to bring, what to say, what NOT to say
                 </p>
               </div>
             </div>
 
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-5">
+            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-5">
               <div className="flex gap-3">
-                <AlertCircle className="h-6 w-6 text-yellow-600 flex-shrink-0" />
+                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                 <div>
-                  <h4 className="font-bold text-yellow-900 mb-2">
+                  <h4 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
                     The "Stop When It Hurts" Principle
                   </h4>
-                  <p className="text-yellow-800 text-sm">
+                  <p className="text-amber-800 dark:text-amber-100 text-sm">
                     For conditions like back pain or knee pain, the simulator will teach you the most important exam tip: <strong>Range of Motion is measured to the point where pain STOPS you</strong> - not where you can force yourself to go. Many veterans unknowingly lower their ratings by "pushing through" during ROM testing.
                   </p>
                 </div>
@@ -1165,8 +1165,8 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             </div>
 
             {/* Disclaimer */}
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-4 rounded">
-              <p className="text-xs text-gray-600 italic">
+            <div className="bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-400 dark:border-gray-600 p-4 rounded">
+              <p className="text-xs text-gray-600 dark:text-gray-400 italic">
                 <strong>Disclaimer:</strong> This is a training tool, not legal advice. Always tell the truth during your exam. The C&P examiner's job is to document your condition accurately - be honest about your worst days, not just your best days. This tool is based on 38 CFR Part 4 as of January 2026.
               </p>
             </div>
@@ -1203,7 +1203,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="exam-prep-title"
@@ -1316,7 +1316,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   if (mode === 'exam-prep-detail' && examPrepDBQ) {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="exam-prep-detail-title"
@@ -1535,14 +1535,14 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   if (mode === 'select-condition') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-condition-select-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-t-lg relative">
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 rounded-t-lg relative">
             <button
               onClick={() => setMode('intro')}
               className="absolute top-4 left-4 text-white hover:text-gray-200"
@@ -1562,20 +1562,20 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             </h2>
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by condition name or diagnostic code..."
-                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
               />
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            <div className="mb-4 text-sm text-gray-600">
+          <div className="p-6 bg-gray-50 dark:bg-gray-900">
+            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               Showing {filteredConditions.length} of {allConditions.length} conditions
             </div>
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -1589,12 +1589,12 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                   <button
                     key={condition.id}
                     onClick={() => handleSelectCondition(condition)}
-                    className="w-full bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 transition text-left group"
+                    className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition text-left group"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-700">
+                          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-teal-700 dark:group-hover:text-teal-400">
                             {condition.conditionName}
                           </h3>
                           {isPremium && (
@@ -2164,14 +2164,14 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-terminology-title"
       >
-        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content">
           {/* Header */}
-          <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-6 relative flex-shrink-0">
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative flex-shrink-0">
             <button
               onClick={() => setMode('intro')}
               className="absolute top-4 left-4 text-white hover:text-gray-200"
@@ -2192,19 +2192,19 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                 VA Claims Terminology
               </h2>
             </div>
-            <p className="text-purple-100 text-center mt-2">
+            <p className="text-emerald-100 text-center mt-2">
               {totalTerms} essential terms from 38 CFR Part 4 and VA claims process
             </p>
             
             {/* Search */}
             <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-300" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
               <input
                 type="text"
                 placeholder="Search terms..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg bg-purple-500 bg-opacity-50 text-white placeholder-purple-200 border border-purple-400 focus:outline-none focus:ring-2 focus:ring-white"
+                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/20 text-white placeholder-emerald-200 border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-white"
               />
             </div>
             
@@ -2212,13 +2212,13 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             <div className="flex justify-center gap-4 mt-3">
               <button
                 onClick={expandAll}
-                className="text-sm text-purple-200 hover:text-white flex items-center gap-1"
+                className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
               >
                 <ChevronDown className="h-4 w-4" /> Expand All
               </button>
               <button
                 onClick={collapseAll}
-                className="text-sm text-purple-200 hover:text-white flex items-center gap-1"
+                className="text-sm text-emerald-200 hover:text-white flex items-center gap-1"
               >
                 <ChevronRight className="h-4 w-4" /> Collapse All
               </button>
@@ -2226,47 +2226,47 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           </div>
 
           {/* Content - Scrollable */}
-          <div className="p-6 space-y-4 overflow-y-auto flex-1">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
             {searchTerm && (
-              <div className="text-sm text-gray-600 mb-2">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Showing {filteredTermsCount} of {totalTerms} terms matching "{searchTerm}"
               </div>
             )}
 
             {filteredCategories.map((category, catIndex) => (
-              <div key={catIndex} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={catIndex} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleCategory(category.category)}
-                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
+                  className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{category.icon}</span>
-                    <span className="font-bold text-gray-800">{category.category}</span>
-                    <span className="text-sm text-gray-500">({category.terms.length} terms)</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-100">{category.category}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">({category.terms.length} terms)</span>
                   </div>
                   {isCategoryExpanded(category.category) ? (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   ) : (
-                    <ChevronRight className="h-5 w-5 text-gray-500" />
+                    <ChevronRight className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   )}
                 </button>
                 
                 {isCategoryExpanded(category.category) && (
-                  <div className="p-4 space-y-4 bg-white">
+                  <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
                     {category.terms.map((item, index) => (
-                      <div key={index} className="bg-white border-2 border-purple-200 rounded-lg p-5">
-                        <h3 className="text-lg font-bold text-purple-900 mb-3 flex items-center gap-2">
+                      <div key={index} className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5">
+                        <h3 className="text-lg font-bold text-teal-700 dark:text-teal-300 mb-3 flex items-center gap-2">
                           <BookOpen className="h-5 w-5 flex-shrink-0" />
                           {item.term}
                         </h3>
                         <div className="space-y-3">
                           <div>
-                            <h4 className="font-semibold text-gray-700 text-sm mb-1">Definition:</h4>
-                            <p className="text-gray-700">{item.definition}</p>
+                            <h4 className="font-semibold text-gray-700 dark:text-gray-300 text-sm mb-1">Definition:</h4>
+                            <p className="text-gray-700 dark:text-gray-200">{item.definition}</p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-gray-700 text-sm mb-1">Example:</h4>
-                            <p className="text-gray-600 italic">"{item.example}"</p>
+                            <h4 className="font-semibold text-gray-700 dark:text-gray-300 text-sm mb-1">Example:</h4>
+                            <p className="text-gray-600 dark:text-gray-400 italic">"{item.example}"</p>
                           </div>
                         </div>
                       </div>
@@ -2276,14 +2276,14 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               </div>
             ))}
 
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5 mt-6">
+            <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-5 mt-6">
               <p className="text-blue-900 dark:text-blue-100 text-sm">
                 <strong>💡 Pro Tip:</strong> Using the exact terminology from the CFR during your C&P exam helps ensure the examiner documents your condition correctly. For example, saying "I have prostrating migraines that cause economic inadaptability" is much more precise than "I have really bad headaches that make me miss work."
               </p>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
-              <p className="text-green-900 dark:text-green-100 text-sm">
+            <div className="bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700 rounded-lg p-5">
+              <p className="text-emerald-900 dark:text-emerald-100 text-sm">
                 <strong>📚 Study Tip:</strong> Focus on terms relevant to YOUR conditions first. If you have a back condition, master ROM, flexion, flare-ups, and functional loss. If you have PTSD, focus on occupational/social impairment and the specific symptoms in the rating criteria.
               </p>
             </div>
@@ -2310,14 +2310,14 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cap-question-title"
       >
-        <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto modal-content overscroll-contain">
           {/* Header with Progress */}
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 text-white p-6 rounded-t-lg relative">
+          <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 rounded-t-lg relative">
             <button
               onClick={() => setMode('select-condition')}
               className="absolute top-4 left-4 text-white hover:text-gray-200"
@@ -2336,12 +2336,12 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
               <h2 id="cap-question-title" className="text-2xl font-bold mb-1">
                 {conditionName}
               </h2>
-              <p className="text-blue-100 text-sm">
+              <p className="text-emerald-100 text-sm">
                 Question {currentQuestionIndex + 1} of {currentQuestions.length}
               </p>
             </div>
             {/* Progress bar */}
-            <div className="w-full bg-blue-900 rounded-full h-2">
+            <div className="w-full bg-emerald-900/50 rounded-full h-2">
               <div
                 className="bg-white rounded-full h-2 transition-all duration-300"
                 style={{ width: `${getProgress()}%` }}
@@ -2350,22 +2350,22 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
           </div>
 
           {/* Question Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
             {/* Question */}
-            <div className="bg-gray-50 rounded-lg p-5 border-2 border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border-2 border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 {currentQuestion.question}
               </h3>
               
               {/* Intent explanation */}
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+              <div className="bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-400 dark:border-teal-500 p-4 mb-4">
                 <div className="flex items-start gap-2">
-                  <HelpCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <HelpCircle className="h-5 w-5 text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-blue-900 text-sm mb-1">
+                    <h4 className="font-semibold text-teal-900 dark:text-teal-200 text-sm mb-1">
                       Why this question matters:
                     </h4>
-                    <p className="text-blue-800 text-sm">
+                    <p className="text-teal-800 dark:text-teal-100 text-sm">
                       {currentQuestion.intent}
                     </p>
                   </div>
@@ -2399,14 +2399,14 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                   onClick={() => handleAnswer(currentQuestion.id, option.value)}
                   className={`w-full text-left p-4 rounded-lg border-2 transition ${
                     currentAnswer === option.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 ${
                       currentAnswer === option.value
-                        ? 'border-blue-500 bg-blue-500'
+                        ? 'border-teal-500 bg-teal-500'
                         : 'border-gray-300 dark:border-gray-500'
                     }`}>
                       {currentAnswer === option.value && (
@@ -2440,7 +2440,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
                 className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 ${
                   !canProceed
                     ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-teal-600 text-white hover:bg-teal-700'
                 }`}
               >
                 {isLastQuestion ? 'Get Results' : 'Next'}
@@ -2460,7 +2460,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto modal-backdrop overscroll-contain"
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-label="C&P Exam Simulation Results"

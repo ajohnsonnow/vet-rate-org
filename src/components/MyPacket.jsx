@@ -34,7 +34,7 @@ import ClaimProgress from './ClaimProgress';
 import { generateAI, getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 
-const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync }) => {
+const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync, onOpenAISettings, onOpenDD214Analyzer }) => {
   const [claims, setClaims] = useState([]);
   const [stats, setStats] = useState({ total: 0, drafting: 0, statementGenerated: 0, filed: 0 });
   const [viewingStatement, setViewingStatement] = useState(null);
@@ -55,6 +55,9 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
   const [editingRating, setEditingRating] = useState(null);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
   
+  // Veteran Profile state
+  const [veteranProfile, setVeteranProfile] = useState({});
+  
   // Service History state
   const [serviceHistory, setServiceHistory] = useState({ deployments: [], awards: [], dd214Data: null });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
@@ -65,6 +68,8 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
   const [dd214Text, setDD214Text] = useState('');
   const [isProcessingDD214, setIsProcessingDD214] = useState(false);
   const [aiStatus, setAIStatus] = useState({ available: false });
+  const [isDraggingDD214, setIsDraggingDD214] = useState(false);
+  const dd214FileInputRef = useRef(null);
   
   // Timeline Events state (Continuity Thread)
   const [timelineEvents, setTimelineEvents] = useState([]);
@@ -83,8 +88,18 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
     loadServiceHistory();
     loadTimelineEvents();
     loadPainMaps();
+    loadVeteranProfile();
     checkAIStatus();
   }, []);
+  
+  const loadVeteranProfile = () => {
+    const profile = getVeteranProfile();
+    // Initialize servicePeriods array if it doesn't exist
+    if (!Array.isArray(profile.servicePeriods)) {
+      profile.servicePeriods = [];
+    }
+    setVeteranProfile(profile || {});
+  };
   
   const checkAIStatus = async () => {
     const status = await getAIStatus();
@@ -284,6 +299,56 @@ Return ONLY the JSON object, no explanation.`,
     if (window.confirm('Clear all DD214 extracted data?')) {
       clearDD214Data();
       loadServiceHistory();
+    }
+  };
+
+  // DD214 Drag and Drop handlers - connects to DD214 Analyzer
+  const handleDD214DragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingDD214(true);
+  };
+
+  const handleDD214DragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingDD214(false);
+  };
+
+  const handleDD214Drop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingDD214(false);
+    
+    const files = Array.from(e.dataTransfer?.files || []);
+    const pdfFile = files.find(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+    
+    if (pdfFile) {
+      // Open DD214 Analyzer with the dropped file
+      // Store the file temporarily and open analyzer
+      if (onOpenDD214Analyzer) {
+        onOpenDD214Analyzer();
+      }
+    } else {
+      alert('Please drop a PDF file (DD214 document).');
+    }
+  };
+
+  const handleDD214FileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        // Open DD214 Analyzer
+        if (onOpenDD214Analyzer) {
+          onOpenDD214Analyzer();
+        }
+      } else {
+        alert('Please select a PDF file.');
+      }
+    }
+    // Reset input
+    if (dd214FileInputRef.current) {
+      dd214FileInputRef.current.value = '';
     }
   };
 
@@ -843,6 +908,17 @@ Return ONLY the JSON object, no explanation.`,
               </button>
               
               <button
+                onClick={() => setActiveTab('profile')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'profile'
+                    ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                ✍️ <span className="hidden sm:inline">Profile</span>
+              </button>
+              
+              <button
                 onClick={() => setActiveTab('forms')}
                 className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === 'forms'
@@ -977,6 +1053,410 @@ Return ONLY the JSON object, no explanation.`,
               </>
             )}
 
+            {/* VETERAN PROFILE TAB */}
+            {activeTab === 'profile' && (
+              <>
+                <div className="mb-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="text-3xl">✍️</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Veteran Profile</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Save your information once, and it'll automatically fill VA forms throughout the app. All data stays on your device.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div className="text-sm">
+                        <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1">Privacy First</p>
+                        <p className="text-indigo-800 dark:text-indigo-200">
+                          • All information is stored <strong>only on your device</strong><br />
+                          • Never sent to any server or database<br />
+                          • Only you can see this data<br />
+                          • Clear it anytime from The Bunker
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile Form */}
+                <div className="space-y-6">
+                  {/* Personal Information Section */}
+                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                      👤 Personal Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                        <input
+                          type="text"
+                          value={veteranProfile.firstName || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, firstName: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="John"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                        <input
+                          type="text"
+                          value={veteranProfile.lastName || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, lastName: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="Doe"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Middle Initial</label>
+                        <input
+                          type="text"
+                          maxLength={1}
+                          value={veteranProfile.middleInitial || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, middleInitial: e.target.value.toUpperCase() })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="M"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
+                        <input
+                          type="date"
+                          value={veteranProfile.dob || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, dob: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SSN (Last 4 Digits)</label>
+                        <input
+                          type="text"
+                          maxLength={4}
+                          value={veteranProfile.ssnLast4 || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, ssnLast4: e.target.value.replace(/\D/g, '') })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="1234"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">VA File Number</label>
+                        <input
+                          type="text"
+                          value={veteranProfile.vaFileNumber || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, vaFileNumber: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="C-12345678"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information Section */}
+                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                      📞 Contact Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <input
+                          type="email"
+                          value={veteranProfile.email || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, email: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="veteran@email.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+                        <input
+                          type="tel"
+                          value={veteranProfile.phone || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, phone: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Alternate Phone</label>
+                        <input
+                          type="tel"
+                          value={veteranProfile.alternatePhone || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, alternatePhone: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="(555) 987-6543"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Street Address</label>
+                        <input
+                          type="text"
+                          value={veteranProfile.street || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, street: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="123 Main Street"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
+                        <input
+                          type="text"
+                          value={veteranProfile.city || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, city: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="Springfield"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">State</label>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          value={veteranProfile.state || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, state: e.target.value.toUpperCase() })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="IL"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ZIP Code</label>
+                        <input
+                          type="text"
+                          maxLength={10}
+                          value={veteranProfile.zip || ''}
+                          onChange={(e) => setVeteranProfile({ ...veteranProfile, zip: e.target.value })}
+                          className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          placeholder="62701"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Information Section - Now supports multiple periods */}
+                  <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        🎖️ Service Periods
+                      </h4>
+                      <button
+                        onClick={() => {
+                          const newPeriod = {
+                            id: `temp-${Date.now()}`,
+                            branch: '',
+                            component: 'Active',
+                            serviceStartDate: '',
+                            serviceEndDate: '',
+                            characterOfService: '',
+                            mos: '',
+                            rankAtDischarge: '',
+                            formType: 'DD214',
+                            notes: '',
+                            isNew: true,
+                          };
+                          setVeteranProfile({
+                            ...veteranProfile,
+                            servicePeriods: [...(veteranProfile.servicePeriods || []), newPeriod]
+                          });
+                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <span>+</span> Add Service Period
+                      </button>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Add all your service periods including Active Duty, Guard, and Reserve time. Each DD214 or NGB 22 is a separate period.
+                    </p>
+                    
+                    {/* Service Periods List */}
+                    {veteranProfile.servicePeriods && veteranProfile.servicePeriods.length > 0 ? (
+                      <div className="space-y-4">
+                        {veteranProfile.servicePeriods.map((period, idx) => (
+                          <div key={period.id || idx} className="border-2 border-indigo-200 dark:border-indigo-800 rounded-lg p-4 bg-indigo-50 dark:bg-indigo-900/20">
+                            <div className="flex items-center justify-between mb-3">
+                              <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+                                Period #{idx + 1}
+                              </h5>
+                              <button
+                                onClick={() => {
+                                  const newPeriods = veteranProfile.servicePeriods.filter((_, i) => i !== idx);
+                                  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                }}
+                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold"
+                              >
+                                🗑️ Remove
+                              </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Branch</label>
+                                <select
+                                  value={period.branch || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], branch: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                >
+                                  <option value="">Select...</option>
+                                  <option value="Army">Army</option>
+                                  <option value="Navy">Navy</option>
+                                  <option value="Air Force">Air Force</option>
+                                  <option value="Marines">Marines</option>
+                                  <option value="Coast Guard">Coast Guard</option>
+                                  <option value="Space Force">Space Force</option>
+                                  <option value="Army National Guard">Army National Guard</option>
+                                  <option value="Air National Guard">Air National Guard</option>
+                                </select>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Component</label>
+                                <select
+                                  value={period.component || 'Active'}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], component: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                >
+                                  <option value="Active">Active Duty</option>
+                                  <option value="Guard">National Guard</option>
+                                  <option value="Reserve">Reserve</option>
+                                </select>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                                <input
+                                  type="date"
+                                  value={period.serviceStartDate || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], serviceStartDate: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+                                <input
+                                  type="date"
+                                  value={period.serviceEndDate || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], serviceEndDate: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Discharge Type</label>
+                                <select
+                                  value={period.characterOfService || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], characterOfService: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                >
+                                  <option value="">Select...</option>
+                                  <option value="Honorable">Honorable</option>
+                                  <option value="General Under Honorable">General Under Honorable</option>
+                                  <option value="Other Than Honorable">Other Than Honorable</option>
+                                  <option value="Medical">Medical</option>
+                                </select>
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Form Type</label>
+                                <select
+                                  value={period.formType || 'DD214'}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], formType: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                >
+                                  <option value="DD214">DD214 (Active Duty)</option>
+                                  <option value="NGB22">NGB 22 (National Guard)</option>
+                                  <option value="DD256">DD256 (Reserve)</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              </div>
+                              
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MOS / Rank (optional)</label>
+                                <input
+                                  type="text"
+                                  value={period.mos || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], mos: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  placeholder="E.g., 11B Infantry, E-5 Sergeant"
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                              </div>
+                              
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (optional)</label>
+                                <input
+                                  type="text"
+                                  value={period.notes || ''}
+                                  onChange={(e) => {
+                                    const newPeriods = [...veteranProfile.servicePeriods];
+                                    newPeriods[idx] = { ...newPeriods[idx], notes: e.target.value };
+                                    setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+                                  }}
+                                  placeholder="E.g., Deployed to Iraq 2008-2009"
+                                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <p className="text-sm">No service periods added yet.</p>
+                        <p className="text-xs mt-1">Click "Add Service Period" to add your military service history.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('vet_rate_veteran_profile', JSON.stringify(veteranProfile));
+                        alert('✅ Veteran Profile saved! This information will now auto-fill VA forms.');
+                      }}
+                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      💾 Save Profile
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* FORMS TAB */}
             {activeTab === 'forms' && (
               <>
@@ -1051,14 +1531,71 @@ Return ONLY the JSON object, no explanation.`,
                       {aiStatus.available && <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">AI Ready</span>}
                     </h3>
                     {!showDD214Processor && !serviceHistory.dd214Data && (
-                      <button
-                        onClick={() => setShowDD214Processor(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                      >
-                        ➕ Process DD214
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowDD214Processor(true)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          📝 Paste Text
+                        </button>
+                        <button
+                          onClick={onOpenDD214Analyzer}
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                          title="Open full DD214 Analyzer with OCR support"
+                        >
+                          📄 Full Analyzer
+                        </button>
+                      </div>
                     )}
                   </div>
+                  
+                  {/* Drop Zone for DD214 - when no data and not processing */}
+                  {!serviceHistory.dd214Data && !showDD214Processor && (
+                    <div className="space-y-4">
+                      {/* Drag & Drop Zone */}
+                      <div
+                        onClick={() => dd214FileInputRef.current?.click()}
+                        onDragOver={handleDD214DragOver}
+                        onDragLeave={handleDD214DragLeave}
+                        onDrop={handleDD214Drop}
+                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                          isDraggingDD214
+                            ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40 scale-[1.02]'
+                            : 'border-blue-300 dark:border-blue-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                        }`}
+                      >
+                        <input
+                          ref={dd214FileInputRef}
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          onChange={handleDD214FileSelect}
+                          className="hidden"
+                        />
+                        <svg className="w-12 h-12 text-blue-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">
+                          {isDraggingDD214 ? '📥 Drop your DD214 here!' : '📄 Drag & Drop DD214 PDF'}
+                        </p>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          or click to browse • Opens in DD214 Analyzer with full OCR support
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
+                          🔒 Your DD214 stays 100% private - processed locally on your device
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
+                        <span className="text-sm text-blue-600 dark:text-blue-400">or</span>
+                        <div className="flex-1 border-t border-blue-200 dark:border-blue-700"></div>
+                      </div>
+                      
+                      <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
+                        Use the buttons above to paste text manually or open the full DD214 Analyzer for advanced processing.
+                      </p>
+                    </div>
+                  )}
                   
                   {showDD214Processor && (
                     <div className="space-y-4">
@@ -1073,7 +1610,7 @@ Return ONLY the JSON object, no explanation.`,
                         rows={6}
                         className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
                       />
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={handleProcessDD214}
                           disabled={isProcessingDD214 || !aiStatus.available}
@@ -1087,6 +1624,20 @@ Return ONLY the JSON object, no explanation.`,
                           ) : (
                             <>🤖 Extract with AI</>
                           )}
+                        </button>
+                        <button
+                          onClick={onOpenDD214Analyzer}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                          title="Open full DD214 Analyzer with PDF upload & OCR"
+                        >
+                          📄 Use Full Analyzer
+                        </button>
+                        <button
+                          onClick={onOpenAISettings}
+                          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                          title="Open Faraday Cage - AI Settings"
+                        >
+                          ⚙️ AI Settings
                         </button>
                         <button
                           onClick={() => { setShowDD214Processor(false); setDD214Text(''); }}
@@ -1141,12 +1692,18 @@ Return ONLY the JSON object, no explanation.`,
                           <p className="font-semibold text-gray-900 dark:text-gray-100">{serviceHistory.dd214Data.foreignService ? 'Yes' : 'No'}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex flex-wrap gap-2 pt-2">
                         <button
                           onClick={() => setShowDD214Processor(true)}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                         >
                           🔄 Re-process DD214
+                        </button>
+                        <button
+                          onClick={onOpenDD214Analyzer}
+                          className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          📄 Open Full Analyzer
                         </button>
                         <button
                           onClick={handleClearDD214}
@@ -1156,12 +1713,6 @@ Return ONLY the JSON object, no explanation.`,
                         </button>
                       </div>
                     </div>
-                  )}
-                  
-                  {!serviceHistory.dd214Data && !showDD214Processor && (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      No DD214 data saved. Process your DD214 to auto-fill service information across tools.
-                    </p>
                   )}
                 </div>
                 

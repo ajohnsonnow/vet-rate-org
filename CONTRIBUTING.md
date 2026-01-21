@@ -6,7 +6,7 @@ Thank you for considering contributing to this project! This guide explains how 
 
 Provide veterans with accurate, accessible information about disability ratings and benefits using official eCFR data from 38 CFR Parts 3 & 4.
 
-## �- Ways to Contribute
+## �- Ways to Contribute
 
 ### 1. Report Bugs
 Found an issue? Open a GitHub issue with:
@@ -398,6 +398,20 @@ Contributors will be:
 - Thanked in release notes
 - Credited in commit history
 
+### 💜 Special Thanks to Our Community Testers
+
+This project wouldn't be what it is without invaluable feedback from our veteran community testers:
+
+**Reddit r/VAClaims**  
+https://www.reddit.com/r/VAClaims/  
+The veterans and advocates here have provided crucial real-world testing, bug reports, and feature suggestions that shaped many of our tools.
+
+**Facebook: Veteran Claims Assistance Group**  
+https://www.facebook.com/groups/709883279032790/  
+Huge thanks for the detailed feedback on usability, mobile experience, and edge cases we never would have caught ourselves.
+
+Your dedication to helping fellow veterans navigate the claims process inspires everything we build. 🇺🇸
+
 ## ❤️ Code of Conduct
 
 This project is dedicated to providing a welcoming and inclusive environment:
@@ -421,6 +435,18 @@ Before submitting PR:
 - [ ] Tested on multiple browsers
 - [ ] Commit messages are clear
 - [ ] PR description is detailed
+
+---
+
+## ⚖️ Legal & Licensing
+
+By submitting a Pull Request (PR) to Vet-Rate.org, you certify the following:
+
+1. **Originality**: The code you are submitting is your original work, or you have the necessary rights to contribute it (e.g., it is not proprietary code from your employer).
+2. **Licensing**: You agree to license your contribution under the project's **GNU Affero General Public License v3.0 (AGPLv3)**.
+3. **No Strings Attached**: You understand that your contribution is a donation to the open-source community and that Vet-Rate.org is distributed freely without warranty.
+
+**Note**: All contributions must align with the mission of providing free, secure, and private tools for veterans. We reserve the right to reject PRs that compromise user privacy or introduce monetization features.
 
 ---
 

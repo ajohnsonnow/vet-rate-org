@@ -29,7 +29,7 @@ const AIConsentModal = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-60 z-[60] overflow-y-auto flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ai-consent-title"
