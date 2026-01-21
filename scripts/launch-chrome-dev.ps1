@@ -97,9 +97,10 @@ if (-not $KeepOpen) {
 
 # Required Chrome flags for WebGPU experimental features
 $flags = @(
-    "--enable-dawn-features=allow_unsafe_apis",
-    "--enable-features=Vulkan",
+    "--enable-dawn-features=allow_unsafe_apis,use_dxc",
+    "--enable-features=Vulkan,UseSkiaRenderer",
     "--enable-unsafe-webgpu",
+    "--enable-webgpu-developer-features",
     "--disable-web-security",
     "--user-data-dir=$env:TEMP\chrome-dev-webgpu"
 )
@@ -107,9 +108,10 @@ $flags = @(
 Write-Host "🎮 Launching Chrome with WebGPU experimental features..." -ForegroundColor $Cyan
 Write-Host ""
 Write-Host "Flags enabled:" -ForegroundColor $Yellow
-Write-Host "  ✓ allow_unsafe_apis (Dawn features)" -ForegroundColor $Green
-Write-Host "  ✓ Vulkan backend" -ForegroundColor $Green
+Write-Host "  ✓ allow_unsafe_apis + use_dxc (Dawn features)" -ForegroundColor $Green
+Write-Host "  ✓ Vulkan backend + Skia renderer" -ForegroundColor $Green
 Write-Host "  ✓ Unsafe WebGPU (experimental)" -ForegroundColor $Green
+Write-Host "  ✓ WebGPU developer features" -ForegroundColor $Green
 Write-Host "  ✓ Web security disabled (localhost dev)" -ForegroundColor $Green
 Write-Host ""
 Write-Host "Opening: $Url" -ForegroundColor $Cyan

@@ -68,9 +68,9 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'DD214 Analyzer',
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
-      modelId: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-      modelName: 'Phi 3.5 Vision',
-      reason: 'Can directly read scanned DD214 images - no OCR needed!',
+      modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
+      modelName: 'Vet-Rate Vision Phi',
+      reason: 'Custom model - reads scanned DD214 images directly! Works in standard Chrome.',
       badge: '👁️ Vision',
     },
     alternatives: [
@@ -86,7 +86,7 @@ export const TOOL_LLM_RECOMMENDATIONS = {
       },
     ],
     tips: [
-      'For scanned/image DD214s, use Phi 3.5 Vision',
+      'For scanned/image DD214s, use Vet-Rate Vision Phi',
       'For text-based PDFs, DeepSeek R1 provides superior extraction',
       'Smaller models work fine for simple verification tasks',
     ],
@@ -521,14 +521,14 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Document Scanner',
     category: TOOL_CATEGORIES.VISION,
     primary: {
-      modelId: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-      modelName: 'Phi 3.5 Vision',
-      reason: 'The ONLY local model that can read images directly',
+      modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
+      modelName: 'Vet-Rate Vision Phi',
+      reason: 'Custom-compiled vision model - works in standard Chrome!',
       badge: '👁️ Vision Required',
     },
     alternatives: [],
     tips: [
-      'For image/scan analysis, Phi 3.5 Vision is your only local option',
+      'Vet-Rate Vision Phi can read images directly in any browser',
       'Text-based documents can use any model after OCR',
       'Cloud AI (Gemini) also has vision capabilities',
     ],
@@ -749,6 +749,7 @@ export const getModelForVRAM = (toolId, availableVRAM) => {
     'Qwen3-4B-q4f32_1-MLC': 4,
     'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC': 6,
     'DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC': 6,
+    'Vet-Rate-Vision-Phi-q4f32_1': 6,
     'Phi-3.5-vision-instruct-q4f32_1-MLC': 6,
     'Qwen3-8B-q4f32_1-MLC': 7,
     'Mistral-7B-Instruct-v0.3-q4f32_1-MLC': 8,

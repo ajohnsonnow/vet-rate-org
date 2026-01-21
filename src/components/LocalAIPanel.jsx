@@ -450,18 +450,25 @@ const AVAILABLE_MODELS = [
   },
   // === VISION (Image Analysis) ===
   {
-    id: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-    name: 'Phi 3.5 Vision (See Images) 👁️ [DISABLED]',
-    size: '3.5 GB',
-    description: '⚠️ Temporarily disabled - Requires experimental Chrome features not yet stable.',
-    bestFor: '🔨 Coming Soon: Vet-Rate Vision Phi',
-    contextInfo: '🚀 We\'re compiling our OWN custom vision model optimized for DD214s! Stay tuned for "Vet-Rate Vision Phi" - built by veterans, for veterans, works in any browser.',
+    id: 'Vet-Rate-Vision-Phi-q4f32_1',
+    name: 'Vet-Rate Vision Phi 👁️ ⭐ NEW!',
+    size: '2.8 GB',
+    description: 'Custom-compiled vision model - reads DD214 images directly! Works in standard Chrome.',
+    bestFor: '📷 DD214 & Document Analysis',
+    contextInfo: 'Built by veterans, for veterans. Analyzes scanned documents, photos, and images without OCR. The ONLY local model that can "see" your documents!',
     vramRequired: '6 GB',
-    recommended: false,
+    recommended: true,
     category: 'vision',
-    isNew: false,
+    isNew: true,
     hasVision: true,
-    disabled: true,
+    disabled: false,
+    // Custom model configuration for HuggingFace
+    isCustomModel: true,
+    customConfig: {
+      model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi',
+      model_id: 'Vet-Rate-Vision-Phi-q4f32_1',
+      model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi/resolve/main/Vet-Rate-Vision-Phi-q4f32_1-webgpu.wasm',
+    },
   },
 ];
 
@@ -627,10 +634,14 @@ export const LocalAIProvider = ({ children }) => {
     }
     
     // Check if this is a vision model that requires experimental features
-    const isVisionModel = modelId.includes('vision');
+    // NOTE: Our custom Vet-Rate Vision Phi model is compiled with q4f32_1 quantization
+    // which uses f32 instead of u8 types, so it works in standard Chrome!
+    const isVisionModel = modelId.includes('vision') || modelId.includes('Vision');
+    const isCustomVisionModel = selectedModel.isCustomModel && selectedModel.hasVision;
     const hasExperimentalFeatures = gpuManager.getDevice()?.features?.has('chromium-experimental-subgroup-matrix');
     
-    if (isVisionModel && !hasExperimentalFeatures) {
+    // Only block non-custom vision models that need experimental features
+    if (isVisionModel && !isCustomVisionModel && !hasExperimentalFeatures) {
       const warningMsg = 
         '⚠️ Vision Model Requires Experimental Chrome Features\n\n' +
         `${selectedModel.name} uses WebGPU features not yet available in Chrome Stable.\n\n` +
@@ -640,7 +651,7 @@ export const LocalAIProvider = ({ children }) => {
         '      • enable-unsafe-webgpu\n' +
         '      • enable-webgpu-developer-features\n' +
         '   3. Relaunch and try again\n\n' +
-        '💡 ALTERNATIVE: Use Llama 3.2 3B for non-vision tasks\n\n' +
+        '💡 BETTER OPTION: Try "Vet-Rate Vision Phi" - our custom model that works in standard Chrome!\n\n' +
         'Technical: Requires chromium-experimental-subgroup-matrix for u8 shader types.';
       
       setError(warningMsg);
@@ -684,8 +695,8 @@ export const LocalAIProvider = ({ children }) => {
         });
       };
 
-      // Create the engine
-      const mlcEngine = await CreateMLCEngine(modelId, {
+      // Create the engine with custom appConfig for custom models
+      const engineOptions = {
         initProgressCallback,
         logLevel: 'SILENT',
         // Request specific WebGPU features if available
@@ -695,7 +706,21 @@ export const LocalAIProvider = ({ children }) => {
           setIsReady(false);
           setEngine(null);
         },
-      });
+      };
+      
+      // Check if this is a custom model that needs appConfig
+      if (selectedModel.isCustomModel && selectedModel.customConfig) {
+        console.log('🎯 Loading custom model with appConfig:', selectedModel.customConfig);
+        engineOptions.appConfig = {
+          model_list: [{
+            model: selectedModel.customConfig.model,
+            model_id: selectedModel.customConfig.model_id,
+            model_lib: selectedModel.customConfig.model_lib,
+          }],
+        };
+      }
+      
+      const mlcEngine = await CreateMLCEngine(modelId, engineOptions);
 
       setEngine(mlcEngine);
       setLoadedModelId(modelId);
