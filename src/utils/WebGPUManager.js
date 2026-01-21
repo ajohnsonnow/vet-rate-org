@@ -269,31 +269,41 @@ class GPUDiscoveryEngine {
           requiredFeatures.push('shader-f16');
         }
         
-        // Experimental features - only add if explicitly requested
-        const experimentalMode = options.experimental || localStorage.getItem('vet_rate_experimental_webgpu') === 'true';
+        // Experimental features - DISABLED by default for stability
+        const experimentalMode = false; // Disabled until custom model compilation complete
         if (experimentalMode) {
           console.log('⚡ Experimental WebGPU mode enabled - attempting to use experimental features');
           console.log('⚡ Available adapter features:', Array.from(availableFeatures).join(', '));
           
-          // Try to enable experimental subgroup features if available
-          if (availableFeatures.has('chromium-experimental-subgroups')) {
-            requiredFeatures.push('chromium-experimental-subgroups');
-          }
-          if (availableFeatures.has('subgroups')) {
-            requiredFeatures.push('subgroups');
-          }
-          if (availableFeatures.has('chromium-experimental-subgroup-uniform-control-flow')) {
-            requiredFeatures.push('chromium-experimental-subgroup-uniform-control-flow');
-          }
-          // Required for u8 type in WGSL shaders (WebLLM) - try both naming conventions
-          if (availableFeatures.has('chromium-experimental-subgroup-matrix')) {
-            requiredFeatures.push('chromium-experimental-subgroup-matrix');
-          }
-          if (availableFeatures.has('chromium_experimental_subgroup_matrix')) {
-            requiredFeatures.push('chromium_experimental_subgroup_matrix');
-          }
+          // Check if required experimental features for MLC-AI are available
+          const hasSubgroupMatrix = availableFeatures.has('chromium-experimental-subgroup-matrix') || 
+                                   availableFeatures.has('chromium_experimental_subgroup_matrix');
           
-          console.log(`⚡ Requesting experimental features: ${requiredFeatures.filter(f => f.includes('experimental') || f.includes('subgroup')).join(', ') || 'none available'}`);
+          if (!hasSubgroupMatrix && (availableFeatures.has('subgroups') || availableFeatures.has('chromium-experimental-subgroups'))) {
+            console.warn('⚠️ Subgroup features available but chromium-experimental-subgroup-matrix is not supported');
+            console.warn('⚠️ This GPU/driver/browser combination cannot use experimental mode with current MLC-AI models');
+            console.warn('⚠️ Falling back to standard WebGPU mode to prevent shader compilation errors');
+          } else {
+            // Try to enable experimental subgroup features if available
+            if (availableFeatures.has('chromium-experimental-subgroups')) {
+              requiredFeatures.push('chromium-experimental-subgroups');
+            }
+            if (availableFeatures.has('subgroups')) {
+              requiredFeatures.push('subgroups');
+            }
+            if (availableFeatures.has('chromium-experimental-subgroup-uniform-control-flow')) {
+              requiredFeatures.push('chromium-experimental-subgroup-uniform-control-flow');
+            }
+            // Required for u8 type in WGSL shaders (WebLLM) - try both naming conventions
+            if (availableFeatures.has('chromium-experimental-subgroup-matrix')) {
+              requiredFeatures.push('chromium-experimental-subgroup-matrix');
+            }
+            if (availableFeatures.has('chromium_experimental_subgroup_matrix')) {
+              requiredFeatures.push('chromium_experimental_subgroup_matrix');
+            }
+            
+            console.log(`⚡ Requesting experimental features: ${requiredFeatures.filter(f => f.includes('experimental') || f.includes('subgroup')).join(', ') || 'none available'}`);
+          }
         }
         
         this.device = await this.selectedAdapter.requestDevice({

@@ -451,16 +451,17 @@ const AVAILABLE_MODELS = [
   // === VISION (Image Analysis) ===
   {
     id: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-    name: 'Phi 3.5 Vision (See Images) 👁️',
+    name: 'Phi 3.5 Vision (See Images) 👁️ [DISABLED]',
     size: '3.5 GB',
-    description: 'Can analyze DD214 images and documents!',
-    bestFor: '👁️ Vision - Scanned Docs',
-    contextInfo: 'Best for: DD214 photos, scanned documents, image analysis',
+    description: '⚠️ Temporarily disabled - Requires experimental Chrome features not yet stable.',
+    bestFor: '🔨 Coming Soon: Vet-Rate Vision Phi',
+    contextInfo: '🚀 We\'re compiling our OWN custom vision model optimized for DD214s! Stay tuned for "Vet-Rate Vision Phi" - built by veterans, for veterans, works in any browser.',
     vramRequired: '6 GB',
     recommended: false,
     category: 'vision',
-    isNew: true,
+    isNew: false,
     hasVision: true,
+    disabled: true,
   },
 ];
 
@@ -578,10 +579,19 @@ export const LocalAIProvider = ({ children }) => {
               forceReinit: true 
             });
             console.log(`✅ WebGPU device reinitialized with experimental=${experimentalMode}`);
+            
+            // Check if experimental mode was disabled due to missing features
+            const actualExperimentalMode = localStorage.getItem('vet_rate_experimental_webgpu') === 'true';
+            if (experimentalMode && !actualExperimentalMode) {
+              console.warn('⚠️ Experimental mode was automatically disabled due to missing GPU features');
+              setExperimentalMode(false);
+              setError('Your GPU/browser combination does not support the required experimental features (chromium-experimental-subgroup-matrix) for MLC-AI models. Experimental mode has been disabled.');
+            }
           }
         }
       } catch (err) {
         console.error('Failed to reinitialize WebGPU device:', err);
+        setError(`Failed to reinitialize WebGPU device: ${err.message}`);
       }
     };
     
@@ -595,6 +605,48 @@ export const LocalAIProvider = ({ children }) => {
   const initializeEngine = useCallback(async (modelId = selectedModel.id) => {
     setIsLoading(true);
     setError(null);
+    
+    // Check if the selected model is disabled
+    if (selectedModel.disabled) {
+      const disabledMsg = 
+        '🚫 This Model is Currently Disabled\n\n' +
+        `${selectedModel.name} has been temporarily disabled.\n\n` +
+        '🔨 COMING SOON: Vet-Rate Vision Phi\n\n' +
+        'We\'re compiling our own custom vision language model specifically optimized for:\n' +
+        '• DD214 document recognition\n' +
+        '• Medical record parsing\n' +
+        '• VA forms processing\n\n' +
+        '✨ Built by veterans, for veterans\n' +
+        '✨ Works in any browser (no experimental features)\n' +
+        '✨ 100% private - runs locally on your device\n\n' +
+        'Check back soon for updates!';
+      
+      setError(disabledMsg);
+      setIsLoading(false);
+      return null;
+    }
+    
+    // Check if this is a vision model that requires experimental features
+    const isVisionModel = modelId.includes('vision');
+    const hasExperimentalFeatures = gpuManager.getDevice()?.features?.has('chromium-experimental-subgroup-matrix');
+    
+    if (isVisionModel && !hasExperimentalFeatures) {
+      const warningMsg = 
+        '⚠️ Vision Model Requires Experimental Chrome Features\n\n' +
+        `${selectedModel.name} uses WebGPU features not yet available in Chrome Stable.\n\n` +
+        '✅ SOLUTION: Use Chrome Canary\n' +
+        '   1. Download: https://google.com/chrome/canary/\n' +
+        '   2. Enable flags: chrome://flags\n' +
+        '      • enable-unsafe-webgpu\n' +
+        '      • enable-webgpu-developer-features\n' +
+        '   3. Relaunch and try again\n\n' +
+        '💡 ALTERNATIVE: Use Llama 3.2 3B for non-vision tasks\n\n' +
+        'Technical: Requires chromium-experimental-subgroup-matrix for u8 shader types.';
+      
+      setError(warningMsg);
+      setIsLoading(false);
+      return null;
+    }
     
     // Check if model is cached to determine the initial message
     const { hasModelInCache } = await import('@mlc-ai/web-llm');
@@ -1441,33 +1493,43 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                     {availableModels.map(model => {
                       const isInstalled = installedModels.has(model.id);
                       const isCurrentlyLoaded = loadedModelId === model.id;
+                      const isDisabled = model.disabled || isLoading;
                       
                       return (
                         <button
                           key={model.id}
-                          onClick={() => setSelectedModel(model)}
-                          disabled={isLoading}
+                          onClick={() => !model.disabled && setSelectedModel(model)}
+                          disabled={isDisabled}
                           className={`p-4 rounded-xl border-2 text-left transition-all ${
-                            selectedModel.id === model.id
+                            model.disabled
+                              ? 'bg-gray-900/30 border-gray-800 opacity-60 cursor-not-allowed'
+                              : selectedModel.id === model.id
                               ? 'bg-cyan-900/30 border-cyan-500'
                               : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
-                          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${isLoading && !model.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-white">{model.name}</span>
-                                {model.bestFor && (
+                                <span className={`font-bold ${model.disabled ? 'text-gray-500 line-through' : 'text-white'}`}>
+                                  {model.name}
+                                </span>
+                                {model.disabled && (
+                                  <span className="text-xs px-2 py-0.5 bg-red-500/30 text-red-300 rounded-full">
+                                    DISABLED
+                                  </span>
+                                )}
+                                {model.bestFor && !model.disabled && (
                                   <span className="text-xs px-2 py-0.5 bg-violet-500/30 text-violet-300 rounded-full">
                                     {model.bestFor}
                                   </span>
                                 )}
-                                {model.recommended && (
+                                {model.recommended && !model.disabled && (
                                   <span className="text-xs px-2 py-0.5 bg-cyan-500/30 text-cyan-300 rounded-full">
                                     RECOMMENDED
                                   </span>
                                 )}
-                                {isInstalled && (
+                                {isInstalled && !model.disabled && (
                                   <span className="text-xs px-2 py-0.5 bg-green-500/30 text-green-300 rounded-full flex items-center gap-1">
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1475,16 +1537,18 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                                     INSTALLED
                                   </span>
                                 )}
-                                {isCurrentlyLoaded && (
+                                {isCurrentlyLoaded && !model.disabled && (
                                   <span className="text-xs px-2 py-0.5 bg-blue-500/30 text-blue-300 rounded-full flex items-center gap-1">
                                     <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
                                     ACTIVE
                                   </span>
                                 )}
                               </div>
-                              <p className="text-gray-400 text-sm mt-1">{model.description}</p>
+                              <p className={`text-sm mt-1 ${model.disabled ? 'text-gray-600' : 'text-gray-400'}`}>
+                                {model.description}
+                              </p>
                               {model.contextInfo && (
-                                <p className="text-cyan-400/80 text-xs mt-1 italic">
+                                <p className={`text-xs mt-1 italic ${model.disabled ? 'text-orange-400/80 font-medium' : 'text-cyan-400/80'}`}>
                                   💡 {model.contextInfo}
                                 </p>
                               )}
@@ -1493,7 +1557,9 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                               </p>
                             </div>
                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
-                              selectedModel.id === model.id
+                              model.disabled
+                                ? 'border-gray-700 bg-gray-800'
+                                : selectedModel.id === model.id
                                 ? 'border-cyan-500 bg-cyan-500'
                                 : 'border-gray-600'
                             }`}>
