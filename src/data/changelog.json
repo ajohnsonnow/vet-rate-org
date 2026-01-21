@@ -1,8 +1,87 @@
 {
-  "version": "1.2.0",
-  "lastUpdated": "2026-01-19",
+  "version": "1.4.2.4",
+  "lastUpdated": "2026-01-21",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.4.2.4",
+      "date": "2026-01-21",
+      "isFirstRelease": false,
+      "releaseTitle": "Local AI Critical Hotfixes - v1.4.2.4",
+      "changelog": [
+        {
+          "type": "fix",
+          "category": "Local AI",
+          "title": "DD214 Analyzer UX Fix",
+          "description": "Analysis now automatically shows confirmation popup with extracted data - no more confusion about where data went"
+        },
+        {
+          "type": "fix",
+          "category": "Local AI",
+          "title": "AI Badge Model Name",
+          "description": "Fixed race condition causing wrong model name in status badge - now updates immediately when model loads"
+        },
+        {
+          "type": "fix",
+          "category": "Local AI",
+          "title": "WebGPU Adapter Reinit",
+          "description": "Fixed 'adapter consumed' error - experimental mode toggle now works without browser reload"
+        },
+        {
+          "type": "fix",
+          "category": "Local AI",
+          "title": "Experimental Mode Crash",
+          "description": "Fixed ReferenceError crash when accessing experimental mode settings"
+        },
+        {
+          "type": "fix",
+          "category": "Local AI",
+          "title": "WGSL Shader Support",
+          "description": "Added chromium_experimental_subgroup_matrix extension for u8 type support in WebLLM models"
+        },
+        {
+          "type": "documentation",
+          "category": "Support",
+          "title": "Local AI Setup Guide",
+          "description": "Added comprehensive FAQ with Chrome flags instructions for Windows/Mac/Linux and troubleshooting steps"
+        }
+      ]
+    },
+    {
+      "version": "1.4.2",
+      "date": "2026-01-21",
+      "isFirstRelease": false,
+      "releaseTitle": "Faraday Cage Protocol - Local AI Arrives - v1.4.2",
+      "changelog": [
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "WebGPU Local AI (Faraday Cage)",
+          "description": "Run AI models 100% locally in browser - zero data ever leaves your device. Supports Llama, Phi, Qwen, DeepSeek models with GPU acceleration",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "AI Configuration",
+          "title": "AI Settings Modal",
+          "description": "Global AI configuration interface - switch between Cloud AI (Gemini) and Local AI, select models, manage WebGPU adapters",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Build Your Evidence",
+          "title": "DD214 Analyzer Enhancements",
+          "description": "AI-powered extraction with automatic profile import confirmation - selective field import with side-by-side comparison",
+          "isNew": true
+        },
+        {
+          "type": "improvement",
+          "category": "Infrastructure",
+          "title": "Dynamic Stats System",
+          "description": "All feature counts update from single source of truth - eliminates hardcoded numbers across entire codebase"
+        }
+      ]
+    },
     {
       "version": "1.2.0",
       "date": "2026-01-19",

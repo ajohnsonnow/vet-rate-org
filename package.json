@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.4.2",
+  "version": "1.4.2.4",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
@@ -12,6 +12,12 @@
     "type-check": "tsc --noEmit",
     "sync-version": "node scripts/sync-version.js",
     "update-stats": "node scripts/update-stats.js",
+    "update-changelog": "node scripts/update-changelog.js",
+    "changelog-preview": "node scripts/update-changelog.js --preview",
+    "release": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major",
+    "release:preview": "node scripts/release.js --preview",
     "sync-legal-pages": "node scripts/sync-legal-pages.js",
     "check-legal-pages": "node scripts/generate-legal-pages.js",
     "legal-sync": "node scripts/generate-legal-pages.js",

@@ -208,14 +208,45 @@ class GPUDiscoveryEngine {
     const target = this.adapters.get(adapterId);
     if (!target) throw new Error("Adapter not found");
 
+    // If force reinit is requested, we need to get a fresh adapter
+    if (options.forceReinit) {
+      console.log('🎮 Force reinitializing WebGPU device...');
+      // Clear the old device
+      if (this.device) {
+        this.device.destroy?.();
+        this.device = null;
+      }
+      this.selectedAdapter = null;
+      this.isInitializing = false;
+      this.initPromise = null;
+      
+      // Request a fresh adapter from the browser
+      try {
+        const freshAdapter = await navigator.gpu.requestAdapter({
+          powerPreference: target.hint
+        });
+        
+        if (!freshAdapter) {
+          throw new Error('Failed to request fresh adapter');
+        }
+        
+        // Update the target adapter with the fresh one
+        target.adapter = freshAdapter;
+        this.selectedAdapter = freshAdapter;
+      } catch (err) {
+        console.error('Failed to get fresh adapter:', err);
+        throw err;
+      }
+    }
+
     // If we already have a device for this exact adapter, return it immediately
-    if (this.device && this.selectedAdapter === target.adapter) {
+    if (this.device && this.selectedAdapter === target.adapter && !options.forceReinit) {
       console.log(`🎮 [Vet-Rate GPU] Already locked to: ${target.info.displayName}`);
       return this.device;
     }
     
     // If currently initializing the same adapter, wait for it
-    if (this.isInitializing && this.initPromise && this.selectedAdapter === target.adapter) {
+    if (this.isInitializing && this.initPromise && this.selectedAdapter === target.adapter && !options.forceReinit) {
       console.log(`🎮 [Vet-Rate GPU] Waiting for initialization to complete...`);
       return await this.initPromise;
     }
@@ -252,6 +283,10 @@ class GPUDiscoveryEngine {
           }
           if (availableFeatures.has('chromium-experimental-subgroup-uniform-control-flow')) {
             requiredFeatures.push('chromium-experimental-subgroup-uniform-control-flow');
+          }
+          // Required for u8 type in WGSL shaders (WebLLM)
+          if (availableFeatures.has('chromium_experimental_subgroup_matrix')) {
+            requiredFeatures.push('chromium_experimental_subgroup_matrix');
           }
           
           console.log(`⚡ Requesting experimental features: ${requiredFeatures.filter(f => f.includes('experimental') || f.includes('subgroup')).join(', ') || 'none available'}`);
