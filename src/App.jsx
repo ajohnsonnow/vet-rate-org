@@ -25,7 +25,7 @@ import DisabilityDetails from './components/DisabilityDetails';
 import Disclaimer from './components/Disclaimer';
 import DisclaimerSplash from './components/DisclaimerSplash';
 import BuyMeCoffee from './components/BuyMeCoffee';
-import PrivacyPolicy from './components/PrivacyPolicy';
+import PrivacyPolicy from './components/PrivacyPolicyPage';
 import AboutUs from './components/AboutUs';
 import ContactUs from './components/ContactUs';
 import SecondaryScout from './components/SecondaryScout';
