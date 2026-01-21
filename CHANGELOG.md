@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2.8] - 2026-01-21
+
+### Changed
+- **Disabled Experimental WebGPU Features**: Hardcoded experimental mode to false for maximum browser stability
+- Prevents shader compilation errors with prebuilt models requiring experimental Chrome features
+- Ensures compatibility across all Chrome browsers without experimental flags
+- Standard WebGPU features remain fully functional for Llama 3.2 and other models
+- Awaiting custom "Vet-Rate Vision Phi" model compilation (no experimental features needed)
+
+## [1.4.2.7] - 2026-01-21
+
+### Changed
+- **Phi 3.5 Vision Temporarily Disabled**: Disabled prebuilt Phi 3.5 Vision model due to experimental Chrome feature requirements
+- Added "DISABLED" badge and clear messaging in model selection
+- Announced upcoming "Vet-Rate Vision Phi" - custom-compiled vision model optimized for DD214s
+- Custom model will work in stable Chrome without experimental features
+- Built specifically for veteran document processing by veterans, for veterans
+
 ## [1.4.2.4] - 2026-01-21
 
 ### Fixed
