@@ -556,6 +556,40 @@ export const LocalAIProvider = ({ children }) => {
     check();
   }, []);
 
+  // Reinitialize WebGPU device when experimental mode changes
+  useEffect(() => {
+    const reinitializeDevice = async () => {
+      if (!webGPUStatus.supported) return;
+      
+      try {
+        console.log(`🎮 Experimental mode ${experimentalMode ? 'ENABLED' : 'DISABLED'} - reinitializing WebGPU device...`);
+        
+        // Get current adapter and reinitialize with new options
+        const selectedAdapter = gpuManager.getSelectedAdapter();
+        if (selectedAdapter) {
+          const adapters = gpuManager.getAdapters();
+          const currentGPU = adapters.find(a => a.adapter === selectedAdapter);
+          
+          if (currentGPU) {
+            // Force reinitialization with a fresh adapter
+            await gpuManager.selectAdapter(currentGPU.id, { 
+              experimental: experimentalMode, 
+              forceReinit: true 
+            });
+            console.log(`✅ WebGPU device reinitialized with experimental=${experimentalMode}`);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to reinitialize WebGPU device:', err);
+      }
+    };
+    
+    // Only reinitialize if we've already initialized once (not on mount)
+    if (webGPUStatus.checked) {
+      reinitializeDevice();
+    }
+  }, [experimentalMode, webGPUStatus.supported, webGPUStatus.checked]);
+
   // Initialize the LLM engine
   const initializeEngine = useCallback(async (modelId = selectedModel.id) => {
     setIsLoading(true);
@@ -630,11 +664,11 @@ export const LocalAIProvider = ({ children }) => {
         setInstalledModels(prev => new Set([...prev, modelId]));
       }
       
+      // Save preference FIRST before registering
+      localStorage.setItem('vet_rate_local_ai_model', modelId);
+      
       // Register with unified AI service for seamless integration
       registerLocalAIEngine(mlcEngine, true);
-      
-      // Save preference
-      localStorage.setItem('vet_rate_local_ai_model', modelId);
       
       return mlcEngine;
     } catch (err) {
