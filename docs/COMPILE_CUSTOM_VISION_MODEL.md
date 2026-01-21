@@ -72,12 +72,18 @@ Storage: 10TB total NVMe        ✅ Plenty for model files
 conda create -n mlc-llm python=3.11 -y
 conda activate mlc-llm
 
-# Install MLC-LLM
-pip install --pre mlc-llm -f https://mlc.ai/wheels
+# Install PyTorch with CUDA support (REQUIRED)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-# Install additional dependencies
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# Install HuggingFace dependencies
 pip install transformers huggingface-hub
+
+# Install MLC-LLM nightly (for CUDA 12.x)
+pip install --pre -U -f https://mlc.ai/wheels mlc-llm-nightly-cu128 mlc-ai-nightly-cu128
+
+# Verify CUDA is available
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+# Should print: CUDA available: True
 ```
 
 ---

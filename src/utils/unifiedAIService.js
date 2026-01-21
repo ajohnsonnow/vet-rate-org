@@ -827,7 +827,8 @@ export const getLocalModelName = () => {
   if (modelId.includes('Llama-3.1-8B')) return 'Llama 3.1 8B';
   if (modelId.includes('Llama')) return 'Llama';
   
-  // Phi Series (Microsoft)
+  // Phi Series (Microsoft) & Custom Vision Models
+  if (modelId.includes('Vet-Rate-Vision-Phi')) return 'Vet-Rate Vision Phi';
   if (modelId.includes('Phi-3.5-vision')) return 'Phi 3.5 Vision';
   if (modelId.includes('Phi-3.5')) return 'Phi 3.5 Mini';
   if (modelId.includes('Phi')) return 'Phi';

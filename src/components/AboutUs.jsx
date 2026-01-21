@@ -497,8 +497,26 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
                             <p><strong>Local Models:</strong> 17 models available</p>
                             <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
-                            <p><strong>Vision Model:</strong> Phi 3.5 Vision (reads images)</p>
+                            <p><strong>Vision Model:</strong> <span className="text-amber-600 dark:text-amber-400 font-medium">Vet-Rate Vision Phi ⭐ Custom Built!</span></p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
+                          </div>
+                          {/* Custom LLM Build Achievement */}
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                            <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">🏆 Custom Vision Model Achievement</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              We compiled our own vision-language model from scratch to work in standard Chrome!
+                            </p>
+                            <div className="grid grid-cols-2 gap-1 text-xs">
+                              <p>• <strong>Source:</strong> Phi 3.5 Vision (8.3 GB)</p>
+                              <p>• <strong>Compiled:</strong> 2.78 GB (66% smaller)</p>
+                              <p>• <strong>WASM Library:</strong> 6.6 MB</p>
+                              <p>• <strong>Parameters:</strong> 4 billion</p>
+                              <p>• <strong>Build Time:</strong> 4 hours</p>
+                              <p>• <strong>Quantization:</strong> q4f32_1</p>
+                            </div>
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                              ✅ No experimental Chrome flags required!
+                            </p>
                           </div>
                         </div>
                         {/* Right Column */}
@@ -615,6 +633,58 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 AI-assisted development allowed a single veteran to build a comprehensive tool that would have 
                 otherwise required a full development team. The future is now! 🚀
               </p>
+              
+              {/* Custom Vision Model Build Details */}
+              <details className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+                <summary className="font-semibold text-amber-600 dark:text-amber-400 cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
+                  🏆 Custom Vision Model Build Story (Click to expand)
+                </summary>
+                <div className="mt-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-sm">
+                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                    <strong>The Challenge:</strong> Standard vision AI models required experimental Chrome features that most users don't have. 
+                    We needed a vision model that could read DD214 documents in any browser.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📊 Build Statistics</p>
+                      <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>• Source Model: microsoft/Phi-3.5-vision-instruct</li>
+                        <li>• Original Size: 8.3 GB → Compiled: 2.78 GB</li>
+                        <li>• Parameters: 4,048,120,832 (~4B)</li>
+                        <li>• WASM Library: 6.6 MB</li>
+                        <li>• Context Window: 131,072 tokens</li>
+                        <li>• Build Time: ~4 hours</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded p-2">
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🛠️ Build Process</p>
+                      <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>1. Set up WSL2 Ubuntu 24.04 environment</li>
+                        <li>2. Install MLC-LLM from nightly builds</li>
+                        <li>3. Download Phi 3.5 Vision (8.3 GB)</li>
+                        <li>4. Quantize with q4f32_1 (avoids u8 shaders)</li>
+                        <li>5. Install Emscripten SDK 3.1.56</li>
+                        <li>6. Build WASM runtime libraries</li>
+                        <li>7. Compile to WebGPU WASM</li>
+                        <li>8. Upload to HuggingFace</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-100 dark:bg-green-900/30 rounded p-2 mb-2">
+                    <p className="font-semibold text-green-700 dark:text-green-300 text-xs mb-1">✅ Result: Works in Standard Chrome!</p>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      By using q4f32_1 quantization (f32 model dtype), our custom model avoids the u8 shader types 
+                      that required experimental Chrome flags. Veterans can now use vision AI without any special setup!
+                    </p>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                    Model available at: <a href="https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi</a>
+                  </p>
+                </div>
+              </details>
             </div>
           </section>
 

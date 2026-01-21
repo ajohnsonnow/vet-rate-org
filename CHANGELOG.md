@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2.9] - 2026-01-21
+
+### Added - 🏆 MAJOR: Custom Vision Model "Vet-Rate Vision Phi"
+- **Custom-compiled Phi 3.5 Vision model** that works in standard Chrome browsers
+- No experimental flags or Chrome Canary required anymore!
+- Model hosted on HuggingFace: [Vet-Rate-org/Vet-Rate-Vision-Phi](https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi)
+- **Build Statistics**:
+  - Source: microsoft/Phi-3.5-vision-instruct (8.3 GB)
+  - Compiled size: 2.78 GB (66% reduction)
+  - WASM library: 6.6 MB
+  - Parameters: 4 billion
+  - Context window: 131,072 tokens
+  - Quantization: q4f32_1 (uses f32 model dtype to avoid u8 shader issues)
+  - Build time: ~4 hours
+- **Technical Achievement**: Used MLC-LLM toolchain with WSL2, Emscripten SDK, and custom WASM runtime compilation
+- Added comprehensive build documentation in `docs/CUSTOM_VISION_MODEL_BUILD.md`
+- Updated AboutUs page with custom LLM build story and statistics
+- Updated llmRecommendations.js to recommend Vet-Rate Vision Phi for DD214 analysis
+
+### Changed
+- **LocalAIPanel**: Added support for custom HuggingFace model configuration via `appConfig`
+- **Vision model check**: Bypasses experimental feature requirement for custom models
+- **Model display**: Updated unifiedAIService.js to recognize Vet-Rate Vision Phi
+
 ## [1.4.2.8] - 2026-01-21
 
 ### Changed
