@@ -13,6 +13,7 @@ import { registerLocalAIEngine } from '../utils/unifiedAIService';
 import ToolCardButton from './ToolCardButton';
 import ReportBugLink from './ReportBugLink';
 import GPUSelector from './GPUSelector';
+import ExperimentalModeWarning from './ExperimentalModeWarning';
 import { gpuManager } from '../utils/WebGPUManager';
 
 // Storage key for GPU preference
@@ -1051,6 +1052,12 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
 
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          {/* Experimental Mode Warning */}
+          <ExperimentalModeWarning 
+            experimentalMode={experimentalMode}
+            dawnFeaturesEnabled={dawnFeaturesEnabled}
+          />
+
           {/* WebGPU Status */}
             <div className={`p-4 rounded-xl border-2 ${
               webGPUStatus.supported 
