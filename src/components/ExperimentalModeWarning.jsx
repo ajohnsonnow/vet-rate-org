@@ -11,7 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { checkDawnFeaturesEnabled, getLaunchInstructions } from '../utils/webgpuFeatureDetector';
 
-export default function ExperimentalModeWarning({ experimentalMode, dawnFeaturesEnabled }) {
+export default function ExperimentalModeWarning({ experimentalMode }) {
   const [featureCheck, setFeatureCheck] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [dismissed, setDismissed] = useState(false);
