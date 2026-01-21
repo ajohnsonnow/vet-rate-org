@@ -27,6 +27,7 @@ function Header({
   onCAPSimulatorClick,
   // ExamPrepRoom merged into CAPSimulator
   onPathfinderClick,
+  onClaimNavigatorClick,
   onMOSHazardMatcherClick,
   onPACTActNavigatorClick,
   onWebOfConditionsClick,
@@ -57,9 +58,14 @@ function Header({
   onLegislativeWatchdogClick,
   // Support & Resources (Sky)
   onVSOFinderClick,
+  onVaIntegrationDemoClick,
   onBackupManagerClick,
   onCloudSyncClick,
-  onAISettingsClick
+  onAISettingsClick,
+  // Onboarding & Guides
+  onWorkflowGuideClick,
+  // Feature Request
+  onFeatureRequestClick
 }) {
   const { isDark, toggleTheme } = useTheme();
   const { isHelperMode } = useHelperMode();
@@ -221,6 +227,18 @@ function Header({
               ❓ Help
             </button>
             
+            {/* Workflow Guide - Step-by-step mission briefings */}
+            <button
+              id="tour-workflow-guide-btn"
+              onClick={onWorkflowGuideClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+              title="Workflow Guide - Step-by-step mission briefings"
+              aria-label="Open Workflow Guide for step-by-step mission briefings"
+            >
+              🗺️ Missions
+              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
+            </button>
+            
             {/* My Packet - Where users save everything */}
             <button
               id="tour-my-packet-btn"
@@ -360,6 +378,18 @@ function Header({
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           AI strategy: increases, secondaries & next steps
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onClaimNavigatorClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40 bg-white/50 dark:bg-teal-800/30"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🗺️ Claim Navigator
+                          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded animate-pulse">NEW</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-teal-600 dark:text-teal-400">
+                          Mission Control: Track claims, deadlines & next steps
                         </p>
                       </button>
                       <button
@@ -730,6 +760,18 @@ function Header({
                         </p>
                       </button>
                       <button
+                        onClick={() => { setShowToolsMenu(false); onVaIntegrationDemoClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🔗 VA.gov Integration
+                          <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">DEMO</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Connect to VA.gov APIs (OAuth 2.0)
+                        </p>
+                      </button>
+                      <button
                         onClick={() => { setShowToolsMenu(false); onUserManualClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
@@ -912,6 +954,19 @@ function Header({
 
             {/* Accessibility Menu */}
             <AccessibilityMenu />
+
+            {/* Feature Request Button */}
+            <button
+              onClick={onFeatureRequestClick}
+              className="inline-flex items-center gap-1.5 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              title="Have an idea? Submit a feature request!"
+              aria-label="Submit a Feature Request"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span className="hidden lg:inline">Ideas?</span>
+            </button>
             
             <button
               onClick={() => setShowFundingModal(true)}

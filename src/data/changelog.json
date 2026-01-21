@@ -81,7 +81,7 @@
           "type": "feature",
           "category": "Build Your Evidence",
           "title": "C-File AI Analyzer",
-          "description": "Upload your Claims File PDF - AI finds evidence in thousands of pages. What others charge $500+ for!"
+          "description": "Drop in your Claims File PDF - AI finds evidence in thousands of pages. What others charge $500+ for!"
         },
         {
           "type": "feature",
@@ -163,7 +163,7 @@
           "type": "feature",
           "category": "Quality Control",
           "title": "Denials Decoder",
-          "description": "OCR scan denial letters + AI analysis - upload a photo or PDF of your denial letter",
+          "description": "OCR scan denial letters + AI analysis - drop in a photo or PDF of your denial letter",
           "isNew": true
         },
         {

@@ -18,6 +18,104 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================
+   RESPONSIVE SCROLLING METHODOLOGY
+   Large screens: Fixed header, body+footer scroll together
+   Small screens: Entire page scrolls naturally
+   ============================================ */
+
+/* Large screens (768px+): Fixed header with scrolling body+footer */
+@media (min-width: 768px) {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  body > div#root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* App container wrapper */
+  body > div#root > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* Header stays fixed at top */
+  body > div#root > div > header,
+  body > div#root header {
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  
+  /* Create a scrollable wrapper for everything after the header */
+  body > div#root > div {
+    position: relative;
+  }
+  
+  /* Main + Footer scroll together - wrap them in scroll context */
+  body > div#root > div > main {
+    flex: 1 1 auto;
+  }
+  
+  /* Footer is part of the scrollable area */
+  body > div#root > div > footer {
+    flex-shrink: 0;
+  }
+  
+  /* The app container minus header scrolls */
+  body > div#root > div.min-h-screen {
+    min-height: 100%;
+    height: 100%;
+  }
+  
+  /* Apply overflow to the app container, make header sticky */
+  body > div#root > div.flex-col {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  /* Sticky header within scrolling container */
+  body > div#root > div.flex-col > header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: inherit;
+  }
+}
+
+/* Small screens (below 768px): Natural page scrolling */
+@media (max-width: 767px) {
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
+  body > div#root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  
+  body > div#root > div {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  
+  /* Everything scrolls naturally on mobile */
+  body > div#root > div > header {
+    position: relative;
+  }
+}
+
 /* Light mode body background - warm and easy on eyes */
 html:not(.dark) body {
   background-color: #e9e9e3;
@@ -1464,6 +1562,123 @@ a {
   }
   h3 {
     @apply text-lg;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLET OPTIMIZATION - "The iPad General"
+   Optimized for iPad, Android tablets, and Surface devices (768px-1366px)
+   v1.4.0 - Proper tablet breakpoints and orientation handling
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet Portrait Mode (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Optimal 2-column grid for tablet portrait */
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3,
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px;
+  }
+  
+  /* Modal optimization - not full screen, but substantial */
+  .modal-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    margin: auto;
+    border-radius: 16px;
+  }
+  
+  /* Better spacing for tablet reading */
+  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  
+  /* Touch targets slightly smaller than phone but still touch-friendly */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+  }
+}
+
+/* Tablet Landscape Mode (1024px - 1366px) - iPad Pro, Surface, etc. */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  /* 3-column grid for tablet landscape */
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  /* Modal slightly narrower in landscape */
+  .modal-content {
+    max-width: 75vw;
+    max-height: 90vh;
+    margin: auto;
+    border-radius: 16px;
+  }
+  
+  /* Sidebar-friendly layout */
+  .container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* iPad/Tablet Touch Optimization */
+@media (hover: none) and (pointer: coarse) and (min-width: 768px) {
+  /* Larger touch targets on tablets */
+  button:not(.icon-button), 
+  a:not(.icon-link),
+  input[type="button"], 
+  input[type="submit"] {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+  
+  /* Form inputs comfortable for touch */
+  input[type="text"], 
+  input[type="search"], 
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  select, 
+  textarea {
+    min-height: 44px;
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+  
+  /* Better scrolling on touch devices */
+  .overflow-auto, .overflow-y-auto, .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Disable hover effects that stick on touch */
+  button:hover, a:hover {
+    transform: none;
+  }
+}
+
+/* iPad-specific fixes (iPadOS 13+ reports as Mac) */
+@supports (-webkit-touch-callout: none) {
+  @media (min-width: 768px) {
+    /* Fix for iPad viewport height issues */
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+    
+    /* Safe area padding for iPad with notch/home indicator */
+    .modal-content {
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    
+    /* Better scroll momentum on iPad */
+    .modal-content, .sidebar, .overflow-auto {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
 

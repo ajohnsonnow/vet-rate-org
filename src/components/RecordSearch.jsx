@@ -49,7 +49,7 @@ const RecordSearch = ({ onClose }) => {
     if (droppedFile && droppedFile.type === 'application/pdf') {
       loadFile(droppedFile);
     } else {
-      setError('Please upload a PDF file.');
+      setError('Please drop in a PDF file.');
     }
   }, []);
 
@@ -111,7 +111,7 @@ const RecordSearch = ({ onClose }) => {
 
   const handleQuickSearch = async (category) => {
     if (!fileData) {
-      setError('Please upload a PDF file first.');
+      setError('Please drop in a PDF file first.');
       return;
     }
 
@@ -158,7 +158,7 @@ const RecordSearch = ({ onClose }) => {
       setTotalMatches(totalCount);
       
       if (allResults.length === 0) {
-        setError(`No matches found for ${category} keywords. Try uploading the correct record file.`);
+        setError(`No matches found for ${category} keywords. Try dropping in the correct record file.`);
       }
     } catch (err) {
       setError(`Search failed: ${err.message}`);

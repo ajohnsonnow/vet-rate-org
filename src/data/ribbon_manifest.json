@@ -1,0 +1,2103 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-01-20 17:16:26",
+  "total_awards": 86,
+  "total_devices": 11,
+  "awards": [
+    {
+      "id": "medal_of_honor",
+      "name": "Medal of Honor",
+      "aliases": [
+        "MOH",
+        "MEDAL OF HONOR",
+        "CONGRESSIONAL MEDAL OF HONOR"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 1,
+        "Navy": 1,
+        "Marines": 1,
+        "Air Force": 1,
+        "Coast Guard": 1,
+        "Space Force": 1
+      },
+      "wiki_file": "Medal_of_Honor_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "medal_of_honor.svg"
+    },
+    {
+      "id": "distinguished_service_cross",
+      "name": "Distinguished Service Cross",
+      "aliases": [
+        "DSC",
+        "DIST SVC CROSS",
+        "DISTINGUISHED SERVICE CROSS"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 2
+      },
+      "wiki_file": "Distinguished_Service_Cross_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "distinguished_service_cross.svg"
+    },
+    {
+      "id": "navy_cross",
+      "name": "Navy Cross",
+      "aliases": [
+        "NC",
+        "NAVY CROSS"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 2,
+        "Marines": 2,
+        "Coast Guard": 2
+      },
+      "wiki_file": "Navy_Cross_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "navy_cross.svg"
+    },
+    {
+      "id": "air_force_cross",
+      "name": "Air Force Cross",
+      "aliases": [
+        "AFC",
+        "AF CROSS",
+        "AIR FORCE CROSS"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 2,
+        "Space Force": 2
+      },
+      "wiki_file": "Air_Force_Cross_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "air_force_cross.svg"
+    },
+    {
+      "id": "defense_distinguished_service_medal",
+      "name": "Defense Distinguished Service Medal",
+      "aliases": [
+        "DDSM",
+        "DEF DIST SVC MDL",
+        "DEFENSE DSM"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 3,
+        "Navy": 3,
+        "Marines": 3,
+        "Air Force": 3,
+        "Coast Guard": 3,
+        "Space Force": 3
+      },
+      "wiki_file": "Defense_Distinguished_Service_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "defense_distinguished_service_medal.svg"
+    },
+    {
+      "id": "army_distinguished_service_medal",
+      "name": "Army Distinguished Service Medal",
+      "aliases": [
+        "ADSM",
+        "ARMY DSM",
+        "DISTINGUISHED SERVICE MEDAL"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 4
+      },
+      "wiki_file": "U.S._Army_Distinguished_Service_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "army_distinguished_service_medal.svg"
+    },
+    {
+      "id": "navy_distinguished_service_medal",
+      "name": "Navy Distinguished Service Medal",
+      "aliases": [
+        "NDSM",
+        "NAVY DSM"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 4,
+        "Marines": 4,
+        "Coast Guard": 4
+      },
+      "wiki_file": "Navy_Distinguished_Service_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "navy_distinguished_service_medal.svg"
+    },
+    {
+      "id": "air_force_distinguished_service_medal",
+      "name": "Air Force Distinguished Service Medal",
+      "aliases": [
+        "AFDSM",
+        "AF DSM"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 4,
+        "Space Force": 4
+      },
+      "wiki_file": "Air_Force_Distinguished_Service_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "air_force_distinguished_service_medal.svg"
+    },
+    {
+      "id": "coast_guard_distinguished_service_medal",
+      "name": "Coast Guard Distinguished Service Medal",
+      "aliases": [
+        "CGDSM",
+        "CG DSM"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 5
+      },
+      "wiki_file": "Coast_Guard_Distinguished_Service_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "coast_guard_distinguished_service_medal.svg"
+    },
+    {
+      "id": "silver_star",
+      "name": "Silver Star",
+      "aliases": [
+        "SS",
+        "SILVER STAR",
+        "SLVR STR",
+        "SSM"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 5,
+        "Navy": 5,
+        "Marines": 5,
+        "Air Force": 5,
+        "Coast Guard": 6,
+        "Space Force": 5
+      },
+      "wiki_file": "Silver_Star_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "silver_star.svg"
+    },
+    {
+      "id": "defense_superior_service_medal",
+      "name": "Defense Superior Service Medal",
+      "aliases": [
+        "DSSM",
+        "DEF SUP SVC MDL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 6,
+        "Navy": 6,
+        "Marines": 6,
+        "Air Force": 6,
+        "Coast Guard": 7,
+        "Space Force": 6
+      },
+      "wiki_file": "Defense_Superior_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "defense_superior_service_medal.svg"
+    },
+    {
+      "id": "legion_of_merit",
+      "name": "Legion of Merit",
+      "aliases": [
+        "LOM",
+        "LM",
+        "LEGION OF MERIT",
+        "LEG OF MERIT"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 7,
+        "Navy": 7,
+        "Marines": 7,
+        "Air Force": 7,
+        "Coast Guard": 8,
+        "Space Force": 7
+      },
+      "wiki_file": "Legion_of_Merit_ribbon.svg",
+      "category": "service",
+      "asset_filename": "legion_of_merit.svg"
+    },
+    {
+      "id": "distinguished_flying_cross",
+      "name": "Distinguished Flying Cross",
+      "aliases": [
+        "DFC",
+        "DIST FLY CROSS",
+        "DISTINGUISHED FLYING CROSS"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 8,
+        "Navy": 8,
+        "Marines": 8,
+        "Air Force": 8,
+        "Coast Guard": 9,
+        "Space Force": 8
+      },
+      "wiki_file": "Distinguished_Flying_Cross_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "distinguished_flying_cross.svg"
+    },
+    {
+      "id": "soldiers_medal",
+      "name": "Soldier's Medal",
+      "aliases": [
+        "SM",
+        "SOLDIERS MEDAL",
+        "SOLDIER'S MEDAL"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 9
+      },
+      "wiki_file": "Soldier's_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "soldiers_medal.svg"
+    },
+    {
+      "id": "navy_marine_corps_medal",
+      "name": "Navy and Marine Corps Medal",
+      "aliases": [
+        "NMCM",
+        "NMC MEDAL",
+        "NAVY MARINE CORPS MEDAL"
+      ],
+      "branch": [
+        "Navy",
+        "Marines"
+      ],
+      "precedence": {
+        "Navy": 9,
+        "Marines": 9
+      },
+      "wiki_file": "Navy_and_Marine_Corps_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "navy_and_marine_corps_medal.svg"
+    },
+    {
+      "id": "airman_medal",
+      "name": "Airman's Medal",
+      "aliases": [
+        "AM",
+        "AIRMANS MEDAL",
+        "AIRMAN'S MEDAL"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 9,
+        "Space Force": 9
+      },
+      "wiki_file": "Airman's_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "airmans_medal.svg"
+    },
+    {
+      "id": "coast_guard_medal",
+      "name": "Coast Guard Medal",
+      "aliases": [
+        "CGM",
+        "CG MEDAL"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 10
+      },
+      "wiki_file": "Coast_Guard_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "coast_guard_medal.svg"
+    },
+    {
+      "id": "bronze_star",
+      "name": "Bronze Star Medal",
+      "aliases": [
+        "BSM",
+        "BS",
+        "BRONZE STAR",
+        "BRNZ STR",
+        "BRONZE STAR MEDAL",
+        "BSM W/V"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 10,
+        "Navy": 10,
+        "Marines": 10,
+        "Air Force": 10,
+        "Coast Guard": 11,
+        "Space Force": 10
+      },
+      "wiki_file": "Bronze_Star_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "bronze_star_medal.svg"
+    },
+    {
+      "id": "purple_heart",
+      "name": "Purple Heart",
+      "aliases": [
+        "PH",
+        "PURPLE HEART",
+        "PRPL HRT"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 11,
+        "Navy": 11,
+        "Marines": 11,
+        "Air Force": 11,
+        "Coast Guard": 12,
+        "Space Force": 11
+      },
+      "wiki_file": "Purple_Heart_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "purple_heart.svg"
+    },
+    {
+      "id": "defense_meritorious_service_medal",
+      "name": "Defense Meritorious Service Medal",
+      "aliases": [
+        "DMSM",
+        "DEF MSM"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 12,
+        "Navy": 12,
+        "Marines": 12,
+        "Air Force": 12,
+        "Coast Guard": 13,
+        "Space Force": 12
+      },
+      "wiki_file": "Defense_Meritorious_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "defense_meritorious_service_medal.svg"
+    },
+    {
+      "id": "meritorious_service_medal",
+      "name": "Meritorious Service Medal",
+      "aliases": [
+        "MSM",
+        "MRT SVC MDL",
+        "MERITORIOUS SERVICE MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 13,
+        "Navy": 13,
+        "Marines": 13,
+        "Air Force": 13,
+        "Coast Guard": 14,
+        "Space Force": 13
+      },
+      "wiki_file": "Meritorious_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "meritorious_service_medal.svg"
+    },
+    {
+      "id": "air_medal",
+      "name": "Air Medal",
+      "aliases": [
+        "AM",
+        "AIR MEDAL",
+        "AIR MDL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 14,
+        "Navy": 14,
+        "Marines": 14,
+        "Air Force": 14,
+        "Coast Guard": 15,
+        "Space Force": 14
+      },
+      "wiki_file": "Air_Medal_ribbon.svg",
+      "category": "valor",
+      "asset_filename": "air_medal.svg"
+    },
+    {
+      "id": "joint_service_commendation_medal",
+      "name": "Joint Service Commendation Medal",
+      "aliases": [
+        "JSCM",
+        "JT SVC COM MDL",
+        "JOINT SERVICE COMMENDATION"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 15,
+        "Navy": 15,
+        "Marines": 15,
+        "Air Force": 15,
+        "Coast Guard": 16,
+        "Space Force": 15
+      },
+      "wiki_file": "Joint_Service_Commendation_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "joint_service_commendation_medal.svg"
+    },
+    {
+      "id": "army_commendation_medal",
+      "name": "Army Commendation Medal",
+      "aliases": [
+        "ARCOM",
+        "ACM",
+        "ARMY COM MDL",
+        "ARMY COMMENDATION MEDAL"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 16
+      },
+      "wiki_file": "Army_Commendation_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "army_commendation_medal.svg"
+    },
+    {
+      "id": "navy_marine_corps_commendation_medal",
+      "name": "Navy and Marine Corps Commendation Medal",
+      "aliases": [
+        "NMCCM",
+        "NAV COM MDL",
+        "NAVY COMMENDATION MEDAL",
+        "NAVY COM"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 16,
+        "Marines": 16,
+        "Coast Guard": 17
+      },
+      "wiki_file": "Navy_and_Marine_Corps_Commendation_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_and_marine_corps_commendation_medal.svg"
+    },
+    {
+      "id": "air_force_commendation_medal",
+      "name": "Air Force Commendation Medal",
+      "aliases": [
+        "AFCM",
+        "AF COM MDL",
+        "AIR FORCE COMMENDATION MEDAL"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 16,
+        "Space Force": 16
+      },
+      "wiki_file": "Air_Force_Commendation_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_commendation_medal.svg"
+    },
+    {
+      "id": "coast_guard_commendation_medal",
+      "name": "Coast Guard Commendation Medal",
+      "aliases": [
+        "CGCM",
+        "CG COM MDL"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 18
+      },
+      "wiki_file": "U.S._Coast_Guard_Commendation_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "coast_guard_commendation_medal.svg"
+    },
+    {
+      "id": "joint_service_achievement_medal",
+      "name": "Joint Service Achievement Medal",
+      "aliases": [
+        "JSAM",
+        "JT SVC ACH MDL",
+        "JOINT SERVICE ACHIEVEMENT"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 17,
+        "Navy": 17,
+        "Marines": 17,
+        "Air Force": 17,
+        "Coast Guard": 19,
+        "Space Force": 17
+      },
+      "wiki_file": "Joint_Service_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "joint_service_achievement_medal.svg"
+    },
+    {
+      "id": "army_achievement_medal",
+      "name": "Army Achievement Medal",
+      "aliases": [
+        "AAM",
+        "ARMY ACH MDL",
+        "ARMY ACHIEVEMENT MEDAL"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 18
+      },
+      "wiki_file": "Army_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "army_achievement_medal.svg"
+    },
+    {
+      "id": "navy_marine_corps_achievement_medal",
+      "name": "Navy and Marine Corps Achievement Medal",
+      "aliases": [
+        "NMCAM",
+        "NAV ACH MDL",
+        "NAVY ACHIEVEMENT MEDAL",
+        "NAVY ACH"
+      ],
+      "branch": [
+        "Navy",
+        "Marines"
+      ],
+      "precedence": {
+        "Navy": 18,
+        "Marines": 18
+      },
+      "wiki_file": "Navy_and_Marine_Corps_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_and_marine_corps_achievement_medal.svg"
+    },
+    {
+      "id": "air_force_achievement_medal",
+      "name": "Air Force Achievement Medal",
+      "aliases": [
+        "AFAM",
+        "AF ACH MDL",
+        "AIR FORCE ACHIEVEMENT MEDAL"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 18,
+        "Space Force": 18
+      },
+      "wiki_file": "Air_Force_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_achievement_medal.svg"
+    },
+    {
+      "id": "coast_guard_achievement_medal",
+      "name": "Coast Guard Achievement Medal",
+      "aliases": [
+        "CGAM",
+        "CG ACH MDL"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 20
+      },
+      "wiki_file": "U.S._Coast_Guard_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "coast_guard_achievement_medal.svg"
+    },
+    {
+      "id": "combat_action_ribbon",
+      "name": "Combat Action Ribbon",
+      "aliases": [
+        "CAR",
+        "COMBAT ACTION RIBBON"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 19,
+        "Marines": 19,
+        "Coast Guard": 21
+      },
+      "wiki_file": "Combat_Action_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "combat_action_ribbon.svg"
+    },
+    {
+      "id": "combat_action_badge",
+      "name": "Combat Action Badge",
+      "aliases": [
+        "CAB",
+        "COMBAT ACTION BADGE"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 19
+      },
+      "wiki_file": null,
+      "category": "badge",
+      "asset_filename": null
+    },
+    {
+      "id": "combat_infantryman_badge",
+      "name": "Combat Infantryman Badge",
+      "aliases": [
+        "CIB",
+        "COMBAT INFANTRY BADGE",
+        "COMBAT INFANTRYMAN BADGE"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 20
+      },
+      "wiki_file": null,
+      "category": "badge",
+      "asset_filename": null
+    },
+    {
+      "id": "presidential_unit_citation_army",
+      "name": "Presidential Unit Citation (Army)",
+      "aliases": [
+        "PUC",
+        "PRESIDENTIAL UNIT CITATION"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 25
+      },
+      "wiki_file": "U.S._Army_and_U.S._Air_Force_Presidential_Unit_Citation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "presidential_unit_citation_army.svg"
+    },
+    {
+      "id": "presidential_unit_citation_navy",
+      "name": "Presidential Unit Citation (Navy)",
+      "aliases": [
+        "PUC",
+        "PRESIDENTIAL UNIT CITATION"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 25,
+        "Marines": 25,
+        "Coast Guard": 25
+      },
+      "wiki_file": "United_States_Navy_Presidential_Unit_Citation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "presidential_unit_citation_navy.svg"
+    },
+    {
+      "id": "air_force_presidential_unit_citation",
+      "name": "Air Force Presidential Unit Citation",
+      "aliases": [
+        "PUC",
+        "AF PUC"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 25,
+        "Space Force": 25
+      },
+      "wiki_file": "AF_Presidential_Unit_Citation_Ribbon.png",
+      "category": "unit",
+      "asset_filename": "air_force_presidential_unit_citation.png"
+    },
+    {
+      "id": "valorous_unit_award",
+      "name": "Valorous Unit Award",
+      "aliases": [
+        "VUA",
+        "VALOROUS UNIT AWARD"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 26
+      },
+      "wiki_file": "Valorous_Unit_Award_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "valorous_unit_award.svg"
+    },
+    {
+      "id": "navy_unit_commendation",
+      "name": "Navy Unit Commendation",
+      "aliases": [
+        "NUC",
+        "NAVY UNIT COMMENDATION"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 26,
+        "Marines": 26,
+        "Coast Guard": 26
+      },
+      "wiki_file": "Navy_Unit_Commendation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "navy_unit_commendation.svg"
+    },
+    {
+      "id": "air_force_gallant_unit_citation",
+      "name": "Air Force Gallant Unit Citation",
+      "aliases": [
+        "AFGUC",
+        "GALLANT UNIT CITATION"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 26,
+        "Space Force": 26
+      },
+      "wiki_file": "Gallant_Unit_Citation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "air_force_gallant_unit_citation.svg"
+    },
+    {
+      "id": "meritorious_unit_commendation_army",
+      "name": "Meritorious Unit Commendation (Army)",
+      "aliases": [
+        "MUC",
+        "MERITORIOUS UNIT COMMENDATION"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 27
+      },
+      "wiki_file": "Meritorious_Unit_Commendation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "meritorious_unit_commendation_army.svg"
+    },
+    {
+      "id": "meritorious_unit_commendation_navy",
+      "name": "Meritorious Unit Commendation (Navy)",
+      "aliases": [
+        "MUC",
+        "NAVY MUC"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 27,
+        "Marines": 27,
+        "Coast Guard": 27
+      },
+      "wiki_file": "Meritorious_Unit_Commendation_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "meritorious_unit_commendation_navy.svg"
+    },
+    {
+      "id": "air_force_meritorious_unit_award",
+      "name": "Air Force Meritorious Unit Award",
+      "aliases": [
+        "AFMUA",
+        "AF MUA"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 27,
+        "Space Force": 27
+      },
+      "wiki_file": "Air_Force_Meritorious_Unit_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "air_force_meritorious_unit_award.svg"
+    },
+    {
+      "id": "army_superior_unit_award",
+      "name": "Army Superior Unit Award",
+      "aliases": [
+        "ASUA",
+        "SUP UNIT AWARD"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 28
+      },
+      "wiki_file": "Army_Superior_Unit_Award_ribbon.svg",
+      "category": "unit",
+      "asset_filename": "army_superior_unit_award.svg"
+    },
+    {
+      "id": "prisoner_of_war_medal",
+      "name": "Prisoner of War Medal",
+      "aliases": [
+        "POW",
+        "POW MEDAL",
+        "PRISONER OF WAR MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 30,
+        "Navy": 30,
+        "Marines": 30,
+        "Air Force": 30,
+        "Coast Guard": 30,
+        "Space Force": 30
+      },
+      "wiki_file": "Prisoner_of_War_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "prisoner_of_war_medal.svg"
+    },
+    {
+      "id": "good_conduct_medal_army",
+      "name": "Good Conduct Medal (Army)",
+      "aliases": [
+        "GCM",
+        "GOOD CONDUCT MEDAL",
+        "ARMY GCM"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 31
+      },
+      "wiki_file": "Army_Good_Conduct_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "good_conduct_medal_army.svg"
+    },
+    {
+      "id": "good_conduct_medal_navy",
+      "name": "Good Conduct Medal (Navy)",
+      "aliases": [
+        "GCM",
+        "NAVY GCM"
+      ],
+      "branch": [
+        "Navy"
+      ],
+      "precedence": {
+        "Navy": 31
+      },
+      "wiki_file": "U.S._Navy_Good_Conduct_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "good_conduct_medal_navy.svg"
+    },
+    {
+      "id": "good_conduct_medal_marine",
+      "name": "Good Conduct Medal (Marine Corps)",
+      "aliases": [
+        "GCM",
+        "MARINE GCM"
+      ],
+      "branch": [
+        "Marines"
+      ],
+      "precedence": {
+        "Marines": 31
+      },
+      "wiki_file": "U.S._Marine_Corps_Good_Conduct_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "good_conduct_medal_marine_corps.svg"
+    },
+    {
+      "id": "good_conduct_medal_air_force",
+      "name": "Good Conduct Medal (Air Force)",
+      "aliases": [
+        "GCM",
+        "AF GCM"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 31,
+        "Space Force": 31
+      },
+      "wiki_file": "U.S._Air_Force_Good_Conduct_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "good_conduct_medal_air_force.svg"
+    },
+    {
+      "id": "good_conduct_medal_coast_guard",
+      "name": "Good Conduct Medal (Coast Guard)",
+      "aliases": [
+        "GCM",
+        "CG GCM"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 31
+      },
+      "wiki_file": "U.S._Coast_Guard_Good_Conduct_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "good_conduct_medal_coast_guard.svg"
+    },
+    {
+      "id": "army_reserve_components_achievement_medal",
+      "name": "Army Reserve Components Achievement Medal",
+      "aliases": [
+        "ARCAM",
+        "RESERVE ACHIEVEMENT"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 32
+      },
+      "wiki_file": "Army_Reserve_Components_Achievement_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "army_reserve_components_achievement_medal.svg"
+    },
+    {
+      "id": "naval_reserve_meritorious_service_medal",
+      "name": "Naval Reserve Meritorious Service Medal",
+      "aliases": [
+        "NRMSM"
+      ],
+      "branch": [
+        "Navy",
+        "Marines"
+      ],
+      "precedence": {
+        "Navy": 32,
+        "Marines": 32
+      },
+      "wiki_file": "Naval_Reserve_Meritorious_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "naval_reserve_meritorious_service_medal.svg"
+    },
+    {
+      "id": "selected_marine_corps_reserve_medal",
+      "name": "Selected Marine Corps Reserve Medal",
+      "aliases": [
+        "SMCRM"
+      ],
+      "branch": [
+        "Marines"
+      ],
+      "precedence": {
+        "Marines": 33
+      },
+      "wiki_file": "Selected_Marine_Corps_Reserve_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "selected_marine_corps_reserve_medal.svg"
+    },
+    {
+      "id": "air_reserve_forces_meritorious_service_medal",
+      "name": "Air Reserve Forces Meritorious Service Medal",
+      "aliases": [
+        "ARFMSM"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 32,
+        "Space Force": 32
+      },
+      "wiki_file": "Air_Reserve_Forces_Meritorious_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_reserve_forces_meritorious_service_medal.svg"
+    },
+    {
+      "id": "coast_guard_reserve_good_conduct_medal",
+      "name": "Coast Guard Reserve Good Conduct Medal",
+      "aliases": [
+        "CGRGCM"
+      ],
+      "branch": [
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Coast Guard": 32
+      },
+      "wiki_file": "Coast_Guard_Reserve_Good_Conduct_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "coast_guard_reserve_good_conduct_medal.svg"
+    },
+    {
+      "id": "national_defense_service_medal",
+      "name": "National Defense Service Medal",
+      "aliases": [
+        "NDSM",
+        "NAT DEF SVC MDL",
+        "NATIONAL DEFENSE SERVICE MEDAL",
+        "NAT DEF"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 40,
+        "Navy": 40,
+        "Marines": 40,
+        "Air Force": 40,
+        "Coast Guard": 40,
+        "Space Force": 40
+      },
+      "wiki_file": "National_Defense_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "national_defense_service_medal.svg"
+    },
+    {
+      "id": "afghanistan_campaign_medal",
+      "name": "Afghanistan Campaign Medal",
+      "aliases": [
+        "ACM",
+        "AFGHAN CAMP MDL",
+        "AFGHANISTAN CAMPAIGN MEDAL",
+        "OEF"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 41,
+        "Navy": 41,
+        "Marines": 41,
+        "Air Force": 41,
+        "Coast Guard": 41,
+        "Space Force": 41
+      },
+      "wiki_file": "Afghanistan_Campaign_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "afghanistan_campaign_medal.svg"
+    },
+    {
+      "id": "iraq_campaign_medal",
+      "name": "Iraq Campaign Medal",
+      "aliases": [
+        "ICM",
+        "IRAQ CAMP MDL",
+        "IRAQ CAMPAIGN MEDAL",
+        "OIF",
+        "OND",
+        "OIR"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 42,
+        "Navy": 42,
+        "Marines": 42,
+        "Air Force": 42,
+        "Coast Guard": 42,
+        "Space Force": 42
+      },
+      "wiki_file": "Iraq_Campaign_Medal_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "iraq_campaign_medal.svg"
+    },
+    {
+      "id": "inherent_resolve_campaign_medal",
+      "name": "Inherent Resolve Campaign Medal",
+      "aliases": [
+        "IRCM",
+        "OIR"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 43,
+        "Navy": 43,
+        "Marines": 43,
+        "Air Force": 43,
+        "Coast Guard": 43,
+        "Space Force": 43
+      },
+      "wiki_file": "Inherent_Resolve_Campaign_Medal_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "inherent_resolve_campaign_medal.svg"
+    },
+    {
+      "id": "global_war_on_terrorism_expeditionary_medal",
+      "name": "Global War on Terrorism Expeditionary Medal",
+      "aliases": [
+        "GWOTEM",
+        "GWOT EXP",
+        "GWOT EXPEDITIONARY"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 44,
+        "Navy": 44,
+        "Marines": 44,
+        "Air Force": 44,
+        "Coast Guard": 44,
+        "Space Force": 44
+      },
+      "wiki_file": "Global_War_on_Terrorism_Expeditionary_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "global_war_on_terrorism_expeditionary_medal.svg"
+    },
+    {
+      "id": "global_war_on_terrorism_service_medal",
+      "name": "Global War on Terrorism Service Medal",
+      "aliases": [
+        "GWOTSM",
+        "GWOT SVC",
+        "GWOT SERVICE"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 45,
+        "Navy": 45,
+        "Marines": 45,
+        "Air Force": 45,
+        "Coast Guard": 45,
+        "Space Force": 45
+      },
+      "wiki_file": "Global_War_on_Terrorism_Service_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "global_war_on_terrorism_service_medal.svg"
+    },
+    {
+      "id": "korean_defense_service_medal",
+      "name": "Korean Defense Service Medal",
+      "aliases": [
+        "KDSM",
+        "KOREAN DEFENSE"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 46,
+        "Navy": 46,
+        "Marines": 46,
+        "Air Force": 46,
+        "Coast Guard": 46,
+        "Space Force": 46
+      },
+      "wiki_file": "Korea_Defense_Service_Medal_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "korean_defense_service_medal.svg"
+    },
+    {
+      "id": "armed_forces_expeditionary_medal",
+      "name": "Armed Forces Expeditionary Medal",
+      "aliases": [
+        "AFEM",
+        "ARMED FORCES EXP",
+        "AFE MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 47,
+        "Navy": 47,
+        "Marines": 47,
+        "Air Force": 47,
+        "Coast Guard": 47,
+        "Space Force": 47
+      },
+      "wiki_file": "Armed_Forces_Expeditionary_Medal_ribbon.svg",
+      "category": "campaign",
+      "asset_filename": "armed_forces_expeditionary_medal.svg"
+    },
+    {
+      "id": "armed_forces_service_medal",
+      "name": "Armed Forces Service Medal",
+      "aliases": [
+        "AFSM",
+        "ARMED FORCES SVC",
+        "AFS MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 48,
+        "Navy": 48,
+        "Marines": 48,
+        "Air Force": 48,
+        "Coast Guard": 48,
+        "Space Force": 48
+      },
+      "wiki_file": "Armed_Forces_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "armed_forces_service_medal.svg"
+    },
+    {
+      "id": "humanitarian_service_medal",
+      "name": "Humanitarian Service Medal",
+      "aliases": [
+        "HSM",
+        "HUMANITARIAN SVC",
+        "HUMANITARIAN SERVICE MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 49,
+        "Navy": 49,
+        "Marines": 49,
+        "Air Force": 49,
+        "Coast Guard": 49,
+        "Space Force": 49
+      },
+      "wiki_file": "Humanitarian_Service_ribbon.svg",
+      "category": "service",
+      "asset_filename": "humanitarian_service_medal.svg"
+    },
+    {
+      "id": "military_outstanding_volunteer_service_medal",
+      "name": "Military Outstanding Volunteer Service Medal",
+      "aliases": [
+        "MOVSM",
+        "VOLUNTEER SVC",
+        "VOLUNTEER SERVICE MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 50,
+        "Navy": 50,
+        "Marines": 50,
+        "Air Force": 50,
+        "Coast Guard": 50,
+        "Space Force": 50
+      },
+      "wiki_file": "Military_Outstanding_Volunteer_Service_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "military_outstanding_volunteer_service_medal.svg"
+    },
+    {
+      "id": "armed_forces_reserve_medal",
+      "name": "Armed Forces Reserve Medal",
+      "aliases": [
+        "AFRM",
+        "AF RESERVE MEDAL"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 55,
+        "Navy": 55,
+        "Marines": 55,
+        "Air Force": 55,
+        "Coast Guard": 55,
+        "Space Force": 55
+      },
+      "wiki_file": "Armed_Forces_Reserve_Medal_ribbon.svg",
+      "category": "service",
+      "asset_filename": "armed_forces_reserve_medal.svg"
+    },
+    {
+      "id": "nco_professional_development_ribbon",
+      "name": "NCO Professional Development Ribbon",
+      "aliases": [
+        "NCOPDR",
+        "NCO DEV RIBBON"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 56
+      },
+      "wiki_file": "NCO_Professional_Development_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "nco_professional_development_ribbon.svg"
+    },
+    {
+      "id": "army_service_ribbon",
+      "name": "Army Service Ribbon",
+      "aliases": [
+        "ASR",
+        "ARMY SVC RIBBON"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 57
+      },
+      "wiki_file": "Army_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "army_service_ribbon.svg"
+    },
+    {
+      "id": "navy_sea_service_ribbon",
+      "name": "Navy Sea Service Deployment Ribbon",
+      "aliases": [
+        "SSDR",
+        "SEA SERVICE"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 56,
+        "Marines": 56,
+        "Coast Guard": 56
+      },
+      "wiki_file": "Sea_Service_Deployment_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_sea_service_deployment_ribbon.svg"
+    },
+    {
+      "id": "air_force_overseas_ribbon_short",
+      "name": "Air Force Overseas Ribbon (Short Tour)",
+      "aliases": [
+        "AFOSR SHORT",
+        "AF OVERSEAS SHORT"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 56,
+        "Space Force": 56
+      },
+      "wiki_file": "Air_Force_Overseas_Short_Tour_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_overseas_ribbon_short_tour.svg"
+    },
+    {
+      "id": "air_force_overseas_ribbon_long",
+      "name": "Air Force Overseas Ribbon (Long Tour)",
+      "aliases": [
+        "AFOSR LONG",
+        "AF OVERSEAS LONG"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 57,
+        "Space Force": 57
+      },
+      "wiki_file": "Air_Force_Overseas_Long_Tour_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_overseas_ribbon_long_tour.svg"
+    },
+    {
+      "id": "overseas_service_ribbon_army",
+      "name": "Overseas Service Ribbon (Army)",
+      "aliases": [
+        "OSR",
+        "ARMY OVERSEAS"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 58
+      },
+      "wiki_file": "Army_Overseas_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "overseas_service_ribbon_army.svg"
+    },
+    {
+      "id": "air_force_expeditionary_service_ribbon",
+      "name": "Air Force Expeditionary Service Ribbon",
+      "aliases": [
+        "AFESR",
+        "AF EXP SVC"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 58,
+        "Space Force": 58
+      },
+      "wiki_file": "Air_and_Space_Expeditionary_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_expeditionary_service_ribbon.svg"
+    },
+    {
+      "id": "air_force_longevity_service_award",
+      "name": "Air Force Longevity Service Award",
+      "aliases": [
+        "AFLSA",
+        "LONGEVITY SVC"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 59,
+        "Space Force": 59
+      },
+      "wiki_file": "Air_Force_Longevity_Service_ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_longevity_service_award.svg"
+    },
+    {
+      "id": "navy_arctic_service_ribbon",
+      "name": "Navy Arctic Service Ribbon",
+      "aliases": [
+        "ASR",
+        "ARCTIC SERVICE"
+      ],
+      "branch": [
+        "Navy",
+        "Marines",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Navy": 57,
+        "Marines": 57,
+        "Coast Guard": 57
+      },
+      "wiki_file": "Navy_Arctic_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_arctic_service_ribbon.svg"
+    },
+    {
+      "id": "navy_reserve_sea_service_ribbon",
+      "name": "Navy and Marine Corps Overseas Service Ribbon",
+      "aliases": [
+        "NMCOSR",
+        "OVERSEAS SVC"
+      ],
+      "branch": [
+        "Navy",
+        "Marines"
+      ],
+      "precedence": {
+        "Navy": 58,
+        "Marines": 58
+      },
+      "wiki_file": "Navy_and_Marine_Corps_Overseas_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_and_marine_corps_overseas_service_ribbon.svg"
+    },
+    {
+      "id": "navy_recruiting_service_ribbon",
+      "name": "Navy Recruiting Service Ribbon",
+      "aliases": [
+        "NRSR",
+        "RECRUITING"
+      ],
+      "branch": [
+        "Navy"
+      ],
+      "precedence": {
+        "Navy": 59
+      },
+      "wiki_file": "Navy_Recruiting_Service_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "navy_recruiting_service_ribbon.svg"
+    },
+    {
+      "id": "marine_corps_recruiting_ribbon",
+      "name": "Marine Corps Recruiting Ribbon",
+      "aliases": [
+        "MCRR"
+      ],
+      "branch": [
+        "Marines"
+      ],
+      "precedence": {
+        "Marines": 59
+      },
+      "wiki_file": "Marine_Corps_Recruiting_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "marine_corps_recruiting_ribbon.svg"
+    },
+    {
+      "id": "army_recruiter_badge",
+      "name": "Army Recruiter Badge",
+      "aliases": [
+        "RECRUITER"
+      ],
+      "branch": [
+        "Army"
+      ],
+      "precedence": {
+        "Army": 59
+      },
+      "wiki_file": null,
+      "category": "badge",
+      "asset_filename": null
+    },
+    {
+      "id": "air_force_recruiter_ribbon",
+      "name": "Air Force Recruiter Ribbon",
+      "aliases": [
+        "AFRR"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 60,
+        "Space Force": 60
+      },
+      "wiki_file": "Air_Force_Recruiter_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_recruiter_ribbon.svg"
+    },
+    {
+      "id": "air_force_training_ribbon",
+      "name": "Air Force Training Ribbon",
+      "aliases": [
+        "AFTR",
+        "AF TRAINING"
+      ],
+      "branch": [
+        "Air Force",
+        "Space Force"
+      ],
+      "precedence": {
+        "Air Force": 61,
+        "Space Force": 61
+      },
+      "wiki_file": "Air_and_Space_Training_Ribbon.svg",
+      "category": "service",
+      "asset_filename": "air_force_training_ribbon.svg"
+    },
+    {
+      "id": "nato_medal",
+      "name": "NATO Medal",
+      "aliases": [
+        "NATO",
+        "NATO MEDAL",
+        "NATO SVC"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 70,
+        "Navy": 70,
+        "Marines": 70,
+        "Air Force": 70,
+        "Coast Guard": 70,
+        "Space Force": 70
+      },
+      "wiki_file": "NATO_Medal_Yugoslavia_ribbon_bar.svg",
+      "category": "foreign",
+      "asset_filename": "nato_medal.svg"
+    },
+    {
+      "id": "multinational_force_observers_medal",
+      "name": "Multinational Force and Observers Medal",
+      "aliases": [
+        "MFO",
+        "MULTINATIONAL FORCE"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 71,
+        "Navy": 71,
+        "Marines": 71,
+        "Air Force": 71,
+        "Coast Guard": 71,
+        "Space Force": 71
+      },
+      "wiki_file": "MFO_Ribbon_bar.svg",
+      "category": "foreign",
+      "asset_filename": "multinational_force_and_observers_medal.svg"
+    },
+    {
+      "id": "united_nations_medal",
+      "name": "United Nations Medal",
+      "aliases": [
+        "UN MEDAL",
+        "UNITED NATIONS"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard",
+        "Space Force"
+      ],
+      "precedence": {
+        "Army": 72,
+        "Navy": 72,
+        "Marines": 72,
+        "Air Force": 72,
+        "Coast Guard": 72,
+        "Space Force": 72
+      },
+      "wiki_file": "United_Nations_Medal_ribbon.svg",
+      "category": "foreign",
+      "asset_filename": "united_nations_medal.svg"
+    },
+    {
+      "id": "republic_of_vietnam_campaign_medal",
+      "name": "Republic of Vietnam Campaign Medal",
+      "aliases": [
+        "RVNCM",
+        "RVN CAMPAIGN",
+        "VIETNAM CAMPAIGN"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Army": 73,
+        "Navy": 73,
+        "Marines": 73,
+        "Air Force": 73,
+        "Coast Guard": 73
+      },
+      "wiki_file": "Republic_of_Vietnam_Campaign_Medal_ribbon,_with_60-_clasp.svg",
+      "category": "foreign",
+      "asset_filename": "republic_of_vietnam_campaign_medal.svg"
+    },
+    {
+      "id": "kuwait_liberation_medal_saudi",
+      "name": "Kuwait Liberation Medal (Saudi Arabia)",
+      "aliases": [
+        "KLM SAUDI",
+        "KUWAIT LIB SAUDI"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Army": 74,
+        "Navy": 74,
+        "Marines": 74,
+        "Air Force": 74,
+        "Coast Guard": 74
+      },
+      "wiki_file": "Kuwait_Liberation_Medal_(Saudi_Arabia)_ribbon.svg",
+      "category": "foreign",
+      "asset_filename": "kuwait_liberation_medal_saudi_arabia.svg"
+    },
+    {
+      "id": "kuwait_liberation_medal_kuwait",
+      "name": "Kuwait Liberation Medal (Kuwait)",
+      "aliases": [
+        "KLM KUWAIT",
+        "KUWAIT LIB KUWAIT"
+      ],
+      "branch": [
+        "Army",
+        "Navy",
+        "Marines",
+        "Air Force",
+        "Coast Guard"
+      ],
+      "precedence": {
+        "Army": 75,
+        "Navy": 75,
+        "Marines": 75,
+        "Air Force": 75,
+        "Coast Guard": 75
+      },
+      "wiki_file": "Kuwait_Liberation_Medal_(Kuwait)_ribbon.svg",
+      "category": "foreign",
+      "asset_filename": "kuwait_liberation_medal_kuwait.svg"
+    }
+  ],
+  "devices": [
+    {
+      "id": "bronze_star_device",
+      "name": "Bronze Service Star",
+      "aliases": [
+        "*",
+        "BRONZE STAR",
+        "BSS"
+      ],
+      "wiki_file": "Bronze-service-star-3d.png",
+      "represents": "additional_award",
+      "asset_filename": "bronze_service_star.png"
+    },
+    {
+      "id": "silver_star_device",
+      "name": "Silver Service Star",
+      "aliases": [
+        "SILVER STAR DEVICE",
+        "SSS"
+      ],
+      "wiki_file": "Silver-service-star-3d.png",
+      "represents": "5_bronze_stars",
+      "asset_filename": "silver_service_star.png"
+    },
+    {
+      "id": "gold_star_device",
+      "name": "Gold Service Star",
+      "aliases": [
+        "GOLD STAR DEVICE",
+        "GSS"
+      ],
+      "wiki_file": "Gold-service-star.png",
+      "represents": "5_silver_stars",
+      "asset_filename": "gold_service_star.png"
+    },
+    {
+      "id": "bronze_oak_leaf_cluster",
+      "name": "Bronze Oak Leaf Cluster",
+      "aliases": [
+        "OLC",
+        "BRONZE OLC",
+        "BOLC"
+      ],
+      "wiki_file": "Bronze_oak_leaf-3d.svg",
+      "represents": "additional_award_army_af",
+      "asset_filename": "bronze_oak_leaf_cluster.svg"
+    },
+    {
+      "id": "silver_oak_leaf_cluster",
+      "name": "Silver Oak Leaf Cluster",
+      "aliases": [
+        "SILVER OLC",
+        "SOLC"
+      ],
+      "wiki_file": "Silver_oakleaf-3d.svg",
+      "represents": "5_bronze_olc",
+      "asset_filename": "silver_oak_leaf_cluster.svg"
+    },
+    {
+      "id": "v_device",
+      "name": "V Device (Valor)",
+      "aliases": [
+        "V",
+        "W/V",
+        "WITH V",
+        "V DEVICE",
+        "VALOR"
+      ],
+      "wiki_file": "\"V\"_device,_brass.svg",
+      "represents": "valor_in_combat",
+      "asset_filename": "v_device_valor.svg"
+    },
+    {
+      "id": "c_device",
+      "name": "C Device (Combat)",
+      "aliases": [
+        "C",
+        "W/C",
+        "COMBAT DISTINGUISHING DEVICE"
+      ],
+      "wiki_file": "Combat_Distinguishing_Device.png",
+      "represents": "combat_conditions",
+      "asset_filename": "c_device_combat.png"
+    },
+    {
+      "id": "r_device",
+      "name": "R Device (Remote)",
+      "aliases": [
+        "R",
+        "W/R",
+        "REMOTE"
+      ],
+      "wiki_file": "Ribbon_Device_R_Bronze.png",
+      "represents": "remote_impact",
+      "asset_filename": "r_device_remote.png"
+    },
+    {
+      "id": "arrowhead_device",
+      "name": "Arrowhead Device",
+      "aliases": [
+        "ARROWHEAD",
+        "ARROW"
+      ],
+      "wiki_file": "Arrowhead_device.svg",
+      "represents": "combat_assault",
+      "asset_filename": "arrowhead_device.svg"
+    },
+    {
+      "id": "hourglass_device",
+      "name": "Hourglass Device",
+      "aliases": [
+        "HOURGLASS",
+        "10 YEARS"
+      ],
+      "wiki_file": "Hourglass_Device_Bronze.svg",
+      "represents": "10_years_reserve",
+      "asset_filename": "hourglass_device.svg"
+    },
+    {
+      "id": "numeral_device",
+      "name": "Numeral Device",
+      "aliases": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "NUMERAL"
+      ],
+      "wiki_file": "Award_numeral_2.svg",
+      "represents": "multiple_awards",
+      "asset_filename": "numeral_device.svg"
+    }
+  ],
+  "precedence_rules": {
+    "Army": "AR 670-1",
+    "Navy": "NAVPERS 15665I",
+    "Marines": "MCO 1020.34H",
+    "Air Force": "DAFI 36-2903",
+    "Space Force": "DAFI 36-2903",
+    "Coast Guard": "COMDTINST M1020.6K"
+  },
+  "branches": [
+    "Army",
+    "Navy",
+    "Marines",
+    "Air Force",
+    "Coast Guard",
+    "Space Force"
+  ]
+}

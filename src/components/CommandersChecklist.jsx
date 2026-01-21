@@ -22,7 +22,10 @@ const TOOL_LINKS = {
   nexus: 'nexus-builder',
   secondary: 'secondary-scout',
   ratings: 'tactical-calculator',
-  forms: 'forms-helper'
+  forms: 'forms-helper',
+  // ClaimNavigator integration
+  claim_navigator_used: 'claim-navigator',
+  claim_tracked: 'claim-navigator'
 };
 
 export default function CommandersChecklist({ isWidget = false, isEmbedded = false, onClose = null, onToolSelect = null }) {

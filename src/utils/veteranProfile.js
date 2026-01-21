@@ -7,20 +7,59 @@
  * Veteran Profile Storage Utility
  * Stores common form fields locally so veterans only have to enter info once.
  * All data stays on user's device - 100% client-side, never sent to servers.
+ * 
+ * Now integrates with persistentStorage for crash-proof auto-saving
  */
+
+import { markAsModified } from './persistentStorage';
 
 const PROFILE_KEY = 'vet_rate_veteran_profile';
 const SAVED_FORMS_KEY = 'vet_rate_saved_forms';
 const RATINGS_KEY = 'vet_rate_my_ratings';
 
-// Valid profile fields for security
+// Valid profile fields for security - covers all common VA form fields
 const VALID_PROFILE_FIELDS = [
-  'firstName', 'middleInitial', 'lastName', 'suffix',
-  'ssn', 'vaFileNumber', 'serviceNumber',
-  'dob', 'email', 'phone', 'intlPhone',
+  // === Personal Identification ===
+  'firstName', 'middleInitial', 'lastName', 'suffix', 'fullName',
+  'ssn', 'ssnLast4', 'vaFileNumber', 'serviceNumber',
+  'dob', 'placeOfBirth', 'gender', 'maritalStatus',
+  
+  // === Contact Information ===
+  'email', 'phone', 'intlPhone', 'alternatePhone',
   'street', 'apt', 'city', 'state', 'zip', 'country',
-  'branch', 'rankAtDischarge', 'serviceStartDate', 'serviceEndDate',
-  'lastUpdated'
+  'mailingStreet', 'mailingCity', 'mailingState', 'mailingZip', 'mailingCountry',
+  'homeOfRecord',
+  
+  // === Military Service Information ===
+  'branch', 'component', 'rankAtDischarge', 'payGrade',
+  'serviceStartDate', 'serviceEndDate', 'totalServiceYears', 'totalServiceMonths',
+  'mos', 'mosTitle', 'primarySpecialty',
+  'characterOfService', 'separationType', 'dischargeType',
+  'foreignService', 'combatService', 'reenlisted',
+  
+  // Service Periods Array - for multiple enlistments
+  'servicePeriods', // Array of service period objects
+  
+  // === Dependent Information (for benefits) ===
+  'spouseName', 'spouseDob', 'spouseSsn', 'marriageDate',
+  'numberOfDependents', 'dependentChildren',
+  
+  // === VA Claim Information ===
+  'currentCombinedRating', 'effectiveDate', 'claimNumber',
+  'vaRepresentative', 'vsoOrganization',
+  
+  // === Employment Information ===
+  'employmentStatus', 'lastEmployer', 'lastEmploymentDate',
+  'occupation', 'annualIncome',
+  
+  // === Banking Information (for direct deposit) ===
+  'bankName', 'routingNumber', 'accountNumber', 'accountType',
+  
+  // === Emergency Contact ===
+  'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship',
+  
+  // === Metadata ===
+  'lastUpdated', 'profileVersion'
 ];
 
 // Max lengths for security
@@ -76,6 +115,10 @@ export const saveVeteranProfile = (profile) => {
     sanitizedProfile.lastUpdated = new Date().toISOString();
     
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitizedProfile));
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
+    
     return true;
   } catch (error) {
     console.error('Error saving veteran profile:', error);
@@ -126,6 +169,134 @@ export const getFullName = () => {
   const parts = [profile.firstName, profile.middleInitial, profile.lastName, profile.suffix].filter(Boolean);
   return parts.join(' ');
 };
+
+// ============================================================================
+// SERVICE PERIODS MANAGEMENT (for multiple enlistments)
+// ============================================================================
+
+/**
+ * Get all service periods from profile
+ * @returns {Array} Array of service period objects
+ */
+export const getServicePeriods = () => {
+  const profile = getVeteranProfile();
+  return Array.isArray(profile.servicePeriods) ? profile.servicePeriods : [];
+};
+
+/**
+ * Add a new service period to the profile
+ * @param {Object} servicePeriod - The service period to add
+ * @returns {boolean} Success status
+ */
+export const addServicePeriod = (servicePeriod) => {
+  const currentProfile = getVeteranProfile();
+  const periods = Array.isArray(currentProfile.servicePeriods) ? currentProfile.servicePeriods : [];
+  
+  // Create new period with ID
+  const newPeriod = {
+    id: Date.now().toString(),
+    branch: sanitizeString(servicePeriod.branch || ''),
+    component: sanitizeString(servicePeriod.component || ''), // Active, Guard, Reserve
+    serviceStartDate: servicePeriod.serviceStartDate || '',
+    serviceEndDate: servicePeriod.serviceEndDate || '',
+    characterOfService: sanitizeString(servicePeriod.characterOfService || ''),
+    mos: sanitizeString(servicePeriod.mos || ''),
+    rankAtDischarge: sanitizeString(servicePeriod.rankAtDischarge || ''),
+    formType: sanitizeString(servicePeriod.formType || 'DD214'), // DD214, NGB22, DD256, etc.
+    notes: sanitizeString(servicePeriod.notes || ''),
+    addedDate: new Date().toISOString(),
+  };
+  
+  periods.push(newPeriod);
+  return saveVeteranProfile({ ...currentProfile, servicePeriods: periods });
+};
+
+/**
+ * Update a service period
+ * @param {string} periodId - ID of the period to update
+ * @param {Object} updates - Fields to update
+ * @returns {boolean} Success status
+ */
+export const updateServicePeriod = (periodId, updates) => {
+  const currentProfile = getVeteranProfile();
+  const periods = Array.isArray(currentProfile.servicePeriods) ? currentProfile.servicePeriods : [];
+  
+  const periodIndex = periods.findIndex(p => p.id === periodId);
+  if (periodIndex === -1) return false;
+  
+  periods[periodIndex] = { ...periods[periodIndex], ...updates };
+  return saveVeteranProfile({ ...currentProfile, servicePeriods: periods });
+};
+
+/**
+ * Delete a service period
+ * @param {string} periodId - ID of the period to delete
+ * @returns {boolean} Success status
+ */
+export const deleteServicePeriod = (periodId) => {
+  const currentProfile = getVeteranProfile();
+  const periods = Array.isArray(currentProfile.servicePeriods) ? currentProfile.servicePeriods : [];
+  
+  const filteredPeriods = periods.filter(p => p.id !== periodId);
+  return saveVeteranProfile({ ...currentProfile, servicePeriods: filteredPeriods });
+};
+
+/**
+ * Get total service time across all periods
+ * @returns {Object} {years: number, months: number}
+ */
+export const getTotalServiceTime = () => {
+  const periods = getServicePeriods();
+  let totalMonths = 0;
+  
+  periods.forEach(period => {
+    if (period.serviceStartDate && period.serviceEndDate) {
+      const start = new Date(period.serviceStartDate);
+      const end = new Date(period.serviceEndDate);
+      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      totalMonths += months;
+    }
+  });
+  
+  return {
+    years: Math.floor(totalMonths / 12),
+    months: totalMonths % 12,
+    totalMonths
+  };
+};
+
+/**
+ * Migrate old single service period to array format
+ * @returns {boolean} Success status
+ */
+export const migrateToServicePeriods = () => {
+  const profile = getVeteranProfile();
+  
+  // If already has servicePeriods array, skip migration
+  if (Array.isArray(profile.servicePeriods) && profile.servicePeriods.length > 0) {
+    return true;
+  }
+  
+  // If has old single period fields, migrate them
+  if (profile.serviceStartDate || profile.branch) {
+    const oldPeriod = {
+      branch: profile.branch || '',
+      component: profile.component || 'Active',
+      serviceStartDate: profile.serviceStartDate || '',
+      serviceEndDate: profile.serviceEndDate || '',
+      characterOfService: profile.characterOfService || '',
+      mos: profile.mos || '',
+      rankAtDischarge: profile.rankAtDischarge || '',
+      formType: 'DD214',
+      notes: 'Migrated from legacy profile',
+    };
+    
+    return addServicePeriod(oldPeriod);
+  }
+  
+  return true;
+};
+
 
 // ============================================================================
 // SAVED FORMS MANAGEMENT
@@ -184,6 +355,9 @@ export const saveForm = (form) => {
     
     forms.push(newForm);
     localStorage.setItem(SAVED_FORMS_KEY, JSON.stringify(forms));
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
     
     return newForm.id;
   } catch (error) {
@@ -748,6 +922,8 @@ export const removeAward = (awardId) => {
 
 /**
  * Save DD214 extracted data
+ * Includes sensitive PII fields for form autofill (SSN, service number, etc.)
+ * ⚠️ SECURITY: All data is stored LOCALLY ONLY using encrypted localStorage
  * @param {Object} dd214Data - Extracted DD214 information
  * @returns {boolean} Success status
  */
@@ -755,6 +931,16 @@ export const saveDD214Data = (dd214Data) => {
   try {
     const history = getServiceHistory();
     history.dd214Data = {
+      // === Personal Identification (SENSITIVE) ===
+      fullName: sanitizeString(dd214Data.fullName || '', 200),
+      ssnLast4: sanitizeString(dd214Data.ssnLast4 || '', 4), // Only last 4 digits
+      ssnFull: sanitizeString(dd214Data.ssnFull || '', 11), // Full SSN if user opts in
+      serviceNumber: sanitizeString(dd214Data.serviceNumber || '', 50),
+      dateOfBirth: dd214Data.dateOfBirth || null,
+      placeOfBirth: sanitizeString(dd214Data.placeOfBirth || '', 200),
+      homeOfRecord: sanitizeString(dd214Data.homeOfRecord || '', 300),
+      
+      // === Service Information ===
       branch: sanitizeString(dd214Data.branch || '', 100),
       mos: sanitizeString(dd214Data.mos || '', 200),
       mosTitle: sanitizeString(dd214Data.mosTitle || '', 200),
@@ -766,8 +952,17 @@ export const saveDD214Data = (dd214Data) => {
       characterOfService: sanitizeString(dd214Data.characterOfService || '', 100),
       reenlisted: !!dd214Data.reenlisted,
       foreignService: !!dd214Data.foreignService,
+      
+      // === Additional Fields for Forms ===
+      rank: sanitizeString(dd214Data.rank || '', 100),
+      payGrade: sanitizeString(dd214Data.payGrade || '', 10),
+      primarySpecialty: sanitizeString(dd214Data.primarySpecialty || '', 200),
+      totalActiveDutyDays: dd214Data.totalActiveDutyDays || null,
+      
+      // === Metadata ===
       extractedText: sanitizeString(dd214Data.extractedText || '', 10000),
-      dateProcessed: new Date().toISOString()
+      dateProcessed: new Date().toISOString(),
+      sensitiveDataStored: !!(dd214Data.ssnFull || dd214Data.serviceNumber) // Flag if PII present
     };
     return saveServiceHistory(history);
   } catch (error) {

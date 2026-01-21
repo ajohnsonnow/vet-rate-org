@@ -314,6 +314,7 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
       <div className="mb-6 pr-12">
         <h2 className="text-2xl font-bold text-red-400 mb-2 flex items-center gap-2">
           ⚔️ The War Game - Red Team Simulator
+          <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">AI</span>
         </h2>
         <p className="text-gray-300 text-sm">
           Stress-test your claim. See the tough questions <span className="font-bold">before</span> the C&P examiner asks them.
@@ -331,6 +332,22 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
           Better to panic now in the safety of this app than freeze up in the exam room.
         </p>
       </div>
+
+      {/* AI Required Warning */}
+      {!isAnyAIAvailable() && (
+        <div className="bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💡</span>
+            <div>
+              <h3 className="font-bold text-amber-300">AI Required for Analysis</h3>
+              <p className="text-amber-200 text-sm mt-1">
+                Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                (100% private) or enter your Gemini API key.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input Section */}
       {!testResults && (

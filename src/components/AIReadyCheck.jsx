@@ -5,16 +5,22 @@
  * 
  * Checks if AI (Local or Cloud) is available before running AI tools.
  * Provides helpful UI to guide users to set up AI if not ready.
+ * 
+ * Now with Device-Aware recommendations based on user analytics:
+ * - Android 10 users (20% of traffic) get Cloud AI recommendation
+ * - Modern iOS/Android users get Local AI recommendation
  */
 
 import React, { useState, useEffect } from 'react';
 import { 
   isAnyAIAvailable, 
   isLocalAIReady, 
+  isLocalAIInitializing,
   isCloudAIAvailable, 
   getAIStatus, 
   AI_MODES 
 } from '../utils/unifiedAIService';
+import { useDeviceCapability, DEVICE_TIERS } from '../utils/useDeviceCapability';
 import { AIStatusBadge } from './AIModeSelector';
 
 const AlertIcon = () => (
@@ -89,6 +95,7 @@ export const AICurrentBadge = ({ className = '' }) => {
 /**
  * AI Ready Check Component
  * Shows warning if no AI is available with links to set it up
+ * Now with device-aware recommendations
  */
 export default function AIReadyCheck({ 
   onOpenFaradayCage, 
@@ -98,16 +105,41 @@ export default function AIReadyCheck({
 }) {
   const [aiReady, setAiReady] = useState(isAnyAIAvailable());
   const [localReady, setLocalReady] = useState(isLocalAIReady());
+  const [localInitializing, setLocalInitializing] = useState(isLocalAIInitializing());
   const [cloudReady, setCloudReady] = useState(isCloudAIAvailable());
+  
+  // Device capability detection for smart AI recommendations
+  const deviceCapability = useDeviceCapability();
 
   useEffect(() => {
     const interval = setInterval(() => {
       setAiReady(isAnyAIAvailable());
       setLocalReady(isLocalAIReady());
+      setLocalInitializing(isLocalAIInitializing());
       setCloudReady(isCloudAIAvailable());
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // If Local AI is warming up, show loading state
+  if (localInitializing) {
+    return (
+      <div className={`bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4 ${className}`}>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl animate-pulse">⏳</span>
+          <div className="flex-1">
+            <h3 className="font-semibold text-cyan-800 dark:text-cyan-200">Local AI Warming Up...</h3>
+            {!compact && (
+              <p className="text-sm text-cyan-700 dark:text-cyan-300">
+                The Neural Engine is loading. Please wait before sending messages.
+              </p>
+            )}
+          </div>
+          <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   // If AI is ready, show success state
   if (aiReady) {
@@ -135,7 +167,7 @@ export default function AIReadyCheck({
     );
   }
 
-  // If no AI is ready, show warning with setup options
+  // If no AI is ready, show warning with setup options (device-aware)
   return (
     <div className={`bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 ${className}`}>
       <div className="flex items-start gap-3">
@@ -149,42 +181,96 @@ export default function AIReadyCheck({
           </p>
 
           <div className="grid md:grid-cols-2 gap-3">
-            {/* Local AI Option */}
+            {/* Local AI Option - Device Aware */}
             <button
-              onClick={onOpenFaradayCage}
-              className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 transition-all group"
+              onClick={deviceCapability.advice?.localAI.buttonDisabled ? undefined : onOpenFaradayCage}
+              disabled={deviceCapability.advice?.localAI.buttonDisabled}
+              className={`flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 transition-all group relative ${
+                deviceCapability.advice?.localAI.buttonDisabled
+                  ? 'border-gray-300 dark:border-gray-700 opacity-60 cursor-not-allowed'
+                  : deviceCapability.advice?.localAI.recommended
+                    ? 'border-green-400 dark:border-green-600 ring-2 ring-green-200 dark:ring-green-900'
+                    : 'border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600'
+              }`}
             >
-              <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/60 transition-colors">
+              {/* Recommendation Badge */}
+              {deviceCapability.advice?.localAI.badge && (
+                <span className={`absolute -top-2 -right-2 px-2 py-0.5 text-xs font-bold rounded-full ${
+                  deviceCapability.advice?.localAI.recommended
+                    ? 'bg-green-500 text-white'
+                    : deviceCapability.isUnsupported
+                      ? 'bg-red-500 text-white'
+                      : 'bg-amber-500 text-white'
+                }`}>
+                  {deviceCapability.advice?.localAI.badge}
+                </span>
+              )}
+              
+              <div className={`p-2 rounded-lg transition-colors ${
+                deviceCapability.advice?.localAI.buttonDisabled
+                  ? 'bg-gray-100 dark:bg-gray-700'
+                  : 'bg-green-100 dark:bg-green-900/40 group-hover:bg-green-200 dark:group-hover:bg-green-800/60'
+              }`}>
                 <LockIcon />
               </div>
               <div className="text-left flex-1">
                 <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  🔒 Local AI (Recommended)
+                  {deviceCapability.advice?.localAI.label || '🔒 Local AI'}
                 </h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  100% private, runs on your device. Download once, use forever offline.
+                  {deviceCapability.advice?.localAI.description || '100% private, runs on your device.'}
                 </p>
+                {/* Warning message for legacy/unsupported devices */}
+                {deviceCapability.advice?.localAI.warning && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                    {deviceCapability.advice.localAI.warning}
+                  </p>
+                )}
+                {/* Battery warning for mobile */}
+                {deviceCapability.advice?.batteryWarning && !deviceCapability.isUnsupported && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic">
+                    📱 Note: Heavy battery usage on mobile
+                  </p>
+                )}
               </div>
             </button>
 
-            {/* Cloud AI Option */}
+            {/* Cloud AI Option - Device Aware */}
             <button
               onClick={onOpenCloudAISettings}
-              className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all group"
+              className={`flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 transition-all group relative ${
+                deviceCapability.advice?.cloudAI.recommended
+                  ? 'border-blue-400 dark:border-blue-600 ring-2 ring-blue-200 dark:ring-blue-900'
+                  : 'border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600'
+              }`}
             >
+              {/* Recommendation Badge */}
+              {deviceCapability.advice?.cloudAI.badge && (
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-xs font-bold rounded-full bg-blue-500 text-white">
+                  {deviceCapability.advice?.cloudAI.badge}
+                </span>
+              )}
+              
               <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/60 transition-colors">
                 <SparklesIcon />
               </div>
               <div className="text-left flex-1">
                 <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  ☁️ Cloud AI (Faster)
+                  ☁️ Cloud AI (Gemini)
                 </h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Requires free Google Gemini API key. Data sent to Google.
+                  {deviceCapability.advice?.cloudAI.description || 'Requires free Google Gemini API key. Data sent to Google.'}
                 </p>
               </div>
             </button>
           </div>
+          
+          {/* Data saver warning */}
+          {deviceCapability.advice?.dataSaverWarning && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 text-center">
+              📶 Data Saver mode detected. Local AI requires downloading 0.7-4GB. Consider using Wi-Fi or Cloud AI.
+            </p>
+          )}
         </div>
       </div>
     </div>

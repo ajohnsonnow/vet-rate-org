@@ -18,14 +18,18 @@
  * 6. Text quality (no em-dash/en-dash, proper formatting)
  * 7. Dead code detection (unused exports, components)
  * 8. Glossary completeness (VA terms coverage)
- * 9. Link validation (internal links work)
- * 10. Archive check (files that should be archived)
+ * 9. Glossary sync (User Manual matches vaGlossary.js)
+ * 10. Link validation (internal links work)
+ * 11. Archive check (files that should be archived)
+ * 12. BuyMeCoffee integration check (funding verbiage)
+ * 13. Feature documentation check (new features documented)
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
+import { syncGlossary } from './sync-glossary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -398,9 +402,130 @@ function checkGlossary() {
   checks.add('Glossary', hasEnoughTerms && hasEssentials);
 }
 
-// 8. Squashed Bugs Counter
+// 8. Glossary Sync (User Manual matches vaGlossary.js)
+function checkGlossarySync() {
+  logSection('8. User Manual Glossary Sync');
+  
+  // Auto-sync glossary (always write to keep up-to-date)
+  log('   🔄 Auto-syncing glossary from vaGlossary.js...', 'blue');
+  
+  try {
+    const result = syncGlossary(true); // Always write on pre-deploy
+    
+    if (result.success) {
+      if (result.changed) {
+        logResult(`Glossary synced to User Manual`, true, `Updated: ${result.sourceTerms} source → ${result.manualTerms} manual terms`);
+      } else {
+        logResult(`Glossary already synced (${result.manualTerms} terms)`, true);
+      }
+      checks.add('Glossary sync', true);
+    } else {
+      logResult(`Glossary sync failed`, false, result.error);
+      checks.add('Glossary sync', false);
+    }
+  } catch (error) {
+    logResult(`Glossary sync failed`, false, error.message);
+    checks.add('Glossary sync', false);
+  }
+}
+
+// 9. BuyMeCoffee Integration Check
+function checkBuyMeCoffeeIntegration() {
+  logSection('9. BuyMeCoffee Integration');
+  
+  // Check dynamicCopy.json for BuyMeCoffee content
+  const dynamicCopy = readFile('src/data/dynamicCopy.json');
+  if (!dynamicCopy) {
+    logResult(`dynamicCopy.json exists`, false);
+    checks.add('BuyMeCoffee', false);
+    return;
+  }
+  
+  const hasBuyMeCoffeeSection = dynamicCopy.includes('"buyMeACoffee"');
+  logResult(`BuyMeCoffee copy exists`, hasBuyMeCoffeeSection);
+  
+  // Check key components integrate BuyMeCoffee
+  const buyMeCoffeeIntegrations = [
+    { file: 'src/App.jsx', name: 'App.jsx' },
+    { file: 'src/components/CAPSimulator.jsx', name: 'C&P Simulator' },
+    { file: 'src/components/BlueButtonXRay.jsx', name: 'Blue Button X-Ray' },
+    { file: 'src/components/DbqBrowser.jsx', name: 'DBQ Browser' },
+  ];
+  
+  let integrationCount = 0;
+  for (const integration of buyMeCoffeeIntegrations) {
+    const content = readFile(integration.file);
+    if (content?.includes('BuyMeCoffee')) {
+      integrationCount++;
+    } else {
+      logWarning(`${integration.name} missing BuyMeCoffee integration`);
+    }
+  }
+  
+  logResult(`BuyMeCoffee integrated in ${integrationCount}/${buyMeCoffeeIntegrations.length} key components`, integrationCount >= 3);
+  
+  // Check for funding verbiage variations
+  const fundingTerms = ['Buy Me a Coffee', 'Support', 'Donate', 'Pay It Forward', 'Help Keep It Free'];
+  const hasFundingVariety = fundingTerms.filter(term => dynamicCopy.includes(term)).length >= 3;
+  logResult(`Funding verbiage variety`, hasFundingVariety);
+  
+  checks.add('BuyMeCoffee', hasBuyMeCoffeeSection && integrationCount >= 3);
+}
+
+// 10. Feature Documentation Check (new features documented)
+function checkFeatureDocumentation() {
+  logSection('10. Feature Documentation Sync');
+  
+  // Get list of major components
+  const componentsDir = path.join(rootDir, 'src', 'components');
+  const componentFiles = fs.readdirSync(componentsDir).filter(f => f.endsWith('.jsx'));
+  
+  // Key new features that should be documented in User Manual
+  const keyFeatures = [
+    { component: 'DbqBrowser.jsx', docId: 'dbq', name: 'DBQ Library' },
+    { component: 'WorkflowGuide.jsx', docId: 'workflow', name: 'Workflow Guide' },
+    { component: 'BackupManager.jsx', docId: 'bunker', name: 'The Bunker' },
+    { component: 'CloudSyncManager.jsx', docId: 'cloud', name: 'Cloud Sync' },
+    { component: 'VAResourcesHub.jsx', docId: 'va-resources', name: 'VA Resources' },
+  ];
+  
+  const userManual = readFile('src/components/UserManual.jsx');
+  const readme = readFile('README.md');
+  
+  let documented = 0;
+  let missing = [];
+  
+  for (const feature of keyFeatures) {
+    const componentExists = componentFiles.includes(feature.component);
+    if (!componentExists) continue;
+    
+    // Check if documented in User Manual (by looking for section or reference)
+    const inManual = userManual?.includes(feature.docId) || userManual?.toLowerCase().includes(feature.name.toLowerCase());
+    
+    if (inManual) {
+      documented++;
+    } else {
+      missing.push(feature.name);
+    }
+  }
+  
+  logResult(`${documented}/${keyFeatures.length} key features documented in User Manual`, documented >= keyFeatures.length - 1);
+  
+  if (missing.length > 0) {
+    logWarning(`Features needing documentation: ${missing.join(', ')}`);
+  }
+  
+  // Check README references key tools
+  const readmeToolRefs = ['Secondary Scout', 'C&P Exam Simulator', 'Tactical Calculator', 'The Bunker'];
+  const readmeDocumented = readmeToolRefs.filter(tool => readme?.includes(tool)).length;
+  logResult(`README documents ${readmeDocumented}/${readmeToolRefs.length} key tools`, readmeDocumented >= 3);
+  
+  checks.add('Feature docs', documented >= keyFeatures.length - 1);
+}
+
+// 11. Squashed Bugs Counter
 function checkBugsSquashed() {
-  logSection('8. Bug Tracker');
+  logSection('11. Bug Tracker');
   
   const squashedBugs = readFile('src/data/squashedBugs.js');
   if (!squashedBugs) {
@@ -422,9 +547,9 @@ function checkBugsSquashed() {
   checks.add('Bug tracker', bugCount > 0 && usesCounter);
 }
 
-// 9. Archive Candidates
+// 12. Archive Candidates
 function checkArchiveCandidates() {
-  logSection('9. Archive Candidates');
+  logSection('12. Archive Candidates');
   
   // Check for .md files in root that might need archiving
   const rootFiles = fs.readdirSync(rootDir);
@@ -451,9 +576,9 @@ function checkArchiveCandidates() {
   checks.add('Archive check', potentialArchive.length === 0);
 }
 
-// 10. Component Exports Check
+// 13. Component Exports Check
 function checkComponentExports() {
-  logSection('10. Component Health');
+  logSection('13. Component Health');
   
   const componentsDir = path.join(rootDir, 'src', 'components');
   const componentFiles = fs.readdirSync(componentsDir).filter(f => f.endsWith('.jsx'));
@@ -481,7 +606,7 @@ async function main() {
   
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
-  console.log('        Vet-Rate.org Comprehensive Check');
+  console.log('        Vet-Rate.org Comprehensive Check (13 checks)');
   console.log('═══════════════════════════════════════════════════════════════');
   console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
   console.log(`📁 Project: ${rootDir}`);
@@ -499,6 +624,9 @@ async function main() {
   checkLegalPages();
   checkDocumentation();
   checkGlossary();
+  checkGlossarySync();         // NEW: Auto-sync glossary to User Manual
+  checkBuyMeCoffeeIntegration(); // NEW: Check funding verbiage integration
+  checkFeatureDocumentation();  // NEW: Ensure new features are documented
   checkBugsSquashed();
   checkArchiveCandidates();
   checkComponentExports();
@@ -546,12 +674,43 @@ async function main() {
     log(`\n📄 Report saved to: pre-deploy-report.json`, 'blue');
   }
   
-  console.log('\n📋 MANUAL CHECKS STILL NEEDED:');
-  console.log('   1. Visual review in browser (npm run dev)');
-  console.log('   2. Test key user flows (search, calculator, etc.)');
-  console.log('   3. Mobile responsive check');
-  console.log('   4. Review What\'s New modal content');
-  console.log('   5. Verify BuyMeCoffee integration messaging');
+  console.log('\n📋 MANUAL CHECKS STILL NEEDED (see DEPLOYMENT.md for full list):');
+  console.log('─'.repeat(60));
+  
+  console.log('\n   🖥️  VISUAL REVIEW:');
+  console.log('   • npm run dev - review in browser');
+  console.log('   • Mobile responsive (Chrome DevTools)');
+  console.log('   • Dark mode + Accessibility menu');
+  
+  console.log('\n   🔍 CORE FEATURES (39 tools):');
+  console.log('   • Search, Secondary Scout, C&P Simulator, Pathfinder');
+  console.log('   • Tactical Calculator, Million Dollar Dashboard, What-If Sandbox');
+  console.log('   • C-File Analyzer, Blue Button X-Ray, Nexus Builder');
+  console.log('   • Red Team, The Tribunal, Consistency Engine');
+  console.log('   • The Bunker, Cloud Sync, VA.gov Integration');
+  
+  console.log('\n   🤖 AI FEATURES (Faraday Cage Protocol):');
+  console.log('   • Local AI loads without ModelNotLoadedError');
+  console.log('   • Cloud AI (Gemini) generates statements');
+  console.log('   • AI Mode Selector toggles correctly');
+  console.log('   • Device-aware UI shows Cloud AI on legacy devices');
+  
+  console.log('\n   📱 CROSS-DEVICE:');
+  console.log('   • Android (especially 10/11), iOS Safari');
+  console.log('   • WebGPU detection shows correct status');
+  console.log('   • PWA install prompt on mobile');
+  
+  console.log('\n   💰 INTEGRATIONS:');
+  console.log('   • What\'s New modal matches deployed features');
+  console.log('   • BuyMeCoffee messaging on-brand');
+  console.log('   • VA API connections (if enabled)');
+  console.log('   • Crisis Modal (988) triggers on keywords');
+  
+  console.log('\n   🎨 COLOR SCHEMA (tool cards/modals match category):');
+  console.log('   • Blue: Calculators | Teal: Discovery | Violet: Evidence');
+  console.log('   • Rose: QC | Amber: Maximize | Sky: Support');
+  
+  console.log('\n   📝 Full checklist: DEPLOYMENT.md (67 items)');
   
   // Exit with error code if checks failed
   process.exit(checks.errors.length > 0 ? 1 : 0);

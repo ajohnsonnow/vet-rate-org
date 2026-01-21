@@ -98,6 +98,7 @@ export const TOOLKIT_CATEGORIES = [
       { name: 'VSO Finder', description: 'Locate free, accredited Veterans Service Officers' },
       { name: 'The Bunker', description: 'Export/import all your data - never lose your work', isNew: true },
       { name: 'Cloud Sync', description: 'Back up to YOUR Google Drive (encrypted)', isNew: true },
+      { name: 'VA.gov Integration', description: 'Connect to VA.gov APIs - view claims, service history, and appeals (Demo Ready)', isNew: true },
       { name: 'My Packet', description: 'Save and manage all your claims evidence in one place' },
       { name: 'VA Resources Hub', description: 'Direct links to official VA programs, crisis support, and benefits' },
       { name: 'User Manual', description: 'Comprehensive guide to using every feature' },

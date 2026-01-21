@@ -971,12 +971,15 @@ Respond in this JSON format:
             <div className="flex items-center gap-3">
               <span className="text-3xl">🐻</span>
               <div>
-                <h2 className="text-xl font-bold text-white">Poke the Bear Calculator</h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  Poke the Bear Calculator
+                  <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">AI</span>
+                </h2>
                 <p className="text-sm text-orange-100">Risk Assessment Before Filing</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <AIStatusBadge showLabel={true} />
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Risk Assessment (Poke the Bear)" />}
               <button
                 onClick={onClose}
@@ -993,36 +996,6 @@ Respond in this JSON format:
         
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-1 p-6">
-          {/* AI Mode Section */}
-          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AIStatusBadge showLabel={true} />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {aiStatus.effectiveMode === AI_MODES.LOCAL 
-                    ? '🔒 100% Private - runs on your device'
-                    : aiStatus.effectiveMode === AI_MODES.CLOUD 
-                      ? '☁️ Cloud AI - strategic analysis available'
-                      : '⚠️ No AI - basic analysis only'}
-                </span>
-              </div>
-              <button
-                onClick={() => setShowAISettings(!showAISettings)}
-                className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200"
-              >
-                {showAISettings ? 'Hide Settings' : 'AI Settings'}
-              </button>
-            </div>
-            
-            {showAISettings && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <AIModeSelector 
-                  onModeChange={() => setAIStatus(getAIStatus())}
-                />
-              </div>
-            )}
-          </div>
-          
           {/* Educational Banner */}
           {!showResults && (
             <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
@@ -1033,6 +1006,22 @@ Respond in this JSON format:
                   <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
                     VA ratings have legal protections under <strong>38 CFR</strong>. The longer your rating has been 
                     in effect, the harder it is to reduce. This tool checks your protection status before you file.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* AI Required Warning */}
+          {!isAnyAIAvailable() && !showResults && (
+            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💡</span>
+                <div>
+                  <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
+                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                    Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                    (100% private) or enter your Gemini API key.
                   </p>
                 </div>
               </div>

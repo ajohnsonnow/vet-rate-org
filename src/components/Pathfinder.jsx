@@ -7,7 +7,7 @@
  * and suggests high-probability secondary claims.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   analyzeStrategy, 
   getProbabilityColors, 
@@ -18,7 +18,9 @@ import { getSavedClaims } from '../utils/claimsStorage';
 import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import VAGovRatingPaster from './VAGovRatingPaster';
+import { analyzeDocument, OCR_STATES, isFileSupported, getFileTypeLabel, getAcceptString } from '../utils/documentAnalyzer';
 
 // Icons
 const CompassIcon = () => (
@@ -257,6 +259,13 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
   
+  // File drop modal state
+  const [showDropInModal, setShowDropInModal] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [fileProgress, setFileProgress] = useState(null);
+  const fileInputRef = useRef(null);
+  
   // Load API key, check consent, and monitor AI status
   useEffect(() => {
     const storedKey = localStorage.getItem('vetrate_gemini_key');
@@ -320,6 +329,77 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
       setRatings(formattedRatings);
     }
     setShowVAGovPaster(false);
+  };
+  
+  /**
+   * Handle file selection from input or drop
+   */
+  const handleFileSelect = async (files) => {
+    const file = files[0];
+    if (!file) return;
+    
+    if (!isFileSupported(file)) {
+      setError(`Unsupported file type. Please use PDF, Word (.docx), Text, or RTF files.`);
+      return;
+    }
+    
+    setUploadedFile(file);
+    setShowDropInModal(true);
+  };
+  
+  /**
+   * Process the uploaded file
+   */
+  const handleProcessFile = async () => {
+    if (!uploadedFile) return;
+    
+    setIsProcessingFile(true);
+    setError(null);
+    
+    try {
+      const result = await analyzeDocument(uploadedFile, setFileProgress);
+      
+      // Parse the extracted text for ratings
+      // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
+      const ratingPatterns = [
+        /([A-Z][a-z\s]+(?:[A-Z][a-z\s]*)*)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
+        /(\d+)%?\s+for\s+([A-Z][a-z\s]+(?:[A-Z][a-z\s]*)*)/gi, // "70% for PTSD"
+      ];
+      
+      const extractedRatings = [];
+      for (const pattern of ratingPatterns) {
+        let match;
+        while ((match = pattern.exec(result.text)) !== null) {
+          const condition = match[1] || match[2];
+          const rating = match[2] || match[1];
+          if (condition && rating && !isNaN(parseInt(rating))) {
+            extractedRatings.push({
+              condition: condition.trim(),
+              rating: parseInt(rating).toString(),
+            });
+          }
+        }
+      }
+      
+      if (extractedRatings.length > 0) {
+        setRatings(extractedRatings);
+        setAdditionalContext(result.text.substring(0, 2000)); // First 2000 chars as context
+      } else {
+        // No structured ratings found, just use the text as context
+        setAdditionalContext(result.text);
+        alert(`No structured ratings found in the document. The text has been added as additional context. Please enter your ratings manually.`);
+      }
+      
+      setShowDropInModal(false);
+      setUploadedFile(null);
+      setFileProgress(null);
+      
+    } catch (err) {
+      console.error('File processing error:', err);
+      setError(`Failed to process file: ${err.message}`);
+    } finally {
+      setIsProcessingFile(false);
+    }
   };
   
   // Load ratings from veteranProfile
@@ -420,6 +500,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl shadow-lg">
             <span className="text-3xl">🧭</span>
           </div>
+          <LLMRecommendationBadge toolId="pathfinder" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">The Pathfinder</h1>
@@ -463,7 +544,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                 <div className="text-sm text-amber-900 dark:text-amber-100">
                   <p className="font-semibold mb-1">AI Required for Analysis</p>
                   <p className="text-amber-800 dark:text-amber-200">
-                    Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                    Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
                     (100% private) or enter your Gemini API key.
                   </p>
                 </div>
@@ -498,6 +579,12 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                   className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
                 >
                   📋 Paste from VA.gov
+                </button>
+                <button
+                  onClick={() => setShowDropInModal(true)}
+                  className="text-sm px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1.5"
+                >
+                  📄 Drop In File
                 </button>
                 <button
                   onClick={loadFromPacket}
@@ -748,6 +835,135 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
           onClose={() => setShowVAGovPaster(false)}
           showExample={true}
         />
+      )}
+      
+      {/* File Drop In Modal */}
+      {showDropInModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  📄 Upload Document
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Upload VA decision letter, rating sheet, or notes
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDropInModal(false);
+                  setUploadedFile(null);
+                  setFileProgress(null);
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              {!uploadedFile ? (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-violet-400 dark:hover:border-violet-500 transition-colors cursor-pointer"
+                >
+                  <div className="text-6xl mb-4">📄</div>
+                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Drop file here or click to browse
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Supports: PDF, Word (.docx), Text, RTF
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    Maximum file size: 50MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={getAcceptString()}
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Selected File Info */}
+                  <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="text-3xl">📄</div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {uploadedFile.name}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {getFileTypeLabel(uploadedFile)} • {(uploadedFile.size / 1024).toFixed(0)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setUploadedFile(null);
+                          setFileProgress(null);
+                        }}
+                        className="p-2 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Processing Progress */}
+                  {fileProgress && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                        {fileProgress.message}
+                      </p>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${fileProgress.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Info */}
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      💡 <strong>What happens next:</strong> We'll extract any ratings found in your document and pre-fill the form. You can review and edit before analyzing.
+                    </p>
+                  </div>
+                  
+                  {/* Process Button */}
+                  <button
+                    onClick={handleProcessFile}
+                    disabled={isProcessingFile}
+                    className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isProcessingFile ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        ✨ Extract & Load
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

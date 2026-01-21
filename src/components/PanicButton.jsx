@@ -265,7 +265,7 @@ const PanicButton = ({
 
         {/* News Website Cover */}
         {coverType === 'news' && (
-          <div className="fixed inset-0 bg-white z-[10001] overflow-y-auto">
+          <div className="fixed inset-0 bg-white z-[10001] flex items-center justify-center p-4">
             {/* Header */}
             <div className="border-b border-gray-300 px-4 py-3">
               <div className="flex items-center justify-between max-w-6xl mx-auto">

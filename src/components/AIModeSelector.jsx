@@ -15,6 +15,7 @@ import {
   setAIMode, 
   getAIStatus,
   isLocalAIReady,
+  isLocalAIInitializing,
   isCloudAIAvailable,
 } from '../utils/unifiedAIService';
 
@@ -34,35 +35,44 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
   }, []);
 
   const getBadgeStyle = () => {
+    // Show warming up state
+    if (status.localInitializing) {
+      return 'bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse';
+    }
     if (status.effectiveMode === AI_MODES.LOCAL) {
-      return 'bg-green-500/20 text-green-400 border-green-500/50';
+      return 'bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md';
     }
     if (status.effectiveMode === AI_MODES.CLOUD) {
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
+      return 'bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md';
     }
-    return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+    return 'bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse';
   };
 
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-all hover:scale-105 ${getBadgeStyle()} ${className}`}
-      title={status.isPrivate ? `Local AI: ${status.localModelName} - 100% Private` : `Cloud AI: ${status.cloudModelName} - Click to configure`}
+      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${getBadgeStyle()} ${className}`}
+      title={status.localInitializing ? 'Local AI is warming up...' : status.isPrivate ? `Local AI: ${status.localModelName} - 100% Private` : `Cloud AI: ${status.cloudModelName} - Click to configure`}
     >
-      {status.effectiveMode === AI_MODES.LOCAL ? (
+      {status.localInitializing ? (
         <>
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span>🔒 {status.localModelName}</span>
+          <span className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
+          <span className="text-base">⏳ Warming up...</span>
+        </>
+      ) : status.effectiveMode === AI_MODES.LOCAL ? (
+        <>
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          <span className="text-base">🔒 {status.localModelName}</span>
         </>
       ) : status.effectiveMode === AI_MODES.CLOUD ? (
         <>
-          <span className="w-2 h-2 bg-blue-400 rounded-full" />
-          <span>☁️ {status.cloudModelName}</span>
+          <span className="w-3 h-3 bg-blue-400 rounded-full" />
+          <span className="text-base">☁️ {status.cloudModelName}</span>
         </>
       ) : (
         <>
-          <span className="w-2 h-2 bg-gray-400 rounded-full" />
-          <span>⚠️ No AI</span>
+          <span className="w-3 h-3 bg-gray-400 rounded-full" />
+          <span className="text-base">⚠️ No AI</span>
         </>
       )}
     </button>

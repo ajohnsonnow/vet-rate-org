@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { stressTestStatement, isAIAvailable } from '../utils/aiStatementHelper';
-import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
+import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
+import { analyzePDF, OCR_STATES, formatFileSize } from '../utils/ocr';
 
 /**
  * RedTeam Component - "The Statement Stress Test"
@@ -25,6 +27,14 @@ const RedTeam = ({ onClose, onReportBug }) => {
   const [error, setError] = useState(null);
   const [showAISettings, setShowAISettings] = useState(false);
   const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const [inputMethod, setInputMethod] = useState('paste'); // 'paste' or 'pdf'
+  
+  // PDF Drop-In state
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
+  const [pdfIsDragging, setPdfIsDragging] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const pdfFileInputRef = useRef(null);
   
   // Monitor AI status changes
   useEffect(() => {
@@ -33,6 +43,75 @@ const RedTeam = ({ onClose, onReportBug }) => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // PDF Drop-In handlers
+  const handlePdfDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(true);
+  };
+
+  const handlePdfDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(false);
+  };
+
+  const handlePdfDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(false);
+    
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/pdf') {
+        await processPdfFile(file);
+      } else {
+        setPdfError('Please drop a PDF file (your draft statement document)');
+      }
+    }
+  };
+
+  const handlePdfFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processPdfFile(file);
+    }
+  };
+
+  const processPdfFile = async (file) => {
+    setPdfFile(file);
+    setPdfError(null);
+    setDraftStatement('');
+    
+    try {
+      const result = await analyzePDF(file, (progress) => {
+        setPdfOcrProgress(progress);
+      });
+      
+      if (result.success && result.text) {
+        setDraftStatement(result.text);
+      } else {
+        setPdfError(result.error || 'Failed to extract text from PDF');
+      }
+    } catch (err) {
+      console.error('PDF processing error:', err);
+      setPdfError('Failed to process PDF. Please try again or paste the text manually.');
+    }
+    
+    setPdfOcrProgress(null);
+  };
+
+  const handleRemovePdf = () => {
+    setPdfFile(null);
+    setPdfOcrProgress(null);
+    setDraftStatement('');
+    setPdfError(null);
+    if (pdfFileInputRef.current) {
+      pdfFileInputRef.current.value = '';
+    }
+  };
 
   const handleStressTest = async () => {
     if (!draftStatement.trim()) {
@@ -136,8 +215,9 @@ const RedTeam = ({ onClose, onReportBug }) => {
                 <span className="text-3xl">🎖️</span>
               </div>
               <div>
-                <h2 id="red-team-title" className="text-2xl sm:text-3xl font-bold">
+                <h2 id="red-team-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                   The Red Team
+                  <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">AI</span>
                 </h2>
                 <p className="text-red-100 text-sm sm:text-base mt-1">
                   Statement Stress Test • Find Weak Language
@@ -145,6 +225,8 @@ const RedTeam = ({ onClose, onReportBug }) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LLMRecommendationBadge toolId="red-team" />
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Red Team" />}
               <button
                 onClick={onClose}
@@ -161,34 +243,6 @@ const RedTeam = ({ onClose, onReportBug }) => {
 
         {/* Content - Scrollable */}
         <div className="overflow-y-auto flex-1 p-6">
-            {/* AI Mode Section */}
-            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AIStatusBadge showLabel={true} />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {aiStatus.effectiveMode === AI_MODES.LOCAL 
-                      ? '🔒 100% Private - runs on your device'
-                      : '☁️ Cloud AI - fast & powerful'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowAISettings(!showAISettings)}
-                  className="text-sm text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200"
-                >
-                  {showAISettings ? 'Hide Settings' : 'AI Settings'}
-                </button>
-              </div>
-              
-              {showAISettings && (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <AIModeSelector 
-                    onModeChange={() => setAIStatus(getAIStatus())}
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Warning Banner */}
             <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-xl">
               <div className="flex items-start gap-3">
@@ -204,32 +258,209 @@ const RedTeam = ({ onClose, onReportBug }) => {
               </div>
             </div>
 
+            {/* AI Required Warning */}
+            {!isAnyAIAvailable() && (
+              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                      (100% private) or enter your Gemini API key.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Input Section */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  📝 Paste Your Draft Statement
-                </label>
-                <textarea
-                  value={draftStatement}
-                  onChange={(e) => setDraftStatement(e.target.value)}
-                  placeholder="Paste your Statement in Support of Claim, Personal Statement, or any written testimony here...
-
-Example: 'My back hurts sometimes after standing for a while, but I try to push through it. I've learned to manage the pain by taking breaks.'"
-                  rows={12}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {draftStatement.length} characters
-                  </span>
+                {/* Input Method Tabs */}
+                <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
                   <button
-                    onClick={() => setDraftStatement('')}
-                    className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                    onClick={() => setInputMethod('paste')}
+                    className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                      inputMethod === 'paste'
+                        ? 'text-red-600 dark:text-red-400 border-b-2 border-red-600 dark:border-red-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    }`}
                   >
-                    Clear
+                    📋 Paste Text
+                  </button>
+                  <button
+                    onClick={() => setInputMethod('pdf')}
+                    className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                      inputMethod === 'pdf'
+                        ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    📄 Drop-In PDF
                   </button>
                 </div>
+
+                {/* Paste Text Input */}
+                {inputMethod === 'paste' && (
+                  <>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      📝 Paste Your Draft Statement
+                    </label>
+                    <textarea
+                      value={draftStatement}
+                      onChange={(e) => setDraftStatement(e.target.value)}
+                      placeholder="Paste your Statement in Support of Claim, Personal Statement, or any written testimony here...
+
+Example: 'My back hurts sometimes after standing for a while, but I try to push through it. I've learned to manage the pain by taking breaks.'"
+                      rows={12}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {draftStatement.length} characters
+                      </span>
+                      <button
+                        onClick={() => setDraftStatement('')}
+                        className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* PDF Drop-In */}
+                {inputMethod === 'pdf' && (
+                  <div>
+                    {/* Drop Zone - only show if no file */}
+                    {!pdfFile && !pdfOcrProgress && (
+                      <div
+                        onDragOver={handlePdfDragOver}
+                        onDragLeave={handlePdfDragLeave}
+                        onDrop={handlePdfDrop}
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                          pdfIsDragging
+                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10'
+                        }`}
+                      >
+                        <input
+                          ref={pdfFileInputRef}
+                          type="file"
+                          accept=".pdf"
+                          onChange={handlePdfFileChange}
+                          className="hidden"
+                        />
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                              Drop your PDF here
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              or{' '}
+                              <button
+                                onClick={() => pdfFileInputRef.current?.click()}
+                                className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                              >
+                                browse to select
+                              </button>
+                            </p>
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                            Supports: Personal Statement, Statement in Support of Claim (PDF)
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* OCR Progress */}
+                    {pdfOcrProgress && (
+                      <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
+                          <span className="font-medium text-purple-800 dark:text-purple-200">
+                            {pdfOcrProgress.state === OCR_STATES.LOADING ? 'Loading PDF...' :
+                             pdfOcrProgress.state === OCR_STATES.EXTRACTING ? 'Extracting text...' :
+                             pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING ? 'Running OCR on scanned pages...' :
+                             'Processing...'}
+                          </span>
+                        </div>
+                        {pdfOcrProgress.progress > 0 && (
+                          <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
+                            <div
+                              className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${pdfOcrProgress.progress}%` }}
+                            />
+                          </div>
+                        )}
+                        {pdfOcrProgress.message && (
+                          <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">{pdfOcrProgress.message}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* File Selected */}
+                    {pdfFile && !pdfOcrProgress && (
+                      <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">{pdfFile.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(pdfFile.size)}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRemovePdf}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Remove file"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Error Display */}
+                        {pdfError && (
+                          <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p className="text-sm text-red-700 dark:text-red-300">{pdfError}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Success - text extracted */}
+                        {draftStatement && !pdfError && (
+                          <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                              <span className="text-green-500">✓</span>
+                              <span className="text-sm font-medium">Text extracted - {draftStatement.length} characters</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Privacy Note */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                      🔒 Your PDF is processed locally in your browser - nothing is sent to any server.
+                    </p>
+                  </div>
+                )}
 
                 <button
                   onClick={handleStressTest}

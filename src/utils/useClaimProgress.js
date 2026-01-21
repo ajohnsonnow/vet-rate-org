@@ -321,6 +321,64 @@ const MILESTONES = [
     phase: 'filing',
     critical: true,
     manualAllowed: true
+  },
+  
+  // ========== CLAIM NAVIGATOR INTEGRATION ==========
+  {
+    id: 'claim_navigator_used',
+    title: 'Claim Navigator Activated',
+    description: 'Using Claim Navigator to track claim workflow and deadlines',
+    storageKey: 'vet_rate_claim_navigator_active',
+    alternateKeys: ['vet_rate_claim_navigator_claim_created'],
+    checkCompleted: (data, altData) => {
+      if (data === 'true') return true;
+      if (altData?.some(d => d && d !== 'null')) return true;
+      try {
+        const parsed = JSON.parse(data || altData?.[0]);
+        return !!(parsed?.created || parsed?.active);
+      } catch {
+        return data === 'true' || altData?.some(d => d === 'true');
+      }
+    },
+    icon: '🗺️',
+    weight: 5,
+    phase: 'preparation',
+    critical: false,
+    manualAllowed: false
+  },
+  {
+    id: 'claim_tracked',
+    title: 'Claims in Navigator',
+    description: 'At least one claim being tracked in Claim Navigator',
+    storageKey: 'vet_rate_claim_navigator_claims',
+    alternateKeys: [],
+    checkCompleted: (data) => {
+      if (!data) return false;
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed?.claims && Array.isArray(parsed.claims)) {
+          return parsed.claims.length > 0;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+    icon: '📋',
+    weight: 8,
+    phase: 'preparation',
+    critical: false,
+    manualAllowed: false
+  }
+];
+
+/**
+ * Get manual progress data from localStorage
+    icon: '📄',
+    weight: 5,
+    phase: 'filing',
+    critical: true,
+    manualAllowed: true
   }
 ];
 
@@ -489,9 +547,16 @@ export default function useClaimProgress() {
     const handleProgressUpdate = () => {
       checkProgress();
     };
+    
+    // Listen for Claim Navigator updates (new integration)
+    const handleNavigatorUpdate = () => {
+      checkProgress();
+    };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('claimProgressUpdate', handleProgressUpdate);
+    window.addEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
+    window.addEventListener('bigThreeUpdate', handleProgressUpdate);
 
     // Set up interval to check periodically (every 10 seconds)
     const interval = setInterval(checkProgress, 10000);
@@ -499,6 +564,8 @@ export default function useClaimProgress() {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('claimProgressUpdate', handleProgressUpdate);
+      window.removeEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
+      window.removeEventListener('bigThreeUpdate', handleProgressUpdate);
       clearInterval(interval);
     };
   }, [checkProgress]);

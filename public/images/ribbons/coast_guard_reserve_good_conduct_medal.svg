@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="218" height="60">
+<path fill="#021694" d="m0,0h218v60H0"/>
+<path fill="#FFF" d="m102,0h14v60H102"/>
+<path stroke="#DB0025" stroke-width="76" d="m50,0v60m118,0V0"/>
+<path stroke="#D8DE00" stroke-width="4" d="m10,0v60m198,0V0"/>
+<path stroke="#444" stroke-width="217" stroke-dasharray="2.07" opacity=".3" d="m109,0v60"/>
+</svg>

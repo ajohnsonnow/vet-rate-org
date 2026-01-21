@@ -9,7 +9,7 @@
  * Prevents catastrophic data loss from cache clearing
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   exportData,
   downloadBackup,
@@ -22,12 +22,29 @@ import {
 import { markBackupCreated } from '../utils/dataPersistence';
 import { downloadDossier, previewDossier } from '../utils/dossierExport';
 import CloudSyncManager from './CloudSyncManager';
+import DbqBrowser from './DbqBrowser';
+import { getCacheStats } from '../utils/dbqOfflineStorage';
 
 export default function BackupManager({ onClose }) {
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success'|'error'|'info', message: '', details: {} }
   const [showStats, setShowStats] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [showDbqBrowser, setShowDbqBrowser] = useState(false);
+  const [dbqCacheStats, setDbqCacheStats] = useState(null);
+  
+  // Load DBQ cache stats on mount
+  useEffect(() => {
+    const loadDbqStats = async () => {
+      try {
+        const stats = await getCacheStats();
+        setDbqCacheStats(stats);
+      } catch (e) {
+        console.error('Error loading DBQ stats:', e);
+      }
+    };
+    loadDbqStats();
+  }, []);
   const [showCloudSync, setShowCloudSync] = useState(false);
   const [importMode, setImportMode] = useState('replace'); // 'replace' or 'merge'
   const fileInputRef = useRef(null);
@@ -134,7 +151,7 @@ export default function BackupManager({ onClose }) {
       } else {
         setStatus({
           type: 'error',
-          message: '❌ Please upload a valid JSON backup file.'
+          message: '❌ Please drop in a valid JSON backup file.'
         });
       }
     }
@@ -329,6 +346,62 @@ export default function BackupManager({ onClose }) {
             </div>
           </div>
 
+          {/* DBQ Library Section - Offline Forms */}
+          <div className="border-2 border-indigo-300 dark:border-indigo-700 rounded-lg p-6 bg-indigo-50 dark:bg-indigo-900/20">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  📋 DBQ Library (Offline Forms)
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Download Disability Benefits Questionnaires for offline access. 
+                  Pre-fill your information before doctor visits.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDbqBrowser(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg flex items-center gap-2"
+              >
+                <span>📋</span> Open Library
+              </button>
+            </div>
+            
+            {/* DBQ Cache Stats */}
+            {dbqCacheStats && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 flex flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">💾</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                      {dbqCacheStats.cachedCount} forms
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">saved offline</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">📦</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                      {dbqCacheStats.totalSizeMB} MB
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">storage used</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Features:</h4>
+              <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                <li>📱 <strong>Works Offline:</strong> Access forms without internet</li>
+                <li>✏️ <strong>Pre-Fill Drafts:</strong> Enter subjective info before appointments</li>
+                <li>🔐 <strong>Secure Sharing:</strong> Download, encrypt, or AirDrop to doctor</li>
+                <li>📋 <strong>69+ DBQs:</strong> All official VA questionnaires available</li>
+                <li>⚠️ <strong>Draft Watermarks:</strong> All pre-filled docs clearly marked</li>
+              </ul>
+            </div>
+          </div>
+
           {/* Import Section */}
           <div className="border-2 border-blue-300 dark:border-blue-700 rounded-lg p-6 bg-blue-50 dark:bg-blue-900/20">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
@@ -519,6 +592,22 @@ export default function BackupManager({ onClose }) {
       {/* Cloud Sync Modal */}
       {showCloudSync && (
         <CloudSyncManager onClose={() => setShowCloudSync(false)} />
+      )}
+      
+      {/* DBQ Browser Modal */}
+      {showDbqBrowser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <DbqBrowser onClose={async () => {
+            setShowDbqBrowser(false);
+            // Refresh DBQ cache stats when closing
+            try {
+              const stats = await getCacheStats();
+              setDbqCacheStats(stats);
+            } catch (e) {
+              console.error('Error refreshing DBQ stats:', e);
+            }
+          }} />
+        </div>
       )}
     </div>
   );

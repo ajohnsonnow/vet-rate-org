@@ -12,6 +12,7 @@ import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessi
 import { analyzeCFile, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ReportBugLink from './ReportBugLink';
 
 // Sub-components for the dashboard
@@ -19,7 +20,7 @@ import CFileTimeline from './CFileTimeline';
 import CFileClaimsCards from './CFileClaimsCards';
 
 export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }) {
-  // File upload state
+  // File drop state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -58,7 +59,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     const droppedFile = e.dataTransfer?.files?.[0];
     if (droppedFile) {
       if (droppedFile.type !== 'application/pdf') {
-        setError('Please upload a PDF file.');
+        setError('Please drop in a PDF file.');
         return;
       }
       setFile(droppedFile);
@@ -93,7 +94,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
   // Start analysis process
   const handleStartAnalysis = useCallback(() => {
     if (!file) {
-      setError('Please upload a file first.');
+      setError('Please drop in a file first.');
       return;
     }
     
@@ -130,7 +131,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       if (!extractionResult.hasText) {
         setError(
           `This PDF appears to be a scanned image with minimal text (${extractionResult.avgCharsPerPage} characters per page average). ` +
-          'Please use OCR software (like Adobe Acrobat "Recognize Text" or a free online OCR tool) to make it searchable first, then re-upload.'
+          'Please use OCR software (like Adobe Acrobat "Recognize Text" or a free online OCR tool) to make it searchable first, then drop it in again.'
         );
         setIsProcessing(false);
         return;
@@ -168,7 +169,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     setHasConsented(false);
   }, []);
   
-  // Render the upload form
+  // Render the drop zone form
   const renderUploadForm = () => (
     <div className="max-w-4xl mx-auto">
       {/* Warning Banner */}
@@ -268,10 +269,10 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           <div className="flex items-start gap-3">
             <span className="text-xl">⚠️</span>
             <div className="text-amber-800 dark:text-amber-200">
-              <p className="font-semibold">AI Required</p>
+              <p className="font-semibold">AI Required for Analysis</p>
               <p className="text-sm mt-1">
-                Click the <strong>AI button</strong> in the header above to load your secure Local AI 
-                or enter your Gemini API key to analyze your C-File.
+                Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                (100% private) or enter your Gemini API key.
               </p>
             </div>
           </div>
@@ -656,8 +657,9 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔬</span>
               <div>
-                <h1 className="text-2xl font-bold text-white">
+                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                   C-File Analyzer
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
                 </h1>
                 <p className="text-sm text-violet-100">
                   AI-powered claims evidence discovery
@@ -671,7 +673,8 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               </span>
             </div>
             <div className="flex items-center gap-3">
-              {/* AI Status Badge - Fully Functional from Main Header */}
+              {/* AI Status & LLM Recommendation Badges */}
+              <LLMRecommendationBadge toolId="cfile-analyzer" />
               <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="C-File Analyzer" />}
               <button

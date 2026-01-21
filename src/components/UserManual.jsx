@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { resetTourState } from './BootCampTour';
+import { resetTourState, triggerTourRestart } from './BootCampTour';
 import { getTotalToolCount } from '../data/toolkitData';
 import { PROJECT_STATS } from '../data/projectStats';
 
@@ -77,9 +77,28 @@ const navigationStructure = [
     ],
   },
   {
+    id: 'dbq-library',
+    title: 'DBQ Library',
+    icon: '📑',
+    children: [
+      { id: 'dbq-overview', title: 'What are DBQs?' },
+      { id: 'dbq-browse', title: 'Browsing DBQs' },
+      { id: 'dbq-usage', title: 'Using DBQs' },
+    ],
+  },
+  {
     id: 'pathfinder',
     title: 'Pathfinder',
     icon: '🧭',
+  },
+  {
+    id: 'workflow-guide',
+    title: 'Workflow Guide',
+    icon: '🗺️',
+    children: [
+      { id: 'workflow-overview', title: 'Mission Briefings' },
+      { id: 'workflow-progress', title: 'Tracking Progress' },
+    ],
   },
   // === BUILD YOUR EVIDENCE ===
   {
@@ -93,7 +112,7 @@ const navigationStructure = [
     icon: '🔎',
     children: [
       { id: 'cfile-what-is', title: 'What is a C-File?' },
-      { id: 'cfile-upload', title: 'Uploading Records' },
+      { id: 'cfile-upload', title: 'Dropping In Records' },
       { id: 'cfile-analysis', title: 'Understanding Results' },
     ],
   },
@@ -160,7 +179,7 @@ const navigationStructure = [
     icon: '📜',
     children: [
       { id: 'decoder-overview', title: 'Overview' },
-      { id: 'decoder-upload', title: 'Upload Decision' },
+      { id: 'decoder-upload', title: 'Drop In Decision' },
       { id: 'decoder-appeal', title: 'Appeal Options' },
     ],
   },
@@ -289,6 +308,17 @@ const navigationStructure = [
     ],
   },
   {
+    id: 'ai-settings',
+    title: 'AI Settings',
+    icon: '🤖',
+    children: [
+      { id: 'local-ai-overview', title: 'Local AI Overview' },
+      { id: 'model-selection', title: 'Choosing the Right Model' },
+      { id: 'cloud-vs-local', title: 'Cloud vs Local AI' },
+      { id: 'vram-requirements', title: 'VRAM Requirements' },
+    ],
+  },
+  {
     id: 'reference',
     title: 'Reference',
     icon: '📖',
@@ -377,7 +407,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 | **Decision Decoder** | AI analysis of VA letters for appeal opportunities |
 | **Denial Decoder** | OCR scan denial letters to find appeal angles |
 | **Blue Button X-Ray** | Extract claim-relevant evidence from medical records |
-| **PDF Evidence Finder** | Keyword search across uploaded documents |
+| **PDF Evidence Finder** | Keyword search across dropped in documents |
 | **Red Team Simulator** | Simulate VA examiner review to find weaknesses |
 
 ### Battle Labs
@@ -973,6 +1003,222 @@ Quick question-and-answer cards for reviewing:
     `,
   },
 
+  // DBQ Library Documentation
+  'dbq-library': {
+    title: 'DBQ Library',
+    content: `
+Browse the complete Disability Benefits Questionnaire (DBQ) library.
+
+## What Are DBQs?
+
+DBQs are standardized medical evaluation forms the VA uses to assess disabilities:
+- **Standardized format** - Same questions for same conditions
+- **Rating criteria aligned** - Questions map directly to rating levels
+- **Used by examiners** - What your C&P examiner fills out
+
+## Why This Matters
+
+Understanding DBQs helps you:
+- Know exactly what criteria the VA evaluates
+- Prepare specific evidence for each question
+- Understand how your symptoms translate to ratings
+- Communicate effectively with your examiner
+
+## Browsing the Library
+
+The DBQ Library is organized by condition category for easy navigation.
+    `,
+  },
+
+  'dbq-overview': {
+    title: 'What are DBQs?',
+    content: `
+Understanding Disability Benefits Questionnaires.
+
+## Purpose of DBQs
+
+The VA created DBQs to standardize disability evaluations:
+- Ensures consistent evaluations nationwide
+- Maps directly to 38 CFR rating criteria
+- Captures functional impairment levels
+
+## Types of DBQs
+
+- **Initial evaluation** - First-time claims
+- **Review examination** - Reevaluations
+- **Specialty-specific** - Tailored to condition types
+
+## Key Sections
+
+Most DBQs include:
+1. **Diagnosis** - Medical condition confirmation
+2. **Symptoms** - Current manifestations
+3. **Functional Impact** - Effect on work/daily life
+4. **Severity Measures** - Specific measurements or frequencies
+
+## Using This Knowledge
+
+Review the DBQ for your condition before your C&P exam to understand what will be evaluated.
+    `,
+  },
+
+  'dbq-browse': {
+    title: 'Browsing DBQs',
+    content: `
+Navigate the DBQ collection effectively.
+
+## How to Access
+
+1. Click **"DBQ Library"** in the Tools menu
+2. Browse by category or search
+3. Select a DBQ to view details
+
+## Categories
+
+DBQs are organized by body system:
+- Mental Disorders
+- Musculoskeletal
+- Respiratory
+- Cardiovascular
+- And more
+
+## Search Features
+
+- Search by condition name
+- Filter by category
+- View related conditions
+
+## What You'll Find
+
+For each DBQ:
+- Form title and number
+- Condition it covers
+- Key evaluation criteria
+- Direct link to official form
+    `,
+  },
+
+  'dbq-usage': {
+    title: 'Using DBQs',
+    content: `
+Get the most value from DBQ information.
+
+## Before Your C&P Exam
+
+1. Find the DBQ for your condition
+2. Review each section and question
+3. Document your symptoms matching the criteria
+4. Prepare examples for functional impact questions
+
+## Supporting Your Claim
+
+- Use DBQ criteria to structure personal statements
+- Ensure medical evidence addresses DBQ questions
+- Identify any gaps in your documentation
+
+## Private DBQ Option
+
+Some veterans have private doctors complete DBQs:
+- Must be an acceptable provider
+- Can supplement VA examinations
+- Discuss with your VSO first
+
+## Tips
+
+- Don't minimize symptoms
+- Document your worst days
+- Be specific about functional limitations
+    `,
+  },
+
+  // Workflow Guide Documentation
+  'workflow-guide': {
+    title: 'Workflow Guide',
+    content: `
+Follow step-by-step "Mission Briefings" for every claims scenario.
+
+## What Is Workflow Guide?
+
+Pre-built, step-by-step workflows that walk you through:
+- Original claims
+- Increase claims
+- Secondary claims
+- Appeals and more
+
+## Why Use Workflow Guide?
+
+- **Never miss a step** - Comprehensive checklists
+- **Right tool at right time** - Guided tool recommendations
+- **Track progress** - Save your place and continue later
+- **Expert-designed** - Based on successful claims strategies
+
+## Available Workflows
+
+Multiple mission briefings covering the most common claims scenarios with specific steps for each.
+    `,
+  },
+
+  'workflow-overview': {
+    title: 'Mission Briefings',
+    content: `
+Understand the workflow system.
+
+## How It Works
+
+1. **Select Your Mission** - Choose the workflow that matches your goal
+2. **Follow the Steps** - Each step tells you what to do and which tool to use
+3. **Mark Progress** - Check off steps as you complete them
+4. **Return Anytime** - Your progress is saved automatically
+
+## Workflow Categories
+
+- **Original Claim** - First-time filing for a condition
+- **Increase Claim** - Requesting higher rating
+- **Secondary Claim** - Claiming conditions caused by service-connected disabilities
+- **Appeal** - Challenging a VA decision
+
+## Tips for Success
+
+- Complete steps in order when possible
+- Don't skip the evidence-gathering steps
+- Use the recommended tools for each step
+- Take notes as you go
+    `,
+  },
+
+  'workflow-progress': {
+    title: 'Tracking Progress',
+    content: `
+Monitor and continue your workflow progress.
+
+## Saving Progress
+
+- Progress saves automatically to your browser
+- Return to any workflow to continue
+- Completed steps remain checked
+
+## Progress Indicators
+
+- **Circle** - Not started
+- **Checkmark** - Completed
+- **Progress bar** - Overall workflow completion
+
+## Resetting Progress
+
+You can reset a workflow if you need to start over or are working on a new claim.
+
+## Multiple Workflows
+
+You can work through multiple workflows simultaneously for different claims or conditions.
+
+## Best Practices
+
+- Complete one step fully before moving on
+- Gather all evidence before filing
+- Review completed steps before submission
+    `,
+  },
+
   'nexus-builder': {
     title: 'Nexus Builder',
     content: `
@@ -1491,7 +1737,7 @@ Your complete VA claims history.
   },
 
   'cfile-upload': {
-    title: 'Uploading Records',
+    title: 'Dropping In Records',
     content: `
 How to use the C-File Analyzer.
 
@@ -1510,7 +1756,7 @@ Your files are processed:
 
 ## Tips
 
-- Upload complete documents
+- Drop in complete documents
 - Include decision letters
 - Add medical records
 - Include service records
@@ -1545,7 +1791,7 @@ Understand VA decision letters and find appeal opportunities.
 
 ## What It Does
 
-Upload your VA decision letter and get:
+Drop in your VA decision letter and get:
 - Plain-English explanation
 - Rating breakdown analysis
 - Appeal option recommendations
@@ -1584,20 +1830,20 @@ Decision Decoder:
   },
 
   'decoder-upload': {
-    title: 'Upload Decision',
+    title: 'Drop In Decision',
     content: `
-How to upload your decision letter.
+How to drop in your decision letter.
 
 ## Steps
 
-1. Click "Upload Decision Letter"
+1. Click "Drop In Decision Letter"
 2. Select your PDF or image
 3. Wait for AI analysis
 4. Review the breakdown
 
 ## Tips
 
-- Upload complete letters
+- Drop in complete letters
 - Include all pages
 - Clearer scans work better
     `,
@@ -1683,7 +1929,7 @@ VA's health record download system.
 ## Using with X-Ray
 
 1. Download Blue Button records (text file)
-2. Upload to X-Ray
+2. Drop in to X-Ray
 3. AI extracts evidence
 4. Review findings
     `,
@@ -2796,6 +3042,207 @@ We never see, collect, or transmit your data. It stays on your device.
     `,
   },
 
+  'ai-settings': {
+    title: 'AI Settings',
+    content: `
+Configure AI to power your claims analysis.
+
+## Two AI Options
+
+### 🔒 Local AI (100% Private)
+Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
+- 17 models from 0.3 GB to 4.8 GB
+- Works offline after initial download
+- Zero internet required during analysis
+
+### ☁️ Cloud AI (Google Gemini)
+Fast and powerful, requires internet.
+- Free tier available
+- Bring your own API key
+- Data sent to Google (with your consent)
+
+## Privacy Comparison
+
+| Feature | Local AI | Cloud AI |
+|---------|----------|----------|
+| Data leaves device | ❌ Never | ✅ Yes |
+| Internet required | ❌ After download | ✅ Always |
+| Speed | Varies by model | Fast |
+| Quality | Good to Excellent | Excellent |
+| Cost | Free (VRAM) | Free tier available |
+    `,
+  },
+
+  'local-ai-overview': {
+    title: 'Local AI Overview',
+    content: `
+Run AI 100% on your device - your data never leaves your computer.
+
+## How It Works
+
+Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
+
+1. **Download Once**: Model downloads to your browser cache (one-time)
+2. **Run Locally**: All processing happens on YOUR GPU
+3. **Stay Private**: Zero data transmission - no internet needed
+
+## Requirements
+
+- **Modern Browser**: Chrome, Edge, or Brave (WebGPU support)
+- **GPU with VRAM**: 2-8 GB depending on model size
+- **Storage**: 0.3 GB to 4.8 GB per model
+
+## First Time Setup
+
+1. Click the 🤖 AI Settings button in the header
+2. Select "Local AI" mode
+3. Choose a model (start with Llama 3.2 3B)
+4. Click "Initialize" - model downloads (~2 min)
+5. You're ready! Model stays cached for instant loading
+
+## GPU Selection (Dual-GPU Laptops)
+
+If you have a gaming laptop with both integrated and discrete GPUs:
+- **High Performance**: Use NVIDIA/AMD GPU for speed
+- **Power Saver**: Use Intel/AMD integrated for battery life
+    `,
+  },
+
+  'model-selection': {
+    title: 'Choosing the Right Model',
+    content: `
+Each AI model has strengths. Here's what to use for each task:
+
+## 📄 Document Parsing (C-Files, DD214s, Medical Records)
+
+| Model | Why |
+|-------|-----|
+| **DeepSeek R1 7B ⭐** | Chain-of-thought reasoning finds evidence in complex files |
+| **Qwen 2.5 7B** | Excellent medical terminology understanding |
+
+## ✍️ Creative Writing (Nexus Letters, Statements)
+
+| Model | Why |
+|-------|-----|
+| **Qwen 3 8B** | Most natural, persuasive writing |
+| **Mistral 7B** | Great fluency and varied prose |
+
+## ⚖️ Legal Analysis (Decisions, TDIU, Regulations)
+
+| Model | Why |
+|-------|-----|
+| **DeepSeek R1 Llama 8B** | Professional-grade reasoning |
+| **Phi 3.5 Mini** | Specialized for regulatory interpretation |
+
+## 🔴 Adversarial (Red Team, War Room)
+
+| Model | Why |
+|-------|-----|
+| **DeepSeek R1 7B** | Thinks like a skeptical examiner |
+
+## 👁️ Vision (Scanned Documents, Photos)
+
+| Model | Why |
+|-------|-----|
+| **Phi 3.5 Vision** | ONLY model that can read images |
+
+## ⚡ Quick Tasks (Search, Calculator, Scout)
+
+| Model | Why |
+|-------|-----|
+| **Llama 3.2 3B** | Fast responses, good quality |
+| **SmolLM2 360M** | Works on any device |
+
+## Smart Recommendations
+
+Each AI-powered tool shows a badge recommending the best model. Look for:
+- 👁️ Vision - Use Phi 3.5 Vision
+- ⭐ Recommended - Optimal for that tool
+- ⚡ Fast - Speed-optimized
+- 🧠 Reasoning - Complex analysis
+    `,
+  },
+
+  'cloud-vs-local': {
+    title: 'Cloud vs Local AI',
+    content: `
+Choose based on your priorities.
+
+## Choose Local AI When:
+
+✅ **Privacy is critical** - Analyzing sensitive medical records
+✅ **Working offline** - No reliable internet
+✅ **Avoiding costs** - No API fees ever
+✅ **You have a modern GPU** - 4+ GB VRAM
+
+## Choose Cloud AI When:
+
+✅ **Speed matters most** - Fastest responses
+✅ **Complex analysis** - Gemini is very capable
+✅ **Limited hardware** - Old computer or low VRAM
+✅ **Occasional use** - Free tier handles light usage
+
+## Can I Use Both?
+
+Yes! You can switch modes anytime:
+1. Use Cloud AI for quick questions
+2. Switch to Local AI for document analysis
+3. Each tool remembers your last setting
+
+## Privacy Comparison
+
+| What Happens | Local AI | Cloud AI |
+|--------------|----------|----------|
+| Your DD214 text | Stays on device | Sent to Google |
+| Medical records | Stays on device | Sent to Google |
+| AI responses | Generated locally | From Google servers |
+| Data retention | None - browser only | Google's policy |
+    `,
+  },
+
+  'vram-requirements': {
+    title: 'VRAM Requirements',
+    content: `
+Choose a model that fits your GPU memory.
+
+## How to Check Your VRAM
+
+**Windows:**
+1. Right-click desktop → Display Settings
+2. Advanced Display Settings → Display Adapter Properties
+3. Look for "Dedicated Video Memory"
+
+**Mac:** Apple Silicon has shared memory - use Light models
+
+## Model Recommendations by VRAM
+
+### 2 GB VRAM (Integrated Graphics)
+- SmolLM2 360M ⚡ (0.3 GB)
+- Llama 3.2 1B ⚡ (0.7 GB)
+
+### 4 GB VRAM (Entry Gaming GPU)
+- Llama 3.2 3B ✓ (1.8 GB) - RECOMMENDED
+- Qwen 2.5 3B (2.0 GB)
+- Phi 3.5 Mini (2.3 GB)
+
+### 6 GB VRAM (GTX 1060, RTX 3060)
+- DeepSeek R1 7B ⭐ (3.5 GB) - BEST VALUE
+- Phi 3.5 Vision 👁️ (3.5 GB)
+
+### 8+ GB VRAM (RTX 3070+, RTX 4070+)
+- Qwen 3 8B (4.8 GB) - TOP TIER
+- Mistral 7B (4.1 GB)
+- Qwen 2.5 7B (4.5 GB)
+
+## Tips
+
+- **Start small**: Try Llama 3.2 3B first
+- **Model stays cached**: Only downloads once
+- **Switch anytime**: Install multiple models
+- **Watch memory**: Close other apps if loading fails
+    `,
+  },
+
   reference: {
     title: 'Reference',
     content: `
@@ -2815,32 +3262,221 @@ Navigate efficiently with your keyboard.
   glossary: {
     title: 'Glossary',
     content: `
-Common VA claims terminology.
+Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 
 ## A-C
 
-- **C&P Exam** - Compensation and Pension examination
-- **CFR** - Code of Federal Regulations
-- **Combined Rating** - Total disability percentage using VA math
+- **Active Duty** - Full-time service in the military - required for most VA disability benefits
+- **ADL** - Activities of Daily Living - Basic self-care tasks like bathing, dressing, eating
+- **Agent Orange** - Toxic herbicide used in Vietnam; certain conditions are presumptive for exposed veterans
+- **Aggravation** - Worsening of a pre-existing condition beyond natural progression due to military service
+- **Aid & Attendance** - Additional benefit for veterans who need help with daily activities
+- **Airborne Hazards** - Exposure to smoke, fumes, sand, dust, and particulate matter during deployments - covered by PACT Act
+- **AMA** - Appeals Modernization Act - The current VA appeals process implemented in 2019, offering three decision review lanes
+- **Analogous Rating** - A rating assigned using a diagnostic code for a similar condition when your specific condition is not listed in the V...
+- **Ancillary Benefits** - Additional benefits automatically considered with your claim like SMC, DEA, and CHAMPVA
+- **Ankylosis** - Complete immobility of a joint - typically qualifies for higher ratings than limited motion
+- **at least as likely as not** - Medical probability of 50% or greater - the standard required for VA nexus opinions
+- **Backpay** - Retroactive compensation from your effective date to the present
+- **benefit of the doubt** - When evidence is approximately equal, VA must decide in favor of the veteran (38 CFR 3.102)
+- **Bilateral Factor** - Additional percentage added when you have the same disability affecting both sides of your body
+- **BiPAP** - Bilevel Positive Airway Pressure - Breathing device similar to CPAP that can support 50% sleep apnea rating
+- **Blue Button** - VA\
+- **Buddy Statement** - A sworn statement from someone who witnessed your condition during or after service, often filed on VA Form 21-10210
+- **Burn Pit** - Open-air waste burning common in Iraq/Afghanistan; PACT Act establishes presumptive conditions
+- **BVA** - Board of Veterans\
+- **C-File** - Claims File - Your complete VA claims folder containing all evidence, decisions, and correspondence
+- **C&P** - Compensation & Pension Exam - A medical examination scheduled by the VA to evaluate your claimed disability
+- **Camp Lejeune** - Marine base with contaminated water (1953-1987); presumptive conditions established by PACT Act
+- **CAPRI** - Computerized Patient Record Interface - VA\
+- **CAVC** - Court of Appeals for Veterans Claims - Federal court that reviews BVA decisions
+- **CFR** - Code of Federal Regulations - The legal framework governing VA disability ratings. Title 38 CFR covers veterans benefits
+- **CFS** - Chronic Fatigue Syndrome - Presumptive condition for Gulf War veterans under 38 CFR 3.317
+- **CHAMPVA** - Civilian Health and Medical Program of VA - Healthcare for dependents of P&T veterans
+- **Chapter 31** - Another name for VR&E/Vocational Rehabilitation
+- **Chapter 35** - See DEA - education benefits for dependents
+- **Chronic Disease** - A disease listed in 38 CFR 3.309 that is presumptively service-connected if it manifests within one year of discharge
+- **Combined Rating** - The VA\
+- **competent evidence** - Evidence from a qualified source (medical evidence from doctors, lay evidence from witnesses)
+- **Continuous Pursuit** - Maintaining your appeal through proper review options to preserve your effective date
+- **COPD** - Chronic Obstructive Pulmonary Disease - Progressive lung disease often service-connected from toxic exposures
+- **credible evidence** - Evidence that is believable and trustworthy
+- **CUE** - Clear and Unmistakable Error - A specific type of appeal arguing the VA made an obvious mistake in law or fact
 
 ## D-I
 
-- **DBQ** - Disability Benefits Questionnaire
-- **DeLuca Factors** - Additional impairment factors (pain, fatigue, etc.)
-- **IMO** - Independent Medical Opinion
-- **ITF** - Intent to File
+- **Date of Claim** - The official date VA receives your claim or Intent to File
+- **Date of Entitlement** - The date your condition met the criteria for a particular rating level
+- **DBQ** - Disability Benefits Questionnaire - A standardized form used by medical providers to document disability evaluations ...
+- **DC** - Diagnostic Code - See Diagnostic Code
+- **DD-214** - Certificate of Release or Discharge from Active Duty - Official proof of military service
+- **DD-215** - Correction to DD-214 - Used to correct or add information to your discharge document
+- **De Novo Review** - A fresh look at your claim by a different reviewer (used in Higher-Level Review)
+- **DEA** - Dependents\
+- **Decision Notice** - Official VA letter informing you of the decision on your claim and your appeal rights
+- **Deferred** - When VA postpones deciding part of your claim pending additional evidence or examination
+- **Development** - The process of gathering evidence for your claim - VA has a duty to assist in this process
+- **Diagnostic Code** - Specific numerical code in 38 CFR used to rate a particular condition (e.g., DC 5003 for arthritis)
+- **DIC** - Dependency and Indemnity Compensation - Benefits for surviving spouses and dependents of veterans who died from servi...
+- **Direct Review Docket** - Board appeal option where only existing evidence is reviewed with no new evidence or hearing - typically the fastest ...
+- **Direct Service Connection** - A disability directly caused by an event, injury, or disease during military service
+- **DRO** - Decision Review Officer - A senior VA employee who reviews claim decisions during the appeals process
+- **DSM-5** - Diagnostic and Statistical Manual of Mental Disorders, 5th Edition - Mental health diagnosis criteria
+- **duty to assist** - VA\
+- **Duty to Notify** - VA obligation to inform you what evidence is needed to substantiate your claim (38 CFR 3.159(b))
+- **Ebenefits** - VA\
+- **EED** - Earliest Effective Date - The date VA uses to calculate when benefits begin, usually the claim filing date
+- **Effective Date** - The date from which VA compensation payments begin
+- **EPTS** - Existed Prior to Service - A condition that existed before military service that may have been aggravated
+- **Evidence Submission Docket** - Board appeal option allowing 90 days to submit new evidence after filing the NOD, but no hearing
+- **Ex Parte** - The nature of VA proceedings meaning VA is supposed to help develop your claim, not act as an adversary
+- **Extraschedular Rating** - A rating above the schedule maximum for exceptional cases (38 CFR 3.321)
+- **favorable finding** - Evidence or testimony that supports the veteran\
+- **Favorable Finding** - A determination in your favor by VA that becomes binding on future adjudicators and cannot be reversed without CUE
+- **FDC** - Fully Developed Claim - A claim submitted with all evidence upfront for faster processing
+- **FEV-1** - Forced Expiratory Volume in 1 Second - A key PFT measurement used in asthma and COPD ratings
+- **FOIA** - Freedom of Information Act - Legal right to request copies of your records from VA and DoD
+- **Functional Impairment** - How your disability affects your ability to work, perform daily activities, and live your life
+- **GAD** - Generalized Anxiety Disorder - Chronic anxiety that may be service-connected
+- **GAF** - Global Assessment of Functioning - Outdated mental health rating scale (no longer used by VA)
+- **Goniometer** - Device used to measure range of motion in joints during C&P exams - critical for musculoskeletal ratings
+- **Gulf War Illness** - Medically unexplained chronic symptoms affecting Gulf War veterans, presumed service-connected
+- **Hearing Request Docket** - Board appeal option to testify before a Veterans Law Judge and submit evidence - longest wait but most thorough review
+- **Herbicide Exposure** - Exposure to tactical herbicides like Agent Orange during military service
+- **HLR** - Higher-Level Review - A review of your claim by a senior VA employee using only existing evidence
+- **Housebound** - Additional benefit for veterans substantially confined to their home
+- **IADL** - Instrumental Activities of Daily Living - Complex tasks like cooking, cleaning, managing finances
+- **IBS** - Irritable Bowel Syndrome - Functional GI disorder presumptive for Gulf War veterans
+- **ICD-10** - International Classification of Diseases, 10th Edition - Standard medical diagnosis codes
+- **IDES** - Integrated Disability Evaluation System - DoD/VA process for evaluating disabilities before separation from service
+- **IME** - Independent Medical Examination - Similar to IMO, a private medical exam obtained outside the VA system
+- **IMO** - Independent Medical Opinion - A private medical evaluation obtained by the veteran, often a nexus letter
+- **In-Service Event** - The incident, injury, illness, or exposure during military service that caused or aggravated your disability
+- **Informal Conference** - Optional phone call during Higher-Level Review to discuss errors in your claim
+- **Intent to File** - VA Form 21-0966 - Locks in an effective date while you gather evidence for your claim
+- **Ionizing Radiation** - Radiation exposure from nuclear weapons testing, occupying Hiroshima/Nagasaki, or other qualifying activities
+
+## J-M
+
+- **Lay Evidence** - Personal statements from the veteran, buddies, or family members describing symptoms and functional impact
+- **Legacy** - Legacy Appeals System - The old VA appeals process (pre-2019). Some claims are still in this system
+- **LHI** - Logistics Health Incorporated - Another VA contractor that conducts C&P exams
+- **LOD** - Line of Duty - Determination that injury or illness occurred while performing military duties, not due to misconduct
+- **Loss of Use** - When a limb or organ has no effective remaining function - qualifies for SMC even without amputation
+- **material fact** - A fact significant enough to affect the outcome of a claim
+- **MDD** - Major Depressive Disorder - Clinical depression that may be service-connected
+- **MEB** - Medical Evaluation Board - Military board that determines fitness for duty due to medical conditions
+- **Medical Evidence** - Evidence provided by licensed healthcare professionals including diagnoses, treatment records, and medical opinions
+- **MST** - Military Sexual Trauma - Sexual assault or harassment experienced during military service
+- **Multi-Symptom Illness** - Conditions like chronic fatigue syndrome, fibromyalgia, or functional GI disorders presumptive for Gulf War veterans
 
 ## N-S
 
-- **Nexus** - Medical connection between condition and service
-- **Secondary Condition** - Disability caused by service-connected condition
-- **Service Connection** - VA recognition that condition is related to service
+- **New and Relevant Evidence** - Evidence not previously submitted that tends to prove an unestablished element of your claim - required for supplemen...
+- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as 
+- **Nexus Letter** - A medical opinion letter from a doctor establishing the connection between your service/service-connected condition a...
+- **NOD** - Notice of Disagreement - The initial appeal filed when you disagree with a VA decision
+- **NOVA** - National Organization of Veterans\
+- **NSC** - Non-Service-Connected - A disability not related to military service
+- **OGC** - Office of General Counsel - VA\
+- **OSA** - Obstructive Sleep Apnea - The most common type of sleep apnea rated under DC 6847
+- **P&T** - Permanent and Total - A 100% disability rating that VA considers permanent and unlikely to improve
+- **PACT Act** - Promise to Address Comprehensive Toxics Act - Expands VA benefits for veterans exposed to burn pits, Agent Orange, an...
+- **Particulate Matter** - Fine particles in the air from burn pits, sand, and dust that can cause respiratory conditions
+- **PEB** - Physical Evaluation Board - Military board that determines disability rating upon separation
+- **Peripheral Neuropathy** - Nerve damage affecting the hands and feet - often secondary to diabetes or herbicide exposure
+- **Persian Gulf War** - Operations after August 2, 1990; qualifies for Gulf War presumptive conditions
+- **Personal Statement** - A written account from the veteran describing symptoms, functional impact, and history in their own words
+- **PFT** - Pulmonary Function Test - Breathing test that measures lung capacity and function, required for respiratory ratings
+- **POA** - Power of Attorney - Document authorizing a VSO or attorney to represent you
+- **preponderance of evidence** - Standard where more evidence supports one side than the other
+- **Presumptive** - A condition automatically assumed to be service-connected if you served in certain locations or time periods
+- **Presumptive Period** - The timeframe after discharge during which certain conditions are presumed service-connected (often 1 year for chroni...
+- **Private Medical Records** - Medical records from non-VA healthcare providers that can be submitted as evidence
+- **probative value** - The weight or persuasiveness of evidence in supporting a claim
+- **Proposed Reduction** - A notice from VA that they intend to reduce your rating - you have 60 days to respond with evidence
+- **Protected Rating** - A rating that cannot be reduced once held for 20+ years (38 CFR 3.951)
+- **PTSD** - Post-Traumatic Stress Disorder - Mental health condition triggered by traumatic events
+- **Pyramiding** - Illegal practice of rating the same disability or symptoms under multiple diagnostic codes
+- **QTC** - QTC Medical Services - One of the private contractors VA uses to conduct C&P exams
+- **Radiation Exposure** - Exposure to ionizing radiation during service; certain conditions are presumptive
+- **Radiculopathy** - Nerve damage causing pain, numbness, or weakness radiating from the spine to the extremities
+- **Rating Criteria** - The specific symptoms, findings, or functional limitations listed in 38 CFR Part 4 for each disability rating level
+- **Rating Decision** - The official VA document explaining the decision on your claim including ratings assigned and effective dates
+- **Rating Reduction** - When VA lowers your disability percentage - subject to due process protections under 38 CFR 3.105(e)
+- **Rating Stabilization** - Protection against reduction for ratings held 5+ years - requires sustained improvement to reduce (38 CFR 3.344)
+- **Remand** - When the BVA sends a case back to the regional office for additional development
+- **Reserve/Guard** - Part-time military service that may qualify for VA benefits during certain periods of active duty
+- **ROM** - Range of Motion - Measurement of joint flexibility, critical for musculoskeletal ratings
+- **SBP** - Survivor Benefit Plan - DoD program that may offset DIC payments
+- **SC** - Service-Connected - A disability that was caused or aggravated by military service
+- **Schedular Rating** - A disability rating based on the criteria in 38 CFR Part 4
+- **Secondary Condition** - A disability caused or aggravated by an already service-connected condition (38 CFR 3.310)
+- **Section 4.3** - Resolution of reasonable doubt in ratings - when disability picture falls between two ratings, assign the higher one
+- **Section 4.7** - Higher of two evaluations - assigns the higher rating when symptoms more nearly approximate those criteria
+- **SF-180** - Request Pertaining to Military Records - Used to request service records from NPRC
+- **SMC** - Special Monthly Compensation - Additional compensation for veterans with severe disabilities like loss of limbs, blin...
+- **SMC(k)** - Special Monthly Compensation for loss of use of one hand, foot, eye, or creative organ - paid in addition to schedula...
+- **SMC(l)** - Special Monthly Compensation for veterans needing aid and attendance of another person
+- **SMC(s)** - Special Monthly Compensation for being housebound OR having 100% rating plus additional 60% disability
+- **SOC** - Statement of the Case - The VA\
+- **Southwest Asia** - Iraq, Kuwait, Saudi Arabia, and surrounding areas - location for Gulf War presumptives
+- **SSOC** - Supplemental Statement of the Case - Additional VA explanation issued after new evidence or arguments
+- **Staged Rating** - Different rating percentages for different time periods based on changing severity
+- **Static Disability** - A condition that has reached maximum improvement and is unlikely to change - protects against routine reexaminations
+- **STR** - Service Treatment Records - Your official military medical records created during active duty
+- **Stressor** - A traumatic event during service that caused PTSD - must be documented or corroborated for non-combat PTSD claims
+- **Supplemental Claim** - An appeal lane where you submit new and relevant evidence to reopen a denied claim
+- **Sustained Improvement** - Improvement that is maintained in ordinary conditions of life - required to reduce ratings held 5+ years
 
-## T-V
+## T-Z
 
-- **TDIU** - Total Disability Individual Unemployability
-- **VA Math** - Method for calculating combined ratings
-- **VSO** - Veterans Service Organization
+- **38 CFR** - Title 38 of the Code of Federal Regulations - The specific section of law covering VA disability rating criteria
+- **38 CFR Part 3** - Adjudication rules - Covers who qualifies, how claims are processed, and eligibility requirements
+- **38 CFR Part 4** - Schedule for Rating Disabilities (VASRD) - Contains all diagnostic codes and rating criteria
+- **50/50 rule** - Legal principle that VA must give veterans the benefit of the doubt when evidence is equal on both sides
+- **TBI** - Traumatic Brain Injury - Brain injury from blast, impact, or concussion during service
+- **TDIU** - Total Disability Individual Unemployability - Provides 100% compensation when service-connected disabilities prevent ...
+- **Toxic Exposure** - Exposure to hazardous substances during military service including burn pits, Agent Orange, contaminated water, and r...
+- **Toxic Exposure Screening** - Required VA health screening for veterans with potential toxic exposures under the PACT Act
+- **Undiagnosed Illness** - Medically unexplained chronic symptoms that qualify Gulf War veterans for compensation under 38 CFR 3.317
+- **VA** - Department of Veterans Affairs - The federal agency responsible for providing benefits and services to veterans
+- **VA Form 10182** - Decision Review Request: Board Appeal - The form to file a Notice of Disagreement and appeal to the Board of Veterans...
+- **VA Form 20-0995** - Decision Review Request: Supplemental Claim - Used to submit new evidence on a denied claim
+- **VA Form 20-0996** - Decision Review Request: Higher-Level Review - Used to request senior reviewer look at your claim
+- **VA Form 21-0781** - Statement in Support of Claim for PTSD - Specialized form for describing PTSD stressors
+- **VA Form 21-0781a** - Statement in Support of Claim for PTSD Secondary to Personal Assault - Specialized form for PTSD from MST or personal...
+- **VA Form 21-0966** - Intent to File - Locks in your effective date for up to 1 year while you gather evidence
+- **VA Form 21-10210** - Lay/Witness Statement - Form for buddy statements from people who observed your condition
+- **VA Form 21-22** - Appointment of Veterans Service Organization as Claimant Representative
+- **VA Form 21-22a** - Appointment of Individual as Claimant Representative (for attorneys/agents)
+- **VA Form 21-2680** - Examination for Housebound Status or Permanent Need for Regular Aid and Attendance
+- **VA Form 21-4138** - Statement in Support of Claim - A general-purpose form for submitting personal statements and additional information
+- **VA Form 21-4192** - Request for Employment Information in Connection with Claim for Disability Benefits - Employer verification for TDIU
+- **VA Form 21-526EZ** - Application for Disability Compensation and Related Compensation Benefits - The main form to file a VA disability claim
+- **VA Form 21-534EZ** - Application for DIC, Death Pension, and Accrued Benefits by Surviving Spouse or Child
+- **VA Form 21-686c** - Declaration of Status of Dependents - Used to add dependents for additional compensation
+- **VA Form 21-8940** - Veterans Application for Increased Compensation Based on Unemployability - The form to apply for TDIU
+- **VA Math** - The VA\
+- **VA Pension** - Non-service-connected pension for low-income wartime veterans
+- **VA Treatment Records** - Medical records from VA healthcare facilities automatically in your claims file
+- **VARO** - VA Regional Office - The local VA office that processes disability claims for your region
+- **VASRD** - VA Schedule for Rating Disabilities - The rating criteria in 38 CFR Part 4 used to evaluate all disabilities
+- **VBA** - Veterans Benefits Administration - The VA division that handles disability compensation, pension, and other benefits
+- **VBMS** - Veterans Benefits Management System - The VA\
+- **VCAA** - Veterans Claims Assistance Act - Law requiring VA to notify veterans of evidence needed and assist in gathering evide...
+- **VES** - Veterans Evaluation Services - Another VA contractor for C&P exams
+- **VHA** - Veterans Health Administration - The VA division that provides healthcare services to veterans
+- **VLJ** - Veterans Law Judge - An attorney employed by the Board of Veterans Appeals who reviews and decides appeals
+- **VR&E** - Vocational Rehabilitation & Employment - VA program providing job training and employment support (formerly Voc Rehab)
+- **VSO** - Veterans Service Organization - Accredited organizations (like DAV, VFW, American Legion) that provide free help with...
+- **Wartime Service** - Service during a designated wartime period - required for VA pension eligibility
+- **WHODAS** - World Health Organization Disability Assessment Schedule - Current tool VA uses to assess functional impairment
+- **Whole Person Theory** - VA rating concept that additional disabilities have smaller impact on already-disabled person
+
+## Full Glossary
+
+For the complete glossary with 195+ terms, hover over highlighted VA terms throughout the app to see tooltips.
     `,
   },
 
@@ -2962,7 +3598,7 @@ Available 24/7
 };
 
 // Simple markdown-like renderer
-const renderContent = (content) => {
+const renderContent = (content, onClose) => {
   if (!content) return null;
   
   const lines = content.trim().split('\n');
@@ -3137,8 +3773,12 @@ const renderContent = (content) => {
         <div key={`tour-btn-${i}`} className="my-4">
           <button
             onClick={() => {
-              resetTourState();
-              alert('Tour reset! Close this manual and refresh the page to see the tour again.');
+              // Close the User Manual first
+              if (onClose) onClose();
+              // Trigger tour restart after a brief delay
+              setTimeout(() => {
+                triggerTourRestart();
+              }, 300);
             }}
             className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
           >
@@ -3226,8 +3866,10 @@ const UserManual = ({ onClose, onReportBug }) => {
           </button>
         </div>
         
-        {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`}>
+        {/* Sidebar - scrollbar on left using RTL */}
+        <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`} dir="rtl">
+          {/* Wrapper to restore LTR for content */}
+          <div dir="ltr">
           {/* Desktop header */}
           <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
             <div className="flex items-center justify-between mb-3">
@@ -3364,14 +4006,32 @@ const UserManual = ({ onClose, onReportBug }) => {
             ))}
           </nav>
           
-          {/* Report bug link */}
+          {/* Start Tour button */}
           <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => {
+                // Close the User Manual first
+                if (onClose) onClose();
+                // Trigger tour restart after a brief delay
+                setTimeout(() => {
+                  triggerTourRestart();
+                }, 300);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
+            >
+              🎓 Start Interactive Tour
+            </button>
+          </div>
+          
+          {/* Report bug link */}
+          <div className="px-3 pb-3">
             <button
               onClick={onReportBug}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
             >
               🐛 Report a Bug
             </button>
+          </div>
           </div>
         </div>
         
@@ -3401,7 +4061,7 @@ const UserManual = ({ onClose, onReportBug }) => {
             
             {/* Content */}
             <div className="prose dark:prose-invert max-w-none">
-              {renderContent(currentContent.content)}
+              {renderContent(currentContent.content, onClose)}
             </div>
             
             {/* Navigation buttons */}

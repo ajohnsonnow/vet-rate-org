@@ -82,8 +82,14 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
     return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   };
 
+  const handleClose = () => {
+    // Dispatch event so tour knows What's New has closed
+    window.dispatchEvent(new CustomEvent('whatsNewClosed'));
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div data-whats-new-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header - Fancy gradient */}
         <div className="sticky top-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-6 rounded-t-2xl relative overflow-hidden">
@@ -104,7 +110,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               aria-label="Close"
             >
@@ -265,7 +271,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
           {/* Action Button */}
           <div className="mt-6 text-center">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Roger That, Let's Go! 🎯

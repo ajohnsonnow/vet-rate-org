@@ -64,15 +64,18 @@ const TermsOfServiceModal = () => {
     localStorage.setItem('vet-rate-tos-accepted', 'true');
     localStorage.setItem('vet-rate-tos-accepted-date', new Date().toISOString());
     setIsOpen(false);
+    
+    // Dispatch event so App can show What's New modal
+    window.dispatchEvent(new CustomEvent('tosAccepted'));
   };
 
   if (!isOpen) return null;
 
   return (
     <div data-tos-modal="true" className={`${modalClasses.backdrop} z-[99]`}>
-      <div className={`${modalClasses.content} max-w-4xl max-h-[90vh]`}>
-        {/* Header */}
-        <div className="sticky top-0 bg-red-700 text-white px-6 py-4 border-b-4 border-red-900">
+      <div className={`${modalClasses.content} max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}>
+        {/* Header - Fixed at top */}
+        <div className="flex-shrink-0 bg-red-700 text-white px-6 py-4 border-b-4 border-red-900">
           <div className="flex items-center gap-3">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -82,8 +85,8 @@ const TermsOfServiceModal = () => {
           <p className="mt-2 text-sm text-red-100">Required Reading - Please Review Carefully</p>
         </div>
 
-        {/* Content */}
-        <div className="px-6 py-6 space-y-6 text-gray-800">
+        {/* Content - Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-gray-800">
           {/* Preamble */}
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
             <p className="font-semibold text-lg mb-2">IMPORTANT NOTICE</p>
@@ -284,8 +287,8 @@ const TermsOfServiceModal = () => {
           </div>
         </div>
 
-        {/* Footer with Button */}
-        <div className="sticky bottom-0 bg-gray-100 px-6 py-4 border-t-2 border-gray-300">
+        {/* Footer with Button - Fixed at bottom */}
+        <div className="flex-shrink-0 bg-gray-100 px-6 py-4 border-t-2 border-gray-300">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-600">
               <p>Effective Date: January 18, 2026</p>

@@ -23,6 +23,7 @@ import { generateAI } from '../utils/unifiedAIService';
 import { isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import {
   VA_PAY_RATES_HISTORICAL,
   getHistoricalRate,
@@ -467,7 +468,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
     >
@@ -514,6 +515,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
             <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  <LLMRecommendationBadge toolId="retro-pay-hunter" />
                   <AIStatusBadge showLabel={true} onClick={onAISettingsClick} />
                   <span className="text-sm text-gray-400">
                     {aiStatus.effectiveMode === AI_MODES.LOCAL 

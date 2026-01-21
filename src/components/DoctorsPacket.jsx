@@ -15,6 +15,7 @@ import {
 } from '../utils/nexusLogicGenerator';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ToolCardButton from './ToolCardButton';
 
 // Icons
@@ -273,11 +274,15 @@ Vet-Rate.org - Helping Veterans Win Claims`;
               <SparklesIcon />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Doctor's Packet Generator</h2>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                Doctor's Packet Generator
+                <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
+              </h2>
               <p className="text-sm text-violet-100">AI-powered medical nexus research</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <LLMRecommendationBadge toolId="doctors-packet" />
             <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
             <button
               onClick={onClose}
@@ -397,9 +402,9 @@ Vet-Rate.org - Helping Veterans Win Claims`;
                   <div className="flex items-start gap-3">
                     <span className="text-xl">💡</span>
                     <div className="text-sm text-amber-100">
-                      <p className="font-semibold mb-1">AI Required</p>
+                      <p className="font-semibold mb-1">AI Required for Analysis</p>
                       <p className="text-amber-200">
-                        Click the <strong>AI button</strong> in the header above to load your secure Local AI 
+                        Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
                         (100% private) or enter your Gemini API key.
                       </p>
                     </div>

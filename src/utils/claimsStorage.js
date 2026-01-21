@@ -7,7 +7,11 @@
  * Claims Storage Utility
  * Manages localStorage for saved claims and generated statements
  * Privacy-focused: All data stays on user's device
+ * 
+ * Now integrates with persistentStorage for crash-proof auto-saving
  */
+
+import { markAsModified } from './persistentStorage';
 
 const STORAGE_KEY = 'vet_rate_saved_claims';
 const STATEMENTS_KEY = 'vet_rate_statements';
@@ -60,6 +64,10 @@ export const saveClaim = (claim) => {
     }
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
+    
     return true;
   } catch (error) {
     console.error('Error saving claim:', error);
@@ -82,6 +90,10 @@ export const removeClaim = (claimId) => {
     const claims = getSavedClaims();
     const filtered = claims.filter(c => c.id !== claimId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
+    
     return true;
   } catch (error) {
     console.error('Error removing claim:', error);
@@ -94,6 +106,10 @@ export const clearAllClaims = () => {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STATEMENTS_KEY);
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
+    
     return true;
   } catch (error) {
     console.error('Error clearing claims:', error);
@@ -111,6 +127,10 @@ export const updateClaimStatus = (claimId, newStatus) => {
       claims[index].status = newStatus;
       claims[index].dateUpdated = new Date().toISOString();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
+      
+      // Trigger auto-save to crash-proof storage
+      markAsModified();
+      
       return true;
     }
     return false;
@@ -132,6 +152,10 @@ export const saveStatement = (claimId, statementData) => {
     
     // Update claim status
     updateClaimStatus(claimId, 'Statement Generated');
+    
+    // Trigger auto-save to crash-proof storage
+    markAsModified();
+    
     return true;
   } catch (error) {
     console.error('Error saving statement:', error);

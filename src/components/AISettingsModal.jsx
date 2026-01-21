@@ -7,8 +7,12 @@ import React, { useState, useEffect } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { AIModeSelector } from './AIModeSelector';
 import { getAIStatus, isCloudAIAvailable, isLocalAIReady, unloadLocalAI } from '../utils/unifiedAIService';
+import { useDeviceCapability, DEVICE_TIERS } from '../utils/useDeviceCapability';
+import { getGPUPreference, GPU_PREFERENCES } from './LocalAIPanel';
 import ToolCardButton from './ToolCardButton';
 import ReportBugLink from './ReportBugLink';
+import TokenLimitConfig from './TokenLimitConfig';
+import PresetSelector from './PresetSelector';
 
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
@@ -20,14 +24,60 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [isUnloading, setIsUnloading] = useState(false);
+  const [gpuInfo, setGpuInfo] = useState(null);
+  const [selectedPreset, setSelectedPreset] = useState('BALANCED');
   const localAIReady = isLocalAIReady();
+  
+  // Device capability detection
+  const deviceCapability = useDeviceCapability();
 
-  // Load API key on mount
+  // Load API key and GPU info on mount
   useEffect(() => {
     const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE);
     if (savedKey) {
       setApiKey(savedKey);
     }
+    
+    // Load saved preset
+    const savedPreset = localStorage.getItem('vetrate_ai_preset');
+    if (savedPreset && ['LEGAL', 'CREATIVE', 'ADVERSARIAL', 'BALANCED'].includes(savedPreset)) {
+      setSelectedPreset(savedPreset);
+    }
+    
+    // Get GPU info
+    const checkGPU = async () => {
+      if (navigator.gpu) {
+        try {
+          // Get current GPU
+          const adapter = await navigator.gpu.requestAdapter();
+          if (adapter) {
+            let info = { device: 'GPU Detected', vendor: 'Unknown', description: '' };
+            try {
+              if (typeof adapter.requestAdapterInfo === 'function') {
+                info = await adapter.requestAdapterInfo();
+                console.log('🎮 Current Active GPU Info:', info);
+              } else if (adapter.info) {
+                info = adapter.info;
+                console.log('🎮 Current Active GPU Info (fallback):', info);
+              }
+            } catch (e) { 
+              console.warn('Could not get current GPU info:', e);
+            }
+            
+            const gpuName = info.description || info.device || `${(info.vendor || 'Unknown').toUpperCase()} GPU`;
+            
+            setGpuInfo({
+              device: gpuName,
+              vendor: info.vendor || 'Unknown',
+              preference: getGPUPreference(),
+            });
+          }
+        } catch (e) {
+          console.warn('Could not get GPU info:', e);
+        }
+      }
+    };
+    checkGPU();
   }, []);
 
   // Update AI status periodically
@@ -52,6 +102,13 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
     localStorage.removeItem(GEMINI_KEY_STORAGE);
     setApiKey('');
     setApiKeySaved(false);
+  };
+
+  // Handle preset change
+  const handlePresetChange = (presetName, presetConfig) => {
+    setSelectedPreset(presetName);
+    localStorage.setItem('vetrate_ai_preset', presetName);
+    console.log('AI Preset changed to:', presetName, presetConfig);
   };
 
   // Unload Local AI
@@ -127,13 +184,54 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
 
           {/* LOCAL AI SECTION - FIRST for maximum privacy emphasis */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xl">🔒</span>
-              <h3 className="font-bold text-gray-900 dark:text-white">Local AI (100% Private) - Recommended</h3>
-              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-bold rounded-full">
-                MOST SECURE
-              </span>
+              <h3 className="font-bold text-gray-900 dark:text-white">Local AI (100% Private)</h3>
+              {/* Device-aware badge */}
+              {deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED ? (
+                <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold rounded-full">
+                  ❌ NOT SUPPORTED
+                </span>
+              ) : deviceCapability.tier === DEVICE_TIERS.LEGACY ? (
+                <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 text-xs font-bold rounded-full">
+                  ⚠️ LIMITED SUPPORT
+                </span>
+              ) : (
+                <>
+                  <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-bold rounded-full">
+                    ✨ RECOMMENDED
+                  </span>
+                  <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-bold rounded-full">
+                    MOST SECURE
+                  </span>
+                </>
+              )}
             </div>
+            
+            {/* Device capability warning for legacy/unsupported devices */}
+            {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED || deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
+              <div className={`p-3 rounded-lg border ${
+                deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                  : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED 
+                    ? 'text-red-700 dark:text-red-300' 
+                    : 'text-yellow-700 dark:text-yellow-300'
+                }`}>
+                  {deviceCapability.advice.localAI.warning}
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {deviceCapability.advice.localAI.description}
+                </p>
+                {deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                    💡 <strong>Recommendation:</strong> Use Cloud AI below - it works on all devices and is still very secure.
+                  </p>
+                )}
+              </div>
+            )}
             
             <div className={`p-4 rounded-xl border-2 ${
               localAIReady 
@@ -156,10 +254,52 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
                 </div>
               </div>
               
-              {!localAIReady && (
-                <ToolCardButton className="mt-4 w-full" type="button" onClick={onOpenLocalAI}>
-                  <span>🚀</span> Set Up Local AI (Recommended)
-                </ToolCardButton>
+              {/* GPU Info Display */}
+              {gpuInfo && deviceCapability.tier !== DEVICE_TIERS.UNSUPPORTED && (
+                <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🎮</span>
+                      <div>
+                        <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                          {gpuInfo.device}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {gpuInfo.vendor} • Mode: {
+                            gpuInfo.preference === GPU_PREFERENCES.HIGH_PERFORMANCE ? '🚀 High Performance' :
+                            gpuInfo.preference === GPU_PREFERENCES.LOW_POWER ? '🔋 Power Saver' :
+                            '🤖 Auto'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={onOpenLocalAI}
+                      className="text-xs px-3 py-1.5 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/70 transition-colors"
+                    >
+                      Change GPU
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {!localAIReady && deviceCapability.tier !== DEVICE_TIERS.UNSUPPORTED && (
+                <button
+                  onClick={onOpenLocalAI}
+                  className="mt-3 w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-cyan-500/25"
+                >
+                  <span className="text-xl">🛡️</span>
+                  Open Faraday Cage Protocol
+                </button>
+              )}
+              
+              {!localAIReady && deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED && (
+                <button 
+                  disabled 
+                  className="mt-4 w-full py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <span>🚫</span> Local AI Not Available on This Device
+                </button>
               )}
               
               {localAIReady && (
@@ -186,20 +326,25 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
                   </button>
                 </div>
               )}
-              
-              {/* Faraday Cage Button - Always visible */}
-              <button
-                onClick={onOpenLocalAI}
-                className="mt-3 w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-cyan-500/25"
-              >
-                <span className="text-xl">🛡️</span>
-                Open Faraday Cage Protocol
-              </button>
             </div>
             
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              <strong>Requirements:</strong> Modern browser with WebGPU support (Chrome 113+, Edge 113+). 
-              Downloads a 0.7-4GB model to your device. <strong>Unload</strong> frees GPU memory when not in use.
+              {deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED ? (
+                <>
+                  <strong>Why isn't Local AI available?</strong> Your device doesn't support WebGPU, which is required for running AI models locally. 
+                  This is common on older Android versions (10 and below) and some iOS devices.
+                </>
+              ) : deviceCapability.tier === DEVICE_TIERS.LEGACY ? (
+                <>
+                  <strong>⚠️ Performance Warning:</strong> Your device may struggle with Local AI due to limited GPU/memory. 
+                  Consider using Cloud AI for a smoother experience, or try the smallest model in Local AI settings.
+                </>
+              ) : (
+                <>
+                  <strong>Requirements:</strong> Modern browser with WebGPU support (Chrome 113+, Edge 113+). 
+                  Downloads a 0.7-4GB model to your device. <strong>Unload</strong> frees GPU memory when not in use.
+                </>
+              )}
             </p>
           </div>
 
@@ -208,10 +353,26 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
 
           {/* API Key Section - SECOND (less private option) */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xl">☁️</span>
               <h3 className="font-bold text-gray-900 dark:text-white">Cloud AI - Gemini API Key (Free)</h3>
+              {/* Show recommended badge for legacy/unsupported devices */}
+              {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED || deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
+                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full">
+                  ✨ RECOMMENDED FOR YOUR DEVICE
+                </span>
+              )}
             </div>
+            
+            {/* Show positive message for legacy devices */}
+            {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED || deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  ✅ <strong>Best option for your device!</strong> Cloud AI works on all devices and is fast and reliable. 
+                  Your data is still protected by Google's enterprise-grade security.
+                </p>
+              </div>
+            )}
             
             <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -285,6 +446,27 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
           {/* Divider */}
           <hr className="border-gray-200 dark:border-gray-700" />
 
+          {/* Token Limit Configuration */}
+          <TokenLimitConfig />
+
+          {/* Divider */}
+          <hr className="border-gray-200 dark:border-gray-700" />
+
+          {/* AI Preset Configuration */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🎯</span>
+              <h3 className="font-bold text-gray-900 dark:text-white">AI Configuration</h3>
+            </div>
+            <PresetSelector 
+              value={selectedPreset}
+              onChange={handlePresetChange}
+            />
+          </div>
+
+          {/* Divider */}
+          <hr className="border-gray-200 dark:border-gray-700" />
+
           {/* AI Mode Selector */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -305,6 +487,7 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
               <li>• <strong>Local AI (Recommended)</strong> - 100% private, works offline, data never leaves your device</li>
               <li>• <strong>Cloud AI (Gemini)</strong> - Faster responses, requires internet, data sent to Google</li>
+              <li>• <strong>Response Length</strong> - Adjust token limits above to control response length and resource usage</li>
               <li>• Your API key is stored only in your browser - we never see it</li>
               <li>• <strong>Unload AI</strong> frees up GPU memory when you're done using AI features</li>
             </ul>

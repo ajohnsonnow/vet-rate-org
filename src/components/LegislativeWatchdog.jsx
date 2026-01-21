@@ -5,6 +5,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 
 /**
  * LegislativeWatchdog Component - "The Rule Change Radar"
@@ -289,7 +290,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="watchdog-title"
@@ -317,6 +318,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
               </div>
               <div className="flex items-center gap-2">
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Legislative Watchdog" />}
+                <LLMRecommendationBadge toolId="legislative-watchdog" />
                 <AIStatusBadge />
                 <button
                   onClick={onClose}

@@ -384,8 +384,9 @@ const callGeminiAPI = async (prompt, userInput = null) => {
 
   } catch (error) {
     console.error('Error calling AI service:', error);
+    const errorMsg = error.message || '';
     
-    if (error.message === 'CRISIS_DETECTED') {
+    if (errorMsg === 'CRISIS_DETECTED') {
       return {
         success: false,
         error: 'This application has been paused. Please connect with crisis support.',
@@ -393,24 +394,102 @@ const callGeminiAPI = async (prompt, userInput = null) => {
       };
     }
     
-    // Provide helpful error messages
-    if (error.message.includes('API key')) {
+    // ===== Cloud AI Errors =====
+    if (errorMsg.includes('API key')) {
       return {
         success: false,
-        error: 'Invalid API key. Please check your Gemini API key in settings.'
+        error: 'Invalid or missing API key. Please check your Gemini API key in Settings.',
+        errorType: 'api_key'
       };
     }
     
-    if (error.message.includes('Local AI not initialized')) {
+    if (errorMsg.includes('Rate limit') || errorMsg.includes('429')) {
       return {
         success: false,
-        error: 'Local AI not ready. Please initialize the Neural Engine first, or switch to Cloud AI.'
+        error: '⏳ Rate limit reached. Please wait a minute before trying again, or switch to Local AI.',
+        errorType: 'rate_limit'
       };
     }
     
+    if (errorMsg.includes('timed out') || errorMsg.includes('timeout')) {
+      return {
+        success: false,
+        error: '⏱️ Request timed out. Try a shorter prompt or switch to Local AI.',
+        errorType: 'timeout'
+      };
+    }
+    
+    if (errorMsg.includes('Network error') || errorMsg.includes('offline')) {
+      return {
+        success: false,
+        error: '📡 Network error. Check your internet connection, or use Local AI which works offline.',
+        errorType: 'network'
+      };
+    }
+    
+    if (errorMsg.includes('region') || errorMsg.includes('not available in')) {
+      return {
+        success: false,
+        error: '🌍 Gemini may not be available in your region. Try using Local AI for 100% private, offline processing.',
+        errorType: 'region'
+      };
+    }
+    
+    if (errorMsg.includes('servers') && (errorMsg.includes('500') || errorMsg.includes('unavailable'))) {
+      return {
+        success: false,
+        error: '🔧 Google\'s servers are temporarily down. Please try again later or switch to Local AI.',
+        errorType: 'server_error'
+      };
+    }
+    
+    // ===== Local AI Errors =====
+    if (errorMsg.includes('warming up')) {
+      return {
+        success: false,
+        error: '🔄 Local AI is still warming up... Please wait for the loading bar to complete.',
+        isWarmingUp: true,
+        errorType: 'warming_up'
+      };
+    }
+    
+    if (errorMsg.includes('Local AI not initialized') || errorMsg.includes('not ready') || errorMsg.includes('Neural Engine')) {
+      return {
+        success: false,
+        error: '🧠 Local AI not ready. Please open Settings and initialize the Neural Engine first.',
+        errorType: 'not_initialized'
+      };
+    }
+    
+    if (errorMsg.includes('GPU') || errorMsg.includes('WebGPU')) {
+      return {
+        success: false,
+        error: '💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.',
+        errorType: 'gpu_error'
+      };
+    }
+    
+    if (errorMsg.includes('out of memory') || errorMsg.includes('OOM')) {
+      return {
+        success: false,
+        error: '💾 GPU out of memory. Try a smaller model or close other browser tabs.',
+        errorType: 'memory'
+      };
+    }
+    
+    if (errorMsg.includes('ModelNotLoaded')) {
+      return {
+        success: false,
+        error: '⏳ Model not loaded yet. Please wait for the AI to finish loading.',
+        errorType: 'not_loaded'
+      };
+    }
+    
+    // Generic fallback
     return {
       success: false,
-      error: 'AI error: ' + (error.message || 'Please try again or use the standard template.')
+      error: 'AI error: ' + (errorMsg || 'Please try again or use the standard template.'),
+      errorType: 'unknown'
     };
   }
 };

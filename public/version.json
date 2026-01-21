@@ -1,9 +1,39 @@
 {
-  "version": "1.3.2",
-  "updateDate": "2026-01-20",
+  "version": "1.4.2",
+  "updateDate": "2026-01-21",
   "maintenance_mode": false,
   "maintenance_message": "Vet-Rate.org is currently undergoing critical maintenance to protect your data. Please check back in a few hours. Follow us on Twitter @VetRateOrg for status updates.",
   "changelog": [
+    {
+      "type": "feature",
+      "title": "📡 VA API Status Monitor - 'The Lighthouse'",
+      "description": "Real-time VA API status monitoring! When VA systems (Blue Button, Health Records, Appeals) are down for maintenance, you'll see a banner - so you know it's not us, it's them."
+    },
+    {
+      "type": "feature",
+      "title": "💻 Tablet Optimization - 'The iPad General'",
+      "description": "Full iPad and tablet support! Smart device detection, orientation-aware layouts, and enhanced save prompts for Files app/cloud storage integration."
+    },
+    {
+      "type": "feature",
+      "title": "🛡️ CRASH-PROOF STORAGE - 'The Bunker'",
+      "description": "Your data now survives browser crashes and cache clears! Click 'Save My Packet' to create a crash-proof file on your device that auto-saves as you work."
+    },
+    {
+      "type": "feature",
+      "title": "🎮 GPU Selection for Dual-GPU Systems",
+      "description": "Laptops with dual GPUs can now choose which GPU runs Local AI! Force 'High Performance' for speed or 'Power Saver' for battery life in Faraday Cage settings."
+    },
+    {
+      "type": "feature",
+      "title": "Save-As-You-Go Protocol",
+      "description": "Every form field, every claim, every statement now auto-saves within 1.5 seconds. No more lost work!"
+    },
+    {
+      "type": "feature",
+      "title": "Resume Packet Feature",
+      "description": "Coming back tomorrow? Click 'Resume Packet' to load your saved file and pick up exactly where you left off."
+    },
     {
       "type": "feature",
       "title": "Live Operations Protection System",

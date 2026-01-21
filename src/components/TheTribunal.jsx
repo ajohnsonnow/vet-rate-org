@@ -637,14 +637,17 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-3xl font-bold">⚖️ The Tribunal</h2>
-                <AIStatusBadge showLabel={true} />
+                <h2 className="text-3xl font-bold flex items-center gap-2">
+                  ⚖️ The Tribunal
+                  <span className="px-1.5 py-0.5 bg-gray-500 text-white text-[10px] font-bold rounded">AI</span>
+                </h2>
               </div>
               <p className="text-gray-300">
                 Mock Board of Veterans' Appeals Hearing
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
               {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="The Tribunal" />}
               <button
                 onClick={onClose}
@@ -676,6 +679,22 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
             <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
               📋 Before You Begin:
             </h3>
+            
+            {/* AI Required Warning */}
+            {!aiAvailable && (
+              <div className="mb-4 p-4 bg-amber-900/30 rounded-lg border border-amber-600/50">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h3 className="font-bold text-amber-300">AI Required for Analysis</h3>
+                    <p className="text-amber-200 text-sm mt-1">
+                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                      (100% private) or enter your Gemini API key.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* AI Mode Toggle */}
             <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-700">

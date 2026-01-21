@@ -214,7 +214,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 pay thousands to a "claim shark" - to get the benefits you earned.
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-green-500/30">
                   <span className="text-3xl block mb-2">💵</span>
                   <span className="text-green-400 font-bold">ZERO COST</span>
@@ -229,6 +229,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   <span className="text-3xl block mb-2">🚫</span>
                   <span className="text-red-400 font-bold">NO TRACKING</span>
                   <p className="text-xs text-gray-400 mt-1">No analytics. No selling data.</p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-purple-500/30">
+                  <span className="text-3xl block mb-2">🤖</span>
+                  <span className="text-purple-400 font-bold">17 LOCAL AI MODELS</span>
+                  <p className="text-xs text-gray-400 mt-1">AI runs in YOUR browser. Offline capable.</p>
                 </div>
               </div>
               
@@ -485,7 +490,15 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p><strong>Framework:</strong> React 18 + Vite</p>
                             <p><strong>Styling:</strong> Tailwind CSS</p>
                             <p><strong>PDF Generation:</strong> jsPDF + html2canvas</p>
-                            <p><strong>AI (Optional):</strong> Google Gemini API</p>
+                            <p><strong>Cloud AI:</strong> Google Gemini API</p>
+                          </div>
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🤖 Local AI Arsenal</p>
+                            <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
+                            <p><strong>Local Models:</strong> 17 models available</p>
+                            <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
+                            <p><strong>Vision Model:</strong> Phi 3.5 Vision (reads images)</p>
+                            <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
                           </div>
                         </div>
                         {/* Right Column */}
@@ -494,9 +507,9 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">⏱️ Development Time</p>
                             <p><strong>Traditional Equivalent:</strong> {FORMATTED_STATS.traditionalHours}</p>
                             <p className="text-xs mt-1 italic">
-                              • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding ({Math.round(PROJECT_STATS.linesOfCode/1000)}k lines @ 20/hr with AI assist)<br />
-                              • {PROJECT_STATS.breakdown.dataEntry} hrs data entry ({PROJECT_STATS.disabilitiesValidated} disabilities validated)<br />
-                              • {PROJECT_STATS.breakdown.testing} hrs testing & debugging<br />
+                              • {formatNumber(PROJECT_STATS.breakdown.coding)} hrs coding (128k lines @ 9.77 LOC/hr blended team rate)<br />
+                              • {PROJECT_STATS.breakdown.dataValidation} hrs data validation ({PROJECT_STATS.disabilitiesValidated} disabilities against 38 CFR)<br />
+                              • {formatNumber(PROJECT_STATS.breakdown.testing)} hrs testing & QA (15% of dev time)<br />
                               • {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations<br />
                               • {PROJECT_STATS.breakdown.documentation} hrs documentation & user manual<br />
                               • {PROJECT_STATS.breakdown.research} hrs research (38 CFR regulations)<br />
@@ -517,7 +530,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
                             </p>
                             <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                              The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate represents the <strong>traditional development cost</strong> and the <strong>value veterans receive for free</strong>. The actual {PROJECT_STATS.actualHours} hours shows the power of modern AI tools (GitHub Copilot, Claude, ChatGPT, Gemini) + React/Vite/Tailwind in 2026.
+                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours for ${formatNumber(PROJECT_STATS.actualCost)} using GitHub Copilot, Claude 3.5, ChatGPT-4, and Gemini 1.5 - enabling us to offer everything FREE to veterans forever.
                             </p>
                           </div>
                         </div>
@@ -587,15 +600,15 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">🛠️</span>
-                  <span><strong>Development Environment:</strong> Visual Studio Code - the go-to editor for modern web development</span>
+                  <span><strong>Development Environment:</strong> Visual Studio Code with GitHub Copilot integration</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-purple-600 mt-1">✨</span>
-                  <span><strong>Prompt Engineering:</strong> Google's Gemini assisted with crafting effective prompts and planning</span>
+                  <span className="text-green-600 mt-1">🤖</span>
+                  <span><strong>AI-Assisted Development:</strong> GitHub Copilot (code generation), Anthropic's Claude 3.5 Sonnet (architecture & complex logic), ChatGPT-4 (problem solving), and Google Gemini 1.5 (data processing)</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-orange-600 mt-1">🤖</span>
-                  <span><strong>Code Development:</strong> Anthropic's Claude AI models (Claude Sonnet 4, Claude 4.5 Haiku, Claude 4.5 Sonnet, and Claude 4.5 Opus) powered the code development and implementation</span>
+                  <span className="text-violet-600 mt-1">⚡</span>
+                  <span><strong>Modern Stack:</strong> React 18, Vite, Tailwind CSS for 280x development speed vs. traditional methods</span>
                 </li>
               </ul>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">

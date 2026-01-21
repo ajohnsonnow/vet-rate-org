@@ -25,9 +25,9 @@ export function useVaAuth() {
 
   /**
    * Initiate the OAuth login flow
-   * Generates PKCE parameters and redirects to VA.gov
+   * Opens VA.gov login in a popup window to keep the main app running
    */
-  const login = useCallback(async () => {
+  const login = useCallback(async (usePopup = true) => {
     try {
       // Validate configuration
       if (!validateConfig()) {
@@ -55,10 +55,29 @@ export function useVaAuth() {
       authUrl.searchParams.set('code_challenge', challenge);
       authUrl.searchParams.set('code_challenge_method', 'S256');
 
-      console.log('[VA Auth] Redirecting to VA.gov authorization...');
+      console.log('[VA Auth] Opening VA.gov authorization...');
       
-      // Redirect to VA.gov
-      window.location.href = authUrl.toString();
+      if (usePopup) {
+        // Open in popup window - keeps main app running
+        const width = 600;
+        const height = 700;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+        
+        const popup = window.open(
+          authUrl.toString(),
+          'va-login',
+          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+        );
+        
+        if (!popup) {
+          console.warn('[VA Auth] Popup blocked, falling back to redirect');
+          window.location.href = authUrl.toString();
+        }
+      } else {
+        // Traditional redirect
+        window.location.href = authUrl.toString();
+      }
     } catch (err) {
       console.error('[VA Auth] Login error:', err);
       setError(err.message);
@@ -75,6 +94,18 @@ export function useVaAuth() {
 
       // Validate state parameter (CSRF protection)
       const storedState = sessionStorage.getItem(STORAGE_KEYS.STATE);
+      
+      // If state is already cleared, this might be a duplicate call (React StrictMode)
+      if (!storedState) {
+        console.warn('[VA Auth] State already cleared - possible duplicate callback');
+        // Check if we're already authenticated
+        const existingToken = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        if (existingToken) {
+          return { success: true, message: 'Already authenticated' };
+        }
+        throw new Error('Authentication session expired. Please try logging in again.');
+      }
+      
       if (state !== storedState) {
         throw new Error('State mismatch - possible CSRF attack');
       }
@@ -85,11 +116,7 @@ export function useVaAuth() {
         throw new Error('Code verifier not found - session may have expired');
       }
 
-      // Clean up stored PKCE parameters
-      sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
-      sessionStorage.removeItem(STORAGE_KEYS.STATE);
-
-      // Exchange the authorization code for tokens
+      // Exchange the authorization code for tokens FIRST, then clean up
       console.log('[VA Auth] Exchanging code for tokens...');
       const tokenResponse = await fetch(VA_ENDPOINTS.token, {
         method: 'POST',
@@ -122,6 +149,10 @@ export function useVaAuth() {
 
       // Store authentication
       setAuth(tokens, user);
+      
+      // Clean up PKCE parameters AFTER successful token exchange
+      sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
+      sessionStorage.removeItem(STORAGE_KEYS.STATE);
 
       return { success: true };
     } catch (err) {

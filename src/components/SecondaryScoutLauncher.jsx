@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import disabilityData from '../data/disabilityData.json';
 import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
 import VAGovRatingPaster from './VAGovRatingPaster';
+import { analyzePDF, OCR_STATES, getProgressStyling, formatFileSize } from '../utils/ocr';
 
 /**
  * SecondaryScoutLauncher Component
@@ -14,7 +15,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
-  const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', 'myratings', or 'paste'
+  const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', 'myratings', 'paste', or 'pdf'
   const [manualInput, setManualInput] = useState('');
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
@@ -22,11 +23,153 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   const [savedRatings, setSavedRatings] = useState([]);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
   
+  // PDF Drop-In state
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
+  const [pdfIsDragging, setPdfIsDragging] = useState(false);
+  const [extractedPdfConditions, setExtractedPdfConditions] = useState([]);
+  const [pdfError, setPdfError] = useState(null);
+  const pdfFileInputRef = useRef(null);
+  
   // Load saved ratings on mount
   useEffect(() => {
     const ratings = getMyRatings();
     setSavedRatings(ratings);
   }, []);
+
+  // PDF Drop-In handlers
+  const handlePdfDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(true);
+  };
+
+  const handlePdfDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(false);
+  };
+
+  const handlePdfDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPdfIsDragging(false);
+    
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/pdf') {
+        await processPdfFile(file);
+      } else {
+        setPdfError('Please drop a PDF file (VA decision letter, rating decision, etc.)');
+      }
+    }
+  };
+
+  const handlePdfFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processPdfFile(file);
+    }
+  };
+
+  const processPdfFile = async (file) => {
+    setPdfFile(file);
+    setPdfError(null);
+    setExtractedPdfConditions([]);
+    
+    try {
+      const result = await analyzePDF(file, (progress) => {
+        setPdfOcrProgress(progress);
+      });
+      
+      if (result.success && result.text) {
+        // Parse conditions from the extracted text
+        const conditions = parseConditionsFromText(result.text);
+        setExtractedPdfConditions(conditions);
+        
+        if (conditions.length === 0) {
+          setPdfError('No conditions found in this document. Try pasting the text manually or use a different document.');
+        }
+      } else {
+        setPdfError(result.error || 'Failed to extract text from PDF');
+      }
+    } catch (err) {
+      console.error('PDF processing error:', err);
+      setPdfError('Failed to process PDF. Please try again or paste the text manually.');
+    }
+    
+    setPdfOcrProgress(null);
+  };
+
+  const parseConditionsFromText = (text) => {
+    const conditions = [];
+    const seenConditions = new Set();
+    
+    // Common patterns in VA decision letters and rating decisions
+    const patterns = [
+      // "XX% rating for [condition]" format
+      /(\d+)%?\s+(?:rating|disability|service.connected)?\s*(?:for|:)?\s*([^,\n]+)/gi,
+      // "Service connection for [condition] is granted/continued"
+      /service\s+connection\s+(?:for\s+)?([^,\n.]+?)(?:\s+is|\s+has been|\s+granted|\s+continued)/gi,
+      // "Your [condition] is rated at XX%"
+      /your\s+([^,\n]+?)\s+is\s+rated\s+at\s+(\d+)%/gi,
+      // Diagnostic Code patterns: "[Condition], Diagnostic Code XXXX"
+      /([A-Z][a-z\s]+(?:,\s*[a-z]+)*),?\s+(?:DC|Diagnostic Code)\s*\d{4}/gi,
+      // "[Condition] (DC XXXX)" format
+      /([A-Z][a-z\s,]+?)\s*\((?:DC|Diagnostic Code)\s*\d{4}\)/gi,
+      // Conditions with percentages at start of lines
+      /^(?:\s*[-•*]\s*)?([A-Z][a-zA-Z\s,]+?)\s*[-–—:]\s*(\d+)%/gm,
+    ];
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        let condition = match[1]?.trim() || match[2]?.trim();
+        if (condition) {
+          // Clean up the condition name
+          condition = condition
+            .replace(/\s+/g, ' ')
+            .replace(/^\d+%?\s*/, '')
+            .replace(/\s*[-–—:]\s*\d+%?\s*$/, '')
+            .replace(/^\s*for\s+/i, '')
+            .trim();
+          
+          // Skip if too short, too long, or common non-condition text
+          if (condition.length < 3 || condition.length > 100) continue;
+          const skipWords = ['the', 'and', 'for', 'your', 'this', 'that', 'with', 'from', 'have', 'been', 'will', 'evidence', 'records', 'medical', 'examination'];
+          if (skipWords.some(w => condition.toLowerCase() === w)) continue;
+          
+          // Normalize for deduplication
+          const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (!seenConditions.has(normalized) && normalized.length > 2) {
+            seenConditions.add(normalized);
+            // Capitalize first letter of each word
+            condition = condition.replace(/\b\w/g, c => c.toUpperCase());
+            conditions.push(condition);
+          }
+        }
+      }
+    }
+    
+    return conditions;
+  };
+
+  const handleRemovePdf = () => {
+    setPdfFile(null);
+    setPdfOcrProgress(null);
+    setExtractedPdfConditions([]);
+    setPdfError(null);
+    if (pdfFileInputRef.current) {
+      pdfFileInputRef.current.value = '';
+    }
+  };
+
+  const handlePdfConditionsSubmit = () => {
+    if (extractedPdfConditions.length > 0) {
+      onLaunch(extractedPdfConditions);
+    }
+  };
 
   // Organized by body system per 38 CFR Part 4, Subpart B - Schedule for Rating Disabilities
   const conditionsBySystem = {
@@ -1006,7 +1149,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="secondary-scout-launcher-title"
@@ -1049,6 +1192,16 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                 }`}
               >
                 <span className="hidden sm:inline">Type </span>Conditions
+              </button>
+              <button
+                onClick={() => setInputMethod('pdf')}
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
+                  inputMethod === 'pdf'
+                    ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                }`}
+              >
+                📄 <span className="hidden sm:inline">Drop-In </span>PDF
               </button>
               <button
                 onClick={() => setShowVAGovPaster(true)}
@@ -1113,6 +1266,167 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
                 >
                   Analyze My Conditions
                 </button>
+              </div>
+            )}
+
+            {/* PDF Drop-In Method */}
+            {inputMethod === 'pdf' && (
+              <div>
+                <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">📄</span>
+                    <div>
+                      <h3 className="font-bold text-purple-800 dark:text-purple-200">Drop-In Your VA Decision Letter</h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                        Drop in a PDF of your VA Rating Decision, Decision Letter, or Benefits Summary to automatically extract your service-connected conditions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Drop Zone */}
+                {!pdfFile && !pdfOcrProgress && (
+                  <div
+                    onDragOver={handlePdfDragOver}
+                    onDragLeave={handlePdfDragLeave}
+                    onDrop={handlePdfDrop}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                      pdfIsDragging
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10'
+                    }`}
+                  >
+                    <input
+                      ref={pdfFileInputRef}
+                      type="file"
+                      accept=".pdf"
+                      onChange={handlePdfFileChange}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                          Drop your PDF here
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          or{' '}
+                          <button
+                            onClick={() => pdfFileInputRef.current?.click()}
+                            className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                          >
+                            browse to select
+                          </button>
+                        </p>
+                      </div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                        Supports: VA Rating Decision, Decision Letter, Benefits Summary Letter (PDF)
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* OCR Progress */}
+                {pdfOcrProgress && (
+                  <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
+                      <span className="font-medium text-purple-800 dark:text-purple-200">
+                        {pdfOcrProgress.state === OCR_STATES.LOADING ? 'Loading PDF...' :
+                         pdfOcrProgress.state === OCR_STATES.EXTRACTING ? 'Extracting text...' :
+                         pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING ? 'Running OCR on scanned pages...' :
+                         'Processing...'}
+                      </span>
+                    </div>
+                    {pdfOcrProgress.progress > 0 && (
+                      <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
+                        <div
+                          className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${pdfOcrProgress.progress}%` }}
+                        />
+                      </div>
+                    )}
+                    {pdfOcrProgress.message && (
+                      <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">{pdfOcrProgress.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* File Selected + Results */}
+                {pdfFile && !pdfOcrProgress && (
+                  <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">{pdfFile.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(pdfFile.size)}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemovePdf}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Remove file"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Error Display */}
+                    {pdfError && (
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-sm text-red-700 dark:text-red-300">{pdfError}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Extracted Conditions */}
+                    {extractedPdfConditions.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                          <span className="text-green-500">✓</span>
+                          Found {extractedPdfConditions.length} Condition{extractedPdfConditions.length !== 1 ? 's' : ''}
+                        </h4>
+                        <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
+                          {extractedPdfConditions.map((condition, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
+                            >
+                              <span className="text-green-600 dark:text-green-400">•</span>
+                              <span className="text-sm text-gray-800 dark:text-gray-200">{condition}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={handlePdfConditionsSubmit}
+                          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                        >
+                          🔍 Analyze These {extractedPdfConditions.length} Conditions for Secondary Claims
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Privacy Note */}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+                  🔒 Your PDF is processed locally in your browser - nothing is sent to any server.
+                </p>
               </div>
             )}
 

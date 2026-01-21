@@ -294,7 +294,7 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
     setParsedData(null);
 
     if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
-      setParseError('Please upload a CSV file. JSON support coming soon!');
+      setParseError('Please drop in a CSV file. JSON support coming soon!');
       return;
     }
 
@@ -425,7 +425,7 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="evidence-importer-title"

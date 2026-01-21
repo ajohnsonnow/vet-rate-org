@@ -17,6 +17,7 @@ import jsPDF from 'jspdf';
 import { saveClaim, generateId } from '../utils/claimsStorage';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { LLMRecommendationBadge } from './LLMRecommendation';
 import ShareButton from './ShareButton';
 import ReportBugLink from './ReportBugLink';
 
@@ -776,7 +777,17 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
           <textarea
             value={answers[currentQuestion.id] || ''}
             onChange={(e) => updateAnswer(currentQuestion.id, e.target.value)}
-            placeholder={currentQuestion.placeholder}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                if (currentQuestionIndex < questions.length - 1) {
+                  setCurrentQuestionIndex(prev => prev + 1);
+                } else if (answeredCount >= 3 && !isGeneratingStatement) {
+                  generateStatement();
+                }
+              }
+            }}
+            placeholder={`${currentQuestion.placeholder}\n\n💡 Tip: Press Ctrl+Enter to advance, Shift+Enter for new line`}
             rows={6}
             className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all resize-none"
           />
@@ -983,12 +994,16 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             <div className="flex items-center gap-3">
               <span className="text-3xl">👥</span>
               <div>
-                <h2 className="text-xl font-bold text-white">The Witness Bench</h2>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  The Witness Bench
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
+                </h2>
                 <p className="text-sm text-violet-100">Buddy Letter Wizard (VA Form 21-10210)</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {/* AI Status Badge */}
+              {/* AI Status & LLM Recommendation Badges */}
+              <LLMRecommendationBadge toolId="witness-bench" />
               <AIStatusBadge onClick={onOpenAISettings} />
               <ShareButton 
                 targetRef={witnessContentRef}
@@ -1024,6 +1039,22 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
                 </div>
               </div>
             </div>
+            
+            {/* AI Required Warning */}
+            {!isAnyAIAvailable() && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
+                      (100% private) or enter your Gemini API key.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Step Content */}
             {step === 1 && renderSetupStep()}
