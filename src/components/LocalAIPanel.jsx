@@ -1055,7 +1055,6 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
           {/* Experimental Mode Warning */}
           <ExperimentalModeWarning 
             experimentalMode={experimentalMode}
-            dawnFeaturesEnabled={dawnFeaturesEnabled}
           />
 
           {/* WebGPU Status */}
