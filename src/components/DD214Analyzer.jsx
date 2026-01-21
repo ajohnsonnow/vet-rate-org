@@ -387,12 +387,52 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
       }
 
       setAnalysisResult(data);
+      
+      // Automatically trigger the save flow to show import confirmation
+      // This provides immediate feedback to the user
+      setTimeout(() => {
+        handleSaveResultsAfterAnalysis(data);
+      }, 500);
 
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'Analysis failed. Please try again.');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  /**
+   * Save results after analysis (automatic trigger)
+   */
+  const handleSaveResultsAfterAnalysis = (result) => {
+    if (!result) return;
+
+    try {
+      // Prepare extracted profile data for review
+      const profileData = {
+        branch: result.branch,
+        mos: result.mos,
+        mosTitle: result.mosTitle,
+        serviceStartDate: result.entryDate,
+        entryDate: result.entryDate,
+        serviceEndDate: result.separationDate,
+        separationDate: result.separationDate,
+        separationType: result.separationType,
+        characterOfService: result.characterOfService,
+        reenlisted: result.reenlisted,
+        foreignService: result.foreignService,
+        yearsService: result.yearsService,
+        monthsService: result.monthsService,
+      };
+
+      // Show confirmation modal automatically
+      setExtractedProfileData(profileData);
+      setShowProfileImportModal(true);
+      
+    } catch (err) {
+      console.error('Auto-save prep error:', err);
+      // Don't show error, user can still click manual save button
     }
   };
 
