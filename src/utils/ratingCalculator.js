@@ -63,16 +63,20 @@ export function calculateCombinedRating(ratings, hasBilateral = false) {
   }
   
   // Combine all ratings using VA formula (38 CFR § 4.25)
+  // Per regulation: "efficiency of the individual as affected first by the most disabling condition"
   let combined = sorted[0];
   
   for (let i = 1; i < sorted.length; i++) {
     const efficiency = 100 - combined;
+    // Round addition to whole number (standard practice)
     const addition = Math.round(sorted[i] * efficiency / 100);
     combined += addition;
   }
   
   // Round to nearest 10 (VA requirement)
-  return Math.round(combined / 10) * 10;
+  // Per 38 CFR § 4.25: "combined values ending in 5 will be adjusted upward"
+  const final = Math.round(combined / 10) * 10;
+  return Math.max(0, Math.min(100, final)); // Clamp to valid range
 }
 
 /**
