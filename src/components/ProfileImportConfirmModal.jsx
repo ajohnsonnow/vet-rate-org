@@ -53,7 +53,10 @@ const ProfileImportConfirmModal = ({
    * Toggle field selection
    */
   const handleFieldToggle = (field) => {
-    setSelectedFields(prev => ({ ...prev, [field]: !prev[field] }));
+    setSelectedFields(prev => ({ 
+      ...prev, 
+      [field]: prev[field] === true ? false : true 
+    }));
   };
 
   /**
@@ -371,14 +374,15 @@ const ProfileImportConfirmModal = ({
  * Field Row Component - Shows current vs imported value with checkbox
  */
 const FieldRow = ({ field, label, currentValue, importedValue, isSelected, onToggle, onChange }) => {
-  const hasChange = currentValue !== formatValue(field, importedValue) && currentValue !== '(empty)';
-  const isBooleanField = typeof importedValue === 'boolean';
-  
+  // Helper function must be defined before use
   const formatValue = (field, value) => {
     if (value === null || value === undefined || value === '') return '(empty)';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     return String(value);
   };
+
+  const hasChange = currentValue !== formatValue(field, importedValue) && currentValue !== '(empty)';
+  const isBooleanField = typeof importedValue === 'boolean';
 
   return (
     <div className={`p-3 rounded-lg border ${
@@ -391,7 +395,7 @@ const FieldRow = ({ field, label, currentValue, importedValue, isSelected, onTog
         <div className="pt-1">
           <input
             type="checkbox"
-            checked={isSelected}
+            checked={isSelected === true}
             onChange={onToggle}
             className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
           />

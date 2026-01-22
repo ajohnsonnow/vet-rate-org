@@ -639,10 +639,10 @@ function generatePrivacyHTML(componentSource) {
   ⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY!
   
   This HTML file is automatically generated from:
-  Source: src/components/PrivacyPolicy.jsx
+  Source: src/components/PrivacyPolicyPage.jsx
   
   To update this page:
-  1. Edit the React component: src/components/PrivacyPolicy.jsx
+  1. Edit the React component: src/components/PrivacyPolicyPage.jsx
   2. Run: npm run build (auto-syncs) OR npm run sync-legal-pages
   3. This HTML will be regenerated automatically
   
@@ -760,7 +760,7 @@ function main() {
     },
     {
       name: 'Privacy Policy',
-      componentPath: path.join(COMPONENTS_DIR, 'PrivacyPolicy.jsx'),
+      componentPath: path.join(COMPONENTS_DIR, 'PrivacyPolicyPage.jsx'),
       htmlPath: path.join(PUBLIC_DIR, 'privacy-policy.html'),
       generator: generatePrivacyHTML
     }

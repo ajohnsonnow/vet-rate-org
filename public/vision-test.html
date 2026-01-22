@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vet-Rate Vision Float32 Test</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@anthropic-ai/claude-instant@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #e4e4e4;
+    }
+    h1 { color: #4ade80; margin-bottom: 10px; }
+    .status { padding: 10px 15px; border-radius: 8px; margin: 10px 0; }
+    .status.info { background: #1e3a5f; border: 1px solid #3b82f6; }
+    .status.success { background: #14532d; border: 1px solid #22c55e; }
+    .status.error { background: #7f1d1d; border: 1px solid #ef4444; }
+    .status.warning { background: #78350f; border: 1px solid #f59e0b; }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #4b5563; cursor: not-allowed; }
+    #progress {
+      width: 100%;
+      height: 24px;
+      background: #374151;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    #progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    #progress-text { text-align: center; margin: 5px 0; color: #9ca3af; }
+    #output {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 200px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+      overflow: auto;
+      max-height: 400px;
+    }
+    .test-section {
+      background: #111827;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .test-section h3 { color: #60a5fa; margin-top: 0; }
+    #image-preview {
+      max-width: 336px;
+      max-height: 336px;
+      border: 2px dashed #4b5563;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    #drop-zone {
+      border: 2px dashed #4b5563;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    #drop-zone:hover, #drop-zone.dragover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .memory-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .memory-card {
+      background: #1f2937;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .memory-card .value { font-size: 20px; font-weight: bold; color: #4ade80; }
+    .memory-card .label { font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>🔬 Vet-Rate Vision Phi Test</h1>
+  <p style="color: #9ca3af;">Testing the custom Float32 build in standard Chrome/Edge</p>
+
+  <!-- WebGPU Check -->
+  <div class="test-section">
+    <h3>Step 1: WebGPU Compatibility Check</h3>
+    <div id="webgpu-status" class="status info">Checking WebGPU support...</div>
+    <div class="memory-info" id="gpu-info" style="display:none;">
+      <div class="memory-card">
+        <div class="value" id="adapter-vendor">-</div>
+        <div class="label">GPU Vendor</div>
+      </div>
+      <div class="memory-card">
+        <div class="value" id="adapter-arch">-</div>
+        <div class="label">Architecture</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model Loading -->
+  <div class="test-section">
+    <h3>Step 2: Load Vision Model</h3>
+    <p style="color: #9ca3af; font-size: 14px;">
+      Model: Vet-Rate Vision Phi (Float32) | Size: 2.6 GB | VRAM: ~5 GB required
+    </p>
+    <button id="load-btn" onclick="loadModel()" disabled>Load Model</button>
+    <div id="progress">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="progress-text">Click "Load Model" to begin</div>
+  </div>
+
+  <!-- Image Test -->
+  <div class="test-section">
+    <h3>Step 3: Test Vision Inference</h3>
+    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+      📷 Drop an image here or click to select<br>
+      <small style="color: #6b7280;">(DD214, medical document, or any image)</small>
+    </div>
+    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+    <img id="image-preview" style="display:none;">
+    <button id="analyze-btn" onclick="analyzeImage()" disabled>🔍 Analyze Image</button>
+  </div>
+
+  <!-- Output -->
+  <div class="test-section">
+    <h3>Output</h3>
+    <div id="output">Waiting for model to load...</div>
+  </div>
+
+  <script type="module">
+    // Import WebLLM
+    const { CreateMLCEngine, hasModelInCache } = await import('https://esm.run/@mlc-ai/web-llm');
+    
+    let engine = null;
+    let currentImage = null;
+
+    // Check WebGPU on load
+    async function checkWebGPU() {
+      const statusEl = document.getElementById('webgpu-status');
+      const gpuInfo = document.getElementById('gpu-info');
+      
+      if (!navigator.gpu) {
+        statusEl.className = 'status error';
+        statusEl.innerHTML = '❌ WebGPU not supported in this browser. Try Chrome 113+ or Edge 113+.';
+        return false;
+      }
+
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) {
+          statusEl.className = 'status error';
+          statusEl.innerHTML = '❌ No WebGPU adapter found. Your GPU may not be supported.';
+          return false;
+        }
+
+        // Get adapter info
+        const info = await adapter.requestAdapterInfo();
+        document.getElementById('adapter-vendor').textContent = info.vendor || 'Unknown';
+        document.getElementById('adapter-arch').textContent = info.architecture || 'Unknown';
+        gpuInfo.style.display = 'grid';
+
+        // Test device creation (this is where u8 issues would show in the old model)
+        const device = await adapter.requestDevice();
+        device.destroy();
+
+        statusEl.className = 'status success';
+        statusEl.innerHTML = `✅ WebGPU available! GPU: ${info.vendor} ${info.architecture || ''}`;
+        document.getElementById('load-btn').disabled = false;
+        return true;
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.innerHTML = `❌ WebGPU error: ${err.message}`;
+        return false;
+      }
+    }
+
+    // Load the Float32 model
+    window.loadModel = async function() {
+      const loadBtn = document.getElementById('load-btn');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const output = document.getElementById('output');
+
+      loadBtn.disabled = true;
+      output.textContent = 'Starting model load...\n';
+
+      try {
+        // Custom app config for HuggingFace model
+        const appConfig = {
+          model_list: [{
+            model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32',
+            model_id: 'Vet-Rate-Vision-Phi-Float32',
+            model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32/resolve/main/model-lib.wasm',
+          }]
+        };
+
+        output.textContent += `\n📦 Loading Vet-Rate Vision Phi (Float32)...\n`;
+        output.textContent += `   Model: huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32\n`;
+        output.textContent += `   WASM lib: model-lib.wasm\n\n`;
+
+        engine = await CreateMLCEngine('Vet-Rate-Vision-Phi-Float32', {
+          appConfig,
+          initProgressCallback: (report) => {
+            const progress = Math.round(report.progress * 100);
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = report.text || `Loading: ${progress}%`;
+            output.textContent += `[${progress}%] ${report.text}\n`;
+            output.scrollTop = output.scrollHeight;
+          },
+        });
+
+        progressBar.style.width = '100%';
+        progressText.textContent = '✅ Model loaded successfully!';
+        output.textContent += '\n🎉 SUCCESS! Vision model ready for inference.\n';
+        output.textContent += '   Float32 Bypass working in standard Chrome!\n';
+        
+        document.getElementById('analyze-btn').disabled = false;
+        
+      } catch (err) {
+        progressBar.style.width = '0%';
+        progressText.textContent = '❌ Load failed';
+        output.textContent += `\n❌ ERROR: ${err.message}\n`;
+        output.textContent += `\nStack trace:\n${err.stack}\n`;
+        loadBtn.disabled = false;
+      }
+    };
+
+    // Handle image file selection
+    window.handleFileSelect = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.getElementById('image-preview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        currentImage = e.target.result;
+        document.getElementById('output').textContent += `\n📷 Image loaded: ${file.name}\n`;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // Drag and drop
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        document.getElementById('file-input').files = e.dataTransfer.files;
+        handleFileSelect({ target: { files: [file] } });
+      }
+    });
+
+    // Analyze image with vision model
+    window.analyzeImage = async function() {
+      if (!engine || !currentImage) {
+        alert('Please load the model and select an image first.');
+        return;
+      }
+
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const output = document.getElementById('output');
+
+      analyzeBtn.disabled = true;
+      output.textContent += '\n🔍 Analyzing image...\n';
+
+      try {
+        const messages = [
+          {
+            role: 'user',
+            content: [
+              { 
+                type: 'text', 
+                text: 'Please describe what you see in this image. If it appears to be a document like a DD214 or medical record, extract key information.' 
+              },
+              { 
+                type: 'image_url', 
+                image_url: { url: currentImage } 
+              }
+            ]
+          }
+        ];
+
+        output.textContent += '\n--- Vision Model Response ---\n\n';
+
+        const response = await engine.chat.completions.create({
+          messages,
+          stream: true,
+        });
+
+        for await (const chunk of response) {
+          const content = chunk.choices[0]?.delta?.content;
+          if (content) {
+            output.textContent += content;
+            output.scrollTop = output.scrollHeight;
+          }
+        }
+
+        output.textContent += '\n\n--- End Response ---\n';
+        
+      } catch (err) {
+        output.textContent += `\n❌ Analysis error: ${err.message}\n`;
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    };
+
+    // Initialize
+    checkWebGPU();
+  </script>
+</body>
+</html>

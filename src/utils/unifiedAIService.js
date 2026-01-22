@@ -12,10 +12,18 @@
  */
 
 import { interceptBeforeAICall } from './crisisInterceptor';
-import { buildSystemPrompt, validateAIResponse } from './aiSystemPrompts';
 import { scrubPII, analyzePII } from './piiScrubber';
 import { validateAIResponse as validateHallucinations } from './hallucinationTrap';
 import { isFeatureEnabled } from './featureFlags';
+
+// Dynamic imports for code splitting
+let aiSystemPromptsModule = null;
+const getAISystemPrompts = async () => {
+  if (!aiSystemPromptsModule) {
+    aiSystemPromptsModule = await import('./aiSystemPrompts');
+  }
+  return aiSystemPromptsModule;
+};
 
 // Storage keys
 const AI_MODE_KEY = 'vet_rate_ai_mode'; // 'cloud' | 'local'
@@ -24,15 +32,44 @@ const LOCAL_MODEL_KEY = 'vet_rate_local_ai_model';
 const TOKEN_LIMIT_KEY = 'vetrate_token_limit_config';
 
 // Cloud AI endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// NOTE: gemini-1.5-flash was deprecated and shut down in late 2025
+// Updated to gemini-2.5-flash which has same 1M token context window
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // Local AI engine reference (set by LocalAIProvider)
 let localAIEngine = null;
 let localAIReady = false;
 let localAIGenerating = false;
 let localAIInitializing = false; // Track if model is currently loading
+let localAIModelId = null; // Track the currently loaded model ID
+let localAIIsVisionModel = false; // Track if loaded model supports vision/images
 let webGPUSupported = null; // Cache WebGPU support check result
 let webGPUCheckPromise = null; // Prevent duplicate checks
+
+// Promise-based mutex to prevent concurrent generation requests
+let generationLock = null;
+
+/**
+ * Acquire generation lock - ensures only one generation at a time
+ */
+const acquireGenerationLock = async () => {
+  // Wait for any existing lock to release
+  while (generationLock) {
+    console.log('⏳ Waiting for previous generation to complete...');
+    await generationLock;
+  }
+  
+  // Create new lock
+  let releaseLock;
+  generationLock = new Promise(resolve => {
+    releaseLock = resolve;
+  });
+  
+  return () => {
+    generationLock = null;
+    releaseLock();
+  };
+};
 
 /**
  * Get user-configured token limit (or default to 2048)
@@ -196,11 +233,16 @@ export const setAIMode = (mode) => {
  * @param {object} engine - The MLCEngine instance
  * @param {boolean} ready - Whether the engine is fully ready for inference
  * @param {boolean} initializing - Whether the engine is currently loading/warming up
+ * @param {string} modelId - The ID of the loaded model
+ * @param {boolean} isVisionModel - Whether the model supports vision/image input
  */
-export const registerLocalAIEngine = (engine, ready, initializing = false) => {
+export const registerLocalAIEngine = (engine, ready, initializing = false, modelId = null, isVisionModel = false) => {
   localAIEngine = engine;
   localAIReady = ready;
   localAIInitializing = initializing;
+  localAIModelId = modelId;
+  localAIIsVisionModel = isVisionModel;
+  console.log(`📝 Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`);
 };
 
 /**
@@ -228,6 +270,8 @@ export const unloadLocalAI = async () => {
     localAIReady = false;
     localAIGenerating = false;
     localAIInitializing = false;
+    localAIModelId = null;
+    localAIIsVisionModel = false;
     
     console.log('✅ Local AI unloaded successfully');
     return true;
@@ -238,6 +282,8 @@ export const unloadLocalAI = async () => {
     localAIReady = false;
     localAIGenerating = false;
     localAIInitializing = false;
+    localAIModelId = null;
+    localAIIsVisionModel = false;
     return false;
   }
 };
@@ -254,6 +300,22 @@ export const isLocalAIReady = () => {
  */
 export const isLocalAIInitializing = () => {
   return localAIInitializing;
+};
+
+/**
+ * Check if the currently loaded local AI model supports vision/image input
+ * @returns {boolean} true if vision model is loaded and ready
+ */
+export const isLocalAIVisionModel = () => {
+  return localAIEngine !== null && localAIReady && localAIIsVisionModel;
+};
+
+/**
+ * Get the currently loaded local AI model ID
+ * @returns {string|null} The model ID or null if no model loaded
+ */
+export const getLocalAIModelId = () => {
+  return localAIModelId;
 };
 
 /**
@@ -337,7 +399,8 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     throw new Error('Gemini API key not configured');
   }
 
-  // Build comprehensive system prompt if not provided
+  // Build comprehensive system prompt if not provided (lazy load)
+  const { buildSystemPrompt } = await getAISystemPrompts();
   const defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || 'general',
     toolContext: options.toolContext,
@@ -448,7 +511,7 @@ const generateWithCloudAI = async (prompt, options = {}) => {
         throw new Error('API key unauthorized. Your Gemini API key may be invalid or expired. Please check Settings.');
       
       case 404:
-        throw new Error('AI model not found. This may be a temporary issue with Google\'s servers. Please try again in a few minutes.');
+        throw new Error('AI model endpoint not found. Please refresh the page and try again. If this persists, the API endpoint may have changed.');
       
       case 429:
         throw new Error('Rate limit reached. Too many requests - please wait a minute before trying again, or consider switching to Local AI.');
@@ -492,8 +555,20 @@ const generateWithLocalAI = async (prompt, options = {}) => {
   if (!localAIReady) {
     throw new Error('Local AI engine exists but is not ready. This may indicate a failed initialization - please try reloading the model.');
   }
+  
+  // Acquire generation lock - this ensures only one generation at a time
+  // and properly serializes concurrent requests
+  const releaseLock = await acquireGenerationLock();
+  
+  // Double-check we're not already generating (belt and suspenders)
+  if (localAIGenerating) {
+    releaseLock();
+    console.warn('⚠️ localAIGenerating flag still set despite lock - possible state bug');
+    throw new Error('Another AI generation is in progress. Please wait for it to complete.');
+  }
 
-  // Build comprehensive system prompt if not provided
+  // Build comprehensive system prompt if not provided (lazy load)
+  const { buildSystemPrompt } = await getAISystemPrompts();
   const defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || 'general',
     toolContext: options.toolContext,
@@ -546,47 +621,152 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     }
   }
 
-  localAIGenerating = true;
+  /**
+   * Clean AI response - remove thinking tags and detect degenerate output
+   * Handles DeepSeek R1 and other reasoning models that output <think> tags
+   */
+  const cleanResponse = (text) => {
+    if (!text) return '';
+    
+    // Remove <think>...</think> blocks (DeepSeek R1, QwQ, and other reasoning models)
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    
+    // Remove unclosed <think> tags (model may have been interrupted mid-thought)
+    cleaned = cleaned.replace(/<think>[\s\S]*/gi, '').trim();
+    
+    // Remove orphaned </think> tags (sometimes R1 outputs these without opening tag)
+    cleaned = cleaned.replace(/<\/think>/gi, '').trim();
+    
+    // Remove any remaining think-like patterns (</think>'ve, </think>", etc.)
+    cleaned = cleaned.replace(/<\/think>[^\s]*/gi, '').trim();
+    
+    // Detect degenerate/repetitive output (same 2-10 char pattern repeated 8+ times)
+    const repetitionPattern = /(.{2,10})\1{8,}/;
+    if (repetitionPattern.test(cleaned)) {
+      console.warn('⚠️ Detected degenerate output (repetition collapse)');
+      const match = cleaned.match(repetitionPattern);
+      if (match) {
+        const repetitiveSection = match[0];
+        cleaned = cleaned.replace(repetitiveSection, '[Output truncated due to repetition]');
+      }
+    }
+    
+    // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
+    const gibberishPatterns = [
+      /(\.{3,}\s*){5,}/,           // Multiple ellipsis sequences
+      /(["\"]\s*){5,}/,            // Multiple quote sequences  
+      /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
+      /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
+    ];
+    
+    for (const pattern of gibberishPatterns) {
+      if (pattern.test(cleaned)) {
+        console.warn('⚠️ Detected R1-style confused output');
+        // Try to extract any meaningful content before the gibberish
+        const lines = cleaned.split('\n').filter(l => l.trim());
+        const meaningfulLines = lines.filter(line => {
+          const lower = line.toLowerCase();
+          return !lower.includes('hmm') && 
+                 !lower.includes('wait') && 
+                 !lower.includes('confuse') &&
+                 !lower.includes('unclear') &&
+                 line.length > 20 &&
+                 !/^[\s\"\'\.\\,\!\?]+$/.test(line);
+        });
+        if (meaningfulLines.length > 0) {
+          cleaned = meaningfulLines.join('\n');
+        } else {
+          cleaned = 'I apologize, but I\'m having trouble generating a clear response. Please try rephrasing your question or using a different AI model.';
+        }
+        break;
+      }
+    }
+    
+    return cleaned;
+  };
 
   try {
+    localAIGenerating = true;
+    
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: scrubbedPrompt },
     ];
 
+    // Generation config with repetition penalty to prevent degenerate output
+    const generationConfig = {
+      messages,
+      max_tokens: finalConfig.maxTokens,
+      temperature: finalConfig.temperature,
+      top_p: finalConfig.topP,
+      // Repetition penalty to prevent loops (1.0 = no penalty, >1.0 = penalize repetition)
+      repetition_penalty: 1.1,
+      // Frequency penalty (penalize tokens that appear frequently)
+      frequency_penalty: 0.3,
+      // Presence penalty (penalize tokens that have appeared at all)
+      presence_penalty: 0.1,
+    };
+
     if (onStream) {
       // Streaming response
       let fullResponse = '';
       const chunks = await localAIEngine.chat.completions.create({
-        messages,
-        max_tokens: finalConfig.maxTokens,
-        temperature: finalConfig.temperature,
-        top_p: finalConfig.topP,
+        ...generationConfig,
         stream: true,
       });
 
       for await (const chunk of chunks) {
         const delta = chunk.choices[0]?.delta?.content || '';
         fullResponse += delta;
-        onStream(delta, fullResponse);
+        
+        // Clean and send the streamed response
+        const cleanedResponse = cleanResponse(fullResponse);
+        onStream(delta, cleanedResponse);
+        
+        // Early abort if we detect degenerate output during streaming
+        if (fullResponse.length > 200) {
+          const last200 = fullResponse.slice(-200);
+          const repetitionPattern = /(.{2,10})\1{8,}/;
+          if (repetitionPattern.test(last200)) {
+            console.warn('⚠️ Aborting due to degenerate output detected during streaming');
+            try {
+              await localAIEngine.interruptGenerate?.();
+            } catch (e) {
+              // Ignore interrupt errors
+            }
+            break;
+          }
+        }
       }
 
       localAIGenerating = false;
-      return fullResponse;
+      releaseLock();
+      return cleanResponse(fullResponse);
     } else {
       // Non-streaming response
-      const response = await localAIEngine.chat.completions.create({
-        messages,
-        max_tokens: finalConfig.maxTokens,
-        temperature: finalConfig.temperature,
-        top_p: finalConfig.topP,
-      });
+      console.log('🔧 Local AI generation config:', JSON.stringify(generationConfig, null, 2).substring(0, 500));
+      const response = await localAIEngine.chat.completions.create(generationConfig);
+      console.log('🔧 Local AI raw response:', JSON.stringify(response, null, 2).substring(0, 1000));
 
       localAIGenerating = false;
-      return response.choices[0]?.message?.content || '';
+      
+      // Check for aborted response (WebLLM returns empty content when aborted)
+      const finishReason = response.choices[0]?.finish_reason;
+      const rawContent = response.choices[0]?.message?.content || '';
+      
+      if (finishReason === 'abort' && !rawContent) {
+        console.warn('⚠️ Generation was aborted (possibly concurrent request conflict)');
+        releaseLock();
+        throw new Error('AI generation was interrupted. Please try again. If this keeps happening, refresh the page.');
+      }
+      
+      console.log('🔧 Local AI rawContent:', rawContent.substring(0, 500) || '(empty)');
+      releaseLock();
+      return cleanResponse(rawContent);
     }
   } catch (err) {
     localAIGenerating = false;
+    releaseLock();
     
     // Provide user-friendly error messages for common Local AI failures
     const errorMsg = err.message || '';
@@ -623,6 +803,145 @@ const getUserPreset = () => {
     console.warn('Error loading preset:', e);
   }
   return null; // Use function defaults if no preset
+};
+
+/**
+ * Generate AI response with image input (for vision models)
+ * This function sends actual images to the vision model instead of OCR text.
+ * 
+ * @param {string} prompt - The text prompt describing what to analyze
+ * @param {string|string[]} imageUrls - Base64 data URLs of images to analyze (data:image/jpeg;base64,...)
+ * @param {Object} options - Generation options
+ * @param {string} options.systemPrompt - System prompt for context
+ * @param {number} options.maxTokens - Maximum tokens to generate
+ * @param {number} options.temperature - Temperature for generation
+ * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
+ */
+export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
+  // Validate vision model is loaded
+  if (!localAIIsVisionModel) {
+    throw new Error('Vision model not loaded. Please load a vision model (like Vet-Rate Vision Phi) to analyze images directly.');
+  }
+  
+  if (!localAIEngine) {
+    throw new Error('Local AI engine not initialized. Please wait for model to load.');
+  }
+  
+  if (!localAIReady) {
+    throw new Error('Local AI not ready. Please wait for model to finish loading.');
+  }
+  
+  // Normalize imageUrls to array
+  const images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+  
+  // Validate images
+  for (const url of images) {
+    if (!url.startsWith('data:image')) {
+      throw new Error('Image must be a base64 data URL (data:image/...). Use renderPDFToImages or convert images first.');
+    }
+  }
+  
+  console.log(`🖼️ generateAIWithImage: ${images.length} image(s), prompt: ${prompt.substring(0, 100)}...`);
+  
+  const {
+    systemPrompt = '',
+    maxTokens = getUserTokenLimit(),
+    temperature = 0.2, // Lower temperature for document analysis
+  } = options;
+  
+  localAIGenerating = true;
+  
+  try {
+    // Build multimodal message content (OpenAI vision format)
+    // WebLLM follows OpenAI's chat completion API for vision models
+    const contentParts = [];
+    
+    // Add text prompt first
+    contentParts.push({
+      type: 'text',
+      text: prompt,
+    });
+    
+    // Add images
+    for (const imageUrl of images) {
+      contentParts.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl,
+        },
+      });
+    }
+    
+    // Build messages array
+    const messages = [];
+    
+    // Add system prompt if provided
+    if (systemPrompt) {
+      messages.push({
+        role: 'system',
+        content: systemPrompt,
+      });
+    }
+    
+    // Add user message with image(s)
+    messages.push({
+      role: 'user',
+      content: contentParts,
+    });
+    
+    console.log('🖼️ Vision request - messages structure:', JSON.stringify(messages.map(m => ({
+      role: m.role,
+      contentType: Array.isArray(m.content) ? `array[${m.content.length}]` : typeof m.content,
+      contentParts: Array.isArray(m.content) ? m.content.map(p => p.type) : null,
+    })), null, 2));
+    
+    const generationConfig = {
+      messages,
+      max_tokens: maxTokens,
+      temperature,
+      top_p: 0.95,
+    };
+    
+    // Non-streaming for image analysis (more reliable)
+    const response = await localAIEngine.chat.completions.create(generationConfig);
+    
+    localAIGenerating = false;
+    const rawContent = response.choices[0]?.message?.content || '';
+    console.log('🖼️ Vision model response:', rawContent.substring(0, 500) || '(empty)');
+    
+    // Check for empty response - this indicates the model failed to process the image
+    if (!rawContent || rawContent.trim().length === 0) {
+      console.warn('⚠️ Vision model returned empty response');
+      // Return with empty flag so caller can handle appropriately
+      return {
+        text: '',
+        mode: 'local',
+        isVisionResponse: true,
+        isEmpty: true,
+      };
+    }
+    
+    return {
+      text: rawContent,
+      mode: 'local',
+      isVisionResponse: true,
+    };
+    
+  } catch (err) {
+    localAIGenerating = false;
+    console.error('Vision model error:', err);
+    
+    const errorMsg = err.message || '';
+    
+    if (errorMsg.includes('not of type ModelType.VLM')) {
+      throw new Error('The loaded model does not support image input. Please load a vision model like Vet-Rate Vision Phi.');
+    }
+    if (errorMsg.includes('image_url')) {
+      throw new Error('Image format error. Please ensure images are valid base64 data URLs.');
+    }
+    
+    throw new Error(`Vision model error: ${errorMsg}`);
+  }
 };
 
 /**
@@ -670,7 +989,7 @@ export const generateAI = async (prompt, options = {}) => {
   // Crisis safety check (unless explicitly skipped)
   if (!options.skipCrisisCheck) {
     const crisisResult = await interceptBeforeAICall(prompt);
-    if (crisisResult.blocked) {
+    if (crisisResult.shouldBlock) {
       throw new Error('CRISIS_DETECTED');
     }
   }
@@ -682,7 +1001,14 @@ export const generateAI = async (prompt, options = {}) => {
   }
 
   // Build system prompt with anti-hallucination guardrails (unless overridden)
-  const systemPrompt = options.systemPrompt || buildSystemPrompt(options.taskType || 'general', options.context);
+  const { buildSystemPrompt } = await getAISystemPrompts();
+  const systemPrompt = options.systemPrompt || buildSystemPrompt({
+    task: options.taskType || 'general',
+    toolContext: options.toolContext,
+    includeAppContext: true,
+    includeRegulations: true,
+    includeVeteranData: true,
+  });
   
   // Apply user's saved preset if no preset specified in options
   const effectivePreset = options.preset || getUserPreset();
@@ -702,12 +1028,21 @@ export const generateAI = async (prompt, options = {}) => {
     let text;
     let usedMode;
     
-    if (effectiveMode === AI_MODES.LOCAL) {
+    // Determine which AI to use
+    // preferCloud option allows callers to hint they want Cloud AI (e.g., for large documents)
+    const useCloud = (options.preferCloud && isCloudAIAvailable()) || effectiveMode === AI_MODES.CLOUD;
+    const useLocal = !useCloud && effectiveMode === AI_MODES.LOCAL;
+    
+    if (useLocal) {
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
-    } else {
+    } else if (useCloud || isCloudAIAvailable()) {
       text = await generateWithCloudAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.CLOUD;
+    } else {
+      // Fallback: try local even if preferCloud was set but cloud unavailable
+      text = await generateWithLocalAI(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.LOCAL;
     }
     
     // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
@@ -741,6 +1076,7 @@ export const generateAI = async (prompt, options = {}) => {
     
     // Validate AI response for hallucinations (unless explicitly skipped)
     if (!options.skipValidation && options.taskType) {
+      const { validateAIResponse } = await getAISystemPrompts();
       const validation = validateAIResponse(text, options.taskType);
       if (!validation.isValid) {
         console.warn('⚠️ AI response validation warnings:', validation.warnings);
@@ -828,7 +1164,8 @@ export const getLocalModelName = () => {
   if (modelId.includes('Llama')) return 'Llama';
   
   // Phi Series (Microsoft) & Custom Vision Models
-  if (modelId.includes('Vet-Rate-Vision-Phi')) return 'Vet-Rate Vision Phi';
+  if (modelId.includes('Vet-Rate-Vision-Phi-Float32')) return 'Vet-Rate Vision Phi';
+  if (modelId.includes('Vet-Rate-Vision-Phi')) return 'Vet-Rate Vision Phi (Legacy)';
   if (modelId.includes('Phi-3.5-vision')) return 'Phi 3.5 Vision';
   if (modelId.includes('Phi-3.5')) return 'Phi 3.5 Mini';
   if (modelId.includes('Phi')) return 'Phi';
@@ -941,11 +1278,14 @@ export default {
   getUserPreset,
   isLocalAIReady,
   isLocalAIInitializing,
+  isLocalAIVisionModel,
+  getLocalAIModelId,
   isCloudAIAvailable,
   isAnyAIAvailable,
   checkWebGPUSupport,
   registerLocalAIEngine,
   generateAI,
+  generateAIWithImage,
   getAIStatus,
   getAIDataDisclosure,
 };

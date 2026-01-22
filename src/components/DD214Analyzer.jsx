@@ -7,15 +7,17 @@
  * - Local OCR support for scanned PDFs
  * - Multi-DD214 cumulative logic (prevents double-counting awards)
  * - AI-powered extraction with diagnostic status
+ * - Vision model support (direct image analysis, bypassing OCR)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { generateAI, getAIStatus, isAnyAIAvailable, isLocalAIReady } from '../utils/unifiedAIService';
+import { generateAI, generateAIWithImage, getAIStatus, isAnyAIAvailable, isLocalAIReady, isLocalAIVisionModel } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import ReportBugLink from './ReportBugLink';
-import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFileSupported, getFileTypeLabel, getAcceptString } from '../utils/documentAnalyzer';
+import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFileSupported, getFileTypeLabel, getAcceptString, renderPDFToImages } from '../utils/documentAnalyzer';
 import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVeteranProfile } from '../utils/veteranProfile';
 import { parseDD214Text } from '../utils/ribbonRackData';
 import ProfileImportConfirmModal from './ProfileImportConfirmModal';
@@ -24,6 +26,58 @@ import ProfileImportConfirmModal from './ProfileImportConfirmModal';
  * System Prompt for Multi-Document Cumulative Analysis
  * Supports: DD214 (Active), NGB 22 (Guard), DD256/DD257 (Reserve)
  * Implements the "Master Record" protocol to prevent double-counting
+ */
+/**
+ * Condensed System Prompt for Local Models (4K context)
+ * Focus on essential JSON extraction - ~800 tokens
+ */
+const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
+
+FIELD LOCATIONS ON DD214:
+- Block 4b/5: MOS code (like 92Y, 11B, 0311, etc)
+- Block 4a: Pay Grade (E-4, O-3, etc)
+- Block 11: Primary Specialty
+- Block 12a/12b: Entry Date, Separation Date
+- Block 13: Awards and Decorations
+- Block 18: Remarks (award overflow)
+- Block 24: Character of Service
+- Block 25: Separation Authority/Type
+
+RULES:
+- Latest separation date = Master Record
+- Extract MOS from Block 4b, 5, or 11
+- Check Block 18/Remarks for award overflow
+- If field not found, use null (not empty string)
+
+OUTPUT JSON:
+{
+  "documentCount": number,
+  "documentTypes": ["DD214","NGB22","DD256"],
+  "masterRecordDate": "YYYY-MM-DD",
+  "masterRecordType": "DD214",
+  "component": "Active|Guard|Reserve|AGR",
+  "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force",
+  "mos": "MOS/Rating code from Block 4b/5/11",
+  "mosTitle": "Job title/specialty name",
+  "entryDate": "YYYY-MM-DD",
+  "separationDate": "YYYY-MM-DD",
+  "yearsService": number,
+  "monthsService": number,
+  "separationType": "Retirement|ETS|Medical|etc",
+  "characterOfService": "Honorable|General|Other Than Honorable|etc",
+  "reenlisted": boolean,
+  "foreignService": boolean,
+  "awards": [{"name":"name","abbreviation":"abbr","devices":[],"deviceCount":0,"isCombat":boolean,"sourceDocument":"source"}],
+  "combatService": {"hasVerifiedCombat":boolean,"indicators":[]},
+  "specialQualifications": [],
+  "extractionNotes": ["notes about extraction"]
+}
+
+CRITICAL: Return ONLY valid JSON. No comments, no markdown, no explanations. JSON does not support // or /* comments.`;
+
+/**
+ * Full System Prompt for Cloud AI (larger context)
+ * Comprehensive multi-document handling with detailed instructions
  */
 const DD214_ANALYSIS_SYSTEM_PROMPT = `You are a military records analyst specializing in discharge document interpretation.
 
@@ -122,36 +176,6 @@ Return a JSON object with this EXACT structure:
 RETURN ONLY THE JSON. No explanations, no markdown.`;
 
 /**
- * DiagnosticStatus Component - Shows AI readiness in modal footer
- */
-const DiagnosticStatus = ({ aiStatus, isGenerating }) => {
-  if (isGenerating) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full text-sm">
-        <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-        <span>🟡 Analyzing...</span>
-      </div>
-    );
-  }
-
-  if (!aiStatus.available) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-sm">
-        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-        <span>🔴 AI Offline (Load Model First)</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm">
-      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-      <span>🟢 AI Ready {aiStatus.isPrivate ? '(Local - 100% Private)' : '(Cloud)'}</span>
-    </div>
-  );
-};
-
-/**
  * OCR Progress Bar Component
  */
 const OCRProgressBar = ({ progress }) => {
@@ -189,11 +213,12 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   useBodyScrollLock(true);
 
   // State
-  const [aiStatus, setAIStatus] = useState({ available: false });
+  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
   const [inputMethod, setInputMethod] = useState('paste'); // 'paste' | 'upload'
   const [pastedText, setPastedText] = useState('');
   const [droppedFiles, setDroppedFiles] = useState([]);
   const [extractedTexts, setExtractedTexts] = useState([]);
+  const [originalPDFFiles, setOriginalPDFFiles] = useState([]); // Keep original PDF files for vision model
   const [ocrProgress, setOcrProgress] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -235,7 +260,9 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     e.stopPropagation();
     setIsDragging(false);
     
+    console.log('📁 Files dropped:', e.dataTransfer.files);
     const files = Array.from(e.dataTransfer.files).filter(f => isFileSupported(f));
+    console.log('📁 Supported files:', files.map(f => f.name));
     if (files.length === 0) {
       setError('Please drop supported files: PDF, Word (.docx), Text (.txt), or RTF');
       return;
@@ -245,16 +272,50 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   };
 
   /**
-   * Process dropped in or selected files
+   * Process dropped in or selected files - Just stores them without OCR
+   * OCR is now triggered explicitly via "Run OCR" button
    */
   const processFiles = async (files) => {
+    console.log('📁 processFiles called with:', files.map(f => f.name));
     if (files.length === 0) return;
 
     setError(null);
-    setDroppedFiles(prev => [...prev, ...files]);
+    setDroppedFiles(prev => {
+      const newFiles = [...prev, ...files];
+      console.log('📁 droppedFiles now:', newFiles.map(f => f.name));
+      return newFiles;
+    });
     
-    // Process each file
-    for (const file of files) {
+    // Keep original PDF files for vision model analysis
+    const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (pdfFiles.length > 0) {
+      setOriginalPDFFiles(prev => [...prev, ...pdfFiles]);
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  /**
+   * Run OCR on all loaded files that haven't been processed yet
+   */
+  const runOCROnFiles = async () => {
+    // Use droppedFiles if available, fall back to originalPDFFiles
+    const filesToProcess = droppedFiles.length > 0 ? droppedFiles : originalPDFFiles;
+    const unprocessedFiles = filesToProcess.filter(
+      file => !extractedTexts.some(et => et.filename === file.name)
+    );
+    
+    if (unprocessedFiles.length === 0) {
+      setError('All files have already been processed.');
+      return;
+    }
+
+    setError(null);
+    
+    for (const file of unprocessedFiles) {
       if (!isFileSupported(file)) {
         setError(`${file.name} is not a supported format. Use PDF, DOCX, TXT, or RTF.`);
         continue;
@@ -264,7 +325,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
       setOcrProgress({
         state: OCR_STATES.LOADING,
         progress: 0,
-        message: `Loading ${file.name}...`,
+        message: `Processing ${file.name}...`,
       });
 
       try {
@@ -287,11 +348,6 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     
     setIsProcessing(false);
     setOcrProgress(null);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   /**
@@ -306,8 +362,13 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
    * Remove a dropped in file
    */
   const handleRemoveFile = (index) => {
+    const fileToRemove = droppedFiles[index];
     setDroppedFiles(prev => prev.filter((_, i) => i !== index));
     setExtractedTexts(prev => prev.filter((_, i) => i !== index));
+    // Also remove from original PDF files if it's a PDF
+    if (fileToRemove?.name?.toLowerCase().endsWith('.pdf')) {
+      setOriginalPDFFiles(prev => prev.filter(f => f.name !== fileToRemove.name));
+    }
   };
 
   /**
@@ -333,54 +394,260 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   };
 
   /**
+   * Estimate token count for Llama 3.2 tokenizer
+   * Real-world testing shows Llama 3.2 uses ~1.7-2.5 chars/token for mixed content
+   * Using 2 chars/token as conservative estimate (errs on side of caution)
+   */
+  const estimateTokens = (text) => Math.ceil(text.length / 2);
+
+  /**
+   * Truncate text to fit within token limit, preserving important sections
+   */
+  const truncateForContext = (text, maxTokens = 2000) => {
+    const maxChars = maxTokens * 2; // ~2 chars per token (conservative for Llama 3.2)
+    if (text.length <= maxChars) return text;
+    
+    // For DD214s, prioritize the beginning (service info, dates, MOS) 
+    // and end (awards, decorations, remarks sections)
+    const beginningChars = Math.floor(maxChars * 0.6); // 60% for beginning
+    const endingChars = Math.floor(maxChars * 0.35); // 35% for ending
+    const beginning = text.slice(0, beginningChars);
+    const ending = text.slice(-endingChars);
+    
+    const omittedKB = Math.floor((text.length - maxChars) / 1000);
+    return `${beginning}\n\n[... DOCUMENT TRUNCATED - ${omittedKB}KB OMITTED FOR LOCAL AI PROCESSING ...]\n\n${ending}`;
+  };
+
+  /**
    * Main Analysis Handler - THE BUTTON
+   * Supports two modes:
+   * 1. Vision Model: Sends actual PDF page images directly to vision model (bypasses OCR)
+   * 2. Text Model: Uses OCR/text extraction then sends to LLM
    */
   const handleAnalyzeWithAI = async () => {
-    const combinedText = getCombinedText();
+    // Prevent double-clicks and React StrictMode double-firing
+    if (isGenerating) {
+      console.log('⚠️ Analysis already in progress, ignoring duplicate click');
+      return;
+    }
     
-    if (!combinedText) {
-      setError('Please paste DD214 text or drop in PDF files first');
+    // Immediately set generating to prevent race conditions
+    setIsGenerating(true);
+    
+    const combinedText = getCombinedText();
+    const hasVisionModel = isLocalAIVisionModel();
+    const hasPDFFiles = originalPDFFiles.length > 0;
+    
+    // Vision model support: DISABLED - Custom model compilation did not produce image_embed function
+    // MLC-LLM vision models require special compilation that includes CLIP preprocessing
+    // To enable, load the official "Phi-3.5-vision-instruct-q4f16_1-MLC" model from MLC-AI
+    // TODO: Investigate proper vision model compilation with image_embed export
+    const useVisionAnalysis = false; // Force OCR path - vision requires official MLC models
+    
+    console.log(`🔍 Analysis mode: ${useVisionAnalysis ? 'VISION (direct image)' : 'TEXT (OCR/extraction)'}`);
+    console.log(`   hasVisionModel: ${hasVisionModel}, hasPDFFiles: ${hasPDFFiles}, hasPastedText: ${!!pastedText.trim()}`);
+    
+    // If no text has been extracted, prompt user to run OCR
+    if (!combinedText && !useVisionAnalysis) {
+      if (hasPDFFiles || droppedFiles.length > 0) {
+        setError('Please click "Run OCR" first to extract text from your PDF files, then analyze.');
+      } else {
+        setError('Please paste DD214 text or drop in PDF files first.');
+      }
+      setIsGenerating(false); // Reset since we're returning early
       return;
     }
 
-    if (!aiStatus.available) {
+    if (!aiStatus.anyAvailable) {
       setError('AI is not available. Please configure AI settings first.');
+      setIsGenerating(false); // Reset since we're returning early
       return;
     }
 
     setError(null);
-    setIsGenerating(true);
     setAnalysisResult(null);
 
     try {
-      // Call the unified AI service with our specialized system prompt
-      const response = await generateAI(
-        `${DD214_ANALYSIS_SYSTEM_PROMPT}\n\nDD214 DOCUMENT(S) TO ANALYZE:\n\n${combinedText}`,
-        {
-          temperature: 0.2, // Lower temperature for more consistent JSON output
-          maxTokens: 4096,
-          expectJSON: true,
-          systemPrompt: DD214_ANALYSIS_SYSTEM_PROMPT,
+      let response;
+      
+      if (useVisionAnalysis) {
+        // ========== VISION MODEL PATH ==========
+        // Render PDFs to images and send directly to vision model
+        console.log('🖼️ Using Vision Model for direct image analysis');
+        
+        setOcrProgress({
+          state: OCR_STATES.LOADING,
+          progress: 0,
+          message: 'Preparing images for vision analysis...',
+        });
+        
+        // Collect all images from all PDF files
+        const allImages = [];
+        for (let i = 0; i < originalPDFFiles.length; i++) {
+          const pdfFile = originalPDFFiles[i];
+          setOcrProgress({
+            state: OCR_STATES.OCR_IN_PROGRESS,
+            progress: (i / originalPDFFiles.length) * 50,
+            message: `Rendering ${pdfFile.name}...`,
+          });
+          
+          const { images } = await renderPDFToImages(pdfFile, {
+            maxPages: 2, // First 2 pages usually have critical DD214 info
+            scale: 1.5, // Good balance of quality vs size
+            format: 'jpeg',
+            quality: 0.85,
+          });
+          allImages.push(...images);
         }
-      );
+        
+        console.log(`📷 Total images for vision model: ${allImages.length}`);
+        
+        setOcrProgress({
+          state: OCR_STATES.OCR_IN_PROGRESS,
+          progress: 60,
+          message: 'Analyzing images with vision model...',
+        });
+        
+        // Send images to vision model
+        response = await generateAIWithImage(
+          'Analyze this DD214 discharge document and extract all information. Return your analysis as JSON following the format specified in the system prompt.',
+          allImages,
+          {
+            systemPrompt: DD214_ANALYSIS_SYSTEM_PROMPT,
+            maxTokens: 2048,
+            temperature: 0.2,
+            skipHallucinationCheck: true, // DD214 JSON doesn't contain diagnostic codes
+          }
+        );
+        
+        setOcrProgress(null);
+        
+      } else {
+        // ========== TEXT MODEL PATH (original) ==========
+        // Use OCR/text extraction then send to LLM
+        console.log('📝 Using Text Model for OCR-based analysis');
+        
+        // Determine if we're using local or cloud AI
+        // Local models have tight context limits (4096), cloud has much more
+        const localContextLimit = 4096;
+        const isLocalOnly = aiStatus.localAvailable && !aiStatus.cloudAvailable;
+        
+        // Choose system prompt based on AI availability
+        // Local models need the condensed prompt to fit in 4K context
+        const systemPrompt = isLocalOnly ? DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL : DD214_ANALYSIS_SYSTEM_PROMPT;
+        
+        // Estimate total tokens needed
+        // Using 2 chars/token for conservative Llama 3.2 estimates
+        const systemPromptTokens = estimateTokens(systemPrompt);
+        const documentTokens = estimateTokens(combinedText);
+        const userPromptWrapper = 100; // "Analyze this DD214 document..." wrapper with formatting
+        // Models with larger context can handle more output tokens
+        const outputBuffer = localContextLimit >= 8192 ? 2048 : 1024;
+        
+        console.log(`📊 Token estimates: system=${systemPromptTokens}, doc=${documentTokens}, wrapper=${userPromptWrapper}, output=${outputBuffer}`);
+        
+        const totalEstimatedTokens = systemPromptTokens + documentTokens + userPromptWrapper + outputBuffer;
+        
+        const needsTruncation = totalEstimatedTokens > localContextLimit && isLocalOnly;
+        const preferCloud = totalEstimatedTokens > localContextLimit && aiStatus.cloudAvailable;
+        
+        let documentText = combinedText;
+        
+        if (needsTruncation) {
+          console.warn(`⚠️ Document too large (${totalEstimatedTokens} tokens estimated). Truncating for local AI...`);
+          // Calculate safe document size:
+          // Available = Context - System - Wrapper - Output
+          const availableForDoc = localContextLimit - systemPromptTokens - userPromptWrapper - outputBuffer;
+          // Ensure minimum reasonable size (at least 500 tokens for useful extraction)
+          const maxDocTokens = Math.max(500, availableForDoc);
+          documentText = truncateForContext(combinedText, maxDocTokens);
+          console.log(`📄 Truncated to ~${estimateTokens(documentText)} tokens (max allowed: ${maxDocTokens})`);
+          setError(null); // Clear any previous errors
+        }
+        
+        if (preferCloud) {
+          console.log(`📄 Large document (${totalEstimatedTokens} tokens). Using Cloud AI for better results.`);
+        }
+
+        // Call the unified AI service - system prompt goes in options, NOT in main message
+        response = await generateAI(
+          `Analyze this DD214 document and extract the information as JSON:\n\n${documentText}`,
+          {
+            temperature: 0.2, // Lower temperature for more consistent JSON output
+            maxTokens: outputBuffer, // Use calculated output buffer based on context size
+            expectJSON: true,
+            systemPrompt: systemPrompt,
+            preferCloud: preferCloud, // Hint to use cloud for large docs
+            skipHallucinationCheck: true, // DD214 JSON doesn't contain diagnostic codes
+          }
+        );
+      }
 
       // Extract text from response
-      const content = response?.text || response;
-      if (!content) {
-        throw new Error('No response received from AI');
+      // Handle both direct string responses and {text, mode} objects
+      let content;
+      if (typeof response === 'string') {
+        content = response;
+      } else if (response && typeof response.text === 'string') {
+        content = response.text;
+      } else {
+        content = '';
+      }
+      console.log('🤖 Raw AI Response:', content || '(empty)');
+      
+      // Check for empty response - vision models may return empty if image processing failed
+      if (!content || content.trim().length === 0) {
+        if (response?.isVisionResponse) {
+          throw new Error('Vision model returned empty response. The model may have had trouble processing the image. Try: 1) Using a clearer scan, 2) Switching to text-based analysis, or 3) Reloading the AI model.');
+        }
+        throw new Error('No response received from AI. Please try again.');
       }
 
       // Parse JSON from response
       let data;
       try {
         let cleanContent = typeof content === 'string' ? content.trim() : JSON.stringify(content);
+        console.log('🧹 Clean content before JSON parse:', cleanContent.substring(0, 500));
         
         // Remove markdown code fences if present
         if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
         if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
         if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
         
+        // Try to find JSON object in the response if it's mixed with other text
+        const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanContent = jsonMatch[0];
+        }
+        
+        // Remove JavaScript-style comments from JSON (some models add these)
+        // Remove single-line comments: // comment
+        cleanContent = cleanContent.replace(/\/\/[^\n\r]*/g, '');
+        // Remove multi-line comments: /* comment */
+        cleanContent = cleanContent.replace(/\/\*[\s\S]*?\*\//g, '');
+        // Clean up any trailing commas before } or ] (common after comment removal)
+        cleanContent = cleanContent.replace(/,(\s*[}\]])/g, '$1');
+        
+        console.log('🧹 After comment removal:', cleanContent.substring(0, 500));
+        
         data = JSON.parse(cleanContent.trim());
+        
+        // Normalize data - AI sometimes returns fields in unexpected formats
+        // Handle MOS being returned as an object instead of string
+        if (data.mos && typeof data.mos === 'object') {
+          const mosObj = data.mos;
+          data.mos = mosObj.code || '';
+          data.mosTitle = data.mosTitle || mosObj.title || '';
+        }
+        // Ensure string fields are actually strings
+        if (data.mos && typeof data.mos !== 'string') {
+          data.mos = String(data.mos);
+        }
+        if (data.mosTitle && typeof data.mosTitle !== 'string') {
+          data.mosTitle = String(data.mosTitle);
+        }
+        
+        console.log('✅ Parsed JSON data:', data);
       } catch (parseError) {
         console.error('JSON parse error:', parseError, 'Content:', content);
         throw new Error('Could not parse AI response. Please try again.');
@@ -403,21 +670,57 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   };
 
   /**
+   * Validate and fix date string
+   * Returns null if date is invalid
+   */
+  const validateDate = (dateStr) => {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    
+    // Try to parse the date
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return dateStr; // Return as-is if not in expected format
+    
+    const [, year, month, day] = match;
+    const y = parseInt(year, 10);
+    const m = parseInt(month, 10);
+    const d = parseInt(day, 10);
+    
+    // Validate ranges
+    if (m < 1 || m > 12) return null;
+    
+    // Days in month (accounting for leap years)
+    const daysInMonth = [31, (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (d < 1 || d > daysInMonth[m - 1]) return null;
+    
+    // Validate reasonable year range for DD214s (1900-2100)
+    if (y < 1900 || y > 2100) return null;
+    
+    return dateStr;
+  };
+
+  /**
    * Save results after analysis (automatic trigger)
    */
   const handleSaveResultsAfterAnalysis = (result) => {
-    if (!result) return;
+    if (!result) {
+      console.warn('handleSaveResultsAfterAnalysis called with empty result');
+      return;
+    }
 
     try {
+      // Validate dates before using
+      const validatedEntryDate = validateDate(result.entryDate);
+      const validatedSeparationDate = validateDate(result.separationDate);
+      
       // Prepare extracted profile data for review
-      const profileData = {
+      // Note: Use EITHER serviceStartDate OR entryDate, not both (they're duplicates)
+      // Same for serviceEndDate/separationDate
+      const rawProfileData = {
         branch: result.branch,
         mos: result.mos,
         mosTitle: result.mosTitle,
-        serviceStartDate: result.entryDate,
-        entryDate: result.entryDate,
-        serviceEndDate: result.separationDate,
-        separationDate: result.separationDate,
+        entryDate: validatedEntryDate,
+        separationDate: validatedSeparationDate,
         separationType: result.separationType,
         characterOfService: result.characterOfService,
         reenlisted: result.reenlisted,
@@ -426,6 +729,31 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         monthsService: result.monthsService,
       };
 
+      // Filter out undefined/null values but keep empty strings for user to fill
+      // Also keep boolean false values (like reenlisted: false)
+      const profileData = Object.fromEntries(
+        Object.entries(rawProfileData).filter(([key, value]) => {
+          // Always exclude undefined/null
+          if (value === undefined || value === null) return false;
+          // Keep booleans (including false)
+          if (typeof value === 'boolean') return true;
+          // Keep non-empty strings
+          if (typeof value === 'string' && value.trim() !== '') return true;
+          // Keep numbers
+          if (typeof value === 'number') return true;
+          // Filter out empty strings
+          return false;
+        })
+      );
+
+      // Only show modal if we have data to import
+      if (Object.keys(profileData).length === 0) {
+        console.warn('No profile data extracted from DD214');
+        return;
+      }
+
+      console.log('Opening profile import modal with data:', profileData);
+      
       // Show confirmation modal automatically
       setExtractedProfileData(profileData);
       setShowProfileImportModal(true);
@@ -443,27 +771,33 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     if (!analysisResult) return;
 
     try {
+      // Validate dates before using
+      const validatedEntryDate = validateDate(analysisResult.entryDate);
+      const validatedSeparationDate = validateDate(analysisResult.separationDate);
+      
       // Prepare extracted profile data for review
+      // Note: No duplicate fields (removed serviceStartDate/serviceEndDate aliases)
       const profileData = {
-        // Map DD214 fields to profile fields
         branch: analysisResult.branch,
         mos: analysisResult.mos,
         mosTitle: analysisResult.mosTitle,
-        serviceStartDate: analysisResult.entryDate,
-        entryDate: analysisResult.entryDate,
-        serviceEndDate: analysisResult.separationDate,
-        separationDate: analysisResult.separationDate,
+        entryDate: validatedEntryDate,
+        separationDate: validatedSeparationDate,
         separationType: analysisResult.separationType,
         characterOfService: analysisResult.characterOfService,
         reenlisted: analysisResult.reenlisted,
         foreignService: analysisResult.foreignService,
-        // Metadata
         yearsService: analysisResult.yearsService,
         monthsService: analysisResult.monthsService,
       };
 
+      // Filter out null/undefined
+      const filteredData = Object.fromEntries(
+        Object.entries(profileData).filter(([_, v]) => v !== null && v !== undefined)
+      );
+
       // Show confirmation modal
-      setExtractedProfileData(profileData);
+      setExtractedProfileData(filteredData);
       setShowProfileImportModal(true);
       
     } catch (err) {
@@ -554,7 +888,9 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     setError(null);
   };
 
-  const hasInput = pastedText.trim() || extractedTexts.length > 0;
+  // Has input if: pasted text, OR processed files with extracted text, OR loaded files (to prompt user to OCR)
+  // Vision path disabled due to custom model lacking image_embed function
+  const hasInput = pastedText.trim() || extractedTexts.length > 0 || droppedFiles.length > 0 || originalPDFFiles.length > 0;
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -684,35 +1020,90 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {ocrProgress && (
                 <OCRProgressBar progress={ocrProgress} />
               )}
+            </div>
+          )}
 
-              {/* Processed Files List */}
-              {extractedTexts.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-gray-700 dark:text-gray-300">Processed Files:</h4>
-                  {extractedTexts.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">📄</span>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">{item.filename}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {item.pageCount} pages • {item.method === 'ocr' ? '🔍 OCR' : item.method === 'hybrid' ? '🔍 Hybrid' : '📝 Text'}
-                          </p>
-                        </div>
+          {/* Loaded Files List - Always visible when files are loaded, regardless of input method */}
+          {/* Show if droppedFiles OR originalPDFFiles have items (for backwards compatibility) */}
+          {(droppedFiles.length > 0 || originalPDFFiles.length > 0) && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-700 dark:text-gray-300">
+                  📁 Loaded Files ({Math.max(droppedFiles.length, originalPDFFiles.length)})
+                </h4>
+                {/* OCR Button - only show if there are unprocessed files */}
+                {(droppedFiles.length > 0 ? droppedFiles : originalPDFFiles).some(f => !extractedTexts.some(et => et.filename === f.name)) && (
+                  <button
+                    onClick={runOCROnFiles}
+                    disabled={isProcessing}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        🔍 Run OCR
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              
+              {/* Use droppedFiles if available, fall back to originalPDFFiles for backwards compat */}
+              {(droppedFiles.length > 0 ? droppedFiles : originalPDFFiles).map((file, idx) => {
+                const isProcessed = extractedTexts.some(et => et.filename === file.name);
+                const processedData = extractedTexts.find(et => et.filename === file.name);
+                
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      isProcessed 
+                        ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
+                        : 'bg-gray-50 dark:bg-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{isProcessed ? '✅' : '📄'}</span>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatFileSize(file.size)}
+                          {isProcessed && processedData && (
+                            <span className="ml-2 text-green-600 dark:text-green-400">
+                              • {processedData.pageCount} pages • {processedData.method === 'ocr' ? '🔍 OCR' : processedData.method === 'hybrid' ? '🔍 Hybrid' : '📝 Text'}
+                            </span>
+                          )}
+                          {!isProcessed && (
+                            <span className="ml-2 text-amber-600 dark:text-amber-400">
+                              • Ready for OCR or Vision AI
+                            </span>
+                          )}
+                        </p>
                       </div>
-                      <button
-                        onClick={() => handleRemoveFile(idx)}
-                        className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
                     </div>
-                  ))}
+                    <button
+                      onClick={() => handleRemoveFile(idx)}
+                      className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+              
+              {/* OCR Tip - shown when files are loaded but not processed */}
+              {(droppedFiles.length > 0 || originalPDFFiles.length > 0) && !extractedTexts.length && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    <span className="font-semibold">📄 Files loaded!</span>
+                    {' '}Click "Run OCR" above to extract text from your PDF, then "Analyze with AI".
+                  </p>
                 </div>
               )}
             </div>
@@ -753,7 +1144,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">MOS</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.mos || 'N/A'}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">
+                    {typeof analysisResult.mos === 'object' 
+                      ? (analysisResult.mos?.code || JSON.stringify(analysisResult.mos)) 
+                      : (analysisResult.mos || 'N/A')}
+                  </p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Time in Service</p>
@@ -829,9 +1224,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-b-2xl bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
-          {/* Diagnostic Status */}
-          <DiagnosticStatus aiStatus={aiStatus} isGenerating={isGenerating} />
+        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col sm:flex-row items-center justify-end gap-4 rounded-b-2xl bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
           
           {/* Actions */}
           <div className="flex items-center gap-3">
@@ -855,7 +1248,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             
             <button
               onClick={handleAnalyzeWithAI}
-              disabled={!hasInput || !aiStatus.available || isGenerating || isProcessing}
+              disabled={!hasInput || !aiStatus.anyAvailable || isGenerating || isProcessing}
               className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
               {isGenerating ? (
@@ -873,14 +1266,15 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         </div>
       </div>
       
-      {/* Profile Import Confirmation Modal */}
-      {showProfileImportModal && extractedProfileData && (
+      {/* Profile Import Confirmation Modal - Rendered via portal to escape z-index stacking context */}
+      {showProfileImportModal && extractedProfileData && createPortal(
         <ProfileImportConfirmModal
           extractedData={extractedProfileData}
           currentProfile={getVeteranProfile()}
           onConfirm={handleConfirmProfileImport}
           onCancel={handleCancelProfileImport}
-        />
+        />,
+        document.body
       )}
     </div>
   );

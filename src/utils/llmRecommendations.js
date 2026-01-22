@@ -521,14 +521,20 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Document Scanner',
     category: TOOL_CATEGORIES.VISION,
     primary: {
-      modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
+      modelId: 'Vet-Rate-Vision-Phi-Float32',
       modelName: 'Vet-Rate Vision Phi',
-      reason: 'Custom-compiled vision model - works in standard Chrome!',
-      badge: '👁️ Vision Required',
+      reason: '✅ Custom Float32 build - works in standard Chrome/Edge! No experimental flags needed.',
+      badge: '👁️ Vision',
     },
-    alternatives: [],
+    alternatives: [
+      {
+        modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
+        modelName: 'Vet-Rate Vision Phi (Legacy)',
+        reason: '⚠️ Legacy version - requires Chrome Canary with experimental flags',
+      },
+    ],
     tips: [
-      'Vet-Rate Vision Phi can read images directly in any browser',
+      'Phi 3.5 Vision Float32 works in any modern browser with WebGPU',
       'Text-based documents can use any model after OCR',
       'Cloud AI (Gemini) also has vision capabilities',
     ],

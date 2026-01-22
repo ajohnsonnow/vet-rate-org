@@ -1,8 +1,34 @@
 {
-  "version": "1.4.2.4",
+  "version": "1.4.3.0",
   "lastUpdated": "2026-01-21",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.4.3.0",
+      "date": "2026-01-21",
+      "isFirstRelease": false,
+      "releaseTitle": "Stability & OCR Improvements - v1.4.3.0",
+      "changelog": [
+        {
+          "type": "improvement",
+          "category": "DD214 Analyzer",
+          "title": "OCR-First Workflow",
+          "description": "DD214 Analyzer now uses reliable OCR extraction before AI analysis - more accurate data extraction for all document types"
+        },
+        {
+          "type": "improvement",
+          "category": "Local AI",
+          "title": "Streamlined Model Selection",
+          "description": "Removed experimental vision models to focus on stable, production-ready text models (Llama, Phi, Qwen, DeepSeek)"
+        },
+        {
+          "type": "improvement",
+          "category": "Local AI",
+          "title": "Cleaner Settings Interface",
+          "description": "Simplified WebGPU configuration - removed experimental toggles for a more intuitive setup experience"
+        }
+      ]
+    },
     {
       "version": "1.4.2.4",
       "date": "2026-01-21",

@@ -350,3 +350,134 @@ export const validateFileSize = (file, maxSizeMB = 50) => {
   }
   return true;
 };
+
+/**
+ * Render PDF pages to images for vision model input
+ * This bypasses OCR and sends actual images to vision-language models
+ * 
+ * @param {File} file - PDF file to render
+ * @param {Object} options - Rendering options
+ * @param {number} options.maxPages - Maximum pages to render (default: 4)
+ * @param {number} options.scale - Render scale (default: 1.5 for balance of quality/size)
+ * @param {string} options.format - Output format 'jpeg' or 'png' (default: 'jpeg')
+ * @param {number} options.quality - JPEG quality 0-1 (default: 0.85)
+ * @param {Function} onProgress - Progress callback
+ * @returns {Promise<{images: string[], pageCount: number, renderedPages: number}>}
+ */
+export async function renderPDFToImages(file, options = {}, onProgress = () => {}) {
+  const {
+    maxPages = 4,
+    scale = 1.5, // Balance between quality and context window size
+    format = 'jpeg',
+    quality = 0.85,
+  } = options;
+
+  // Validate input
+  if (!file) {
+    throw new Error('No file provided');
+  }
+  
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    throw new Error('File must be a PDF document');
+  }
+
+  // Dynamically import pdfjs-dist
+  const pdfjsLib = await import('pdfjs-dist');
+  const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
+
+  onProgress({
+    state: OCR_STATES.LOADING,
+    progress: 0,
+    message: 'Loading PDF for vision analysis...',
+  });
+
+  try {
+    // Read file into ArrayBuffer
+    const arrayBuffer = await readFileAsArrayBuffer(file);
+    
+    // Load PDF document
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPages = pdf.numPages;
+    const pagesToRender = Math.min(numPages, maxPages);
+    
+    onProgress({
+      state: OCR_STATES.EXTRACTING_TEXT,
+      progress: 10,
+      message: `Rendering ${pagesToRender} page(s) for vision model...`,
+      totalPages: pagesToRender,
+    });
+
+    const images = [];
+
+    for (let i = 1; i <= pagesToRender; i++) {
+      const progress = 10 + ((i - 1) / pagesToRender) * 80;
+      onProgress({
+        state: OCR_STATES.OCR_IN_PROGRESS,
+        progress: Math.round(progress),
+        message: `Rendering page ${i} of ${pagesToRender}...`,
+        currentPage: i,
+        totalPages: pagesToRender,
+      });
+
+      // Get page
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale });
+      
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      
+      // Render PDF page to canvas
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
+      
+      // Convert to data URL
+      const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      images.push(dataUrl);
+      
+      // Clean up
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+
+    onProgress({
+      state: OCR_STATES.COMPLETE,
+      progress: 100,
+      message: `Rendered ${pagesToRender} page(s) for vision analysis`,
+      totalPages: pagesToRender,
+    });
+
+    console.log(`📷 Rendered ${images.length} PDF pages as images for vision model`);
+    
+    return {
+      images,
+      pageCount: numPages,
+      renderedPages: pagesToRender,
+    };
+    
+  } catch (error) {
+    console.error('Error rendering PDF to images:', error);
+    throw new Error(`Failed to render PDF: ${error.message}`);
+  }
+}
+
+/**
+ * Convert an image file to base64 data URL for vision model input
+ * 
+ * @param {File} file - Image file (JPEG, PNG, etc.)
+ * @returns {Promise<string>} Base64 data URL
+ */
+export async function imageFileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+}

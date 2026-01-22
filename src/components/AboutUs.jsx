@@ -495,27 +495,27 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🤖 Local AI Arsenal</p>
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
-                            <p><strong>Local Models:</strong> 17 models available</p>
+                            <p><strong>Local Models:</strong> 18 models available</p>
                             <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
-                            <p><strong>Vision Model:</strong> <span className="text-amber-600 dark:text-amber-400 font-medium">Vet-Rate Vision Phi ⭐ Custom Built!</span></p>
+                            <p><strong>Vision Model:</strong> <span className="text-green-600 dark:text-green-400 font-medium">Vet-Rate Vision Phi ✅ Standard Chrome!</span></p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
                           </div>
                           {/* Custom LLM Build Achievement */}
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                            <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">🏆 Custom Vision Model Achievement</p>
+                            <p className="font-semibold text-green-600 dark:text-green-400 mb-1">🏆 Float32 Bypass Vision Model</p>
                             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              We compiled our own vision-language model from scratch to work in standard Chrome!
+                              We compiled a custom vision model with Float32 pixel inputs that works in standard Chrome!
                             </p>
                             <div className="grid grid-cols-2 gap-1 text-xs">
                               <p>• <strong>Source:</strong> Phi 3.5 Vision (8.3 GB)</p>
-                              <p>• <strong>Compiled:</strong> 2.78 GB (66% smaller)</p>
-                              <p>• <strong>WASM Library:</strong> 6.6 MB</p>
+                              <p>• <strong>Compiled:</strong> 2.6 GB (68% smaller)</p>
+                              <p>• <strong>WASM Library:</strong> 6.7 MB</p>
                               <p>• <strong>Parameters:</strong> 4 billion</p>
-                              <p>• <strong>Build Time:</strong> 4 hours</p>
-                              <p>• <strong>Quantization:</strong> q4f32_1</p>
+                              <p>• <strong>Build Time:</strong> 2.5 hours</p>
+                              <p>• <strong>Quantization:</strong> q4f16_1</p>
                             </div>
                             <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                              ✅ No experimental Chrome flags required!
+                              ✅ Float32 Bypass: Works in Chrome/Edge without experimental flags!
                             </p>
                           </div>
                         </div>
@@ -673,15 +673,16 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   </div>
                   
                   <div className="bg-green-100 dark:bg-green-900/30 rounded p-2 mb-2">
-                    <p className="font-semibold text-green-700 dark:text-green-300 text-xs mb-1">✅ Result: Works in Standard Chrome!</p>
+                    <p className="font-semibold text-green-700 dark:text-green-300 text-xs mb-1">✅ Float32 Bypass Build Complete!</p>
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      By using q4f32_1 quantization (f32 model dtype), our custom model avoids the u8 shader types 
-                      that required experimental Chrome flags. Veterans can now use vision AI without any special setup!
+                      As of January 21, 2026, we've compiled a Float32 Bypass version that works in <strong>standard Chrome/Edge</strong> without experimental flags!
+                      The model uses Float32 pixel inputs instead of uint8, enabling universal WebGPU compatibility.
                     </p>
                   </div>
                   
                   <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                    Model available at: <a href="https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi</a>
+                    Float32 model: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">Vet-Rate Vision Phi</code> | 
+                    Legacy model at: <a href="https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi</a>
                   </p>
                 </div>
               </details>

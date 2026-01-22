@@ -17,8 +17,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateAI } from '../utils/unifiedAIService';
 import { useHelperMode } from '../contexts/HelperModeContext';
 import { getTotalToolCount } from '../data/toolkitData';
+import { AIStatusBadge } from './AIModeSelector';
 
-const AIAssistant = ({ currentTool = 'Home', onClose }) => {
+const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -218,15 +219,22 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
         }
       });
 
+      // Validate we got a meaningful response
+      const responseText = result?.text?.trim();
+      if (!responseText) {
+        throw new Error('AI returned an empty response. Please try again or rephrase your question.');
+      }
+
       const assistantMessage = {
         role: 'assistant',
-        content: result.text,
+        content: responseText,
         timestamp: new Date(),
         mode: result.mode
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      console.error('Navigator AI error:', error);
       let errorMessage = 'I encountered an error. Please try again.';
       
       if (error.message === 'CRISIS_DETECTED') {
@@ -235,6 +243,12 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
         errorMessage = '⚠️ AI is not configured. Please set up Cloud AI (Gemini API key) or Local AI in Settings.';
       } else if (error.message.includes('temporarily disabled')) {
         errorMessage = '⚠️ AI features are temporarily unavailable. Please try again later.';
+      } else if (error.message.includes('empty response')) {
+        errorMessage = '⚠️ AI returned an empty response. This can happen with Local AI sometimes. Please try:\n• Rephrasing your question\n• Using a shorter prompt\n• Checking if the model is fully loaded';
+      } else if (error.message.includes('not initialized') || error.message.includes('not loaded')) {
+        errorMessage = '⚠️ Local AI is not ready yet. Please wait for the model to finish loading, or configure Cloud AI in Settings.';
+      } else if (error.message) {
+        errorMessage = `⚠️ ${error.message}`;
       }
 
       setMessages(prev => [...prev, {
@@ -373,6 +387,16 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
         </div>
         
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* AI Status Button */}
+          {onOpenAISettings && (
+            <div className="pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+              <AIStatusBadge 
+                onClick={onOpenAISettings} 
+                className="text-xs"
+                showLabel={false}
+              />
+            </div>
+          )}
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
