@@ -21,6 +21,7 @@ import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFile
 import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVeteranProfile } from '../utils/veteranProfile';
 import { parseDD214Text } from '../utils/ribbonRackData';
 import ProfileImportConfirmModal from './ProfileImportConfirmModal';
+import DD214FormBuilder from './DD214FormBuilder';
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -214,7 +215,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
   // State
   const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
-  const [inputMethod, setInputMethod] = useState('paste'); // 'paste' | 'upload'
+  const [inputMethod, setInputMethod] = useState('paste'); // 'paste' | 'upload' | 'manual'
   const [pastedText, setPastedText] = useState('');
   const [droppedFiles, setDroppedFiles] = useState([]);
   const [extractedTexts, setExtractedTexts] = useState([]);
@@ -229,6 +230,9 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   // Profile import confirmation modal
   const [showProfileImportModal, setShowProfileImportModal] = useState(false);
   const [extractedProfileData, setExtractedProfileData] = useState(null);
+  
+  // Manual form builder
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -961,6 +965,16 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             >
               📄 Drop In PDF {extractedTexts.length > 0 && `(${extractedTexts.length})`}
             </button>
+            <button
+              onClick={() => setInputMethod('manual')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                inputMethod === 'manual'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              ✏️ Manual Entry
+            </button>
           </div>
 
           {/* Paste Input */}
@@ -979,6 +993,41 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 ⚠️ Your DD214 contains sensitive PII. Data stays on your device only.
               </p>
+            </div>
+          )}
+
+          {/* Manual Entry */}
+          {inputMethod === 'manual' && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <span className="text-4xl">✏️</span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-blue-900 dark:text-blue-100 text-lg mb-2">
+                      Build Your DD214 Manually
+                    </h3>
+                    <p className="text-blue-800 dark:text-blue-200 mb-4">
+                      Type or paste information directly into DD214 form fields. Perfect for when you have a physical DD214 
+                      or want to enter specific information block-by-block.
+                    </p>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 mb-4">
+                      <li>• 📋 All standard DD214 blocks included</li>
+                      <li>• 💾 Save multiple DD214s to My Packet</li>
+                      <li>• 🔒 Data stays 100% on your device</li>
+                      <li>• ✅ Guided form with field labels</li>
+                    </ul>
+                    <button
+                      onClick={() => setShowFormBuilder(true)}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
+                    >
+                      📝 Open Form Builder
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Show saved DD214s if any */}
+              <SavedDD214List />
             </div>
           )}
 
@@ -1276,6 +1325,64 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         />,
         document.body
       )}
+
+      {/* DD214 Form Builder Modal */}
+      {showFormBuilder && (
+        <DD214FormBuilder
+          onClose={() => setShowFormBuilder(false)}
+          onSave={(dd214) => {
+            console.log('DD214 saved:', dd214);
+            // Optionally refresh the list or show success message
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+/**
+ * Component to display saved DD214s
+ */
+const SavedDD214List = () => {
+  const [savedDD214s, setSavedDD214s] = useState([]);
+
+  useEffect(() => {
+    const history = getServiceHistory();
+    const dd214s = history.dd214s || [];
+    setSavedDD214s(dd214s);
+  }, []);
+
+  if (savedDD214s.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+      <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <span>📚</span>
+        <span>Saved DD214s ({savedDD214s.length})</span>
+      </h4>
+      <div className="space-y-2">
+        {savedDD214s.map((dd214, index) => (
+          <div key={dd214.id || index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {dd214.fullName || 'Untitled DD214'}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
+                  {dd214.branch && <span className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">{dd214.branch}</span>}
+                  {dd214.separationDate && <span>Sep: {new Date(dd214.separationDate).toLocaleDateString()}</span>}
+                  {dd214.characterOfService && <span>{dd214.characterOfService}</span>}
+                </div>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-500">
+                {dd214.source === 'manual-entry' ? '✏️ Manual' : '🤖 AI'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
