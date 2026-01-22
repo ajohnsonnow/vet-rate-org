@@ -104,7 +104,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <img 
-              src="/images/NaptimeLuna.jpg" 
+              src="/images/ReadyForHerCloseup.jpg" 
               alt="Luna - Chief Treat Officer"
               className="w-16 h-16 rounded-full object-cover border-4 border-va-gold shadow-lg"
             />
