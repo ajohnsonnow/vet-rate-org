@@ -1,0 +1,5120 @@
+{
+  "generated_at": "2026-01-22T10:30:53.743030",
+  "summary": {
+    "matched": 652,
+    "name_mismatches": 88,
+    "local_only": 8,
+    "ecfr_valid_missing": 1,
+    "ecfr_removed": 43,
+    "ecfr_metadata": 57
+  },
+  "reconciliation": {
+    "matched": [
+      {
+        "code": "5000",
+        "ecfr_name": "Osteomyelitis, acute, subacute, or chronic",
+        "local_name": "Osteomyelitis (Acute, Subacute, or Chronic)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5001",
+        "ecfr_name": "Bones and joints, tuberculosis of, active or inactive",
+        "local_name": "Bones and Joints, tuberculosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5002",
+        "ecfr_name": "Multi-joint arthritis (except post-traumatic and gout)",
+        "local_name": "Rheumatoid Arthritis (Multi-joint Arthritis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5003",
+        "ecfr_name": "Degenerative arthritis, other than post-traumatic",
+        "local_name": "Degenerative Joint Disease (Osteoarthritis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5004",
+        "ecfr_name": "Arthritis, gonorrheal",
+        "local_name": "Arthritis, gonorrheal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5005",
+        "ecfr_name": "Arthritis, pneumococcic",
+        "local_name": "Arthritis, pneumococcic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5006",
+        "ecfr_name": "Arthritis, typhoid",
+        "local_name": "Arthritis, typhoid",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5007",
+        "ecfr_name": "Arthritis, syphilitic",
+        "local_name": "Arthritis, syphilitic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5008",
+        "ecfr_name": "Arthritis, streptococcic",
+        "local_name": "Arthritis, streptococcic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5009",
+        "ecfr_name": "Other specified forms of arthropathy (excluding gout)",
+        "local_name": "Other specified forms of arthropathy (excluding gout)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5010",
+        "ecfr_name": "Post-traumatic arthritis: Rate as limitation of motion, dislocation, or other specified instability ",
+        "local_name": "Post-Traumatic Arthritis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5011",
+        "ecfr_name": "Decompression illness: Rate manifestations under the appropriate diagnostic code within the affected",
+        "local_name": "Decompression illness",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5012",
+        "ecfr_name": "Bones, neoplasm, malignant, primary or secondary",
+        "local_name": "Bones, neoplasm, malignant, primary or secondary",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5013",
+        "ecfr_name": "Osteoporosis, residuals of",
+        "local_name": "Osteoporosis, residuals of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5014",
+        "ecfr_name": "Osteomalacia, residuals of",
+        "local_name": "Osteomalacia, residuals of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5015",
+        "ecfr_name": "Bones, neoplasm, benign",
+        "local_name": "Bones, neoplasm, benign",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5016",
+        "ecfr_name": "Osteitis deformans",
+        "local_name": "Osteitis deformans",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5017",
+        "ecfr_name": "Gout",
+        "local_name": "Gout",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5019",
+        "ecfr_name": "Bursitis",
+        "local_name": "Bursitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5021",
+        "ecfr_name": "Myositis",
+        "local_name": "Myositis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5023",
+        "ecfr_name": "Heterotopic ossification",
+        "local_name": "Heterotopic ossification",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5024",
+        "ecfr_name": "Tenosynovitis, tendinitis, tendinosis or tendinopathy",
+        "local_name": "Tenosynovitis, tendinitis, tendinosis or tendinopathy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5025",
+        "ecfr_name": "Fibromyalgia (fibrositis, primary fibromyalgia syndrome)",
+        "local_name": "Fibromyalgia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5051",
+        "ecfr_name": "Shoulder replacement (prosthesis)",
+        "local_name": "Shoulder replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5052",
+        "ecfr_name": "Elbow replacement (prosthesis)",
+        "local_name": "Elbow replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5053",
+        "ecfr_name": "Wrist replacement (prosthesis)",
+        "local_name": "Wrist replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5054",
+        "ecfr_name": "Hip, resurfacing or replacement (prosthesis)",
+        "local_name": "Hip, resurfacing or replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5055",
+        "ecfr_name": "Knee, resurfacing or replacement (prosthesis)",
+        "local_name": "Knee, resurfacing or replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5056",
+        "ecfr_name": "Ankle replacement (prosthesis)",
+        "local_name": "Ankle replacement (prosthesis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5104",
+        "ecfr_name": "Anatomical loss of one hand and loss of use of one foot",
+        "local_name": "Anatomical loss of one hand and loss of use of one foot",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5105",
+        "ecfr_name": "Anatomical loss of one foot and loss of use of one hand",
+        "local_name": "Anatomical loss of one foot and loss of use of one hand",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5106",
+        "ecfr_name": "Anatomical loss of both hands",
+        "local_name": "Anatomical loss of both hands",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5107",
+        "ecfr_name": "Anatomical loss of both feet",
+        "local_name": "Anatomical loss of both feet",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5108",
+        "ecfr_name": "Anatomical loss of one hand and one foot",
+        "local_name": "Anatomical loss of one hand and one foot",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5109",
+        "ecfr_name": "Loss of use of both hands",
+        "local_name": "Loss of use of both hands",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5110",
+        "ecfr_name": "Loss of use of both feet",
+        "local_name": "Loss of use of both feet",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5111",
+        "ecfr_name": "Loss of use of one hand and one foot",
+        "local_name": "Loss of use of one hand and one foot",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5120",
+        "ecfr_name": "Complete amputation, upper extremity",
+        "local_name": "Complete amputation, upper extremity",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5121",
+        "ecfr_name": "Above insertion of deltoid",
+        "local_name": "Arm amputation above insertion of deltoid",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5122",
+        "ecfr_name": "Below insertion of deltoid",
+        "local_name": "Arm amputation below insertion of deltoid",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5123",
+        "ecfr_name": "Above insertion of pronator teres",
+        "local_name": "Forearm amputation above insertion of pronator teres",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5124",
+        "ecfr_name": "Below insertion of pronator teres",
+        "local_name": "Forearm amputation below insertion of pronator teres",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5125",
+        "ecfr_name": "Hand, loss of use of",
+        "local_name": "Hand, loss of use of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5126",
+        "ecfr_name": "Five digits of one hand, amputation of",
+        "local_name": "Five digits of one hand",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5127",
+        "ecfr_name": "Thumb, index, long and ring",
+        "local_name": "Four digits: Thumb, index, long and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5128",
+        "ecfr_name": "Thumb, index, long and little",
+        "local_name": "Four digits: Thumb, index, long and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5129",
+        "ecfr_name": "Thumb, index, ring and little",
+        "local_name": "Four digits: Thumb, index, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5130",
+        "ecfr_name": "Thumb, long, ring and little",
+        "local_name": "Four digits: Thumb, long, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5131",
+        "ecfr_name": "Index, long, ring and little",
+        "local_name": "Four digits: Index, long, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5132",
+        "ecfr_name": "Thumb, index and long",
+        "local_name": "Three digits: Thumb, index and long",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5133",
+        "ecfr_name": "Thumb, index and ring",
+        "local_name": "Three digits: Thumb, index and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5134",
+        "ecfr_name": "Thumb, index and little",
+        "local_name": "Three digits: Thumb, index and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5135",
+        "ecfr_name": "Thumb, long and ring",
+        "local_name": "Three digits: Thumb, long and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5136",
+        "ecfr_name": "Thumb, long and little",
+        "local_name": "Three digits: Thumb, long and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5137",
+        "ecfr_name": "Thumb, ring and little",
+        "local_name": "Three digits: Thumb, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5138",
+        "ecfr_name": "Index, long and ring",
+        "local_name": "Three digits: Index, long and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5139",
+        "ecfr_name": "Index, long and little",
+        "local_name": "Three digits: Index, long and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5140",
+        "ecfr_name": "Index, ring and little",
+        "local_name": "Three digits: Index, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5141",
+        "ecfr_name": "Long, ring and little",
+        "local_name": "Three digits: Long, ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5142",
+        "ecfr_name": "Thumb and index",
+        "local_name": "Two digits: Thumb and index",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5143",
+        "ecfr_name": "Thumb and long",
+        "local_name": "Two digits: Thumb and long",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5144",
+        "ecfr_name": "Thumb and ring",
+        "local_name": "Two digits: Thumb and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5145",
+        "ecfr_name": "Thumb and little",
+        "local_name": "Two digits: Thumb and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5146",
+        "ecfr_name": "Index and long",
+        "local_name": "Two digits: Index and long",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5147",
+        "ecfr_name": "Index and ring",
+        "local_name": "Two digits: Index and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5148",
+        "ecfr_name": "Index and little",
+        "local_name": "Two digits: Index and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5149",
+        "ecfr_name": "Long and ring",
+        "local_name": "Two digits: Long and ring",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5150",
+        "ecfr_name": "Long and little",
+        "local_name": "Two digits: Long and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5151",
+        "ecfr_name": "Ring and little",
+        "local_name": "Two digits: Ring and little",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5153",
+        "ecfr_name": "Index finger, amputation of",
+        "local_name": "Single finger: Index finger",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5154",
+        "ecfr_name": "Long finger, amputation of",
+        "local_name": "Single finger: Long finger",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5155",
+        "ecfr_name": "Ring finger, amputation of",
+        "local_name": "Single finger: Ring finger",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5156",
+        "ecfr_name": "Little finger, amputation of",
+        "local_name": "Single finger: Little finger",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5160",
+        "ecfr_name": "Complete amputation, lower extremity",
+        "local_name": "Complete amputation, lower extremity",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5161",
+        "ecfr_name": "Upper third, one-third of the distance from perineum to knee joint measured from perineum",
+        "local_name": "Thigh amputation, upper third",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5162",
+        "ecfr_name": "Middle or lower thirds",
+        "local_name": "Thigh amputation, middle or lower thirds",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5163",
+        "ecfr_name": "With defective stump, thigh amputation recommended",
+        "local_name": "Leg amputation with defective stump",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5164",
+        "ecfr_name": "Amputation not improvable by prosthesis controlled by natural knee action",
+        "local_name": "Leg amputation not improvable by prosthesis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5165",
+        "ecfr_name": "At a lower level, permitting prosthesis",
+        "local_name": "Leg amputation at lower level, permitting prosthesis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5166",
+        "ecfr_name": "Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)",
+        "local_name": "Forefoot amputation, proximal to metatarsal bones",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5167",
+        "ecfr_name": "Foot, loss of use of",
+        "local_name": "Foot, loss of use of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5170",
+        "ecfr_name": "Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half",
+        "local_name": "Toes, all, amputation of, without metatarsal loss",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5171",
+        "ecfr_name": "Toe, great, amputation of",
+        "local_name": "Toe, great, amputation of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5172",
+        "ecfr_name": "Toes, other than great, amputation of, with removal of metatarsal head",
+        "local_name": "Toes, other than great, with removal of metatarsal head",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5173",
+        "ecfr_name": "Toes, three or four, amputation of, without metatarsal involvement",
+        "local_name": "Toes, three or more, without metatarsal involvement",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5200",
+        "ecfr_name": "Scapulohumeral articulation, ankylosis of",
+        "local_name": "Scapulohumeral articulation, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5201",
+        "ecfr_name": "Arm, limitation of motion of",
+        "local_name": "Arm, limitation of motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5202",
+        "ecfr_name": "Humerus, other impairment of",
+        "local_name": "Humerus, other impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5203",
+        "ecfr_name": "Clavicle or scapula, impairment of",
+        "local_name": "Clavicle or scapula, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5205",
+        "ecfr_name": "Elbow, ankylosis of",
+        "local_name": "Elbow, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5206",
+        "ecfr_name": "Forearm, limitation of flexion of",
+        "local_name": "Forearm, limitation of flexion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5207",
+        "ecfr_name": "Forearm, limitation of extension of",
+        "local_name": "Forearm, limitation of extension",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5208",
+        "ecfr_name": "Forearm, flexion limited to",
+        "local_name": "Forearm, flexion limited",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5209",
+        "ecfr_name": "Elbow, other impairment of Flail joint",
+        "local_name": "Elbow, other impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5210",
+        "ecfr_name": "Radius and ulna, nonunion of, with flail false joint",
+        "local_name": "Radius and ulna, nonunion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5211",
+        "ecfr_name": "Ulna, impairment of",
+        "local_name": "Ulna, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5212",
+        "ecfr_name": "Radius, impairment of",
+        "local_name": "Radius, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5213",
+        "ecfr_name": "Supination and pronation, impairment of",
+        "local_name": "Supination and pronation, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5214",
+        "ecfr_name": "Wrist, ankylosis of",
+        "local_name": "Wrist, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5215",
+        "ecfr_name": "Wrist, limitation of motion of",
+        "local_name": "Wrist, limitation of motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5216",
+        "ecfr_name": "Five digits of one hand, unfavorable ankylosis of",
+        "local_name": "Five digits unfavorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5217",
+        "ecfr_name": "Four digits of one hand, unfavorable ankylosis of",
+        "local_name": "Four digits unfavorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5218",
+        "ecfr_name": "Three digits of one hand, unfavorable ankylosis of",
+        "local_name": "Three digits unfavorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5219",
+        "ecfr_name": "Two digits of one hand, unfavorable ankylosis of",
+        "local_name": "Two digits unfavorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5220",
+        "ecfr_name": "Five digits of one hand, favorable ankylosis of",
+        "local_name": "Five digits favorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5221",
+        "ecfr_name": "Four digits of one hand, favorable ankylosis of",
+        "local_name": "Four digits favorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5222",
+        "ecfr_name": "Three digits of one hand, favorable ankylosis of",
+        "local_name": "Three digits favorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5223",
+        "ecfr_name": "Two digits of one hand, favorable ankylosis of",
+        "local_name": "Two digits favorable ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5224",
+        "ecfr_name": "Thumb, ankylosis of",
+        "local_name": "Thumb, ankylosis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5225",
+        "ecfr_name": "Index finger, ankylosis of",
+        "local_name": "Index finger, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5226",
+        "ecfr_name": "Long finger, ankylosis of",
+        "local_name": "Long finger, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5227",
+        "ecfr_name": "Ring or little finger, ankylosis of",
+        "local_name": "Ring or little finger, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5228",
+        "ecfr_name": "Thumb, limitation of motion",
+        "local_name": "Thumb, limitation of motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5229",
+        "ecfr_name": "Index or long finger, limitation of motion",
+        "local_name": "Index or long finger, limitation of motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5230",
+        "ecfr_name": "Ring or little finger, limitation of motion",
+        "local_name": "Ring or little finger, limitation of motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5235",
+        "ecfr_name": "Vertebral fracture or dislocation",
+        "local_name": "Vertebral Fracture or Dislocation",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5236",
+        "ecfr_name": "Sacroiliac injury and weakness",
+        "local_name": "Sacroiliac injury and weakness",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5237",
+        "ecfr_name": "Lumbosacral or cervical strain",
+        "local_name": "Lumbosacral or Cervical Strain",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5238",
+        "ecfr_name": "Spinal stenosis",
+        "local_name": "Spinal stenosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5239",
+        "ecfr_name": "Spondylolisthesis or segmental instability",
+        "local_name": "Spondylolisthesis or segmental instability",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5240",
+        "ecfr_name": "Ankylosing spondylitis",
+        "local_name": "Ankylosing Spondylitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5241",
+        "ecfr_name": "Spinal fusion",
+        "local_name": "Spinal fusion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5242",
+        "ecfr_name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome (also, see",
+        "local_name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5243",
+        "ecfr_name": "Intervertebral disc syndrome: Assign this diagnostic code only when there is disc herniation with co",
+        "local_name": "Intervertebral Disc Syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5244",
+        "ecfr_name": "Traumatic paralysis, complete",
+        "local_name": "Traumatic paralysis, complete",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5250",
+        "ecfr_name": "Hip, ankylosis of",
+        "local_name": "Hip, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5251",
+        "ecfr_name": "Thigh, limitation of extension of",
+        "local_name": "Thigh, limitation of extension",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5252",
+        "ecfr_name": "Thigh, limitation of flexion of",
+        "local_name": "Thigh, limitation of flexion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5253",
+        "ecfr_name": "Thigh, impairment of",
+        "local_name": "Thigh, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5254",
+        "ecfr_name": "Hip, flail joint",
+        "local_name": "Hip, flail joint",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5255",
+        "ecfr_name": "Femur, impairment of",
+        "local_name": "Femur, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5256",
+        "ecfr_name": "Knee, ankylosis of",
+        "local_name": "Knee, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5257",
+        "ecfr_name": "Knee, other impairment of",
+        "local_name": "Knee, other impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5258",
+        "ecfr_name": "Cartilage, semilunar, dislocated, with frequent episodes of \u201clocking,\u201d pain, and effusion into the j",
+        "local_name": "Cartilage, Semilunar, Dislocated (Meniscus Tear)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5259",
+        "ecfr_name": "Cartilage, semilunar, removal of, symptomatic",
+        "local_name": "Cartilage, Semilunar, Removal of (Meniscectomy)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5260",
+        "ecfr_name": "Leg, limitation of flexion of",
+        "local_name": "Leg, limitation of flexion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5261",
+        "ecfr_name": "Leg, limitation of extension of",
+        "local_name": "Leg, limitation of extension",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5262",
+        "ecfr_name": "Tibia and fibula, impairment of",
+        "local_name": "Tibia and fibula, impairment",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5263",
+        "ecfr_name": "Genu recurvatum (acquired, traumatic, with weakness and insecurity in weight-bearing objectively dem",
+        "local_name": "Genu recurvatum",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5270",
+        "ecfr_name": "Ankle, ankylosis of",
+        "local_name": "Ankle, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5271",
+        "ecfr_name": "Ankle, limited motion of",
+        "local_name": "Ankle, limited motion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5272",
+        "ecfr_name": "Subastragalar or tarsal joint, ankylosis of",
+        "local_name": "Subastragalar or tarsal joint, ankylosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5273",
+        "ecfr_name": "Os calcis or astragalus, malunion of",
+        "local_name": "Os calcis or astragalus, malunion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5274",
+        "ecfr_name": "Astragalectomy",
+        "local_name": "Astragalectomy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5275",
+        "ecfr_name": "Bones, of the lower extremity, shortening of",
+        "local_name": "Bones of lower extremity, shortening",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5269",
+        "ecfr_name": "Plantar fasciitis",
+        "local_name": "Plantar fasciitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5276",
+        "ecfr_name": "Flatfoot, acquired",
+        "local_name": "Flatfoot, acquired",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5277",
+        "ecfr_name": "Weak foot, bilateral",
+        "local_name": "Weak foot, bilateral",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5278",
+        "ecfr_name": "Claw foot (pes cavus), acquired",
+        "local_name": "Claw foot (pes cavus), acquired",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5279",
+        "ecfr_name": "Metatarsalgia, anterior (Morton's disease), unilateral, or bilateral",
+        "local_name": "Metatarsalgia, anterior (Morton's disease)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5280",
+        "ecfr_name": "Hallux valgus, unilateral",
+        "local_name": "Hallux valgus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5281",
+        "ecfr_name": "Hallux rigidus, unilateral, severe",
+        "local_name": "Hallux rigidus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5282",
+        "ecfr_name": "Hammer toe",
+        "local_name": "Hammer toe",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5283",
+        "ecfr_name": "Tarsal, or metatarsal bones, malunion of, or nonunion of",
+        "local_name": "Tarsal or metatarsal bones",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5284",
+        "ecfr_name": "Foot injuries, other",
+        "local_name": "Foot injuries, other",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5296",
+        "ecfr_name": "Skull, loss of part of, both inner and outer tables",
+        "local_name": "Skull, loss of part of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5297",
+        "ecfr_name": "Ribs, removal of",
+        "local_name": "Ribs, removal of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5301",
+        "ecfr_name": "Group I",
+        "local_name": "Group I: Upward rotation of scapula",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5302",
+        "ecfr_name": "Group II",
+        "local_name": "Group II: Depression of arm",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5303",
+        "ecfr_name": "Group III",
+        "local_name": "Group III: Elevation and abduction of arm",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5304",
+        "ecfr_name": "Group IV",
+        "local_name": "Group IV: Stabilization of shoulder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5305",
+        "ecfr_name": "Group V",
+        "local_name": "Group V: Elbow supination",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5306",
+        "ecfr_name": "Group VI",
+        "local_name": "Group VI: Extension of elbow",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5307",
+        "ecfr_name": "Group VII",
+        "local_name": "Group VII: Flexion of wrist and fingers",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5308",
+        "ecfr_name": "Group VIII",
+        "local_name": "Group VIII: Extension of wrist, fingers, thumb",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5309",
+        "ecfr_name": "Group IX",
+        "local_name": "Group IX: Forearm muscles",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5310",
+        "ecfr_name": "Group X",
+        "local_name": "Group X: Movement of forefoot and toes",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5311",
+        "ecfr_name": "Group XI",
+        "local_name": "Group XI: Propulsion of foot",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5312",
+        "ecfr_name": "Group XII",
+        "local_name": "Group XII: Dorsiflexion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5313",
+        "ecfr_name": "Group XIII",
+        "local_name": "Group XIII: Extension of hip and flexion of knee",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5314",
+        "ecfr_name": "Group XIV",
+        "local_name": "Group XIV: Extension of knee",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5315",
+        "ecfr_name": "Group XV",
+        "local_name": "Group XV: Adduction of hip",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5316",
+        "ecfr_name": "Group XVI",
+        "local_name": "Group XVI: Flexion of hip",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5317",
+        "ecfr_name": "Group XVII",
+        "local_name": "Group XVII: Extension of hip",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5318",
+        "ecfr_name": "Group XVIII",
+        "local_name": "Group XVIII: Outward rotation of thigh",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5319",
+        "ecfr_name": "Group XIX",
+        "local_name": "Group XIX: Abdominal wall and lower thorax",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5320",
+        "ecfr_name": "Group XX",
+        "local_name": "Group XX: Postural support of body",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5321",
+        "ecfr_name": "Group XXI",
+        "local_name": "Group XXI: Respiration",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5322",
+        "ecfr_name": "Group XXII",
+        "local_name": "Group XXII: Rotary and forward movements, head",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5323",
+        "ecfr_name": "Group XXIII",
+        "local_name": "Group XXIII: Movements of head",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5324",
+        "ecfr_name": "Diaphragm, rupture of, with herniation. Rate under diagnostic code",
+        "local_name": "Diaphragm, rupture of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5325",
+        "ecfr_name": "Muscle injury, facial muscles. Evaluate functional impairment as seventh (facial) cranial nerve neur",
+        "local_name": "Muscle injury, facial muscles",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5326",
+        "ecfr_name": "Muscle hernia, extensive. Without other injury to the muscle\u2014",
+        "local_name": "Muscle hernia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5327",
+        "ecfr_name": "Muscle, neoplasm of, malignant (excluding soft tissue sarcoma)\u2014",
+        "local_name": "Muscle, neoplasm of, malignant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5328",
+        "ecfr_name": "Muscle, neoplasm of, benign, postoperative. Rate on impairment of function",
+        "local_name": "Muscle, neoplasm of, benign",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5329",
+        "ecfr_name": "Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)\u2014",
+        "local_name": "Sarcoma, soft tissue",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5330",
+        "ecfr_name": "Rhabdomyolysis, residuals of",
+        "local_name": "Rhabdomyolysis, residuals of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "5331",
+        "ecfr_name": "Compartment syndrome",
+        "local_name": "Compartment syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6001",
+        "ecfr_name": "Keratopathy",
+        "local_name": "Keratopathy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6006",
+        "ecfr_name": "Retinopathy or maculopathy not otherwise specified",
+        "local_name": "Retinopathy or maculopathy not otherwise specified",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6007",
+        "ecfr_name": "Intraocular hemorrhage",
+        "local_name": "Intraocular hemorrhage",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6008",
+        "ecfr_name": "Detachment of retina",
+        "local_name": "Detachment of retina",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6009",
+        "ecfr_name": "Unhealed eye injury",
+        "local_name": "Unhealed eye injury",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6010",
+        "ecfr_name": "Tuberculosis of eye",
+        "local_name": "Tuberculosis of eye",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6011",
+        "ecfr_name": "Retinal scars, atrophy, or irregularities",
+        "local_name": "Retinal scars, atrophy, or irregularities",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6012",
+        "ecfr_name": "Angle-closure glaucoma",
+        "local_name": "Angle-closure glaucoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6013",
+        "ecfr_name": "Open-angle glaucoma",
+        "local_name": "Open-angle glaucoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6014",
+        "ecfr_name": "Malignant neoplasms of the eye, orbit, and adnexa (excluding skin)",
+        "local_name": "Malignant neoplasms of eye, orbit, and adnexa",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6015",
+        "ecfr_name": "Benign neoplasms of the eye, orbit, and adnexa (excluding skin)",
+        "local_name": "Benign neoplasms of eye, orbit, and adnexa",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6016",
+        "ecfr_name": "Nystagmus, central",
+        "local_name": "Nystagmus, central",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6018",
+        "ecfr_name": "Chronic conjunctivitis (nontrachomatous)",
+        "local_name": "Conjunctivitis, other, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6019",
+        "ecfr_name": "Ptosis, unilateral or bilateral",
+        "local_name": "Ptosis, unilateral or bilateral",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6020",
+        "ecfr_name": "Ectropion",
+        "local_name": "Ectropion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6021",
+        "ecfr_name": "Entropion",
+        "local_name": "Entropion",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6022",
+        "ecfr_name": "Lagophthalmos",
+        "local_name": "Lagophthalmos",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6023",
+        "ecfr_name": "Loss of eyebrows, complete, unilateral or bilateral",
+        "local_name": "Eyebrows, loss of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6024",
+        "ecfr_name": "Loss of eyelashes, complete, unilateral or bilateral",
+        "local_name": "Eyelashes, loss of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6025",
+        "ecfr_name": "Disorders of the lacrimal apparatus (epiphora, dacryocystitis, etc.)",
+        "local_name": "Disorders of lacrimal apparatus (epiphora, dacryocystitis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6027",
+        "ecfr_name": "Cataract",
+        "local_name": "Cataract",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6029",
+        "ecfr_name": "Aphakia or dislocation of crystalline lens",
+        "local_name": "Aphakia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6030",
+        "ecfr_name": "Paralysis of accommodation (due to neuropathy of the Oculomotor Nerve (cranial nerve III))",
+        "local_name": "Accommodation, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6032",
+        "ecfr_name": "Loss of eyelids, partial or complete",
+        "local_name": "Eyelids, loss of portion of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6034",
+        "ecfr_name": "Pterygium",
+        "local_name": "Pterygium",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6035",
+        "ecfr_name": "Keratoconus",
+        "local_name": "Keratoconus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6036",
+        "ecfr_name": "Status post corneal transplant",
+        "local_name": "Status post corneal transplant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6040",
+        "ecfr_name": "Diabetic retinopathy",
+        "local_name": "Diabetic retinopathy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6042",
+        "ecfr_name": "Retinal dystrophy (including retinitis pigmentosa, wet or dry macular degeneration, early-onset macu",
+        "local_name": "Retinal dystrophy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6046",
+        "ecfr_name": "Post-chiasmal disorders",
+        "local_name": "Post-chiasmal disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6061",
+        "ecfr_name": "Anatomical loss of both eyes",
+        "local_name": "Anatomical loss, both eyes",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6062",
+        "ecfr_name": "No more than light perception in both eyes",
+        "local_name": "Blindness, both eyes, only light perception",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6063",
+        "ecfr_name": "Anatomical loss of one eye",
+        "local_name": "Anatomical loss one eye, other 5/200",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6064",
+        "ecfr_name": "No more than light perception in one eye",
+        "local_name": "Anatomical loss one eye, other 10/200-20/200",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6065",
+        "ecfr_name": "Vision in one eye",
+        "local_name": "Anatomical loss one eye, other 20/100-20/50",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6066",
+        "ecfr_name": "Visual acuity in one eye",
+        "local_name": "Anatomical loss one eye, other 20/40",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6080",
+        "ecfr_name": "Visual field defects",
+        "local_name": "Field vision, impairment of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6090",
+        "ecfr_name": "Diplopia (double vision)",
+        "local_name": "Diplopia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6091",
+        "ecfr_name": "Symblepharon",
+        "local_name": "Symblepharon",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6200",
+        "ecfr_name": "Chronic suppurative otitis media, mastoiditis, or cholesteatoma (or any combination)",
+        "local_name": "Chronic suppurative otitis media",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6201",
+        "ecfr_name": "Chronic nonsuppurative otitis media with effusion (serous otitis media)",
+        "local_name": "Chronic nonsuppurative otitis media",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6202",
+        "ecfr_name": "Otosclerosis",
+        "local_name": "Otosclerosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6204",
+        "ecfr_name": "Peripheral vestibular disorders",
+        "local_name": "Peripheral vestibular disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6205",
+        "ecfr_name": "Meniere's syndrome (endolymphatic hydrops)",
+        "local_name": "Meniere's syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6207",
+        "ecfr_name": "Loss of auricle",
+        "local_name": "Loss of auricle",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6208",
+        "ecfr_name": "Malignant neoplasm of the ear (other than skin only)",
+        "local_name": "Malignant neoplasm of ear",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6209",
+        "ecfr_name": "Benign neoplasms of the ear (other than skin only)",
+        "local_name": "Benign neoplasm of ear",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6210",
+        "ecfr_name": "Chronic otitis externa",
+        "local_name": "Chronic otitis externa",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6211",
+        "ecfr_name": "Tympanic membrane, perforation of",
+        "local_name": "Tympanic membrane, perforation of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6275",
+        "ecfr_name": "Sense of smell, complete loss",
+        "local_name": "Sense of smell, complete loss",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6276",
+        "ecfr_name": "Sense of taste, complete loss",
+        "local_name": "Sense of taste, complete loss",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6301",
+        "ecfr_name": "Visceral leishmaniasis",
+        "local_name": "Visceral Leishmaniasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6302",
+        "ecfr_name": "Leprosy (Hansen's disease)",
+        "local_name": "Leprosy (Hansen's Disease)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6304",
+        "ecfr_name": "Malaria",
+        "local_name": "Malaria",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6305",
+        "ecfr_name": "Lymphatic filariasis, to include elephantiasis",
+        "local_name": "Lymphatic filariasis, to include elephantiasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6306",
+        "ecfr_name": "Bartonellosis",
+        "local_name": "Bartonellosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6307",
+        "ecfr_name": "Plague",
+        "local_name": "Plague",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6308",
+        "ecfr_name": "Relapsing Fever",
+        "local_name": "Relapsing fever",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6309",
+        "ecfr_name": "Rheumatic fever",
+        "local_name": "Rheumatic fever",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6311",
+        "ecfr_name": "Tuberculosis, miliary",
+        "local_name": "Tuberculosis, miliary",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6312",
+        "ecfr_name": "Nontuberculosis mycobacterium infection",
+        "local_name": "Nontuberculosis mycobacterium infection",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6313",
+        "ecfr_name": "Avitaminosis",
+        "local_name": "Avitaminosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6314",
+        "ecfr_name": "Beriberi",
+        "local_name": "Beriberi",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6315",
+        "ecfr_name": "Pellagra",
+        "local_name": "Pellagra",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6316",
+        "ecfr_name": "Brucellosis",
+        "local_name": "Brucellosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6317",
+        "ecfr_name": "Rickettsial, ehrlichia, and anaplasma infections",
+        "local_name": "Rickettsial, ehrlichia, and anaplasma infections",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6318",
+        "ecfr_name": "Melioidosis",
+        "local_name": "Melioidosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6319",
+        "ecfr_name": "Lyme disease",
+        "local_name": "Lyme disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6320",
+        "ecfr_name": "Parasitic diseases otherwise not specified",
+        "local_name": "Parasitic diseases",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6325",
+        "ecfr_name": "Hyperinfection syndrome or disseminated strongyloidiasis",
+        "local_name": "Hyperinfection syndrome or disseminated strongyloidiasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6326",
+        "ecfr_name": "Schistosomiasis",
+        "local_name": "Schistosomiasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6329",
+        "ecfr_name": "Hemorrhagic fevers, including dengue, yellow fever, and others",
+        "local_name": "Hemorrhagic fevers (dengue, yellow fever, and others)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6330",
+        "ecfr_name": "Campylobacter jejuni infection",
+        "local_name": "Campylobacter jejuni infection",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6331",
+        "ecfr_name": "Coxiella burnetii infection (Q fever)",
+        "local_name": "Coxiella burnetii infection (Q Fever)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6333",
+        "ecfr_name": "Nontyphoid salmonella infections",
+        "local_name": "Nontyphoid salmonella infections",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6334",
+        "ecfr_name": "Shigella infections",
+        "local_name": "Shigella infections",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6335",
+        "ecfr_name": "West Nile virus infection",
+        "local_name": "West Nile virus infection",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6350",
+        "ecfr_name": "Lupus erythematosus, systemic (disseminated)",
+        "local_name": "Systemic Lupus Erythematosus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6351",
+        "ecfr_name": "HIV-related illness",
+        "local_name": "HIV-Related Illness",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6354",
+        "ecfr_name": "Chronic fatigue syndrome (CFS)",
+        "local_name": "Chronic Fatigue Syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6502",
+        "ecfr_name": "Septum, nasal, deviation of",
+        "local_name": "Septum, nasal, deviation of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6504",
+        "ecfr_name": "Nose, loss of part of, or scars",
+        "local_name": "Nose, loss of part of, or scars",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6511",
+        "ecfr_name": "Sinusitis, ethmoid, chronic",
+        "local_name": "Sinusitis, ethmoid, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6512",
+        "ecfr_name": "Sinusitis, frontal, chronic",
+        "local_name": "Sinusitis, frontal, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6513",
+        "ecfr_name": "Sinusitis, maxillary, chronic",
+        "local_name": "Sinusitis, maxillary, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6514",
+        "ecfr_name": "Sinusitis, sphenoid, chronic",
+        "local_name": "Sinusitis, sphenoid, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6515",
+        "ecfr_name": "Laryngitis, tuberculous, active or inactive",
+        "local_name": "Laryngitis, tuberculous",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6516",
+        "ecfr_name": "Laryngitis, chronic",
+        "local_name": "Laryngitis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6518",
+        "ecfr_name": "Laryngectomy, total",
+        "local_name": "Laryngectomy, total",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6519",
+        "ecfr_name": "Aphonia, complete organic",
+        "local_name": "Aphonia, complete organic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6520",
+        "ecfr_name": "Larynx, stenosis of, including residuals of laryngeal trauma (unilateral or bilateral)",
+        "local_name": "Larynx, stenosis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6521",
+        "ecfr_name": "Pharynx, injuries to",
+        "local_name": "Pharynx, injuries to",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6522",
+        "ecfr_name": "Allergic or vasomotor rhinitis",
+        "local_name": "Allergic Rhinitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6523",
+        "ecfr_name": "Bacterial rhinitis",
+        "local_name": "Bacterial rhinitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6524",
+        "ecfr_name": "Granulomatous rhinitis",
+        "local_name": "Granulomatous rhinitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6600",
+        "ecfr_name": "Bronchitis, chronic",
+        "local_name": "Bronchitis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6601",
+        "ecfr_name": "Bronchiectasis",
+        "local_name": "Bronchiectasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6603",
+        "ecfr_name": "Emphysema, pulmonary",
+        "local_name": "Emphysema, pulmonary",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6604",
+        "ecfr_name": "Chronic obstructive pulmonary disease",
+        "local_name": "Chronic Obstructive Pulmonary Disease (COPD)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6701",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, far advanced, active",
+        "local_name": "Pulmonary TB, active, far advanced",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6702",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, moderately advanced, active",
+        "local_name": "Pulmonary TB, active, moderately advanced",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6704",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, active, advancement unspecified",
+        "local_name": "Pulmonary TB, active, advancement unspecified",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6721",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, far advanced, inactive",
+        "local_name": "Pulmonary TB, inactive, far advanced",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6722",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, moderately advanced, inactive",
+        "local_name": "Pulmonary TB, inactive, moderately advanced",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6724",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, inactive, advancement unspecified",
+        "local_name": "Pulmonary TB, inactive, advancement unspecified",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6730",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, active",
+        "local_name": "Pulmonary TB, chronic, active",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6731",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, inactive",
+        "local_name": "Pulmonary TB, chronic, inactive",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6732",
+        "ecfr_name": "Pleurisy, tuberculous, active or inactive",
+        "local_name": "Pleurisy, active or inactive tuberculous",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6817",
+        "ecfr_name": "Pulmonary Vascular Disease",
+        "local_name": "Pulmonary Vascular Disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6819",
+        "ecfr_name": "Neoplasms, malignant, any specified part of respiratory system exclusive of skin growths",
+        "local_name": "Neoplasms, malignant, respiratory",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6820",
+        "ecfr_name": "Neoplasms, benign, any specified part of respiratory system. Evaluate using an appropriate respirato",
+        "local_name": "Neoplasms, benign, respiratory",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6822",
+        "ecfr_name": "Actinomycosis",
+        "local_name": "Actinomycosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6823",
+        "ecfr_name": "Nocardiosis",
+        "local_name": "Nocardiosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6824",
+        "ecfr_name": "Chronic lung abscess",
+        "local_name": "Chronic lung abscess",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6825",
+        "ecfr_name": "Diffuse interstitial fibrosis (interstitial pneumonitis, fibrosing alveolitis)",
+        "local_name": "Diffuse interstitial fibrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6826",
+        "ecfr_name": "Desquamative interstitial pneumonitis",
+        "local_name": "Desquamative interstitial pneumonitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6827",
+        "ecfr_name": "Pulmonary alveolar proteinosis",
+        "local_name": "Pulmonary alveolar proteinosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6828",
+        "ecfr_name": "Eosinophilic granuloma of lung",
+        "local_name": "Eosinophilic granuloma of lung",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6829",
+        "ecfr_name": "Drug-induced pulmonary pneumonitis and fibrosis",
+        "local_name": "Drug-induced pneumonitis and fibrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6830",
+        "ecfr_name": "Radiation-induced pulmonary pneumonitis and fibrosis",
+        "local_name": "Radiation-induced pneumonitis and fibrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6831",
+        "ecfr_name": "Hypersensitivity pneumonitis (extrinsic allergic alveolitis)",
+        "local_name": "Hypersensitivity pneumonitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6832",
+        "ecfr_name": "Pneumoconiosis (silicosis, anthracosis, etc.)",
+        "local_name": "Pneumoconiosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6833",
+        "ecfr_name": "Asbestosis",
+        "local_name": "Asbestosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6834",
+        "ecfr_name": "Histoplasmosis of lung",
+        "local_name": "Histoplasmosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6835",
+        "ecfr_name": "Coccidioidomycosis",
+        "local_name": "Coccidioidomycosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6836",
+        "ecfr_name": "Blastomycosis",
+        "local_name": "Blastomycosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6837",
+        "ecfr_name": "Cryptococcosis",
+        "local_name": "Cryptococcosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6838",
+        "ecfr_name": "Aspergillosis",
+        "local_name": "Aspergillosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6839",
+        "ecfr_name": "Mucormycosis",
+        "local_name": "Mucormycosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6840",
+        "ecfr_name": "Diaphragm paralysis or paresis",
+        "local_name": "Diaphragm paralysis or paresis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6841",
+        "ecfr_name": "Spinal cord injury with respiratory insufficiency",
+        "local_name": "Spinal cord injury with respiratory insufficiency",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6842",
+        "ecfr_name": "Kyphoscoliosis, pectus excavatum, pectus carinatum",
+        "local_name": "Kyphoscoliosis, pectus excavatum/carinatum",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6843",
+        "ecfr_name": "Traumatic chest wall defect, pneumothorax, hernia, etc",
+        "local_name": "Traumatic chest wall defect",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6844",
+        "ecfr_name": "Post-surgical residual (lobectomy, pneumonectomy, etc.)",
+        "local_name": "Post-surgical residual",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6845",
+        "ecfr_name": "Chronic pleural effusion or fibrosis",
+        "local_name": "Pleural effusion or fibrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6846",
+        "ecfr_name": "Sarcoidosis",
+        "local_name": "Sarcoidosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6847",
+        "ecfr_name": "Sleep Apnea Syndromes (Obstructive, Central, Mixed)",
+        "local_name": "Sleep Apnea Syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7000",
+        "ecfr_name": "Valvular heart disease (including rheumatic heart disease)",
+        "local_name": "Valvular heart disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7003",
+        "ecfr_name": "Pericardial adhesions",
+        "local_name": "Pericardial adhesions",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7004",
+        "ecfr_name": "Syphilitic heart disease",
+        "local_name": "Syphilitic Heart Disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7005",
+        "ecfr_name": "Arteriosclerotic heart disease (coronary artery disease)",
+        "local_name": "Arteriosclerotic Heart Disease (Coronary Artery Disease)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7006",
+        "ecfr_name": "Myocardial infarction",
+        "local_name": "Myocardial infarction",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7007",
+        "ecfr_name": "Hypertensive heart disease",
+        "local_name": "Hypertensive heart disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7008",
+        "ecfr_name": "Hyperthyroid heart disease",
+        "local_name": "Hyperthyroid heart disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7009",
+        "ecfr_name": "Bradycardia (Bradyarrhythmia), symptomatic, requiring permanent pacemaker implantation",
+        "local_name": "Bradycardia, symptomatic, requiring permanent pacemaker",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7011",
+        "ecfr_name": "Ventricular arrhythmias (sustained)",
+        "local_name": "Ventricular arrhythmias",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7015",
+        "ecfr_name": "Atrioventricular block",
+        "local_name": "Atrioventricular block",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7016",
+        "ecfr_name": "Heart valve replacement (prosthesis)",
+        "local_name": "Heart valve replacement",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7017",
+        "ecfr_name": "Coronary bypass surgery",
+        "local_name": "Coronary bypass surgery",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7018",
+        "ecfr_name": "Implantable cardiac pacemakers",
+        "local_name": "Implantable cardiac pacemakers",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7019",
+        "ecfr_name": "Cardiac transplantation",
+        "local_name": "Cardiac transplantation",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7020",
+        "ecfr_name": "Cardiomyopathy",
+        "local_name": "Cardiomyopathy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7101",
+        "ecfr_name": "Hypertensive vascular disease (hypertension and isolated systolic hypertension)",
+        "local_name": "Hypertensive Vascular Disease (Hypertension)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7110",
+        "ecfr_name": "Aortic aneurysm: Ascending, thoracic, or abdominal",
+        "local_name": "Aortic aneurysm",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7111",
+        "ecfr_name": "Aneurysm, any large artery",
+        "local_name": "Aneurysm, large artery",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7112",
+        "ecfr_name": "Aneurysm, any small artery",
+        "local_name": "Aneurysm, small artery",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7113",
+        "ecfr_name": "Arteriovenous fistula, traumatic",
+        "local_name": "Arteriovenous fistula, traumatic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7114",
+        "ecfr_name": "Peripheral arterial disease",
+        "local_name": "Peripheral arterial disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7115",
+        "ecfr_name": "Thrombo-angiitis obliterans (Buerger's Disease)",
+        "local_name": "Thrombo-angiitis obliterans (Buerger's Disease)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7118",
+        "ecfr_name": "Angioneurotic edema",
+        "local_name": "Angioneurotic edema",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7119",
+        "ecfr_name": "Erythromelalgia",
+        "local_name": "Erythromelalgia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7120",
+        "ecfr_name": "Varicose veins",
+        "local_name": "Varicose veins",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7121",
+        "ecfr_name": "Post-phlebitic syndrome of any etiology",
+        "local_name": "Post-phlebitic syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7122",
+        "ecfr_name": "Cold injury residuals",
+        "local_name": "Cold injury residuals",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7123",
+        "ecfr_name": "Soft tissue sarcoma (of vascular origin)",
+        "local_name": "Soft tissue sarcoma, vascular origin",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7124",
+        "ecfr_name": "Raynaud's disease (also known as primary Raynaud's)",
+        "local_name": "Raynaud's disease (primary Raynaud's)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7200",
+        "ecfr_name": "Soft tissue injury of the mouth, other than tongue or lips",
+        "local_name": "Soft tissue injury of the mouth",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7201",
+        "ecfr_name": "Lips, injuries of",
+        "local_name": "Lips, injuries of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7202",
+        "ecfr_name": "Tongue, loss of whole or part",
+        "local_name": "Tongue, loss of whole or part",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7203",
+        "ecfr_name": "Esophagus, stricture of",
+        "local_name": "Esophagus, stricture of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7204",
+        "ecfr_name": "Esophageal motility disorder",
+        "local_name": "Esophageal motility disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7205",
+        "ecfr_name": "Esophagus, diverticulum of, acquired",
+        "local_name": "Esophagus, diverticulum of, acquired",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7206",
+        "ecfr_name": "Gastroesophageal reflux disease",
+        "local_name": "Gastroesophageal reflux disease (GERD)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7207",
+        "ecfr_name": "Barrett's esophagus",
+        "local_name": "Barrett's esophagus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7301",
+        "ecfr_name": "Peritoneum, adhesions of, due to surgery, trauma, disease, or infection",
+        "local_name": "Peritoneum, adhesions of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7303",
+        "ecfr_name": "Chronic complications of upper gastrointestinal surgery",
+        "local_name": "Chronic complications of upper gastrointestinal surgery",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7304",
+        "ecfr_name": "Peptic ulcer disease",
+        "local_name": "Peptic Ulcer Disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7307",
+        "ecfr_name": "Gastritis, chronic",
+        "local_name": "Gastritis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7308",
+        "ecfr_name": "Postgastrectomy syndrome",
+        "local_name": "Postgastrectomy syndromes",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7309",
+        "ecfr_name": "Stomach, stenosis of",
+        "local_name": "Stomach, stenosis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7310",
+        "ecfr_name": "Stomach, injury of, residuals",
+        "local_name": "Stomach, injury of, residuals",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7311",
+        "ecfr_name": "Residuals of injury of the liver",
+        "local_name": "Liver, injury of, residuals",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7312",
+        "ecfr_name": "Cirrhosis of the liver",
+        "local_name": "Cirrhosis of the Liver",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7314",
+        "ecfr_name": "Chronic biliary tract disease",
+        "local_name": "Chronic biliary tract disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7315",
+        "ecfr_name": "Cholelithiasis, chronic",
+        "local_name": "Cholelithiasis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7317",
+        "ecfr_name": "Gallbladder, injury of",
+        "local_name": "Gallbladder, injury of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7318",
+        "ecfr_name": "Cholecystectomy (gallbladder removal), complications of (such as strictures and biliary leaks)",
+        "local_name": "Cholecystectomy, complications of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7319",
+        "ecfr_name": "Irritable bowel syndrome (IBS)",
+        "local_name": "Irritable Bowel Syndrome (IBS)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7323",
+        "ecfr_name": "Colitis, ulcerative",
+        "local_name": "Ulcerative Colitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7325",
+        "ecfr_name": "Enteritis, chronic",
+        "local_name": "Enteritis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7326",
+        "ecfr_name": "Crohn's disease or undifferentiated form of inflammatory bowel disease",
+        "local_name": "Crohn's Disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7327",
+        "ecfr_name": "Diverticulitis and diverticulosis",
+        "local_name": "Diverticulitis and diverticulosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7328",
+        "ecfr_name": "Intestine, small, resection of",
+        "local_name": "Intestine, small, resection of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7329",
+        "ecfr_name": "Intestine, large, resection of",
+        "local_name": "Intestine, large, resection of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7330",
+        "ecfr_name": "Intestinal fistulous disease, external",
+        "local_name": "Intestinal fistulous diseases, external",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7332",
+        "ecfr_name": "Rectum and anus, impairment of sphincter control",
+        "local_name": "Rectum and anus, impairment of sphincter control",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7333",
+        "ecfr_name": "Rectum and anus, stricture of",
+        "local_name": "Rectum and anus, stricture of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7334",
+        "ecfr_name": "Rectum, prolapse of",
+        "local_name": "Rectum, prolapse of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7335",
+        "ecfr_name": "Ano, fistula in, including anorectal fistula and anorectal abscess",
+        "local_name": "Fistula in ano (anorectal fistula, anorectal abscess)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7336",
+        "ecfr_name": "Hemorrhoids, external or internal",
+        "local_name": "Hemorrhoids, external or internal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7337",
+        "ecfr_name": "Pruritus ani (anal itching)",
+        "local_name": "Pruritus ani (anal itching)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7338",
+        "ecfr_name": "Hernia, including femoral, inguinal, umbilical, ventral, incisional, and other (but not including hi",
+        "local_name": "Hernia (femoral, inguinal, umbilical, ventral, incisional)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7343",
+        "ecfr_name": "Malignant neoplasms of the digestive system, exclusive of skin growths",
+        "local_name": "Neoplasms, malignant, digestive",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7344",
+        "ecfr_name": "Benign neoplasms, exclusive of skin growths",
+        "local_name": "Benign neoplasms, digestive",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7345",
+        "ecfr_name": "Chronic liver disease without cirrhosis",
+        "local_name": "Chronic liver disease without cirrhosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7346",
+        "ecfr_name": "Hiatal hernia and paraesophageal hernia",
+        "local_name": "Hiatal hernia and paraesophageal hernia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7347",
+        "ecfr_name": "Pancreatitis, chronic",
+        "local_name": "Pancreatitis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7348",
+        "ecfr_name": "Vagotomy with pyloroplasty or gastroenterostomy",
+        "local_name": "Vagotomy with pyloroplasty or gastroenterostomy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7350",
+        "ecfr_name": "Liver abscess",
+        "local_name": "Liver abscess",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7351",
+        "ecfr_name": "Liver transplant",
+        "local_name": "Liver transplant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7352",
+        "ecfr_name": "Pancreas transplant",
+        "local_name": "Pancreas transplant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7354",
+        "ecfr_name": "Hepatitis C (or non-A, non-B hepatitis)",
+        "local_name": "Hepatitis C",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7355",
+        "ecfr_name": "Celiac disease",
+        "local_name": "Celiac disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7356",
+        "ecfr_name": "Gastrointestinal dysmotility syndrome",
+        "local_name": "Gastrointestinal dysmotility syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7357",
+        "ecfr_name": "Post pancreatectomy syndrome",
+        "local_name": "Post pancreatectomy syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7500",
+        "ecfr_name": "Kidney, removal of one",
+        "local_name": "Kidney, removal of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7502",
+        "ecfr_name": "Nephritis, chronic",
+        "local_name": "Nephritis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7504",
+        "ecfr_name": "Pyelonephritis, chronic",
+        "local_name": "Pyelonephritis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7505",
+        "ecfr_name": "Kidney, tuberculosis of",
+        "local_name": "Kidney, tuberculosis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7507",
+        "ecfr_name": "Nephrosclerosis, arteriolar",
+        "local_name": "Nephrosclerosis, arteriolar",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7508",
+        "ecfr_name": "Nephrolithiasis/Ureterolithiasis/Nephrocalcinosis",
+        "local_name": "Nephrolithiasis/Ureterolithiasis/Nephrocalcinosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7509",
+        "ecfr_name": "Hydronephrosis",
+        "local_name": "Hydronephrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7511",
+        "ecfr_name": "Ureter, stricture of",
+        "local_name": "Ureter, stricture of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7512",
+        "ecfr_name": "Cystitis, chronic, includes interstitial and all etiologies, infectious and non-infectious",
+        "local_name": "Cystitis, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7515",
+        "ecfr_name": "Bladder, calculus in, with symptoms interfering with function",
+        "local_name": "Bladder, calculus in",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7516",
+        "ecfr_name": "Bladder, fistula of",
+        "local_name": "Bladder, fistula of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7517",
+        "ecfr_name": "Bladder, injury of",
+        "local_name": "Bladder, injury of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7518",
+        "ecfr_name": "Urethra, stricture of",
+        "local_name": "Urethra, stricture of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7519",
+        "ecfr_name": "Urethra, fistula of",
+        "local_name": "Urethra, fistula of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7520",
+        "ecfr_name": "Penis, removal of half or more",
+        "local_name": "Penis, removal of half or more",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7521",
+        "ecfr_name": "Penis, removal of glans",
+        "local_name": "Penis, removal of glans",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7522",
+        "ecfr_name": "Erectile dysfunction, with or without penile deformity",
+        "local_name": "Erectile Dysfunction",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7523",
+        "ecfr_name": "Testis, atrophy complete",
+        "local_name": "Testis, atrophy, complete",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7524",
+        "ecfr_name": "Testis, removal",
+        "local_name": "Testis, removal of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7525",
+        "ecfr_name": "Prostatitis, urethritis, epididymitis, orchitis (unilateral or bilateral), chronic only",
+        "local_name": "Prostatitis, urethritis, epididymitis, orchitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7527",
+        "ecfr_name": "Prostate gland injuries, infections, hypertrophy, postoperative residuals, bladder outlet obstructio",
+        "local_name": "Prostate gland injuries, infections, hypertrophy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7528",
+        "ecfr_name": "Malignant neoplasms of the genitourinary system",
+        "local_name": "Malignant neoplasms of the genitourinary system",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7529",
+        "ecfr_name": "Benign neoplasms of the genitourinary system",
+        "local_name": "Benign neoplasms of genitourinary system",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7530",
+        "ecfr_name": "Chronic renal disease requiring regular dialysis",
+        "local_name": "Renal disease, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7531",
+        "ecfr_name": "Kidney transplant",
+        "local_name": "Kidney transplant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7532",
+        "ecfr_name": "Renal tubular disorders (such as renal glycosurias, aminoacidurias, renal tubular acidosis, Fanconi'",
+        "local_name": "Renal tubular disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7533",
+        "ecfr_name": "Cystic diseases of the kidneys",
+        "local_name": "Cystic diseases of the kidneys",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7534",
+        "ecfr_name": "Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel d",
+        "local_name": "Atherosclerotic renal disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7535",
+        "ecfr_name": "Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy me",
+        "local_name": "Toxic nephropathy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7536",
+        "ecfr_name": "Glomerulonephritis",
+        "local_name": "Glomerulonephritis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7537",
+        "ecfr_name": "Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism",
+        "local_name": "Interstitial nephritis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7538",
+        "ecfr_name": "Papillary necrosis",
+        "local_name": "Papillary necrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7539",
+        "ecfr_name": "Renal amyloid disease",
+        "local_name": "Renal amyloid disease",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7540",
+        "ecfr_name": "Disseminated intravascular coagulation with renal cortical necrosis",
+        "local_name": "Disseminated intravascular coagulation with renal cortical necrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7541",
+        "ecfr_name": "Renal involvement in diabetes mellitus type I or II",
+        "local_name": "Renal involvement in diabetes mellitus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7542",
+        "ecfr_name": "Neurogenic bladder",
+        "local_name": "Neurogenic Bladder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7543",
+        "ecfr_name": "Varicocele/Hydrocele",
+        "local_name": "Varicocele/Hydrocele",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7544",
+        "ecfr_name": "Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and",
+        "local_name": "Renal disease caused by viral infection",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7545",
+        "ecfr_name": "Bladder, diverticulum of",
+        "local_name": "Bladder, diverticulum of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7610",
+        "ecfr_name": "Vulva or clitoris, disease or injury of (including vulvovaginitis)",
+        "local_name": "Vulva or Clitoris, Disease or Injury (Including Vulvovaginitis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7611",
+        "ecfr_name": "Vagina, disease or injury of",
+        "local_name": "Vagina, Disease or Injury",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7612",
+        "ecfr_name": "Cervix, disease or injury of",
+        "local_name": "Cervix, Disease or Injury",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7613",
+        "ecfr_name": "Uterus, disease, injury, or adhesions of",
+        "local_name": "Uterus, Disease, Injury, or Adhesions",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7614",
+        "ecfr_name": "Fallopian tube, disease, injury, or adhesions of (including pelvic inflammatory disease (PID))",
+        "local_name": "Fallopian Tube, Disease, Injury, or Adhesions (Including PID)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7615",
+        "ecfr_name": "Ovary, disease, injury, or adhesions of",
+        "local_name": "Ovary, Disease, Injury, or Adhesions",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7617",
+        "ecfr_name": "Uterus and both ovaries, removal of, complete",
+        "local_name": "Uterus and Both Ovaries, Complete Removal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7618",
+        "ecfr_name": "Uterus, removal of, including corpus",
+        "local_name": "Uterus, Removal (Including Corpus)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7619",
+        "ecfr_name": "Ovary, removal of",
+        "local_name": "Ovary, Removal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7620",
+        "ecfr_name": "Ovaries, atrophy of both, complete",
+        "local_name": "Ovaries, Complete Atrophy of Both",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7621",
+        "ecfr_name": "Complete or incomplete pelvic organ prolapse due to injury, disease, or surgical complications of pr",
+        "local_name": "Pelvic Organ Prolapse",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7624",
+        "ecfr_name": "Fistula, rectovaginal",
+        "local_name": "Fistula, Rectovaginal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7625",
+        "ecfr_name": "Fistula, urethrovaginal",
+        "local_name": "Fistula, Urethrovaginal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7626",
+        "ecfr_name": "Breast, surgery of",
+        "local_name": "Breast, Surgery (Mastectomy)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7627",
+        "ecfr_name": "Malignant neoplasms of gynecological system",
+        "local_name": "Malignant Neoplasms of Gynecological System",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7628",
+        "ecfr_name": "Benign neoplasms of gynecological system. Rate chronic residuals to include scars, lymphedema, disfi",
+        "local_name": "Benign Neoplasms of Gynecological System",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7629",
+        "ecfr_name": "Endometriosis",
+        "local_name": "Endometriosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7630",
+        "ecfr_name": "Malignant neoplasms of the breast",
+        "local_name": "Malignant Neoplasms of the Breast",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7631",
+        "ecfr_name": "Benign neoplasms of the breast and other injuries of the breast. Rate chronic residuals according to",
+        "local_name": "Benign Neoplasms and Other Injuries of the Breast",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7632",
+        "ecfr_name": "Female sexual arousal disorder (FSAD)",
+        "local_name": "Female Sexual Arousal Disorder (FSAD)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7702",
+        "ecfr_name": "Agranulocytosis, acquired",
+        "local_name": "Agranulocytosis, acquired",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7703",
+        "ecfr_name": "Leukemia (except for chronic myelogenous leukemia)",
+        "local_name": "Leukemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7704",
+        "ecfr_name": "Polycythemia vera",
+        "local_name": "Polycythemia vera",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7705",
+        "ecfr_name": "Immune thrombocytopenia",
+        "local_name": "Immune thrombocytopenia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7706",
+        "ecfr_name": "Splenectomy",
+        "local_name": "Splenectomy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7707",
+        "ecfr_name": "Spleen, injury of, healed",
+        "local_name": "Spleen, injury of, healed",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7709",
+        "ecfr_name": "Hodgkin's lymphoma",
+        "local_name": "Hodgkin's lymphoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7710",
+        "ecfr_name": "Adenitis, tuberculous, active or inactive",
+        "local_name": "Adenitis, tuberculous",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7712",
+        "ecfr_name": "Multiple myeloma",
+        "local_name": "Multiple myeloma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7714",
+        "ecfr_name": "Sickle cell anemia",
+        "local_name": "Sickle cell anemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7715",
+        "ecfr_name": "Non-Hodgkin's lymphoma",
+        "local_name": "Non-Hodgkin's lymphoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7716",
+        "ecfr_name": "Aplastic anemia",
+        "local_name": "Aplastic anemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7717",
+        "ecfr_name": "AL amyloidosis (primary amyloidosis)",
+        "local_name": "AL amyloidosis (primary amyloidosis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7718",
+        "ecfr_name": "Essential thrombocythemia and primary myelofibrosis",
+        "local_name": "Essential thrombocythemia and primary myelofibrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7719",
+        "ecfr_name": "Chronic myelogenous leukemia (CML) (chronic myeloid leukemia or chronic granulocytic leukemia)",
+        "local_name": "Chronic myelogenous leukemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7720",
+        "ecfr_name": "Iron deficiency anemia",
+        "local_name": "Iron deficiency anemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7721",
+        "ecfr_name": "Folic acid deficiency",
+        "local_name": "Folic acid deficiency",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7722",
+        "ecfr_name": "Pernicious anemia and Vitamin B",
+        "local_name": "Pernicious anemia and Vitamin B12 deficiency",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7723",
+        "ecfr_name": "Acquired hemolytic anemia",
+        "local_name": "Acquired hemolytic anemia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7724",
+        "ecfr_name": "Solitary plasmacytoma",
+        "local_name": "Solitary plasmacytoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7725",
+        "ecfr_name": "Myelodysplastic syndromes",
+        "local_name": "Myelodysplastic syndromes",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7801",
+        "ecfr_name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are associated wit",
+        "local_name": "Burn scars with underlying soft tissue damage",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7802",
+        "ecfr_name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are not associated",
+        "local_name": "Burn scars without underlying soft tissue damage",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7804",
+        "ecfr_name": "Scar(s), unstable or painful",
+        "local_name": "Scars, unstable or painful",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7805",
+        "ecfr_name": "Scars, other; and other effects of scars evaluated under diagnostic codes",
+        "local_name": "Scars, other",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7806",
+        "ecfr_name": "Dermatitis or eczema",
+        "local_name": "Eczema (Atopic Dermatitis)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7807",
+        "ecfr_name": "American (New World) leishmaniasis (mucocutaneous, espundia)",
+        "local_name": "Leishmaniasis, American (New World)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7808",
+        "ecfr_name": "Old World leishmaniasis (cutaneous, Oriental sore)",
+        "local_name": "Leishmaniasis, Old World",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7809",
+        "ecfr_name": "Discoid lupus erythematosus",
+        "local_name": "Discoid lupus erythematosus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7811",
+        "ecfr_name": "Tuberculosis luposa (lupus vulgaris), active or inactive",
+        "local_name": "Tuberculosis luposa (lupus vulgaris)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7813",
+        "ecfr_name": "Dermatophytosis (ringworm: Of body, tinea corporis; of head, tinea capitis; of feet, tinea pedis; of",
+        "local_name": "Dermatophytosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7815",
+        "ecfr_name": "Bullous disorders (including pemphigus vulgaris, pemphigus foliaceous, bullous pemphigoid, dermatiti",
+        "local_name": "Bullous disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7816",
+        "ecfr_name": "Psoriasis",
+        "local_name": "Psoriasis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7817",
+        "ecfr_name": "Erythroderma",
+        "local_name": "Erythroderma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7818",
+        "ecfr_name": "Malignant skin neoplasms (other than malignant melanoma)",
+        "local_name": "Malignant skin neoplasms",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7819",
+        "ecfr_name": "Benign skin neoplasms",
+        "local_name": "Benign skin neoplasms",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7820",
+        "ecfr_name": "Infections of the skin not listed elsewhere (including bacterial, fungal, viral, treponemal, and par",
+        "local_name": "Infections of the skin",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7821",
+        "ecfr_name": "Cutaneous manifestations of collagen-vascular diseases not listed elsewhere (including scleroderma, ",
+        "local_name": "Cutaneous manifestations of collagen-vascular diseases",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7822",
+        "ecfr_name": "Papulosquamous disorders not listed elsewhere (including lichen planus, large or small plaque paraps",
+        "local_name": "Papulosquamous disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7823",
+        "ecfr_name": "Vitiligo",
+        "local_name": "Vitiligo",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7824",
+        "ecfr_name": "Diseases of keratinization (including icthyoses, Darier's disease, and palmoplantar keratoderma)",
+        "local_name": "Keratinization, diseases of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7825",
+        "ecfr_name": "Chronic urticaria",
+        "local_name": "Chronic urticaria",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7826",
+        "ecfr_name": "Vasculitis, primary cutaneous",
+        "local_name": "Vasculitis, primary cutaneous",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7827",
+        "ecfr_name": "Erythema multiforme; Toxic epidermal necrolysis",
+        "local_name": "Erythema multiforme",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7828",
+        "ecfr_name": "Acne",
+        "local_name": "Acne",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7829",
+        "ecfr_name": "Chloracne",
+        "local_name": "Chloracne",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7830",
+        "ecfr_name": "Scarring alopecia",
+        "local_name": "Scarring alopecia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7831",
+        "ecfr_name": "Alopecia areata",
+        "local_name": "Alopecia areata",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7832",
+        "ecfr_name": "Hyperhidrosis",
+        "local_name": "Hyperhidrosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7833",
+        "ecfr_name": "Malignant melanoma",
+        "local_name": "Malignant melanoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7901",
+        "ecfr_name": "Thyroid enlargement, toxic",
+        "local_name": "Thyroid enlargement, toxic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7902",
+        "ecfr_name": "Thyroid enlargement, nontoxic",
+        "local_name": "Thyroid enlargement, nontoxic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7903",
+        "ecfr_name": "Hypothyroidism",
+        "local_name": "Hypothyroidism",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7904",
+        "ecfr_name": "Hyperparathyroidism",
+        "local_name": "Hyperparathyroidism",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7905",
+        "ecfr_name": "Hypoparathyroidism",
+        "local_name": "Hypoparathyroidism",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7906",
+        "ecfr_name": "Thyroiditis",
+        "local_name": "Thyroiditis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7907",
+        "ecfr_name": "Cushing's syndrome",
+        "local_name": "Cushing's syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7908",
+        "ecfr_name": "Acromegaly",
+        "local_name": "Acromegaly",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7909",
+        "ecfr_name": "Diabetes insipidus",
+        "local_name": "Diabetes insipidus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7911",
+        "ecfr_name": "Addison's disease (adrenocortical insufficiency)",
+        "local_name": "Addison's disease (adrenocortical insufficiency)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7912",
+        "ecfr_name": "Polyglandular syndrome (multiple endocrine neoplasia, autoimmune polyglandular syndrome)",
+        "local_name": "Polyglandular syndrome",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7913",
+        "ecfr_name": "Diabetes mellitus",
+        "local_name": "Diabetes mellitus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7914",
+        "ecfr_name": "Neoplasm, malignant, any specified part of the endocrine system",
+        "local_name": "Malignant neoplasm, endocrine",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7915",
+        "ecfr_name": "Neoplasm, benign, any specified part of the endocrine system",
+        "local_name": "Benign neoplasm, endocrine",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7916",
+        "ecfr_name": "Hyperpituitarism (prolactin secreting pituitary dysfunction)",
+        "local_name": "Hyperpituitarism",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7917",
+        "ecfr_name": "Hyperaldosteronism (benign or malignant)",
+        "local_name": "Hyperaldosteronism",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7918",
+        "ecfr_name": "Pheochromocytoma (benign or malignant)",
+        "local_name": "Pheochromocytoma",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "7919",
+        "ecfr_name": "C-cell hyperplasia of the thyroid",
+        "local_name": "C-cell hyperplasia, thyroid",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8000",
+        "ecfr_name": "Encephalitis, epidemic, chronic",
+        "local_name": "Encephalitis, epidemic, chronic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8004",
+        "ecfr_name": "Paralysis agitans",
+        "local_name": "Paralysis agitans",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8005",
+        "ecfr_name": "Bulbar palsy",
+        "local_name": "Bulbar palsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8007",
+        "ecfr_name": "Brain, vessels, embolism of",
+        "local_name": "Brain, vessels, embolism of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8008",
+        "ecfr_name": "Brain, vessels, thrombosis of",
+        "local_name": "Brain, vessels, thrombosis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8009",
+        "ecfr_name": "Brain, vessels, hemorrhage from",
+        "local_name": "Brain, vessels, hemorrhage from",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8010",
+        "ecfr_name": "Myelitis",
+        "local_name": "Myelitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8011",
+        "ecfr_name": "Poliomyelitis, anterior",
+        "local_name": "Poliomyelitis, anterior",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8012",
+        "ecfr_name": "Hematomyelia",
+        "local_name": "Hematomyelia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8013",
+        "ecfr_name": "Syphilis, cerebrospinal",
+        "local_name": "Syphilis, cerebrospinal",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8014",
+        "ecfr_name": "Syphilis, meningovascular",
+        "local_name": "Syphilis, meningovascular",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8015",
+        "ecfr_name": "Tabes dorsalis",
+        "local_name": "Tabes dorsalis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8017",
+        "ecfr_name": "Amyotrophic lateral sclerosis",
+        "local_name": "Amyotrophic lateral sclerosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8018",
+        "ecfr_name": "Multiple sclerosis",
+        "local_name": "Multiple Sclerosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8019",
+        "ecfr_name": "Meningitis, cerebrospinal, epidemic",
+        "local_name": "Meningitis, cerebrospinal, epidemic",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8020",
+        "ecfr_name": "Brain, abscess of",
+        "local_name": "Brain, abscess of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8021",
+        "ecfr_name": "Malignant",
+        "local_name": "Spinal cord, new growth of, malignant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8023",
+        "ecfr_name": "Progressive muscular atrophy",
+        "local_name": "Progressive muscular atrophy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8024",
+        "ecfr_name": "Syringomyelia",
+        "local_name": "Syringomyelia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8025",
+        "ecfr_name": "Myasthenia gravis",
+        "local_name": "Myasthenia Gravis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8045",
+        "ecfr_name": "Residuals of traumatic brain injury (TBI)",
+        "local_name": "Traumatic Brain Injury (TBI) Residuals",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8046",
+        "ecfr_name": "Cerebral arteriosclerosis",
+        "local_name": "Cerebral arteriosclerosis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8100",
+        "ecfr_name": "Migraine",
+        "local_name": "Migraine Headaches",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8103",
+        "ecfr_name": "Tic, convulsive",
+        "local_name": "Tic, convulsive",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8104",
+        "ecfr_name": "Paramyoclonus multiplex (convulsive state, myoclonic type)",
+        "local_name": "Paramyoclonus multiplex",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8105",
+        "ecfr_name": "Chorea, Sydenham's",
+        "local_name": "Chorea, Sydenham's",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8106",
+        "ecfr_name": "Chorea, Huntington's",
+        "local_name": "Chorea, Huntington's",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8107",
+        "ecfr_name": "Athetosis, acquired",
+        "local_name": "Athetosis, acquired",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8108",
+        "ecfr_name": "Narcolepsy",
+        "local_name": "Narcolepsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8205",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Fifth (trigeminal) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8207",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Seventh (facial) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8209",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Ninth (glossopharyngeal) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8210",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Tenth (pneumogastric, vagus) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8211",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Eleventh (spinal accessory) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8212",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Twelfth (hypoglossal) nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8510",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Upper radicular group, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8511",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Middle radicular group, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8512",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Lower radicular group, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8513",
+        "ecfr_name": "Paralysis of",
+        "local_name": "All radicular groups, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8514",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Musculospiral nerve (radial), paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8515",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Median nerve, paralysis of (includes Carpal Tunnel Syndrome)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8516",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Ulnar nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8517",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Musculocutaneous nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8518",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Circumflex nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8519",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Long thoracic nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8521",
+        "ecfr_name": "Paralysis of",
+        "local_name": "External popliteal nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8522",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Musculocutaneous nerve (superficial peroneal), paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8523",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Anterior tibial nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8524",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Internal popliteal nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8525",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Posterior tibial nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8526",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Anterior crural nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8527",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Internal saphenous nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8528",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Obturator nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8529",
+        "ecfr_name": "Paralysis of",
+        "local_name": "External cutaneous nerve of thigh, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8530",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Ilio-inguinal nerve, paralysis of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8540",
+        "ecfr_name": "Soft-tissue sarcoma (of neurogenic origin)",
+        "local_name": "Soft-tissue sarcoma (Neurogenic origin)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8911",
+        "ecfr_name": "Epilepsy, petit mal",
+        "local_name": "Petit mal epilepsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8912",
+        "ecfr_name": "Epilepsy, Jacksonian and focal motor or sensory",
+        "local_name": "Jacksonian and focal motor or sensory epilepsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8913",
+        "ecfr_name": "Epilepsy, diencephalic",
+        "local_name": "Diencephalic epilepsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "8914",
+        "ecfr_name": "Epilepsy, psychomotor",
+        "local_name": "Psychomotor epilepsy",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9201",
+        "ecfr_name": "Schizophrenia",
+        "local_name": "Schizophrenia",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9208",
+        "ecfr_name": "Delusional disorder",
+        "local_name": "Delusional disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9210",
+        "ecfr_name": "Other specified and unspecified schizophrenia spectrum and other psychotic disorders",
+        "local_name": "Other specified schizophrenia spectrum disorders",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9211",
+        "ecfr_name": "Schizoaffective disorder",
+        "local_name": "Schizoaffective disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9300",
+        "ecfr_name": "Delirium",
+        "local_name": "Delirium",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9301",
+        "ecfr_name": "Major or mild neurocognitive disorder due to HIV or other infections",
+        "local_name": "Major or mild neurocognitive disorder due to HIV",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9304",
+        "ecfr_name": "Major or mild neurocognitive disorder due to traumatic brain injury",
+        "local_name": "Major or mild neurocognitive disorder due to TBI",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9305",
+        "ecfr_name": "Major or mild vascular neurocognitive disorder",
+        "local_name": "Major or mild vascular neurocognitive disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9310",
+        "ecfr_name": "Unspecified neurocognitive disorder",
+        "local_name": "Unspecified neurocognitive disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9312",
+        "ecfr_name": "Major or mild neurocognitive disorder due to Alzheimer's disease",
+        "local_name": "Major or mild neurocognitive disorder due to Alzheimer's",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9326",
+        "ecfr_name": "Major or mild neurocognitive disorder due to another medical condition or substance/medication-induc",
+        "local_name": "Substance/medication-induced neurocognitive disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9400",
+        "ecfr_name": "Generalized anxiety disorder",
+        "local_name": "Generalized Anxiety Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9403",
+        "ecfr_name": "Specific phobia; social anxiety disorder (social phobia)",
+        "local_name": "Specific phobia; social anxiety disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9404",
+        "ecfr_name": "Obsessive compulsive disorder",
+        "local_name": "Obsessive Compulsive Disorder (OCD)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9410",
+        "ecfr_name": "Other specified anxiety disorder",
+        "local_name": "Other specified anxiety disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9411",
+        "ecfr_name": "Posttraumatic stress disorder",
+        "local_name": "Post-Traumatic Stress Disorder (PTSD)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9412",
+        "ecfr_name": "Panic disorder and/or agoraphobia",
+        "local_name": "Panic Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9413",
+        "ecfr_name": "Unspecified anxiety disorder",
+        "local_name": "Unspecified anxiety disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9416",
+        "ecfr_name": "Dissociative amnesia; dissociative identity disorder",
+        "local_name": "Dissociative amnesia; dissociative identity disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9417",
+        "ecfr_name": "Depersonalization/Derealization disorder",
+        "local_name": "Depersonalization/derealization disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9421",
+        "ecfr_name": "Somatic symptom disorder",
+        "local_name": "Somatic symptom disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9422",
+        "ecfr_name": "Other specified somatic symptom and related disorder",
+        "local_name": "Other specified somatic symptom disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9423",
+        "ecfr_name": "Unspecified somatic symptom and related disorder",
+        "local_name": "Unspecified somatic symptom disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9424",
+        "ecfr_name": "Conversion disorder (functional neurological symptom disorder)",
+        "local_name": "Conversion disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9425",
+        "ecfr_name": "Illness anxiety disorder",
+        "local_name": "Illness anxiety disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9431",
+        "ecfr_name": "Cyclothymic disorder",
+        "local_name": "Cyclothymic disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9432",
+        "ecfr_name": "Bipolar disorder",
+        "local_name": "Bipolar Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9433",
+        "ecfr_name": "Persistent depressive disorder (dysthymia)",
+        "local_name": "Persistent depressive disorder (dysthymia)",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9434",
+        "ecfr_name": "Major depressive disorder",
+        "local_name": "Major Depressive Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9435",
+        "ecfr_name": "Unspecified depressive disorder",
+        "local_name": "Unspecified depressive disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9440",
+        "ecfr_name": "Chronic adjustment disorder",
+        "local_name": "Chronic Adjustment Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9520",
+        "ecfr_name": "Anorexia nervosa",
+        "local_name": "Anorexia nervosa",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9521",
+        "ecfr_name": "Bulimia nervosa",
+        "local_name": "Bulimia nervosa",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9900",
+        "ecfr_name": "Maxilla or mandible, chronic osteomyelitis, osteonecrosis or osteoradionecrosis of",
+        "local_name": "Maxilla or mandible, chronic osteomyelitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9901",
+        "ecfr_name": "Mandible, loss of, complete, between angles",
+        "local_name": "Mandible, loss of, complete",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9902",
+        "ecfr_name": "Mandible, loss of, including ramus, unilaterally or bilaterally",
+        "local_name": "Mandible, loss of, including ramus",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9903",
+        "ecfr_name": "Mandible, nonunion of, confirmed by diagnostic imaging studies",
+        "local_name": "Mandible, nonunion of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9904",
+        "ecfr_name": "Mandible, malunion of",
+        "local_name": "Mandible, malunion of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9905",
+        "ecfr_name": "Temporomandibular disorder (TMD)",
+        "local_name": "Temporomandibular Joint (TMJ) Disorder",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9908",
+        "ecfr_name": "Condyloid process, loss of, one or both sides",
+        "local_name": "Condyloid process",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9909",
+        "ecfr_name": "Coronoid process, loss of",
+        "local_name": "Coronoid process",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9911",
+        "ecfr_name": "Hard palate, loss of",
+        "local_name": "Hard palate, loss of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9913",
+        "ecfr_name": "Teeth, loss of, due to loss of substance of body of maxilla or mandible without loss of continuity",
+        "local_name": "Teeth, loss of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9914",
+        "ecfr_name": "Maxilla, loss of more than half",
+        "local_name": "Maxilla, loss of more than half",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9915",
+        "ecfr_name": "Maxilla, loss of half or less",
+        "local_name": "Maxilla, loss of half or less",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9916",
+        "ecfr_name": "Maxilla, malunion or nonunion of",
+        "local_name": "Maxilla, malunion or nonunion of",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9917",
+        "ecfr_name": "Neoplasm, hard and soft tissue, benign",
+        "local_name": "Neoplasm, hard and soft tissue, benign",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "9918",
+        "ecfr_name": "Neoplasm, hard and soft tissue, malignant",
+        "local_name": "Neoplasm, hard and soft tissue, malignant",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6003",
+        "ecfr_name": "Iritis",
+        "local_name": "Iritis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6004",
+        "ecfr_name": "Cyclitis",
+        "local_name": "Cyclitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6005",
+        "ecfr_name": "Choroiditis",
+        "local_name": "Choroiditis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6031",
+        "ecfr_name": "Dacryocystitis",
+        "local_name": "Dacryocystitis",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6067",
+        "ecfr_name": "Other eye",
+        "local_name": "Blindness one eye, other 5/200",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6068",
+        "ecfr_name": "Other eye",
+        "local_name": "Blindness one eye, other 10/200-20/200",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6069",
+        "ecfr_name": "Other eye",
+        "local_name": "Blindness one eye, other 20/100-20/50",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6070",
+        "ecfr_name": "Other eye",
+        "local_name": "Blindness one eye, other 20/40",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6072",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 5/200 one eye, other 10/200-20/200",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6073",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 5/200 one eye, other 20/100-20/50",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6074",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 5/200 one eye, other 20/40",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6075",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 10/200-20/200, both eyes or one eye",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6077",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 10/200-20/200 one eye, other 20/40",
+        "status": "VERIFIED"
+      },
+      {
+        "code": "6078",
+        "ecfr_name": "Other eye",
+        "local_name": "Vision 20/100-20/50, both eyes or one eye",
+        "status": "VERIFIED"
+      }
+    ],
+    "name_mismatch": [
+      {
+        "code": "5152",
+        "ecfr_name": "Thumb, amputation of",
+        "local_name": "Single finger: Thumb",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "5298",
+        "ecfr_name": "Coccyx, removal of",
+        "local_name": "Complex Regional Pain Syndrome (CRPS)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6000",
+        "ecfr_name": "Choroidopathy, including uveitis, iritis, cyclitis, or choroiditis",
+        "local_name": "Visual Acuity Impairment",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6002",
+        "ecfr_name": "Scleritis",
+        "local_name": "Diabetes Mellitus",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6017",
+        "ecfr_name": "Trachomatous conjunctivitis",
+        "local_name": "Conjunctivitis, trachomatous, chronic",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6026",
+        "ecfr_name": "Optic neuropathy",
+        "local_name": "Glaucoma",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6081",
+        "ecfr_name": "Scotoma, unilateral",
+        "local_name": "Scotoma",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6260",
+        "ecfr_name": "Tinnitus, recurrent",
+        "local_name": "Tinnitus",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6300",
+        "ecfr_name": "Vibriosis (Cholera, Non-cholera)",
+        "local_name": "Tuberculosis",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6310",
+        "ecfr_name": "Syphilis, and other treponema infections",
+        "local_name": "Syphilis",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6510",
+        "ecfr_name": "Sinusitis, pansinusitis, chronic",
+        "local_name": "Sinusitis (Chronic)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6602",
+        "ecfr_name": "Asthma, bronchial",
+        "local_name": "Asthma",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6703",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, minimal, active",
+        "local_name": "Pulmonary TB, active, minimal",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6723",
+        "ecfr_name": "Tuberculosis, pulmonary, chronic, minimal, inactive",
+        "local_name": "Pulmonary TB, inactive, minimal",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7001",
+        "ecfr_name": "Endocarditis, or",
+        "local_name": "Endocarditis",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7002",
+        "ecfr_name": "Pericarditis",
+        "local_name": "Congestive Heart Failure",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7010",
+        "ecfr_name": "Supraventricular tachycardia",
+        "local_name": "Atrial Fibrillation",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7117",
+        "ecfr_name": "Raynaud's syndrome (also known as secondary Raynaud's phenomenon or secondary Raynaud's)",
+        "local_name": "Peripheral Artery Disease",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7331",
+        "ecfr_name": "Peritonitis, tuberculous, active or inactive",
+        "local_name": "Peritonitis",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7342",
+        "ecfr_name": "Visceroptosis, symptomatic, marked",
+        "local_name": "Visceroptosis",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7501",
+        "ecfr_name": "Kidney, abscess of",
+        "local_name": "Chronic Kidney Disease",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7800",
+        "ecfr_name": "Burn scar(s) of the head, face, or neck; scar(s) of the head, face, or neck due to other causes; or ",
+        "local_name": "Skin Conditions (Various)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "7900",
+        "ecfr_name": "Hyperthyroidism, including, but not limited to, Graves' disease",
+        "local_name": "Hyperthyroidism (Graves' disease)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8002",
+        "ecfr_name": "Malignant",
+        "local_name": "Paralysis of Facial Nerve (Bell's Palsy)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8003",
+        "ecfr_name": "Benign, minimum",
+        "local_name": "Brain, new growth of, benign",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8022",
+        "ecfr_name": "Benign, minimum rating",
+        "local_name": "Spinal cord, new growth of, benign",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8305",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, fifth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8405",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, fifth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8307",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, seventh cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8407",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, seventh cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8309",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, ninth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8409",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, ninth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8310",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, tenth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8410",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, tenth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8311",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, eleventh cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8411",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, eleventh cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8312",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, twelfth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8412",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, twelfth cranial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8610",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, upper radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8710",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, upper radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8611",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, middle radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8711",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, middle radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8612",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, lower radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8712",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, lower radicular group",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8613",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, all radicular groups",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8713",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, all radicular groups",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8614",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, musculospiral nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8714",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, musculospiral nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8615",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, median nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8715",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, median nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8616",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, ulnar nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8716",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, ulnar nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8617",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, musculocutaneous nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8717",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, musculocutaneous nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8618",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, circumflex nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8718",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, circumflex nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8619",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, long thoracic nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8719",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, long thoracic nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8520",
+        "ecfr_name": "Paralysis of",
+        "local_name": "Radiculopathy (Sciatic Nerve)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8620",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, sciatic nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8720",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, sciatic nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8621",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, external popliteal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8721",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, external popliteal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8622",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, musculocutaneous nerve (superficial peroneal)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8722",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, musculocutaneous nerve (superficial peroneal)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8623",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, anterior tibial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8723",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, anterior tibial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8624",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, internal popliteal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8724",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, internal popliteal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8625",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, posterior tibial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8725",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, posterior tibial nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8626",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, anterior crural nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8726",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, anterior crural nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8627",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, internal saphenous nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8727",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, internal saphenous nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8628",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, obturator nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8728",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, obturator nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8629",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, external cutaneous nerve of thigh",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8729",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, external cutaneous nerve of thigh",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8630",
+        "ecfr_name": "Neuritis",
+        "local_name": "Neuritis, ilio-inguinal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8730",
+        "ecfr_name": "Neuralgia",
+        "local_name": "Neuralgia, ilio-inguinal nerve",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "8910",
+        "ecfr_name": "Epilepsy, grand mal",
+        "local_name": "Epilepsy (Major Seizures)",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6079",
+        "ecfr_name": "Criterion",
+        "local_name": "Vision 20/40 or better, specified combinations",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6071",
+        "ecfr_name": "Criterion",
+        "local_name": "Vision 5/200 one eye, other 5/200",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6076",
+        "ecfr_name": "Evaluation",
+        "local_name": "Vision 10/200-20/200 one eye, other 20/100-20/50",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6028",
+        "ecfr_name": "Cataract",
+        "local_name": "Cataract, senile, and others",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6033",
+        "ecfr_name": "Lens",
+        "local_name": "Lens, crystalline, dislocation of",
+        "status": "NAME_MISMATCH"
+      },
+      {
+        "code": "6092",
+        "ecfr_name": "Diplopia",
+        "local_name": "Diplopia, limited muscle function",
+        "status": "NAME_MISMATCH"
+      }
+    ],
+    "local_only": [
+      {
+        "code": "6100",
+        "name": "Hearing Loss (Sensorineural)",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "6262",
+        "name": "Hearing Loss",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "6266",
+        "name": "Peripheral Vertigo",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "6268",
+        "name": "Meniere's Syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "5250-5259",
+        "name": "Hip Conditions (Various)",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "5256-5262",
+        "name": "Knee Conditions (Various)",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "5270-5276",
+        "name": "Ankle and Foot Conditions",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      },
+      {
+        "code": "8510-8540",
+        "name": "Peripheral Neuropathy",
+        "status": "NOT_IN_ECFR_SCRAPE",
+        "reason": "May need manual verification"
+      }
+    ],
+    "ecfr_only_valid": [
+      {
+        "code": "6037",
+        "name": "Pinguecula",
+        "status": "MISSING_FROM_LOCAL",
+        "reason": "Valid code not in local database"
+      }
+    ],
+    "ecfr_only_removed": [
+      {
+        "code": "5018",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "5020",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "5022",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9202",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9203",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9204",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9205",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9327",
+        "name": "[Removed]",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "5103",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6286",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6517",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6705",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6801",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6813",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6815",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6816",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "6818",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7013",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7014",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7302",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7316",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7322",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7324",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7340",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7341",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7503",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7513",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7526",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7622",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7623",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7700",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7701",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7713",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7810",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7812",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7814",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "7910",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9200",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9503",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9906",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9907",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9910",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      },
+      {
+        "code": "9912",
+        "name": "Removed",
+        "status": "REMOVED",
+        "reason": "Code has been removed from 38 CFR Part 4"
+      }
+    ],
+    "ecfr_metadata": [
+      {
+        "code": "5174",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "5295",
+        "name": "September",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "5264",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "5293",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "5294",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6297",
+        "name": "March",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6291",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6352",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6353",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6710",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6728",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6800",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6802",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6814",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "6821",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7100",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7116",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7305",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7306",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7313",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7321",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7339",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7510",
+        "name": "Evaluation",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7514",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7711",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "7803",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9511",
+        "name": "September",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9206",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9207",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9209",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9302",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9303",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9306",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9307",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9308",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9309",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9311",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9313",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9314",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9315",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9321",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9322",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9323",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9324",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9325",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9401",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9402",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9500",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9501",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9502",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9504",
+        "name": "Criterion",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9505",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9506",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9507",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9508",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9509",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      },
+      {
+        "code": "9510",
+        "name": "Added",
+        "status": "METADATA",
+        "reason": "This is table metadata, not a diagnostic code"
+      }
+    ],
+    "ecfr_invalid": []
+  }
+}

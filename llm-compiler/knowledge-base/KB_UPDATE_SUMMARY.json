@@ -1,0 +1,18 @@
+{
+  "updated_at": "2026-01-22T10:31:37.801953",
+  "previous_count": 1515,
+  "new_count": 1597,
+  "entries_added": 82,
+  "breakdown": {
+    "removed_dc_codes": 43,
+    "missing_dc_codes": 1,
+    "additional_sources": 38
+  },
+  "sources_added": [
+    "ACUS EAJA Statistics (acus.gov)",
+    "BVA Annual Reports (department.va.gov)",
+    "BVA Wait Times (department.va.gov)",
+    "eCFR Removed DC Codes",
+    "eCFR Missing DC Codes"
+  ]
+}

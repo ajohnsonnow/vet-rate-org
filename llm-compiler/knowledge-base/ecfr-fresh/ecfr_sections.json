@@ -1,0 +1,108 @@
+{
+  "71a": {
+    "name": "Musculoskeletal System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.71a",
+    "content_length": 196752,
+    "status": "OK"
+  },
+  "84a": {
+    "name": "Eye",
+    "status": "HTTP 404"
+  },
+  "85": {
+    "name": "Ear - Hearing",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.85",
+    "content_length": 66243,
+    "status": "OK"
+  },
+  "87": {
+    "name": "Ear - Vestibular",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.87",
+    "content_length": 69381,
+    "status": "OK"
+  },
+  "88a": {
+    "name": "Infectious Diseases",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.88a",
+    "content_length": 65331,
+    "status": "OK"
+  },
+  "88b": {
+    "name": "Immune System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.88b",
+    "content_length": 93515,
+    "status": "OK"
+  },
+  "97": {
+    "name": "Respiratory System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.97",
+    "content_length": 101693,
+    "status": "OK"
+  },
+  "104": {
+    "name": "Cardiovascular System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.104",
+    "content_length": 106321,
+    "status": "OK"
+  },
+  "114": {
+    "name": "Digestive System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.114",
+    "content_length": 131797,
+    "status": "OK"
+  },
+  "115a": {
+    "name": "Genitourinary - Renal",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.115a",
+    "content_length": 72387,
+    "status": "OK"
+  },
+  "115b": {
+    "name": "Genitourinary - Voiding",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.115b",
+    "content_length": 82068,
+    "status": "OK"
+  },
+  "116": {
+    "name": "Gynecological",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.116",
+    "content_length": 81064,
+    "status": "OK"
+  },
+  "117": {
+    "name": "Hemic and Lymphatic",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.117",
+    "content_length": 99424,
+    "status": "OK"
+  },
+  "118": {
+    "name": "Skin",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.118",
+    "content_length": 102226,
+    "status": "OK"
+  },
+  "119": {
+    "name": "Endocrine System",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.119",
+    "content_length": 84566,
+    "status": "OK"
+  },
+  "124a": {
+    "name": "Neurological",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.124a",
+    "content_length": 144544,
+    "status": "OK"
+  },
+  "130": {
+    "name": "Mental Disorders",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.130",
+    "content_length": 71628,
+    "status": "OK"
+  },
+  "150": {
+    "name": "Dental and Oral",
+    "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/subpart-B/section-4.150",
+    "content_length": 81091,
+    "status": "OK"
+  }
+}

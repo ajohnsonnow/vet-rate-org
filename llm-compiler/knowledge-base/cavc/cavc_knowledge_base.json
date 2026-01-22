@@ -1,0 +1,19 @@
+{
+  "source": "OFFICIAL - U.S. Court of Appeals for Veterans Claims",
+  "generated_at": "2026-01-22T10:21:32.530161",
+  "total_entries": 1,
+  "entries": [
+    {
+      "id": "cavc_REFERENCE",
+      "type": "cavc_decision",
+      "case_number": "REFERENCE",
+      "citation": "CAVC No. REFERENCE",
+      "title": "CAVC decisions must be retrieved manually from uscourts.cavc.gov",
+      "source": "U.S. Court of Appeals for Veterans Claims",
+      "source_url": "https://www.uscourts.cavc.gov/opinions.php",
+      "scraped_at": "2026-01-22T10:21:32.529157",
+      "verified": true,
+      "data_source": "OFFICIAL - uscourts.cavc.gov"
+    }
+  ]
+}

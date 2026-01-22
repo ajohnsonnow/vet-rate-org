@@ -1,0 +1,547 @@
+{
+  "removed_at": "2026-01-22T10:25:28.825501",
+  "reason": "Fabricated BVA citations - not from official sources",
+  "count": 45,
+  "entries": [
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-12345 regarding PTSD?",
+      "input": "",
+      "output": "**PTSD Service Connection - Combat Veteran** [BVA Precedent - GREEN]\n\nThe Board grants service connection for PTSD. The evidence shows: (1) current PTSD diagnosis from VA examiner using DSM-5 criteria; (2) credible lay evidence of combat stressor consistent with conditions of service in Iraq per 38 CFR \u00a73.304(f)(2); (3) VA examiner's positive nexus opinion stating PTSD is at least as likely as not related to verified combat stressor. The relaxed evidentiary standard for combat veterans applies. Service connection is established.\n\nOutcome: Granted\nCitation: BVA 2021-12345",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-12345",
+        "topic": "PTSD",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-54321 regarding PTSD-MST?",
+      "input": "",
+      "output": "**PTSD - MST Stressor Verification** [BVA Precedent - GREEN]\n\nService connection for PTSD based on Military Sexual Trauma (MST) is granted. Under 38 CFR \u00a73.304(f)(5), VA shall consider markers of MST including behavioral changes, substance abuse, and mental health treatment. The Veteran's credible testimony, corroborating buddy statements, and markers in service records establish the in-service stressor. The VA examiner provided a positive nexus opinion. All three elements satisfied.\n\nOutcome: Granted\nCitation: BVA 2020-54321",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-54321",
+        "topic": "PTSD-MST",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-98765 regarding PTSD-Rating?",
+      "input": "",
+      "output": "**PTSD Rating Increase to 70%** [BVA Precedent - GREEN]\n\nAn increased rating of 70% for PTSD is warranted. The evidence shows occupational and social impairment with deficiencies in most areas including work, family relations, judgment, thinking, and mood. Symptoms include suicidal ideation without plan, near-continuous panic affecting ability to function, difficulty adapting to stressful circumstances, and inability to establish and maintain effective relationships. The criteria for 70% under DC 9411 are met.\n\nOutcome: 70% Granted\nCitation: BVA 2019-98765",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-98765",
+        "topic": "PTSD-Rating",
+        "outcome": "70% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-11111 regarding Sleep Apnea Secondary?",
+      "input": "",
+      "output": "**Sleep Apnea Secondary to PTSD** [BVA Precedent - GREEN]\n\nService connection for obstructive sleep apnea (OSA) as secondary to service-connected PTSD is granted. Medical literature and the VA examiner's opinion establish that PTSD-related hypervigilance, nightmares, and sleep disturbance contribute to OSA development and severity. Under 38 CFR \u00a73.310, secondary service connection is warranted when a service-connected disability causes or aggravates another condition. The nexus is established.\n\nOutcome: Granted\nCitation: BVA 2022-11111",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-11111",
+        "topic": "Sleep Apnea Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-22222 regarding Sleep Apnea Chain?",
+      "input": "",
+      "output": "**Sleep Apnea - Weight Gain Secondary to Service-Connected Knee** [BVA Precedent - GREEN]\n\nOSA is granted as secondary to service-connected bilateral knee disability. The Board finds credible the medical opinion explaining that limited mobility from the knee disabilities led to weight gain, which is a primary risk factor for OSA. The chain of causation (service-connected knee \u2192 limited mobility \u2192 weight gain \u2192 OSA) is medically supported. Secondary service connection under 38 CFR \u00a73.310 is established.\n\nOutcome: Granted\nCitation: BVA 2021-22222",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-22222",
+        "topic": "Sleep Apnea Chain",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-33333 regarding Knee Rating?",
+      "input": "",
+      "output": "**Knee Disability - DeLuca Factors** [BVA Precedent - GREEN]\n\nA rating of 20% for right knee limitation of flexion is warranted when considering DeLuca factors. While objective range of motion testing showed flexion to 60 degrees (10% under DC 5260), the Veteran reported significant flare-ups with additional functional loss. Under DeLuca v. Brown, 38 CFR \u00a7\u00a74.40 and 4.45 require consideration of pain, weakness, and fatigability. A 20% rating accounting for functional loss is appropriate.\n\nOutcome: 20% Granted\nCitation: BVA 2020-33333",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-33333",
+        "topic": "Knee Rating",
+        "outcome": "20% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-44444 regarding Knee Secondary?",
+      "input": "",
+      "output": "**Right Knee Secondary to Left Knee** [BVA Precedent - GREEN]\n\nService connection for right knee degenerative joint disease as secondary to service-connected left knee is granted. The VA orthopedic examiner opined that altered gait mechanics from the left knee disability placed abnormal stress on the right knee, causing accelerated degeneration. This constitutes aggravation under 38 CFR \u00a73.310. Secondary service connection is established.\n\nOutcome: Granted\nCitation: BVA 2019-44444",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-44444",
+        "topic": "Knee Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-55555 regarding Back Rating?",
+      "input": "",
+      "output": "**Lumbar Spine - IVDS Formula** [BVA Precedent - GREEN]\n\nA 40% rating for lumbar spine intervertebral disc syndrome (IVDS) is warranted. The evidence shows incapacitating episodes requiring bed rest prescribed by a physician totaling at least 4 weeks but less than 6 weeks during the past 12 months. Under the Formula for Rating IVDS (DC 5243), this warrants a 40% evaluation. The alternative General Rating Formula does not provide a higher rating.\n\nOutcome: 40% Granted\nCitation: BVA 2022-55555",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-55555",
+        "topic": "Back Rating",
+        "outcome": "40% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-66666 regarding Spine Direct?",
+      "input": "",
+      "output": "**Cervical Spine Direct Service Connection** [BVA Precedent - GREEN]\n\nDirect service connection for cervical spine degenerative disc disease is granted. Service treatment records document neck injury during airborne operations. Continuous neck symptoms are documented in post-service medical records. The VA examiner provided a positive nexus opinion based on the documented in-service injury and progressive nature of the condition. All elements of direct service connection are satisfied.\n\nOutcome: Granted\nCitation: BVA 2021-66666",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-66666",
+        "topic": "Spine Direct",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-77777 regarding TBI Rating?",
+      "input": "",
+      "output": "**TBI Rating - Cognitive Impairment** [BVA Precedent - GREEN]\n\nAn initial rating of 40% for traumatic brain injury (TBI) residuals is granted. Under DC 8045, TBI is evaluated based on cognitive, emotional/behavioral, and physical impairments. The evidence shows Level 2 cognitive impairment (objective evidence on testing of mild impairment in at least one facet) and Level 2 emotional/behavioral impairment. The highest level of impairment (2) warrants a 40% rating.\n\nOutcome: 40% Granted\nCitation: BVA 2020-77777",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-77777",
+        "topic": "TBI Rating",
+        "outcome": "40% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-88888 regarding TBI Residuals?",
+      "input": "",
+      "output": "**TBI Secondary Conditions** [BVA Precedent - GREEN]\n\nService connection for headaches, tinnitus, and vertigo as residuals of service-connected TBI is granted. The neurologist opined these conditions are at least as likely as not residuals of the documented in-service TBI. Under 38 CFR \u00a74.124a DC 8045, these are evaluable as residual conditions of TBI rather than under separate diagnostic codes unless doing so would result in a higher combined rating.\n\nOutcome: Granted\nCitation: BVA 2022-88888",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-88888",
+        "topic": "TBI Residuals",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-99999 regarding Migraines?",
+      "input": "",
+      "output": "**Migraine Headaches 50% Rating** [BVA Precedent - GREEN]\n\nA 50% rating for migraine headaches is warranted. The evidence establishes very frequent completely prostrating and prolonged attacks productive of severe economic inadaptability. The Veteran missed approximately 2-3 days of work per week due to migraines. Under DC 8100, the maximum 50% rating requires very frequent completely prostrating attacks productive of severe economic inadaptability. Criteria are met.\n\nOutcome: 50% Granted\nCitation: BVA 2021-99999",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-99999",
+        "topic": "Migraines",
+        "outcome": "50% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-10101 regarding GERD Secondary?",
+      "input": "",
+      "output": "**GERD Secondary to PTSD Medications** [BVA Precedent - GREEN]\n\nService connection for GERD as secondary to service-connected PTSD is granted. The medical evidence establishes that long-term use of psychiatric medications prescribed for PTSD caused or aggravated the Veteran's GERD. The VA gastroenterologist specifically attributed the GERD to medication-induced gastroparesis. Secondary service connection under 38 CFR \u00a73.310 for medication side effects is established.\n\nOutcome: Granted\nCitation: BVA 2020-10101",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-10101",
+        "topic": "GERD Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-11111 regarding Tinnitus?",
+      "input": "",
+      "output": "**Tinnitus Service Connection - Noise Exposure** [BVA Precedent - GREEN]\n\nService connection for tinnitus is granted. The Veteran's military occupational specialty (MOS) as infantry is conceded as involving hazardous noise exposure. The Veteran provided credible testimony of onset during service and continuity since. Under Fountain v. McDonald, acoustic trauma is consistent with infantry service. The VA audiologist's negative nexus opinion is outweighed by the credible lay evidence of onset and continuity.\n\nOutcome: Granted\nCitation: BVA 2019-11111",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-11111",
+        "topic": "Tinnitus",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-12121 regarding Hearing Loss?",
+      "input": "",
+      "output": "**Bilateral Hearing Loss - Sensorineural** [BVA Precedent - GREEN]\n\nService connection for bilateral sensorineural hearing loss is granted. The audiogram shows hearing loss disability for VA purposes under 38 CFR \u00a73.385. The Veteran's MOS involved significant noise exposure. While the VA examiner provided a negative opinion, the Board finds the rationale inadequate as it failed to account for delayed-onset hearing loss or threshold shifts noted in service. Service connection is established.\n\nOutcome: Granted\nCitation: BVA 2022-12121",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-12121",
+        "topic": "Hearing Loss",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-13131 regarding Hypertension Secondary?",
+      "input": "",
+      "output": "**Hypertension Secondary to PTSD** [BVA Precedent - GREEN]\n\nService connection for hypertension as secondary to service-connected PTSD is granted. The cardiologist's opinion explains the established medical link between chronic stress/anxiety disorders and hypertension through sustained sympathetic nervous system activation. Studies cited include those showing elevated blood pressure in PTSD patients. Secondary service connection under 38 CFR \u00a73.310 is warranted.\n\nOutcome: Granted\nCitation: BVA 2021-13131",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-13131",
+        "topic": "Hypertension Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-14141 regarding Hypertension AO?",
+      "input": "",
+      "output": "**Hypertension - Presumptive Agent Orange** [BVA Precedent - GREEN]\n\nService connection for hypertension on a presumptive basis due to herbicide agent exposure is denied, as hypertension is not currently on the presumptive list. However, service connection is granted on a direct basis. The Veteran served in Vietnam and has current hypertension. The 2018 National Academies report establishes sufficient evidence of association. Direct service connection based on actual causation is warranted.\n\nOutcome: Granted (Direct)\nCitation: BVA 2020-14141",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-14141",
+        "topic": "Hypertension AO",
+        "outcome": "Granted (Direct)"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-15151 regarding Diabetes AO?",
+      "input": "",
+      "output": "**Diabetes Type II - Agent Orange Presumptive** [BVA Precedent - GREEN]\n\nService connection for Type II diabetes mellitus is granted on a presumptive basis. The evidence establishes the Veteran served in the Republic of Vietnam during the presumptive period, thus herbicide agent exposure is conceded. Type II diabetes is a presumptive condition under 38 CFR \u00a73.309(e). Current diagnosis of Type II diabetes is established. All presumptive service connection elements are met.\n\nOutcome: Granted\nCitation: BVA 2019-15151",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-15151",
+        "topic": "Diabetes AO",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-16161 regarding Neuropathy Secondary?",
+      "input": "",
+      "output": "**Diabetic Peripheral Neuropathy Secondary** [BVA Precedent - GREEN]\n\nService connection for bilateral lower extremity peripheral neuropathy as secondary to service-connected Type II diabetes is granted. The VA examiner confirmed the neuropathy is diabetic in origin based on EMG/NCS findings and clinical presentation. Under 38 CFR \u00a73.310, disabilities proximately due to service-connected conditions warrant secondary service connection. Each extremity is rated separately under DC 8520.\n\nOutcome: Granted\nCitation: BVA 2022-16161",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-16161",
+        "topic": "Neuropathy Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-17171 regarding Skin Rating?",
+      "input": "",
+      "output": "**Eczema Rating Increase** [BVA Precedent - GREEN]\n\nA 30% rating for eczema is warranted. The evidence shows the condition affects 20 to 40 percent of the entire body or exposed areas, and requires intermittent systemic therapy for control. Under DC 7806, these findings warrant a 30% evaluation. The higher 60% rating requires constant or near-constant systemic therapy or affects more than 40% of the body, which is not shown.\n\nOutcome: 30% Granted\nCitation: BVA 2021-17171",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-17171",
+        "topic": "Skin Rating",
+        "outcome": "30% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-18181 regarding Chloracne AO?",
+      "input": "",
+      "output": "**Chloracne - Presumptive Herbicide** [BVA Precedent - GREEN]\n\nService connection for chloracne as due to herbicide agent exposure is granted. The Veteran served in Vietnam during the presumptive period. Chloracne is a presumptive condition that must manifest within one year of the last herbicide exposure. Medical records from 1971 document chloracne-type skin lesions within the presumptive period. All elements for presumptive service connection are established.\n\nOutcome: Granted\nCitation: BVA 2020-18181",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-18181",
+        "topic": "Chloracne AO",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-19191 regarding Heart AO?",
+      "input": "",
+      "output": "**Ischemic Heart Disease - Agent Orange** [BVA Precedent - GREEN]\n\nService connection for ischemic heart disease (IHD) is granted on a presumptive basis. The Veteran served in Vietnam and IHD is a presumptive condition under 38 CFR \u00a73.309(e). The VA cardiologist confirmed the current diagnosis of coronary artery disease, which falls within the definition of IHD per M21-1. Presumptive service connection is warranted.\n\nOutcome: Granted\nCitation: BVA 2022-19191",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-19191",
+        "topic": "Heart AO",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-20202 regarding Heart Rating?",
+      "input": "",
+      "output": "**Heart Condition Rating - METs Testing** [BVA Precedent - GREEN]\n\nA 60% rating for coronary artery disease status post CABG is warranted. The exercise stress test shows METs level of 4, indicating that workloads of greater than 3 METs but not greater than 5 METs result in dyspnea and fatigue. Under DC 7005, a METs level of greater than 3 but not greater than 5 with documented cardiac hypertrophy warrants 60%. Criteria are met.\n\nOutcome: 60% Granted\nCitation: BVA 2021-20202",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-20202",
+        "topic": "Heart Rating",
+        "outcome": "60% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-21212 regarding Effective Date?",
+      "input": "",
+      "output": "**Earlier Effective Date - Intent to File** [BVA Precedent - GREEN]\n\nAn earlier effective date of June 15, 2018 is granted for service connection for PTSD. The record contains an Intent to File (VA Form 21-0966) received on that date. The formal claim was received within one year. Under 38 CFR \u00a73.155, the effective date is the date VA received the Intent to File when the complete claim is received within one year. The earlier effective date is warranted.\n\nOutcome: Earlier Date Granted\nCitation: BVA 2020-21212",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-21212",
+        "topic": "Effective Date",
+        "outcome": "Earlier Date Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-22222 regarding PACT Act EED?",
+      "input": "",
+      "output": "**Effective Date - Liberalizing Law (PACT Act)** [BVA Precedent - GREEN]\n\nAn earlier effective date of August 10, 2022 (the date of the PACT Act enactment) is granted. The Veteran's claim for presumptive service connection for a condition added by the PACT Act was received within one year of the Act. Under 38 CFR \u00a73.114, when a claim is filed within one year of a liberalizing law, the effective date may be the date of the law. The earlier effective date is appropriate.\n\nOutcome: Earlier Date Granted\nCitation: BVA 2019-22222",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-22222",
+        "topic": "PACT Act EED",
+        "outcome": "Earlier Date Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-23232 regarding CUE?",
+      "input": "",
+      "output": "**Clear and Unmistakable Error (CUE)** [BVA Precedent - GREEN]\n\nThe motion for revision based on CUE in the October 1995 rating decision is granted. The 1995 decision failed to apply the presumption of soundness despite the Veteran's clean entrance examination. This is a clear and unmistakable error of law. The correct application of 38 CFR \u00a73.304(b) would have manifestly changed the outcome. The 1995 decision is revised to grant service connection effective from the original claim date.\n\nOutcome: CUE Found - Revised\nCitation: BVA 2022-23232",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-23232",
+        "topic": "CUE",
+        "outcome": "CUE Found - Revised"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-24242 regarding TDIU?",
+      "input": "",
+      "output": "**TDIU - Single Disability** [BVA Precedent - GREEN]\n\nEntitlement to TDIU is granted. The Veteran has a single service-connected disability rated at 70% (PTSD). The evidence shows the Veteran is unable to secure or follow substantially gainful employment due to service-connected PTSD. The VA examiner opined that PTSD symptoms preclude competitive employment. Schedular TDIU under 38 CFR \u00a74.16(a) is warranted.\n\nOutcome: Granted\nCitation: BVA 2021-24242",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-24242",
+        "topic": "TDIU",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-25252 regarding TDIU Combined?",
+      "input": "",
+      "output": "**TDIU - Combined Disabilities** [BVA Precedent - GREEN]\n\nTDIU is granted. The Veteran's combined rating is 80% with multiple service-connected disabilities, one rated at least 40%. The vocational expert opinion establishes the combined effects of PTSD (50%), lumbar spine (40%), and bilateral knee (20% each) prevent the Veteran from performing sedentary or physical employment. Schedular criteria under 38 CFR \u00a74.16(a) are met.\n\nOutcome: Granted\nCitation: BVA 2020-25252",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-25252",
+        "topic": "TDIU Combined",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-26262 regarding TDIU Extraschedular?",
+      "input": "",
+      "output": "**TDIU - Extraschedular Referral** [BVA Precedent - GREEN]\n\nReferral for extraschedular TDIU is granted. While the Veteran does not meet the schedular criteria (combined 50%), the evidence shows unemployability solely due to service-connected disabilities. Under 38 CFR \u00a74.16(b), the claim is referred to the Director of Compensation Service for extraschedular consideration. The SSA disability award based on the same conditions supports unemployability.\n\nOutcome: Referral Granted\nCitation: BVA 2022-26262",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-26262",
+        "topic": "TDIU Extraschedular",
+        "outcome": "Referral Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2019-27272 regarding Depression Secondary?",
+      "input": "",
+      "output": "**Major Depressive Disorder Secondary to Chronic Pain** [BVA Precedent - GREEN]\n\nService connection for major depressive disorder (MDD) as secondary to service-connected chronic pain conditions is granted. The psychiatrist's opinion establishes the MDD is caused by dealing with chronic pain from service-connected lumbar spine and bilateral knee disabilities. Secondary service connection for mental health conditions resulting from dealing with service-connected physical disabilities is well-established under 38 CFR \u00a73.310.\n\nOutcome: Granted\nCitation: BVA 2019-27272",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2019-27272",
+        "topic": "Depression Secondary",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-28282 regarding Anxiety Rating?",
+      "input": "",
+      "output": "**Anxiety Disorder Rating 50%** [BVA Precedent - GREEN]\n\nAn increased rating of 50% for generalized anxiety disorder is warranted. The evidence shows occupational and social impairment with reduced reliability and productivity due to such symptoms as: flattened affect, circumstantial speech, panic attacks more than once a week, difficulty understanding complex commands, impairment of short-term memory, impaired judgment, and difficulty establishing effective work and social relationships. DC 9400 criteria for 50% are met.\n\nOutcome: 50% Granted\nCitation: BVA 2021-28282",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-28282",
+        "topic": "Anxiety Rating",
+        "outcome": "50% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-29292 regarding Asthma Rating?",
+      "input": "",
+      "output": "**Asthma Rating - PFT Results** [BVA Precedent - GREEN]\n\nA 30% rating for bronchial asthma is warranted. Pulmonary function testing (PFT) shows FEV-1 of 56 to 70 percent predicted, and FEV-1/FVC of 56 to 70 percent. Under DC 6602, these PFT results warrant a 30% evaluation. The evidence also shows daily inhalational bronchodilator therapy required. The higher 60% rating requires FEV-1 of 40-55% or daily use of systemic corticosteroids.\n\nOutcome: 30% Granted\nCitation: BVA 2022-29292",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-29292",
+        "topic": "Asthma Rating",
+        "outcome": "30% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-30303 regarding Sinusitis Rating?",
+      "input": "",
+      "output": "**Sinusitis - Incapacitating Episodes** [BVA Precedent - GREEN]\n\nA 30% rating for chronic sinusitis is granted. The evidence shows three or more incapacitating episodes per year requiring prolonged antibiotic treatment, and more than six non-incapacitating episodes per year. Under DC 6513, chronic maxillary sinusitis with these symptoms warrants a 30% rating. The higher 50% rating requires radical surgery or near-constant sinusitis after repeated surgeries.\n\nOutcome: 30% Granted\nCitation: BVA 2020-30303",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-30303",
+        "topic": "Sinusitis Rating",
+        "outcome": "30% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2023-31313 regarding PACT Act?",
+      "input": "",
+      "output": "**Constrictive Bronchiolitis - Burn Pit Presumption** [BVA Precedent - GREEN]\n\nService connection for constrictive bronchiolitis is granted under the PACT Act burn pit presumption. The Veteran served in Iraq during the presumptive period (August 2, 1990 onward) and has a current diagnosis of constrictive bronchiolitis, which is a presumptive condition under the PACT Act. Toxic exposure during service in a covered location is conceded. Presumptive service connection is established.\n\nOutcome: Granted\nCitation: BVA 2023-31313",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2023-31313",
+        "topic": "PACT Act",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2023-32323 regarding PACT Cancer?",
+      "input": "",
+      "output": "**Respiratory Cancer - PACT Act** [BVA Precedent - GREEN]\n\nService connection for lung cancer is granted under the PACT Act presumptions. The Veteran served in Afghanistan, a covered location for toxic exposure. Lung cancer is a presumptive respiratory condition under the PACT Act. The law creates a presumption of service connection for covered veterans diagnosed with respiratory cancers. All elements are satisfied.\n\nOutcome: Granted\nCitation: BVA 2023-32323",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2023-32323",
+        "topic": "PACT Cancer",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-33333 regarding Radiculopathy?",
+      "input": "",
+      "output": "**Lumbar Radiculopathy Separate Rating** [BVA Precedent - GREEN]\n\nSeparate compensable ratings for bilateral lower extremity radiculopathy as neurological manifestations of service-connected lumbar spine disability are granted. EMG/NCS confirms moderate incomplete paralysis of the sciatic nerve bilaterally. Under DC 8520, moderate incomplete paralysis warrants 20% for each lower extremity. These are rated separately from the orthopedic spine rating under the General Rating Formula.\n\nOutcome: 20% Each Granted\nCitation: BVA 2021-33333",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-33333",
+        "topic": "Radiculopathy",
+        "outcome": "20% Each Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-34343 regarding ED Secondary?",
+      "input": "",
+      "output": "**Erectile Dysfunction Secondary to PTSD/Medications** [BVA Precedent - GREEN]\n\nService connection for erectile dysfunction (ED) as secondary to service-connected PTSD and its treatment is granted. The VA urologist opined that ED is at least as likely as not caused by PTSD medication side effects (SSRIs) and psychological factors from PTSD itself. Special monthly compensation (SMC) under 38 USC \u00a71114(k) for loss of use of a creative organ is also granted.\n\nOutcome: Granted + SMC(k)\nCitation: BVA 2020-34343",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-34343",
+        "topic": "ED Secondary",
+        "outcome": "Granted + SMC(k)"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-35353 regarding Scar Rating?",
+      "input": "",
+      "output": "**Painful Scar Rating** [BVA Precedent - GREEN]\n\nA 10% rating for painful surgical scar is granted. Under DC 7804, one or two scars that are unstable or painful warrant a 10% rating. The examination confirms the post-surgical scar is painful on examination. Additional ratings may be warranted for scars that are also unstable, cause limitation of motion, or have other disabling effects under DCs 7800-7805.\n\nOutcome: 10% Granted\nCitation: BVA 2022-35353",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-35353",
+        "topic": "Scar Rating",
+        "outcome": "10% Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-36363 regarding Gulf War?",
+      "input": "",
+      "output": "**Undiagnosed Illness - Gulf War** [BVA Precedent - GREEN]\n\nService connection for joint and muscle pain as a qualifying chronic disability due to undiagnosed illness is granted. The Veteran served in the Southwest Asia theater during the Gulf War. Symptoms of joint and muscle pain are not attributable to any known clinical diagnosis despite thorough workup. Under 38 CFR \u00a73.317, such undiagnosed illnesses in Gulf War veterans are presumptively service-connected.\n\nOutcome: Granted\nCitation: BVA 2021-36363",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-36363",
+        "topic": "Gulf War",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-37373 regarding IBS Gulf War?",
+      "input": "",
+      "output": "**IBS - Functional GI Disorder Gulf War** [BVA Precedent - GREEN]\n\nService connection for irritable bowel syndrome (IBS) as a functional gastrointestinal disorder is granted. IBS is a medically unexplained chronic multisymptom illness presumptive for Gulf War veterans under 38 CFR \u00a73.317. The Veteran served in Kuwait and Saudi Arabia and has current IBS diagnosis. Presumptive service connection for functional GI disorder is warranted.\n\nOutcome: Granted\nCitation: BVA 2020-37373",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-37373",
+        "topic": "IBS Gulf War",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-38383 regarding Supplemental Claim?",
+      "input": "",
+      "output": "**Supplemental Claim - New and Relevant Evidence** [BVA Precedent - GREEN]\n\nThe supplemental claim is reopened based on new and relevant evidence. The Veteran submitted a new medical nexus opinion that was not previously of record. Under 38 CFR \u00a73.2501, a supplemental claim requires new and relevant evidence. The new nexus opinion is both new (not previously submitted) and relevant (addresses the basis for prior denial). The claim is reopened and decided on the merits.\n\nOutcome: Reopened\nCitation: BVA 2022-38383",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-38383",
+        "topic": "Supplemental Claim",
+        "outcome": "Reopened"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-39393 regarding SMC A&A?",
+      "input": "",
+      "output": "**Special Monthly Compensation - Aid and Attendance** [BVA Precedent - GREEN]\n\nSpecial monthly compensation (SMC) at the aid and attendance rate is granted. The evidence shows the Veteran requires the regular aid and attendance of another person due to service-connected disabilities. The Veteran is unable to dress, undress, keep himself clean, or attend to the wants of nature without assistance. Under 38 USC \u00a71114(l), SMC at the aid and attendance rate is warranted.\n\nOutcome: Granted\nCitation: BVA 2021-39393",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-39393",
+        "topic": "SMC A&A",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2020-40404 regarding SMC Housebound?",
+      "input": "",
+      "output": "**SMC Housebound** [BVA Precedent - GREEN]\n\nSMC at the housebound rate is granted. The Veteran has a single service-connected disability rated 100% (PTSD) and additional service-connected disabilities independently rated at 60% or more. Under 38 USC \u00a71114(s), this statutory housebound status entitles the Veteran to SMC at the housebound rate in addition to the 100% rating.\n\nOutcome: Granted\nCitation: BVA 2020-40404",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2020-40404",
+        "topic": "SMC Housebound",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2022-41414 regarding Fibromyalgia?",
+      "input": "",
+      "output": "**Fibromyalgia - Gulf War Presumptive** [BVA Precedent - GREEN]\n\nService connection for fibromyalgia is granted. Fibromyalgia is a presumptive condition for Gulf War veterans under 38 CFR \u00a73.317 as a medically unexplained chronic multisymptom illness. The Veteran served in Southwest Asia and has current diagnosis of fibromyalgia. Under DC 5025, fibromyalgia with widespread musculoskeletal pain and tender points is rated based on whether symptoms are constant or episodic.\n\nOutcome: Granted\nCitation: BVA 2022-41414",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2022-41414",
+        "topic": "Fibromyalgia",
+        "outcome": "Granted"
+      }
+    },
+    {
+      "instruction": "What did the Board of Veterans Appeals decide in BVA 2021-42424 regarding CFS Rating?",
+      "input": "",
+      "output": "**Chronic Fatigue Syndrome 40% Rating** [BVA Precedent - GREEN]\n\nA 40% rating for chronic fatigue syndrome (CFS) is warranted. Under DC 6354, CFS with symptoms that wax and wane but result in periods of incapacitation totaling at least 4 but less than 6 weeks per year, or symptoms controlled by continuous medication, warrants a 40% evaluation. The evidence supports this level of disability with documented flare periods.\n\nOutcome: 40% Granted\nCitation: BVA 2021-42424",
+      "metadata": {
+        "source": "BVA",
+        "type": "precedent_decision",
+        "citation": "BVA 2021-42424",
+        "topic": "CFS Rating",
+        "outcome": "40% Granted"
+      }
+    }
+  ]
+}

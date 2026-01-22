@@ -1,0 +1,5910 @@
+{
+  "source": "eCFR.gov XML API",
+  "url": "https://www.ecfr.gov/api/versioner/v1/full/YYYY-MM-DD/title-38.xml?part=4",
+  "scraped_at": "2026-01-22T10:20:28.738513",
+  "total_codes": 841,
+  "codes": {
+    "5000": {
+      "code": "5000",
+      "name": "Osteomyelitis, acute, subacute, or chronic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5001": {
+      "code": "5001",
+      "name": "Bones and joints, tuberculosis of, active or inactive",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5002": {
+      "code": "5002",
+      "name": "Multi-joint arthritis (except post-traumatic and gout)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5003": {
+      "code": "5003",
+      "name": "Degenerative arthritis, other than post-traumatic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5004": {
+      "code": "5004",
+      "name": "Arthritis, gonorrheal",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5005": {
+      "code": "5005",
+      "name": "Arthritis, pneumococcic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5006": {
+      "code": "5006",
+      "name": "Arthritis, typhoid",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5007": {
+      "code": "5007",
+      "name": "Arthritis, syphilitic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5008": {
+      "code": "5008",
+      "name": "Arthritis, streptococcic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5009": {
+      "code": "5009",
+      "name": "Other specified forms of arthropathy (excluding gout)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5010": {
+      "code": "5010",
+      "name": "Post-traumatic arthritis: Rate as limitation of motion, dislocation, or other specified instability ",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5011": {
+      "code": "5011",
+      "name": "Decompression illness: Rate manifestations under the appropriate diagnostic code within the affected",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5012": {
+      "code": "5012",
+      "name": "Bones, neoplasm, malignant, primary or secondary",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5013": {
+      "code": "5013",
+      "name": "Osteoporosis, residuals of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5014": {
+      "code": "5014",
+      "name": "Osteomalacia, residuals of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5015": {
+      "code": "5015",
+      "name": "Bones, neoplasm, benign",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5016": {
+      "code": "5016",
+      "name": "Osteitis deformans",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5017": {
+      "code": "5017",
+      "name": "Gout",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5018": {
+      "code": "5018",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5019": {
+      "code": "5019",
+      "name": "Bursitis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5020": {
+      "code": "5020",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5021": {
+      "code": "5021",
+      "name": "Myositis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5022": {
+      "code": "5022",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5023": {
+      "code": "5023",
+      "name": "Heterotopic ossification",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5024": {
+      "code": "5024",
+      "name": "Tenosynovitis, tendinitis, tendinosis or tendinopathy",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5025": {
+      "code": "5025",
+      "name": "Fibromyalgia (fibrositis, primary fibromyalgia syndrome)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5051": {
+      "code": "5051",
+      "name": "Shoulder replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5052": {
+      "code": "5052",
+      "name": "Elbow replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5053": {
+      "code": "5053",
+      "name": "Wrist replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5054": {
+      "code": "5054",
+      "name": "Hip, resurfacing or replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5055": {
+      "code": "5055",
+      "name": "Knee, resurfacing or replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5056": {
+      "code": "5056",
+      "name": "Ankle replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5104": {
+      "code": "5104",
+      "name": "Anatomical loss of one hand and loss of use of one foot",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5105": {
+      "code": "5105",
+      "name": "Anatomical loss of one foot and loss of use of one hand",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5106": {
+      "code": "5106",
+      "name": "Anatomical loss of both hands",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5107": {
+      "code": "5107",
+      "name": "Anatomical loss of both feet",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5108": {
+      "code": "5108",
+      "name": "Anatomical loss of one hand and one foot",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5109": {
+      "code": "5109",
+      "name": "Loss of use of both hands",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5110": {
+      "code": "5110",
+      "name": "Loss of use of both feet",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5111": {
+      "code": "5111",
+      "name": "Loss of use of one hand and one foot",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5120": {
+      "code": "5120",
+      "name": "Complete amputation, upper extremity",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5121": {
+      "code": "5121",
+      "name": "Above insertion of deltoid",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5122": {
+      "code": "5122",
+      "name": "Below insertion of deltoid",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5123": {
+      "code": "5123",
+      "name": "Above insertion of pronator teres",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5124": {
+      "code": "5124",
+      "name": "Below insertion of pronator teres",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5125": {
+      "code": "5125",
+      "name": "Hand, loss of use of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5126": {
+      "code": "5126",
+      "name": "Five digits of one hand, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5127": {
+      "code": "5127",
+      "name": "Thumb, index, long and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5128": {
+      "code": "5128",
+      "name": "Thumb, index, long and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5129": {
+      "code": "5129",
+      "name": "Thumb, index, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5130": {
+      "code": "5130",
+      "name": "Thumb, long, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5131": {
+      "code": "5131",
+      "name": "Index, long, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5132": {
+      "code": "5132",
+      "name": "Thumb, index and long",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5133": {
+      "code": "5133",
+      "name": "Thumb, index and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5134": {
+      "code": "5134",
+      "name": "Thumb, index and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5135": {
+      "code": "5135",
+      "name": "Thumb, long and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5136": {
+      "code": "5136",
+      "name": "Thumb, long and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5137": {
+      "code": "5137",
+      "name": "Thumb, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5138": {
+      "code": "5138",
+      "name": "Index, long and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5139": {
+      "code": "5139",
+      "name": "Index, long and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5140": {
+      "code": "5140",
+      "name": "Index, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5141": {
+      "code": "5141",
+      "name": "Long, ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5142": {
+      "code": "5142",
+      "name": "Thumb and index",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5143": {
+      "code": "5143",
+      "name": "Thumb and long",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5144": {
+      "code": "5144",
+      "name": "Thumb and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5145": {
+      "code": "5145",
+      "name": "Thumb and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5146": {
+      "code": "5146",
+      "name": "Index and long",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5147": {
+      "code": "5147",
+      "name": "Index and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5148": {
+      "code": "5148",
+      "name": "Index and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5149": {
+      "code": "5149",
+      "name": "Long and ring",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5150": {
+      "code": "5150",
+      "name": "Long and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5151": {
+      "code": "5151",
+      "name": "Ring and little",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5152": {
+      "code": "5152",
+      "name": "Thumb, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5153": {
+      "code": "5153",
+      "name": "Index finger, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5154": {
+      "code": "5154",
+      "name": "Long finger, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5155": {
+      "code": "5155",
+      "name": "Ring finger, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5156": {
+      "code": "5156",
+      "name": "Little finger, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5160": {
+      "code": "5160",
+      "name": "Complete amputation, lower extremity",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5161": {
+      "code": "5161",
+      "name": "Upper third, one-third of the distance from perineum to knee joint measured from perineum",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5162": {
+      "code": "5162",
+      "name": "Middle or lower thirds",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5163": {
+      "code": "5163",
+      "name": "With defective stump, thigh amputation recommended",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5164": {
+      "code": "5164",
+      "name": "Amputation not improvable by prosthesis controlled by natural knee action",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5165": {
+      "code": "5165",
+      "name": "At a lower level, permitting prosthesis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5166": {
+      "code": "5166",
+      "name": "Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5167": {
+      "code": "5167",
+      "name": "Foot, loss of use of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5170": {
+      "code": "5170",
+      "name": "Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5171": {
+      "code": "5171",
+      "name": "Toe, great, amputation of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5172": {
+      "code": "5172",
+      "name": "Toes, other than great, amputation of, with removal of metatarsal head",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5173": {
+      "code": "5173",
+      "name": "Toes, three or four, amputation of, without metatarsal involvement",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5200": {
+      "code": "5200",
+      "name": "Scapulohumeral articulation, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5201": {
+      "code": "5201",
+      "name": "Arm, limitation of motion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5202": {
+      "code": "5202",
+      "name": "Humerus, other impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5203": {
+      "code": "5203",
+      "name": "Clavicle or scapula, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5205": {
+      "code": "5205",
+      "name": "Elbow, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5206": {
+      "code": "5206",
+      "name": "Forearm, limitation of flexion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5207": {
+      "code": "5207",
+      "name": "Forearm, limitation of extension of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5208": {
+      "code": "5208",
+      "name": "Forearm, flexion limited to",
+      "ratings": [
+        100
+      ],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5209": {
+      "code": "5209",
+      "name": "Elbow, other impairment of Flail joint",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5210": {
+      "code": "5210",
+      "name": "Radius and ulna, nonunion of, with flail false joint",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5211": {
+      "code": "5211",
+      "name": "Ulna, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5212": {
+      "code": "5212",
+      "name": "Radius, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5213": {
+      "code": "5213",
+      "name": "Supination and pronation, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5214": {
+      "code": "5214",
+      "name": "Wrist, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5215": {
+      "code": "5215",
+      "name": "Wrist, limitation of motion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5216": {
+      "code": "5216",
+      "name": "Five digits of one hand, unfavorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5217": {
+      "code": "5217",
+      "name": "Four digits of one hand, unfavorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5218": {
+      "code": "5218",
+      "name": "Three digits of one hand, unfavorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5219": {
+      "code": "5219",
+      "name": "Two digits of one hand, unfavorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5220": {
+      "code": "5220",
+      "name": "Five digits of one hand, favorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5221": {
+      "code": "5221",
+      "name": "Four digits of one hand, favorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5222": {
+      "code": "5222",
+      "name": "Three digits of one hand, favorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5223": {
+      "code": "5223",
+      "name": "Two digits of one hand, favorable ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5224": {
+      "code": "5224",
+      "name": "Thumb, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5225": {
+      "code": "5225",
+      "name": "Index finger, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5226": {
+      "code": "5226",
+      "name": "Long finger, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5227": {
+      "code": "5227",
+      "name": "Ring or little finger, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5228": {
+      "code": "5228",
+      "name": "Thumb, limitation of motion",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5229": {
+      "code": "5229",
+      "name": "Index or long finger, limitation of motion",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5230": {
+      "code": "5230",
+      "name": "Ring or little finger, limitation of motion",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5235": {
+      "code": "5235",
+      "name": "Vertebral fracture or dislocation",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5236": {
+      "code": "5236",
+      "name": "Sacroiliac injury and weakness",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5237": {
+      "code": "5237",
+      "name": "Lumbosacral or cervical strain",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5238": {
+      "code": "5238",
+      "name": "Spinal stenosis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5239": {
+      "code": "5239",
+      "name": "Spondylolisthesis or segmental instability",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5240": {
+      "code": "5240",
+      "name": "Ankylosing spondylitis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5241": {
+      "code": "5241",
+      "name": "Spinal fusion",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5242": {
+      "code": "5242",
+      "name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome (also, see",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5243": {
+      "code": "5243",
+      "name": "Intervertebral disc syndrome: Assign this diagnostic code only when there is disc herniation with co",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5244": {
+      "code": "5244",
+      "name": "Traumatic paralysis, complete",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5250": {
+      "code": "5250",
+      "name": "Hip, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5251": {
+      "code": "5251",
+      "name": "Thigh, limitation of extension of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5252": {
+      "code": "5252",
+      "name": "Thigh, limitation of flexion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5253": {
+      "code": "5253",
+      "name": "Thigh, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5254": {
+      "code": "5254",
+      "name": "Hip, flail joint",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5255": {
+      "code": "5255",
+      "name": "Femur, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5256": {
+      "code": "5256",
+      "name": "Knee, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5257": {
+      "code": "5257",
+      "name": "Knee, other impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5258": {
+      "code": "5258",
+      "name": "Cartilage, semilunar, dislocated, with frequent episodes of \u201clocking,\u201d pain, and effusion into the j",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5259": {
+      "code": "5259",
+      "name": "Cartilage, semilunar, removal of, symptomatic",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5260": {
+      "code": "5260",
+      "name": "Leg, limitation of flexion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5261": {
+      "code": "5261",
+      "name": "Leg, limitation of extension of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5262": {
+      "code": "5262",
+      "name": "Tibia and fibula, impairment of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5263": {
+      "code": "5263",
+      "name": "Genu recurvatum (acquired, traumatic, with weakness and insecurity in weight-bearing objectively dem",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5270": {
+      "code": "5270",
+      "name": "Ankle, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5271": {
+      "code": "5271",
+      "name": "Ankle, limited motion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5272": {
+      "code": "5272",
+      "name": "Subastragalar or tarsal joint, ankylosis of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5273": {
+      "code": "5273",
+      "name": "Os calcis or astragalus, malunion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5274": {
+      "code": "5274",
+      "name": "Astragalectomy",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5275": {
+      "code": "5275",
+      "name": "Bones, of the lower extremity, shortening of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5269": {
+      "code": "5269",
+      "name": "Plantar fasciitis",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5276": {
+      "code": "5276",
+      "name": "Flatfoot, acquired",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5277": {
+      "code": "5277",
+      "name": "Weak foot, bilateral",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5278": {
+      "code": "5278",
+      "name": "Claw foot (pes cavus), acquired",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5279": {
+      "code": "5279",
+      "name": "Metatarsalgia, anterior (Morton's disease), unilateral, or bilateral",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5280": {
+      "code": "5280",
+      "name": "Hallux valgus, unilateral",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5281": {
+      "code": "5281",
+      "name": "Hallux rigidus, unilateral, severe",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5282": {
+      "code": "5282",
+      "name": "Hammer toe",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5283": {
+      "code": "5283",
+      "name": "Tarsal, or metatarsal bones, malunion of, or nonunion of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5284": {
+      "code": "5284",
+      "name": "Foot injuries, other",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5296": {
+      "code": "5296",
+      "name": "Skull, loss of part of, both inner and outer tables",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5297": {
+      "code": "5297",
+      "name": "Ribs, removal of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5298": {
+      "code": "5298",
+      "name": "Coccyx, removal of",
+      "ratings": [],
+      "section": "4.71a",
+      "source": "eCFR XML"
+    },
+    "5301": {
+      "code": "5301",
+      "name": "Group I",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5302": {
+      "code": "5302",
+      "name": "Group II",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5303": {
+      "code": "5303",
+      "name": "Group III",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5304": {
+      "code": "5304",
+      "name": "Group IV",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5305": {
+      "code": "5305",
+      "name": "Group V",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5306": {
+      "code": "5306",
+      "name": "Group VI",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5307": {
+      "code": "5307",
+      "name": "Group VII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5308": {
+      "code": "5308",
+      "name": "Group VIII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5309": {
+      "code": "5309",
+      "name": "Group IX",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5310": {
+      "code": "5310",
+      "name": "Group X",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5311": {
+      "code": "5311",
+      "name": "Group XI",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5312": {
+      "code": "5312",
+      "name": "Group XII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5313": {
+      "code": "5313",
+      "name": "Group XIII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5314": {
+      "code": "5314",
+      "name": "Group XIV",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5315": {
+      "code": "5315",
+      "name": "Group XV",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5316": {
+      "code": "5316",
+      "name": "Group XVI",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5317": {
+      "code": "5317",
+      "name": "Group XVII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5318": {
+      "code": "5318",
+      "name": "Group XVIII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5319": {
+      "code": "5319",
+      "name": "Group XIX",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5320": {
+      "code": "5320",
+      "name": "Group XX",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5321": {
+      "code": "5321",
+      "name": "Group XXI",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5322": {
+      "code": "5322",
+      "name": "Group XXII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5323": {
+      "code": "5323",
+      "name": "Group XXIII",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5324": {
+      "code": "5324",
+      "name": "Diaphragm, rupture of, with herniation. Rate under diagnostic code",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5325": {
+      "code": "5325",
+      "name": "Muscle injury, facial muscles. Evaluate functional impairment as seventh (facial) cranial nerve neur",
+      "ratings": [
+        10
+      ],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5326": {
+      "code": "5326",
+      "name": "Muscle hernia, extensive. Without other injury to the muscle\u2014",
+      "ratings": [
+        10
+      ],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5327": {
+      "code": "5327",
+      "name": "Muscle, neoplasm of, malignant (excluding soft tissue sarcoma)\u2014",
+      "ratings": [
+        100
+      ],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5328": {
+      "code": "5328",
+      "name": "Muscle, neoplasm of, benign, postoperative. Rate on impairment of function",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5329": {
+      "code": "5329",
+      "name": "Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)\u2014",
+      "ratings": [
+        100
+      ],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5330": {
+      "code": "5330",
+      "name": "Rhabdomyolysis, residuals of",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "5331": {
+      "code": "5331",
+      "name": "Compartment syndrome",
+      "ratings": [],
+      "section": "4.73",
+      "source": "eCFR XML"
+    },
+    "6000": {
+      "code": "6000",
+      "name": "Choroidopathy, including uveitis, iritis, cyclitis, or choroiditis",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6001": {
+      "code": "6001",
+      "name": "Keratopathy",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6002": {
+      "code": "6002",
+      "name": "Scleritis",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6006": {
+      "code": "6006",
+      "name": "Retinopathy or maculopathy not otherwise specified",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6007": {
+      "code": "6007",
+      "name": "Intraocular hemorrhage",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6008": {
+      "code": "6008",
+      "name": "Detachment of retina",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6009": {
+      "code": "6009",
+      "name": "Unhealed eye injury",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6010": {
+      "code": "6010",
+      "name": "Tuberculosis of eye",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6011": {
+      "code": "6011",
+      "name": "Retinal scars, atrophy, or irregularities",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6012": {
+      "code": "6012",
+      "name": "Angle-closure glaucoma",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6013": {
+      "code": "6013",
+      "name": "Open-angle glaucoma",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6014": {
+      "code": "6014",
+      "name": "Malignant neoplasms of the eye, orbit, and adnexa (excluding skin)",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6015": {
+      "code": "6015",
+      "name": "Benign neoplasms of the eye, orbit, and adnexa (excluding skin)",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6016": {
+      "code": "6016",
+      "name": "Nystagmus, central",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6017": {
+      "code": "6017",
+      "name": "Trachomatous conjunctivitis",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6018": {
+      "code": "6018",
+      "name": "Chronic conjunctivitis (nontrachomatous)",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6019": {
+      "code": "6019",
+      "name": "Ptosis, unilateral or bilateral",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6020": {
+      "code": "6020",
+      "name": "Ectropion",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6021": {
+      "code": "6021",
+      "name": "Entropion",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6022": {
+      "code": "6022",
+      "name": "Lagophthalmos",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6023": {
+      "code": "6023",
+      "name": "Loss of eyebrows, complete, unilateral or bilateral",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6024": {
+      "code": "6024",
+      "name": "Loss of eyelashes, complete, unilateral or bilateral",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6025": {
+      "code": "6025",
+      "name": "Disorders of the lacrimal apparatus (epiphora, dacryocystitis, etc.)",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6026": {
+      "code": "6026",
+      "name": "Optic neuropathy",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6027": {
+      "code": "6027",
+      "name": "Cataract",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6029": {
+      "code": "6029",
+      "name": "Aphakia or dislocation of crystalline lens",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6030": {
+      "code": "6030",
+      "name": "Paralysis of accommodation (due to neuropathy of the Oculomotor Nerve (cranial nerve III))",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6032": {
+      "code": "6032",
+      "name": "Loss of eyelids, partial or complete",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6034": {
+      "code": "6034",
+      "name": "Pterygium",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6035": {
+      "code": "6035",
+      "name": "Keratoconus",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6036": {
+      "code": "6036",
+      "name": "Status post corneal transplant",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6037": {
+      "code": "6037",
+      "name": "Pinguecula",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6040": {
+      "code": "6040",
+      "name": "Diabetic retinopathy",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6042": {
+      "code": "6042",
+      "name": "Retinal dystrophy (including retinitis pigmentosa, wet or dry macular degeneration, early-onset macu",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6046": {
+      "code": "6046",
+      "name": "Post-chiasmal disorders",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6061": {
+      "code": "6061",
+      "name": "Anatomical loss of both eyes",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6062": {
+      "code": "6062",
+      "name": "No more than light perception in both eyes",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6063": {
+      "code": "6063",
+      "name": "Anatomical loss of one eye",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6064": {
+      "code": "6064",
+      "name": "No more than light perception in one eye",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6065": {
+      "code": "6065",
+      "name": "Vision in one eye",
+      "ratings": [
+        60
+      ],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6066": {
+      "code": "6066",
+      "name": "Visual acuity in one eye",
+      "ratings": [
+        60,
+        10
+      ],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6080": {
+      "code": "6080",
+      "name": "Visual field defects",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6081": {
+      "code": "6081",
+      "name": "Scotoma, unilateral",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6090": {
+      "code": "6090",
+      "name": "Diplopia (double vision)",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6091": {
+      "code": "6091",
+      "name": "Symblepharon",
+      "ratings": [],
+      "section": "4.79",
+      "source": "eCFR XML"
+    },
+    "6200": {
+      "code": "6200",
+      "name": "Chronic suppurative otitis media, mastoiditis, or cholesteatoma (or any combination)",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6201": {
+      "code": "6201",
+      "name": "Chronic nonsuppurative otitis media with effusion (serous otitis media)",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6202": {
+      "code": "6202",
+      "name": "Otosclerosis",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6204": {
+      "code": "6204",
+      "name": "Peripheral vestibular disorders",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6205": {
+      "code": "6205",
+      "name": "Meniere's syndrome (endolymphatic hydrops)",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6207": {
+      "code": "6207",
+      "name": "Loss of auricle",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6208": {
+      "code": "6208",
+      "name": "Malignant neoplasm of the ear (other than skin only)",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6209": {
+      "code": "6209",
+      "name": "Benign neoplasms of the ear (other than skin only)",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6210": {
+      "code": "6210",
+      "name": "Chronic otitis externa",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6211": {
+      "code": "6211",
+      "name": "Tympanic membrane, perforation of",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6260": {
+      "code": "6260",
+      "name": "Tinnitus, recurrent",
+      "ratings": [],
+      "section": "4.87",
+      "source": "eCFR XML"
+    },
+    "6275": {
+      "code": "6275",
+      "name": "Sense of smell, complete loss",
+      "ratings": [],
+      "section": "4.87a",
+      "source": "eCFR XML"
+    },
+    "6276": {
+      "code": "6276",
+      "name": "Sense of taste, complete loss",
+      "ratings": [],
+      "section": "4.87a",
+      "source": "eCFR XML"
+    },
+    "6300": {
+      "code": "6300",
+      "name": "Vibriosis (Cholera, Non-cholera)",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6301": {
+      "code": "6301",
+      "name": "Visceral leishmaniasis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6302": {
+      "code": "6302",
+      "name": "Leprosy (Hansen's disease)",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6304": {
+      "code": "6304",
+      "name": "Malaria",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6305": {
+      "code": "6305",
+      "name": "Lymphatic filariasis, to include elephantiasis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6306": {
+      "code": "6306",
+      "name": "Bartonellosis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6307": {
+      "code": "6307",
+      "name": "Plague",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6308": {
+      "code": "6308",
+      "name": "Relapsing Fever",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6309": {
+      "code": "6309",
+      "name": "Rheumatic fever",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6310": {
+      "code": "6310",
+      "name": "Syphilis, and other treponema infections",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6311": {
+      "code": "6311",
+      "name": "Tuberculosis, miliary",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6312": {
+      "code": "6312",
+      "name": "Nontuberculosis mycobacterium infection",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6313": {
+      "code": "6313",
+      "name": "Avitaminosis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6314": {
+      "code": "6314",
+      "name": "Beriberi",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6315": {
+      "code": "6315",
+      "name": "Pellagra",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6316": {
+      "code": "6316",
+      "name": "Brucellosis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6317": {
+      "code": "6317",
+      "name": "Rickettsial, ehrlichia, and anaplasma infections",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6318": {
+      "code": "6318",
+      "name": "Melioidosis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6319": {
+      "code": "6319",
+      "name": "Lyme disease",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6320": {
+      "code": "6320",
+      "name": "Parasitic diseases otherwise not specified",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6325": {
+      "code": "6325",
+      "name": "Hyperinfection syndrome or disseminated strongyloidiasis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6326": {
+      "code": "6326",
+      "name": "Schistosomiasis",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6329": {
+      "code": "6329",
+      "name": "Hemorrhagic fevers, including dengue, yellow fever, and others",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6330": {
+      "code": "6330",
+      "name": "Campylobacter jejuni infection",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6331": {
+      "code": "6331",
+      "name": "Coxiella burnetii infection (Q fever)",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6333": {
+      "code": "6333",
+      "name": "Nontyphoid salmonella infections",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6334": {
+      "code": "6334",
+      "name": "Shigella infections",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6335": {
+      "code": "6335",
+      "name": "West Nile virus infection",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6350": {
+      "code": "6350",
+      "name": "Lupus erythematosus, systemic (disseminated)",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6351": {
+      "code": "6351",
+      "name": "HIV-related illness",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6354": {
+      "code": "6354",
+      "name": "Chronic fatigue syndrome (CFS)",
+      "ratings": [],
+      "section": "4.88b",
+      "source": "eCFR XML"
+    },
+    "6502": {
+      "code": "6502",
+      "name": "Septum, nasal, deviation of",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6504": {
+      "code": "6504",
+      "name": "Nose, loss of part of, or scars",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6510": {
+      "code": "6510",
+      "name": "Sinusitis, pansinusitis, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6511": {
+      "code": "6511",
+      "name": "Sinusitis, ethmoid, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6512": {
+      "code": "6512",
+      "name": "Sinusitis, frontal, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6513": {
+      "code": "6513",
+      "name": "Sinusitis, maxillary, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6514": {
+      "code": "6514",
+      "name": "Sinusitis, sphenoid, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6515": {
+      "code": "6515",
+      "name": "Laryngitis, tuberculous, active or inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6516": {
+      "code": "6516",
+      "name": "Laryngitis, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6518": {
+      "code": "6518",
+      "name": "Laryngectomy, total",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6519": {
+      "code": "6519",
+      "name": "Aphonia, complete organic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6520": {
+      "code": "6520",
+      "name": "Larynx, stenosis of, including residuals of laryngeal trauma (unilateral or bilateral)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6521": {
+      "code": "6521",
+      "name": "Pharynx, injuries to",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6522": {
+      "code": "6522",
+      "name": "Allergic or vasomotor rhinitis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6523": {
+      "code": "6523",
+      "name": "Bacterial rhinitis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6524": {
+      "code": "6524",
+      "name": "Granulomatous rhinitis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6600": {
+      "code": "6600",
+      "name": "Bronchitis, chronic",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6601": {
+      "code": "6601",
+      "name": "Bronchiectasis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6602": {
+      "code": "6602",
+      "name": "Asthma, bronchial",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6603": {
+      "code": "6603",
+      "name": "Emphysema, pulmonary",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6604": {
+      "code": "6604",
+      "name": "Chronic obstructive pulmonary disease",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6701": {
+      "code": "6701",
+      "name": "Tuberculosis, pulmonary, chronic, far advanced, active",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6702": {
+      "code": "6702",
+      "name": "Tuberculosis, pulmonary, chronic, moderately advanced, active",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6703": {
+      "code": "6703",
+      "name": "Tuberculosis, pulmonary, chronic, minimal, active",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6704": {
+      "code": "6704",
+      "name": "Tuberculosis, pulmonary, chronic, active, advancement unspecified",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6721": {
+      "code": "6721",
+      "name": "Tuberculosis, pulmonary, chronic, far advanced, inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6722": {
+      "code": "6722",
+      "name": "Tuberculosis, pulmonary, chronic, moderately advanced, inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6723": {
+      "code": "6723",
+      "name": "Tuberculosis, pulmonary, chronic, minimal, inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6724": {
+      "code": "6724",
+      "name": "Tuberculosis, pulmonary, chronic, inactive, advancement unspecified",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6730": {
+      "code": "6730",
+      "name": "Tuberculosis, pulmonary, chronic, active",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6731": {
+      "code": "6731",
+      "name": "Tuberculosis, pulmonary, chronic, inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6732": {
+      "code": "6732",
+      "name": "Pleurisy, tuberculous, active or inactive",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6817": {
+      "code": "6817",
+      "name": "Pulmonary Vascular Disease",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6819": {
+      "code": "6819",
+      "name": "Neoplasms, malignant, any specified part of respiratory system exclusive of skin growths",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6820": {
+      "code": "6820",
+      "name": "Neoplasms, benign, any specified part of respiratory system. Evaluate using an appropriate respirato",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6822": {
+      "code": "6822",
+      "name": "Actinomycosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6823": {
+      "code": "6823",
+      "name": "Nocardiosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6824": {
+      "code": "6824",
+      "name": "Chronic lung abscess",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6825": {
+      "code": "6825",
+      "name": "Diffuse interstitial fibrosis (interstitial pneumonitis, fibrosing alveolitis)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6826": {
+      "code": "6826",
+      "name": "Desquamative interstitial pneumonitis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6827": {
+      "code": "6827",
+      "name": "Pulmonary alveolar proteinosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6828": {
+      "code": "6828",
+      "name": "Eosinophilic granuloma of lung",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6829": {
+      "code": "6829",
+      "name": "Drug-induced pulmonary pneumonitis and fibrosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6830": {
+      "code": "6830",
+      "name": "Radiation-induced pulmonary pneumonitis and fibrosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6831": {
+      "code": "6831",
+      "name": "Hypersensitivity pneumonitis (extrinsic allergic alveolitis)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6832": {
+      "code": "6832",
+      "name": "Pneumoconiosis (silicosis, anthracosis, etc.)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6833": {
+      "code": "6833",
+      "name": "Asbestosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6834": {
+      "code": "6834",
+      "name": "Histoplasmosis of lung",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6835": {
+      "code": "6835",
+      "name": "Coccidioidomycosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6836": {
+      "code": "6836",
+      "name": "Blastomycosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6837": {
+      "code": "6837",
+      "name": "Cryptococcosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6838": {
+      "code": "6838",
+      "name": "Aspergillosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6839": {
+      "code": "6839",
+      "name": "Mucormycosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6840": {
+      "code": "6840",
+      "name": "Diaphragm paralysis or paresis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6841": {
+      "code": "6841",
+      "name": "Spinal cord injury with respiratory insufficiency",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6842": {
+      "code": "6842",
+      "name": "Kyphoscoliosis, pectus excavatum, pectus carinatum",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6843": {
+      "code": "6843",
+      "name": "Traumatic chest wall defect, pneumothorax, hernia, etc",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6844": {
+      "code": "6844",
+      "name": "Post-surgical residual (lobectomy, pneumonectomy, etc.)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6845": {
+      "code": "6845",
+      "name": "Chronic pleural effusion or fibrosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6846": {
+      "code": "6846",
+      "name": "Sarcoidosis",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "6847": {
+      "code": "6847",
+      "name": "Sleep Apnea Syndromes (Obstructive, Central, Mixed)",
+      "ratings": [],
+      "section": "4.97",
+      "source": "eCFR XML"
+    },
+    "7000": {
+      "code": "7000",
+      "name": "Valvular heart disease (including rheumatic heart disease)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7001": {
+      "code": "7001",
+      "name": "Endocarditis, or",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7002": {
+      "code": "7002",
+      "name": "Pericarditis",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7003": {
+      "code": "7003",
+      "name": "Pericardial adhesions",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7004": {
+      "code": "7004",
+      "name": "Syphilitic heart disease",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7005": {
+      "code": "7005",
+      "name": "Arteriosclerotic heart disease (coronary artery disease)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7006": {
+      "code": "7006",
+      "name": "Myocardial infarction",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7007": {
+      "code": "7007",
+      "name": "Hypertensive heart disease",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7008": {
+      "code": "7008",
+      "name": "Hyperthyroid heart disease",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7009": {
+      "code": "7009",
+      "name": "Bradycardia (Bradyarrhythmia), symptomatic, requiring permanent pacemaker implantation",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7010": {
+      "code": "7010",
+      "name": "Supraventricular tachycardia",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7011": {
+      "code": "7011",
+      "name": "Ventricular arrhythmias (sustained)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7015": {
+      "code": "7015",
+      "name": "Atrioventricular block",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7016": {
+      "code": "7016",
+      "name": "Heart valve replacement (prosthesis)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7017": {
+      "code": "7017",
+      "name": "Coronary bypass surgery",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7018": {
+      "code": "7018",
+      "name": "Implantable cardiac pacemakers",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7019": {
+      "code": "7019",
+      "name": "Cardiac transplantation",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7020": {
+      "code": "7020",
+      "name": "Cardiomyopathy",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7101": {
+      "code": "7101",
+      "name": "Hypertensive vascular disease (hypertension and isolated systolic hypertension)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7110": {
+      "code": "7110",
+      "name": "Aortic aneurysm: Ascending, thoracic, or abdominal",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7111": {
+      "code": "7111",
+      "name": "Aneurysm, any large artery",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7112": {
+      "code": "7112",
+      "name": "Aneurysm, any small artery",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7113": {
+      "code": "7113",
+      "name": "Arteriovenous fistula, traumatic",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7114": {
+      "code": "7114",
+      "name": "Peripheral arterial disease",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7115": {
+      "code": "7115",
+      "name": "Thrombo-angiitis obliterans (Buerger's Disease)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7117": {
+      "code": "7117",
+      "name": "Raynaud's syndrome (also known as secondary Raynaud's phenomenon or secondary Raynaud's)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7118": {
+      "code": "7118",
+      "name": "Angioneurotic edema",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7119": {
+      "code": "7119",
+      "name": "Erythromelalgia",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7120": {
+      "code": "7120",
+      "name": "Varicose veins",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7121": {
+      "code": "7121",
+      "name": "Post-phlebitic syndrome of any etiology",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7122": {
+      "code": "7122",
+      "name": "Cold injury residuals",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7123": {
+      "code": "7123",
+      "name": "Soft tissue sarcoma (of vascular origin)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7124": {
+      "code": "7124",
+      "name": "Raynaud's disease (also known as primary Raynaud's)",
+      "ratings": [],
+      "section": "4.104",
+      "source": "eCFR XML"
+    },
+    "7200": {
+      "code": "7200",
+      "name": "Soft tissue injury of the mouth, other than tongue or lips",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7201": {
+      "code": "7201",
+      "name": "Lips, injuries of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7202": {
+      "code": "7202",
+      "name": "Tongue, loss of whole or part",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7203": {
+      "code": "7203",
+      "name": "Esophagus, stricture of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7204": {
+      "code": "7204",
+      "name": "Esophageal motility disorder",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7205": {
+      "code": "7205",
+      "name": "Esophagus, diverticulum of, acquired",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7206": {
+      "code": "7206",
+      "name": "Gastroesophageal reflux disease",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7207": {
+      "code": "7207",
+      "name": "Barrett's esophagus",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7301": {
+      "code": "7301",
+      "name": "Peritoneum, adhesions of, due to surgery, trauma, disease, or infection",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7303": {
+      "code": "7303",
+      "name": "Chronic complications of upper gastrointestinal surgery",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7304": {
+      "code": "7304",
+      "name": "Peptic ulcer disease",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7307": {
+      "code": "7307",
+      "name": "Gastritis, chronic",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7308": {
+      "code": "7308",
+      "name": "Postgastrectomy syndrome",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7309": {
+      "code": "7309",
+      "name": "Stomach, stenosis of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7310": {
+      "code": "7310",
+      "name": "Stomach, injury of, residuals",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7311": {
+      "code": "7311",
+      "name": "Residuals of injury of the liver",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7312": {
+      "code": "7312",
+      "name": "Cirrhosis of the liver",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7314": {
+      "code": "7314",
+      "name": "Chronic biliary tract disease",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7315": {
+      "code": "7315",
+      "name": "Cholelithiasis, chronic",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7317": {
+      "code": "7317",
+      "name": "Gallbladder, injury of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7318": {
+      "code": "7318",
+      "name": "Cholecystectomy (gallbladder removal), complications of (such as strictures and biliary leaks)",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7319": {
+      "code": "7319",
+      "name": "Irritable bowel syndrome (IBS)",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7323": {
+      "code": "7323",
+      "name": "Colitis, ulcerative",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7325": {
+      "code": "7325",
+      "name": "Enteritis, chronic",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7326": {
+      "code": "7326",
+      "name": "Crohn's disease or undifferentiated form of inflammatory bowel disease",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7327": {
+      "code": "7327",
+      "name": "Diverticulitis and diverticulosis",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7328": {
+      "code": "7328",
+      "name": "Intestine, small, resection of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7329": {
+      "code": "7329",
+      "name": "Intestine, large, resection of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7330": {
+      "code": "7330",
+      "name": "Intestinal fistulous disease, external",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7331": {
+      "code": "7331",
+      "name": "Peritonitis, tuberculous, active or inactive",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7332": {
+      "code": "7332",
+      "name": "Rectum and anus, impairment of sphincter control",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7333": {
+      "code": "7333",
+      "name": "Rectum and anus, stricture of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7334": {
+      "code": "7334",
+      "name": "Rectum, prolapse of",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7335": {
+      "code": "7335",
+      "name": "Ano, fistula in, including anorectal fistula and anorectal abscess",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7336": {
+      "code": "7336",
+      "name": "Hemorrhoids, external or internal",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7337": {
+      "code": "7337",
+      "name": "Pruritus ani (anal itching)",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7338": {
+      "code": "7338",
+      "name": "Hernia, including femoral, inguinal, umbilical, ventral, incisional, and other (but not including hi",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7342": {
+      "code": "7342",
+      "name": "Visceroptosis, symptomatic, marked",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7343": {
+      "code": "7343",
+      "name": "Malignant neoplasms of the digestive system, exclusive of skin growths",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7344": {
+      "code": "7344",
+      "name": "Benign neoplasms, exclusive of skin growths",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7345": {
+      "code": "7345",
+      "name": "Chronic liver disease without cirrhosis",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7346": {
+      "code": "7346",
+      "name": "Hiatal hernia and paraesophageal hernia",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7347": {
+      "code": "7347",
+      "name": "Pancreatitis, chronic",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7348": {
+      "code": "7348",
+      "name": "Vagotomy with pyloroplasty or gastroenterostomy",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7350": {
+      "code": "7350",
+      "name": "Liver abscess",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7351": {
+      "code": "7351",
+      "name": "Liver transplant",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7352": {
+      "code": "7352",
+      "name": "Pancreas transplant",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7354": {
+      "code": "7354",
+      "name": "Hepatitis C (or non-A, non-B hepatitis)",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7355": {
+      "code": "7355",
+      "name": "Celiac disease",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7356": {
+      "code": "7356",
+      "name": "Gastrointestinal dysmotility syndrome",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7357": {
+      "code": "7357",
+      "name": "Post pancreatectomy syndrome",
+      "ratings": [],
+      "section": "4.114",
+      "source": "eCFR XML"
+    },
+    "7500": {
+      "code": "7500",
+      "name": "Kidney, removal of one",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7501": {
+      "code": "7501",
+      "name": "Kidney, abscess of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7502": {
+      "code": "7502",
+      "name": "Nephritis, chronic",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7504": {
+      "code": "7504",
+      "name": "Pyelonephritis, chronic",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7505": {
+      "code": "7505",
+      "name": "Kidney, tuberculosis of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7507": {
+      "code": "7507",
+      "name": "Nephrosclerosis, arteriolar",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7508": {
+      "code": "7508",
+      "name": "Nephrolithiasis/Ureterolithiasis/Nephrocalcinosis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7509": {
+      "code": "7509",
+      "name": "Hydronephrosis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7511": {
+      "code": "7511",
+      "name": "Ureter, stricture of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7512": {
+      "code": "7512",
+      "name": "Cystitis, chronic, includes interstitial and all etiologies, infectious and non-infectious",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7515": {
+      "code": "7515",
+      "name": "Bladder, calculus in, with symptoms interfering with function",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7516": {
+      "code": "7516",
+      "name": "Bladder, fistula of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7517": {
+      "code": "7517",
+      "name": "Bladder, injury of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7518": {
+      "code": "7518",
+      "name": "Urethra, stricture of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7519": {
+      "code": "7519",
+      "name": "Urethra, fistula of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7520": {
+      "code": "7520",
+      "name": "Penis, removal of half or more",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7521": {
+      "code": "7521",
+      "name": "Penis, removal of glans",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7522": {
+      "code": "7522",
+      "name": "Erectile dysfunction, with or without penile deformity",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7523": {
+      "code": "7523",
+      "name": "Testis, atrophy complete",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7524": {
+      "code": "7524",
+      "name": "Testis, removal",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7525": {
+      "code": "7525",
+      "name": "Prostatitis, urethritis, epididymitis, orchitis (unilateral or bilateral), chronic only",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7527": {
+      "code": "7527",
+      "name": "Prostate gland injuries, infections, hypertrophy, postoperative residuals, bladder outlet obstructio",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7528": {
+      "code": "7528",
+      "name": "Malignant neoplasms of the genitourinary system",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7529": {
+      "code": "7529",
+      "name": "Benign neoplasms of the genitourinary system",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7530": {
+      "code": "7530",
+      "name": "Chronic renal disease requiring regular dialysis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7531": {
+      "code": "7531",
+      "name": "Kidney transplant",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7532": {
+      "code": "7532",
+      "name": "Renal tubular disorders (such as renal glycosurias, aminoacidurias, renal tubular acidosis, Fanconi'",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7533": {
+      "code": "7533",
+      "name": "Cystic diseases of the kidneys",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7534": {
+      "code": "7534",
+      "name": "Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel d",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7535": {
+      "code": "7535",
+      "name": "Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy me",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7536": {
+      "code": "7536",
+      "name": "Glomerulonephritis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7537": {
+      "code": "7537",
+      "name": "Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7538": {
+      "code": "7538",
+      "name": "Papillary necrosis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7539": {
+      "code": "7539",
+      "name": "Renal amyloid disease",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7540": {
+      "code": "7540",
+      "name": "Disseminated intravascular coagulation with renal cortical necrosis",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7541": {
+      "code": "7541",
+      "name": "Renal involvement in diabetes mellitus type I or II",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7542": {
+      "code": "7542",
+      "name": "Neurogenic bladder",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7543": {
+      "code": "7543",
+      "name": "Varicocele/Hydrocele",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7544": {
+      "code": "7544",
+      "name": "Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7545": {
+      "code": "7545",
+      "name": "Bladder, diverticulum of",
+      "ratings": [],
+      "section": "4.115b",
+      "source": "eCFR XML"
+    },
+    "7610": {
+      "code": "7610",
+      "name": "Vulva or clitoris, disease or injury of (including vulvovaginitis)",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7611": {
+      "code": "7611",
+      "name": "Vagina, disease or injury of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7612": {
+      "code": "7612",
+      "name": "Cervix, disease or injury of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7613": {
+      "code": "7613",
+      "name": "Uterus, disease, injury, or adhesions of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7614": {
+      "code": "7614",
+      "name": "Fallopian tube, disease, injury, or adhesions of (including pelvic inflammatory disease (PID))",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7615": {
+      "code": "7615",
+      "name": "Ovary, disease, injury, or adhesions of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7617": {
+      "code": "7617",
+      "name": "Uterus and both ovaries, removal of, complete",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7618": {
+      "code": "7618",
+      "name": "Uterus, removal of, including corpus",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7619": {
+      "code": "7619",
+      "name": "Ovary, removal of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7620": {
+      "code": "7620",
+      "name": "Ovaries, atrophy of both, complete",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7621": {
+      "code": "7621",
+      "name": "Complete or incomplete pelvic organ prolapse due to injury, disease, or surgical complications of pr",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7624": {
+      "code": "7624",
+      "name": "Fistula, rectovaginal",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7625": {
+      "code": "7625",
+      "name": "Fistula, urethrovaginal",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7626": {
+      "code": "7626",
+      "name": "Breast, surgery of",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7627": {
+      "code": "7627",
+      "name": "Malignant neoplasms of gynecological system",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7628": {
+      "code": "7628",
+      "name": "Benign neoplasms of gynecological system. Rate chronic residuals to include scars, lymphedema, disfi",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7629": {
+      "code": "7629",
+      "name": "Endometriosis",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7630": {
+      "code": "7630",
+      "name": "Malignant neoplasms of the breast",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7631": {
+      "code": "7631",
+      "name": "Benign neoplasms of the breast and other injuries of the breast. Rate chronic residuals according to",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7632": {
+      "code": "7632",
+      "name": "Female sexual arousal disorder (FSAD)",
+      "ratings": [],
+      "section": "4.116",
+      "source": "eCFR XML"
+    },
+    "7702": {
+      "code": "7702",
+      "name": "Agranulocytosis, acquired",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7703": {
+      "code": "7703",
+      "name": "Leukemia (except for chronic myelogenous leukemia)",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7704": {
+      "code": "7704",
+      "name": "Polycythemia vera",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7705": {
+      "code": "7705",
+      "name": "Immune thrombocytopenia",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7706": {
+      "code": "7706",
+      "name": "Splenectomy",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7707": {
+      "code": "7707",
+      "name": "Spleen, injury of, healed",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7709": {
+      "code": "7709",
+      "name": "Hodgkin's lymphoma",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7710": {
+      "code": "7710",
+      "name": "Adenitis, tuberculous, active or inactive",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7712": {
+      "code": "7712",
+      "name": "Multiple myeloma",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7714": {
+      "code": "7714",
+      "name": "Sickle cell anemia",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7715": {
+      "code": "7715",
+      "name": "Non-Hodgkin's lymphoma",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7716": {
+      "code": "7716",
+      "name": "Aplastic anemia",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7717": {
+      "code": "7717",
+      "name": "AL amyloidosis (primary amyloidosis)",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7718": {
+      "code": "7718",
+      "name": "Essential thrombocythemia and primary myelofibrosis",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7719": {
+      "code": "7719",
+      "name": "Chronic myelogenous leukemia (CML) (chronic myeloid leukemia or chronic granulocytic leukemia)",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7720": {
+      "code": "7720",
+      "name": "Iron deficiency anemia",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7721": {
+      "code": "7721",
+      "name": "Folic acid deficiency",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7722": {
+      "code": "7722",
+      "name": "Pernicious anemia and Vitamin B",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7723": {
+      "code": "7723",
+      "name": "Acquired hemolytic anemia",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7724": {
+      "code": "7724",
+      "name": "Solitary plasmacytoma",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7725": {
+      "code": "7725",
+      "name": "Myelodysplastic syndromes",
+      "ratings": [],
+      "section": "4.117",
+      "source": "eCFR XML"
+    },
+    "7800": {
+      "code": "7800",
+      "name": "Burn scar(s) of the head, face, or neck; scar(s) of the head, face, or neck due to other causes; or ",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7801": {
+      "code": "7801",
+      "name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are associated wit",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7802": {
+      "code": "7802",
+      "name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are not associated",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7804": {
+      "code": "7804",
+      "name": "Scar(s), unstable or painful",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7805": {
+      "code": "7805",
+      "name": "Scars, other; and other effects of scars evaluated under diagnostic codes",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7806": {
+      "code": "7806",
+      "name": "Dermatitis or eczema",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7807": {
+      "code": "7807",
+      "name": "American (New World) leishmaniasis (mucocutaneous, espundia)",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7808": {
+      "code": "7808",
+      "name": "Old World leishmaniasis (cutaneous, Oriental sore)",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7809": {
+      "code": "7809",
+      "name": "Discoid lupus erythematosus",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7811": {
+      "code": "7811",
+      "name": "Tuberculosis luposa (lupus vulgaris), active or inactive",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7813": {
+      "code": "7813",
+      "name": "Dermatophytosis (ringworm: Of body, tinea corporis; of head, tinea capitis; of feet, tinea pedis; of",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7815": {
+      "code": "7815",
+      "name": "Bullous disorders (including pemphigus vulgaris, pemphigus foliaceous, bullous pemphigoid, dermatiti",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7816": {
+      "code": "7816",
+      "name": "Psoriasis",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7817": {
+      "code": "7817",
+      "name": "Erythroderma",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7818": {
+      "code": "7818",
+      "name": "Malignant skin neoplasms (other than malignant melanoma)",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7819": {
+      "code": "7819",
+      "name": "Benign skin neoplasms",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7820": {
+      "code": "7820",
+      "name": "Infections of the skin not listed elsewhere (including bacterial, fungal, viral, treponemal, and par",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7821": {
+      "code": "7821",
+      "name": "Cutaneous manifestations of collagen-vascular diseases not listed elsewhere (including scleroderma, ",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7822": {
+      "code": "7822",
+      "name": "Papulosquamous disorders not listed elsewhere (including lichen planus, large or small plaque paraps",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7823": {
+      "code": "7823",
+      "name": "Vitiligo",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7824": {
+      "code": "7824",
+      "name": "Diseases of keratinization (including icthyoses, Darier's disease, and palmoplantar keratoderma)",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7825": {
+      "code": "7825",
+      "name": "Chronic urticaria",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7826": {
+      "code": "7826",
+      "name": "Vasculitis, primary cutaneous",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7827": {
+      "code": "7827",
+      "name": "Erythema multiforme; Toxic epidermal necrolysis",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7828": {
+      "code": "7828",
+      "name": "Acne",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7829": {
+      "code": "7829",
+      "name": "Chloracne",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7830": {
+      "code": "7830",
+      "name": "Scarring alopecia",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7831": {
+      "code": "7831",
+      "name": "Alopecia areata",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7832": {
+      "code": "7832",
+      "name": "Hyperhidrosis",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7833": {
+      "code": "7833",
+      "name": "Malignant melanoma",
+      "ratings": [],
+      "section": "4.118",
+      "source": "eCFR XML"
+    },
+    "7900": {
+      "code": "7900",
+      "name": "Hyperthyroidism, including, but not limited to, Graves' disease",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7901": {
+      "code": "7901",
+      "name": "Thyroid enlargement, toxic",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7902": {
+      "code": "7902",
+      "name": "Thyroid enlargement, nontoxic",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7903": {
+      "code": "7903",
+      "name": "Hypothyroidism",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7904": {
+      "code": "7904",
+      "name": "Hyperparathyroidism",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7905": {
+      "code": "7905",
+      "name": "Hypoparathyroidism",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7906": {
+      "code": "7906",
+      "name": "Thyroiditis",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7907": {
+      "code": "7907",
+      "name": "Cushing's syndrome",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7908": {
+      "code": "7908",
+      "name": "Acromegaly",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7909": {
+      "code": "7909",
+      "name": "Diabetes insipidus",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7911": {
+      "code": "7911",
+      "name": "Addison's disease (adrenocortical insufficiency)",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7912": {
+      "code": "7912",
+      "name": "Polyglandular syndrome (multiple endocrine neoplasia, autoimmune polyglandular syndrome)",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7913": {
+      "code": "7913",
+      "name": "Diabetes mellitus",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7914": {
+      "code": "7914",
+      "name": "Neoplasm, malignant, any specified part of the endocrine system",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7915": {
+      "code": "7915",
+      "name": "Neoplasm, benign, any specified part of the endocrine system",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7916": {
+      "code": "7916",
+      "name": "Hyperpituitarism (prolactin secreting pituitary dysfunction)",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7917": {
+      "code": "7917",
+      "name": "Hyperaldosteronism (benign or malignant)",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7918": {
+      "code": "7918",
+      "name": "Pheochromocytoma (benign or malignant)",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "7919": {
+      "code": "7919",
+      "name": "C-cell hyperplasia of the thyroid",
+      "ratings": [],
+      "section": "4.119",
+      "source": "eCFR XML"
+    },
+    "8000": {
+      "code": "8000",
+      "name": "Encephalitis, epidemic, chronic",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8002": {
+      "code": "8002",
+      "name": "Malignant",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8003": {
+      "code": "8003",
+      "name": "Benign, minimum",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8004": {
+      "code": "8004",
+      "name": "Paralysis agitans",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8005": {
+      "code": "8005",
+      "name": "Bulbar palsy",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8007": {
+      "code": "8007",
+      "name": "Brain, vessels, embolism of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8008": {
+      "code": "8008",
+      "name": "Brain, vessels, thrombosis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8009": {
+      "code": "8009",
+      "name": "Brain, vessels, hemorrhage from",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8010": {
+      "code": "8010",
+      "name": "Myelitis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8011": {
+      "code": "8011",
+      "name": "Poliomyelitis, anterior",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8012": {
+      "code": "8012",
+      "name": "Hematomyelia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8013": {
+      "code": "8013",
+      "name": "Syphilis, cerebrospinal",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8014": {
+      "code": "8014",
+      "name": "Syphilis, meningovascular",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8015": {
+      "code": "8015",
+      "name": "Tabes dorsalis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8017": {
+      "code": "8017",
+      "name": "Amyotrophic lateral sclerosis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8018": {
+      "code": "8018",
+      "name": "Multiple sclerosis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8019": {
+      "code": "8019",
+      "name": "Meningitis, cerebrospinal, epidemic",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8020": {
+      "code": "8020",
+      "name": "Brain, abscess of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8021": {
+      "code": "8021",
+      "name": "Malignant",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8022": {
+      "code": "8022",
+      "name": "Benign, minimum rating",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8023": {
+      "code": "8023",
+      "name": "Progressive muscular atrophy",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8024": {
+      "code": "8024",
+      "name": "Syringomyelia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8025": {
+      "code": "8025",
+      "name": "Myasthenia gravis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8045": {
+      "code": "8045",
+      "name": "Residuals of traumatic brain injury (TBI)",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8046": {
+      "code": "8046",
+      "name": "Cerebral arteriosclerosis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8100": {
+      "code": "8100",
+      "name": "Migraine",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8103": {
+      "code": "8103",
+      "name": "Tic, convulsive",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8104": {
+      "code": "8104",
+      "name": "Paramyoclonus multiplex (convulsive state, myoclonic type)",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8105": {
+      "code": "8105",
+      "name": "Chorea, Sydenham's",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8106": {
+      "code": "8106",
+      "name": "Chorea, Huntington's",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8107": {
+      "code": "8107",
+      "name": "Athetosis, acquired",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8108": {
+      "code": "8108",
+      "name": "Narcolepsy",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8205": {
+      "code": "8205",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8305": {
+      "code": "8305",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8405": {
+      "code": "8405",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8207": {
+      "code": "8207",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8307": {
+      "code": "8307",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8407": {
+      "code": "8407",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8209": {
+      "code": "8209",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8309": {
+      "code": "8309",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8409": {
+      "code": "8409",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8210": {
+      "code": "8210",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8310": {
+      "code": "8310",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8410": {
+      "code": "8410",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8211": {
+      "code": "8211",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8311": {
+      "code": "8311",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8411": {
+      "code": "8411",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8212": {
+      "code": "8212",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8312": {
+      "code": "8312",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8412": {
+      "code": "8412",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8510": {
+      "code": "8510",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8610": {
+      "code": "8610",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8710": {
+      "code": "8710",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8511": {
+      "code": "8511",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8611": {
+      "code": "8611",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8711": {
+      "code": "8711",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8512": {
+      "code": "8512",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8612": {
+      "code": "8612",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8712": {
+      "code": "8712",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8513": {
+      "code": "8513",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8613": {
+      "code": "8613",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8713": {
+      "code": "8713",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8514": {
+      "code": "8514",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8614": {
+      "code": "8614",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8714": {
+      "code": "8714",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8515": {
+      "code": "8515",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8615": {
+      "code": "8615",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8715": {
+      "code": "8715",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8516": {
+      "code": "8516",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8616": {
+      "code": "8616",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8716": {
+      "code": "8716",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8517": {
+      "code": "8517",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8617": {
+      "code": "8617",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8717": {
+      "code": "8717",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8518": {
+      "code": "8518",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8618": {
+      "code": "8618",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8718": {
+      "code": "8718",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8519": {
+      "code": "8519",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8619": {
+      "code": "8619",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8719": {
+      "code": "8719",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8520": {
+      "code": "8520",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8620": {
+      "code": "8620",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8720": {
+      "code": "8720",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8521": {
+      "code": "8521",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8621": {
+      "code": "8621",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8721": {
+      "code": "8721",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8522": {
+      "code": "8522",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8622": {
+      "code": "8622",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8722": {
+      "code": "8722",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8523": {
+      "code": "8523",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8623": {
+      "code": "8623",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8723": {
+      "code": "8723",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8524": {
+      "code": "8524",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8624": {
+      "code": "8624",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8724": {
+      "code": "8724",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8525": {
+      "code": "8525",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8625": {
+      "code": "8625",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8725": {
+      "code": "8725",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8526": {
+      "code": "8526",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8626": {
+      "code": "8626",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8726": {
+      "code": "8726",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8527": {
+      "code": "8527",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8627": {
+      "code": "8627",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8727": {
+      "code": "8727",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8528": {
+      "code": "8528",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8628": {
+      "code": "8628",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8728": {
+      "code": "8728",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8529": {
+      "code": "8529",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8629": {
+      "code": "8629",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8729": {
+      "code": "8729",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8530": {
+      "code": "8530",
+      "name": "Paralysis of",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8630": {
+      "code": "8630",
+      "name": "Neuritis",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8730": {
+      "code": "8730",
+      "name": "Neuralgia",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8540": {
+      "code": "8540",
+      "name": "Soft-tissue sarcoma (of neurogenic origin)",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8910": {
+      "code": "8910",
+      "name": "Epilepsy, grand mal",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8911": {
+      "code": "8911",
+      "name": "Epilepsy, petit mal",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8912": {
+      "code": "8912",
+      "name": "Epilepsy, Jacksonian and focal motor or sensory",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8913": {
+      "code": "8913",
+      "name": "Epilepsy, diencephalic",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "8914": {
+      "code": "8914",
+      "name": "Epilepsy, psychomotor",
+      "ratings": [],
+      "section": "4.124a",
+      "source": "eCFR XML"
+    },
+    "9201": {
+      "code": "9201",
+      "name": "Schizophrenia",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9202": {
+      "code": "9202",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9203": {
+      "code": "9203",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9204": {
+      "code": "9204",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9205": {
+      "code": "9205",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9208": {
+      "code": "9208",
+      "name": "Delusional disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9210": {
+      "code": "9210",
+      "name": "Other specified and unspecified schizophrenia spectrum and other psychotic disorders",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9211": {
+      "code": "9211",
+      "name": "Schizoaffective disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9300": {
+      "code": "9300",
+      "name": "Delirium",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9301": {
+      "code": "9301",
+      "name": "Major or mild neurocognitive disorder due to HIV or other infections",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9304": {
+      "code": "9304",
+      "name": "Major or mild neurocognitive disorder due to traumatic brain injury",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9305": {
+      "code": "9305",
+      "name": "Major or mild vascular neurocognitive disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9310": {
+      "code": "9310",
+      "name": "Unspecified neurocognitive disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9312": {
+      "code": "9312",
+      "name": "Major or mild neurocognitive disorder due to Alzheimer's disease",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9326": {
+      "code": "9326",
+      "name": "Major or mild neurocognitive disorder due to another medical condition or substance/medication-induc",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9327": {
+      "code": "9327",
+      "name": "[Removed]",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9400": {
+      "code": "9400",
+      "name": "Generalized anxiety disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9403": {
+      "code": "9403",
+      "name": "Specific phobia; social anxiety disorder (social phobia)",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9404": {
+      "code": "9404",
+      "name": "Obsessive compulsive disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9410": {
+      "code": "9410",
+      "name": "Other specified anxiety disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9411": {
+      "code": "9411",
+      "name": "Posttraumatic stress disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9412": {
+      "code": "9412",
+      "name": "Panic disorder and/or agoraphobia",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9413": {
+      "code": "9413",
+      "name": "Unspecified anxiety disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9416": {
+      "code": "9416",
+      "name": "Dissociative amnesia; dissociative identity disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9417": {
+      "code": "9417",
+      "name": "Depersonalization/Derealization disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9421": {
+      "code": "9421",
+      "name": "Somatic symptom disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9422": {
+      "code": "9422",
+      "name": "Other specified somatic symptom and related disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9423": {
+      "code": "9423",
+      "name": "Unspecified somatic symptom and related disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9424": {
+      "code": "9424",
+      "name": "Conversion disorder (functional neurological symptom disorder)",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9425": {
+      "code": "9425",
+      "name": "Illness anxiety disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9431": {
+      "code": "9431",
+      "name": "Cyclothymic disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9432": {
+      "code": "9432",
+      "name": "Bipolar disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9433": {
+      "code": "9433",
+      "name": "Persistent depressive disorder (dysthymia)",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9434": {
+      "code": "9434",
+      "name": "Major depressive disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9435": {
+      "code": "9435",
+      "name": "Unspecified depressive disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9440": {
+      "code": "9440",
+      "name": "Chronic adjustment disorder",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9520": {
+      "code": "9520",
+      "name": "Anorexia nervosa",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9521": {
+      "code": "9521",
+      "name": "Bulimia nervosa",
+      "ratings": [],
+      "section": "4.130",
+      "source": "eCFR XML"
+    },
+    "9900": {
+      "code": "9900",
+      "name": "Maxilla or mandible, chronic osteomyelitis, osteonecrosis or osteoradionecrosis of",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9901": {
+      "code": "9901",
+      "name": "Mandible, loss of, complete, between angles",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9902": {
+      "code": "9902",
+      "name": "Mandible, loss of, including ramus, unilaterally or bilaterally",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9903": {
+      "code": "9903",
+      "name": "Mandible, nonunion of, confirmed by diagnostic imaging studies",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9904": {
+      "code": "9904",
+      "name": "Mandible, malunion of",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9905": {
+      "code": "9905",
+      "name": "Temporomandibular disorder (TMD)",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9908": {
+      "code": "9908",
+      "name": "Condyloid process, loss of, one or both sides",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9909": {
+      "code": "9909",
+      "name": "Coronoid process, loss of",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9911": {
+      "code": "9911",
+      "name": "Hard palate, loss of",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9913": {
+      "code": "9913",
+      "name": "Teeth, loss of, due to loss of substance of body of maxilla or mandible without loss of continuity",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9914": {
+      "code": "9914",
+      "name": "Maxilla, loss of more than half",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9915": {
+      "code": "9915",
+      "name": "Maxilla, loss of half or less",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9916": {
+      "code": "9916",
+      "name": "Maxilla, malunion or nonunion of",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9917": {
+      "code": "9917",
+      "name": "Neoplasm, hard and soft tissue, benign",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "9918": {
+      "code": "9918",
+      "name": "Neoplasm, hard and soft tissue, malignant",
+      "ratings": [],
+      "section": "4.150",
+      "source": "eCFR XML"
+    },
+    "5103": {
+      "code": "5103",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "5174": {
+      "code": "5174",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "5295": {
+      "code": "5295",
+      "name": "September",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "5264": {
+      "code": "5264",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "5293": {
+      "code": "5293",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "5294": {
+      "code": "5294",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6079": {
+      "code": "6079",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6071": {
+      "code": "6071",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6076": {
+      "code": "6076",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6297": {
+      "code": "6297",
+      "name": "March",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6286": {
+      "code": "6286",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6291": {
+      "code": "6291",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6352": {
+      "code": "6352",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6353": {
+      "code": "6353",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6517": {
+      "code": "6517",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6705": {
+      "code": "6705",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6710": {
+      "code": "6710",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6728": {
+      "code": "6728",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6800": {
+      "code": "6800",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6801": {
+      "code": "6801",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6802": {
+      "code": "6802",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6813": {
+      "code": "6813",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6814": {
+      "code": "6814",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6815": {
+      "code": "6815",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6816": {
+      "code": "6816",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6818": {
+      "code": "6818",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6821": {
+      "code": "6821",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7013": {
+      "code": "7013",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7014": {
+      "code": "7014",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7100": {
+      "code": "7100",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7116": {
+      "code": "7116",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7302": {
+      "code": "7302",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7305": {
+      "code": "7305",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7306": {
+      "code": "7306",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7313": {
+      "code": "7313",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7316": {
+      "code": "7316",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7321": {
+      "code": "7321",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7322": {
+      "code": "7322",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7324": {
+      "code": "7324",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7339": {
+      "code": "7339",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7340": {
+      "code": "7340",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7341": {
+      "code": "7341",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7503": {
+      "code": "7503",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7510": {
+      "code": "7510",
+      "name": "Evaluation",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7513": {
+      "code": "7513",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7514": {
+      "code": "7514",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7526": {
+      "code": "7526",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7622": {
+      "code": "7622",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7623": {
+      "code": "7623",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7700": {
+      "code": "7700",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7701": {
+      "code": "7701",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7711": {
+      "code": "7711",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7713": {
+      "code": "7713",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7803": {
+      "code": "7803",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7810": {
+      "code": "7810",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7812": {
+      "code": "7812",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7814": {
+      "code": "7814",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "7910": {
+      "code": "7910",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9511": {
+      "code": "9511",
+      "name": "September",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9200": {
+      "code": "9200",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9206": {
+      "code": "9206",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9207": {
+      "code": "9207",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9209": {
+      "code": "9209",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9302": {
+      "code": "9302",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9303": {
+      "code": "9303",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9306": {
+      "code": "9306",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9307": {
+      "code": "9307",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9308": {
+      "code": "9308",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9309": {
+      "code": "9309",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9311": {
+      "code": "9311",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9313": {
+      "code": "9313",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9314": {
+      "code": "9314",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9315": {
+      "code": "9315",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9321": {
+      "code": "9321",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9322": {
+      "code": "9322",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9323": {
+      "code": "9323",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9324": {
+      "code": "9324",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9325": {
+      "code": "9325",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9401": {
+      "code": "9401",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9402": {
+      "code": "9402",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9500": {
+      "code": "9500",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9501": {
+      "code": "9501",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9502": {
+      "code": "9502",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9503": {
+      "code": "9503",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9504": {
+      "code": "9504",
+      "name": "Criterion",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9505": {
+      "code": "9505",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9506": {
+      "code": "9506",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9507": {
+      "code": "9507",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9508": {
+      "code": "9508",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9509": {
+      "code": "9509",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9510": {
+      "code": "9510",
+      "name": "Added",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9906": {
+      "code": "9906",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9907": {
+      "code": "9907",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9910": {
+      "code": "9910",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "9912": {
+      "code": "9912",
+      "name": "Removed",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6003": {
+      "code": "6003",
+      "name": "Iritis",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6004": {
+      "code": "6004",
+      "name": "Cyclitis",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6005": {
+      "code": "6005",
+      "name": "Choroiditis",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6028": {
+      "code": "6028",
+      "name": "Cataract",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6031": {
+      "code": "6031",
+      "name": "Dacryocystitis",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6033": {
+      "code": "6033",
+      "name": "Lens",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6067": {
+      "code": "6067",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6068": {
+      "code": "6068",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6069": {
+      "code": "6069",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6070": {
+      "code": "6070",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6072": {
+      "code": "6072",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6073": {
+      "code": "6073",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6074": {
+      "code": "6074",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6075": {
+      "code": "6075",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6077": {
+      "code": "6077",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6078": {
+      "code": "6078",
+      "name": "Other eye",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    },
+    "6092": {
+      "code": "6092",
+      "name": "Diplopia",
+      "ratings": [],
+      "section": "",
+      "source": "eCFR text search"
+    }
+  }
+}
