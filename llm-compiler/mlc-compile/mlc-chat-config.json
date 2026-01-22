@@ -1,0 +1,16 @@
+{
+  "model_lib": "vet-rate-llm-q4f16_1-webgpu",
+  "local_id": "vet-rate-va-assistant",
+  "conv_template": "llama-3",
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "mean_gen_len": 256,
+  "max_gen_len": 1024,
+  "shift_fill_factor": 0.3,
+  "tokenizer_files": [
+    "tokenizer.json",
+    "tokenizer_config.json"
+  ],
+  "model_category": "llama",
+  "model_name": "Vet-Rate VA Claims Assistant"
+}

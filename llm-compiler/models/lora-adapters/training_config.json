@@ -1,0 +1,26 @@
+{
+  "base_model": "meta-llama/Llama-3.2-3B-Instruct",
+  "training_data": "E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\knowledge-base\\axolotl_training.json",
+  "output_dir": "E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\models\\lora-adapters",
+  "lora_config": {
+    "r": 32,
+    "lora_alpha": 64,
+    "target_modules": [
+      "q_proj",
+      "v_proj",
+      "k_proj",
+      "o_proj"
+    ],
+    "lora_dropout": 0.05
+  },
+  "training_args": {
+    "num_train_epochs": 3,
+    "per_device_train_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "learning_rate": 0.0002,
+    "warmup_steps": 100,
+    "save_steps": 500
+  },
+  "status": "READY_FOR_TRAINING",
+  "note": "Run on GPU-enabled system with: axolotl train this_config.yaml"
+}

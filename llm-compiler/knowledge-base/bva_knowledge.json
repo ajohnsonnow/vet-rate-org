@@ -1,0 +1,38 @@
+[
+  {
+    "source": "BVA",
+    "citation": "BVA-PTSD-Sample-001",
+    "title": "BVA Decision - PTSD Service Connection",
+    "content": "The Board finds that service connection for PTSD is warranted. The veteran has a current diagnosis of PTSD from a VA examiner. There is evidence of an in-service stressor event during combat operations in Iraq. The VA examiner provided a medical nexus opinion stating the PTSD is at least as likely as not related to the in-service stressor. 38 CFR §3.304(f) requirements are met.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/vetapp/"
+  },
+  {
+    "source": "BVA",
+    "citation": "BVA-Knee-Secondary-Sample-002",
+    "title": "BVA Decision - Knee Secondary to Service-Connected Back",
+    "content": "The Board grants service connection for the right knee condition as secondary to the veteran's service-connected lumbar spine disability. Medical evidence shows the veteran developed a gait disturbance due to the back condition, which caused abnormal stress on the right knee. The nexus opinion establishes the knee condition is proximately due to or aggravated by the service-connected back disability per 38 CFR §3.310.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/vetapp/"
+  },
+  {
+    "source": "BVA",
+    "citation": "BVA-Sleep-Apnea-Sample-003",
+    "title": "BVA Decision - Sleep Apnea Secondary to PTSD",
+    "content": "Service connection for obstructive sleep apnea as secondary to service-connected PTSD is granted. The medical evidence includes a nexus opinion from the veteran's private physician stating the sleep apnea is caused or aggravated by PTSD-related symptoms including hypervigilance and nightmares. The Board finds the secondary service connection requirements of 38 CFR §3.310 are satisfied.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/vetapp/"
+  }
+]
