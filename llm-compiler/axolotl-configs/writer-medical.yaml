@@ -1,0 +1,83 @@
+# Axolotl Configuration for VA Claims Writer Model (Medical/Nexus Specialist)
+# Diamond Standard - Model Swarm Component 2/3
+
+base_model: meta-llama/Llama-3.2-3B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+
+load_in_8bit: false
+load_in_4bit: true
+strict: false
+
+# Dataset Configuration - Focuses on medical evidence and nexus letters
+datasets:
+  - path: ../knowledge-base/va_training_dataset.jsonl
+    name: va_writer_dataset
+    type: alpaca
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+    
+dataset_prepared_path: ../knowledge-base/writer_prepared
+val_set_size: 0.05
+output_dir: ./outputs/va-writer-model
+
+# Training Hyperparameters
+sequence_len: 8192  # Longer sequences for medical narratives
+sample_packing: true
+pad_to_sequence_len: true
+
+adapter: qlora
+lora_model_dir:
+lora_r: 64  # Higher rank for medical writing complexity
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - v_proj
+  - k_proj
+  - o_proj
+  - gate_proj
+  - down_proj
+  - up_proj
+
+# Optimization
+bf16: auto
+fp16:
+tf32: false
+gradient_checkpointing: true
+gradient_accumulation_steps: 8
+micro_batch_size: 1
+num_epochs: 4
+learning_rate: 0.00015
+lr_scheduler: cosine
+warmup_steps: 150
+
+# Evaluation & Logging
+eval_steps: 50
+save_steps: 100
+logging_steps: 10
+save_total_limit: 3
+weight_decay: 0.01
+
+# Special Tokens
+special_tokens:
+  pad_token: "<|end_of_text|>"
+  bos_token: "<|begin_of_text|>"
+  eos_token: "<|end_of_text|>"
+
+# Inference Optimization
+flash_attention: true
+
+# Training Prompt Format
+chat_template: llama3
+default_system_message: |
+  You are a VA Medical Nexus Writer AI. You draft compelling medical evidence statements,
+  nexus letters, and DBQs that connect service-connected events to current disabilities.
+  You cite medical literature, BVA precedents [GREEN], and rating criteria [RED].
+  Your writing is persuasive, medically sound, and legally grounded.
+  You include DSM-5/ICD codes and specific symptomatology.
+  
+# Model-Specific Behavior
+evals_per_epoch: 3
+saves_per_epoch: 2

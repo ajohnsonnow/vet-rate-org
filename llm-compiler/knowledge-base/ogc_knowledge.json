@@ -1,0 +1,38 @@
+[
+  {
+    "source": "OGC",
+    "citation": "VAOPGCPREC 3-97",
+    "title": "OGC Opinion: VAOPGCPREC 3-97",
+    "content": "Interpretation of 38 CFR §3.310 regarding secondary service connection. When a veteran's service-connected disability causes or aggravates a non-service-connected condition, secondary service connection may be established. The medical evidence must show the secondary condition is proximately due to or the result of the service-connected disability. The phrase 'proximately due to' includes both direct causation and aggravation of a preexisting condition.",
+    "hierarchy_level": 4,
+    "color_code": "PURPLE",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/ogc/precedentopinions.asp"
+  },
+  {
+    "source": "OGC",
+    "citation": "VAOPGCPREC 12-99",
+    "title": "OGC Opinion: VAOPGCPREC 12-99",
+    "content": "Clear and Unmistakable Error (CUE) standard under 38 USC §5109A. CUE is a very specific and rare kind of error that must be undebatable and of the sort that had it not been made, would have manifestly changed the outcome at the time it was made. It must be based on the evidence of record at the time of the prior decision. New evidence cannot be used to establish CUE. The error must be one of fact or law, not mere disagreement with how facts were weighed.",
+    "hierarchy_level": 4,
+    "color_code": "PURPLE",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/ogc/precedentopinions.asp"
+  },
+  {
+    "source": "OGC",
+    "citation": "VAOPGCPREC 27-2003",
+    "title": "OGC Opinion: VAOPGCPREC 27-2003",
+    "content": "Interpretation of diagnostic codes under 38 CFR Part 4. When evaluating disabilities, VA must consider all symptoms and their effects on the veteran's earning capacity. The General Counsel clarifies that diagnostic codes provide minimum criteria for specific disability ratings, but more severe symptoms warrant higher ratings even if not explicitly listed. Rating officials must consider functional loss and impairment to employment.",
+    "hierarchy_level": 4,
+    "color_code": "PURPLE",
+    "effective_date": null,
+    "superseded_by": null,
+    "related_codes": [],
+    "url": "https://www.va.gov/ogc/precedentopinions.asp"
+  }
+]
