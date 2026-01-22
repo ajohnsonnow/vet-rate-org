@@ -79,6 +79,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   );
   const [showSteps, setShowSteps] = useState(false);
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
+  
+  // Edit condition modal
+  const [editingCondition, setEditingCondition] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    bodyPart: '',
+    rating: 10,
+    side: 'none',
+  });
 
   // Handle incoming C&P Simulator results
   useEffect(() => {
@@ -201,6 +210,53 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   // Handle removing a condition
   const handleRemoveCondition = (id) => {
     setConditions(prev => prev.filter(c => c.id !== id));
+  };
+  
+  // Handle editing a condition
+  const handleEditCondition = (condition) => {
+    setEditingCondition(condition);
+    setEditForm({
+      name: condition.name,
+      bodyPart: condition.bodyPart,
+      rating: condition.rating,
+      side: condition.side || 'none',
+    });
+  };
+  
+  // Handle saving edited condition
+  const handleSaveEdit = () => {
+    if (!editForm.bodyPart) {
+      alert('Please select a body part.');
+      return;
+    }
+    
+    const bodyPartInfo = allBodyParts.find(bp => bp.value === editForm.bodyPart);
+    const canBeBilateral = bodyPartInfo?.canBeBilateral || false;
+    
+    setConditions(prev => prev.map(c => 
+      c.id === editingCondition.id
+        ? {
+            ...c,
+            name: editForm.name || c.name,
+            bodyPart: editForm.bodyPart,
+            rating: editForm.rating,
+            side: canBeBilateral ? editForm.side : 'none',
+          }
+        : c
+    ));
+    
+    setEditingCondition(null);
+  };
+  
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setEditingCondition(null);
+    setEditForm({
+      name: '',
+      bodyPart: '',
+      rating: 10,
+      side: 'none',
+    });
   };
 
   // Rating percentage options
@@ -909,15 +965,28 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                                 )}
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleRemoveCondition(condition.id)}
-                              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                              aria-label="Remove"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditCondition(condition)}
+                                className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                                aria-label="Edit"
+                                title="Edit condition"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleRemoveCondition(condition.id)}
+                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                aria-label="Remove"
+                                title="Remove condition"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1771,6 +1840,134 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           onClose={() => setShowVAGovPaster(false)}
           showExample={true}
         />
+      )}
+      
+      {/* Edit Condition Modal */}
+      {editingCondition && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
+              <h3 className="text-xl font-bold">Edit Condition</h3>
+              <p className="text-blue-100 text-sm mt-1">Update rating and bilateral status</p>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Condition Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Condition Name
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="e.g., PTSD, Knee Pain"
+                />
+              </div>
+              
+              {/* Body Part */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Body Part / System
+                </label>
+                <select
+                  value={editForm.bodyPart}
+                  onChange={(e) => setEditForm({ ...editForm, bodyPart: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">Select body part...</option>
+                  <optgroup label="Extremities (Can be Bilateral)">
+                    {BODY_PARTS.extremities.map(bp => (
+                      <option key={bp.value} value={bp.value}>
+                        {bp.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Other Body Systems">
+                    {BODY_PARTS.other.map(bp => (
+                      <option key={bp.value} value={bp.value}>
+                        {bp.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+              
+              {/* Rating Percentage */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Rating Percentage
+                </label>
+                <select
+                  value={editForm.rating}
+                  onChange={(e) => setEditForm({ ...editForm, rating: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  {ratingOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}%</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Side (only show if body part can be bilateral) */}
+              {editForm.bodyPart && allBodyParts.find(bp => bp.value === editForm.bodyPart)?.canBeBilateral && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Side (Bilateral Factor)
+                  </label>
+                  <select
+                    value={editForm.side}
+                    onChange={(e) => setEditForm({ ...editForm, side: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="none">Not Bilateral</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                    <option value="bilateral">Both Sides</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    💡 If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26
+                  </p>
+                </div>
+              )}
+              
+              {/* Bilateral Factor Explanation */}
+              {editForm.side !== 'none' && (
+                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
+                  <div className="flex gap-2">
+                    <span className="text-lg">🔄</span>
+                    <div className="text-sm text-purple-700 dark:text-purple-300">
+                      <p className="font-semibold">Bilateral Factor Will Apply</p>
+                      <p className="text-xs mt-1">
+                        Per 38 CFR § 4.26, if you have paired extremities rated (left + right), 
+                        you'll get an additional 10% boost to the combined bilateral rating.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 rounded-b-lg flex justify-end gap-3">
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
