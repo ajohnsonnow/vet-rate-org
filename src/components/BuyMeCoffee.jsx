@@ -288,7 +288,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
           <div className="flex items-start gap-3">
             {/* Luna photo - Chief Keyboard Inspector */}
             <img 
-              src="/images/NaptimeLuna.jpg" 
+              src="/images/ReadyForHerCloseup.jpg" 
               alt="Luna - Chief Keyboard Inspector & Treat Supervisor"
               className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-va-gold shadow-sm"
             />
