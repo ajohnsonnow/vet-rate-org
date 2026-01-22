@@ -38,18 +38,21 @@ const AnimatedBug = ({ size = 'sm', className = '' }) => {
     
     // Initial delay 2-8 seconds
     const initialDelay = 2000 + Math.random() * 6000;
+    let interval; // Declare interval in outer scope for cleanup
+    
     const initialTimeout = setTimeout(() => {
       triggerAnimation();
       
       // Then repeat every 5-15 seconds
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         triggerAnimation();
       }, 5000 + Math.random() * 10000);
-      
-      return () => clearInterval(interval);
     }, initialDelay);
     
-    return () => clearTimeout(initialTimeout);
+    return () => {
+      clearTimeout(initialTimeout);
+      if (interval) clearInterval(interval); // Clean up interval
+    };
   }, []);
   
   const sizeClasses = {

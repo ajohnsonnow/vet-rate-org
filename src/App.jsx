@@ -92,6 +92,7 @@ import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
 import AISettingsModal from './components/AISettingsModal';
 import LocalAIPanel, { LocalAIProvider } from './components/LocalAIPanel';
+import VisionSimulatorPanel from './components/VisionSimulatorPanel';
 import DD214Analyzer from './components/DD214Analyzer';
 import BootCampTour from './components/BootCampTour';
 import DemoDataLoader from './components/DemoDataLoader';
@@ -205,6 +206,7 @@ function App() {
   const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [showLocalAIPanel, setShowLocalAIPanel] = useState(false);
+  const [showVisionSimulator, setShowVisionSimulator] = useState(false);
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
   
   // WOW FEATURES: Evidence Gap, Retro Pay, Pain Painter
@@ -281,6 +283,18 @@ function App() {
     
     window.addEventListener('tosAccepted', handleTosAccepted);
     return () => window.removeEventListener('tosAccepted', handleTosAccepted);
+  }, []);
+
+  // Listen for Vision Simulator open event (triggered from LocalAIPanel when vision model fails)
+  useEffect(() => {
+    const handleOpenVisionSimulator = () => {
+      setShowVisionSimulator(true);
+      // Close the local AI panel if open
+      setShowLocalAIPanel(false);
+    };
+    
+    window.addEventListener('openVisionSimulator', handleOpenVisionSimulator);
+    return () => window.removeEventListener('openVisionSimulator', handleOpenVisionSimulator);
   }, []);
 
   // Initialize error capture for bug reports
@@ -634,7 +648,7 @@ function App() {
       'statement-analyzer': () => setShowStatementAnalyzer(true),
       'mos-hazard': () => setShowMOSHazardMatcher(true),
       'timeline-wizard': () => setShowTimelineWizard(true),
-      'dd214-analyzer': () => setShowDD214Analyzer(true),
+      // 'dd214-analyzer': () => setShowDD214Analyzer(true), // Temporarily disabled - OCR needs work
       'web-of-conditions': () => setShowWebOfConditions(true),
       'cap-simulator': () => setShowCAPSimulator(true),
       'pain-painter': () => setShowPainPainter(true),
@@ -1866,6 +1880,7 @@ function App() {
         <AIAssistant 
           currentTool={getCurrentToolName()} 
           onClose={aiAssistant.close}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2172,14 +2187,14 @@ function App() {
         />
       )}
       
-      {/* DD214 Analyzer */}
-      {showDD214Analyzer && (
+      {/* DD214 Analyzer - Temporarily disabled, OCR needs work */}
+      {/* {showDD214Analyzer && (
         <DD214Analyzer
           onClose={() => setShowDD214Analyzer(false)}
           onReportBug={() => { setShowDD214Analyzer(false); setShowBugSquasher(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
         />
-      )}
+      )} */}
       
       {/* Shark Radar */}
       {showSharkRadar && (
@@ -2717,6 +2732,31 @@ function App() {
             setShowBugSquasher(true);
           }}
         />
+      )}
+      
+      {/* Vision Simulator Panel - OCR + AI document analysis (works in all browsers!) */}
+      {showVisionSimulator && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              <button
+                onClick={() => setShowVisionSimulator(false)}
+                className="absolute -top-2 -right-2 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full shadow-lg"
+                title="Close"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <VisionSimulatorPanel
+                onAnalysisComplete={(result) => {
+                  console.log('Vision analysis complete:', result);
+                  // Could integrate with Navigator or other AI features
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
       
       {/* DIAMOND-TIER: PWA Install Prompt */}

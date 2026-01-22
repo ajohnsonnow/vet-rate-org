@@ -1539,11 +1539,11 @@ Return ONLY the JSON object, no explanation.`,
                           📝 Paste Text
                         </button>
                         <button
-                          onClick={onOpenDD214Analyzer}
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                          title="Open full DD214 Analyzer with OCR support"
+                          disabled
+                          className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
+                          title="DD214 Analyzer - Coming Soon"
                         >
-                          📄 Full Analyzer
+                          📄 Full Analyzer (Coming Soon)
                         </button>
                       </div>
                     )}
@@ -1626,11 +1626,11 @@ Return ONLY the JSON object, no explanation.`,
                           )}
                         </button>
                         <button
-                          onClick={onOpenDD214Analyzer}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                          title="Open full DD214 Analyzer with PDF upload & OCR"
+                          disabled
+                          className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
+                          title="DD214 Analyzer - Coming Soon"
                         >
-                          📄 Use Full Analyzer
+                          📄 Full Analyzer (Coming Soon)
                         </button>
                         <button
                           onClick={onOpenAISettings}
@@ -1700,10 +1700,11 @@ Return ONLY the JSON object, no explanation.`,
                           🔄 Re-process DD214
                         </button>
                         <button
-                          onClick={onOpenDD214Analyzer}
-                          className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                          disabled
+                          className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                          title="Coming Soon"
                         >
-                          📄 Open Full Analyzer
+                          📄 Full Analyzer (Coming Soon)
                         </button>
                         <button
                           onClick={handleClearDD214}

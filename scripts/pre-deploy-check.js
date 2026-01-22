@@ -331,7 +331,7 @@ function checkLegalPages() {
   logResult(`Terms of Service files exist`, tosExists);
   
   // Check Privacy Policy
-  const privacyComponent = readFile('src/components/PrivacyPolicy.jsx');
+  const privacyComponent = readFile('src/components/PrivacyPolicyPage.jsx');
   const privacyHtml = readFile('public/privacy-policy.html');
   
   const privacyExists = privacyComponent && privacyHtml;

@@ -208,38 +208,41 @@ class GPUDiscoveryEngine {
     const target = this.adapters.get(adapterId);
     if (!target) throw new Error("Adapter not found");
 
-    // If force reinit is requested, we need to get a fresh adapter
+    // If force reinit is requested, we need to get a completely fresh adapter
     if (options.forceReinit) {
       console.log('🎮 Force reinitializing WebGPU device...');
-      // Clear the old device
+      
+      // Destroy the old device properly
       if (this.device) {
-        this.device.destroy?.();
+        try {
+          this.device.destroy?.();
+        } catch (e) {
+          // Ignore destroy errors
+        }
         this.device = null;
       }
+      
+      // Clear state
       this.selectedAdapter = null;
       this.isInitializing = false;
       this.initPromise = null;
       
-      // Request a fresh adapter from the browser
-      try {
-        const freshAdapter = await navigator.gpu.requestAdapter({
-          powerPreference: target.hint
-        });
-        
-        if (!freshAdapter) {
-          throw new Error('Failed to request fresh adapter');
-        }
-        
-        // Update the target adapter with the fresh one
-        target.adapter = freshAdapter;
-        this.selectedAdapter = freshAdapter;
-      } catch (err) {
-        console.error('Failed to get fresh adapter:', err);
-        throw err;
+      // Clear all cached adapters and rescan to get fresh ones
+      this.adapters.clear();
+      await this.scanForAdapters();
+      
+      // Get the target again after rescan
+      const newTarget = this.adapters.get(adapterId);
+      if (!newTarget) {
+        throw new Error('Failed to find adapter after rescan');
       }
+      
+      // Now proceed with the fresh adapter
+      this.selectedAdapter = newTarget.adapter;
     }
 
     // If we already have a device for this exact adapter, return it immediately
+    // (but only if we didn't just reinit)
     if (this.device && this.selectedAdapter === target.adapter && !options.forceReinit) {
       console.log(`🎮 [Vet-Rate GPU] Already locked to: ${target.info.displayName}`);
       return this.device;
@@ -253,7 +256,18 @@ class GPUDiscoveryEngine {
     
     // Mark as initializing
     this.isInitializing = true;
-    this.selectedAdapter = target.adapter;
+    
+    // Use the appropriate adapter (fresh one if reinit, original otherwise)
+    const adapterToUse = options.forceReinit 
+      ? this.adapters.get(adapterId)?.adapter 
+      : target.adapter;
+      
+    if (!adapterToUse) {
+      this.isInitializing = false;
+      throw new Error('No valid adapter to use');
+    }
+    
+    this.selectedAdapter = adapterToUse;
     
     // Initialize the device (this is where we lock it in)
     this.initPromise = (async () => {
@@ -306,9 +320,62 @@ class GPUDiscoveryEngine {
           }
         }
         
-        this.device = await this.selectedAdapter.requestDevice({
-          requiredFeatures: requiredFeatures.length > 0 ? requiredFeatures : undefined
-        });
+        // Get adapter limits to request higher limits if available
+        const adapterLimits = this.selectedAdapter.limits;
+        const requiredLimits = {};
+        
+        // Request higher maxComputeInvocationsPerWorkgroup if adapter supports it
+        // This is required for MLC-LLM models that use 1024 workgroup invocations
+        if (adapterLimits.maxComputeInvocationsPerWorkgroup >= 1024) {
+          requiredLimits.maxComputeInvocationsPerWorkgroup = adapterLimits.maxComputeInvocationsPerWorkgroup;
+          console.log(`🎮 Requesting maxComputeInvocationsPerWorkgroup: ${requiredLimits.maxComputeInvocationsPerWorkgroup}`);
+        }
+        
+        // Request higher buffer size limits for large models
+        if (adapterLimits.maxStorageBufferBindingSize) {
+          requiredLimits.maxStorageBufferBindingSize = adapterLimits.maxStorageBufferBindingSize;
+        }
+        if (adapterLimits.maxBufferSize) {
+          requiredLimits.maxBufferSize = adapterLimits.maxBufferSize;
+        }
+        
+        // Request higher compute workgroup sizes if available
+        if (adapterLimits.maxComputeWorkgroupSizeX) {
+          requiredLimits.maxComputeWorkgroupSizeX = adapterLimits.maxComputeWorkgroupSizeX;
+        }
+        if (adapterLimits.maxComputeWorkgroupSizeY) {
+          requiredLimits.maxComputeWorkgroupSizeY = adapterLimits.maxComputeWorkgroupSizeY;
+        }
+        if (adapterLimits.maxComputeWorkgroupSizeZ) {
+          requiredLimits.maxComputeWorkgroupSizeZ = adapterLimits.maxComputeWorkgroupSizeZ;
+        }
+        
+        try {
+          this.device = await this.selectedAdapter.requestDevice({
+            requiredFeatures: requiredFeatures.length > 0 ? requiredFeatures : undefined,
+            requiredLimits: Object.keys(requiredLimits).length > 0 ? requiredLimits : undefined
+          });
+        } catch (deviceErr) {
+          // Device creation failed - this can happen during hot module reload
+          // when the adapter becomes stale. Try getting a fresh adapter.
+          console.warn('🎮 Device creation failed, attempting fresh adapter...', deviceErr.message);
+          
+          // Get a fresh adapter
+          const freshAdapter = await navigator.gpu.requestAdapter({
+            powerPreference: target.info.powerPreference || 'high-performance'
+          });
+          
+          if (freshAdapter) {
+            this.selectedAdapter = freshAdapter;
+            this.device = await freshAdapter.requestDevice({
+              requiredFeatures: requiredFeatures.length > 0 ? requiredFeatures : undefined,
+              requiredLimits: Object.keys(requiredLimits).length > 0 ? requiredLimits : undefined
+            });
+          } else {
+            throw deviceErr; // Re-throw if we couldn't get a fresh adapter
+          }
+        }
+        
         console.log(`🎮 [Vet-Rate GPU] Locked to: ${target.info.displayName}`);
         if (requiredFeatures.length > 0) {
           console.log(`🎮 [Vet-Rate GPU] Enabled features: ${requiredFeatures.join(', ')}`);
@@ -344,6 +411,12 @@ class GPUDiscoveryEngine {
   }
 
   async autoSelectBest() {
+    // If we already have a valid device, return it (prevents React strict mode double-init)
+    if (this.device) {
+      console.log('🎮 Device already initialized, reusing existing device');
+      return this.device;
+    }
+    
     // Only scan if we don't have adapters yet
     let adapters = Array.from(this.adapters.values());
     if (adapters.length === 0) {
@@ -354,14 +427,38 @@ class GPUDiscoveryEngine {
     const savedId = localStorage.getItem('vet_rate_selected_gpu');
     if (savedId && this.adapters.has(savedId)) {
       console.log('🎮 Restoring previous GPU selection');
-      return await this.selectAdapter(savedId);
+      try {
+        return await this.selectAdapter(savedId);
+      } catch (err) {
+        if (err.message?.includes('consumed')) {
+          console.warn('🎮 Saved adapter was consumed, rescanning for fresh adapters...');
+          this.adapters.clear();
+          adapters = await this.scanForAdapters();
+          // Continue to auto-select below
+        } else {
+          throw err;
+        }
+      }
     }
     
     // Auto-select the "High Performance" one if available
     const best = adapters.find(a => a.tier === 'High Performance') || adapters[0];
     if (best) {
       console.log('🎮 Auto-selecting best available GPU');
-      return await this.selectAdapter(best.id);
+      try {
+        return await this.selectAdapter(best.id);
+      } catch (err) {
+        if (err.message?.includes('consumed')) {
+          console.warn('🎮 Best adapter was consumed, rescanning for fresh adapters...');
+          this.adapters.clear();
+          const freshAdapters = await this.scanForAdapters();
+          const freshBest = freshAdapters.find(a => a.tier === 'High Performance') || freshAdapters[0];
+          if (freshBest) {
+            return await this.selectAdapter(freshBest.id);
+          }
+        }
+        throw err;
+      }
     }
     
     throw new Error('No GPU adapters found');

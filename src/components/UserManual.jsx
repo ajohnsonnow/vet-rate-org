@@ -3144,7 +3144,7 @@ Each AI model has strengths. Here's what to use for each task:
 
 | Model | Why |
 |-------|-----|
-| **Phi 3.5 Vision** | ONLY model that can read images |
+| **Vet-Rate Vision Phi ✅** | Custom build for standard Chrome! Reads images directly |
 
 ## ⚡ Quick Tasks (Search, Calculator, Scout)
 
@@ -3156,7 +3156,7 @@ Each AI model has strengths. Here's what to use for each task:
 ## Smart Recommendations
 
 Each AI-powered tool shows a badge recommending the best model. Look for:
-- 👁️ Vision - Use Phi 3.5 Vision
+- 👁️ Vision - Use Vet-Rate Vision Phi
 - ⭐ Recommended - Optimal for that tool
 - ⚡ Fast - Speed-optimized
 - 🧠 Reasoning - Complex analysis

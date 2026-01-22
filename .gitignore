@@ -39,5 +39,8 @@ coverage/
 *.log
 .cache/
 
+# Large AI/ML Model Files (hosted on HuggingFace)
+public/models/
+
 # Archive folder (development files)
 archive/

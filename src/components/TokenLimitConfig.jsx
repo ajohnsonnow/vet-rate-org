@@ -44,8 +44,8 @@ const TOKEN_PRESETS = {
 // Model-specific capabilities and warnings
 const MODEL_CAPABILITIES = {
   // Cloud AI (Gemini)
-  'gemini-1.5-flash': {
-    name: 'Google Gemini 1.5 Flash',
+  'gemini-2.5-flash': {
+    name: 'Google Gemini 2.5 Flash',
     maxContext: 1000000, // 1M tokens
     recommendedMax: 8192,
     absoluteMax: 8192, // API limit
@@ -187,7 +187,7 @@ const TokenLimitConfig = () => {
       const modelId = localStorage.getItem('vet_rate_local_ai_model') || 'Llama-3.2-3B-Instruct-q4f32_1-MLC';
       return MODEL_CAPABILITIES[modelId] || MODEL_CAPABILITIES['Llama-3.2-3B-Instruct-q4f32_1-MLC'];
     }
-    return MODEL_CAPABILITIES['gemini-1.5-flash'];
+    return MODEL_CAPABILITIES['gemini-2.5-flash'];
   };
   
   const currentModel = getCurrentModel();

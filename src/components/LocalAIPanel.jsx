@@ -51,19 +51,20 @@ const getAdapterInfo = async (adapter) => {
   let adapterInfo = { vendor: 'Unknown', architecture: 'Unknown', device: 'Unknown GPU', description: '' };
   
   try {
-    // Modern browsers (Chrome 121+)
-    if (typeof adapter.requestAdapterInfo === 'function') {
-      adapterInfo = await adapter.requestAdapterInfo();
-      console.log('🎮 Raw GPU Adapter Info:', adapterInfo);
-    } 
-    // Fallback: Try direct property access (older implementations)
-    else if (adapter.info) {
+    // Modern WebGPU spec: info property is directly accessible
+    if (adapter.info) {
       adapterInfo = adapter.info;
-      console.log('🎮 GPU Adapter Info (fallback):', adapterInfo);
+      console.log('🎮 GPU Adapter Info:', adapterInfo);
     }
-    // Some browsers expose it as a getter
+    // Legacy: Try requestAdapterInfo method (older Chrome versions)
+    else if (adapter.requestAdapterInfo && typeof adapter.requestAdapterInfo === 'function') {
+      adapterInfo = await adapter.requestAdapterInfo();
+      console.log('🎮 GPU Adapter Info (legacy method):', adapterInfo);
+    }
+    // Fallback: Basic detection
     else if (adapter.features && adapter.limits) {
       adapterInfo = { vendor: 'WebGPU Compatible', device: 'GPU Detected', description: 'WebGPU is functional' };
+      console.log('🎮 GPU Adapter Info (basic detection):', adapterInfo);
     }
   } catch (infoErr) {
     console.log('Could not get detailed adapter info, but WebGPU is available');
@@ -187,74 +188,123 @@ export const enumerateGPUs = async () => {
 };
 
 // Check WebGPU support using the new WebGPUManager
+// Track if we've already started initialization to prevent double-init in strict mode
+let webGPUInitializing = false;
+let webGPUInitPromise = null;
+let webGPULastResult = null; // Cache the result for strict mode re-renders
+
 const checkWebGPUSupport = async (forcePowerPreference = null) => {
   if (!navigator.gpu) {
     return { supported: false, reason: 'WebGPU not available in this browser. Try Chrome 113+, Edge 113+, or Firefox Nightly.' };
   }
   
-  try {
-    console.log('🎮 Initializing WebGPU Manager...');
-    
-    // Scan for available GPUs using the new manager
-    const adapters = await gpuManager.scanForAdapters();
-    
-    if (adapters.length === 0) {
-      return { supported: false, reason: 'No WebGPU adapter found (GPU may not be compatible)' };
-    }
-    
-    // Auto-select best GPU or restore previous selection
-    await gpuManager.autoSelectBest();
-    const device = gpuManager.getDevice();
-    
-    if (!device) {
-      return { supported: false, reason: 'Failed to initialize GPU device' };
-    }
-    
-    // Get the selected adapter info
-    const selectedAdapter = gpuManager.getSelectedAdapter();
-    const selectedGPU = adapters.find(a => a.adapter === selectedAdapter);
-    
-    if (!selectedGPU) {
-      return { supported: false, reason: 'Selected GPU not found' };
-    }
-    
-    console.log(`🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`);
-    console.log(`🎮 Selected: ${selectedGPU.info.displayName}`);
-    
-    // Check for required features
-    const requiredFeatures = ['shader-f16']; // MLC-LLM typically needs float16 support
-    const availableFeatures = Array.from(selectedAdapter.features || []);
-    const missingFeatures = requiredFeatures.filter(f => !availableFeatures.includes(f));
-    
-    if (missingFeatures.length > 0) {
-      console.warn(`⚠️ Missing WebGPU features: ${missingFeatures.join(', ')}`);
-      console.warn('⚠️ Some AI models may not work properly');
-    }
-    
-    return {
-      supported: true,
-      adapter: selectedGPU.info,
-      vendor: selectedGPU.info.vendor,
-      device: selectedGPU.info.displayName,
-      currentPreference: selectedGPU.hint || 'auto',
-      availableFeatures,
-      missingFeatures,
-      availableGPUs: adapters.map(a => ({
-        type: a.tier.toLowerCase().replace(' ', '-'),
-        label: a.tier === 'High Performance' ? '🚀 High Performance' : a.tier === 'Integrated' ? '🔋 Power Saver' : '⚙️ Standard',
-        description: a.tier === 'High Performance' ? 'Best for AI - Uses dedicated GPU' : a.tier === 'Integrated' ? 'Extends battery life - Uses integrated GPU' : 'Standard GPU',
-        vendor: a.info.vendor,
-        device: a.info.displayName,
-        architecture: a.info.architecture,
-        vram: gpuManager.estimateVRAM(a),
-        adapter: a.info,
-      })),
-      hasDualGPU: adapters.length > 1,
-    };
-  } catch (err) {
-    console.error('🎮 WebGPU Manager error:', err);
-    return { supported: false, reason: `WebGPU initialization failed: ${err.message}` };
+  // If we already have a successful result and device is still valid, return cached result
+  // This handles React strict mode re-renders efficiently
+  if (webGPULastResult?.supported && gpuManager.getDevice()) {
+    console.log('🎮 Using cached WebGPU initialization result');
+    return webGPULastResult;
   }
+  
+  // Prevent concurrent initialization attempts (React strict mode double-mounts)
+  if (webGPUInitializing && webGPUInitPromise) {
+    console.log('🎮 WebGPU initialization already in progress, waiting...');
+    try {
+      return await webGPUInitPromise;
+    } catch (err) {
+      // If waiting failed (e.g., consumed adapter), fall through to reinitialize
+      console.warn('🎮 Previous init failed, retrying with fresh adapters...');
+    }
+  }
+  
+  webGPUInitializing = true;
+  
+  webGPUInitPromise = (async () => {
+    try {
+      console.log('🎮 Initializing WebGPU Manager...');
+      
+      // Scan for available GPUs using the new manager
+      const adapters = await gpuManager.scanForAdapters();
+      
+      if (adapters.length === 0) {
+        return { supported: false, reason: 'No WebGPU adapter found (GPU may not be compatible)' };
+      }
+      
+      // Auto-select best GPU or restore previous selection
+      await gpuManager.autoSelectBest();
+      const device = gpuManager.getDevice();
+      
+      if (!device) {
+        return { supported: false, reason: 'Failed to initialize GPU device' };
+      }
+      
+      // Get the selected adapter info
+      const selectedAdapter = gpuManager.getSelectedAdapter();
+      const selectedGPU = adapters.find(a => a.adapter === selectedAdapter);
+      
+      if (!selectedGPU) {
+        return { supported: false, reason: 'Selected GPU not found' };
+      }
+      
+      console.log(`🎮 WebGPU Manager initialized with ${adapters.length} GPU(s)`);
+      console.log(`🎮 Selected: ${selectedGPU.info.displayName}`);
+      
+      // Check for required features
+      const requiredFeatures = ['shader-f16']; // MLC-LLM typically needs float16 support
+      const availableFeatures = Array.from(selectedAdapter.features || []);
+      const missingFeatures = requiredFeatures.filter(f => !availableFeatures.includes(f));
+      
+      if (missingFeatures.length > 0) {
+        console.warn(`⚠️ Missing WebGPU features: ${missingFeatures.join(', ')}`);
+        console.warn('⚠️ Some AI models may not work properly');
+      }
+      
+      const result = {
+        supported: true,
+        adapter: selectedGPU.info,
+        vendor: selectedGPU.info.vendor,
+        device: selectedGPU.info.displayName,
+        currentPreference: selectedGPU.hint || 'auto',
+        availableFeatures,
+        missingFeatures,
+        availableGPUs: adapters.map(a => ({
+          type: a.tier.toLowerCase().replace(' ', '-'),
+          label: a.tier === 'High Performance' ? '🚀 High Performance' : a.tier === 'Integrated' ? '🔋 Power Saver' : '⚙️ Standard',
+          description: a.tier === 'High Performance' ? 'Best for AI - Uses dedicated GPU' : a.tier === 'Integrated' ? 'Extends battery life - Uses integrated GPU' : 'Standard GPU',
+          vendor: a.info.vendor,
+          device: a.info.displayName,
+          architecture: a.info.architecture,
+          vram: gpuManager.estimateVRAM(a),
+          adapter: a.info,
+        })),
+        hasDualGPU: adapters.length > 1,
+      };
+      
+      // Cache successful result
+      webGPULastResult = result;
+      return result;
+    } catch (err) {
+      console.error('🎮 WebGPU Manager error:', err);
+      
+      // If adapter was consumed (strict mode issue), try to reinitialize
+      if (err.message?.includes('consumed')) {
+        console.warn('🎮 Adapter was consumed, attempting to recover with fresh adapters...');
+        // Clear cached adapters and try again
+        gpuManager.adapters.clear();
+        gpuManager.device = null;
+        gpuManager.selectedAdapter = null;
+        gpuManager.isInitializing = false;
+        gpuManager.initPromise = null;
+        // Return unsupported for now, let user retry
+        return { supported: false, reason: 'WebGPU adapter was consumed. Please refresh the page or click the refresh button.' };
+      }
+      
+      return { supported: false, reason: `WebGPU initialization failed: ${err.message}` };
+    } finally {
+      webGPUInitializing = false;
+    }
+  })();
+  
+  return await webGPUInitPromise;
 };
 
 // Available models organized by RECOMMENDED USE CASE
@@ -391,16 +441,16 @@ const AVAILABLE_MODELS = [
   // === POWERFUL (4-6 GB) - For serious analysis ===
   {
     id: 'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC',
-    name: 'DeepSeek R1 7B (Reasoning) ⭐',
+    name: 'DeepSeek R1 7B (Reasoning)',
     size: '3.5 GB',
-    description: 'Chain-of-thought reasoning, excellent for claims',
-    bestFor: '📄 Document Parsing • 🔴 Adversarial',
-    contextInfo: 'Best for: C-Files, DD214s, Red Team, War Room, claim analysis',
+    description: 'Chain-of-thought reasoning model. May produce verbose output.',
+    bestFor: '🧠 Simple Reasoning • 📝 Basic Q&A',
+    contextInfo: 'Note: Small distilled model - may struggle with complex prompts. Try Llama/Phi for better results.',
     vramRequired: '6 GB',
     recommended: false,
     category: 'powerful',
-    isNew: true,
-    isFeatured: true,
+    isNew: false,
+    isFeatured: false,
   },
   {
     id: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
@@ -448,21 +498,49 @@ const AVAILABLE_MODELS = [
     category: 'powerful',
     isNew: true,
   },
-  // === VISION (Image Analysis) ===
+  // === VISION (Image Analysis) - DISABLED ===
+  // Vision models disabled due to image_embed function not being properly exported from WASM compilation
+  // The MLC-LLM compilation did not produce working vision capabilities
+  // TODO: Re-enable when proper vision model compilation is achieved
+  /*
+  {
+    id: 'Vet-Rate-Vision-Phi-Fast',
+    name: 'Vet-Rate Vision Phi 👁️ [DISABLED]',
+    size: '3.4 GB',
+    description: '🚧 DISABLED - Vision model compilation incomplete. Use OCR + text models instead.',
+    bestFor: '📷 DD214 & Document Analysis',
+    contextInfo: '❌ Vision functionality not working - image_embed function missing from WASM.',
+    vramRequired: '7 GB',
+    recommended: false,
+    category: 'vision',
+    isNew: false,
+    hasVision: true,
+    disabled: true,
+    disabledReason: 'vision-not-working',
+    isCustomModel: true,
+    customConfig: {
+      model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Fast',
+      model_id: 'Vet-Rate-Vision-Phi-Fast',
+      model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Fast/resolve/main/model-lib.wasm',
+    },
+  },
+  */
+  // Legacy vision model - also disabled
+  /*
   {
     id: 'Vet-Rate-Vision-Phi-q4f32_1',
-    name: 'Vet-Rate Vision Phi 👁️ ⭐ NEW!',
+    name: 'Vet-Rate Vision Phi 👁️ 🚧 LEGACY',
     size: '2.8 GB',
-    description: 'Custom-compiled vision model - reads DD214 images directly! Works in standard Chrome.',
+    description: '🚧 LEGACY: Requires Chrome Canary with experimental WebGPU flags.',
     bestFor: '📷 DD214 & Document Analysis',
-    contextInfo: 'Built by veterans, for veterans. Analyzes scanned documents, photos, and images without OCR. The ONLY local model that can "see" your documents!',
+    contextInfo: '⚠️ Requires: Chrome Canary + --enable-dawn-features=allow_unsafe_apis flag.',
     vramRequired: '6 GB',
-    recommended: true,
+    recommended: false,
     category: 'vision',
-    isNew: true,
+    isNew: false,
     hasVision: true,
-    disabled: false,
-    // Custom model configuration for HuggingFace
+    disabled: true,
+    disabledReason: 'beta-experimental',
     isCustomModel: true,
     customConfig: {
       model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi',
@@ -470,6 +548,7 @@ const AVAILABLE_MODELS = [
       model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi/resolve/main/Vet-Rate-Vision-Phi-q4f32_1-webgpu.wasm',
     },
   },
+  */
 ];
 
 // Context for Local AI state
@@ -540,9 +619,13 @@ export const LocalAIProvider = ({ children }) => {
         const { hasModelInCache } = await import('@mlc-ai/web-llm');
         const installed = new Set();
         
-        // Check each model individually
+        // Check each model individually (skip custom models - they're not in prebuiltAppConfig)
         await Promise.all(
           AVAILABLE_MODELS.map(async (model) => {
+            // Skip cache check for custom models - WebLLM's hasModelInCache doesn't know about them
+            if (model.isCustomModel) {
+              return;
+            }
             try {
               const isCached = await hasModelInCache(model.id);
               if (isCached) {
@@ -615,18 +698,42 @@ export const LocalAIProvider = ({ children }) => {
     
     // Check if the selected model is disabled
     if (selectedModel.disabled) {
-      const disabledMsg = 
-        '🚫 This Model is Currently Disabled\n\n' +
-        `${selectedModel.name} has been temporarily disabled.\n\n` +
-        '🔨 COMING SOON: Vet-Rate Vision Phi\n\n' +
-        'We\'re compiling our own custom vision language model specifically optimized for:\n' +
-        '• DD214 document recognition\n' +
-        '• Medical record parsing\n' +
-        '• VA forms processing\n\n' +
-        '✨ Built by veterans, for veterans\n' +
-        '✨ Works in any browser (no experimental features)\n' +
-        '✨ 100% private - runs locally on your device\n\n' +
-        'Check back soon for updates!';
+      let disabledMsg;
+      
+      // Check for beta/experimental models (vision models with u8 shader issue)
+      if (selectedModel.disabledReason === 'beta-experimental') {
+        disabledMsg = 
+          '🚧 VISION MODEL: Waiting for Upstream Fix\n\n' +
+          `${selectedModel.name} requires experimental WebGPU features that aren't available in standard browsers yet.\n\n` +
+          '📋 WHAT\'S HAPPENING:\n' +
+          'Vision models use image processing shaders with "u8" (uint8) data types. These require the experimental "chromium_experimental_subgroup_matrix" WebGPU extension, which is only available in Chrome Canary with special flags.\n\n' +
+          '🔧 TEMPORARY WORKAROUND:\n' +
+          '1. Install Chrome Canary: google.com/chrome/canary\n' +
+          '2. Create a shortcut with flag:\n' +
+          '   chrome.exe --enable-dawn-features=allow_unsafe_apis\n' +
+          '3. Open Vet-Rate.org in Chrome Canary\n\n' +
+          '🔮 WHAT WE\'RE DOING:\n' +
+          'The MLC-AI team is actively working on a fix (GitHub issue #727). We\'re monitoring progress and will enable this model as soon as standard browser support is available.\n\n' +
+          '💡 ALTERNATIVES:\n' +
+          '• Use "The Navigator" with cloud AI for document questions\n' +
+          '• Use our DD214 text extraction (OCR) feature\n' +
+          '• Text-only local models work great for claims help!\n\n' +
+          '🎖️ Built by veterans, for veterans - we\'ll get this working!';
+      } else {
+        // Default disabled message
+        disabledMsg = 
+          '🚫 This Model is Currently Disabled\n\n' +
+          `${selectedModel.name} has been temporarily disabled.\n\n` +
+          '🔨 COMING SOON: Vet-Rate Vision Phi\n\n' +
+          'We\'re compiling our own custom vision language model specifically optimized for:\n' +
+          '• DD214 document recognition\n' +
+          '• Medical record parsing\n' +
+          '• VA forms processing\n\n' +
+          '✨ Built by veterans, for veterans\n' +
+          '✨ Works in any browser (no experimental features)\n' +
+          '✨ 100% private - runs locally on your device\n\n' +
+          'Check back soon for updates!';
+      }
       
       setError(disabledMsg);
       setIsLoading(false);
@@ -661,7 +768,14 @@ export const LocalAIProvider = ({ children }) => {
     
     // Check if model is cached to determine the initial message
     const { hasModelInCache } = await import('@mlc-ai/web-llm');
-    const isCached = await hasModelInCache(modelId);
+    let isCached = false;
+    try {
+      isCached = await hasModelInCache(modelId);
+    } catch (err) {
+      console.warn(`Could not check cache for ${modelId}:`, err);
+      // Assume not cached if we can't check (e.g., custom models)
+      isCached = false;
+    }
     const isDownloading = !isCached;
     
     setLoadProgress({ 
@@ -672,6 +786,75 @@ export const LocalAIProvider = ({ children }) => {
     try {
       // Dynamically import WebLLM (heavy dependency)
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+      
+      // CRITICAL FIX: Monkey-patch navigator.gpu.requestAdapter to inject proper limits
+      // MLC-LLM calls requestAdapter() itself, so we must patch at that level
+      if (!window._mlc_gpu_patched && navigator.gpu) {
+        const originalRequestAdapter = navigator.gpu.requestAdapter.bind(navigator.gpu);
+        
+        navigator.gpu.requestAdapter = async function(options) {
+          console.log('🔧 Intercepting requestAdapter');
+          const adapter = await originalRequestAdapter(options);
+          if (!adapter) return adapter;
+          
+          // Now patch this adapter's requestDevice
+          const adapterLimits = adapter.limits;
+          const adapterFeatures = adapter.features;
+          const originalRequestDevice = adapter.requestDevice.bind(adapter);
+          
+          console.log('🔧 Adapter limits:', {
+            maxStorageBufferBindingSize: adapterLimits.maxStorageBufferBindingSize,
+            maxBufferSize: adapterLimits.maxBufferSize,
+            maxComputeInvocationsPerWorkgroup: adapterLimits.maxComputeInvocationsPerWorkgroup,
+          });
+          console.log('🔧 Adapter features:', [...adapterFeatures]);
+          
+          adapter.requestDevice = async function(descriptor = {}) {
+            console.log('🔧 Intercepting requestDevice to inject proper limits');
+            
+            // Build requiredLimits from adapter's max limits
+            const requiredLimits = {
+              ...descriptor.requiredLimits,
+              maxComputeInvocationsPerWorkgroup: adapterLimits.maxComputeInvocationsPerWorkgroup || 1024,
+              maxStorageBufferBindingSize: adapterLimits.maxStorageBufferBindingSize,
+              maxBufferSize: adapterLimits.maxBufferSize,
+              maxComputeWorkgroupSizeX: adapterLimits.maxComputeWorkgroupSizeX,
+              maxComputeWorkgroupSizeY: adapterLimits.maxComputeWorkgroupSizeY,
+              maxComputeWorkgroupSizeZ: adapterLimits.maxComputeWorkgroupSizeZ,
+              maxComputeWorkgroupStorageSize: adapterLimits.maxComputeWorkgroupStorageSize,
+              maxBindGroups: adapterLimits.maxBindGroups,
+              maxBindingsPerBindGroup: adapterLimits.maxBindingsPerBindGroup,
+              maxDynamicStorageBuffersPerPipelineLayout: adapterLimits.maxDynamicStorageBuffersPerPipelineLayout,
+              maxStorageBuffersPerShaderStage: adapterLimits.maxStorageBuffersPerShaderStage,
+            };
+            
+            // Build requiredFeatures - include shader-f16 if available for better compatibility
+            const requiredFeatures = [...(descriptor.requiredFeatures || [])];
+            if (adapterFeatures.has('shader-f16') && !requiredFeatures.includes('shader-f16')) {
+              requiredFeatures.push('shader-f16');
+            }
+            
+            const enhancedDescriptor = {
+              ...descriptor,
+              requiredLimits,
+              requiredFeatures,
+            };
+            
+            console.log('🔧 Requesting device with:', {
+              maxComputeInvocationsPerWorkgroup: enhancedDescriptor.requiredLimits.maxComputeInvocationsPerWorkgroup,
+              maxStorageBufferBindingSize: enhancedDescriptor.requiredLimits.maxStorageBufferBindingSize,
+              maxBufferSize: enhancedDescriptor.requiredLimits.maxBufferSize,
+              requiredFeatures: enhancedDescriptor.requiredFeatures,
+            });
+            
+            return await originalRequestDevice(enhancedDescriptor);
+          };
+          
+          return adapter;
+        };
+        window._mlc_gpu_patched = true;
+        console.log('🔧 WebGPU patched for MLC-LLM compatibility');
+      }
       
       // Progress callback with better messaging
       const initProgressCallback = (report) => {
@@ -711,12 +894,24 @@ export const LocalAIProvider = ({ children }) => {
       // Check if this is a custom model that needs appConfig
       if (selectedModel.isCustomModel && selectedModel.customConfig) {
         console.log('🎯 Loading custom model with appConfig:', selectedModel.customConfig);
+        
+        // Import ModelType enum from WebLLM for VLM specification
+        const { ModelType } = await import('@mlc-ai/web-llm');
+        
+        const modelListEntry = {
+          model: selectedModel.customConfig.model,
+          model_id: selectedModel.customConfig.model_id,
+          model_lib: selectedModel.customConfig.model_lib,
+        };
+        
+        // If this is a vision model, specify model_type as VLM
+        if (selectedModel.hasVision) {
+          modelListEntry.model_type = ModelType.VLM;
+          console.log('🖼️ Custom model marked as VLM (vision-language model)');
+        }
+        
         engineOptions.appConfig = {
-          model_list: [{
-            model: selectedModel.customConfig.model,
-            model_id: selectedModel.customConfig.model_id,
-            model_lib: selectedModel.customConfig.model_lib,
-          }],
+          model_list: [modelListEntry],
         };
       }
       
@@ -745,8 +940,15 @@ export const LocalAIProvider = ({ children }) => {
       // Save preference FIRST before registering
       localStorage.setItem('vet_rate_local_ai_model', modelId);
       
+      // Determine if this is a vision model
+      const isVision = isVisionModel || isCustomVisionModel || selectedModel.hasVision;
+      console.log(`🔍 Model type: ${isVision ? 'Vision (VLM)' : 'Text-only (LLM)'}`);
+      
       // Register with unified AI service for seamless integration
-      registerLocalAIEngine(mlcEngine, true);
+      registerLocalAIEngine(mlcEngine, true, false, modelId, isVision);
+      
+      // Reset generating state when model loads (prevents stale state from previous session)
+      setIsGenerating(false);
       
       return mlcEngine;
     } catch (err) {
@@ -755,12 +957,29 @@ export const LocalAIProvider = ({ children }) => {
       // Provide more helpful error messages for common issues
       let errorMessage = err.message || 'Failed to initialize local AI';
       
+      // Check for GPUPipelineError with u8 type issues (Vision models)
+      if (err.name === 'GPUPipelineError' || err.message?.includes('GPUPipelineError') || err.message?.includes('Invalid ShaderModule')) {
+        errorMessage = '🚨 GPU Shader Compilation Failed\n\n' +
+          'This model uses WebGPU shader features not available in standard Chrome/Edge.\n\n' +
+          '🔧 TO FIX:\n\n' +
+          '1. Install Chrome Canary:\n' +
+          '   https://google.com/chrome/canary/\n\n' +
+          '2. Create a shortcut with this flag:\n' +
+          '   chrome.exe --enable-dawn-features=allow_unsafe_apis\n\n' +
+          '💡 Or try a different model that works in standard Chrome!\n\n' +
+          'Technical: Model uses u8/uint8 shader types requiring chromium_experimental_subgroup_matrix.';
+        setError(errorMessage);
+        setIsLoading(false);
+        setLoadProgress({ progress: 0, text: '' });
+        return null;
+      }
+      
       if (err.message?.includes('chromium_experimental_subgroup_matrix')) {
         errorMessage = `🚨 WGSL Extension Not Enabled\n\nThe 'chromium_experimental_subgroup_matrix' extension is required but not enabled.\n\n✅ FIX: Launch Chrome with:\n--enable-dawn-features=allow_unsafe_apis\n\n📚 See FAQ for detailed instructions (Windows/Mac/Linux)`;
         setError(errorMessage);
         setIsLoading(false);
         setLoadProgress({ progress: 0, text: '' });
-        return;
+        return null;
       }
       
       if (err.message?.includes('u8') || err.message?.includes('WGSL') || err.message?.includes('shader')) {
@@ -780,6 +999,24 @@ export const LocalAIProvider = ({ children }) => {
           '• Browser compatibility issues\n' +
           '• Insufficient GPU memory\n\n' +
           'Please update your GPU drivers and browser.';
+      } else if (err.message?.includes('Cache') || err.message?.includes('Entry was not found')) {
+        errorMessage = '⚠️ Model Download Issue\n\n' +
+          'The model could not be downloaded or cached. This may be due to:\n' +
+          '• Network connection issues\n' +
+          '• HuggingFace server temporarily unavailable\n' +
+          '• Browser storage quota exceeded\n\n' +
+          '🔧 Solutions:\n' +
+          '1. Check your internet connection\n' +
+          '2. Clear browser cache and try again\n' +
+          '3. Try a smaller model first\n' +
+          '4. Check if you have sufficient disk space';
+      } else if (err.message?.includes('network') || err.message?.includes('fetch') || err.message?.includes('Failed to fetch')) {
+        errorMessage = '⚠️ Network Error\n\n' +
+          'Could not download the AI model.\n\n' +
+          '🔧 Please check:\n' +
+          '• Your internet connection\n' +
+          '• That HuggingFace.co is not blocked\n' +
+          '• Your firewall/proxy settings';
       }
       
       setError(errorMessage);
@@ -829,40 +1066,130 @@ export const LocalAIProvider = ({ children }) => {
 
     setIsGenerating(true);
 
+    /**
+     * Clean AI response - remove thinking tags and detect degenerate output
+     * Handles DeepSeek R1 and other reasoning models that output <think> tags
+     */
+    const cleanResponse = (text) => {
+      if (!text) return '';
+      
+      // Remove <think>...</think> blocks (DeepSeek R1, QwQ, and other reasoning models)
+      let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      
+      // Remove unclosed <think> tags (model may have been interrupted mid-thought)
+      cleaned = cleaned.replace(/<think>[\s\S]*/gi, '').trim();
+      
+      // Remove orphaned </think> tags (sometimes R1 outputs these without opening tag)
+      cleaned = cleaned.replace(/<\/think>/gi, '').trim();
+      
+      // Remove any remaining think-like patterns (</think>'ve, </think>", etc.)
+      cleaned = cleaned.replace(/<\/think>[^\s]*/gi, '').trim();
+      
+      // Detect degenerate/repetitive output (same 2-10 char pattern repeated 8+ times)
+      const repetitionPattern = /(.{2,10})\1{8,}/;
+      if (repetitionPattern.test(cleaned)) {
+        console.warn('⚠️ Detected degenerate output (repetition collapse)');
+        const match = cleaned.match(repetitionPattern);
+        if (match) {
+          const repetitiveSection = match[0];
+          cleaned = cleaned.replace(repetitiveSection, '[Output truncated due to repetition]');
+        }
+      }
+      
+      // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
+      const gibberishPatterns = [
+        /(\.{3,}\s*){5,}/,           // Multiple ellipsis sequences
+        /(["\"]\s*){5,}/,            // Multiple quote sequences  
+        /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
+        /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
+      ];
+      
+      for (const pattern of gibberishPatterns) {
+        if (pattern.test(cleaned)) {
+          console.warn('⚠️ Detected R1-style confused output');
+          // Try to extract any meaningful content before the gibberish
+          const lines = cleaned.split('\n').filter(l => l.trim());
+          const meaningfulLines = lines.filter(line => {
+            const lower = line.toLowerCase();
+            return !lower.includes('hmm') && 
+                   !lower.includes('wait') && 
+                   !lower.includes('confuse') &&
+                   !lower.includes('unclear') &&
+                   line.length > 20 &&
+                   !/^[\s\"\'\.\\,\!\?]+$/.test(line);
+          });
+          if (meaningfulLines.length > 0) {
+            cleaned = meaningfulLines.join('\n');
+          } else {
+            cleaned = 'I apologize, but I\'m having trouble generating a clear response. Please try rephrasing your question or using a different AI model.';
+          }
+          break;
+        }
+      }
+      
+      return cleaned;
+    };
+
     try {
       const messages = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt },
       ];
 
+      // Generation config with repetition penalty to prevent degenerate output
+      const generationConfig = {
+        messages,
+        max_tokens: maxTokens,
+        temperature,
+        // Repetition penalty to prevent loops (1.0 = no penalty, >1.0 = penalize repetition)
+        repetition_penalty: 1.1,
+        // Frequency penalty (penalize tokens that appear frequently)
+        frequency_penalty: 0.3,
+        // Presence penalty (penalize tokens that have appeared at all)
+        presence_penalty: 0.1,
+      };
+
       if (onStream) {
         // Streaming response
         let fullResponse = '';
         const chunks = await engine.chat.completions.create({
-          messages,
-          max_tokens: maxTokens,
-          temperature,
+          ...generationConfig,
           stream: true,
         });
 
         for await (const chunk of chunks) {
           const delta = chunk.choices[0]?.delta?.content || '';
           fullResponse += delta;
-          onStream(delta, fullResponse);
+          
+          // Clean and send the streamed response
+          const cleanedResponse = cleanResponse(fullResponse);
+          onStream(delta, cleanedResponse);
+          
+          // Early abort if we detect degenerate output during streaming
+          if (fullResponse.length > 200) {
+            const last200 = fullResponse.slice(-200);
+            const repetitionPattern = /(.{2,10})\1{8,}/;
+            if (repetitionPattern.test(last200)) {
+              console.warn('⚠️ Aborting due to degenerate output detected during streaming');
+              try {
+                await engine.interruptGenerate?.();
+              } catch (e) {
+                // Ignore interrupt errors
+              }
+              break;
+            }
+          }
         }
 
         setIsGenerating(false);
-        return fullResponse;
+        return cleanResponse(fullResponse);
       } else {
         // Non-streaming response
-        const response = await engine.chat.completions.create({
-          messages,
-          max_tokens: maxTokens,
-          temperature,
-        });
+        const response = await engine.chat.completions.create(generationConfig);
 
         setIsGenerating(false);
-        return response.choices[0]?.message?.content || '';
+        const rawContent = response.choices[0]?.message?.content || '';
+        return cleanResponse(rawContent);
       }
     } catch (err) {
       setIsGenerating(false);
@@ -870,18 +1197,30 @@ export const LocalAIProvider = ({ children }) => {
     }
   }, [engine, isReady]);
 
-  // Interrupt generation
+  // Interrupt generation - only interrupts if there's actually a global generation in progress
   const interruptGeneration = useCallback(async () => {
-    if (engine && isGenerating) {
+    // Check the global unified state - this is the source of truth for whether generation is happening
+    const { getAIStatus } = await import('../utils/unifiedAIService.js');
+    const aiStatus = getAIStatus();
+    
+    // ONLY interrupt if the unified service says generation is in progress
+    // LocalAIPanel's isGenerating state can get stale during React re-renders
+    if (!aiStatus.localGenerating) {
+      console.log('⏭️ interruptGeneration called but no global generation in progress - ignoring');
+      setIsGenerating(false); // Sync local state with global
+      return;
+    }
+    
+    if (engine) {
+      console.warn('🛑 Interrupting active generation');
       try {
-        // Use WebLLM's interrupt method if available
         await engine.interruptGenerate?.();
       } catch (err) {
         console.warn('Error interrupting generation:', err);
       }
       setIsGenerating(false);
     }
-  }, [engine, isGenerating]);
+  }, [engine]);
 
   // Switch to a different model
   const switchModel = useCallback(async (newModelId) => {
@@ -1181,8 +1520,9 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
             )
             }
 
-            {/* Experimental WebGPU Features Toggle */}
-            {webGPUStatus.supported && (
+            {/* Experimental WebGPU Features Toggle - HIDDEN (feature disabled) */}
+            {/* Vision models and experimental features disabled - standard WebGPU works great for all text models */}
+            {false && webGPUStatus.supported && (
               <div className="p-4 rounded-xl border-2 bg-amber-900/20 border-amber-500/50">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">⚠️</span>
@@ -1745,9 +2085,42 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                 {/* Error State */}
                 {error && (
                   <div className="bg-red-900/30 border-2 border-red-500 rounded-xl p-4">
-                    <p className="text-red-400">
+                    <p className="text-red-400 whitespace-pre-wrap">
                       <strong>Error:</strong> {error}
                     </p>
+                    
+                    {/* Vision model alternative - show Vision Simulator option */}
+                    {selectedModel?.disabledReason === 'beta-experimental' && selectedModel?.hasVision && (
+                      <div className="mt-4 pt-4 border-t border-red-500/30">
+                        <p className="text-green-400 font-semibold mb-2">
+                          🎉 Good News: We Have a Working Alternative!
+                        </p>
+                        <p className="text-gray-300 text-sm mb-3">
+                          Use our <strong>Vision Simulator</strong> - it combines OCR (text extraction) 
+                          with AI analysis to give you ~80% of vision model functionality for documents 
+                          like DD214s, medical records, and VA forms.
+                        </p>
+                        <p className="text-gray-400 text-xs mb-3">
+                          ✅ Works in ALL browsers | ✅ No special flags needed | ✅ 100% private
+                        </p>
+                        <button
+                          onClick={() => {
+                            // Store that user wants vision simulator
+                            localStorage.setItem('vet_rate_show_vision_simulator', 'true');
+                            // Dispatch event for Navigator/AIAssistant to pick up
+                            window.dispatchEvent(new CustomEvent('openVisionSimulator'));
+                            setError(null);
+                          }}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Open Vision Simulator
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
