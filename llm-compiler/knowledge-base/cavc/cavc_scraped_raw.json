@@ -1,0 +1,14 @@
+{
+  "source": "U.S. Court of Appeals for Veterans Claims",
+  "url": "https://www.uscourts.cavc.gov/opinions.php",
+  "scraped_at": "2026-01-22T10:21:32.529548",
+  "total_decisions": 1,
+  "decisions": [
+    {
+      "case_number": "REFERENCE",
+      "title": "CAVC decisions must be retrieved manually from uscourts.cavc.gov",
+      "url": "https://www.uscourts.cavc.gov/opinions.php",
+      "note": "The CAVC website requires JavaScript or manual navigation"
+    }
+  ]
+}

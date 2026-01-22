@@ -1,0 +1,4483 @@
+{
+  "5000": {
+    "code": "5000",
+    "name": "Osteomyelitis, acute, subacute, or chronic",
+    "raw_text": "5000 Osteomyelitis, acute, subacute, or chronic:\n\n\n\nOf the pelvis, vertebrae, or extending into major joints, or with multiple localization or with long history of intractability and debility, anemia, amyloid liver changes, or other continuous constitutional symptoms\n100\n\n\nFrequent episodes, with constitutional symptoms\n60\n\n\nWith definite involucrum or sequestrum, with or without discharging sinus\n30\n\n\nWith discharging sinus or other evidence of active infection within the past 5 years\n20\n\n\nInac",
+    "method": "full_pattern"
+  },
+  "5001": {
+    "code": "5001",
+    "name": "Bones and joints, tuberculosis of, active or inactive",
+    "raw_text": "5001 Bones and joints, tuberculosis of, active or inactive:\n\n\n\nActive\n100\n\n\nInactive: See §§ 4.88c and 4.89\n\n\n\n5002 Multi-joint arthritis (except post-traumatic and gout), 2 or more joints, as an active process:\n\n\n\nWith constitutional manifestations associated with active joint involvement, totally incapacitating\n100\n\n\nLess than criteria for 100%",
+    "method": "full_pattern"
+  },
+  "5003": {
+    "code": "5003",
+    "name": "Degenerative arthritis, other than post-traumatic",
+    "raw_text": "5003 Degenerative arthritis, other than post-traumatic:\n\n\n\nDegenerative arthritis established by X-ray findings will be rated on the basis of limitation of motion under the appropriate diagnostic codes for the specific joint or joints involved (DC 5200 etc.). When however, the limitation of motion of the specific joint or joints involved is noncompensable under the appropriate diagnostic codes, a rating of 10 pct is for application for each such major joint or group of minor joints affected by l",
+    "method": "full_pattern"
+  },
+  "5004": {
+    "code": "5004",
+    "name": "Arthritis, gonorrheal",
+    "raw_text": "5004 Arthritis, gonorrheal.\n\n\n\n5005 Arthritis, pneumococcic.\n\n\n\n5006 Arthritis, typhoid.\n\n\n\n5007 Arthritis, syphilitic.\n\n\n\n5008 Arthritis, streptococcic.\n\n\n\n5009 Other specified forms of arthropathy (excluding gout).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5010": {
+    "code": "5010",
+    "name": "Post-traumatic arthritis",
+    "raw_text": "5010 Post-traumatic arthritis: Rate as limitation of motion, dislocation, or other specified instability under the affected joint. If there are 2 or more joints affected, each rating shall be combined in accordance with § 4.25.\n\n\n\n5011 Decompression illness: Rate manifestations under the appropriate diagnostic code within the affected body system, such as arthritis for musculoskeletal residuals; auditory system for vestibular residuals; respiratory system for pulmonary barotrauma residuals; and ",
+    "method": "full_pattern"
+  },
+  "5013": {
+    "code": "5013",
+    "name": "Osteoporosis, residuals of",
+    "raw_text": "5013 Osteoporosis, residuals of.\n\n\n\n5014 Osteomalacia, residuals of.\n\n\n\n5015 Bones, neoplasm, benign.\n\n\n\n5016 Osteitis deformans.\n\n\n\n5017 Gout.\n\n\n\n5018 [Removed]\n\n\n\n5019 Bursitis.\n\n\n\n5020 [Removed]\n\n\n\n\n5021 Myositis.\n\n\n\n5022 [Removed]\n\n\n\n\n5023 Heterotopic ossification.\n\n\n\n5024 Tenosynovitis, tendinitis, tendinosis or tendinopathy.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5025": {
+    "code": "5025",
+    "name": "Fibromyalgia (fibrositis, primary fibromyalgia syndrome)",
+    "raw_text": "5025 Fibromyalgia (fibrositis, primary fibromyalgia syndrome)\n\n\n\nWith widespread musculoskeletal pain and tender points, with or without associated fatigue, sleep disturbance, stiffness, paresthesias, headache, irritable bowel symptoms, depression, anxiety, or Raynaud's-like symptoms:\n\n\n\nThat are constant, or nearly so, and refractory to therapy\n40\n\n\nThat are episodic, with exacerbations often precipitated by environmental or emotional stress or by overexertion, but that are present more than on",
+    "method": "full_pattern"
+  },
+  "5051": {
+    "code": "5051",
+    "name": "Shoulder replacement (prosthesis)",
+    "raw_text": "5051 Shoulder replacement (prosthesis).\n\n\n\n\nProsthetic replacement of the shoulder joint:\n\n\n\n\nFor 1 year following implantation of prosthesis\n100\n100\n\n\nWith chronic residuals consisting of severe, painful motion or weakness in the affected extremity\n60\n50\n\n\nWith intermediate degrees of residual weakness, pain or limitation of motion, rate by analogy to diagnostic codes 5200 and 5203.\n\n\n\n\nMinimum rating\n30\n20\n\n\n5052 Elbow replacement (prosthesis).\n\n\n\n\nProsthetic replacement of the elbow joint:\n\n\n",
+    "method": "full_pattern"
+  },
+  "5055": {
+    "code": "5055",
+    "name": "Knee, resurfacing or replacement (prosthesis)",
+    "raw_text": "5055 Knee, resurfacing or replacement (prosthesis):\n\n\n\n\nFor 4 months following implantation of prosthesis or resurfacing\n\n100\n\n\nProsthetic replacement of knee joint:\n\n\n\n\nWith chronic residuals consisting of severe painful motion or weakness in the affected extremity\n\n60\n\n\nWith intermediate degrees of residual weakness, pain or limitation of motion rate by analogy to diagnostic codes 5256, 5261, or 5262.\n\n\n\n\nMinimum evaluation, total replacement only\n\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5056": {
+    "code": "5056",
+    "name": "Ankle replacement (prosthesis)",
+    "raw_text": "5056 Ankle replacement (prosthesis).\n\n\n\n\nProsthetic replacement of ankle joint:\n\n\n\n\nFor 1 year following implantation of prosthesis\n \n100\n\n\nWith chronic residuals consisting of severe painful motion or weakness\n \n40\n\n\nWith intermediate degrees of residual weakness, pain or limitation of motion rate by analogy to 5270 or 5271.\n\n\n\n\nMinimum rating\n \n20\n\n\n\ncombinations of disabilities\n\n\n5104 Anatomical loss of one hand and loss of use of one foot\n \n1 100\n\n\n5105 Anatomical loss of one foot and loss o",
+    "method": "full_pattern"
+  },
+  "5120": {
+    "code": "5120",
+    "name": "Complete amputation, upper extremity",
+    "raw_text": "5120 Complete amputation, upper extremity:\n\n\n\n\nForequarter amputation (involving complete removal of the humerus along with any portion of the scapula, clavicle, and/or ribs)\n1 100\n1 100\n\n\nDisarticulation (involving complete removal of the humerus only)\n1 90\n1 90\n\n\n5121 Above insertion of deltoid\n1 90\n1 80\n\n\n5122 Below insertion of deltoid\n1 80\n1 70\n\n\nForearm, amputation of:\n\n\n\n\n5123 Above insertion of pronator teres\n1 80\n1 70\n\n\n5124 Below insertion of pronator teres\n1 70\n1 60\n\n\n5125 Hand, loss ",
+    "method": "full_pattern"
+  },
+  "5152": {
+    "code": "5152",
+    "name": "Thumb, amputation of",
+    "raw_text": "5152 Thumb, amputation of:\n\n\n\n\nWith metacarpal resection\n40\n30\n\n\nAt metacarpophalangeal joint or through proximal phalanx\n30\n20\n\n\nAt distal joint or through distal phalanx\n20\n20\n\n\n5153 Index finger, amputation of\n\n\n\n\nWith metacarpal resection (more than one-half the bone lost)\n30\n20\n\n\nWithout metacarpal resection, at proximal interphalangeal joint or proximal thereto\n20\n20\n\n\nThrough middle phalanx or at distal joint\n10\n10\n\n\n5154 Long finger, amputation of:\n\n\n\n\nWith metacarpal resection (more tha",
+    "method": "full_pattern"
+  },
+  "5160": {
+    "code": "5160",
+    "name": "Complete amputation, lower extremity",
+    "raw_text": "5160 Complete amputation, lower extremity:\n\n\n\nTrans-pelvic amputation (involving complete removal of the femur and intrinsic pelvic musculature along with any portion of the pelvic bones)\n2 100\n\n\nDisarticulation (involving complete removal of the femur and intrinsic pelvic musculature only)\n2 90\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5171": {
+    "code": "5171",
+    "name": "Toe, great, amputation of",
+    "raw_text": "5171 Toe, great, amputation of:\n\n\n\nWith removal of metatarsal head\n30\n\n\nWithout metatarsal involvement\n10\n\n\n5172 Toes, other than great, amputation of, with removal of metatarsal head:\n\n\n\nOne or two\n20\n\n\nWithout metatarsal involvement\n0\n\n\n5173 Toes, three or four, amputation of, without metatarsal involvement:\n\n\n\nIncluding great toe\n20\n\n\nNot including great toe\n10\n\n\n\n2 Also entitled to special monthly compensation.\n\n\n\n\nThe Shoulder and Arm\n\n\n \nRating\n\n\nMajor\nMinor\n\n\n\n\n5200 Scapulohumeral articul",
+    "method": "full_pattern"
+  },
+  "5201": {
+    "code": "5201",
+    "name": "Arm, limitation of motion of",
+    "raw_text": "5201 Arm, limitation of motion of:\n\n\n\n\nFlexion and/or abduction limited to 25° from side\n40\n30\n\n\nMidway between side and shoulder level (flexion and/or abduction limited to 45°)\n30\n20\n\n\nAt shoulder level (flexion and/or abduction limited to 90°)\n20\n20\n\n\n\n5202 Humerus, other impairment of:\n\n\n\n\nLoss of head of (flail shoulder)\n80\n70\n\n\nNonunion of (false flail joint)\n60\n50\n\n\nFibrous union of\n50\n40\n\n\nRecurrent dislocation of at scapulohumeral joint:\n\n\n\n\nWith frequent episodes and guarding of all arm",
+    "method": "full_pattern"
+  },
+  "5214": {
+    "code": "5214",
+    "name": "Wrist, ankylosis of",
+    "raw_text": "5214 Wrist, ankylosis of:\n\n\n\n\nUnfavorable, in any degree of palmar flexion, or with ulnar or radial deviation\n50\n40\n\n\nAny other position, except favorable\n40\n30\n\n\nFavorable in 20° to 30° dorsiflexion\n30\n20\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5215": {
+    "code": "5215",
+    "name": "Wrist, limitation of motion of",
+    "raw_text": "5215 Wrist, limitation of motion of:\n\n\n\n\nDorsiflexion less than 15°\n10\n10\n\n\nPalmar flexion limited in line with forearm\n10\n10\n\n\n\n\n\n\nEvaluation of Ankylosis or Limitation of Motion of Single or Multiple Digits of the Hand\n\n\n \nRating\n\n\nMajor\nMinor\n\n\n\n\n(1) For the index, long, ring, and little fingers (digits II, III, IV, and V), zero degrees of flexion represents the fingers fully extended, making a straight line with the rest of the hand. The position of function of the hand is with the wrist dor",
+    "method": "full_pattern"
+  },
+  "5217": {
+    "code": "5217",
+    "name": "Four digits of one hand, unfavorable ankylosis of",
+    "raw_text": "5217 Four digits of one hand, unfavorable ankylosis of:\n\n\n\n\nThumb and any three fingers\n60\n50\n\n\nIndex, long, ring, and little fingers\n50\n40\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5218": {
+    "code": "5218",
+    "name": "Three digits of one hand, unfavorable ankylosis of",
+    "raw_text": "5218 Three digits of one hand, unfavorable ankylosis of:\n\n\n\n\nThumb and any two fingers\n50\n40\n\n\nIndex, long, and ring; index, long, and little; or index, ring, and little fingers\n40\n30\n\n\nLong, ring, and little fingers\n30\n20\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5219": {
+    "code": "5219",
+    "name": "Two digits of one hand, unfavorable ankylosis of",
+    "raw_text": "5219 Two digits of one hand, unfavorable ankylosis of:\n\n\n\n\nThumb and any finger\n40\n30\n\n\nIndex and long; index and ring; or index and little fingers\n30\n20\n\n\nLong and ring; long and little; or ring and little fingers\n20\n20\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5221": {
+    "code": "5221",
+    "name": "Four digits of one hand, favorable ankylosis of",
+    "raw_text": "5221 Four digits of one hand, favorable ankylosis of:\n\n\n\n\nThumb and any three fingers\n50\n40\n\n\nIndex, long, ring, and little fingers\n40\n30\n\n\n5222 Three digits of one hand, favorable ankylosis of:\n\n\n\n\nThumb and any two fingers\n40\n30\n\n\nIndex, long, and ring; index, long, and little; or index, ring, and little fingers\n30\n20\n\n\nLong, ring and little fingers\n20\n20\n\n\n5223 Two digits of one hand, favorable ankylosis of:\n\n\n\n\nThumb and any finger\n30\n20\n\n\nIndex and long; index and ring; or index and little ",
+    "method": "full_pattern"
+  },
+  "5225": {
+    "code": "5225",
+    "name": "Index finger, ankylosis of",
+    "raw_text": "5225 Index finger, ankylosis of:\n\n\n\n\nUnfavorable or favorable\n10\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5226": {
+    "code": "5226",
+    "name": "Long finger, ankylosis of",
+    "raw_text": "5226 Long finger, ankylosis of:\n\n\n\n\nUnfavorable or favorable\n10\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5227": {
+    "code": "5227",
+    "name": "Ring or little finger, ankylosis of",
+    "raw_text": "5227 Ring or little finger, ankylosis of:\n\n\n\n\nUnfavorable or favorable\n0\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5228": {
+    "code": "5228",
+    "name": "Thumb, limitation of motion",
+    "raw_text": "5228 Thumb, limitation of motion:\n\n\n\n\nWith a gap of more than two inches (5.1 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers\n20\n20\n\n\nWith a gap of one to two inches (2.5 to 5.1 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers\n10\n10\n\n\nWith a gap of less than one inch (2.5 cm.) between the thumb pad and the fingers, with the thumb attempting to oppose the fingers\n0\n0\n\n\n5229 Index or long finger, limitation of m",
+    "method": "full_pattern"
+  },
+  "5235": {
+    "code": "5235",
+    "name": "Vertebral fracture or dislocation",
+    "raw_text": "5235 Vertebral fracture or dislocation\n\n\n\n 5236 Sacroiliac injury and weakness\n\n\n\n 5237 Lumbosacral or cervical strain\n\n\n\n 5238 Spinal stenosis\n\n\n\n 5239 Spondylolisthesis or segmental instability\n\n\n\n 5240 Ankylosing spondylitis\n\n\n\n 5241 Spinal fusion\n\n\n\n5242 Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome (also, see either DC 5003 or 5010)\n\n\n\n\n5243 Intervertebral disc syndrome: Assign this diagnostic code only when there is disc herniation with compressi",
+    "method": "full_pattern"
+  },
+  "5250": {
+    "code": "5250",
+    "name": "Hip, ankylosis of",
+    "raw_text": "5250 Hip, ankylosis of:\n\n\n\nUnfavorable, extremely unfavorable ankylosis, the foot not reaching ground, crutches necessitated\n3 90\n\n\nIntermediate\n70\n\n\nFavorable, in flexion at an angle between 20° and 40°, and slight adduction or abduction\n60\n\n\n5251 Thigh, limitation of extension of:\n\n\n\nExtension limited to 5°\n10\n\n\n5252 Thigh, limitation of flexion of:\n\n\n\nFlexion limited to 10°\n40\n\n\nFlexion limited to 20°\n30\n\n\nFlexion limited to 30°\n20\n\n\nFlexion limited to 45°\n10\n\n\n5253 Thigh, impairment of:\n\n\n\nL",
+    "method": "full_pattern"
+  },
+  "5260": {
+    "code": "5260",
+    "name": "Leg, limitation of flexion of",
+    "raw_text": "5260 Leg, limitation of flexion of:\n\n\n\nFlexion limited to 15°\n30\n\n\nFlexion limited to 30°\n20\n\n\nFlexion limited to 45°\n10\n\n\nFlexion limited to 60°\n0\n\n\n5261 Leg, limitation of extension of:\n\n\n\nExtension limited to 45°\n50\n\n\nExtension limited to 30°\n40\n\n\nExtension limited to 20°\n30\n\n\nExtension limited to 15°\n20\n\n\nExtension limited to 10°\n10\n\n\nExtension limited to 5°\n0\n\n\n\n5262 Tibia and fibula, impairment of:\n\n\n\nNonunion of, with loose motion, requiring brace\n40\n\n\nMalunion of:\n\n\n\nEvaluate under diagn",
+    "method": "full_pattern"
+  },
+  "5269": {
+    "code": "5269",
+    "name": "Plantar fasciitis",
+    "raw_text": "5269 Plantar fasciitis:\n\n\n\nNo relief from both non-surgical and surgical treatment, bilateral\n30\n\n\nNo relief from both non-surgical and surgical treatment, unilateral\n20\n\n\nOtherwise, unilateral or bilateral\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5276": {
+    "code": "5276",
+    "name": "Flatfoot, acquired",
+    "raw_text": "5276 Flatfoot, acquired:\n\n\n\nPronounced; marked pronation, extreme tenderness of plantar surfaces of the feet, marked inward displacement and severe spasm of the tendo achillis on manipulation, not improved by orthopedic shoes or appliances\n\n\n\nBilateral\n50\n\n\nUnilateral\n30\n\n\nSevere; objective evidence of marked deformity (pronation, abduction, etc.), pain on manipulation and use accentuated, indication of swelling on use, characteristic callosities:\n\n\n\nBilateral\n30\n\n\nUnilateral\n20\n\n\nModerate; weig",
+    "method": "full_pattern"
+  },
+  "5282": {
+    "code": "5282",
+    "name": "Hammer toe",
+    "raw_text": "5282 Hammer toe:\n\n\n\nAll toes, unilateral without claw foot\n10\n\n\nSingle toes\n0\n\n\n5283 Tarsal, or metatarsal bones, malunion of, or nonunion of:\n\n\n\nSevere\n30\n\n\nModerately severe\n20\n\n\nModerate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5284": {
+    "code": "5284",
+    "name": "Foot injuries, other",
+    "raw_text": "5284 Foot injuries, other:\n\n\n\nSevere\n30\n\n\nModerately severe\n20\n\n\nModerate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5296": {
+    "code": "5296",
+    "name": "Skull, loss of part of, both inner and outer tables",
+    "raw_text": "5296 Skull, loss of part of, both inner and outer tables:\n\n\n\nWith brain hernia\n80\n\n\nWithout brain hernia:\n\n\n\nArea larger than size of a 50-cent piece or 1.140 in 2 (7.355 cm 2)\n50\n\n\nArea intermediate\n30\n\n\nArea smaller than the size of a 25-cent piece or 0.716 in 2 (4.619 cm 2)\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5297": {
+    "code": "5297",
+    "name": "Ribs, removal of",
+    "raw_text": "5297 Ribs, removal of:\n\n\n\nMore than six\n50\n\n\nFive or six\n40\n\n\nThree or four\n30\n\n\nTwo\n20\n\n\nOne or resection of two or more ribs without regeneration\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5298": {
+    "code": "5298",
+    "name": "Coccyx, removal of",
+    "raw_text": "5298 Coccyx, removal of:\n\n\n\nPartial or complete, with painful residuals\n10\n\n\nWithout painful residuals\n0\n\n\n\n\n(Authority: 38 U.S.C. 1155)\n\n[29 FR 6718, May 22, 1964, as amended at 34 FR 5062, Mar. 11, 1969; 40 FR 42536, Sept. 15, 1975; 41 FR 11294, Mar. 18, 1976; 43 FR 45350, Oct. 2, 1978; 51 FR 6411, Feb. 24, 1986; 61 FR 20439, May 7, 1996; 67 FR 48785, July 26, 2002; 67 FR 54349, Aug. 22, 2002; 68 FR 51456, Aug. 27, 2003; 69 FR 32450, June 10, 2004; 80 FR 42041, July 16, 2015; 85 FR 76460, Nov.",
+    "method": "full_pattern"
+  },
+  "5301": {
+    "code": "5301",
+    "name": "Group I. Function",
+    "raw_text": "5301 Group I. Function: Upward rotation of scapula; elevation of arm above shoulder level. Extrinsic muscles of shoulder girdle: (1) Trapezius; (2) levator scapulae; (3) serratus magnus\n\n\n\n\nSevere\n40\n30\n\n\nModerately Severe\n30\n20\n\n\nModerate\n10\n10\n\n\nSlight\n0\n0\n\n\n5302 Group II. Function: Depression of arm from vertical overhead to hanging at side (1, 2); downward rotation of scapula (3, 4); 1 and 2 act with Group III in forward and backward swing of arm. Extrinsic muscles of shoulder girdle: (1) Pe",
+    "method": "full_pattern"
+  },
+  "5310": {
+    "code": "5310",
+    "name": "Group X. Function",
+    "raw_text": "5310 Group X. Function: Movements of forefoot and toes; propulsion thrust in walking. Intrinsic muscles of the foot: Plantar: (1) Flexor digitorum brevis; (2) abductor hallucis; (3) abductor digiti minimi; (4) quadratus plantae; (5) lumbricales; (6) flexor hallucis brevis; (7) adductor hallucis; (8) flexor digiti minimi brevis; (9) dorsal and plantar interossei. Other important plantar structures: Plantar aponeurosis, long plantar and calcaneonavicular ligament, tendons of posterior tibial, pero",
+    "method": "full_pattern"
+  },
+  "5311": {
+    "code": "5311",
+    "name": "Group XI. Function",
+    "raw_text": "5311 Group XI. Function: Propulsion, plantar flexion of foot (1); stabilization of arch (2, 3); flexion of toes (4, 5); Flexion of knee (6). Posterior and lateral crural muscles, and muscles of the calf: (1) Triceps surae (gastrocnemius and soleus); (2) tibialis posterior; (3) peroneus longus; (4) peroneus brevis; (5) flexor hallucis longus; (6) flexor digitorum longus; (7) popliteus; (8) plantaris\n\n\n\nSevere\n30\n\n\nModerately Severe\n20\n\n\nModerate\n10\n\n\nSlight\n0\n\n\n5312 Group XII. Function: Dorsiflex",
+    "method": "full_pattern"
+  },
+  "5329": {
+    "code": "5329",
+    "name": "Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)",
+    "raw_text": "5329 Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)—100\n\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5330": {
+    "code": "5330",
+    "name": "Rhabdomyolysis, residuals of",
+    "raw_text": "5330 Rhabdomyolysis, residuals of:\n\n\n\nRate each affected muscle group separately and combine in accordance with § 4.25\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "5331": {
+    "code": "5331",
+    "name": "Compartment syndrome",
+    "raw_text": "5331 Compartment syndrome:\n\n\n\nRate each affected muscle group separately and combine in accordance with § 4.25\n\n\n\n\n\n(Authority: 38 U.S.C. 1155)\n\n[62 FR 30239, June 3, 1997, as amemded 85 FR 76464, Nov. 30, 2020]\n\n\n\n\n\nThe Organs of Special Sense\n\n§ 4.75 General considerations for evaluating visual impairment.\n(a) Visual impairment. The evaluation of visual impairment is based on impairment of visual acuity (excluding developmental errors of refraction), visual field, and muscle function.\n(b) Exam",
+    "method": "full_pattern"
+  },
+  "6000": {
+    "code": "6000",
+    "name": "Choroidopathy, including uveitis, iritis, cyclitis, or choroiditis",
+    "raw_text": "6000 Choroidopathy, including uveitis, iritis, cyclitis, or choroiditis.\n\n\n\n\n6001 Keratopathy.\n\n\n\n6002 Scleritis.\n\n\n\n\n6006 Retinopathy or maculopathy not otherwise specified\n\n\n\n\n6007 Intraocular hemorrhage.\n\n\n\n6008 Detachment of retina.\n\n\n\n\n6009 Unhealed eye injury.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6010": {
+    "code": "6010",
+    "name": "Tuberculosis of eye",
+    "raw_text": "6010 Tuberculosis of eye:\n\n\n\nActive\n100\n\n\nInactive: Evaluate under § 4.88c or § 4.89 of this part, whichever is appropriate\n\n\n\n\n6011 Retinal scars, atrophy, or irregularities:\n\n\n\nLocalized scars, atrophy, or irregularities of the retina, unilateral or bilateral, that are centrally located and that result in an irregular, duplicated, enlarged, or diminished image\n10\n\n\nAlternatively, evaluate based on the General Rating Formula for Diseases of the Eye, if this would result in a higher evaluation\n\n",
+    "method": "full_pattern"
+  },
+  "6015": {
+    "code": "6015",
+    "name": "Benign neoplasms of the eye, orbit, and adnexa (excluding skin)",
+    "raw_text": "6015 Benign neoplasms of the eye, orbit, and adnexa (excluding skin):\n\n\n\nSeparately evaluate visual and nonvisual impairment, e.g., disfigurement (diagnostic code 7800), and combine the evaluations\n\n\n\n\n6016 Nystagmus, central\n10\n\n\n\n6017 Trachomatous conjunctivitis:\n\n\n\nActive: Evaluate under the General Rating Formula for Diseases of the Eye, minimum rating\n30\n\n\nInactive: Evaluate based on residuals, such as visual impairment and disfigurement (diagnostic code 7800)\n\n\n\n\n6018 Chronic conjunctiviti",
+    "method": "full_pattern"
+  },
+  "6091": {
+    "code": "6091",
+    "name": "Symblepharon",
+    "raw_text": "6091 Symblepharon:\n\n\n\nEvaluate under the General Rating Formula for Diseases of the Eye, lagophthalmos (diagnostic code 6022), disfigurement (diagnostic code 7800), etc., depending on the particular findings, and combine in accordance with § 4.25\n\n\n\n\n\n(Authority: 38 U.S.C. 1155)\n\n[73 FR 66550, Nov. 10, 2008, as amended at 83 FR 15321, Apr. 10, 2018]\n\n\n\n\n§§ 4.80-4.84 [Reserved]\n\n\n\n\nImpairment of Auditory Acuity\n\n§ 4.85 Evaluation of hearing impairment.\n(a) An examination for hearing impairment fo",
+    "method": "full_pattern"
+  },
+  "6201": {
+    "code": "6201",
+    "name": "Chronic nonsuppurative otitis media with effusion (serous otitis media)",
+    "raw_text": "6201 Chronic nonsuppurative otitis media with effusion (serous otitis media):\n\n\n\nRate hearing impairment\n\n\n\n6202 Otosclerosis:\n\n\n\nRate hearing impairment\n\n\n\n6204 Peripheral vestibular disorders:\n\n\n\nDizziness and occasional staggering\n30\n\n\nOccasional dizziness\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6205": {
+    "code": "6205",
+    "name": "Meniere's syndrome (endolymphatic hydrops)",
+    "raw_text": "6205 Meniere's syndrome (endolymphatic hydrops):\n\n\n\nHearing impairment with attacks of vertigo and cerebellar gait occurring more than once weekly, with or without tinnitus\n100\n\n\nHearing impairment with attacks of vertigo and cerebellar gait occurring from one to four times a month, with or without tinnitus\n60\n\n\nHearing impairment with vertigo less than once a month, with or without tinnitus\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6207": {
+    "code": "6207",
+    "name": "Loss of auricle",
+    "raw_text": "6207 Loss of auricle:\n\n\n\nComplete loss of both\n50\n\n\nComplete loss of one\n30\n\n\nDeformity of one, with loss of one-third or more of the substance\n10\n\n\n6208 Malignant neoplasm of the ear (other than skin only)\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6209": {
+    "code": "6209",
+    "name": "Benign neoplasms of the ear (other than skin only)",
+    "raw_text": "6209 Benign neoplasms of the ear (other than skin only):\n\n\n\nRate on impairment of function.\n\n\n\n6210 Chronic otitis externa:\n\n\n\nSwelling, dry and scaly or serous discharge, and itching requiring frequent and prolonged treatment\n10\n\n\n6211 Tympanic membrane, perforation of\n0\n\n\n6260 Tinnitus, recurrent\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6300": {
+    "code": "6300",
+    "name": "Vibriosis (Cholera, Non-cholera)",
+    "raw_text": "6300 Vibriosis (Cholera, Non-cholera):\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6301": {
+    "code": "6301",
+    "name": "Visceral leishmaniasis",
+    "raw_text": "6301 Visceral leishmaniasis:\n\n\n\nAs active disease\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6302": {
+    "code": "6302",
+    "name": "Leprosy (Hansen's disease)",
+    "raw_text": "6302 Leprosy (Hansen's disease):\n\n\n\nAs active disease\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6304": {
+    "code": "6304",
+    "name": "Malaria",
+    "raw_text": "6304 Malaria:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6305": {
+    "code": "6305",
+    "name": "Lymphatic filariasis, to include elephantiasis",
+    "raw_text": "6305 Lymphatic filariasis, to include elephantiasis:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6306": {
+    "code": "6306",
+    "name": "Bartonellosis",
+    "raw_text": "6306 Bartonellosis:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6307": {
+    "code": "6307",
+    "name": "Plague",
+    "raw_text": "6307 Plague:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6308": {
+    "code": "6308",
+    "name": "Relapsing Fever",
+    "raw_text": "6308 Relapsing Fever:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6309": {
+    "code": "6309",
+    "name": "Rheumatic fever",
+    "raw_text": "6309 Rheumatic fever:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6310": {
+    "code": "6310",
+    "name": "Syphilis, and other treponema infections",
+    "raw_text": "6310 Syphilis, and other treponema infections:\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6311": {
+    "code": "6311",
+    "name": "Tuberculosis, miliary",
+    "raw_text": "6311 Tuberculosis, miliary:\n\n\n\nAs active disease\n100\n\n\nInactive disease: See §§ 4.88c and 4.89.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6312": {
+    "code": "6312",
+    "name": "Nontuberculosis mycobacterium infection",
+    "raw_text": "6312 Nontuberculosis mycobacterium infection:\n\n\n\nAs active disease\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6313": {
+    "code": "6313",
+    "name": "Avitaminosis",
+    "raw_text": "6313 Avitaminosis:\n\n\n\nMarked mental changes, moist dermatitis, inability to retain adequate nourishment, exhaustion, and cachexia\n100\n\n\nWith all of the symptoms listed below, plus mental symptoms and impaired bodily vigor\n60\n\n\nWith stomatitis, diarrhea, and symmetrical dermatitis\n40\n\n\nWith stomatitis, or achlorhydria, or diarrhea\n20\n\n\nConfirmed diagnosis with nonspecific symptoms such as: decreased appetite, weight loss, abdominal discomfort, weakness, inability to concentrate and irritability\n1",
+    "method": "full_pattern"
+  },
+  "6317": {
+    "code": "6317",
+    "name": "Rickettsial, ehrlichia, and anaplasma infections",
+    "raw_text": "6317 Rickettsial, ehrlichia, and anaplasma infections:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6318": {
+    "code": "6318",
+    "name": "Melioidosis",
+    "raw_text": "6318 Melioidosis:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6319": {
+    "code": "6319",
+    "name": "Lyme disease",
+    "raw_text": "6319 Lyme disease:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6320": {
+    "code": "6320",
+    "name": "Parasitic diseases otherwise not specified",
+    "raw_text": "6320 Parasitic diseases otherwise not specified:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6325": {
+    "code": "6325",
+    "name": "Hyperinfection syndrome or disseminated strongyloidiasis",
+    "raw_text": "6325 Hyperinfection syndrome or disseminated strongyloidiasis:\n\n\n\nAs active disease\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6326": {
+    "code": "6326",
+    "name": "Schistosomiasis",
+    "raw_text": "6326 Schistosomiasis:\n\n\n\nAs acute or asymptomatic chronic disease\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6329": {
+    "code": "6329",
+    "name": "Hemorrhagic fevers, including dengue, yellow fever, and others",
+    "raw_text": "6329 Hemorrhagic fevers, including dengue, yellow fever, and others:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6330": {
+    "code": "6330",
+    "name": "Campylobacter jejuni infection",
+    "raw_text": "6330 Campylobacter jejuni infection:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6331": {
+    "code": "6331",
+    "name": "Coxiella burnetii infection (Q fever)",
+    "raw_text": "6331 Coxiella burnetii infection (Q fever):\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6333": {
+    "code": "6333",
+    "name": "Nontyphoid salmonella infections",
+    "raw_text": "6333 Nontyphoid salmonella infections:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6334": {
+    "code": "6334",
+    "name": "Shigella infections",
+    "raw_text": "6334 Shigella infections:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6335": {
+    "code": "6335",
+    "name": "West Nile virus infection",
+    "raw_text": "6335 West Nile virus infection:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6350": {
+    "code": "6350",
+    "name": "Lupus erythematosus, systemic (disseminated)",
+    "raw_text": "6350 Lupus erythematosus, systemic (disseminated):\n\n\n\nNot to be combined with ratings under DC 7809 Acute, with frequent exacerbations, producing severe impairment of health\n100\n\n\nExacerbations lasting a week or more, 2 or 3 times per year\n60\n\n\nExacerbations once or twice a year or symptomatic during the past 2 years\n10\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6351": {
+    "code": "6351",
+    "name": "HIV-related illness",
+    "raw_text": "6351 HIV-related illness:\n\n\n\nAIDS with recurrent opportunistic infections (see Note",
+    "method": "full_pattern"
+  },
+  "6354": {
+    "code": "6354",
+    "name": "Chronic fatigue syndrome (CFS)",
+    "raw_text": "6354 Chronic fatigue syndrome (CFS):\n\n\n\nDebilitating fatigue, cognitive impairments (such as inability to concentrate, forgetfulness, or confusion), or a combination of other signs and symptoms:\n\n\n\nWhich are nearly constant and so severe as to restrict routine daily activities almost completely and which may occasionally preclude self-care\n100\n\n\nWhich are nearly constant and restrict routine daily activities to less than 50 percent",
+    "method": "full_pattern"
+  },
+  "6502": {
+    "code": "6502",
+    "name": "Septum, nasal, deviation of",
+    "raw_text": "6502 Septum, nasal, deviation of:\n\n\n\nTraumatic only,\n\n\n\nWith 50-percent obstruction of the nasal passage on both sides or complete obstruction on one side\n10\n\n\n6504 Nose, loss of part of, or scars:\n\n\n\nExposing both nasal passages\n30\n\n\nLoss of part of one ala, or other obvious disfigurement\n10\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6510": {
+    "code": "6510",
+    "name": "Sinusitis, pansinusitis, chronic",
+    "raw_text": "6510 Sinusitis, pansinusitis, chronic.\n\n\n\n6511 Sinusitis, ethmoid, chronic.\n\n\n\n6512 Sinusitis, frontal, chronic.\n\n\n\n6513 Sinusitis, maxillary, chronic.\n\n\n\n6514 Sinusitis, sphenoid, chronic.\n\n\n\nGeneral Rating Formula for Sinusitis (DC's 6510 through 6514):\n\n\n\nFollowing radical surgery with chronic osteomyelitis, or; near constant sinusitis characterized by headaches, pain and tenderness of affected sinus, and purulent discharge or crusting after repeated surgeries\n50\n\n\nThree or more incapacitatin",
+    "method": "full_pattern"
+  },
+  "6515": {
+    "code": "6515",
+    "name": "Laryngitis, tuberculous, active or inactive",
+    "raw_text": "6515 Laryngitis, tuberculous, active or inactive.\n\n\n\nRate under §§ 4.88c or 4.89, whichever is appropriate.\n\n\n\n6516 Laryngitis, chronic:\n\n\n\nHoarseness, with thickening or nodules of cords, polyps, submucous infiltration, or pre-malignant changes on biopsy\n30\n\n\nHoarseness, with inflammation of cords or mucous membrane\n10\n\n\n6518 Laryngectomy, total.\n1 100\n\n\nRate the residuals of partial laryngectomy as laryngitis (DC 6516), aphonia (DC 6519), or stenosis of larynx (DC 6520).\n\n\n\n6519 Aphonia, compl",
+    "method": "full_pattern"
+  },
+  "6520": {
+    "code": "6520",
+    "name": "Larynx, stenosis of, including residuals of laryngeal trauma (unilateral or bilateral)",
+    "raw_text": "6520 Larynx, stenosis of, including residuals of laryngeal trauma (unilateral or bilateral):\n\n\n\nForced expiratory volume in one second (FEV-1) less than 40 percent",
+    "method": "full_pattern"
+  },
+  "6521": {
+    "code": "6521",
+    "name": "Pharynx, injuries to",
+    "raw_text": "6521 Pharynx, injuries to:\n\n\n\nStricture or obstruction of pharynx or nasopharynx, or; absence of soft palate secondary to trauma, chemical burn, or granulomatous disease, or; paralysis of soft palate with swallowing difficulty (nasal regurgitation) and speech impairment\n50\n\n\n6522 Allergic or vasomotor rhinitis:\n\n\n\nWith polyps\n30\n\n\nWithout polyps, but with greater than 50-percent obstruction of nasal passage on both sides or complete obstruction on one side\n10\n\n\n6523 Bacterial rhinitis:\n\n\n\nRhinos",
+    "method": "full_pattern"
+  },
+  "6601": {
+    "code": "6601",
+    "name": "Bronchiectasis",
+    "raw_text": "6601 Bronchiectasis:\n\n\n\nWith incapacitating episodes of infection of at least six weeks total duration per year\n100\n\n\nWith incapacitating episodes of infection of four to six weeks total duration per year, or; near constant findings of cough with purulent sputum associated with anorexia, weight loss, and frank hemoptysis and requiring antibiotic usage almost continuously\n60\n\n\nWith incapacitating episodes of infection of two to four weeks total duration per year, or; daily productive cough with s",
+    "method": "full_pattern"
+  },
+  "6602": {
+    "code": "6602",
+    "name": "Asthma, bronchial",
+    "raw_text": "6602 Asthma, bronchial:\n\n\n\nFEV-1 less than 40-percent predicted, or; FEV-1/FVC less than 40 percent",
+    "method": "full_pattern"
+  },
+  "6603": {
+    "code": "6603",
+    "name": "Emphysema, pulmonary",
+    "raw_text": "6603 Emphysema, pulmonary:\n\n\n\nFEV-1 less than 40 percent",
+    "method": "full_pattern"
+  },
+  "6604": {
+    "code": "6604",
+    "name": "Chronic obstructive pulmonary disease",
+    "raw_text": "6604 Chronic obstructive pulmonary disease:\n\n\n\nFEV-1 less than 40 percent",
+    "method": "full_pattern"
+  },
+  "6721": {
+    "code": "6721",
+    "name": "Tuberculosis, pulmonary, chronic, far advanced, inactive",
+    "raw_text": "6721 Tuberculosis, pulmonary, chronic, far advanced, inactive\n\n\n\n6722 Tuberculosis, pulmonary, chronic, moderately advanced, inactive\n\n\n\n6723 Tuberculosis, pulmonary, chronic, minimal, inactive\n\n\n\n6724 Tuberculosis, pulmonary, chronic, inactive, advancement unspecified\n\n\n\nGeneral Rating Formula for Inactive Pulmonary Tuberculosis: For two years after date of inactivity, following active tuberculosis, which was clinically identified during service or subsequently\n100\n\n\nThereafter for four years, ",
+    "method": "full_pattern"
+  },
+  "6731": {
+    "code": "6731",
+    "name": "Tuberculosis, pulmonary, chronic, inactive",
+    "raw_text": "6731 Tuberculosis, pulmonary, chronic, inactive:\n\n\n\nDepending on the specific findings, rate residuals as interstitial lung disease, restrictive lung disease, or, when obstructive lung disease is the major residual, as chronic bronchitis (DC 6600). Rate thoracoplasty as removal of ribs under DC 5297.\n\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6732": {
+    "code": "6732",
+    "name": "Pleurisy, tuberculous, active or inactive",
+    "raw_text": "6732 Pleurisy, tuberculous, active or inactive:\n\n\n\nRate under §§ 4.88c or 4.89, whichever is appropriate.\n\n\n\nNONTUBERCULOUS DISEASES\n\n\n6817 Pulmonary Vascular Disease:\n\n\n\nPrimary pulmonary hypertension, or; chronic pulmonary thromboembolism with evidence of pulmonary hypertension, right ventricular hypertrophy, or cor pulmonale, or; pulmonary hypertension secondary to other obstructive disease of pulmonary arteries or veins with evidence of right ventricular hypertrophy or cor pulmonale\n100\n\n\nCh",
+    "method": "full_pattern"
+  },
+  "6822": {
+    "code": "6822",
+    "name": "Actinomycosis",
+    "raw_text": "6822 Actinomycosis.\n\n\n\n6823 Nocardiosis.\n\n\n\n6824 Chronic lung abscess.\n\n\n\nGeneral Rating Formula for Bacterial Infections of the Lung (diagnostic codes 6822 through 6824):\n\n\n\nActive infection with systemic symptoms such as fever, night sweats, weight loss, or hemoptysis\n100\n\n\nDepending on the specific findings, rate residuals as interstitial lung disease, restrictive lung disease, or, when obstructive lung disease is the major residual, as chronic bronchitis (DC 6600).\n\n\n\nInterstitial Lung Disea",
+    "method": "full_pattern"
+  },
+  "6840": {
+    "code": "6840",
+    "name": "Diaphragm paralysis or paresis",
+    "raw_text": "6840 Diaphragm paralysis or paresis.\n\n\n\n6841 Spinal cord injury with respiratory insufficiency.\n\n\n\n6842 Kyphoscoliosis, pectus excavatum, pectus carinatum.\n\n\n\n6843 Traumatic chest wall defect, pneumothorax, hernia, etc.\n\n\n\n6844 Post-surgical residual (lobectomy, pneumonectomy, etc.).\n\n\n\n6845 Chronic pleural effusion or fibrosis.\n\n\n\nGeneral Rating Formula for Restrictive Lung Disease (diagnostic codes 6840 through 6845):\n\n\n\nFEV-1 less than 40 percent",
+    "method": "full_pattern"
+  },
+  "6846": {
+    "code": "6846",
+    "name": "Sarcoidosis",
+    "raw_text": "6846 Sarcoidosis:\n\n\n\nCor pulmonale, or; cardiac involvement with congestive heart failure, or; progressive pulmonary disease with fever, night sweats, and weight loss despite treatment\n100\n\n\nPulmonary involvement requiring systemic high dose (therapeutic) corticosteroids for control\n60\n\n\nPulmonary involvement with persistent symptoms requiring chronic low dose (maintenance) or intermittent corticosteroids\n30\n\n\nChronic hilar adenopathy or stable lung infiltrates without symptoms or physiologic im",
+    "method": "full_pattern"
+  },
+  "7000": {
+    "code": "7000",
+    "name": "Valvular heart disease (including rheumatic heart disease)",
+    "raw_text": "7000 Valvular heart disease (including rheumatic heart disease),\n\n\n\n\n7001 Endocarditis, or\n\n\n\n\n7002 Pericarditis:\n\n\n\nDuring active infection with cardiac involvement and for three months following cessation of therapy for the active infection\n100\n\n\nThereafter, with diagnosis confirmed by findings on physical examination and either echocardiogram, Doppler echocardiogram, or cardiac catheterization, use the General Rating Formula.\n\n\n\n\n7003 Pericardial adhesions.\n\n\n\n\n7004 Syphilitic heart disease:\n",
+    "method": "full_pattern"
+  },
+  "7005": {
+    "code": "7005",
+    "name": "Arteriosclerotic heart disease (coronary artery disease)",
+    "raw_text": "7005 Arteriosclerotic heart disease (coronary artery disease).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7006": {
+    "code": "7006",
+    "name": "Myocardial infarction",
+    "raw_text": "7006 Myocardial infarction:\n\n\n\nDuring and for three months following myocardial infarction, confirmed by laboratory tests\n100\n\n\nThereafter, use the General Rating Formula.\n\n\n\n\n7007 Hypertensive heart disease.\n\n\n\n\n7008 Hyperthyroid heart disease:\n\n\n\nRate under the appropriate cardiovascular diagnostic code, depending on particular findings.\n\n\n\nFor DCs 7009, 7010, 7011, and 7015, a single evaluation will be assigned under the diagnostic code that reflects the predominant disability picture.\n\n\n\n\n70",
+    "method": "full_pattern"
+  },
+  "7010": {
+    "code": "7010",
+    "name": "Supraventricular tachycardia",
+    "raw_text": "7010 Supraventricular tachycardia:\n\n\n\nConfirmed by ECG, with five or more treatment interventions per year\n30\n\n\nConfirmed by ECG, with one to four treatment interventions per year; or, confirmed by ECG with either continuous use of oral medications to control or use of vagal maneuvers to control\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7011": {
+    "code": "7011",
+    "name": "Ventricular arrhythmias (sustained)",
+    "raw_text": "7011 Ventricular arrhythmias (sustained):\n\n\n\nFor an indefinite period from the date of inpatient hospital admission for initial medical therapy for a sustained ventricular arrhythmia; or, for an indefinite period from the date of inpatient hospital admission for ventricular aneurysmectomy; or, with an automatic implantable cardioverter-defibrillator (AICD) in place\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7015": {
+    "code": "7015",
+    "name": "Atrioventricular block",
+    "raw_text": "7015 Atrioventricular block:\n\n\n\nBenign (First-Degree and Second-Degree, Type I):\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nNon-Benign (Second-Degree, Type II and Third-Degree):\n\n\n\nEvaluate under DC 7018 (implantable cardiac pacemakers).\n\n\n\n\n7016 Heart valve replacement (prosthesis):\n\n\n\nFor an indefinite period following date of hospital admission for valve replacement\n100\n\n\nThereafter, use the General Rating Formula.\n\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7017": {
+    "code": "7017",
+    "name": "Coronary bypass surgery",
+    "raw_text": "7017 Coronary bypass surgery:\n\n\n\nFor three months following hospital admission for surgery\n100\n\n\nThereafter, use the General Rating Formula.\n\n\n\n\n7018 Implantable cardiac pacemakers:\n\n\n\nFor one month following hospital discharge for implantation or re-implantation\n100\n\n\nThereafter:\n\n\n\nEvaluate as supraventricular tachycardia (DC 7010), ventricular arrhythmias (DC 7011), or atrioventricular block (DC 7015).\n\n\n\nMinimum\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7019": {
+    "code": "7019",
+    "name": "Cardiac transplantation",
+    "raw_text": "7019 Cardiac transplantation:\n\n\n\nFor a minimum of one year from the date of hospital admission for cardiac transplantation\n100\n\n\nThereafter:\n\n\n\nEvaluate under the General Rating Formula.\n\n\n\nMinimum\n30\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7020": {
+    "code": "7020",
+    "name": "Cardiomyopathy",
+    "raw_text": "7020 Cardiomyopathy.\n\n\n\n\nDiseases of the Arteries and Veins\n\n\n\n\n\n7101 Hypertensive vascular disease (hypertension and isolated systolic hypertension):\n\n\n\nDiastolic pressure predominantly 130 or more\n60\n\n\nDiastolic pressure predominantly 120 or more\n40\n\n\nDiastolic pressure predominantly 110 or more, or; systolic pressure predominantly 200 or more\n20\n\n\nDiastolic pressure predominantly 100 or more, or; systolic pressure predominantly 160 or more, or; minimum evaluation for an individual with a hist",
+    "method": "full_pattern"
+  },
+  "7110": {
+    "code": "7110",
+    "name": "Aortic aneurysm",
+    "raw_text": "7110 Aortic aneurysm: Ascending, thoracic, or abdominal:\n\n\n\nEvaluate at 100 percent",
+    "method": "full_pattern"
+  },
+  "7111": {
+    "code": "7111",
+    "name": "Aneurysm, any large artery",
+    "raw_text": "7111 Aneurysm, any large artery:\n\n\n\nIf symptomatic; or, for the period beginning on the date a physician recommends surgical correction and continuing for six months following discharge from inpatient hospital admission for surgical correction\n100\n\n\nFollowing surgery: Evaluate under DC 7114 (peripheral arterial disease).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7112": {
+    "code": "7112",
+    "name": "Aneurysm, any small artery",
+    "raw_text": "7112 Aneurysm, any small artery:\n\n\n\nAsymptomatic\n0\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7113": {
+    "code": "7113",
+    "name": "Arteriovenous fistula, traumatic",
+    "raw_text": "7113 Arteriovenous fistula, traumatic:\n\n\n\nWith high-output heart failure\n100\n\n\nWithout heart failure but with enlarged heart, wide pulse pressure, and tachycardia\n60\n\n\nWithout cardiac involvement but with chronic edema, stasis dermatitis, and either ulceration or cellulitis:\n\n\n\nLower extremity\n50\n\n\nUpper extremity\n40\n\n\nWithout cardiac involvement but with chronic edema or stasis dermatitis:\n\n\n\nLower extremity\n30\n\n\nUpper extremity\n20\n\n\n\n7114 Peripheral arterial disease:\n\n\n\nAt least one of the fol",
+    "method": "full_pattern"
+  },
+  "7115": {
+    "code": "7115",
+    "name": "Thrombo-angiitis obliterans (Buerger's Disease)",
+    "raw_text": "7115 Thrombo-angiitis obliterans (Buerger's Disease):\n\n\n\nLower extremity: Rate under DC 7114.\n\n\n\nUpper extremity:\n\n\n\nDeep ischemic ulcers and necrosis of the fingers with persistent coldness of the extremity, trophic changes with pains in the hand during physical activity, and diminished upper extremity pulses\n100\n\n\nPersistent coldness of the extremity, trophic changes with pains in the hands during physical activity, and diminished upper extremity pulses\n60\n\n\nTrophic changes with numbness and p",
+    "method": "full_pattern"
+  },
+  "7117": {
+    "code": "7117",
+    "name": "Raynaud's syndrome (also known as secondary Raynaud's phenomenon or secondary Raynaud's)",
+    "raw_text": "7117 Raynaud's syndrome (also known as secondary Raynaud's phenomenon or secondary Raynaud's):\n\n\n\nWith two or more digital ulcers plus auto-amputation of one or more digits and history of characteristic attacks\n100\n\n\nWith two or more digital ulcers and history of characteristic attacks\n60\n\n\nCharacteristic attacks occurring at least daily\n40\n\n\nCharacteristic attacks occurring four to six times a week\n20\n\n\nCharacteristic attacks occurring one to three times a week\n10\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7118": {
+    "code": "7118",
+    "name": "Angioneurotic edema",
+    "raw_text": "7118 Angioneurotic edema:\n\n\n\nAttacks without laryngeal involvement lasting one to seven days or longer and occurring more than eight times a year, or; attacks with laryngeal involvement of any duration occurring more than twice a year\n40\n\n\nAttacks without laryngeal involvement lasting one to seven days and occurring five to eight times a year, or; attacks with laryngeal involvement of any duration occurring once or twice a year\n20\n\n\nAttacks without laryngeal involvement lasting one to seven days",
+    "method": "full_pattern"
+  },
+  "7120": {
+    "code": "7120",
+    "name": "Varicose veins",
+    "raw_text": "7120 Varicose veins:\n\n\n\nEvaluate under diagnostic code 7121.\n\n\n\n\n7121 Post-phlebitic syndrome of any etiology:\n\n\n\nWith the following findings attributed to venous disease:\n\n\n\nMassive board-like edema with constant pain at rest\n100\n\n\nPersistent edema or subcutaneous induration, stasis pigmentation or eczema, and persistent ulceration\n60\n\n\nPersistent edema and stasis pigmentation or eczema, with or without intermittent ulceration\n40\n\n\nPersistent edema, incompletely relieved by elevation of extremi",
+    "method": "full_pattern"
+  },
+  "7122": {
+    "code": "7122",
+    "name": "Cold injury residuals",
+    "raw_text": "7122 Cold injury residuals:\n\n\n\nWith the following in affected parts:\n\n\n\nArthralgia or other pain, numbness, or cold sensitivity plus two or more of the following: Tissue loss, nail abnormalities, color changes, locally impaired sensation, hyperhidrosis, anhydrosis, X-ray abnormalities (osteoporosis, subarticular punched-out lesions, or osteoarthritis), atrophy or fibrosis of the affected musculature, flexion or extension deformity of distal joints, volar fat pad loss in fingers or toes, avascula",
+    "method": "full_pattern"
+  },
+  "7124": {
+    "code": "7124",
+    "name": "Raynaud's disease (also known as primary Raynaud's)",
+    "raw_text": "7124 Raynaud's disease (also known as primary Raynaud's):\n\n\n\nCharacteristic attacks associated with trophic change(s), such as tight, shiny skin\n10\n\n\nCharacteristic attacks without trophic change(s)\n0\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7200": {
+    "code": "7200",
+    "name": "Soft tissue injury of the mouth, other than tongue or lips",
+    "raw_text": "7200 Soft tissue injury of the mouth, other than tongue or lips:\n\n\n\nRate as for disfigurement (diagnostic codes 7800 and 7804) and impairment of mastication.\n\n\n\n\n7201 Lips, injuries of:\n\n\n\nRate as disfigurement (diagnostic codes 7800 and 7804).\n\n\n\n\n7202 Tongue, loss of whole or part:\n\n\n\nAbsent oral nutritional intake\n100\n\n\nIntact oral nutritional intake with permanently impaired swallowing function that requires prescribed dietary modification\n60\n\n\nIntact oral nutritional intake with permanently",
+    "method": "full_pattern"
+  },
+  "7203": {
+    "code": "7203",
+    "name": "Esophagus, stricture of",
+    "raw_text": "7203 Esophagus, stricture of:\n\n\n\nDocumented history of recurrent or refractory esophageal stricture(s) causing dysphagia with at least one of the symptoms present: (1) aspiration, (2) undernutrition, and/or (3) substantial weight loss as defined by § 4.112(a) and treatment with either surgical correction or percutaneous esophago-gastrointestinal tube (PEG tube)\n80\n\n\nDocumented history of recurrent or refractory esophageal stricture(s) causing dysphagia which requires at least one of the followin",
+    "method": "full_pattern"
+  },
+  "7204": {
+    "code": "7204",
+    "name": "Esophageal motility disorder",
+    "raw_text": "7204 Esophageal motility disorder:\n\n\n\nRate as esophagus, stricture of (DC 7203).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7205": {
+    "code": "7205",
+    "name": "Esophagus, diverticulum of, acquired",
+    "raw_text": "7205 Esophagus, diverticulum of, acquired:\n\n\n\nRate as esophagus, stricture of (DC 7203).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7206": {
+    "code": "7206",
+    "name": "Gastroesophageal reflux disease",
+    "raw_text": "7206 Gastroesophageal reflux disease:\n\n\n\nDocumented history of recurrent or refractory esophageal stricture(s) causing dysphagia with at least one of the symptoms present: (1) aspiration, (2) undernutrition, and/or (3) substantial weight loss as defined by § 4.112(a) and treatment with either surgical correction of esophageal stricture(s) or percutaneous esophago-gastrointestinal tube (PEG tube)\n80\n\n\nDocumented history of recurrent or refractory esophageal stricture(s) causing dysphagia which re",
+    "method": "full_pattern"
+  },
+  "7207": {
+    "code": "7207",
+    "name": "Barrett's esophagus",
+    "raw_text": "7207 Barrett's esophagus:\n\n\n\nWith esophageal stricture: Rate as esophagus, stricture of (DC 7203).\n\n\n\nWithout esophageal stricture:\n\n\n\nDocumented by pathologic diagnosis with high-grade dysplasia\n30\n\n\nDocumented by pathologic diagnosis with low-grade dysplasia\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7301": {
+    "code": "7301",
+    "name": "Peritoneum, adhesions of, due to surgery, trauma, disease, or infection",
+    "raw_text": "7301 Peritoneum, adhesions of, due to surgery, trauma, disease, or infection:\n\n\n\nPersistent partial bowel obstruction that is either inoperable and refractory to treatment, or requires total parenteral nutrition (TPN) for obstructive symptoms\n80\n\n\nSymptomatic peritoneal adhesions, persisting or recurring after surgery, trauma, inflammatory disease process such as chronic cholecystitis or Crohn's disease, or infection, as determined by a healthcare provider; and clinical evidence of recurrent obs",
+    "method": "full_pattern"
+  },
+  "7304": {
+    "code": "7304",
+    "name": "Peptic ulcer disease",
+    "raw_text": "7304 Peptic ulcer disease:\n\n\n\nPost-operative for perforation or hemorrhage, for three months\n100\n\n\nContinuous abdominal pain with intermittent vomiting, recurrent hematemesis (vomiting blood) or melena (tarry stools); and manifestations of anemia which require hospitalization at least once in the past 12 months\n60\n\n\nEpisodes of abdominal pain, nausea, or vomiting, that: last for at least three consecutive days in duration; occur four or more times in the past 12 months; and are managed by daily ",
+    "method": "full_pattern"
+  },
+  "7307": {
+    "code": "7307",
+    "name": "Gastritis, chronic",
+    "raw_text": "7307 Gastritis, chronic:\n\n\n\nRate as peptic ulcer disease (DC 7304).\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7308": {
+    "code": "7308",
+    "name": "Postgastrectomy syndrome",
+    "raw_text": "7308 Postgastrectomy syndrome:\n\n\n\nRate residuals as chronic complications of upper gastrointestinal surgery (DC 7303).\n\n\n\n\n7309 Stomach, stenosis of:\n\n\n\nRate as chronic complications of upper gastrointestinal surgery (DC 7303) or peptic ulcer disease (DC 7304), depending on the predominant disability.\n\n\n\n\n7310 Stomach, injury of, residuals:\n\n\n\nPre-operative: Rate as adhesions of peritoneum due to surgery, trauma, disease, or infection (DC 7301). No adhesions are necessary when evaluating under D",
+    "method": "full_pattern"
+  },
+  "7314": {
+    "code": "7314",
+    "name": "Chronic biliary tract disease",
+    "raw_text": "7314 Chronic biliary tract disease:\n\n\n\nWith three or more clinically documented attacks of right upper quadrant pain with nausea and vomiting during the past 12 months; or requiring dilatation of biliary tract strictures at least once during the past 12 months.\n30\n\n\nWith one or two clinically documented attacks of right upper quadrant pain with nausea and vomiting in the past 12 months.\n10\n\n\nAsymptomatic, without history of a clinically documented attack of right upper quadrant pain with nausea ",
+    "method": "full_pattern"
+  },
+  "7315": {
+    "code": "7315",
+    "name": "Cholelithiasis, chronic",
+    "raw_text": "7315 Cholelithiasis, chronic:\n\n\n\nRate as chronic biliary tract disease (DC 7314).\n\n\n\n\n7317 Gallbladder, injury of:\n\n\n\nRate as adhesions of the peritoneum due to surgery, trauma, disease, or infection (DC 7301); or chronic gallbladder and biliary tract disease (DC 7314), or cholecystectomy (gallbladder removal), complications of (such as strictures and biliary leaks) (DC 7318), depending on the predominant disability.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7318": {
+    "code": "7318",
+    "name": "Cholecystectomy (gallbladder removal), complications of (such as strictures and biliary leaks)",
+    "raw_text": "7318 Cholecystectomy (gallbladder removal), complications of (such as strictures and biliary leaks):\n\n\n\nWith recurrent abdominal pain (post-prandial or nocturnal); and chronic diarrhea characterized by three or more watery bowel movements per day\n30\n\n\nWith intermittent abdominal pain; and diarrhea characterized by one to two watery bowel movements per day\n10\n\n\nAsymptomatic\n0\n\n\n\n7319 Irritable bowel syndrome (IBS):\n\n\n\nAbdominal pain related to defecation at least one day per week during the previ",
+    "method": "full_pattern"
+  },
+  "7323": {
+    "code": "7323",
+    "name": "Colitis, ulcerative",
+    "raw_text": "7323 Colitis, ulcerative:\n\n\n\nRate as Crohn's disease or undifferentiated form of inflammatory bowel disease (DC 7326).\n\n\n\n\n7325 Enteritis, chronic:\n\n\n\nRate as Irritable Bowel Syndrome (DC 7319) or Crohn's disease or undifferentiated form of inflammatory bowel disease (DC 7326), depending on the predominant disability.\n\n\n\n\n7326 Crohn's disease or undifferentiated form of inflammatory bowel disease:\n\n\n\nSevere inflammatory bowel disease that is unresponsive to treatment; and requires hospitalizatio",
+    "method": "full_pattern"
+  },
+  "7327": {
+    "code": "7327",
+    "name": "Diverticulitis and diverticulosis",
+    "raw_text": "7327 Diverticulitis and diverticulosis:\n\n\n\nDiverticular disease requiring hospitalization for abdominal distress, fever, and leukocytosis (elevated white blood cells) one or more times in the past 12 months; and with at least one of the following complications: (1) hemorrhage, (2) obstruction, (3) abscess, (4) peritonitis, or (5) perforation\n30\n\n\nDiverticular disease requiring hospitalization for abdominal distress, fever, and leukocytosis (elevated white blood cells) one or more times in the pa",
+    "method": "full_pattern"
+  },
+  "7328": {
+    "code": "7328",
+    "name": "Intestine, small, resection of",
+    "raw_text": "7328 Intestine, small, resection of:\n\n\n\nStatus post intestinal resection with undernutrition and anemia; and requiring total parenteral nutrition (TPN)\n80\n\n\nStatus post intestinal resection with undernutrition and anemia; and requiring prescribed oral dietary supplementation, continuous medication and intermittent total parenteral nutrition (TPN)\n60\n\n\nStatus post intestinal resection with four or more episodes of diarrhea per day resulting in undernutrition and anemia; and requiring prescribed o",
+    "method": "full_pattern"
+  },
+  "7329": {
+    "code": "7329",
+    "name": "Intestine, large, resection of",
+    "raw_text": "7329 Intestine, large, resection of:\n\n\n\nTotal colectomy with formation of ileostomy, high-output syndrome, and more than two episodes of dehydration requiring intravenous hydration in the past 12 months\n100\n\n\nTotal colectomy with or without permanent colostomy or ileostomy without high-output syndrome\n60\n\n\nPartial colectomy with permanent colostomy or ileostomy without high-output syndrome\n40\n\n\nPartial colectomy with reanastomosis (reconnection of the intestinal tube) with loss of ileocecal valv",
+    "method": "full_pattern"
+  },
+  "7331": {
+    "code": "7331",
+    "name": "Peritonitis, tuberculous, active or inactive",
+    "raw_text": "7331 Peritonitis, tuberculous, active or inactive:\n\n\n\nActive\n100\n\n\nInactive: See §§ 4.88b and 4.89.\n\n\n\n\n7332 Rectum and anus, impairment of sphincter control:\n\n\n\nComplete loss of sphincter control characterized by incontinence or retention that is not responsive to a physician-prescribed bowel program and requires either surgery or digital stimulation, medication (beyond laxative use), and special diet; or incontinence to solids and/or liquids two or more times per day, which requires changing a",
+    "method": "full_pattern"
+  },
+  "7333": {
+    "code": "7333",
+    "name": "Rectum and anus, stricture of",
+    "raw_text": "7333 Rectum and anus, stricture of:\n\n\n\nInability to open the anus with inability to expel solid feces\n100\n\n\nReduction of the lumen 50%",
+    "method": "full_pattern"
+  },
+  "7334": {
+    "code": "7334",
+    "name": "Rectum, prolapse of",
+    "raw_text": "7334 Rectum, prolapse of:\n\n\n\nPersistent irreducible prolapse, repairable or unrepairable\n100\n\n\nManually reducible prolapse that is not repairable and occurs at times other than bowel movements, exertion, or while performing the Valsalva maneuver\n50\n\n\nManually reducible prolapse that is not repairable and occurs only after bowel movements, exertion, or while performing the Valsalva maneuver\n30\n\n\nSpontaneously reducible prolapse that is not repairable\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7335": {
+    "code": "7335",
+    "name": "Ano, fistula in, including anorectal fistula and anorectal abscess",
+    "raw_text": "7335 Ano, fistula in, including anorectal fistula and anorectal abscess:\n\n\n\nMore than two constant or near-constant fistulas with abscesses, drainage, and pain, which are refractory to medical and surgical treatment\n60\n\n\nOne or two simultaneous fistulas, with abscess, drainage, and pain\n40\n\n\nTwo or more simultaneous fistulas with drainage and pain, but without abscesses\n20\n\n\nOne fistula with drainage and pain, but without abscess\n10\n\n\n\n7336 Hemorrhoids, external or internal:\n\n\n\nInternal or exter",
+    "method": "full_pattern"
+  },
+  "7344": {
+    "code": "7344",
+    "name": "Benign neoplasms, exclusive of skin growths",
+    "raw_text": "7344 Benign neoplasms, exclusive of skin growths:\n\n\n\nEvaluate under a diagnostic code appropriate to the predominant disability or the specific residuals after treatment.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7345": {
+    "code": "7345",
+    "name": "Chronic liver disease without cirrhosis",
+    "raw_text": "7345 Chronic liver disease without cirrhosis:\n\n\n\nProgressive chronic liver disease requiring use of both parenteral antiviral therapy (direct antiviral agents), and parenteral immunomodulatory therapy (interferon and other); and for six months following discontinuance of treatment\n100\n\n\nProgressive chronic liver disease requiring continuous medication and causing substantial weight loss and at least two of the following: (1) daily fatigue, (2) malaise, (3) anorexia, (4) hepatomegaly, (5) pruritu",
+    "method": "full_pattern"
+  },
+  "7346": {
+    "code": "7346",
+    "name": "Hiatal hernia and paraesophageal hernia",
+    "raw_text": "7346 Hiatal hernia and paraesophageal hernia:\n\n\n\nRate as esophagus, stricture of (DC 7203).\n\n\n\n\n7347 Pancreatitis, chronic:\n\n\n\nDaily episodes of abdominal or mid-back pain that require three or more hospitalizations per year; and pain management by a physician; and maldigestion and malabsorption requiring dietary restriction and pancreatic enzyme supplementation\n100\n\n\nThree or more episodes of abdominal or mid-back pain per year and at least one episode per year requiring hospitalization for man",
+    "method": "full_pattern"
+  },
+  "7348": {
+    "code": "7348",
+    "name": "Vagotomy with pyloroplasty or gastroenterostomy",
+    "raw_text": "7348 Vagotomy with pyloroplasty or gastroenterostomy:\n\n\n\nFollowing confirmation of postoperative complications of stricture or continuing gastric retention\n40\n\n\nWith symptoms and confirmed diagnosis of alkaline gastritis, or with confirmed persisting diarrhea\n30\n\n\nWith incomplete vagotomy\n20\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7350": {
+    "code": "7350",
+    "name": "Liver abscess",
+    "raw_text": "7350 Liver abscess:\n\n\n\nAssign a rating of 100%",
+    "method": "full_pattern"
+  },
+  "7351": {
+    "code": "7351",
+    "name": "Liver transplant",
+    "raw_text": "7351 Liver transplant:\n\n\n\nFor an indefinite period from the date of hospital admission for transplant surgery\n100\n\n\nEligible and awaiting transplant surgery, minimum rating\n60\n\n\nFollowing transplant surgery, minimum rating\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7352": {
+    "code": "7352",
+    "name": "Pancreas transplant",
+    "raw_text": "7352 Pancreas transplant:\n\n\n\nFor an indefinite period from the date of hospital admission for transplant surgery\n100\n\n\nMinimum rating\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7354": {
+    "code": "7354",
+    "name": "Hepatitis C (or non-A, non-B hepatitis)",
+    "raw_text": "7354 Hepatitis C (or non-A, non-B hepatitis):\n\n\n\nRate under DC 7345 (Chronic liver disease without cirrhosis).\n\n\n\n\n7355 Celiac disease:\n\n\n\nMalabsorption syndrome with weakness which interferes with activities of daily living; and weight loss resulting in wasting and nutritional deficiencies; and with systemic manifestations including but not limited to, weakness and fatigue, dermatitis, lymph node enlargement, hypocalcemia, low vitamin levels; and anemia related to malabsorption; and episodes of",
+    "method": "full_pattern"
+  },
+  "7356": {
+    "code": "7356",
+    "name": "Gastrointestinal dysmotility syndrome",
+    "raw_text": "7356 Gastrointestinal dysmotility syndrome:\n\n\n\nRequiring complete dependence on total parenteral nutrition (TPN) or continuous tube feeding for nutritional support\n80\n\n\nRequiring intermittent tube feeding for nutritional support; with recurrent emergency treatment for episodes of intestinal obstruction or regurgitation due to poor gastric emptying, abdominal pain, recurrent nausea, or recurrent vomiting\n50\n\n\nWith symptoms of chronic intestinal pseudo-obstruction (CIPO) or symptoms of intestinal ",
+    "method": "full_pattern"
+  },
+  "7357": {
+    "code": "7357",
+    "name": "Post pancreatectomy syndrome",
+    "raw_text": "7357 Post pancreatectomy syndrome:\n\n\n\nFollowing total or partial pancreatectomy, evaluate under Pancreatitis, chronic (DC 7347), Chronic complications of upper gastrointestinal surgery (DC 7303), or based on residuals such as malabsorption (Intestine, small, resection of, DC 7328), diarrhea (Irritable bowel syndrome, DC 7319, or Crohn's disease or undifferentiated form of inflammatory bowel disease, DC 7326), or diabetes (DC 7913), whichever provides the highest evaluation\n\n\n\nMinimum\n30\n\n\n\n\n\n(Au",
+    "method": "full_pattern"
+  },
+  "7500": {
+    "code": "7500",
+    "name": "Kidney, removal of one",
+    "raw_text": "7500 Kidney, removal of one:\n\n\n\nMinimum evaluation\n30\n\n\nOr rate as renal dysfunction if there is nephritis, infection, or pathology of the other.\n\n\n\n7501 Kidney, abscess of:\n\n\n\nRate as urinary tract infection\n\n\n\n7502 Nephritis, chronic:\n\n\n\nRate as renal dysfunction.\n\n\n\n7504 Pyelonephritis, chronic:\n\n\n\nRate as renal dysfunction or urinary tract infection, whichever is predominant.\n\n\n\n7505 Kidney, tuberculosis of:\n\n\n\nRate in accordance with §§ 4.88b or 4.89, whichever is appropriate.\n\n\n\n7507 Nephr",
+    "method": "full_pattern"
+  },
+  "7523": {
+    "code": "7523",
+    "name": "Testis, atrophy complete",
+    "raw_text": "7523 Testis, atrophy complete:\n\n\n\nBoth—20 1\n\n\n\nOne—0 1\n\n\n\n7524 Testis, removal:\n\n\n\nBoth\n1 30\n\n\nOne\n1 0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7525": {
+    "code": "7525",
+    "name": "Prostatitis, urethritis, epididymitis, orchitis (unilateral or bilateral), chronic only",
+    "raw_text": "7525 Prostatitis, urethritis, epididymitis, orchitis (unilateral or bilateral), chronic only:\n\n\n\nRate as urinary tract infection.\n\n\n\nFor tubercular infections: Rate in accordance with §§ 4.88b or 4.89, whichever is appropriate.\n\n\n\n\n7527 Prostate gland injuries, infections, hypertrophy, postoperative residuals, bladder outlet obstruction:\n\n\n\nRate as voiding dysfunction or urinary tract infection, whichever is predominant.\n\n\n\n\n7528 Malignant neoplasms of the genitourinary system\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7529": {
+    "code": "7529",
+    "name": "Benign neoplasms of the genitourinary system",
+    "raw_text": "7529 Benign neoplasms of the genitourinary system:\n\n\n\nRate as voiding dysfunction or renal dysfunction, whichever is predominant.\n\n\n\n7530 Chronic renal disease requiring regular dialysis:\n\n\n\nRate as renal dysfunction.\n\n\n\n7531 Kidney transplant:\n\n\n\nFollowing transplant surgery\n100\n\n\nThereafter: Rate on residuals as renal dysfunction, minimum rating\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7533": {
+    "code": "7533",
+    "name": "Cystic diseases of the kidneys",
+    "raw_text": "7533 Cystic diseases of the kidneys:\n\n\n\nRate as renal dysfunction.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7536": {
+    "code": "7536",
+    "name": "Glomerulonephritis",
+    "raw_text": "7536 Glomerulonephritis:\n\n\n\nRate as renal dysfunction.\n\n\n\n7537 Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism:\n\n\n\nRate as renal dysfunction.\n\n\n\n\n7538 Papillary necrosis:\n\n\n\nRate as renal dysfunction.\n\n\n\n7539 Renal amyloid disease:\n\n\n\nRate as renal dysfunction.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7540": {
+    "code": "7540",
+    "name": "Disseminated intravascular coagulation with renal cortical necrosis",
+    "raw_text": "7540 Disseminated intravascular coagulation with renal cortical necrosis:\n\n\n\nRate as renal dysfunction.\n\n\n\n\n7541 Renal involvement in diabetes mellitus type I or II:\n\n\n\nRate as renal dysfunction.\n\n\n\n7542 Neurogenic bladder:\n\n\n\nRate as voiding dysfunction or urinary tract infection, whichever is predominant.\n\n\n\n\n7543 Varicocele/Hydrocele\n1 0\n\n\n7544 Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and Hepatitis C:\n\n\n\nRate as renal dysfunction.\n\n\n\n\n75",
+    "method": "full_pattern"
+  },
+  "7610": {
+    "code": "7610",
+    "name": "Vulva or clitoris, disease or injury of (including vulvovaginitis)",
+    "raw_text": "7610 Vulva or clitoris, disease or injury of (including vulvovaginitis)\n\n\n\n\n7611 Vagina, disease or injury of.\n\n\n\n7612 Cervix, disease or injury of.\n\n\n\n7613 Uterus, disease, injury, or adhesions of.\n\n\n\n7614 Fallopian tube, disease, injury, or adhesions of (including pelvic inflammatory disease (PID)).\n\n\n\n7615 Ovary, disease, injury, or adhesions of.\n\n\n\nGeneral Rating Formula for Disease, Injury, or Adhesions of Female Reproductive Organs (diagnostic codes 7610 through 7615):\n\n\n\n\nSymptoms not con",
+    "method": "full_pattern"
+  },
+  "7617": {
+    "code": "7617",
+    "name": "Uterus and both ovaries, removal of, complete",
+    "raw_text": "7617 Uterus and both ovaries, removal of, complete:\n\n\n\nFor three months after removal\n1 100\n\n\nThereafter\n1 50\n\n\n7618 Uterus, removal of, including corpus:\n\n\n\nFor three months after removal\n1 100\n\n\nThereafter\n1 30\n\n\n7619 Ovary, removal of:\n\n\n\nFor three months after removal\n1 100\n\n\nThereafter:\n\n\n\nComplete removal of both ovaries\n1 30\n\n\nRemoval of one with or without partial removal of the other\n1 0\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7624": {
+    "code": "7624",
+    "name": "Fistula, rectovaginal",
+    "raw_text": "7624 Fistula, rectovaginal:\n\n\n\nVaginal fecal leakage at least once a day requiring wearing of pad\n100\n\n\nVaginal fecal leakage four or more times per week, but less than daily, requiring wearing of pad\n60\n\n\nVaginal fecal leakage one to three times per week requiring wearing of pad\n30\n\n\nVaginal fecal leakage less than once a week\n10\n\n\nWithout leakage\n0\n\n\n7625 Fistula, urethrovaginal:\n\n\n\nMultiple urethrovaginal fistulae\n100\n\n\nRequiring the use of an appliance or the wearing of absorbent materials w",
+    "method": "full_pattern"
+  },
+  "7629": {
+    "code": "7629",
+    "name": "Endometriosis",
+    "raw_text": "7629 Endometriosis:\n\n\n\nLesions involving bowel or bladder confirmed by laparoscopy, pelvic pain or heavy or irregular bleeding not controlled by treatment, and bowel or bladder symptoms\n50\n\n\nPelvic pain or heavy or irregular bleeding not controlled by treatment\n30\n\n\nPelvic pain or heavy or irregular bleeding requiring continuous treatment for control\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7702": {
+    "code": "7702",
+    "name": "Agranulocytosis, acquired",
+    "raw_text": "7702 Agranulocytosis, acquired:\n\n\n\nRequiring bone marrow transplant; or infections recurring, on average, at least once every six weeks per 12-month period\n100\n\n\nRequiring intermittent myeloid growth factors (granulocyte colony-stimulating factor (G-CSF) or granulocyte-macrophage colony-stimulating factor (GM-CSF) or continuous immunosuppressive therapy such as cyclosporine to maintain absolute neutrophil count (ANC) greater than 500/microliter (µl) but less than 1000/µl; or infections recurring",
+    "method": "full_pattern"
+  },
+  "7703": {
+    "code": "7703",
+    "name": "Leukemia (except for chronic myelogenous leukemia)",
+    "raw_text": "7703 Leukemia (except for chronic myelogenous leukemia):\n\n\n\nWhen there is active disease or during a treatment phase\n100\n\n\nOtherwise rate residuals under the appropriate diagnostic code(s)\n\n\n\nChronic lymphocytic leukemia or monoclonal B-cell lymphocytosis (MBL), asymptomatic, Rai Stage 0\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7704": {
+    "code": "7704",
+    "name": "Polycythemia vera",
+    "raw_text": "7704 Polycythemia vera:\n\n\n\nRequiring peripheral blood or bone marrow stem-cell transplant or chemotherapy (including myelosuppressants) for the purpose of ameliorating the symptom burden\n100\n\n\nRequiring phlebotomy 6 or more times per 12-month period or molecularly targeted therapy for the purpose of controlling RBC count\n60\n\n\nRequiring phlebotomy 4-5 times per 12-month period, or if requiring continuous biologic therapy or myelosuppressive agents, to include interferon, to maintain platelets <20",
+    "method": "full_pattern"
+  },
+  "7705": {
+    "code": "7705",
+    "name": "Immune thrombocytopenia",
+    "raw_text": "7705 Immune thrombocytopenia:\n\n\n\nRequiring chemotherapy for chronic refractory thrombocytopenia; or a platelet count 30,000 or below despite treatment\n100\n\n\nRequiring immunosuppressive therapy; or for a platelet count higher than 30,000 but not higher than 50,000, with history of hospitalization because of severe bleeding requiring intravenous immune globulin, high-dose parenteral corticosteroids, and platelet transfusions\n70\n\n\nPlatelet count higher than 30,000 but not higher than 50,000, with e",
+    "method": "full_pattern"
+  },
+  "7707": {
+    "code": "7707",
+    "name": "Spleen, injury of, healed",
+    "raw_text": "7707 Spleen, injury of, healed.\n\n\n\nRate for any residuals.\n\n\n\n7709 Hodgkin's lymphoma:\n\n\n\nWith active disease or during a treatment phase\n100\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7710": {
+    "code": "7710",
+    "name": "Adenitis, tuberculous, active or inactive",
+    "raw_text": "7710 Adenitis, tuberculous, active or inactive:\n\n\n\nRate under § 4.88c or 4.89 of this part, whichever is appropriate\n\n\n\n\n7712 Multiple myeloma:\n\n\n\nSymptomatic multiple myeloma\n100\n\n\nAsymptomatic, smoldering, or monoclonal gammopathy of undetermined significance (MGUS)\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7714": {
+    "code": "7714",
+    "name": "Sickle cell anemia",
+    "raw_text": "7714 Sickle cell anemia:\n\n\n\nWith at least 4 or more painful episodes per 12-month period, occurring in skin, joints, bones, or any major organs, caused by hemolysis and sickling of red blood cells, with anemia, thrombosis, and infarction, with residual symptoms precluding even light manual labor\n100\n\n\nWith 3 painful episodes per 12-month period or with symptoms precluding other than light manual labor\n60\n\n\nWith 1 or 2 painful episodes per 12-month period\n30\n\n\nAsymptomatic, established case in re",
+    "method": "full_pattern"
+  },
+  "7715": {
+    "code": "7715",
+    "name": "Non-Hodgkin's lymphoma",
+    "raw_text": "7715 Non-Hodgkin's lymphoma:\n\n\n\nWhen there is active disease, during treatment phase, or with indolent and non-contiguous phase of low grade NHL\n100\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7716": {
+    "code": "7716",
+    "name": "Aplastic anemia",
+    "raw_text": "7716 Aplastic anemia:\n\n\n\nRequiring peripheral blood or bone marrow stem cell transplant; or requiring transfusion of platelets or red cells, on average, at least once every six weeks per 12-month period; or infections recurring, on average, at least once every six weeks per 12-month period\n100\n\n\nRequiring transfusion of platelets or red cells, on average, at least once every three months per 12-month period; or infections recurring, on average, at least once every three months per 12-month perio",
+    "method": "full_pattern"
+  },
+  "7718": {
+    "code": "7718",
+    "name": "Essential thrombocythemia and primary myelofibrosis",
+    "raw_text": "7718 Essential thrombocythemia and primary myelofibrosis:\n\n\n\nRequiring either continuous myelosuppressive therapy, or, for six months following hospital admission for any of the following treatments: peripheral blood or bone marrow stem cell transplant, or chemotherapy, or interferon treatment\n100\n\n\nRequiring continuous or intermittent myelosuppressive therapy, or chemotherapy, or interferon treatment to maintain platelet count <500 × 109/L\n70\n\n\nRequiring continuous or intermittent myelosuppress",
+    "method": "full_pattern"
+  },
+  "7719": {
+    "code": "7719",
+    "name": "Chronic myelogenous leukemia (CML) (chronic myeloid leukemia or chronic granulocytic leukemia)",
+    "raw_text": "7719 Chronic myelogenous leukemia (CML) (chronic myeloid leukemia or chronic granulocytic leukemia):\n\n\n\nRequiring peripheral blood or bone marrow stem cell transplant, or continuous myelosuppressive or immunosuppressive therapy treatment\n100\n\n\nRequiring intermittent myelosuppressive therapy, or molecularly targeted therapy with tyrosine kinase inhibitors, or interferon treatment when not in apparent remission\n60\n\n\nIn apparent remission on continuous molecularly targeted therapy with tyrosine kin",
+    "method": "full_pattern"
+  },
+  "7720": {
+    "code": "7720",
+    "name": "Iron deficiency anemia",
+    "raw_text": "7720 Iron deficiency anemia:\n\n\n\nRequiring intravenous iron infusions 4 or more times per 12-month period\n30\n\n\nRequiring intravenous iron infusions at least 1 time but less than 4 times per 12-month period, or requiring continuous treatment with oral supplementation\n10\n\n\nAsymptomatic or requiring treatment only by dietary modification\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7721": {
+    "code": "7721",
+    "name": "Folic acid deficiency",
+    "raw_text": "7721 Folic acid deficiency:\n\n\n\nRequiring continuous treatment with high-dose oral supplementation\n10\n\n\nAsymptomatic or requiring treatment only by dietary modification\n0\n\n\n\n7722 Pernicious anemia and Vitamin B12 deficiency anemia:\n\n\n\nFor initial diagnosis requiring transfusion due to severe anemia, or if there are signs or symptoms related to central nervous system impairment, such as encephalopathy, myelopathy, or severe peripheral neuropathy, requiring parenteral B12 therapy\n100\n\n\nRequiring co",
+    "method": "full_pattern"
+  },
+  "7723": {
+    "code": "7723",
+    "name": "Acquired hemolytic anemia",
+    "raw_text": "7723 Acquired hemolytic anemia:\n\n\n\nRequiring a bone marrow transplant or continuous intravenous or immunosuppressive therapy (e.g., prednisone, Cytoxan, azathioprine, or rituximab)\n100\n\n\nRequiring immunosuppressive medication 4 or more times per 12-month period\n60\n\n\nRequiring at least 2 but less than 4 courses of immunosuppressive therapy per 12-month period\n30\n\n\nRequiring one course of immunosuppressive therapy per 12-month period\n10\n\n\nAsymptomatic\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7724": {
+    "code": "7724",
+    "name": "Solitary plasmacytoma",
+    "raw_text": "7724 Solitary plasmacytoma:\n\n\n\nSolitary plasmacytoma, when there is active disease or during a treatment phase\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7725": {
+    "code": "7725",
+    "name": "Myelodysplastic syndromes",
+    "raw_text": "7725 Myelodysplastic syndromes:\n\n\n\nRequiring peripheral blood or bone marrow stem cell transplant; or requiring chemotherapy\n100\n\n\nRequiring 4 or more blood or platelet transfusions per 12-month period; or infections requiring hospitalization 3 or more times per 12-month period\n60\n\n\nRequiring at least 1 but no more than 3 blood or platelet transfusions per 12-month period; infections requiring hospitalization at least 1 but no more than 2 times per 12-month period; or requiring biologic therapy ",
+    "method": "full_pattern"
+  },
+  "7804": {
+    "code": "7804",
+    "name": "Scar(s), unstable or painful",
+    "raw_text": "7804 Scar(s), unstable or painful:\n\n\n\nFive or more scars that are unstable or painful\n30\n\n\nThree or four scars that are unstable or painful\n20\n\n\nOne or two scars that are unstable or painful\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7806": {
+    "code": "7806",
+    "name": "Dermatitis or eczema",
+    "raw_text": "7806 Dermatitis or eczema.\n\n\n\nEvaluate under the General Rating Formula for the Skin\n\n\n\n\n7807 American (New World) leishmaniasis (mucocutaneous, espundia):\n\n\n\nRate as disfigurement of the head, face, or neck (DC 7800), scars (DC's 7801, 7802, 7803, 7804, or 7805), or dermatitis (DC 7806), depending upon the predominant disability\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7808": {
+    "code": "7808",
+    "name": "Old World leishmaniasis (cutaneous, Oriental sore)",
+    "raw_text": "7808 Old World leishmaniasis (cutaneous, Oriental sore):\n\n\n\nRate as disfigurement of the head, face, or neck (DC 7800), scars (DC's, 7801, 7802, 7803, 7804, or 7805), or dermatitis (DC 7806), depending upon the predominant disabililty\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7809": {
+    "code": "7809",
+    "name": "Discoid lupus erythematosus",
+    "raw_text": "7809 Discoid lupus erythematosus.\n\n\n\nEvaluate under the General Rating Formula for the Skin\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7811": {
+    "code": "7811",
+    "name": "Tuberculosis luposa (lupus vulgaris), active or inactive",
+    "raw_text": "7811 Tuberculosis luposa (lupus vulgaris), active or inactive:\n\n\n\nRate under §§ 4.88c or 4.89, whichever is appropriate\n\n\n\n\n7813 Dermatophytosis (ringworm: Of body, tinea corporis; of head, tinea capitis; of feet, tinea pedis; of beard area, tinea barbae; of nails, tinea unguium (onychomycosis); of inguinal area (jock itch), tinea cruris; tinea versicolor).\n\n\n\nEvaluate under the General Rating Formula for the Skin\n\n\n\n\n7815 Bullous disorders (including pemphigus vulgaris, pemphigus foliaceous, bu",
+    "method": "full_pattern"
+  },
+  "7816": {
+    "code": "7816",
+    "name": "Psoriasis",
+    "raw_text": "7816 Psoriasis.\n\n\n\nEvaluate under the General Rating Formula for the Skin\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7817": {
+    "code": "7817",
+    "name": "Erythroderma",
+    "raw_text": "7817 Erythroderma:\n\n\n\nGeneralized involvement of the skin with systemic manifestations (such as fever, weight loss, or hypoproteinemia) AND one of the following\n100\n\n\nConstant or near-constant systemic therapy such as therapeutic doses of corticosteroids, other immunosuppressive drugs, retinoids, PUVA (psoralen with long-wave ultraviolet-A light), UVB (ultraviolet-B light) treatments, biologics, or electron beam therapy required over the past 12 month period; or\n\n\n\nNo current treatment due to a ",
+    "method": "full_pattern"
+  },
+  "7818": {
+    "code": "7818",
+    "name": "Malignant skin neoplasms (other than malignant melanoma)",
+    "raw_text": "7818 Malignant skin neoplasms (other than malignant melanoma):\n\n\n\nRate as disfigurement of the head, face, or neck (DC 7800), scars (DC's 7801, 7802, 7803, 7804, or 7805), or impairment of function\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7819": {
+    "code": "7819",
+    "name": "Benign skin neoplasms",
+    "raw_text": "7819 Benign skin neoplasms:\n\n\n\nRate as disfigurement of the head, face, or neck (DC 7800), scars (DC's 7801, 7802, 7803, 7804, or 7805), or impairment of function\n\n\n\n\n7820 Infections of the skin not listed elsewhere (including bacterial, fungal, viral, treponemal, and parasitic diseases).\n\n\n\nEvaluate under the General Rating Formula for the Skin\n\n\n\n\n7821 Cutaneous manifestations of collagen-vascular diseases not listed elsewhere (including scleroderma, calcinosis cutis, subacute cutaneous lupus ",
+    "method": "full_pattern"
+  },
+  "7829": {
+    "code": "7829",
+    "name": "Chloracne",
+    "raw_text": "7829 Chloracne:\n\n\n\nDeep acne (deep inflamed nodules and pus-filled cysts) affecting 40 percent",
+    "method": "full_pattern"
+  },
+  "7830": {
+    "code": "7830",
+    "name": "Scarring alopecia",
+    "raw_text": "7830 Scarring alopecia:\n\n\n\nAffecting more than 40 percent",
+    "method": "full_pattern"
+  },
+  "7831": {
+    "code": "7831",
+    "name": "Alopecia areata",
+    "raw_text": "7831 Alopecia areata:\n\n\n\nWith loss of all body hair\n10\n\n\nWith loss of hair limited to scalp and face\n0\n\n\n7832 Hyperhidrosis:\n\n\n\nUnable to handle paper or tools because of moisture, and unresponsive to therapy\n30\n\n\nAble to handle paper or tools after therapy\n0\n\n\n7833 Malignant melanoma:\n\n\n\nRate as scars (DC's 7801, 7802, 7803, 7804, or 7805), disfigurement of the head, face, or neck (DC 7800), or impairment of function (under the appropriate body system)\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7900": {
+    "code": "7900",
+    "name": "Hyperthyroidism, including, but not limited to, Graves' disease",
+    "raw_text": "7900 Hyperthyroidism, including, but not limited to, Graves' disease:\n\n\n\nFor six months after initial diagnosis\n30\n\n\nThereafter, rate residuals of disease or complications of medical treatment within the appropriate diagnostic code(s) within the appropriate body system.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7901": {
+    "code": "7901",
+    "name": "Thyroid enlargement, toxic",
+    "raw_text": "7901 Thyroid enlargement, toxic:\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7902": {
+    "code": "7902",
+    "name": "Thyroid enlargement, nontoxic",
+    "raw_text": "7902 Thyroid enlargement, nontoxic:\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7903": {
+    "code": "7903",
+    "name": "Hypothyroidism",
+    "raw_text": "7903 Hypothyroidism:\n\n\n\nHypothyroidism manifesting as myxedema (cold intolerance, muscular weakness, cardiovascular involvement (including, but not limited to hypotension, bradycardia, and pericardial effusion), and mental disturbance (including, but not limited to dementia, slowing of thought and depression))\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7904": {
+    "code": "7904",
+    "name": "Hyperparathyroidism",
+    "raw_text": "7904 Hyperparathyroidism:\n\n\n\nFor six months from date of discharge following surgery\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7905": {
+    "code": "7905",
+    "name": "Hypoparathyroidism",
+    "raw_text": "7905 Hypoparathyroidism:\n\n\n\nFor three months after initial diagnosis\n100\n\n\nThereafter, evaluate chronic residuals, such as nephrolithiasis (kidney stones), cataracts, decreased renal function, and congestive heart failure under the appropriate diagnostic codes.\n\n\n\n7906 Thyroiditis:\n\n\n\nWith normal thyroid function (euthyroid)\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7907": {
+    "code": "7907",
+    "name": "Cushing's syndrome",
+    "raw_text": "7907 Cushing's syndrome:\n\n\n\nAs active, progressive disease, including areas of osteoporosis, hypertension, and proximal upper and lower extremity muscle wasting that results in inability to rise from squatting position, climb stairs, rise from a deep chair without assistance, or raise arms\n100\n\n\nProximal upper or lower extremity muscle wasting that results in inability to rise from squatting position, climb stairs, rise from a deep chair without assistance, or raise arms\n60\n\n\nWith striae, obesit",
+    "method": "full_pattern"
+  },
+  "7908": {
+    "code": "7908",
+    "name": "Acromegaly",
+    "raw_text": "7908 Acromegaly:\n\n\n\nEvidence of increased intracranial pressure (such as visual field defect), arthropathy, glucose intolerance, and either hypertension or cardiomegaly\n100\n\n\nArthropathy, glucose intolerance, and hypertension\n60\n\n\nEnlargement of acral parts or overgrowth of long bones\n30\n\n\n7909 Diabetes insipidus:\n\n\n\nFor three months after initial diagnosis\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7911": {
+    "code": "7911",
+    "name": "Addison's disease (adrenocortical insufficiency)",
+    "raw_text": "7911 Addison's disease (adrenocortical insufficiency):\n\n\n\nFour or more crises during the past year\n60\n\n\nThree crises during the past year, or; five or more episodes during the past year\n40\n\n\nOne or two crises during the past year, or; two to four episodes during the past year, or; weakness and fatigability, or; corticosteroid therapy required for control\n20\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7912": {
+    "code": "7912",
+    "name": "Polyglandular syndrome (multiple endocrine neoplasia, autoimmune polyglandular syndrome)",
+    "raw_text": "7912 Polyglandular syndrome (multiple endocrine neoplasia, autoimmune polyglandular syndrome):\n\n\n\nEvaluate according to major manifestations to include, but not limited to, Type I diabetes mellitus, hyperthyroidism, hypothyroidism, hypoparathyroidism, or Addison's disease.\n\n\n\n7913 Diabetes mellitus:\n\n\n\nRequiring more than one daily injection of insulin, restricted diet, and regulation of activities (avoidance of strenuous occupational and recreational activities) with episodes of ketoacidosis or",
+    "method": "full_pattern"
+  },
+  "7915": {
+    "code": "7915",
+    "name": "Neoplasm, benign, any specified part of the endocrine system",
+    "raw_text": "7915 Neoplasm, benign, any specified part of the endocrine system:\n\n\n\nRate as residuals of endocrine dysfunction.\n\n\n\n7916 Hyperpituitarism (prolactin secreting pituitary dysfunction):\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7917": {
+    "code": "7917",
+    "name": "Hyperaldosteronism (benign or malignant)",
+    "raw_text": "7917 Hyperaldosteronism (benign or malignant):\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7918": {
+    "code": "7918",
+    "name": "Pheochromocytoma (benign or malignant)",
+    "raw_text": "7918 Pheochromocytoma (benign or malignant):\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "7919": {
+    "code": "7919",
+    "name": "C-cell hyperplasia of the thyroid",
+    "raw_text": "7919 C-cell hyperplasia of the thyroid:\n\n\n\nIf antineoplastic therapy is required, evaluate as a malignant neoplasm under DC 7914. If a prophylactic thyroidectomy is performed (based upon genetic testing) and antineoplastic therapy is not required, evaluate as hypothyroidism under DC 7903.\n\n\n\n\n\n[61 FR 20446, May 7, 1996, as amended at 82 FR 50804, Nov. 2, 2017]\n\n\n\n\n\nNeurological Conditions and Convulsive Disorders\n\n§ 4.120 Evaluations by comparison.\nDisability in this field is ordinarily to be ra",
+    "method": "full_pattern"
+  },
+  "8000": {
+    "code": "8000",
+    "name": "Encephalitis, epidemic, chronic",
+    "raw_text": "8000 Encephalitis, epidemic, chronic:\n\n\n\nAs active febrile disease\n100\n\n\nRate residuals, minimum\n10\n\n\nBrain, new growth of:\n\n\n\n8002 Malignant\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8004": {
+    "code": "8004",
+    "name": "Paralysis agitans",
+    "raw_text": "8004 Paralysis agitans:\n\n\n\nMinimum rating\n30\n\n\n8005 Bulbar palsy\n100\n\n\n8007 Brain, vessels, embolism of.\n\n\n\n8008 Brain, vessels, thrombosis of.\n\n\n\n8009 Brain, vessels, hemorrhage from:\n\n\n\nRate the vascular conditions under Codes 8007 through 8009, for 6 months\n100\n\n\nRate residuals, thereafter, minimum\n10\n\n\n8010 Myelitis:\n\n\n\nMinimum rating\n10\n\n\n8011 Poliomyelitis, anterior:\n\n\n\nAs active febrile disease\n100\n\n\nRate residuals, minimum\n10\n\n\n8012 Hematomyelia:\n\n\n\nFor 6 months\n100\n\n\nRate residuals, min",
+    "method": "full_pattern"
+  },
+  "8018": {
+    "code": "8018",
+    "name": "Multiple sclerosis",
+    "raw_text": "8018 Multiple sclerosis:\n\n\n\nMinimum rating\n30\n\n\n8019 Meningitis, cerebrospinal, epidemic:\n\n\n\nAs active febrile disease\n100\n\n\nRate residuals, minimum\n10\n\n\n8020 Brain, abscess of:\n\n\n\nAs active disease\n100\n\n\nRate residuals, minimum\n10\n\n\nSpinal cord, new growths of:\n\n\n\n8021 Malignant\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8023": {
+    "code": "8023",
+    "name": "Progressive muscular atrophy",
+    "raw_text": "8023 Progressive muscular atrophy:\n\n\n\nMinimum rating\n30\n\n\n8024 Syringomyelia:\n\n\n\nMinimum rating\n30\n\n\n8025 Myasthenia gravis:\n\n\n\nMinimum rating\n30\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8045": {
+    "code": "8045",
+    "name": "Residuals of traumatic brain injury (TBI)",
+    "raw_text": "8045 Residuals of traumatic brain injury (TBI):\n\n\n\nThere are three main areas of dysfunction that may result from TBI and have profound effects on functioning: cognitive (which is common in varying degrees after TBI), emotional/behavioral, and physical. Each of these areas of dysfunction may require evaluation.\n\n\n\nCognitive impairment is defined as decreased memory, concentration, attention, and executive functions of the brain. Executive functions are goal setting, speed of information processi",
+    "method": "full_pattern"
+  },
+  "8046": {
+    "code": "8046",
+    "name": "Cerebral arteriosclerosis",
+    "raw_text": "8046 Cerebral arteriosclerosis:\n\n\n\nPurely neurological disabilities, such as hemiplegia, cranial nerve paralysis, etc., due to cerebral arteriosclerosis will be rated under the diagnostic codes dealing with such specific disabilities, with citation of a hyphenated diagnostic code (e.g., 8046-8207).\n\n\n\nPurely subjective complaints such as headache, dizziness, tinnitus, insomnia and irritability, recognized as symptomatic of a properly diagnosed cerebral arteriosclerosis, will be rated 10 percent",
+    "method": "full_pattern"
+  },
+  "8100": {
+    "code": "8100",
+    "name": "Migraine",
+    "raw_text": "8100 Migraine:\n\n\n\nWith very frequent completely prostrating and prolonged attacks productive of severe economic inadaptability\n50\n\n\nWith characteristic prostrating attacks occurring on an average once a month over last several months\n30\n\n\nWith characteristic prostrating attacks averaging one in 2 months over last several months\n10\n\n\nWith less frequent attacks\n0\n\n\n8103 Tic, convulsive:\n\n\n\nSevere\n30\n\n\nModerate\n10\n\n\nMild\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8104": {
+    "code": "8104",
+    "name": "Paramyoclonus multiplex (convulsive state, myoclonic type)",
+    "raw_text": "8104 Paramyoclonus multiplex (convulsive state, myoclonic type):\n\n\n\nRate as tic; convulsive; severe cases\n60\n\n\n8105 Chorea, Sydenham's:\n\n\n\nPronounced, progressive grave types\n100\n\n\nSevere\n80\n\n\nModerately severe\n50\n\n\nModerate\n30\n\n\nMild\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8106": {
+    "code": "8106",
+    "name": "Chorea, Huntington's",
+    "raw_text": "8106 Chorea, Huntington's.\n\n\n\nRate as Sydenham's chorea. This, though a familial disease, has its onset in late adult life, and is considered a ratable disability.\n\n\n\n8107 Athetosis, acquired.\n\n\n\nRate as chorea.\n\n\n\n8108 Narcolepsy.\n\n\n\nRate as for epilepsy, petit mal.\n\n\n\n\n\n\n\nDiseases of the Cranial Nerves\n\n\n \nRating\n\n\n\n\nDisability from lesions of peripheral portions of first, second, third, fourth, sixth, and eighth nerves will be rated under the Organs of Special Sense. The ratings for the crani",
+    "method": "full_pattern"
+  },
+  "8305": {
+    "code": "8305",
+    "name": "Neuritis",
+    "raw_text": "8305 Neuritis.\n\n\n\n8405 Neuralgia.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8207": {
+    "code": "8207",
+    "name": "Paralysis of",
+    "raw_text": "8207 Paralysis of:\n\n\n\nComplete\n30\n\n\nIncomplete, severe\n20\n\n\nIncomplete, moderate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8307": {
+    "code": "8307",
+    "name": "Neuritis",
+    "raw_text": "8307 Neuritis.\n\n\n\n8407 Neuralgia.\n\n\n\nNinth (glossopharyngeal) cranial nerve\n\n\n\n8209 Paralysis of:\n\n\n\nComplete\n30\n\n\nIncomplete, severe\n20\n\n\nIncomplete, moderate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8309": {
+    "code": "8309",
+    "name": "Neuritis",
+    "raw_text": "8309 Neuritis.\n\n\n\n8409 Neuralgia.\n\n\n\nTenth (pneumogastric, vagus) cranial nerve\n\n\n\n8210 Paralysis of:\n\n\n\nComplete\n50\n\n\nIncomplete, severe\n30\n\n\nIncomplete, moderate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8310": {
+    "code": "8310",
+    "name": "Neuritis",
+    "raw_text": "8310 Neuritis.\n\n\n\n8410 Neuralgia.\n\n\n\nEleventh (spinal accessory, external branch) cranial nerve.\n\n\n\n8211 Paralysis of:\n\n\n\nComplete\n30\n\n\nIncomplete, severe\n20\n\n\nIncomplete, moderate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8311": {
+    "code": "8311",
+    "name": "Neuritis",
+    "raw_text": "8311 Neuritis.\n\n\n\n8411 Neuralgia.\n\n\n\nTwelfth (hypoglossal) cranial nerve.\n\n\n\n8212 Paralysis of:\n\n\n\nComplete\n50\n\n\nIncomplete, severe\n30\n\n\nIncomplete, moderate\n10\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8312": {
+    "code": "8312",
+    "name": "Neuritis",
+    "raw_text": "8312 Neuritis.\n\n\n\n8412 Neuralgia.\n\n\n\n\n\n\n\nDiseases of the Peripheral Nerves\n\n\nSchedule of ratings\nRating\n\n\nMajor\nMinor\n\n\n\n\nThe term “incomplete paralysis,” with this and other peripheral nerve injuries, indicates a degree of lost or impaired function substantially less than the type picture for complete paralysis given with each nerve, whether due to varied level of the nerve lesion or to partial regeneration. When the involvement is wholly sensory, the rating should be for the mild, or at most, ",
+    "method": "full_pattern"
+  },
+  "8515": {
+    "code": "8515",
+    "name": "Paralysis of",
+    "raw_text": "8515 Paralysis of:\n\n\n\n\nComplete; the hand inclined to the ulnar side, the index and middle fingers more extended than normally, considerable atrophy of the muscles of the thenar eminence, the thumb in the plane of the hand (ape hand); pronation incomplete and defective, absence of flexion of index finger and feeble flexion of middle finger, cannot make a fist, index and middle fingers remain extended; cannot flex distal phalanx of thumb, defective opposition and abduction of the thumb, at right ",
+    "method": "full_pattern"
+  },
+  "8619": {
+    "code": "8619",
+    "name": "Neuritis",
+    "raw_text": "8619 Neuritis.\n\n\n\n\n8719 Neuralgia.\n\n\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8520": {
+    "code": "8520",
+    "name": "Paralysis of",
+    "raw_text": "8520 Paralysis of:\n\n\n\nComplete; the foot dangles and drops, no active movement possible of muscles below the knee, flexion of knee weakened or (very rarely) lost\n80\n\n\nIncomplete:\n\n\n\nSevere, with marked muscular atrophy\n60\n\n\nModerately severe\n40\n\n\nModerate\n20\n\n\nMild\n10\n\n\n8620 Neuritis.\n\n\n\n8720 Neuralgia.\n\n\n\n\nExternal popliteal nerve (common peroneal)\n\n\n\n\n8521 Paralysis of:\n\n\n\nComplete; foot drop and slight droop of first phalanges of all toes, cannot dorsiflex the foot, extension (dorsal flexion)",
+    "method": "full_pattern"
+  },
+  "8910": {
+    "code": "8910",
+    "name": "Epilepsy, grand mal",
+    "raw_text": "8910 Epilepsy, grand mal.\n\n\n\nRate under the general rating formula for major seizures.\n\n\n\n8911 Epilepsy, petit mal.\n\n\n\nRate under the general rating formula for minor seizures.\n\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "8912": {
+    "code": "8912",
+    "name": "Epilepsy, Jacksonian and focal motor or sensory",
+    "raw_text": "8912 Epilepsy, Jacksonian and focal motor or sensory.\n\n\n\n8913 Epilepsy, diencephalic.\n\n\n\nRate as minor seizures, except in the presence of major and minor seizures, rate the predominating type.\n\n\n\n8914 Epilepsy, psychomotor.\n\n\n\nMajor seizures:\n\n\n\nPsychomotor seizures will be rated as major seizures under the general rating formula when characterized by automatic states and/or generalized convulsions with unconsciousness.\n\n\n\nMinor seizures:\n\n\n\nPsychomotor seizures will be rated as minor seizures ",
+    "method": "full_pattern"
+  },
+  "9201": {
+    "code": "9201",
+    "name": "Schizophrenia",
+    "raw_text": "9201 Schizophrenia\n\n9202 [Removed]\n\n9203 [Removed]\n\n9204 [Removed]\n\n9205 [Removed]\n\n9208 Delusional disorder\n\n9210 Other specified and unspecified schizophrenia spectrum and other psychotic disorders\n\n9211 Schizoaffective disorder\n\n9300 Delirium\n\n9301 Major or mild neurocognitive disorder due to HIV or other infections\n\n9304 Major or mild neurocognitive disorder due to traumatic brain injury\n\n9305 Major or mild vascular neurocognitive disorder\n\n9310 Unspecified neurocognitive disorder\n\n9312 Majo",
+    "method": "full_pattern"
+  },
+  "9900": {
+    "code": "9900",
+    "name": "Maxilla or mandible, chronic osteomyelitis, osteonecrosis or osteoradionecrosis of",
+    "raw_text": "9900 Maxilla or mandible, chronic osteomyelitis, osteonecrosis or osteoradionecrosis of:\n\n\n\nRate as osteomyelitis, chronic under diagnostic code 5000.\n\n\n\n\n9901 Mandible, loss of, complete, between angles\n100\n\n\n\n9902 Mandible, loss of, including ramus, unilaterally or bilaterally:\n\n\n\nLoss of one-half or more,\n\n\n\nInvolving temporomandibular articulation\n\n\n\nNot replaceable by prosthesis\n70\n\n\nReplaceable by prosthesis\n50\n\n\nNot involving temporomandibular articulation.\n\n\n\nNot replaceable by prosthesi",
+    "method": "full_pattern"
+  },
+  "9909": {
+    "code": "9909",
+    "name": "Coronoid process, loss of",
+    "raw_text": "9909 Coronoid process, loss of:\n\n\n\nBilateral\n20\n\n\nUnilateral\n10\n\n\n\n9911 Hard palate, loss of:\n\n\n\nLoss of half or more, not replaceable by prosthesis\n30\n\n\nLoss of less than half, not replaceable by prosthesis\n20\n\n\nLoss of half or more, replaceable by prosthesis\n10\n\n\nLoss of less than half, replaceable by prosthesis\n0\n\n\n\n9913 Teeth, loss of, due to loss of substance of body of maxilla or mandible without loss of continuity:\n\n\n\nWhere the lost masticatory surface cannot be restored by suitable prost",
+    "method": "full_pattern"
+  },
+  "9914": {
+    "code": "9914",
+    "name": "Maxilla, loss of more than half",
+    "raw_text": "9914 Maxilla, loss of more than half:\n\n\n\nNot replaceable by prosthesis\n100\n\n\nReplaceable by prosthesis\n50\n\n\n9915 Maxilla, loss of half or less:\n\n\n\nLoss of 25 to 50 percent",
+    "method": "full_pattern"
+  },
+  "9916": {
+    "code": "9916",
+    "name": "Maxilla, malunion or nonunion of",
+    "raw_text": "9916 Maxilla, malunion or nonunion of:\n\n\n\nNonunion,\n\n\n\nWith false motion\n30\n\n\nWithout false motion\n10\n\n\nMalunion,\n\n\n\nWith displacement, causing severe anterior or posterior open bite\n30\n\n\nWith displacement, causing moderate anterior or posterior open bite\n10\n\n\nWith displacement, causing mild anterior or posterior open bite\n0\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "9917": {
+    "code": "9917",
+    "name": "Neoplasm, hard and soft tissue, benign",
+    "raw_text": "9917 Neoplasm, hard and soft tissue, benign:\n\n\n\nRate as loss of supporting structures (bone or teeth) and/or functional impairment due to scarring.\n\n\n\n9918 Neoplasm, hard and soft tissue, malignant\n100\n\n\nNote",
+    "method": "full_pattern"
+  },
+  "6019": {
+    "code": "6019",
+    "name": "Evaluation",
+    "raw_text": "6019\nEvaluation.\n\n\n \n6026\nEvaluation May 13, 2018.\n\n\n \n6027\nEvaluation May 13, 2018.\n\n\n \n6034\nEvaluation May 13, 2018.\n\n\n \n6035\nEvaluation May 13, 2018.\n\n\n \n6036\nEvaluation May 13, 2018.\n\n\n \n6040\nAdded May 13, 2018.\n\n\n \n6042\nAdded May 13, 2018.\n\n\n \n6046\nAdded May 13, 2018.\n\n\n \n6091\nEvaluation May 13, 2018.\n\n\n\n4.84a\n\nTable V criterion July 1, 1994.\n\n\n \n6010\nCriterion March 11, 1969.\n\n\n \n6019\nCriterion September 22, 1978.\n\n\n \n6029\nNOTE August 23, 1948; criterion September 22, 1978.\n\n\n \n6035\nAdded ",
+    "method": "full_pattern"
+  },
+  "5005": {
+    "code": "5005",
+    "name": "Arthritis, pneumococcic",
+    "raw_text": "5005 Arthritis, pneumococcic.",
+    "method": "name_pattern"
+  },
+  "5006": {
+    "code": "5006",
+    "name": "Arthritis, typhoid",
+    "raw_text": "5006 Arthritis, typhoid.",
+    "method": "name_pattern"
+  },
+  "5007": {
+    "code": "5007",
+    "name": "Arthritis, syphilitic",
+    "raw_text": "5007 Arthritis, syphilitic.",
+    "method": "name_pattern"
+  },
+  "5008": {
+    "code": "5008",
+    "name": "Arthritis, streptococcic",
+    "raw_text": "5008 Arthritis, streptococcic.",
+    "method": "name_pattern"
+  },
+  "5009": {
+    "code": "5009",
+    "name": "Other specified forms of arthropathy (excluding gout)",
+    "raw_text": "5009 Other specified forms of arthropathy (excluding gout).",
+    "method": "name_pattern"
+  },
+  "5011": {
+    "code": "5011",
+    "name": "Decompression illness",
+    "raw_text": "5011 Decompression illness:",
+    "method": "name_pattern"
+  },
+  "5012": {
+    "code": "5012",
+    "name": "Bones, neoplasm, malignant, primary or secondary",
+    "raw_text": "5012 Bones, neoplasm, malignant, primary or secondary\n",
+    "method": "name_pattern"
+  },
+  "5014": {
+    "code": "5014",
+    "name": "Osteomalacia, residuals of",
+    "raw_text": "5014 Osteomalacia, residuals of.",
+    "method": "name_pattern"
+  },
+  "5015": {
+    "code": "5015",
+    "name": "Bones, neoplasm, benign",
+    "raw_text": "5015 Bones, neoplasm, benign.",
+    "method": "name_pattern"
+  },
+  "5016": {
+    "code": "5016",
+    "name": "Osteitis deformans",
+    "raw_text": "5016 Osteitis deformans.",
+    "method": "name_pattern"
+  },
+  "5017": {
+    "code": "5017",
+    "name": "Gout",
+    "raw_text": "5017 Gout.",
+    "method": "name_pattern"
+  },
+  "5019": {
+    "code": "5019",
+    "name": "Bursitis",
+    "raw_text": "5019 Bursitis.",
+    "method": "name_pattern"
+  },
+  "5021": {
+    "code": "5021",
+    "name": "Myositis",
+    "raw_text": "5021 Myositis.",
+    "method": "name_pattern"
+  },
+  "5023": {
+    "code": "5023",
+    "name": "Heterotopic ossification",
+    "raw_text": "5023 Heterotopic ossification.",
+    "method": "name_pattern"
+  },
+  "5024": {
+    "code": "5024",
+    "name": "Tenosynovitis, tendinitis, tendinosis or tendinopathy",
+    "raw_text": "5024 Tenosynovitis, tendinitis, tendinosis or tendinopathy.",
+    "method": "name_pattern"
+  },
+  "5052": {
+    "code": "5052",
+    "name": "Elbow replacement (prosthesis)",
+    "raw_text": "5052 Elbow replacement (prosthesis).",
+    "method": "name_pattern"
+  },
+  "5053": {
+    "code": "5053",
+    "name": "Wrist replacement (prosthesis)",
+    "raw_text": "5053 Wrist replacement (prosthesis).",
+    "method": "name_pattern"
+  },
+  "5054": {
+    "code": "5054",
+    "name": "Hip, resurfacing or replacement (prosthesis)",
+    "raw_text": "5054 Hip, resurfacing or replacement (prosthesis):",
+    "method": "name_pattern"
+  },
+  "5104": {
+    "code": "5104",
+    "name": "Anatomical loss of one hand and loss of use of one foot",
+    "raw_text": "5104 Anatomical loss of one hand and loss of use of one foot\n \n",
+    "method": "name_pattern"
+  },
+  "5105": {
+    "code": "5105",
+    "name": "Anatomical loss of one foot and loss of use of one hand",
+    "raw_text": "5105 Anatomical loss of one foot and loss of use of one hand\n \n",
+    "method": "name_pattern"
+  },
+  "5106": {
+    "code": "5106",
+    "name": "Anatomical loss of both hands",
+    "raw_text": "5106 Anatomical loss of both hands\n \n",
+    "method": "name_pattern"
+  },
+  "5107": {
+    "code": "5107",
+    "name": "Anatomical loss of both feet",
+    "raw_text": "5107 Anatomical loss of both feet\n \n",
+    "method": "name_pattern"
+  },
+  "5108": {
+    "code": "5108",
+    "name": "Anatomical loss of one hand and one foot",
+    "raw_text": "5108 Anatomical loss of one hand and one foot\n \n",
+    "method": "name_pattern"
+  },
+  "5109": {
+    "code": "5109",
+    "name": "Loss of use of both hands",
+    "raw_text": "5109 Loss of use of both hands\n \n",
+    "method": "name_pattern"
+  },
+  "5110": {
+    "code": "5110",
+    "name": "Loss of use of both feet",
+    "raw_text": "5110 Loss of use of both feet\n \n",
+    "method": "name_pattern"
+  },
+  "5111": {
+    "code": "5111",
+    "name": "Loss of use of one hand and one foot",
+    "raw_text": "5111 Loss of use of one hand and one foot\n \n",
+    "method": "name_pattern"
+  },
+  "5121": {
+    "code": "5121",
+    "name": "Above insertion of deltoid",
+    "raw_text": "5121 Above insertion of deltoid\n",
+    "method": "name_pattern"
+  },
+  "5122": {
+    "code": "5122",
+    "name": "Below insertion of deltoid",
+    "raw_text": "5122 Below insertion of deltoid\n",
+    "method": "name_pattern"
+  },
+  "5123": {
+    "code": "5123",
+    "name": "Above insertion of pronator teres",
+    "raw_text": "5123 Above insertion of pronator teres\n",
+    "method": "name_pattern"
+  },
+  "5124": {
+    "code": "5124",
+    "name": "Below insertion of pronator teres",
+    "raw_text": "5124 Below insertion of pronator teres\n",
+    "method": "name_pattern"
+  },
+  "5125": {
+    "code": "5125",
+    "name": "Hand, loss of use of",
+    "raw_text": "5125 Hand, loss of use of\n",
+    "method": "name_pattern"
+  },
+  "5126": {
+    "code": "5126",
+    "name": "Five digits of one hand, amputation of",
+    "raw_text": "5126 Five digits of one hand, amputation of\n",
+    "method": "name_pattern"
+  },
+  "5127": {
+    "code": "5127",
+    "name": "Thumb, index, long and ring",
+    "raw_text": "5127 Thumb, index, long and ring\n",
+    "method": "name_pattern"
+  },
+  "5128": {
+    "code": "5128",
+    "name": "Thumb, index, long and little",
+    "raw_text": "5128 Thumb, index, long and little\n",
+    "method": "name_pattern"
+  },
+  "5129": {
+    "code": "5129",
+    "name": "Thumb, index, ring and little",
+    "raw_text": "5129 Thumb, index, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5130": {
+    "code": "5130",
+    "name": "Thumb, long, ring and little",
+    "raw_text": "5130 Thumb, long, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5131": {
+    "code": "5131",
+    "name": "Index, long, ring and little",
+    "raw_text": "5131 Index, long, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5132": {
+    "code": "5132",
+    "name": "Thumb, index and long",
+    "raw_text": "5132 Thumb, index and long\n",
+    "method": "name_pattern"
+  },
+  "5133": {
+    "code": "5133",
+    "name": "Thumb, index and ring",
+    "raw_text": "5133 Thumb, index and ring\n",
+    "method": "name_pattern"
+  },
+  "5134": {
+    "code": "5134",
+    "name": "Thumb, index and little",
+    "raw_text": "5134 Thumb, index and little\n",
+    "method": "name_pattern"
+  },
+  "5135": {
+    "code": "5135",
+    "name": "Thumb, long and ring",
+    "raw_text": "5135 Thumb, long and ring\n",
+    "method": "name_pattern"
+  },
+  "5136": {
+    "code": "5136",
+    "name": "Thumb, long and little",
+    "raw_text": "5136 Thumb, long and little\n",
+    "method": "name_pattern"
+  },
+  "5137": {
+    "code": "5137",
+    "name": "Thumb, ring and little",
+    "raw_text": "5137 Thumb, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5138": {
+    "code": "5138",
+    "name": "Index, long and ring",
+    "raw_text": "5138 Index, long and ring\n",
+    "method": "name_pattern"
+  },
+  "5139": {
+    "code": "5139",
+    "name": "Index, long and little",
+    "raw_text": "5139 Index, long and little\n",
+    "method": "name_pattern"
+  },
+  "5140": {
+    "code": "5140",
+    "name": "Index, ring and little",
+    "raw_text": "5140 Index, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5141": {
+    "code": "5141",
+    "name": "Long, ring and little",
+    "raw_text": "5141 Long, ring and little\n",
+    "method": "name_pattern"
+  },
+  "5142": {
+    "code": "5142",
+    "name": "Thumb and index",
+    "raw_text": "5142 Thumb and index\n",
+    "method": "name_pattern"
+  },
+  "5143": {
+    "code": "5143",
+    "name": "Thumb and long",
+    "raw_text": "5143 Thumb and long\n",
+    "method": "name_pattern"
+  },
+  "5144": {
+    "code": "5144",
+    "name": "Thumb and ring",
+    "raw_text": "5144 Thumb and ring\n",
+    "method": "name_pattern"
+  },
+  "5145": {
+    "code": "5145",
+    "name": "Thumb and little",
+    "raw_text": "5145 Thumb and little\n",
+    "method": "name_pattern"
+  },
+  "5146": {
+    "code": "5146",
+    "name": "Index and long",
+    "raw_text": "5146 Index and long\n",
+    "method": "name_pattern"
+  },
+  "5147": {
+    "code": "5147",
+    "name": "Index and ring",
+    "raw_text": "5147 Index and ring\n",
+    "method": "name_pattern"
+  },
+  "5148": {
+    "code": "5148",
+    "name": "Index and little",
+    "raw_text": "5148 Index and little\n",
+    "method": "name_pattern"
+  },
+  "5149": {
+    "code": "5149",
+    "name": "Long and ring",
+    "raw_text": "5149 Long and ring\n",
+    "method": "name_pattern"
+  },
+  "5150": {
+    "code": "5150",
+    "name": "Long and little",
+    "raw_text": "5150 Long and little\n",
+    "method": "name_pattern"
+  },
+  "5151": {
+    "code": "5151",
+    "name": "Ring and little",
+    "raw_text": "5151 Ring and little\n",
+    "method": "name_pattern"
+  },
+  "5153": {
+    "code": "5153",
+    "name": "Index finger, amputation of",
+    "raw_text": "5153 Index finger, amputation of\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "5154": {
+    "code": "5154",
+    "name": "Long finger, amputation of",
+    "raw_text": "5154 Long finger, amputation of:",
+    "method": "name_pattern"
+  },
+  "5155": {
+    "code": "5155",
+    "name": "Ring finger, amputation of",
+    "raw_text": "5155 Ring finger, amputation of:",
+    "method": "name_pattern"
+  },
+  "5156": {
+    "code": "5156",
+    "name": "Little finger, amputation of",
+    "raw_text": "5156 Little finger, amputation of:",
+    "method": "name_pattern"
+  },
+  "5161": {
+    "code": "5161",
+    "name": "Upper third, one-third of the distance from perineum to knee joint measured from perineum",
+    "raw_text": "5161 Upper third, one-third of the distance from perineum to knee joint measured from perineum\n",
+    "method": "name_pattern"
+  },
+  "5162": {
+    "code": "5162",
+    "name": "Middle or lower thirds",
+    "raw_text": "5162 Middle or lower thirds\n",
+    "method": "name_pattern"
+  },
+  "5163": {
+    "code": "5163",
+    "name": "With defective stump, thigh amputation recommended",
+    "raw_text": "5163 With defective stump, thigh amputation recommended\n",
+    "method": "name_pattern"
+  },
+  "5164": {
+    "code": "5164",
+    "name": "Amputation not improvable by prosthesis controlled by natural knee action",
+    "raw_text": "5164 Amputation not improvable by prosthesis controlled by natural knee action\n",
+    "method": "name_pattern"
+  },
+  "5165": {
+    "code": "5165",
+    "name": "At a lower level, permitting prosthesis",
+    "raw_text": "5165 At a lower level, permitting prosthesis\n",
+    "method": "name_pattern"
+  },
+  "5166": {
+    "code": "5166",
+    "name": "Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)",
+    "raw_text": "5166 Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)\n",
+    "method": "name_pattern"
+  },
+  "5167": {
+    "code": "5167",
+    "name": "Foot, loss of use of",
+    "raw_text": "5167 Foot, loss of use of\n",
+    "method": "name_pattern"
+  },
+  "5170": {
+    "code": "5170",
+    "name": "Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half of metatarsal loss",
+    "raw_text": "5170 Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half of metatarsal loss\n",
+    "method": "name_pattern"
+  },
+  "5172": {
+    "code": "5172",
+    "name": "Toes, other than great, amputation of, with removal of metatarsal head",
+    "raw_text": "5172 Toes, other than great, amputation of, with removal of metatarsal head:",
+    "method": "name_pattern"
+  },
+  "5173": {
+    "code": "5173",
+    "name": "Toes, three or four, amputation of, without metatarsal involvement",
+    "raw_text": "5173 Toes, three or four, amputation of, without metatarsal involvement:",
+    "method": "name_pattern"
+  },
+  "5200": {
+    "code": "5200",
+    "name": "Scapulohumeral articulation, ankylosis of",
+    "raw_text": "5200 Scapulohumeral articulation, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5202": {
+    "code": "5202",
+    "name": "Humerus, other impairment of",
+    "raw_text": "5202 Humerus, other impairment of:",
+    "method": "name_pattern"
+  },
+  "5203": {
+    "code": "5203",
+    "name": "Clavicle or scapula, impairment of",
+    "raw_text": "5203 Clavicle or scapula, impairment of:",
+    "method": "name_pattern"
+  },
+  "5205": {
+    "code": "5205",
+    "name": "Elbow, ankylosis of",
+    "raw_text": "5205 Elbow, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5206": {
+    "code": "5206",
+    "name": "Forearm, limitation of flexion of",
+    "raw_text": "5206 Forearm, limitation of flexion of:",
+    "method": "name_pattern"
+  },
+  "5207": {
+    "code": "5207",
+    "name": "Forearm, limitation of extension of",
+    "raw_text": "5207 Forearm, limitation of extension of:",
+    "method": "name_pattern"
+  },
+  "5209": {
+    "code": "5209",
+    "name": "Elbow, other impairment of Flail joint",
+    "raw_text": "5209 Elbow, other impairment of Flail joint\n",
+    "method": "name_pattern"
+  },
+  "5210": {
+    "code": "5210",
+    "name": "Radius and ulna, nonunion of, with flail false joint",
+    "raw_text": "5210 Radius and ulna, nonunion of, with flail false joint\n",
+    "method": "name_pattern"
+  },
+  "5211": {
+    "code": "5211",
+    "name": "Ulna, impairment of",
+    "raw_text": "5211 Ulna, impairment of:",
+    "method": "name_pattern"
+  },
+  "5212": {
+    "code": "5212",
+    "name": "Radius, impairment of",
+    "raw_text": "5212 Radius, impairment of:",
+    "method": "name_pattern"
+  },
+  "5213": {
+    "code": "5213",
+    "name": "Supination and pronation, impairment of",
+    "raw_text": "5213 Supination and pronation, impairment of:",
+    "method": "name_pattern"
+  },
+  "5216": {
+    "code": "5216",
+    "name": "Five digits of one hand, unfavorable ankylosis of",
+    "raw_text": "5216 Five digits of one hand, unfavorable ankylosis of\n",
+    "method": "name_pattern"
+  },
+  "5220": {
+    "code": "5220",
+    "name": "Five digits of one hand, favorable ankylosis of",
+    "raw_text": "5220 Five digits of one hand, favorable ankylosis of\n",
+    "method": "name_pattern"
+  },
+  "5222": {
+    "code": "5222",
+    "name": "Three digits of one hand, favorable ankylosis of",
+    "raw_text": "5222 Three digits of one hand, favorable ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5223": {
+    "code": "5223",
+    "name": "Two digits of one hand, favorable ankylosis of",
+    "raw_text": "5223 Two digits of one hand, favorable ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5224": {
+    "code": "5224",
+    "name": "Thumb, ankylosis of",
+    "raw_text": "5224 Thumb, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5229": {
+    "code": "5229",
+    "name": "Index or long finger, limitation of motion",
+    "raw_text": "5229 Index or long finger, limitation of motion:",
+    "method": "name_pattern"
+  },
+  "5230": {
+    "code": "5230",
+    "name": "Ring or little finger, limitation of motion",
+    "raw_text": "5230 Ring or little finger, limitation of motion:",
+    "method": "name_pattern"
+  },
+  "5236": {
+    "code": "5236",
+    "name": "Sacroiliac injury and weakness",
+    "raw_text": "5236 Sacroiliac injury and weakness\n\n\n\n ",
+    "method": "name_pattern"
+  },
+  "5237": {
+    "code": "5237",
+    "name": "Lumbosacral or cervical strain",
+    "raw_text": "5237 Lumbosacral or cervical strain\n\n\n\n ",
+    "method": "name_pattern"
+  },
+  "5238": {
+    "code": "5238",
+    "name": "Spinal stenosis",
+    "raw_text": "5238 Spinal stenosis\n\n\n\n ",
+    "method": "name_pattern"
+  },
+  "5239": {
+    "code": "5239",
+    "name": "Spondylolisthesis or segmental instability",
+    "raw_text": "5239 Spondylolisthesis or segmental instability\n\n\n\n ",
+    "method": "name_pattern"
+  },
+  "5240": {
+    "code": "5240",
+    "name": "Ankylosing spondylitis",
+    "raw_text": "5240 Ankylosing spondylitis\n\n\n\n ",
+    "method": "name_pattern"
+  },
+  "5241": {
+    "code": "5241",
+    "name": "Spinal fusion",
+    "raw_text": "5241 Spinal fusion\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "5243": {
+    "code": "5243",
+    "name": "Intervertebral disc syndrome",
+    "raw_text": "5243 Intervertebral disc syndrome:",
+    "method": "name_pattern"
+  },
+  "5244": {
+    "code": "5244",
+    "name": "Traumatic paralysis, complete",
+    "raw_text": "5244 Traumatic paralysis, complete:",
+    "method": "name_pattern"
+  },
+  "5251": {
+    "code": "5251",
+    "name": "Thigh, limitation of extension of",
+    "raw_text": "5251 Thigh, limitation of extension of:",
+    "method": "name_pattern"
+  },
+  "5252": {
+    "code": "5252",
+    "name": "Thigh, limitation of flexion of",
+    "raw_text": "5252 Thigh, limitation of flexion of:",
+    "method": "name_pattern"
+  },
+  "5253": {
+    "code": "5253",
+    "name": "Thigh, impairment of",
+    "raw_text": "5253 Thigh, impairment of:",
+    "method": "name_pattern"
+  },
+  "5254": {
+    "code": "5254",
+    "name": "Hip, flail joint",
+    "raw_text": "5254 Hip, flail joint\n",
+    "method": "name_pattern"
+  },
+  "5255": {
+    "code": "5255",
+    "name": "Femur, impairment of",
+    "raw_text": "5255 Femur, impairment of:",
+    "method": "name_pattern"
+  },
+  "5256": {
+    "code": "5256",
+    "name": "Knee, ankylosis of",
+    "raw_text": "5256 Knee, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5257": {
+    "code": "5257",
+    "name": "Knee, other impairment of",
+    "raw_text": "5257 Knee, other impairment of:",
+    "method": "name_pattern"
+  },
+  "5259": {
+    "code": "5259",
+    "name": "Cartilage, semilunar, removal of, symptomatic",
+    "raw_text": "5259 Cartilage, semilunar, removal of, symptomatic\n",
+    "method": "name_pattern"
+  },
+  "5261": {
+    "code": "5261",
+    "name": "Leg, limitation of extension of",
+    "raw_text": "5261 Leg, limitation of extension of:",
+    "method": "name_pattern"
+  },
+  "5262": {
+    "code": "5262",
+    "name": "Tibia and fibula, impairment of",
+    "raw_text": "5262 Tibia and fibula, impairment of:",
+    "method": "name_pattern"
+  },
+  "5263": {
+    "code": "5263",
+    "name": "Genu recurvatum (acquired, traumatic, with weakness and insecurity in weight-bearing objectively demonstrated)",
+    "raw_text": "5263 Genu recurvatum (acquired, traumatic, with weakness and insecurity in weight-bearing objectively demonstrated)\n",
+    "method": "name_pattern"
+  },
+  "5270": {
+    "code": "5270",
+    "name": "Ankle, ankylosis of",
+    "raw_text": "5270 Ankle, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5271": {
+    "code": "5271",
+    "name": "Ankle, limited motion of",
+    "raw_text": "5271 Ankle, limited motion of:",
+    "method": "name_pattern"
+  },
+  "5272": {
+    "code": "5272",
+    "name": "Subastragalar or tarsal joint, ankylosis of",
+    "raw_text": "5272 Subastragalar or tarsal joint, ankylosis of:",
+    "method": "name_pattern"
+  },
+  "5273": {
+    "code": "5273",
+    "name": "Os calcis or astragalus, malunion of",
+    "raw_text": "5273 Os calcis or astragalus, malunion of:",
+    "method": "name_pattern"
+  },
+  "5274": {
+    "code": "5274",
+    "name": "Astragalectomy",
+    "raw_text": "5274 Astragalectomy\n",
+    "method": "name_pattern"
+  },
+  "5275": {
+    "code": "5275",
+    "name": "Bones, of the lower extremity, shortening of",
+    "raw_text": "5275 Bones, of the lower extremity, shortening of:",
+    "method": "name_pattern"
+  },
+  "5277": {
+    "code": "5277",
+    "name": "Weak foot, bilateral",
+    "raw_text": "5277 Weak foot, bilateral:",
+    "method": "name_pattern"
+  },
+  "5278": {
+    "code": "5278",
+    "name": "Claw foot (pes cavus), acquired",
+    "raw_text": "5278 Claw foot (pes cavus), acquired:",
+    "method": "name_pattern"
+  },
+  "5280": {
+    "code": "5280",
+    "name": "Hallux valgus, unilateral",
+    "raw_text": "5280 Hallux valgus, unilateral:",
+    "method": "name_pattern"
+  },
+  "5281": {
+    "code": "5281",
+    "name": "Hallux rigidus, unilateral, severe",
+    "raw_text": "5281 Hallux rigidus, unilateral, severe:",
+    "method": "name_pattern"
+  },
+  "5283": {
+    "code": "5283",
+    "name": "Tarsal, or metatarsal bones, malunion of, or nonunion of",
+    "raw_text": "5283 Tarsal, or metatarsal bones, malunion of, or nonunion of:",
+    "method": "name_pattern"
+  },
+  "5302": {
+    "code": "5302",
+    "name": "Group II",
+    "raw_text": "5302 Group II.",
+    "method": "name_pattern"
+  },
+  "5303": {
+    "code": "5303",
+    "name": "Group III",
+    "raw_text": "5303 Group III.",
+    "method": "name_pattern"
+  },
+  "5304": {
+    "code": "5304",
+    "name": "Group IV",
+    "raw_text": "5304 Group IV.",
+    "method": "name_pattern"
+  },
+  "5305": {
+    "code": "5305",
+    "name": "Group V",
+    "raw_text": "5305 Group V.",
+    "method": "name_pattern"
+  },
+  "5306": {
+    "code": "5306",
+    "name": "Group VI",
+    "raw_text": "5306 Group VI.",
+    "method": "name_pattern"
+  },
+  "5307": {
+    "code": "5307",
+    "name": "Group VII",
+    "raw_text": "5307 Group VII.",
+    "method": "name_pattern"
+  },
+  "5308": {
+    "code": "5308",
+    "name": "Group VIII",
+    "raw_text": "5308 Group VIII.",
+    "method": "name_pattern"
+  },
+  "5309": {
+    "code": "5309",
+    "name": "Group IX",
+    "raw_text": "5309 Group IX.",
+    "method": "name_pattern"
+  },
+  "5312": {
+    "code": "5312",
+    "name": "Group XII",
+    "raw_text": "5312 Group XII.",
+    "method": "name_pattern"
+  },
+  "5313": {
+    "code": "5313",
+    "name": "Group XIII",
+    "raw_text": "5313 Group XIII.",
+    "method": "name_pattern"
+  },
+  "5314": {
+    "code": "5314",
+    "name": "Group XIV",
+    "raw_text": "5314 Group XIV.",
+    "method": "name_pattern"
+  },
+  "5315": {
+    "code": "5315",
+    "name": "Group XV",
+    "raw_text": "5315 Group XV.",
+    "method": "name_pattern"
+  },
+  "5316": {
+    "code": "5316",
+    "name": "Group XVI",
+    "raw_text": "5316 Group XVI.",
+    "method": "name_pattern"
+  },
+  "5317": {
+    "code": "5317",
+    "name": "Group XVII",
+    "raw_text": "5317 Group XVII.",
+    "method": "name_pattern"
+  },
+  "5318": {
+    "code": "5318",
+    "name": "Group XVIII",
+    "raw_text": "5318 Group XVIII.",
+    "method": "name_pattern"
+  },
+  "5319": {
+    "code": "5319",
+    "name": "Group XIX",
+    "raw_text": "5319 Group XIX.",
+    "method": "name_pattern"
+  },
+  "5320": {
+    "code": "5320",
+    "name": "Group XX",
+    "raw_text": "5320 Group XX.",
+    "method": "name_pattern"
+  },
+  "5321": {
+    "code": "5321",
+    "name": "Group XXI",
+    "raw_text": "5321 Group XXI.",
+    "method": "name_pattern"
+  },
+  "5322": {
+    "code": "5322",
+    "name": "Group XXII",
+    "raw_text": "5322 Group XXII.",
+    "method": "name_pattern"
+  },
+  "5323": {
+    "code": "5323",
+    "name": "Group XXIII",
+    "raw_text": "5323 Group XXIII.",
+    "method": "name_pattern"
+  },
+  "5324": {
+    "code": "5324",
+    "name": "Diaphragm, rupture of, with herniation",
+    "raw_text": "5324 Diaphragm, rupture of, with herniation.",
+    "method": "name_pattern"
+  },
+  "5325": {
+    "code": "5325",
+    "name": "Muscle injury, facial muscles",
+    "raw_text": "5325 Muscle injury, facial muscles.",
+    "method": "name_pattern"
+  },
+  "5326": {
+    "code": "5326",
+    "name": "Muscle hernia, extensive",
+    "raw_text": "5326 Muscle hernia, extensive.",
+    "method": "name_pattern"
+  },
+  "5328": {
+    "code": "5328",
+    "name": "Muscle, neoplasm of, benign, postoperative",
+    "raw_text": "5328 Muscle, neoplasm of, benign, postoperative.",
+    "method": "name_pattern"
+  },
+  "6001": {
+    "code": "6001",
+    "name": "Keratopathy",
+    "raw_text": "6001 Keratopathy.",
+    "method": "name_pattern"
+  },
+  "6002": {
+    "code": "6002",
+    "name": "Scleritis",
+    "raw_text": "6002 Scleritis.",
+    "method": "name_pattern"
+  },
+  "6006": {
+    "code": "6006",
+    "name": "Retinopathy or maculopathy not otherwise specified",
+    "raw_text": "6006 Retinopathy or maculopathy not otherwise specified\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6007": {
+    "code": "6007",
+    "name": "Intraocular hemorrhage",
+    "raw_text": "6007 Intraocular hemorrhage.",
+    "method": "name_pattern"
+  },
+  "6008": {
+    "code": "6008",
+    "name": "Detachment of retina",
+    "raw_text": "6008 Detachment of retina.",
+    "method": "name_pattern"
+  },
+  "6009": {
+    "code": "6009",
+    "name": "Unhealed eye injury",
+    "raw_text": "6009 Unhealed eye injury.",
+    "method": "name_pattern"
+  },
+  "6011": {
+    "code": "6011",
+    "name": "Retinal scars, atrophy, or irregularities",
+    "raw_text": "6011 Retinal scars, atrophy, or irregularities:",
+    "method": "name_pattern"
+  },
+  "6012": {
+    "code": "6012",
+    "name": "Angle-closure glaucoma",
+    "raw_text": "6012 Angle-closure glaucoma\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6013": {
+    "code": "6013",
+    "name": "Open-angle glaucoma",
+    "raw_text": "6013 Open-angle glaucoma\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6014": {
+    "code": "6014",
+    "name": "Malignant neoplasms of the eye, orbit, and adnexa (excluding skin)",
+    "raw_text": "6014 Malignant neoplasms of the eye, orbit, and adnexa (excluding skin):",
+    "method": "name_pattern"
+  },
+  "6016": {
+    "code": "6016",
+    "name": "Nystagmus, central",
+    "raw_text": "6016 Nystagmus, central\n",
+    "method": "name_pattern"
+  },
+  "6017": {
+    "code": "6017",
+    "name": "Trachomatous conjunctivitis",
+    "raw_text": "6017 Trachomatous conjunctivitis:",
+    "method": "name_pattern"
+  },
+  "6018": {
+    "code": "6018",
+    "name": "Chronic conjunctivitis (nontrachomatous)",
+    "raw_text": "6018 Chronic conjunctivitis (nontrachomatous):",
+    "method": "name_pattern"
+  },
+  "6020": {
+    "code": "6020",
+    "name": "Ectropion",
+    "raw_text": "6020 Ectropion:",
+    "method": "name_pattern"
+  },
+  "6021": {
+    "code": "6021",
+    "name": "Entropion",
+    "raw_text": "6021 Entropion:",
+    "method": "name_pattern"
+  },
+  "6022": {
+    "code": "6022",
+    "name": "Lagophthalmos",
+    "raw_text": "6022 Lagophthalmos:",
+    "method": "name_pattern"
+  },
+  "6023": {
+    "code": "6023",
+    "name": "Loss of eyebrows, complete, unilateral or bilateral",
+    "raw_text": "6023 Loss of eyebrows, complete, unilateral or bilateral\n",
+    "method": "name_pattern"
+  },
+  "6024": {
+    "code": "6024",
+    "name": "Loss of eyelashes, complete, unilateral or bilateral",
+    "raw_text": "6024 Loss of eyelashes, complete, unilateral or bilateral\n",
+    "method": "name_pattern"
+  },
+  "6025": {
+    "code": "6025",
+    "name": "Disorders of the lacrimal apparatus (epiphora, dacryocystitis, etc",
+    "raw_text": "6025 Disorders of the lacrimal apparatus (epiphora, dacryocystitis, etc.",
+    "method": "name_pattern"
+  },
+  "6026": {
+    "code": "6026",
+    "name": "Optic neuropathy",
+    "raw_text": "6026 Optic neuropathy\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6027": {
+    "code": "6027",
+    "name": "Cataract",
+    "raw_text": "6027 Cataract:",
+    "method": "name_pattern"
+  },
+  "6029": {
+    "code": "6029",
+    "name": "Aphakia or dislocation of crystalline lens",
+    "raw_text": "6029 Aphakia or dislocation of crystalline lens:",
+    "method": "name_pattern"
+  },
+  "6030": {
+    "code": "6030",
+    "name": "Paralysis of accommodation (due to neuropathy of the Oculomotor Nerve (cranial nerve III))",
+    "raw_text": "6030 Paralysis of accommodation (due to neuropathy of the Oculomotor Nerve (cranial nerve III)).",
+    "method": "name_pattern"
+  },
+  "6032": {
+    "code": "6032",
+    "name": "Loss of eyelids, partial or complete",
+    "raw_text": "6032 Loss of eyelids, partial or complete:",
+    "method": "name_pattern"
+  },
+  "6034": {
+    "code": "6034",
+    "name": "Pterygium",
+    "raw_text": "6034 Pterygium:",
+    "method": "name_pattern"
+  },
+  "6035": {
+    "code": "6035",
+    "name": "Keratoconus",
+    "raw_text": "6035 Keratoconus\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6036": {
+    "code": "6036",
+    "name": "Status post corneal transplant",
+    "raw_text": "6036 Status post corneal transplant:",
+    "method": "name_pattern"
+  },
+  "6037": {
+    "code": "6037",
+    "name": "Pinguecula",
+    "raw_text": "6037 Pinguecula:",
+    "method": "name_pattern"
+  },
+  "6040": {
+    "code": "6040",
+    "name": "Diabetic retinopathy",
+    "raw_text": "6040 Diabetic retinopathy\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6046": {
+    "code": "6046",
+    "name": "Post-chiasmal disorders",
+    "raw_text": "6046 Post-chiasmal disorders\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6063": {
+    "code": "6063",
+    "name": "Anatomical loss of one eye",
+    "raw_text": "6063 Anatomical loss of one eye:",
+    "method": "name_pattern"
+  },
+  "6064": {
+    "code": "6064",
+    "name": "No more than light perception in one eye",
+    "raw_text": "6064 No more than light perception in one eye:",
+    "method": "name_pattern"
+  },
+  "6080": {
+    "code": "6080",
+    "name": "Visual field defects",
+    "raw_text": "6080 Visual field defects:",
+    "method": "name_pattern"
+  },
+  "6081": {
+    "code": "6081",
+    "name": "Scotoma, unilateral",
+    "raw_text": "6081 Scotoma, unilateral:",
+    "method": "name_pattern"
+  },
+  "6090": {
+    "code": "6090",
+    "name": "Diplopia (double vision)",
+    "raw_text": "6090 Diplopia (double vision):",
+    "method": "name_pattern"
+  },
+  "6200": {
+    "code": "6200",
+    "name": "Chronic suppurative otitis media, mastoiditis, or cholesteatoma (or any combination)",
+    "raw_text": "6200 Chronic suppurative otitis media, mastoiditis, or cholesteatoma (or any combination):",
+    "method": "name_pattern"
+  },
+  "6202": {
+    "code": "6202",
+    "name": "Otosclerosis",
+    "raw_text": "6202 Otosclerosis:",
+    "method": "name_pattern"
+  },
+  "6204": {
+    "code": "6204",
+    "name": "Peripheral vestibular disorders",
+    "raw_text": "6204 Peripheral vestibular disorders:",
+    "method": "name_pattern"
+  },
+  "6208": {
+    "code": "6208",
+    "name": "Malignant neoplasm of the ear (other than skin only)",
+    "raw_text": "6208 Malignant neoplasm of the ear (other than skin only)\n",
+    "method": "name_pattern"
+  },
+  "6210": {
+    "code": "6210",
+    "name": "Chronic otitis externa",
+    "raw_text": "6210 Chronic otitis externa:",
+    "method": "name_pattern"
+  },
+  "6211": {
+    "code": "6211",
+    "name": "Tympanic membrane, perforation of",
+    "raw_text": "6211 Tympanic membrane, perforation of\n",
+    "method": "name_pattern"
+  },
+  "6260": {
+    "code": "6260",
+    "name": "Tinnitus, recurrent",
+    "raw_text": "6260 Tinnitus, recurrent\n",
+    "method": "name_pattern"
+  },
+  "6275": {
+    "code": "6275",
+    "name": "Sense of smell, complete loss",
+    "raw_text": "6275 Sense of smell, complete loss\n",
+    "method": "name_pattern"
+  },
+  "6276": {
+    "code": "6276",
+    "name": "Sense of taste, complete loss",
+    "raw_text": "6276 Sense of taste, complete loss\n",
+    "method": "name_pattern"
+  },
+  "6314": {
+    "code": "6314",
+    "name": "Beriberi",
+    "raw_text": "6314 Beriberi:",
+    "method": "name_pattern"
+  },
+  "6315": {
+    "code": "6315",
+    "name": "Pellagra",
+    "raw_text": "6315 Pellagra:",
+    "method": "name_pattern"
+  },
+  "6316": {
+    "code": "6316",
+    "name": "Brucellosis",
+    "raw_text": "6316 Brucellosis:",
+    "method": "name_pattern"
+  },
+  "6504": {
+    "code": "6504",
+    "name": "Nose, loss of part of, or scars",
+    "raw_text": "6504 Nose, loss of part of, or scars:",
+    "method": "name_pattern"
+  },
+  "6511": {
+    "code": "6511",
+    "name": "Sinusitis, ethmoid, chronic",
+    "raw_text": "6511 Sinusitis, ethmoid, chronic.",
+    "method": "name_pattern"
+  },
+  "6512": {
+    "code": "6512",
+    "name": "Sinusitis, frontal, chronic",
+    "raw_text": "6512 Sinusitis, frontal, chronic.",
+    "method": "name_pattern"
+  },
+  "6513": {
+    "code": "6513",
+    "name": "Sinusitis, maxillary, chronic",
+    "raw_text": "6513 Sinusitis, maxillary, chronic.",
+    "method": "name_pattern"
+  },
+  "6514": {
+    "code": "6514",
+    "name": "Sinusitis, sphenoid, chronic",
+    "raw_text": "6514 Sinusitis, sphenoid, chronic.",
+    "method": "name_pattern"
+  },
+  "6516": {
+    "code": "6516",
+    "name": "Laryngitis, chronic",
+    "raw_text": "6516 Laryngitis, chronic:",
+    "method": "name_pattern"
+  },
+  "6518": {
+    "code": "6518",
+    "name": "Laryngectomy, total",
+    "raw_text": "6518 Laryngectomy, total.",
+    "method": "name_pattern"
+  },
+  "6519": {
+    "code": "6519",
+    "name": "Aphonia, complete organic",
+    "raw_text": "6519 Aphonia, complete organic:",
+    "method": "name_pattern"
+  },
+  "6522": {
+    "code": "6522",
+    "name": "Allergic or vasomotor rhinitis",
+    "raw_text": "6522 Allergic or vasomotor rhinitis:",
+    "method": "name_pattern"
+  },
+  "6523": {
+    "code": "6523",
+    "name": "Bacterial rhinitis",
+    "raw_text": "6523 Bacterial rhinitis:",
+    "method": "name_pattern"
+  },
+  "6524": {
+    "code": "6524",
+    "name": "Granulomatous rhinitis",
+    "raw_text": "6524 Granulomatous rhinitis:",
+    "method": "name_pattern"
+  },
+  "6600": {
+    "code": "6600",
+    "name": "Bronchitis, chronic",
+    "raw_text": "6600 Bronchitis, chronic:",
+    "method": "name_pattern"
+  },
+  "6701": {
+    "code": "6701",
+    "name": "Tuberculosis, pulmonary, chronic, far advanced, active",
+    "raw_text": "6701 Tuberculosis, pulmonary, chronic, far advanced, active\n",
+    "method": "name_pattern"
+  },
+  "6702": {
+    "code": "6702",
+    "name": "Tuberculosis, pulmonary, chronic, moderately advanced, active",
+    "raw_text": "6702 Tuberculosis, pulmonary, chronic, moderately advanced, active\n",
+    "method": "name_pattern"
+  },
+  "6703": {
+    "code": "6703",
+    "name": "Tuberculosis, pulmonary, chronic, minimal, active",
+    "raw_text": "6703 Tuberculosis, pulmonary, chronic, minimal, active\n",
+    "method": "name_pattern"
+  },
+  "6704": {
+    "code": "6704",
+    "name": "Tuberculosis, pulmonary, chronic, active, advancement unspecified",
+    "raw_text": "6704 Tuberculosis, pulmonary, chronic, active, advancement unspecified\n",
+    "method": "name_pattern"
+  },
+  "6722": {
+    "code": "6722",
+    "name": "Tuberculosis, pulmonary, chronic, moderately advanced, inactive",
+    "raw_text": "6722 Tuberculosis, pulmonary, chronic, moderately advanced, inactive\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6723": {
+    "code": "6723",
+    "name": "Tuberculosis, pulmonary, chronic, minimal, inactive",
+    "raw_text": "6723 Tuberculosis, pulmonary, chronic, minimal, inactive\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6724": {
+    "code": "6724",
+    "name": "Tuberculosis, pulmonary, chronic, inactive, advancement unspecified",
+    "raw_text": "6724 Tuberculosis, pulmonary, chronic, inactive, advancement unspecified\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "6730": {
+    "code": "6730",
+    "name": "Tuberculosis, pulmonary, chronic, active",
+    "raw_text": "6730 Tuberculosis, pulmonary, chronic, active\n",
+    "method": "name_pattern"
+  },
+  "6817": {
+    "code": "6817",
+    "name": "Pulmonary Vascular Disease",
+    "raw_text": "6817 Pulmonary Vascular Disease:",
+    "method": "name_pattern"
+  },
+  "6819": {
+    "code": "6819",
+    "name": "Neoplasms, malignant, any specified part of respiratory system exclusive of skin growths",
+    "raw_text": "6819 Neoplasms, malignant, any specified part of respiratory system exclusive of skin growths\n",
+    "method": "name_pattern"
+  },
+  "6820": {
+    "code": "6820",
+    "name": "Neoplasms, benign, any specified part of respiratory system",
+    "raw_text": "6820 Neoplasms, benign, any specified part of respiratory system.",
+    "method": "name_pattern"
+  },
+  "6823": {
+    "code": "6823",
+    "name": "Nocardiosis",
+    "raw_text": "6823 Nocardiosis.",
+    "method": "name_pattern"
+  },
+  "6824": {
+    "code": "6824",
+    "name": "Chronic lung abscess",
+    "raw_text": "6824 Chronic lung abscess.",
+    "method": "name_pattern"
+  },
+  "6825": {
+    "code": "6825",
+    "name": "Diffuse interstitial fibrosis (interstitial pneumonitis, fibrosing alveolitis)",
+    "raw_text": "6825 Diffuse interstitial fibrosis (interstitial pneumonitis, fibrosing alveolitis).",
+    "method": "name_pattern"
+  },
+  "6826": {
+    "code": "6826",
+    "name": "Desquamative interstitial pneumonitis",
+    "raw_text": "6826 Desquamative interstitial pneumonitis.",
+    "method": "name_pattern"
+  },
+  "6827": {
+    "code": "6827",
+    "name": "Pulmonary alveolar proteinosis",
+    "raw_text": "6827 Pulmonary alveolar proteinosis.",
+    "method": "name_pattern"
+  },
+  "6828": {
+    "code": "6828",
+    "name": "Eosinophilic granuloma of lung",
+    "raw_text": "6828 Eosinophilic granuloma of lung.",
+    "method": "name_pattern"
+  },
+  "6829": {
+    "code": "6829",
+    "name": "Drug-induced pulmonary pneumonitis and fibrosis",
+    "raw_text": "6829 Drug-induced pulmonary pneumonitis and fibrosis.",
+    "method": "name_pattern"
+  },
+  "6830": {
+    "code": "6830",
+    "name": "Radiation-induced pulmonary pneumonitis and fibrosis",
+    "raw_text": "6830 Radiation-induced pulmonary pneumonitis and fibrosis.",
+    "method": "name_pattern"
+  },
+  "6831": {
+    "code": "6831",
+    "name": "Hypersensitivity pneumonitis (extrinsic allergic alveolitis)",
+    "raw_text": "6831 Hypersensitivity pneumonitis (extrinsic allergic alveolitis).",
+    "method": "name_pattern"
+  },
+  "6832": {
+    "code": "6832",
+    "name": "Pneumoconiosis (silicosis, anthracosis, etc",
+    "raw_text": "6832 Pneumoconiosis (silicosis, anthracosis, etc.",
+    "method": "name_pattern"
+  },
+  "6833": {
+    "code": "6833",
+    "name": "Asbestosis",
+    "raw_text": "6833 Asbestosis.",
+    "method": "name_pattern"
+  },
+  "6834": {
+    "code": "6834",
+    "name": "Histoplasmosis of lung",
+    "raw_text": "6834 Histoplasmosis of lung.",
+    "method": "name_pattern"
+  },
+  "6835": {
+    "code": "6835",
+    "name": "Coccidioidomycosis",
+    "raw_text": "6835 Coccidioidomycosis.",
+    "method": "name_pattern"
+  },
+  "6836": {
+    "code": "6836",
+    "name": "Blastomycosis",
+    "raw_text": "6836 Blastomycosis.",
+    "method": "name_pattern"
+  },
+  "6837": {
+    "code": "6837",
+    "name": "Cryptococcosis",
+    "raw_text": "6837 Cryptococcosis.",
+    "method": "name_pattern"
+  },
+  "6838": {
+    "code": "6838",
+    "name": "Aspergillosis",
+    "raw_text": "6838 Aspergillosis.",
+    "method": "name_pattern"
+  },
+  "6839": {
+    "code": "6839",
+    "name": "Mucormycosis",
+    "raw_text": "6839 Mucormycosis.",
+    "method": "name_pattern"
+  },
+  "6841": {
+    "code": "6841",
+    "name": "Spinal cord injury with respiratory insufficiency",
+    "raw_text": "6841 Spinal cord injury with respiratory insufficiency.",
+    "method": "name_pattern"
+  },
+  "6842": {
+    "code": "6842",
+    "name": "Kyphoscoliosis, pectus excavatum, pectus carinatum",
+    "raw_text": "6842 Kyphoscoliosis, pectus excavatum, pectus carinatum.",
+    "method": "name_pattern"
+  },
+  "6843": {
+    "code": "6843",
+    "name": "Traumatic chest wall defect, pneumothorax, hernia, etc",
+    "raw_text": "6843 Traumatic chest wall defect, pneumothorax, hernia, etc.",
+    "method": "name_pattern"
+  },
+  "6844": {
+    "code": "6844",
+    "name": "Post-surgical residual (lobectomy, pneumonectomy, etc",
+    "raw_text": "6844 Post-surgical residual (lobectomy, pneumonectomy, etc.",
+    "method": "name_pattern"
+  },
+  "6845": {
+    "code": "6845",
+    "name": "Chronic pleural effusion or fibrosis",
+    "raw_text": "6845 Chronic pleural effusion or fibrosis.",
+    "method": "name_pattern"
+  },
+  "6847": {
+    "code": "6847",
+    "name": "Sleep Apnea Syndromes (Obstructive, Central, Mixed)",
+    "raw_text": "6847 Sleep Apnea Syndromes (Obstructive, Central, Mixed):",
+    "method": "name_pattern"
+  },
+  "7001": {
+    "code": "7001",
+    "name": "Endocarditis, or",
+    "raw_text": "7001 Endocarditis, or\n\n\n\n\n",
+    "method": "name_pattern"
+  },
+  "7002": {
+    "code": "7002",
+    "name": "Pericarditis",
+    "raw_text": "7002 Pericarditis:",
+    "method": "name_pattern"
+  },
+  "7003": {
+    "code": "7003",
+    "name": "Pericardial adhesions",
+    "raw_text": "7003 Pericardial adhesions.",
+    "method": "name_pattern"
+  },
+  "7004": {
+    "code": "7004",
+    "name": "Syphilitic heart disease",
+    "raw_text": "7004 Syphilitic heart disease:",
+    "method": "name_pattern"
+  },
+  "7007": {
+    "code": "7007",
+    "name": "Hypertensive heart disease",
+    "raw_text": "7007 Hypertensive heart disease.",
+    "method": "name_pattern"
+  },
+  "7008": {
+    "code": "7008",
+    "name": "Hyperthyroid heart disease",
+    "raw_text": "7008 Hyperthyroid heart disease:",
+    "method": "name_pattern"
+  },
+  "7009": {
+    "code": "7009",
+    "name": "Bradycardia (Bradyarrhythmia), symptomatic, requiring permanent pacemaker implantation",
+    "raw_text": "7009 Bradycardia (Bradyarrhythmia), symptomatic, requiring permanent pacemaker implantation:",
+    "method": "name_pattern"
+  },
+  "7016": {
+    "code": "7016",
+    "name": "Heart valve replacement (prosthesis)",
+    "raw_text": "7016 Heart valve replacement (prosthesis):",
+    "method": "name_pattern"
+  },
+  "7018": {
+    "code": "7018",
+    "name": "Implantable cardiac pacemakers",
+    "raw_text": "7018 Implantable cardiac pacemakers:",
+    "method": "name_pattern"
+  },
+  "7101": {
+    "code": "7101",
+    "name": "Hypertensive vascular disease (hypertension and isolated systolic hypertension)",
+    "raw_text": "7101 Hypertensive vascular disease (hypertension and isolated systolic hypertension):",
+    "method": "name_pattern"
+  },
+  "7114": {
+    "code": "7114",
+    "name": "Peripheral arterial disease",
+    "raw_text": "7114 Peripheral arterial disease:",
+    "method": "name_pattern"
+  },
+  "7119": {
+    "code": "7119",
+    "name": "Erythromelalgia",
+    "raw_text": "7119 Erythromelalgia:",
+    "method": "name_pattern"
+  },
+  "7121": {
+    "code": "7121",
+    "name": "Post-phlebitic syndrome of any etiology",
+    "raw_text": "7121 Post-phlebitic syndrome of any etiology:",
+    "method": "name_pattern"
+  },
+  "7123": {
+    "code": "7123",
+    "name": "Soft tissue sarcoma (of vascular origin)",
+    "raw_text": "7123 Soft tissue sarcoma (of vascular origin)\n",
+    "method": "name_pattern"
+  },
+  "7201": {
+    "code": "7201",
+    "name": "Lips, injuries of",
+    "raw_text": "7201 Lips, injuries of:",
+    "method": "name_pattern"
+  },
+  "7202": {
+    "code": "7202",
+    "name": "Tongue, loss of whole or part",
+    "raw_text": "7202 Tongue, loss of whole or part:",
+    "method": "name_pattern"
+  },
+  "7303": {
+    "code": "7303",
+    "name": "Chronic complications of upper gastrointestinal surgery",
+    "raw_text": "7303 Chronic complications of upper gastrointestinal surgery:",
+    "method": "name_pattern"
+  },
+  "7309": {
+    "code": "7309",
+    "name": "Stomach, stenosis of",
+    "raw_text": "7309 Stomach, stenosis of:",
+    "method": "name_pattern"
+  },
+  "7310": {
+    "code": "7310",
+    "name": "Stomach, injury of, residuals",
+    "raw_text": "7310 Stomach, injury of, residuals:",
+    "method": "name_pattern"
+  },
+  "7311": {
+    "code": "7311",
+    "name": "Residuals of injury of the liver",
+    "raw_text": "7311 Residuals of injury of the liver:",
+    "method": "name_pattern"
+  },
+  "7312": {
+    "code": "7312",
+    "name": "Cirrhosis of the liver",
+    "raw_text": "7312 Cirrhosis of the liver:",
+    "method": "name_pattern"
+  },
+  "7317": {
+    "code": "7317",
+    "name": "Gallbladder, injury of",
+    "raw_text": "7317 Gallbladder, injury of:",
+    "method": "name_pattern"
+  },
+  "7319": {
+    "code": "7319",
+    "name": "Irritable bowel syndrome (IBS)",
+    "raw_text": "7319 Irritable bowel syndrome (IBS):",
+    "method": "name_pattern"
+  },
+  "7325": {
+    "code": "7325",
+    "name": "Enteritis, chronic",
+    "raw_text": "7325 Enteritis, chronic:",
+    "method": "name_pattern"
+  },
+  "7330": {
+    "code": "7330",
+    "name": "Intestinal fistulous disease, external",
+    "raw_text": "7330 Intestinal fistulous disease, external:",
+    "method": "name_pattern"
+  },
+  "7332": {
+    "code": "7332",
+    "name": "Rectum and anus, impairment of sphincter control",
+    "raw_text": "7332 Rectum and anus, impairment of sphincter control:",
+    "method": "name_pattern"
+  },
+  "7336": {
+    "code": "7336",
+    "name": "Hemorrhoids, external or internal",
+    "raw_text": "7336 Hemorrhoids, external or internal:",
+    "method": "name_pattern"
+  },
+  "7337": {
+    "code": "7337",
+    "name": "Pruritus ani (anal itching)",
+    "raw_text": "7337 Pruritus ani (anal itching):",
+    "method": "name_pattern"
+  },
+  "7338": {
+    "code": "7338",
+    "name": "Hernia, including femoral, inguinal, umbilical, ventral, incisional, and other (but not including hiatal)",
+    "raw_text": "7338 Hernia, including femoral, inguinal, umbilical, ventral, incisional, and other (but not including hiatal).",
+    "method": "name_pattern"
+  },
+  "7342": {
+    "code": "7342",
+    "name": "Visceroptosis, symptomatic, marked",
+    "raw_text": "7342 Visceroptosis, symptomatic, marked\n",
+    "method": "name_pattern"
+  },
+  "7343": {
+    "code": "7343",
+    "name": "Malignant neoplasms of the digestive system, exclusive of skin growths",
+    "raw_text": "7343 Malignant neoplasms of the digestive system, exclusive of skin growths\n",
+    "method": "name_pattern"
+  },
+  "7347": {
+    "code": "7347",
+    "name": "Pancreatitis, chronic",
+    "raw_text": "7347 Pancreatitis, chronic:",
+    "method": "name_pattern"
+  },
+  "7355": {
+    "code": "7355",
+    "name": "Celiac disease",
+    "raw_text": "7355 Celiac disease:",
+    "method": "name_pattern"
+  },
+  "7501": {
+    "code": "7501",
+    "name": "Kidney, abscess of",
+    "raw_text": "7501 Kidney, abscess of:",
+    "method": "name_pattern"
+  },
+  "7502": {
+    "code": "7502",
+    "name": "Nephritis, chronic",
+    "raw_text": "7502 Nephritis, chronic:",
+    "method": "name_pattern"
+  },
+  "7504": {
+    "code": "7504",
+    "name": "Pyelonephritis, chronic",
+    "raw_text": "7504 Pyelonephritis, chronic:",
+    "method": "name_pattern"
+  },
+  "7505": {
+    "code": "7505",
+    "name": "Kidney, tuberculosis of",
+    "raw_text": "7505 Kidney, tuberculosis of:",
+    "method": "name_pattern"
+  },
+  "7507": {
+    "code": "7507",
+    "name": "Nephrosclerosis, arteriolar",
+    "raw_text": "7507 Nephrosclerosis, arteriolar:",
+    "method": "name_pattern"
+  },
+  "7509": {
+    "code": "7509",
+    "name": "Hydronephrosis",
+    "raw_text": "7509 Hydronephrosis:",
+    "method": "name_pattern"
+  },
+  "7511": {
+    "code": "7511",
+    "name": "Ureter, stricture of",
+    "raw_text": "7511 Ureter, stricture of:",
+    "method": "name_pattern"
+  },
+  "7512": {
+    "code": "7512",
+    "name": "Cystitis, chronic, includes interstitial and all etiologies, infectious and non-infectious",
+    "raw_text": "7512 Cystitis, chronic, includes interstitial and all etiologies, infectious and non-infectious:",
+    "method": "name_pattern"
+  },
+  "7515": {
+    "code": "7515",
+    "name": "Bladder, calculus in, with symptoms interfering with function",
+    "raw_text": "7515 Bladder, calculus in, with symptoms interfering with function:",
+    "method": "name_pattern"
+  },
+  "7516": {
+    "code": "7516",
+    "name": "Bladder, fistula of",
+    "raw_text": "7516 Bladder, fistula of:",
+    "method": "name_pattern"
+  },
+  "7517": {
+    "code": "7517",
+    "name": "Bladder, injury of",
+    "raw_text": "7517 Bladder, injury of:",
+    "method": "name_pattern"
+  },
+  "7518": {
+    "code": "7518",
+    "name": "Urethra, stricture of",
+    "raw_text": "7518 Urethra, stricture of:",
+    "method": "name_pattern"
+  },
+  "7519": {
+    "code": "7519",
+    "name": "Urethra, fistula of",
+    "raw_text": "7519 Urethra, fistula of:",
+    "method": "name_pattern"
+  },
+  "7520": {
+    "code": "7520",
+    "name": "Penis, removal of half or more",
+    "raw_text": "7520 Penis, removal of half or more\n",
+    "method": "name_pattern"
+  },
+  "7521": {
+    "code": "7521",
+    "name": "Penis, removal of glans",
+    "raw_text": "7521 Penis, removal of glans\n",
+    "method": "name_pattern"
+  },
+  "7522": {
+    "code": "7522",
+    "name": "Erectile dysfunction, with or without penile deformity",
+    "raw_text": "7522 Erectile dysfunction, with or without penile deformity\n",
+    "method": "name_pattern"
+  },
+  "7524": {
+    "code": "7524",
+    "name": "Testis, removal",
+    "raw_text": "7524 Testis, removal:",
+    "method": "name_pattern"
+  },
+  "7527": {
+    "code": "7527",
+    "name": "Prostate gland injuries, infections, hypertrophy, postoperative residuals, bladder outlet obstruction",
+    "raw_text": "7527 Prostate gland injuries, infections, hypertrophy, postoperative residuals, bladder outlet obstruction:",
+    "method": "name_pattern"
+  },
+  "7528": {
+    "code": "7528",
+    "name": "Malignant neoplasms of the genitourinary system",
+    "raw_text": "7528 Malignant neoplasms of the genitourinary system\n",
+    "method": "name_pattern"
+  },
+  "7530": {
+    "code": "7530",
+    "name": "Chronic renal disease requiring regular dialysis",
+    "raw_text": "7530 Chronic renal disease requiring regular dialysis:",
+    "method": "name_pattern"
+  },
+  "7531": {
+    "code": "7531",
+    "name": "Kidney transplant",
+    "raw_text": "7531 Kidney transplant:",
+    "method": "name_pattern"
+  },
+  "7534": {
+    "code": "7534",
+    "name": "Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel disease, unspecified)",
+    "raw_text": "7534 Atherosclerotic renal disease (renal artery stenosis, atheroembolic renal disease, or large vessel disease, unspecified):",
+    "method": "name_pattern"
+  },
+  "7535": {
+    "code": "7535",
+    "name": "Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy metals, and similar agents)",
+    "raw_text": "7535 Toxic nephropathy (antibotics, radiocontrast agents, nonsteroidal anti-inflammatory agents, heavy metals, and similar agents):",
+    "method": "name_pattern"
+  },
+  "7537": {
+    "code": "7537",
+    "name": "Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism",
+    "raw_text": "7537 Interstitial nephritis, including gouty nephropathy, disorders of calcium metabolism:",
+    "method": "name_pattern"
+  },
+  "7538": {
+    "code": "7538",
+    "name": "Papillary necrosis",
+    "raw_text": "7538 Papillary necrosis:",
+    "method": "name_pattern"
+  },
+  "7539": {
+    "code": "7539",
+    "name": "Renal amyloid disease",
+    "raw_text": "7539 Renal amyloid disease:",
+    "method": "name_pattern"
+  },
+  "7541": {
+    "code": "7541",
+    "name": "Renal involvement in diabetes mellitus type I or II",
+    "raw_text": "7541 Renal involvement in diabetes mellitus type I or II:",
+    "method": "name_pattern"
+  },
+  "7542": {
+    "code": "7542",
+    "name": "Neurogenic bladder",
+    "raw_text": "7542 Neurogenic bladder:",
+    "method": "name_pattern"
+  },
+  "7544": {
+    "code": "7544",
+    "name": "Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and Hepatitis C",
+    "raw_text": "7544 Renal disease caused by viral infection such as human immunodeficiency virus (HIV), Hepatitis B, and Hepatitis C:",
+    "method": "name_pattern"
+  },
+  "7545": {
+    "code": "7545",
+    "name": "Bladder, diverticulum of",
+    "raw_text": "7545 Bladder, diverticulum of:",
+    "method": "name_pattern"
+  },
+  "7611": {
+    "code": "7611",
+    "name": "Vagina, disease or injury of",
+    "raw_text": "7611 Vagina, disease or injury of.",
+    "method": "name_pattern"
+  },
+  "7612": {
+    "code": "7612",
+    "name": "Cervix, disease or injury of",
+    "raw_text": "7612 Cervix, disease or injury of.",
+    "method": "name_pattern"
+  },
+  "7613": {
+    "code": "7613",
+    "name": "Uterus, disease, injury, or adhesions of",
+    "raw_text": "7613 Uterus, disease, injury, or adhesions of.",
+    "method": "name_pattern"
+  },
+  "7614": {
+    "code": "7614",
+    "name": "Fallopian tube, disease, injury, or adhesions of (including pelvic inflammatory disease (PID))",
+    "raw_text": "7614 Fallopian tube, disease, injury, or adhesions of (including pelvic inflammatory disease (PID)).",
+    "method": "name_pattern"
+  },
+  "7615": {
+    "code": "7615",
+    "name": "Ovary, disease, injury, or adhesions of",
+    "raw_text": "7615 Ovary, disease, injury, or adhesions of.",
+    "method": "name_pattern"
+  },
+  "7618": {
+    "code": "7618",
+    "name": "Uterus, removal of, including corpus",
+    "raw_text": "7618 Uterus, removal of, including corpus:",
+    "method": "name_pattern"
+  },
+  "7619": {
+    "code": "7619",
+    "name": "Ovary, removal of",
+    "raw_text": "7619 Ovary, removal of:",
+    "method": "name_pattern"
+  },
+  "7620": {
+    "code": "7620",
+    "name": "Ovaries, atrophy of both, complete",
+    "raw_text": "7620 Ovaries, atrophy of both, complete\n",
+    "method": "name_pattern"
+  },
+  "7621": {
+    "code": "7621",
+    "name": "Complete or incomplete pelvic organ prolapse due to injury, disease, or surgical complications of pregnancy",
+    "raw_text": "7621 Complete or incomplete pelvic organ prolapse due to injury, disease, or surgical complications of pregnancy\n",
+    "method": "name_pattern"
+  },
+  "7625": {
+    "code": "7625",
+    "name": "Fistula, urethrovaginal",
+    "raw_text": "7625 Fistula, urethrovaginal:",
+    "method": "name_pattern"
+  },
+  "7626": {
+    "code": "7626",
+    "name": "Breast, surgery of",
+    "raw_text": "7626 Breast, surgery of:",
+    "method": "name_pattern"
+  },
+  "7627": {
+    "code": "7627",
+    "name": "Malignant neoplasms of gynecological system",
+    "raw_text": "7627 Malignant neoplasms of gynecological system\n",
+    "method": "name_pattern"
+  },
+  "7628": {
+    "code": "7628",
+    "name": "Benign neoplasms of gynecological system",
+    "raw_text": "7628 Benign neoplasms of gynecological system.",
+    "method": "name_pattern"
+  },
+  "7630": {
+    "code": "7630",
+    "name": "Malignant neoplasms of the breast",
+    "raw_text": "7630 Malignant neoplasms of the breast\n",
+    "method": "name_pattern"
+  },
+  "7631": {
+    "code": "7631",
+    "name": "Benign neoplasms of the breast and other injuries of the breast",
+    "raw_text": "7631 Benign neoplasms of the breast and other injuries of the breast.",
+    "method": "name_pattern"
+  },
+  "7632": {
+    "code": "7632",
+    "name": "Female sexual arousal disorder (FSAD)",
+    "raw_text": "7632 Female sexual arousal disorder (FSAD)\n",
+    "method": "name_pattern"
+  },
+  "7706": {
+    "code": "7706",
+    "name": "Splenectomy",
+    "raw_text": "7706 Splenectomy\n",
+    "method": "name_pattern"
+  },
+  "7712": {
+    "code": "7712",
+    "name": "Multiple myeloma",
+    "raw_text": "7712 Multiple myeloma:",
+    "method": "name_pattern"
+  },
+  "7717": {
+    "code": "7717",
+    "name": "AL amyloidosis (primary amyloidosis)",
+    "raw_text": "7717 AL amyloidosis (primary amyloidosis)\n",
+    "method": "name_pattern"
+  },
+  "7801": {
+    "code": "7801",
+    "name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are associated with underlying soft tissue damage",
+    "raw_text": "7801 Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are associated with underlying soft tissue damage:",
+    "method": "name_pattern"
+  },
+  "7802": {
+    "code": "7802",
+    "name": "Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are not associated with underlying soft tissue damage",
+    "raw_text": "7802 Burn scar(s) or scar(s) due to other causes, not of the head, face, or neck, that are not associated with underlying soft tissue damage:",
+    "method": "name_pattern"
+  },
+  "7807": {
+    "code": "7807",
+    "name": "American (New World) leishmaniasis (mucocutaneous, espundia)",
+    "raw_text": "7807 American (New World) leishmaniasis (mucocutaneous, espundia):",
+    "method": "name_pattern"
+  },
+  "7813": {
+    "code": "7813",
+    "name": "Dermatophytosis (ringworm",
+    "raw_text": "7813 Dermatophytosis (ringworm:",
+    "method": "name_pattern"
+  },
+  "7815": {
+    "code": "7815",
+    "name": "Bullous disorders (including pemphigus vulgaris, pemphigus foliaceous, bullous pemphigoid, dermatitis herpetiformis, epidermolysis bullosa acquisit...",
+    "raw_text": "7815 Bullous disorders (including pemphigus vulgaris, pemphigus foliaceous, bullous pemphigoid, dermatitis herpetiformis, epidermolysis bullosa acquisita, benign chronic familial pemphigus (Hailey-Hai",
+    "method": "name_pattern"
+  },
+  "7820": {
+    "code": "7820",
+    "name": "Infections of the skin not listed elsewhere (including bacterial, fungal, viral, treponemal, and parasitic diseases)",
+    "raw_text": "7820 Infections of the skin not listed elsewhere (including bacterial, fungal, viral, treponemal, and parasitic diseases).",
+    "method": "name_pattern"
+  },
+  "7821": {
+    "code": "7821",
+    "name": "Cutaneous manifestations of collagen-vascular diseases not listed elsewhere (including scleroderma, calcinosis cutis, subacute cutaneous lupus eryt...",
+    "raw_text": "7821 Cutaneous manifestations of collagen-vascular diseases not listed elsewhere (including scleroderma, calcinosis cutis, subacute cutaneous lupus erythematosus, and dermatomyositis).",
+    "method": "name_pattern"
+  },
+  "7822": {
+    "code": "7822",
+    "name": "Papulosquamous disorders not listed elsewhere (including lichen planus, large or small plaque parapsoriasis, pityriasis lichenoides et varioliformi...",
+    "raw_text": "7822 Papulosquamous disorders not listed elsewhere (including lichen planus, large or small plaque parapsoriasis, pityriasis lichenoides et varioliformis acuta (PLEVA), lymphomatoid papulosus, mycosis",
+    "method": "name_pattern"
+  },
+  "7823": {
+    "code": "7823",
+    "name": "Vitiligo",
+    "raw_text": "7823 Vitiligo:",
+    "method": "name_pattern"
+  },
+  "7825": {
+    "code": "7825",
+    "name": "Chronic urticaria",
+    "raw_text": "7825 Chronic urticaria:",
+    "method": "name_pattern"
+  },
+  "7826": {
+    "code": "7826",
+    "name": "Vasculitis, primary cutaneous",
+    "raw_text": "7826 Vasculitis, primary cutaneous:",
+    "method": "name_pattern"
+  },
+  "7828": {
+    "code": "7828",
+    "name": "Acne",
+    "raw_text": "7828 Acne:",
+    "method": "name_pattern"
+  },
+  "7832": {
+    "code": "7832",
+    "name": "Hyperhidrosis",
+    "raw_text": "7832 Hyperhidrosis:",
+    "method": "name_pattern"
+  },
+  "7833": {
+    "code": "7833",
+    "name": "Malignant melanoma",
+    "raw_text": "7833 Malignant melanoma:",
+    "method": "name_pattern"
+  },
+  "7906": {
+    "code": "7906",
+    "name": "Thyroiditis",
+    "raw_text": "7906 Thyroiditis:",
+    "method": "name_pattern"
+  },
+  "7909": {
+    "code": "7909",
+    "name": "Diabetes insipidus",
+    "raw_text": "7909 Diabetes insipidus:",
+    "method": "name_pattern"
+  },
+  "7913": {
+    "code": "7913",
+    "name": "Diabetes mellitus",
+    "raw_text": "7913 Diabetes mellitus:",
+    "method": "name_pattern"
+  },
+  "7914": {
+    "code": "7914",
+    "name": "Neoplasm, malignant, any specified part of the endocrine system",
+    "raw_text": "7914 Neoplasm, malignant, any specified part of the endocrine system\n",
+    "method": "name_pattern"
+  },
+  "7916": {
+    "code": "7916",
+    "name": "Hyperpituitarism (prolactin secreting pituitary dysfunction)",
+    "raw_text": "7916 Hyperpituitarism (prolactin secreting pituitary dysfunction):",
+    "method": "name_pattern"
+  },
+  "8002": {
+    "code": "8002",
+    "name": "Malignant",
+    "raw_text": "8002 Malignant\n",
+    "method": "name_pattern"
+  },
+  "8003": {
+    "code": "8003",
+    "name": "Benign, minimum",
+    "raw_text": "8003 Benign, minimum\n",
+    "method": "name_pattern"
+  },
+  "8005": {
+    "code": "8005",
+    "name": "Bulbar palsy",
+    "raw_text": "8005 Bulbar palsy\n",
+    "method": "name_pattern"
+  },
+  "8007": {
+    "code": "8007",
+    "name": "Brain, vessels, embolism of",
+    "raw_text": "8007 Brain, vessels, embolism of.",
+    "method": "name_pattern"
+  },
+  "8008": {
+    "code": "8008",
+    "name": "Brain, vessels, thrombosis of",
+    "raw_text": "8008 Brain, vessels, thrombosis of.",
+    "method": "name_pattern"
+  },
+  "8009": {
+    "code": "8009",
+    "name": "Brain, vessels, hemorrhage from",
+    "raw_text": "8009 Brain, vessels, hemorrhage from:",
+    "method": "name_pattern"
+  },
+  "8010": {
+    "code": "8010",
+    "name": "Myelitis",
+    "raw_text": "8010 Myelitis:",
+    "method": "name_pattern"
+  },
+  "8011": {
+    "code": "8011",
+    "name": "Poliomyelitis, anterior",
+    "raw_text": "8011 Poliomyelitis, anterior:",
+    "method": "name_pattern"
+  },
+  "8012": {
+    "code": "8012",
+    "name": "Hematomyelia",
+    "raw_text": "8012 Hematomyelia:",
+    "method": "name_pattern"
+  },
+  "8013": {
+    "code": "8013",
+    "name": "Syphilis, cerebrospinal",
+    "raw_text": "8013 Syphilis, cerebrospinal.",
+    "method": "name_pattern"
+  },
+  "8014": {
+    "code": "8014",
+    "name": "Syphilis, meningovascular",
+    "raw_text": "8014 Syphilis, meningovascular.",
+    "method": "name_pattern"
+  },
+  "8015": {
+    "code": "8015",
+    "name": "Tabes dorsalis",
+    "raw_text": "8015 Tabes dorsalis.",
+    "method": "name_pattern"
+  },
+  "8017": {
+    "code": "8017",
+    "name": "Amyotrophic lateral sclerosis",
+    "raw_text": "8017 Amyotrophic lateral sclerosis\n",
+    "method": "name_pattern"
+  },
+  "8019": {
+    "code": "8019",
+    "name": "Meningitis, cerebrospinal, epidemic",
+    "raw_text": "8019 Meningitis, cerebrospinal, epidemic:",
+    "method": "name_pattern"
+  },
+  "8020": {
+    "code": "8020",
+    "name": "Brain, abscess of",
+    "raw_text": "8020 Brain, abscess of:",
+    "method": "name_pattern"
+  },
+  "8021": {
+    "code": "8021",
+    "name": "Malignant",
+    "raw_text": "8021 Malignant\n",
+    "method": "name_pattern"
+  },
+  "8022": {
+    "code": "8022",
+    "name": "Benign, minimum rating",
+    "raw_text": "8022 Benign, minimum rating\n",
+    "method": "name_pattern"
+  },
+  "8024": {
+    "code": "8024",
+    "name": "Syringomyelia",
+    "raw_text": "8024 Syringomyelia:",
+    "method": "name_pattern"
+  },
+  "8025": {
+    "code": "8025",
+    "name": "Myasthenia gravis",
+    "raw_text": "8025 Myasthenia gravis:",
+    "method": "name_pattern"
+  },
+  "8103": {
+    "code": "8103",
+    "name": "Tic, convulsive",
+    "raw_text": "8103 Tic, convulsive:",
+    "method": "name_pattern"
+  },
+  "8107": {
+    "code": "8107",
+    "name": "Athetosis, acquired",
+    "raw_text": "8107 Athetosis, acquired.",
+    "method": "name_pattern"
+  },
+  "8108": {
+    "code": "8108",
+    "name": "Narcolepsy",
+    "raw_text": "8108 Narcolepsy.",
+    "method": "name_pattern"
+  },
+  "8205": {
+    "code": "8205",
+    "name": "Paralysis of",
+    "raw_text": "8205 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8405": {
+    "code": "8405",
+    "name": "Neuralgia",
+    "raw_text": "8405 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8407": {
+    "code": "8407",
+    "name": "Neuralgia",
+    "raw_text": "8407 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8209": {
+    "code": "8209",
+    "name": "Paralysis of",
+    "raw_text": "8209 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8409": {
+    "code": "8409",
+    "name": "Neuralgia",
+    "raw_text": "8409 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8210": {
+    "code": "8210",
+    "name": "Paralysis of",
+    "raw_text": "8210 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8410": {
+    "code": "8410",
+    "name": "Neuralgia",
+    "raw_text": "8410 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8211": {
+    "code": "8211",
+    "name": "Paralysis of",
+    "raw_text": "8211 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8411": {
+    "code": "8411",
+    "name": "Neuralgia",
+    "raw_text": "8411 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8212": {
+    "code": "8212",
+    "name": "Paralysis of",
+    "raw_text": "8212 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8412": {
+    "code": "8412",
+    "name": "Neuralgia",
+    "raw_text": "8412 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8510": {
+    "code": "8510",
+    "name": "Paralysis of",
+    "raw_text": "8510 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8610": {
+    "code": "8610",
+    "name": "Neuritis",
+    "raw_text": "8610 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8710": {
+    "code": "8710",
+    "name": "Neuralgia",
+    "raw_text": "8710 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8511": {
+    "code": "8511",
+    "name": "Paralysis of",
+    "raw_text": "8511 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8611": {
+    "code": "8611",
+    "name": "Neuritis",
+    "raw_text": "8611 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8711": {
+    "code": "8711",
+    "name": "Neuralgia",
+    "raw_text": "8711 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8512": {
+    "code": "8512",
+    "name": "Paralysis of",
+    "raw_text": "8512 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8612": {
+    "code": "8612",
+    "name": "Neuritis",
+    "raw_text": "8612 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8712": {
+    "code": "8712",
+    "name": "Neuralgia",
+    "raw_text": "8712 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8513": {
+    "code": "8513",
+    "name": "Paralysis of",
+    "raw_text": "8513 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8613": {
+    "code": "8613",
+    "name": "Neuritis",
+    "raw_text": "8613 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8713": {
+    "code": "8713",
+    "name": "Neuralgia",
+    "raw_text": "8713 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8514": {
+    "code": "8514",
+    "name": "Paralysis of",
+    "raw_text": "8514 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8614": {
+    "code": "8614",
+    "name": "Neuritis",
+    "raw_text": "8614 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8714": {
+    "code": "8714",
+    "name": "Neuralgia",
+    "raw_text": "8714 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8615": {
+    "code": "8615",
+    "name": "Neuritis",
+    "raw_text": "8615 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8715": {
+    "code": "8715",
+    "name": "Neuralgia",
+    "raw_text": "8715 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8516": {
+    "code": "8516",
+    "name": "Paralysis of",
+    "raw_text": "8516 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8616": {
+    "code": "8616",
+    "name": "Neuritis",
+    "raw_text": "8616 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8716": {
+    "code": "8716",
+    "name": "Neuralgia",
+    "raw_text": "8716 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8517": {
+    "code": "8517",
+    "name": "Paralysis of",
+    "raw_text": "8517 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8617": {
+    "code": "8617",
+    "name": "Neuritis",
+    "raw_text": "8617 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8717": {
+    "code": "8717",
+    "name": "Neuralgia",
+    "raw_text": "8717 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8518": {
+    "code": "8518",
+    "name": "Paralysis of",
+    "raw_text": "8518 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8618": {
+    "code": "8618",
+    "name": "Neuritis",
+    "raw_text": "8618 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8718": {
+    "code": "8718",
+    "name": "Neuralgia",
+    "raw_text": "8718 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8519": {
+    "code": "8519",
+    "name": "Paralysis of",
+    "raw_text": "8519 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8719": {
+    "code": "8719",
+    "name": "Neuralgia",
+    "raw_text": "8719 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8620": {
+    "code": "8620",
+    "name": "Neuritis",
+    "raw_text": "8620 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8720": {
+    "code": "8720",
+    "name": "Neuralgia",
+    "raw_text": "8720 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8521": {
+    "code": "8521",
+    "name": "Paralysis of",
+    "raw_text": "8521 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8621": {
+    "code": "8621",
+    "name": "Neuritis",
+    "raw_text": "8621 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8721": {
+    "code": "8721",
+    "name": "Neuralgia",
+    "raw_text": "8721 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8522": {
+    "code": "8522",
+    "name": "Paralysis of",
+    "raw_text": "8522 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8622": {
+    "code": "8622",
+    "name": "Neuritis",
+    "raw_text": "8622 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8722": {
+    "code": "8722",
+    "name": "Neuralgia",
+    "raw_text": "8722 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8523": {
+    "code": "8523",
+    "name": "Paralysis of",
+    "raw_text": "8523 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8623": {
+    "code": "8623",
+    "name": "Neuritis",
+    "raw_text": "8623 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8723": {
+    "code": "8723",
+    "name": "Neuralgia",
+    "raw_text": "8723 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8524": {
+    "code": "8524",
+    "name": "Paralysis of",
+    "raw_text": "8524 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8624": {
+    "code": "8624",
+    "name": "Neuritis",
+    "raw_text": "8624 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8724": {
+    "code": "8724",
+    "name": "Neuralgia",
+    "raw_text": "8724 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8525": {
+    "code": "8525",
+    "name": "Paralysis of",
+    "raw_text": "8525 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8625": {
+    "code": "8625",
+    "name": "Neuritis",
+    "raw_text": "8625 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8725": {
+    "code": "8725",
+    "name": "Neuralgia",
+    "raw_text": "8725 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8526": {
+    "code": "8526",
+    "name": "Paralysis of",
+    "raw_text": "8526 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8626": {
+    "code": "8626",
+    "name": "Neuritis",
+    "raw_text": "8626 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8726": {
+    "code": "8726",
+    "name": "Neuralgia",
+    "raw_text": "8726 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8527": {
+    "code": "8527",
+    "name": "Paralysis of",
+    "raw_text": "8527 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8627": {
+    "code": "8627",
+    "name": "Neuritis",
+    "raw_text": "8627 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8727": {
+    "code": "8727",
+    "name": "Neuralgia",
+    "raw_text": "8727 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8528": {
+    "code": "8528",
+    "name": "Paralysis of",
+    "raw_text": "8528 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8628": {
+    "code": "8628",
+    "name": "Neuritis",
+    "raw_text": "8628 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8728": {
+    "code": "8728",
+    "name": "Neuralgia",
+    "raw_text": "8728 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8529": {
+    "code": "8529",
+    "name": "Paralysis of",
+    "raw_text": "8529 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8629": {
+    "code": "8629",
+    "name": "Neuritis",
+    "raw_text": "8629 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8729": {
+    "code": "8729",
+    "name": "Neuralgia",
+    "raw_text": "8729 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8530": {
+    "code": "8530",
+    "name": "Paralysis of",
+    "raw_text": "8530 Paralysis of:",
+    "method": "name_pattern"
+  },
+  "8630": {
+    "code": "8630",
+    "name": "Neuritis",
+    "raw_text": "8630 Neuritis.",
+    "method": "name_pattern"
+  },
+  "8730": {
+    "code": "8730",
+    "name": "Neuralgia",
+    "raw_text": "8730 Neuralgia.",
+    "method": "name_pattern"
+  },
+  "8540": {
+    "code": "8540",
+    "name": "Soft-tissue sarcoma (of neurogenic origin)",
+    "raw_text": "8540 Soft-tissue sarcoma (of neurogenic origin)\n",
+    "method": "name_pattern"
+  },
+  "8911": {
+    "code": "8911",
+    "name": "Epilepsy, petit mal",
+    "raw_text": "8911 Epilepsy, petit mal.",
+    "method": "name_pattern"
+  },
+  "8913": {
+    "code": "8913",
+    "name": "Epilepsy, diencephalic",
+    "raw_text": "8913 Epilepsy, diencephalic.",
+    "method": "name_pattern"
+  },
+  "8914": {
+    "code": "8914",
+    "name": "Epilepsy, psychomotor",
+    "raw_text": "8914 Epilepsy, psychomotor.",
+    "method": "name_pattern"
+  },
+  "9208": {
+    "code": "9208",
+    "name": "Delusional disorder",
+    "raw_text": "9208 Delusional disorder\n",
+    "method": "name_pattern"
+  },
+  "9210": {
+    "code": "9210",
+    "name": "Other specified and unspecified schizophrenia spectrum and other psychotic disorders",
+    "raw_text": "9210 Other specified and unspecified schizophrenia spectrum and other psychotic disorders\n",
+    "method": "name_pattern"
+  },
+  "9211": {
+    "code": "9211",
+    "name": "Schizoaffective disorder",
+    "raw_text": "9211 Schizoaffective disorder\n",
+    "method": "name_pattern"
+  },
+  "9300": {
+    "code": "9300",
+    "name": "Delirium",
+    "raw_text": "9300 Delirium\n",
+    "method": "name_pattern"
+  },
+  "9301": {
+    "code": "9301",
+    "name": "Major or mild neurocognitive disorder due to HIV or other infections",
+    "raw_text": "9301 Major or mild neurocognitive disorder due to HIV or other infections\n",
+    "method": "name_pattern"
+  },
+  "9304": {
+    "code": "9304",
+    "name": "Major or mild neurocognitive disorder due to traumatic brain injury",
+    "raw_text": "9304 Major or mild neurocognitive disorder due to traumatic brain injury\n",
+    "method": "name_pattern"
+  },
+  "9305": {
+    "code": "9305",
+    "name": "Major or mild vascular neurocognitive disorder",
+    "raw_text": "9305 Major or mild vascular neurocognitive disorder\n",
+    "method": "name_pattern"
+  },
+  "9310": {
+    "code": "9310",
+    "name": "Unspecified neurocognitive disorder",
+    "raw_text": "9310 Unspecified neurocognitive disorder\n",
+    "method": "name_pattern"
+  },
+  "9400": {
+    "code": "9400",
+    "name": "Generalized anxiety disorder",
+    "raw_text": "9400 Generalized anxiety disorder\n",
+    "method": "name_pattern"
+  },
+  "9404": {
+    "code": "9404",
+    "name": "Obsessive compulsive disorder",
+    "raw_text": "9404 Obsessive compulsive disorder\n",
+    "method": "name_pattern"
+  },
+  "9410": {
+    "code": "9410",
+    "name": "Other specified anxiety disorder",
+    "raw_text": "9410 Other specified anxiety disorder\n",
+    "method": "name_pattern"
+  },
+  "9411": {
+    "code": "9411",
+    "name": "Posttraumatic stress disorder",
+    "raw_text": "9411 Posttraumatic stress disorder\n",
+    "method": "name_pattern"
+  },
+  "9413": {
+    "code": "9413",
+    "name": "Unspecified anxiety disorder",
+    "raw_text": "9413 Unspecified anxiety disorder\n",
+    "method": "name_pattern"
+  },
+  "9421": {
+    "code": "9421",
+    "name": "Somatic symptom disorder",
+    "raw_text": "9421 Somatic symptom disorder\n",
+    "method": "name_pattern"
+  },
+  "9422": {
+    "code": "9422",
+    "name": "Other specified somatic symptom and related disorder",
+    "raw_text": "9422 Other specified somatic symptom and related disorder\n",
+    "method": "name_pattern"
+  },
+  "9423": {
+    "code": "9423",
+    "name": "Unspecified somatic symptom and related disorder",
+    "raw_text": "9423 Unspecified somatic symptom and related disorder\n",
+    "method": "name_pattern"
+  },
+  "9424": {
+    "code": "9424",
+    "name": "Conversion disorder (functional neurological symptom disorder)",
+    "raw_text": "9424 Conversion disorder (functional neurological symptom disorder)\n",
+    "method": "name_pattern"
+  },
+  "9425": {
+    "code": "9425",
+    "name": "Illness anxiety disorder",
+    "raw_text": "9425 Illness anxiety disorder\n",
+    "method": "name_pattern"
+  },
+  "9431": {
+    "code": "9431",
+    "name": "Cyclothymic disorder",
+    "raw_text": "9431 Cyclothymic disorder\n",
+    "method": "name_pattern"
+  },
+  "9432": {
+    "code": "9432",
+    "name": "Bipolar disorder",
+    "raw_text": "9432 Bipolar disorder\n",
+    "method": "name_pattern"
+  },
+  "9433": {
+    "code": "9433",
+    "name": "Persistent depressive disorder (dysthymia)",
+    "raw_text": "9433 Persistent depressive disorder (dysthymia)\n",
+    "method": "name_pattern"
+  },
+  "9434": {
+    "code": "9434",
+    "name": "Major depressive disorder",
+    "raw_text": "9434 Major depressive disorder\n",
+    "method": "name_pattern"
+  },
+  "9435": {
+    "code": "9435",
+    "name": "Unspecified depressive disorder",
+    "raw_text": "9435 Unspecified depressive disorder\n",
+    "method": "name_pattern"
+  },
+  "9440": {
+    "code": "9440",
+    "name": "Chronic adjustment disorder",
+    "raw_text": "9440 Chronic adjustment disorder \n\n\n",
+    "method": "name_pattern"
+  },
+  "9520": {
+    "code": "9520",
+    "name": "Anorexia nervosa",
+    "raw_text": "9520 Anorexia nervosa\n",
+    "method": "name_pattern"
+  },
+  "9521": {
+    "code": "9521",
+    "name": "Bulimia nervosa",
+    "raw_text": "9521 Bulimia nervosa\n\n\n",
+    "method": "name_pattern"
+  },
+  "9901": {
+    "code": "9901",
+    "name": "Mandible, loss of, complete, between angles",
+    "raw_text": "9901 Mandible, loss of, complete, between angles\n",
+    "method": "name_pattern"
+  },
+  "9902": {
+    "code": "9902",
+    "name": "Mandible, loss of, including ramus, unilaterally or bilaterally",
+    "raw_text": "9902 Mandible, loss of, including ramus, unilaterally or bilaterally:",
+    "method": "name_pattern"
+  },
+  "9903": {
+    "code": "9903",
+    "name": "Mandible, nonunion of, confirmed by diagnostic imaging studies",
+    "raw_text": "9903 Mandible, nonunion of, confirmed by diagnostic imaging studies:",
+    "method": "name_pattern"
+  },
+  "9904": {
+    "code": "9904",
+    "name": "Mandible, malunion of",
+    "raw_text": "9904 Mandible, malunion of:",
+    "method": "name_pattern"
+  },
+  "9905": {
+    "code": "9905",
+    "name": "Temporomandibular disorder (TMD)",
+    "raw_text": "9905 Temporomandibular disorder (TMD):",
+    "method": "name_pattern"
+  },
+  "9908": {
+    "code": "9908",
+    "name": "Condyloid process, loss of, one or both sides",
+    "raw_text": "9908 Condyloid process, loss of, one or both sides\n",
+    "method": "name_pattern"
+  },
+  "9911": {
+    "code": "9911",
+    "name": "Hard palate, loss of",
+    "raw_text": "9911 Hard palate, loss of:",
+    "method": "name_pattern"
+  },
+  "9913": {
+    "code": "9913",
+    "name": "Teeth, loss of, due to loss of substance of body of maxilla or mandible without loss of continuity",
+    "raw_text": "9913 Teeth, loss of, due to loss of substance of body of maxilla or mandible without loss of continuity:",
+    "method": "name_pattern"
+  },
+  "9915": {
+    "code": "9915",
+    "name": "Maxilla, loss of half or less",
+    "raw_text": "9915 Maxilla, loss of half or less:",
+    "method": "name_pattern"
+  },
+  "9918": {
+    "code": "9918",
+    "name": "Neoplasm, hard and soft tissue, malignant",
+    "raw_text": "9918 Neoplasm, hard and soft tissue, malignant\n",
+    "method": "name_pattern"
+  },
+  "5208": {
+    "code": "5208",
+    "name": "Forearm, flexion limited",
+    "raw_text": "5208\nForearm, flexion limited.",
+    "method": "name_pattern"
+  },
+  "5258": {
+    "code": "5258",
+    "name": "Cartilage, semilunar, dislocated",
+    "raw_text": "5258\nCartilage, semilunar, dislocated.",
+    "method": "name_pattern"
+  },
+  "5327": {
+    "code": "5327",
+    "name": "Muscle, neoplasm of, malignant",
+    "raw_text": "5327\nMuscle, neoplasm of, malignant.",
+    "method": "name_pattern"
+  },
+  "6003": {
+    "code": "6003",
+    "name": "Iritis",
+    "raw_text": "6003\nIritis.",
+    "method": "name_pattern"
+  },
+  "6004": {
+    "code": "6004",
+    "name": "Cyclitis",
+    "raw_text": "6004\nCyclitis.",
+    "method": "name_pattern"
+  },
+  "6005": {
+    "code": "6005",
+    "name": "Choroiditis",
+    "raw_text": "6005\nChoroiditis.",
+    "method": "name_pattern"
+  },
+  "6028": {
+    "code": "6028",
+    "name": "Cataract, senile, and others",
+    "raw_text": "6028\nCataract, senile, and others.",
+    "method": "name_pattern"
+  },
+  "6031": {
+    "code": "6031",
+    "name": "Dacryocystitis",
+    "raw_text": "6031\nDacryocystitis.",
+    "method": "name_pattern"
+  },
+  "6033": {
+    "code": "6033",
+    "name": "Lens, crystalline, dislocation",
+    "raw_text": "6033\nLens, crystalline, dislocation.",
+    "method": "name_pattern"
+  },
+  "6061": {
+    "code": "6061",
+    "name": "Anatomical loss both eyes",
+    "raw_text": "6061\nAnatomical loss both eyes.",
+    "method": "name_pattern"
+  },
+  "6062": {
+    "code": "6062",
+    "name": "Blindness, both eyes, only light perception",
+    "raw_text": "6062\nBlindness, both eyes, only light perception.",
+    "method": "name_pattern"
+  },
+  "6092": {
+    "code": "6092",
+    "name": "Diplopia, limited muscle function",
+    "raw_text": "6092\nDiplopia, limited muscle function.",
+    "method": "name_pattern"
+  },
+  "7532": {
+    "code": "7532",
+    "name": "Renal tubular disorders",
+    "raw_text": "7532\nRenal tubular disorders.",
+    "method": "name_pattern"
+  },
+  "7824": {
+    "code": "7824",
+    "name": "Keratinization, diseases",
+    "raw_text": "7824\nKeratinization, diseases.",
+    "method": "name_pattern"
+  },
+  "7827": {
+    "code": "7827",
+    "name": "Erythema multiforme",
+    "raw_text": "7827\nErythema multiforme.",
+    "method": "name_pattern"
+  },
+  "7321": {
+    "code": "7321",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7321\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "6066": {
+    "code": "6066",
+    "name": "Both feet",
+    "raw_text": "6066\n\n\nBoth feet\n",
+    "method": "name_pattern"
+  },
+  "7722": {
+    "code": "7722",
+    "name": "Aneurysm",
+    "raw_text": "7722\n\n\nAneurysm:",
+    "method": "name_pattern"
+  },
+  "5002": {
+    "code": "5002",
+    "name": "Streptococcic",
+    "raw_text": "5002\n\n\nStreptococcic\n",
+    "method": "name_pattern"
+  },
+  "6070": {
+    "code": "6070",
+    "name": "Bones",
+    "raw_text": "6070\n\n\nBones:",
+    "method": "name_pattern"
+  },
+  "8105": {
+    "code": "8105",
+    "name": "Chloracne",
+    "raw_text": "8105\n\n\nChloracne\n",
+    "method": "name_pattern"
+  },
+  "7326": {
+    "code": "7326",
+    "name": "Gallbladder and biliary tract, chronic",
+    "raw_text": "7326\n\n\nGallbladder and biliary tract, chronic\n",
+    "method": "name_pattern"
+  },
+  "7709": {
+    "code": "7709",
+    "name": "Inflammatory bowel",
+    "raw_text": "7709\n\n\nInflammatory bowel\n",
+    "method": "name_pattern"
+  },
+  "5279": {
+    "code": "5279",
+    "name": "Parasitic",
+    "raw_text": "5279\n\n\nParasitic\n",
+    "method": "name_pattern"
+  },
+  "7800": {
+    "code": "7800",
+    "name": "Dislocated",
+    "raw_text": "7800\n\n\nDislocated:",
+    "method": "name_pattern"
+  },
+  "7324": {
+    "code": "7324",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7324\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7322": {
+    "code": "7322",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7322\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "9416": {
+    "code": "9416",
+    "name": "Generalized anxiety disorder",
+    "raw_text": "9416\n\n\nGeneralized anxiety disorder\n",
+    "method": "name_pattern"
+  },
+  "9326": {
+    "code": "9326",
+    "name": "Major or mild neurocognitive disorder due to HIV or other infections",
+    "raw_text": "9326\n\n\nMajor or mild neurocognitive disorder due to HIV or other infections\n",
+    "method": "name_pattern"
+  },
+  "9412": {
+    "code": "9412",
+    "name": "Persistent depressive disorder (dysthymia)",
+    "raw_text": "9412\n\n\nPersistent depressive disorder (dysthymia)\n",
+    "method": "name_pattern"
+  },
+  "9403": {
+    "code": "9403",
+    "name": "Unspecified somatic symptom and related disorder",
+    "raw_text": "9403\n\n\nUnspecified somatic symptom and related disorder\n",
+    "method": "name_pattern"
+  },
+  "7508": {
+    "code": "7508",
+    "name": "Nephrosclerosis, arteriolar",
+    "raw_text": "7508\n\n\nNephrosclerosis, arteriolar\n",
+    "method": "name_pattern"
+  },
+  "6042": {
+    "code": "6042",
+    "name": "Retinopathy, diabetic",
+    "raw_text": "6042\n\n\n\nRetinopathy, diabetic\n",
+    "method": "name_pattern"
+  },
+  "7805": {
+    "code": "7805",
+    "name": "Unstable or painful",
+    "raw_text": "7805\n\n\nUnstable or painful\n",
+    "method": "name_pattern"
+  },
+  "5242": {
+    "code": "5242",
+    "name": "Spinal fusion",
+    "raw_text": "5242\n\n\nSpinal fusion\n",
+    "method": "name_pattern"
+  },
+  "7543": {
+    "code": "7543",
+    "name": "Varicose veins",
+    "raw_text": "7543\n\n\nVaricose veins\n",
+    "method": "name_pattern"
+  },
+  "6079": {
+    "code": "6079",
+    "name": "Vitiligo",
+    "raw_text": "6079\n\n\nVitiligo\n",
+    "method": "name_pattern"
+  },
+  "5018": {
+    "code": "5018",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "5018\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "5020": {
+    "code": "5020",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "5020\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "5022": {
+    "code": "5022",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "5022\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "9202": {
+    "code": "9202",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "9202 [Removed]",
+    "method": "removed_pattern"
+  },
+  "9203": {
+    "code": "9203",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "9203 [Removed]",
+    "method": "removed_pattern"
+  },
+  "9204": {
+    "code": "9204",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "9204 [Removed]",
+    "method": "removed_pattern"
+  },
+  "9205": {
+    "code": "9205",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "9205 [Removed]",
+    "method": "removed_pattern"
+  },
+  "9327": {
+    "code": "9327",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "9327 [Removed]",
+    "method": "removed_pattern"
+  },
+  "7305": {
+    "code": "7305",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7305\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7306": {
+    "code": "7306",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7306\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7316": {
+    "code": "7316",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7316\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7339": {
+    "code": "7339",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7339\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7340": {
+    "code": "7340",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7340\n[Removed]",
+    "method": "removed_pattern"
+  },
+  "7700": {
+    "code": "7700",
+    "name": "[Removed]",
+    "status": "REMOVED",
+    "raw_text": "7700\n[Removed]",
+    "method": "removed_pattern"
+  }
+}

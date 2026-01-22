@@ -1,0 +1,76 @@
+{
+  "5165": [
+    {
+      "percentage": 40,
+      "criteria": "rating may be further combined with evaluation for disabilities above the knee but not to exceed the above the knee amputation elective level"
+    }
+  ],
+  "6063": [
+    {
+      "percentage": 10,
+      "criteria": ", but the maximum evaluation for visual impairment of both eyes must not exceed 100 percent"
+    }
+  ],
+  "6724": [
+    {
+      "percentage": 50,
+      "criteria": "for failure to submit to examination or to follow prescribed treatment upon report to that effect from the medical authorities"
+    }
+  ],
+  "7110": [
+    {
+      "percentage": 100,
+      "criteria": "if the aneurysm is any one of the following: Five centimeters or larger in diameter; symptomatic (e"
+    }
+  ],
+  "7304": [
+    {
+      "percentage": 100,
+      "criteria": "for 6 mon"
+    },
+    {
+      "percentage": 20,
+      "criteria": "; and rate post-operative residuals not addressed by this diagnostic code under DC 7303 (Chronic complications of upper gastrointestinal surgery)"
+    }
+  ],
+  "7621": [
+    {
+      "percentage": 10,
+      "criteria": "evaluation under DC 7621 7624 Fistula, rectovaginal: Vaginal fecal leakage at least once a day requiring wearing of pad 100 Vaginal fecal leakage f..."
+    }
+  ],
+  "7828": [
+    {
+      "percentage": 40,
+      "criteria": "or more of the face and neck 30 Deep acne (deep inflamed nodules and pus-filled cysts) affecting less than 40 percent of the face and neck, or deep..."
+    }
+  ],
+  "7829": [
+    {
+      "percentage": 40,
+      "criteria": "or more of the face and neck 30 Deep acne (deep inflamed nodules and pus-filled cysts) affecting the intertriginous areas (the axilla of the arm, t..."
+    }
+  ],
+  "7830": [
+    {
+      "percentage": 40,
+      "criteria": "of the scalp 20 Affecting 20 to 40 percent of the scalp 10 Affecting less than 20 percent of the scalp 0 7831 Alopecia areata: With loss of all bod..."
+    }
+  ],
+  "8207": [
+    {
+      "percentage": 10,
+      "criteria": "and no more under diagnostic code 9305"
+    },
+    {
+      "percentage": 10,
+      "criteria": "rating will not be combined with any other rating for a disability due to cerebral or generalized arteriosclerosis"
+    }
+  ],
+  "9521": [
+    {
+      "percentage": 80,
+      "criteria": "of expected minimum weight, with incapacitating episodes of at least six weeks total duration per year, and requiring hospitalization more than twi..."
+    }
+  ]
+}
