@@ -161,48 +161,56 @@ function BugSquasher({ onClose, appState = {} }) {
       await copyToClipboard(generatedReport);
       
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
-      const severityLabel = formData.severity?.label || 'Unknown';
-      
-      const formPayload = {
-        _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
-        _template: 'table',
-        report_id: reportId,
-        severity: severityLabel,
-        category: formData.category,
-        module: formData.module,
-        diagnostic_code: formData.diagnosticCode || 'N/A',
-        description: formData.userDescription,
-        steps_to_reproduce: formData.stepsToReproduce || 'Not provided',
-        expected_behavior: formData.expectedBehavior || 'Not provided',
-        actual_behavior: formData.actualBehavior || 'Not provided',
-        additional_context: formData.additionalContext || 'None',
-        veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
-        submitted_at: new Date().toISOString(),
-        full_report: generatedReport
-      };
+      // Note: This is best-effort. Local save is the primary success path.
+      try {
+        const severityLabel = formData.severity?.label || 'Unknown';
+        
+        const formPayload = {
+          _subject: `[${reportId}] ${severityLabel} - ${formData.category} Bug Report`,
+          _template: 'table',
+          report_id: reportId,
+          severity: severityLabel,
+          category: formData.category,
+          module: formData.module,
+          diagnostic_code: formData.diagnosticCode || 'N/A',
+          description: formData.userDescription,
+          steps_to_reproduce: formData.stepsToReproduce || 'Not provided',
+          expected_behavior: formData.expectedBehavior || 'Not provided',
+          actual_behavior: formData.actualBehavior || 'Not provided',
+          additional_context: formData.additionalContext || 'None',
+          veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
+          submitted_at: new Date().toISOString(),
+          full_report: generatedReport
+        };
 
-      const response = await fetch(FORMSUBMIT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(formPayload)
-      });
+        const response = await fetch(FORMSUBMIT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(formPayload)
+        });
 
-      if (!response.ok) {
-        throw new Error(`FormSubmit returned ${response.status}`);
+        if (!response.ok) {
+          console.warn(`⚠️ FormSubmit returned ${response.status} - report saved locally`);
+        } else {
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log(`✅ Bug report ${reportId} sent via FormSubmit AND saved locally`);
+          } else {
+            console.warn(`⚠️ FormSubmit submission failed: ${result.message || 'Unknown error'} - report saved locally`);
+          }
+        }
+      } catch (emailError) {
+        // Log but don't fail - local save is what matters
+        console.warn(`⚠️ Could not send email notification (${emailError.message}). Your report was saved locally in My Tickets.`);
       }
-
-      const result = await response.json();
       
-      if (result.success) {
-        console.log(`✅ Bug report ${reportId} sent successfully via FormSubmit`);
-        setSubmitted(true);
-        setCopied(true);
-      } else {
-        throw new Error(result.message || 'FormSubmit submission failed');
-      }
+      // Always succeed if we got this far (local save succeeded)
+      setSubmitted(true);
+      setCopied(true);
       
       setSubmitting(false);
       

@@ -216,48 +216,56 @@ Thank you for helping make Vet-Rate.org better for all veterans!
       await copyToClipboard(generatedReport);
       
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
-      const priorityLabel = formData.priority?.label || 'Feature';
-      
-      const formPayload = {
-        _subject: `[${featureId}] ${priorityLabel} - ${formData.title}`,
-        _template: 'table',
-        request_id: featureId,
-        title: formData.title,
-        category: formData.category,
-        priority: priorityLabel,
-        module: formData.module,
-        description: formData.description,
-        problem_solved: formData.problemSolved || 'Not specified',
-        proposed_solution: formData.proposedSolution || 'Not specified',
-        alternatives: formData.alternativesConsidered || 'None mentioned',
-        additional_context: formData.additionalContext || 'None',
-        veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
-        submitted_at: new Date().toISOString(),
-        full_report: generatedReport
-      };
+      // Note: This is best-effort. Local save is the primary success path.
+      try {
+        const priorityLabel = formData.priority?.label || 'Feature';
+        
+        const formPayload = {
+          _subject: `[${featureId}] ${priorityLabel} - ${formData.title}`,
+          _template: 'table',
+          request_id: featureId,
+          title: formData.title,
+          category: formData.category,
+          priority: priorityLabel,
+          module: formData.module,
+          description: formData.description,
+          problem_solved: formData.problemSolved || 'Not specified',
+          proposed_solution: formData.proposedSolution || 'Not specified',
+          alternatives: formData.alternativesConsidered || 'None mentioned',
+          additional_context: formData.additionalContext || 'None',
+          veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
+          submitted_at: new Date().toISOString(),
+          full_report: generatedReport
+        };
 
-      const response = await fetch(FORMSUBMIT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(formPayload)
-      });
+        const response = await fetch(FORMSUBMIT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(formPayload)
+        });
 
-      if (!response.ok) {
-        throw new Error(`FormSubmit returned ${response.status}`);
+        if (!response.ok) {
+          console.warn(`⚠️ FormSubmit returned ${response.status} - request saved locally`);
+        } else {
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log(`✅ Feature request ${featureId} sent via FormSubmit AND saved locally`);
+          } else {
+            console.warn(`⚠️ FormSubmit submission failed: ${result.message || 'Unknown error'} - request saved locally`);
+          }
+        }
+      } catch (emailError) {
+        // Log but don't fail - local save is what matters
+        console.warn(`⚠️ Could not send email notification (${emailError.message}). Your request was saved locally in My Tickets.`);
       }
-
-      const result = await response.json();
       
-      if (result.success) {
-        console.log(`✅ Feature request ${featureId} sent successfully via FormSubmit`);
-        setSubmitted(true);
-        setCopied(true);
-      } else {
-        throw new Error(result.message || 'FormSubmit submission failed');
-      }
+      // Always succeed if we got this far (local save succeeded)
+      setSubmitted(true);
+      setCopied(true);
       
       setSubmitting(false);
       
