@@ -599,10 +599,10 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                       </div>
                     </div>
                     <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
-                      Request Sent Successfully! 🎉
+                      Request Saved Successfully! 🎉
                     </h3>
                     <p className="text-green-700 dark:text-green-100 mb-4">
-                      Your feature request has been <strong>sent directly</strong> - no email app needed!
+                      Your feature request has been <strong>saved to My Tickets</strong> and the report is copied to your clipboard!
                     </p>
                     <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
                       <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ What happens next:</h4>
