@@ -204,11 +204,26 @@ export const BODY_PARTS = {
  * Combine two ratings using VA "efficiency" math
  * Formula: A + B(1-A) where A and B are decimals
  * Example: 50% + 30% = 0.5 + 0.3(1-0.5) = 0.5 + 0.15 = 0.65 = 65%
+ * 
+ * CRITICAL: No intermediate rounding - only round to 1 decimal for precision
+ * This matches VA Combined Ratings Table (38 CFR § 4.25)
  */
 export const combineTwoRatings = (rating1, rating2) => {
+  // Validate inputs
+  if (typeof rating1 !== 'number' || typeof rating2 !== 'number') {
+    console.error('Invalid rating input:', rating1, rating2);
+    return 0;
+  }
+  if (rating1 < 0 || rating1 > 100 || rating2 < 0 || rating2 > 100) {
+    console.error('Rating out of range:', rating1, rating2);
+    return Math.max(0, Math.min(100, rating1));
+  }
+  
   const a = rating1 / 100;
   const b = rating2 / 100;
-  return Math.round((a + b * (1 - a)) * 100 * 10) / 10; // Keep one decimal for intermediate calcs
+  // Round to 1 decimal to match VA table precision
+  const result = Math.round((a + b * (1 - a)) * 100 * 10) / 10;
+  return result;
 };
 
 /**
@@ -232,10 +247,14 @@ export const combineMultipleRatings = (ratings) => {
 
 /**
  * Round to nearest 10 (VA final rounding rule)
- * 0.5 rounds UP per VA policy
+ * Per 38 CFR § 4.25: "combined values ending in 5 will be adjusted upward"
+ * Examples: 65 → 70, 74 → 70, 75 → 80, 84 → 80, 85 → 90
  */
 export const roundToNearest10 = (value) => {
-  return Math.round(value / 10) * 10;
+  // JavaScript Math.round() correctly rounds 0.5 up
+  // 6.5 → 7, 7.4 → 7, 7.5 → 8
+  const rounded = Math.round(value / 10) * 10;
+  return Math.max(0, Math.min(100, rounded)); // Clamp to 0-100
 };
 
 /**
@@ -342,11 +361,18 @@ export const calculateVARating = (conditions) => {
   const rawScore = combineMultipleRatings(allRatings);
   const combinedRating = roundToNearest10(rawScore);
 
+  // Add detailed final step with validation
   steps.push({
     step: steps.length + 1,
     description: 'Final calculation',
     rawScore: rawScore,
     roundedTo: combinedRating,
+    method: '38 CFR § 4.25 Combined Ratings Table',
+    validation: {
+      inputValid: allRatings.every(r => r >= 0 && r <= 100),
+      outputValid: combinedRating >= 0 && combinedRating <= 100 && combinedRating % 10 === 0,
+      roundingRule: rawScore % 10 >= 5 ? 'Rounded UP' : 'Rounded DOWN'
+    }
   });
 
   // Calculate gap analysis
