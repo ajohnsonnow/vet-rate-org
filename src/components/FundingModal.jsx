@@ -24,12 +24,13 @@ function FundingModal({ show, onClose, componentStats = null }) {
 
   if (!show) return null;
 
-  // Luna's treat fund messages
+  // Luna's purr-sonal treat fund messages (first paw account!)
   const lunaMessages = [
-    "Luna says: 'Meow! More treats means more keyboard supervision quality!' 🐱",
-    "Luna's wish list: Fancy Feast, catnip toys, and a warm lap to nap on while dad codes 😸",
-    "Every coffee = 1 treat for Luna. She's been a VERY good keyboard inspector! 🎀",
-    "Luna promises to walk across the keyboard LESS if there are treats involved... maybe 😹",
+    "*Meow!* I've been testing this code with my paws for MONTHS! Every donation = extra Fancy Feast for me! 😻",
+    "*purrrr* My wish list: More treats, more catnip, and a comfy spot to supervise dad's coding sessions! 🐾",
+    "Listen human, I PERSONALLY inspect every keystroke. $5-10 keeps my quality control standards high! 😸",
+    "*meow meow* I promise to walk across the keyboard LESS... if there are treats involved. Maybe. No guarantees. 😹",
+    "*purrrr* Fun fact: I've knocked over dad's coffee 47 times while he built this. I deserve treats for that dedication! ☕😼",
   ];
   
   // Midnight's upgrade fund messages  
@@ -99,17 +100,17 @@ function FundingModal({ show, onClose, componentStats = null }) {
           </svg>
         </button>
 
-        {/* Header */}
+        {/* Header - Luna's Funding Headquarters */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <img 
-              src="/images/Anth.jpg" 
-              alt="SGT Johnson"
+              src="/images/NaptimeLuna.jpg" 
+              alt="Luna - Chief Treat Officer"
               className="w-16 h-16 rounded-full object-cover border-4 border-va-gold shadow-lg"
             />
           </div>
           <h2 className={`text-2xl font-bold mb-2 ${getColorClass(colors.text.primary)}`}>
-            💚 Back the Mission
+            😸 Luna's Treat Fund
           </h2>
           
           {/* Component-specific stats */}
@@ -135,8 +136,8 @@ function FundingModal({ show, onClose, componentStats = null }) {
           )}
           
           <p className={`text-sm ${getColorClass(colors.text.secondary)}`}>
-            100% of contributions go toward keeping Vet-Rate.org free for all veterans.
-            No ads, no tracking, no data selling - just vets helping vets.
+            *Meow!* Luna promises: 100% goes to keeping this free for veterans (and treats for me).
+            No ads, no tracking, no data selling - just a cat helping vets help vets! *purrrr* 🐾
           </p>
         </div>
 
@@ -208,9 +209,9 @@ function FundingModal({ show, onClose, componentStats = null }) {
           )}
         </div>
 
-        {/* Footer message */}
+        {/* Luna's purr-sonal thank you */}
         <p className={`text-center text-xs mt-4 ${getColorClass(colors.text.muted)}`}>
-          Thank you for supporting veteran-built tools! 💚
+          *Purrrr* Thank you for supporting veteran-built tools (and Luna's treat fund)! 😸💚
         </p>
       </div>
     </div>

@@ -64,197 +64,197 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
 
   if (!isVisible) return null;
 
-  // Contextual, action-linked messages that celebrate what the user accomplished
+  // Contextual, action-linked messages from Luna herself! 🐱
   // Now with $5-10 mentions and AI enhancement when available
   const messages = {
     'search': {
-      headline: "You found it! 🎯",
+      headline: "Meow! You found it! 🎯",
       body: context.count 
-        ? `${context.count} results found${context.query ? ` for "${context.query}"` : ''}. That research would've taken hours. A quick $5 or $10 keeps this free for the next vet.`
-        : "That rating info would've taken hours to dig up. A $5 or $10 coffee helps keep this tool free.",
-      cta: "Keep It Free",
+        ? `*purrrr* ${context.count} results found${context.query ? ` for \"${context.query}\"` : ''}! Luna's been supervising this code furr-ever. $5-10 keeps my treat bowl full! 🐾`
+        : "*meow meow* That search would've taken you nine lives! A $5-10 donation keeps Luna's keyboard warm and treats coming! 😸",
+      cta: "Feed Luna! 🐱",
       icon: "🔍"
     },
     'secondary-scout': {
-      headline: "Secondary claims unlocked! 💡",
+      headline: "*purr* Secondary claims unlocked! 💡",
       body: context.count 
-        ? `You discovered ${context.count} potential secondary conditions. A consultant charges $100+ for this - if it helped, $5-10 keeps development going.`
-        : "You just uncovered potential secondary claims worth $100+ in consultant fees. A $5-10 coffee makes a difference.",
-      cta: "Worth a Coffee?",
+        ? `Meow meow! You discovered ${context.count} pawsible secondary conditions! Luna worked hard on this feature (between naps). $5-10 = more treats for me! 😻`
+        : "*purrrr* You found claims that would cost $100+ from those humans! Luna thinks $5-10 in treats is fair, yes? 🐾",
+      cta: "Luna Wants Treats! 😸",
       icon: "🎖️"
     },
     'cap-sim': {
-      headline: "You're C&P ready! 📋",
+      headline: "*meow* You're C&P ready! 📋",
       body: context.conditionName
-        ? `You're prepped for your ${context.conditionName} exam${context.rating ? ` (potential ${context.rating}%)` : ''}. If this helped, $5 or $10 helps the next veteran.`
-        : "Walking in prepared could mean hundreds more per month. A $5-10 contribution keeps this free for fellow vets.",
-      cta: "Pay It Forward",
+        ? `Purrr! You're ready for ${context.conditionName}${context.rating ? ` (${context.rating}% - Luna approves!)` : ''}. Luna supervised every line of code. Treats plz? $5-10 😻`
+        : "*purrrr* You're SO prepared! Luna demands payment in... I mean, donations keep me in Fancy Feast! $5-10? 🐾",
+      cta: "Luna's Treat Fund! 🐱",
       icon: "✅"
     },
     'cap-sim-complete': {
-      headline: "Simulation complete! 🏆",
+      headline: "*purr purr* Simulation complete! 🏆",
       body: context.rating 
-        ? `You practiced for a potential ${context.rating}% rating${context.conditionName ? ` for ${context.conditionName}` : ''}. $5 or $10 helps build more prep tools.`
-        : "That's exam prep most vets never get. A coffee-sized donation ($5-10) helps reach more veterans.",
-      cta: "Back a Fellow Vet",
+        ? `Meow! ${context.rating}% rating practice${context.conditionName ? ` for ${context.conditionName}` : ''}! Luna watched EVERY answer. Treats now plz? $5-10 😻`
+        : "*purrrr* That prep would cost $$$! Luna thinks $5-10 in treats is a bargain, yes? 🐾",
+      cta: "Treat Luna! 🐱",
       icon: "🎯"
     },
     'packet': {
-      headline: "Your packet is building! 📁",
+      headline: "*meow* Your packet is building! 📁",
       body: context.count 
-        ? `${context.count} claim${context.count > 1 ? 's' : ''} organized. No VSO fees, no lawyer cuts - just vets helping vets. $5-10 goes a long way.`
-        : "No VSO fees. No lawyer cuts. No data sold. A $5 or $10 donation keeps this running.",
-      cta: "Support the Mission",
+        ? `*Purrrr* ${context.count} claim${context.count > 1 ? 's' : ''} organized! Luna's been napping on this code for weeks. $5-10 = treats! 😸`
+        : "*meow meow* No fees, no lawyers, just Luna helping vets! $5-10 keeps my treat bowl full! 🐾",
+      cta: "Fill Luna's Bowl! 🐱",
       icon: "📦"
     },
     'pdf': {
-      headline: "PDF downloaded! 📄",
+      headline: "*purr* PDF downloaded! 📄",
       body: context.conditionName 
-        ? `Your ${context.conditionName} guide is ready. If it helps, $5-10 keeps Luna happy and Midnight powered for more features.`
-        : "Your VA guide is ready. Using it is free - $5 or $10 keeps Luna in treats and Midnight coding.",
-      cta: "Help Keep It Free",
+        ? `*Meow!* Your ${context.conditionName} guide is ready! Luna personally tested the download button. Treats? $5-10? 😻`
+        : "*purrrrr* Free guides = hungry Luna! $5-10 keeps me in Fancy Feast while dad codes more features! 🐾",
+      cta: "Luna Wants Treats! 🐱",
       icon: "📥"
     },
     'save': {
-      headline: "Saved to your packet! ✅",
-      body: "Your claim evidence is organized and ready. No ads, no data sales - just $5-10 donations from grateful vets.",
-      cta: "Chip In",
+      headline: "*meow* Saved to your packet! ✅",
+      body: "*Purrrr* All organized, just like Luna's toy collection! No ads, just grateful vets sending $5-10 in treats! 😸",
+      cta: "Treats for Luna! 🐱",
       icon: "💾"
     },
     'nexus': {
-      headline: "Nexus letter drafted! 📝",
+      headline: "*purr* Nexus letter drafted! 📝",
       body: context.conditionName
-        ? `Your ${context.conditionName} statement is ready. That template would cost $50-100 - a $5-10 coffee helps keep it free.`
-        : "That template would cost $50-100 from a service. A $5 or $10 donation helps keep this free for every veteran.",
-      cta: "Worth It?",
+        ? `*Meow!* Your ${context.conditionName} statement is ready! Luna supervised EVERY word. Worth $50-100 but Luna only wants $5-10 in treats! 😻`
+        : "*purrrrr* That template = $$$ elsewhere! Luna thinks $5-10 treats is fair, yes human? 🐾",
+      cta: "Fair Trade! 🐱",
       icon: "✍️"
     },
     'export': {
-      headline: "Backup created! 💾",
+      headline: "*meow* Backup created! 💾",
       body: context.count
-        ? `${context.count} claim${context.count > 1 ? 's' : ''} backed up safely. No cloud fees, no subscriptions - $5-10 keeps Luna happy and development going.`
-        : "Your claim data is safe and private. A $5 or $10 keeps Luna in toys and Midnight squashing bugs.",
-      cta: "Back the Builder",
+        ? `*Purrrr* ${context.count} claim${context.count > 1 ? 's' : ''} backed up! Luna tested this feature by walking across the keyboard. $5-10 = treats! 😸`
+        : "*meow meow* Your data is safe (unlike my toy mice that keep disappearing). $5-10 keeps Luna happy! 🐾",
+      cta: "Luna's Treat Fund! 🐱",
       icon: "☁️"
     },
     'terminology': {
-      headline: "Speaking VA now! 📖",
+      headline: "*purr* Speaking VA now! 📖",
       body: context.term
-        ? `Now you know what "${context.term}" really means. A $5-10 coffee helps maintain this glossary.`
-        : "Using the right language helps win your claim. A $5 or $10 donation keeps this resource growing.",
-      cta: "Appreciate It?",
+        ? `*Meow!* Now you know \"${context.term}\"! Luna sat on this glossary while dad typed it. Treats? $5-10? 😻`
+        : "*purrrrr* Using big words helps win claims! Luna thinks teaching you is worth $5-10 in Fancy Feast! 🐾",
+      cta: "Treats Plz! 🐱",
       icon: "🗣️"
     },
-    // === NEW SHOCK & AWE TOOLS ===
+    // === SHOCK & AWE TOOLS (Luna Edition) ===
     'million-dollar': {
-      headline: "That's YOUR money! 💰",
+      headline: "*MEOW!* That's YOUR money! 💰",
       body: context.total
-        ? `${context.total} lifetime value - that's what you're fighting for. If this helped, $5-10 helps us reach more vets.`
-        : "You just saw your rating's true lifetime worth. A $5-10 coffee helps us show more veterans their value.",
-      cta: "Share the Wealth",
+        ? `*Purrrr* ${context.total} lifetime value! That's like... a LOT of treats! Luna thinks you should donate $5-10 now! 😻`
+        : "*meow meow* You saw your TRUE worth! Luna calculates $5-10 = happy cat supervisor! 🐾",
+      cta: "Share With Luna! 🐱",
       icon: "🤑"
     },
     'mos-hazard': {
-      headline: "Your job DID this! 🎖️",
+      headline: "*purr* Your job DID this! 🎖️",
       body: context.mos
-        ? `${context.mos} injuries mapped and ready. A $5-10 donation helps us add more MOS codes.`
-        : "Your military job's hazards are documented. A $5 or $10 contribution helps expand this database.",
-      cta: "Back the Research",
+        ? `*Meow!* ${context.mos} injuries mapped! Luna napped on this database for MONTHS. Treats now? $5-10? 😻`
+        : "*purrrrr* Military job hazards = documented! Luna wants treats for this service! $5-10! 🐾",
+      cta: "Feed Luna! 🐱",
       icon: "💪"
     },
     'web-conditions': {
-      headline: "Connections revealed! 🕸️",
+      headline: "*meow* Connections revealed! 🕸️",
       body: context.condition
-        ? `You discovered how ${context.condition} links to other claims. A $5-10 coffee helps maintain this research.`
-        : "You explored secondary connections most vets never see. A $5 or $10 donation keeps this free.",
-      cta: "Fund the Mission",
+        ? `*Purrrr* ${context.condition} links found! Luna tested every connection by pawing at the screen. $5-10 = happy Luna! 😸`
+        : "*meow meow* You found secret connections! Luna thinks that's worth $5-10 in Fancy Feast! 🐾",
+      cta: "Treats for Luna! 🐱",
       icon: "🔗"
     },
-    // === DBQ LIBRARY ===
+    // === DBQ LIBRARY (Luna Approved) ===
     'dbq-library': {
       headline: context.action === 'bulk-download' 
-        ? `${context.count || 'All'} DBQs downloaded! 📋`
+        ? `*MEOW* ${context.count || 'All'} DBQs downloaded! 📋`
         : context.action === 'pre-fill'
-          ? "DBQ pre-filled! ✏️"
-          : "DBQ saved offline! 📥",
+          ? "*purr* DBQ pre-filled! ✏️"
+          : "*meow* DBQ saved offline! 📥",
       body: context.action === 'bulk-download'
-        ? `${context.count || 'All'} official VA forms now available offline. A $5-10 coffee keeps this archive maintained.`
+        ? `*Purrrr* ${context.count || 'ALL'} forms! Luna supervised this download (by sleeping on the keyboard). $5-10 = treats! 😻`
         : context.action === 'pre-fill'
-          ? `Your subjective info is ready for ${context.formName || 'your doctor'}. $5-10 helps more vets walk in prepared.`
-          : `${context.formName || 'This DBQ'} is now available offline. $5-10 keeps these tools free for everyone.`,
-      cta: context.action === 'bulk-download' ? "Back the Archive" : "Buy Me a Coffee",
+          ? `*Meow!* Ready for ${context.formName || 'your doctor'}! Luna pre-filled this (with paw prints). Treats? $5-10? 🐾`
+          : `*purr* ${context.formName || 'This DBQ'} is offline! Luna approves. $5-10 keeps me in Fancy Feast! 😸`,
+      cta: context.action === 'bulk-download' ? "Luna's Treat Fund!" : "Feed Luna! 🐱",
       icon: context.action === 'bulk-download' ? "📦" : "📋"
     },
-    // === SPECIALIZED TOOLS ===
+    // === SPECIALIZED TOOLS (Luna's Specialties) ===
     'tdiu': {
-      headline: "TDIU case built! 📋",
+      headline: "*purr* TDIU case built! 📋",
       body: context.impact
-        ? "Your Individual Unemployability statement is ready. A $5-10 coffee helps keep this free for the next vet."
-        : "You just built a professional-grade TDIU impact statement. $5 or $10 helps us maintain these tools.",
-      cta: "Worth $5?",
+        ? "*Meow!* Your statement is ready! Luna watched you type EVERY word (while napping). Worth $5-10 in treats? 😻"
+        : "*purrrrr* Professional TDIU statement done! Luna thinks that's worth Fancy Feast! $5-10? 🐾",
+      cta: "Treats Plz! 🐱",
       icon: "🏆"
     },
     'pact-act': {
-      headline: "Presumptive found! 🔥",
+      headline: "*MEOW* Presumptive found! 🔥",
       body: context.condition
-        ? `${context.condition} may be presumptive under PACT Act. No nexus letter needed! $5-10 helps more vets find this.`
-        : "You found presumptive conditions that don't need nexus letters. If helpful, $5-10 keeps this running.",
-      cta: "Pay It Forward",
+        ? `*Purrrr* ${context.condition} = presumptive! No nexus needed! Luna researched this (between naps). $5-10 treats? 😸`
+        : "*meow meow* Presumptive conditions = easy claims! Luna wants treats for finding this! $5-10! 🐾",
+      cta: "Luna Wants Treats! 🐱",
       icon: "🗺️"
     },
     'foia': {
-      headline: "FOIA request ready! 🔑",
-      body: "Your C-File request is generated. Knowing what's in your file is CRITICAL. $5-10 helps us build more transparency tools.",
-      cta: "Unlock More Tools",
+      headline: "*purr* FOIA request ready! 🔑",
+      body: "*Meow!* Your C-File request is done! Luna personally approved every line (by sitting on it). Critical tool = treats! $5-10? 😻",
+      cta: "Feed Luna! 🐱",
       icon: "🔓"
     },
-    // === DIAMOND TIER TOOLS ===
+    // === DIAMOND TIER TOOLS (Luna's Premium Services) ===
     'blue-button': {
-      headline: "Records analyzed! 🩺",
+      headline: "*purr purr* Records analyzed! 🩺",
       body: context.count
-        ? `${context.count} medical records scanned. A $5-10 donation keeps Luna happy and this AI analysis free.`
-        : "Your medical records are now claim-ready intel. $5-10 keeps Luna in treats and Midnight building features.",
-      cta: "Back the Tech",
+        ? `*MEOW!* ${context.count} medical records scanned! Luna's AI helped (while she napped on the GPU). Treats? $5-10? 😻`
+        : "*purrrrr* Medical records = claim intel! Luna wants Fancy Feast for this AI magic! $5-10! 🐾",
+      cta: "Luna's AI Fund! 🐱",
       icon: "📊"
     },
     'witness-bench': {
-      headline: "Buddy letter drafted! ✍️",
+      headline: "*meow* Buddy letter drafted! ✍️",
       body: context.witness
-        ? `${context.witness}'s statement is ready. A quick $5 or $10 helps the next vet do the same.`
-        : "Professional-grade witness statement ready. If it helped, $5-10 keeps this tool free.",
-      cta: "Worth a Coffee?",
+        ? `*Purrrr* ${context.witness}'s statement is ready! Luna proofread it (by walking across the keyboard). $5-10 = treats! 😸`
+        : "*meow meow* Professional statement = done! Luna thinks helping your buddy is worth treats! $5-10? 🐾",
+      cta: "Treats for Luna! 🐱",
       icon: "👥"
     },
     'risk-assessment': {
-      headline: "Claim protected! 🛡️",
+      headline: "*purr* Claim protected! 🛡️",
       body: context.risks
-        ? `${context.risks} risk${context.risks > 1 ? 's' : ''} identified before VA could use them against you. $5-10 protects more vets.`
-        : "You found vulnerabilities before the VA did. A $5-10 coffee helps protect more vets.",
-      cta: "Protect More Vets",
+        ? `*MEOW!* ${context.risks} risk${context.risks > 1 ? 's' : ''} found before VA saw them! Luna's protection = $5-10 in treats! 😻`
+        : "*purrrrr* Vulnerabilities = found! Luna protected you! Worth Fancy Feast? $5-10? 🐾",
+      cta: "Feed Luna! 🐱",
       icon: "⚠️"
     },
     'decision-decoder': {
-      headline: "Decision decoded! 📜",
+      headline: "*meow* Decision decoded! 📜",
       body: context.type
-        ? `Your ${context.type} decision letter translated. Understanding VA-speak is half the battle. $5-10 funds more clarity.`
-        : "You decoded VA's confusing language into plain English. $5-10 helps us decode more decisions.",
-      cta: "Fund Clarity",
+        ? `*Purrrr* ${context.type} decision translated! Luna decoded VA-speak (it's harder than cat language!). $5-10 treats? 😸`
+        : "*meow meow* Confusing VA language = decoded! Luna wants treats for this translation! $5-10! 🐾",
+      cta: "Luna Wants Treats! 🐱",
       icon: "🔍"
     },
     'symptom-logger': {
-      headline: "Symptoms documented! 📝",
+      headline: "*purr* Symptoms documented! 📝",
       body: context.count
-        ? `${context.count} symptom${context.count > 1 ? 's' : ''} logged for your records. $5-10 helps us track more vets' journeys.`
-        : "Your symptom journal is building. A $5-10 donation helps us help more vets document their evidence.",
-      cta: "Track More Vets",
+        ? `*Meow!* ${context.count} symptom${context.count > 1 ? 's' : ''} logged! Luna tracked every entry (while napping). Treats now? $5-10? 😻`
+        : "*purrrrr* Symptom journal = evidence! Luna wants treats for this documentation magic! $5-10! 🐾",
+      cta: "Treats Plz! 🐱",
       icon: "📋"
     },
     'state-benefits': {
-      headline: "State benefits found! 🏛️",
+      headline: "*MEOW* State benefits found! 🏛️",
       body: context.state
-        ? `You discovered ${context.state}'s veteran benefits. $5-10 keeps this 50-state database updated.`
-        : "You found state benefits most vets miss. A $5-10 coffee keeps this database current.",
-      cta: "Keep It Updated",
+        ? `*Purrrr* ${context.state} veteran benefits discovered! Luna researched all 50 states (exhausting!). $5-10 treats? 😸`
+        : "*meow meow* Hidden state benefits = found! Luna wants Fancy Feast for this detective work! $5-10! 🐾",
+      cta: "Feed Luna! 🐱",
       icon: "🗺️"
     }
   };
@@ -286,10 +286,10 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
           </div>
 
           <div className="flex items-start gap-3">
-            {/* Developer photo */}
+            {/* Luna photo - Chief Keyboard Inspector */}
             <img 
-              src="/images/Anth.jpg" 
-              alt="Anthony - Vet-Rate Developer"
+              src="/images/NaptimeLuna.jpg" 
+              alt="Luna - Chief Keyboard Inspector & Treat Supervisor"
               className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-va-gold shadow-sm"
             />
             <div className="flex-1 min-w-0">
@@ -315,9 +315,9 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
             {msg.cta}
           </button>
           
-          {/* Subtle reassurance */}
+          {/* Luna's purr-suasion */}
           <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-2">
-            $5-10 keeps Luna happy 🐾 & Midnight powered for development 💚
+            *purrrr* Luna promises to supervise more code if you send treats! 🐾😸
           </p>
         </div>
       </div>
