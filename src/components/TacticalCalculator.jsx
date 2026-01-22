@@ -803,12 +803,12 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
 
             {/* Calculator Tab */}
             {activeTab === 'calculator' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
                 {/* Input Section */}
-                <div className="space-y-6">
+                <div className="space-y-6 flex flex-col h-full">
                   {/* Quick Load from My Ratings */}
                   {myRatings.length > 0 && conditions.length === 0 && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
                       <span className="text-sm text-amber-700 dark:text-amber-300">
                         ⭐ You have {myRatings.length} saved rating{myRatings.length !== 1 ? 's' : ''}
                       </span>
@@ -822,7 +822,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   )}
                   
                   {/* Add Condition Form */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                       <span>➕</span> Add Rated Condition
                     </h3>
@@ -919,9 +919,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     </button>
                   </div>
 
-                  {/* Conditions List */}
-                  <div>
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between">
+                  {/* Conditions List - Expands to fill remaining space */}
+                  <div className="flex flex-col flex-1 min-h-0">
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
                       <span>📋 Your Rated Conditions ({conditions.length})</span>
                       {conditions.length > 0 && (
                         <button
@@ -940,7 +940,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         <p className="text-sm mt-1">Add your service-connected ratings above.</p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <div className="space-y-2 overflow-y-auto flex-1 pr-2">{/*  Removed max-h-64, added flex-1 */}
                         {conditions.map(condition => (
                           <div 
                             key={condition.id}
