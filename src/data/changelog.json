@@ -1,8 +1,49 @@
 {
-  "version": "1.4.3.0",
-  "lastUpdated": "2026-01-21",
+  "version": "1.6.1",
+  "lastUpdated": "2026-01-23",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.6.1",
+      "date": "2026-01-23",
+      "isFirstRelease": false,
+      "releaseTitle": "Diamond Swarm - Elite AI Squadron - v1.6.1",
+      "changelog": [
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "Diamond Swarm Integration",
+          "description": "Three specialized AI agents fine-tuned on VA claims: Auditor (legal analysis), Writer (statement generation), and Rater (disability assessment) - all running 100% locally",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "Wllama Browser Engine",
+          "description": "New WASM-based AI backend runs entirely in your browser - no server required, works offline, maximum privacy",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "AI & Privacy",
+          "title": "Local Server Support",
+          "description": "Connect to llama.cpp, Ollama, or any OpenAI-compatible local server - bring your own hardware for maximum power",
+          "isNew": true
+        },
+        {
+          "type": "improvement",
+          "category": "Local AI",
+          "title": "Streamlined Model Selection",
+          "description": "Removed 16 generic models to focus exclusively on Diamond Swarm agents - purpose-built for veteran claims, not generic chat"
+        },
+        {
+          "type": "improvement",
+          "category": "Performance",
+          "title": "Optimized Bundle Size",
+          "description": "Cleaned up legacy WebLLM model configurations - faster load times and reduced memory footprint"
+        }
+      ]
+    },
     {
       "version": "1.4.3.0",
       "date": "2026-01-21",
