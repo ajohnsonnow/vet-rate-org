@@ -173,7 +173,7 @@ function bumpVersion(currentVersion, bumpType) {
 
 async function main() {
   const args = parseArgs();
-  const totalSteps = args.noBump ? 6 : 7;
+  const totalSteps = args.noBump ? 7 : 8; // Added changelog sync step
   let currentStep = 0;
   
   console.log('\n' + '═'.repeat(65));
@@ -292,6 +292,38 @@ async function main() {
   logStep(++currentStep, totalSteps, 'Updating project stats...');
   exec('npm run update-stats');
   logSuccess('Project stats updated');
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Step 5.5: Sync changelog with current version
+  // ─────────────────────────────────────────────────────────────────────────────
+  logStep(++currentStep, totalSteps, 'Syncing changelog with current version...');
+  
+  try {
+    // Read changelog.json and update version
+    const changelogPath = path.join(rootDir, 'src', 'data', 'changelog.json');
+    const changelog = JSON.parse(fs.readFileSync(changelogPath, 'utf8'));
+    
+    // Update version and lastUpdated
+    changelog.version = newVersion;
+    changelog.lastUpdated = new Date().toISOString().split('T')[0];
+    
+    // Check if there's already an entry for this version
+    const hasEntry = changelog.updates?.some(u => u.version === newVersion);
+    if (!hasEntry && changelog.updates?.length > 0) {
+      // Update the first entry's version if it doesn't match
+      if (changelog.updates[0].version !== newVersion) {
+        log(`   Updating first changelog entry from ${changelog.updates[0].version} to ${newVersion}`, 'cyan');
+        changelog.updates[0].version = newVersion;
+        changelog.updates[0].date = changelog.lastUpdated;
+      }
+    }
+    
+    fs.writeFileSync(changelogPath, JSON.stringify(changelog, null, 2));
+    logSuccess(`Changelog synced to v${newVersion}`);
+  } catch (error) {
+    logWarning('Could not auto-sync changelog: ' + error.message);
+    logWarning('Run "npm run update-changelog" manually if needed');
+  }
   
   // ─────────────────────────────────────────────────────────────────────────────
   // Step 6: Check legal pages
