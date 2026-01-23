@@ -718,50 +718,167 @@ function App() {
     setError(null);
   }, []);
 
-  // Gather current app state for bug reports
+  // Gather current app state for bug reports - DIAMOND LEVEL: All 45+ tools tracked!
   const getCurrentAppState = useCallback(() => ({
+    // Search & Core
     searchTerm,
     results,
     selectedResult,
     hasSearched,
     error,
-    showPrivacyPolicy,
-    showAboutUs,
-    showContactUs,
+    
+    // Core Navigation
+    showMyPacket,
+    showUserManual,
+    showVAResources,
+    
+    // Calculate Tools
+    showTacticalCalculator,
+    showMillionDollarDashboard,
+    showWhatIfSandbox,
+    showRetroPayHunter,
+    showTimeMachine,
+    
+    // Discover Tools
     showSecondaryScoutLauncher,
     showSecondaryScout,
     userConditions,
+    showCAPSimulator,
+    showPathfinder,
+    showClaimNavigator,
+    showMOSHazardMatcher,
+    showPACTActNavigator,
+    showWebOfConditions,
+    
+    // Build Evidence Tools
+    showCFileAnalyzer,
+    showBlueButtonXRay,
+    showRecordSearch,
+    showWitnessBench,
     showNexusBuilder,
     nexusBuilderData,
-    showMyPacket,
-    showCAPSimulator,
-    showVAResources,
     showFormsHelper,
-    showCFileAnalyzer,
-    showUserManual,
-    showStateBenefitHunter,
-    showVSOFinder,
-    showRedTeam,
     showSymptomLogger,
-    showDecisionDecoder,
-    showTacticalCalculator,
-    showBlueButtonXRay,
-    showWitnessBench,
-    showRiskAssessment,
-    showTDIUBuilder,
-    showPACTActNavigator,
+    showPainPainter,
+    showEvidenceTimeline,
     showFOIAGenerator,
-    showMillionDollarDashboard,
-    showMOSHazardMatcher,
-    showWebOfConditions
+    showDD214Analyzer,
+    
+    // Quality Control Tools
+    showRedTeam,
+    showClaimStressTest,
+    showDecisionDecoder,
+    showDenialDecoder,
+    showSharkRadar,
+    showConsistencyEngine,
+    showEvidenceGapVisualizer,
+    showRiskAssessment,
+    
+    // Maximize Rating Tools
+    showTDIUBuilder,
+    showStateBenefitHunter,
+    showTheTribunal,
+    showLegislativeWatchdog,
+    
+    // Support Tools
+    showVSOFinder,
+    showVAAITransparency,
+    
+    // Data Management
+    showBackupManager,
+    showCloudSyncManager,
+    
+    // AI & Settings
+    showAISettings,
+    showLocalAIPanel,
+    
+    // Modals
+    showPrivacyPolicy,
+    showAboutUs,
+    showContactUs,
+    showTermsOfService,
+    
+    // Helper to determine current module - DIAMOND LEVEL SMART DETECTION
+    currentModule: (() => {
+      // Priority order: most specific tools first
+      if (showMyPacket) return 'My Packet';
+      if (showUserManual) return 'User Manual';
+      if (showTacticalCalculator) return 'Tactical Calculator (Rating)';
+      if (showMillionDollarDashboard) return 'Million Dollar Dashboard';
+      if (showWhatIfSandbox) return 'What-If Sandbox';
+      if (showRetroPayHunter) return 'Retro Pay Hunter';
+      if (showTimeMachine) return 'Time Machine (ITF Tracker)';
+      if (showSecondaryScout) return 'Secondary Scout';
+      if (showSecondaryScoutLauncher) return 'Secondary Scout Launcher';
+      if (showCAPSimulator) return 'C&P Exam Simulator';
+      if (showPathfinder) return 'Pathfinder (AI Strategy)';
+      if (showClaimNavigator) return 'Claim Navigator';
+      if (showMOSHazardMatcher) return 'MOS Hazard Matcher';
+      if (showPACTActNavigator) return 'PACT Act Navigator';
+      if (showWebOfConditions) return 'Web of Conditions';
+      if (showCFileAnalyzer) return 'C-File Analyzer';
+      if (showBlueButtonXRay) return 'Blue Button X-Ray';
+      if (showRecordSearch) return 'Record Search';
+      if (showWitnessBench) return 'Witness Bench (Buddy Letters)';
+      if (showNexusBuilder) return 'Nexus Builder';
+      if (showFormsHelper) return 'Forms Helper';
+      if (showSymptomLogger) return 'Symptom Logger';
+      if (showPainPainter) return 'Pain Painter (Body Map)';
+      if (showEvidenceTimeline) return 'Evidence Timeline';
+      if (showFOIAGenerator) return 'FOIA Generator (Keysmith)';
+      if (showDD214Analyzer) return 'DD214 Analyzer';
+      if (showRedTeam) return 'Red Team (Statement Stress Test)';
+      if (showClaimStressTest) return 'Claim Stress Test (War Game)';
+      if (showDecisionDecoder) return 'Decision Decoder';
+      if (showDenialDecoder) return 'Denial Decoder';
+      if (showSharkRadar) return 'Shark Radar (Scam Detector)';
+      if (showConsistencyEngine) return 'Consistency Engine';
+      if (showEvidenceGapVisualizer) return 'Evidence Gap Visualizer';
+      if (showRiskAssessment) return 'Risk Assessment (Poke the Bear)';
+      if (showTDIUBuilder) return 'TDIU Builder';
+      if (showStateBenefitHunter) return 'State Benefit Hunter';
+      if (showTheTribunal) return 'The Tribunal (Mock Hearing)';
+      if (showLegislativeWatchdog) return 'Legislative Watchdog';
+      if (showVSOFinder) return 'VSO Finder';
+      if (showVAAITransparency) return 'VA AI Transparency';
+      if (showVAResources) return 'VA Resources Hub';
+      if (showBackupManager) return 'Backup Manager';
+      if (showCloudSyncManager) return 'Cloud Sync Manager';
+      if (showAISettings) return 'AI Settings';
+      if (showLocalAIPanel) return 'Local AI Panel';
+      if (showPrivacyPolicy) return 'Privacy Policy Modal';
+      if (showAboutUs) return 'About Us Modal';
+      if (showContactUs) return 'Contact Us Modal';
+      if (showTermsOfService) return 'Terms of Service';
+      if (selectedResult) return 'Disability Details View';
+      return 'Disability Search';
+    })()
   }), [
+    // Search & Core
     searchTerm, results, selectedResult, hasSearched, error,
-    showPrivacyPolicy, showAboutUs, showContactUs,
-    showSecondaryScoutLauncher, showSecondaryScout, userConditions,
-    showNexusBuilder, nexusBuilderData, showMyPacket, showCAPSimulator, showVAResources, showFormsHelper, showCFileAnalyzer, showUserManual,
-    showStateBenefitHunter, showVSOFinder, showRedTeam, showSymptomLogger, showDecisionDecoder, showTacticalCalculator,
-    showBlueButtonXRay, showWitnessBench, showRiskAssessment, showTDIUBuilder, showPACTActNavigator, showFOIAGenerator,
-    showMillionDollarDashboard, showMOSHazardMatcher, showWebOfConditions
+    // Core Navigation
+    showMyPacket, showUserManual, showVAResources,
+    // Calculate Tools
+    showTacticalCalculator, showMillionDollarDashboard, showWhatIfSandbox, showRetroPayHunter, showTimeMachine,
+    // Discover Tools
+    showSecondaryScoutLauncher, showSecondaryScout, userConditions, showCAPSimulator, showPathfinder,
+    showClaimNavigator, showMOSHazardMatcher, showPACTActNavigator, showWebOfConditions,
+    // Build Evidence Tools
+    showCFileAnalyzer, showBlueButtonXRay, showRecordSearch, showWitnessBench, showNexusBuilder, nexusBuilderData,
+    showFormsHelper, showSymptomLogger, showPainPainter, showEvidenceTimeline, showFOIAGenerator, showDD214Analyzer,
+    // Quality Control Tools
+    showRedTeam, showClaimStressTest, showDecisionDecoder, showDenialDecoder, showSharkRadar,
+    showConsistencyEngine, showEvidenceGapVisualizer, showRiskAssessment,
+    // Maximize Rating Tools
+    showTDIUBuilder, showStateBenefitHunter, showTheTribunal, showLegislativeWatchdog,
+    // Support Tools
+    showVSOFinder, showVAAITransparency,
+    // Data Management
+    showBackupManager, showCloudSyncManager,
+    // AI & Settings
+    showAISettings, showLocalAIPanel,
+    // Modals
+    showPrivacyPolicy, showAboutUs, showContactUs, showTermsOfService
   ]);
 
   // Show migration loading screen if migrating

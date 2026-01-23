@@ -1,20 +1,34 @@
 /**
  * Vet-Rate.org - Unified AI Service
- * "The Faraday Cage Protocol" - Seamless switching between Cloud and Local AI
+ * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  * 
- * This service provides a unified interface for AI operations, allowing users
- * to seamlessly switch between:
- * - Cloud AI (Google Gemini) - Requires API key, data sent to Google
- * - Local AI (WebLLM) - 100% private, runs entirely in browser via WebGPU
+ * This service provides a unified interface for AI operations using the
+ * Diamond Swarm - 3 specialized fine-tuned models:
+ * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
+ * - WRITER: Generates compelling personal statements and nexus letters  
+ * - RATER: Calculates VA disability ratings using bilateral factor formula
  * 
- * The user's preference is remembered and the switch is transparent to all
- * AI-powered features in the application.
+ * Supports fallback to cloud AI (Gemini) when local models unavailable.
+ * 100% private local inference - no data leaves the device.
  */
 
 import { interceptBeforeAICall } from './crisisInterceptor';
 import { scrubPII, analyzePII } from './piiScrubber';
 import { validateAIResponse as validateHallucinations } from './hallucinationTrap';
 import { isFeatureEnabled } from './featureFlags';
+import {
+  SWARM_AGENTS,
+  TOOL_AGENT_MAP,
+  getAgentForTool,
+  isSwarmReady,
+  isSwarmInitializing,
+  getCurrentAgent,
+  getSwarmStatus,
+  generateWithSwarm,
+  initializeSwarm,
+  switchAgent,
+  unloadSwarm
+} from './diamondSwarm';
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -26,25 +40,32 @@ const getAISystemPrompts = async () => {
 };
 
 // Storage keys
-const AI_MODE_KEY = 'vet_rate_ai_mode'; // 'cloud' | 'local'
+const AI_MODE_KEY = 'vet_rate_ai_mode'; // 'cloud' | 'local' | 'swarm'
 const GEMINI_KEY = 'vetrate_gemini_key';
 const LOCAL_MODEL_KEY = 'vet_rate_local_ai_model';
 const TOKEN_LIMIT_KEY = 'vetrate_token_limit_config';
 
-// Cloud AI endpoint
+// Cloud AI endpoint (fallback only)
 // NOTE: gemini-1.5-flash was deprecated and shut down in late 2025
 // Updated to gemini-2.5-flash which has same 1M token context window
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-// Local AI engine reference (set by LocalAIProvider)
+// Diamond Swarm state (primary AI engine)
+let swarmEngine = null;
+let swarmReady = false;
+let swarmGenerating = false;
+let swarmInitializingState = false;
+let swarmCurrentAgent = null;
+
+// Legacy WebLLM state (deprecated - kept for backward compatibility)
 let localAIEngine = null;
 let localAIReady = false;
 let localAIGenerating = false;
-let localAIInitializing = false; // Track if model is currently loading
-let localAIModelId = null; // Track the currently loaded model ID
-let localAIIsVisionModel = false; // Track if loaded model supports vision/images
-let webGPUSupported = null; // Cache WebGPU support check result
-let webGPUCheckPromise = null; // Prevent duplicate checks
+let localAIInitializing = false;
+let localAIModelId = null;
+let localAIIsVisionModel = false;
+let webGPUSupported = null;
+let webGPUCheckPromise = null;
 
 // Promise-based mutex to prevent concurrent generation requests
 let generationLock = null;
@@ -207,14 +228,21 @@ export const checkWebGPUSupport = async () => {
 export const AI_MODES = {
   CLOUD: 'cloud',
   LOCAL: 'local',
-  AUTO: 'auto', // Prefer local if available, fallback to cloud
+  SWARM: 'swarm',  // 💎 Diamond Swarm - 3 specialized agents
+  AUTO: 'auto',    // Prefer swarm, fallback to local, then cloud
 };
 
 /**
  * Get the current AI mode preference
  */
 export const getAIMode = () => {
-  return localStorage.getItem(AI_MODE_KEY) || AI_MODES.AUTO;
+  const stored = localStorage.getItem(AI_MODE_KEY);
+  // Migrate old 'local' preference to 'swarm'
+  if (stored === 'local') {
+    localStorage.setItem(AI_MODE_KEY, AI_MODES.SWARM);
+    return AI_MODES.SWARM;
+  }
+  return stored || AI_MODES.SWARM; // Default to Diamond Swarm
 };
 
 /**
@@ -229,7 +257,22 @@ export const setAIMode = (mode) => {
 };
 
 /**
- * Register the local AI engine (called by LocalAIProvider)
+ * Register the Diamond Swarm engine (primary AI)
+ * @param {object} engine - The swarm engine instance
+ * @param {boolean} ready - Whether the swarm is fully ready
+ * @param {boolean} initializing - Whether the swarm is currently loading
+ * @param {string} agentId - The ID of the current agent
+ */
+export const registerSwarmEngine = (engine, ready, initializing = false, agentId = null) => {
+  swarmEngine = engine;
+  swarmReady = ready;
+  swarmInitializingState = initializing;
+  swarmCurrentAgent = agentId;
+  console.log(`💎 Diamond Swarm registered: agent=${agentId}, ready=${ready}`);
+};
+
+/**
+ * Register the local AI engine (legacy - for backward compatibility)
  * @param {object} engine - The MLCEngine instance
  * @param {boolean} ready - Whether the engine is fully ready for inference
  * @param {boolean} initializing - Whether the engine is currently loading/warming up
@@ -242,7 +285,16 @@ export const registerLocalAIEngine = (engine, ready, initializing = false, model
   localAIInitializing = initializing;
   localAIModelId = modelId;
   localAIIsVisionModel = isVisionModel;
-  console.log(`📝 Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`);
+  console.log(`📝 Legacy Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`);
+  
+  // Also register with Diamond Swarm system
+  if (ready && modelId) {
+    // Map legacy model to closest Diamond Swarm agent
+    const agentId = modelId.toLowerCase().includes('writer') ? 'writer' 
+      : modelId.toLowerCase().includes('rater') ? 'rater' 
+      : 'auditor';
+    registerSwarmEngine(engine, ready, initializing, agentId);
+  }
 };
 
 /**
@@ -289,9 +341,19 @@ export const unloadLocalAI = async () => {
 };
 
 /**
- * Check if local AI is ready
+ * Check if Diamond Swarm is ready (primary)
+ */
+export const isDiamondSwarmReady = () => {
+  return isSwarmReady() || (swarmEngine !== null && swarmReady && !swarmInitializingState);
+};
+
+/**
+ * Check if local AI is ready (includes Diamond Swarm)
  */
 export const isLocalAIReady = () => {
+  // Diamond Swarm takes priority
+  if (isDiamondSwarmReady()) return true;
+  // Fallback to legacy local AI
   return localAIEngine !== null && localAIReady && !localAIInitializing;
 };
 
@@ -299,7 +361,7 @@ export const isLocalAIReady = () => {
  * Check if local AI is currently initializing/warming up
  */
 export const isLocalAIInitializing = () => {
-  return localAIInitializing;
+  return isSwarmInitializing() || swarmInitializingState || localAIInitializing;
 };
 
 /**
@@ -365,15 +427,25 @@ export const isAnyAIAvailable = () => {
 export const getEffectiveAIMode = () => {
   const preferredMode = getAIMode();
   
+  // Diamond Swarm mode (preferred)
+  if (preferredMode === AI_MODES.SWARM) {
+    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
+    if (isLocalAIReady()) return AI_MODES.LOCAL;
+    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
+    return null;
+  }
+  
   if (preferredMode === AI_MODES.LOCAL) {
+    if (isDiamondSwarmReady()) return AI_MODES.SWARM; // Upgrade to swarm
     return isLocalAIReady() ? AI_MODES.LOCAL : (isCloudAIAvailable() ? AI_MODES.CLOUD : null);
   }
   
   if (preferredMode === AI_MODES.CLOUD) {
-    return isCloudAIAvailable() ? AI_MODES.CLOUD : (isLocalAIReady() ? AI_MODES.LOCAL : null);
+    return isCloudAIAvailable() ? AI_MODES.CLOUD : (isDiamondSwarmReady() ? AI_MODES.SWARM : (isLocalAIReady() ? AI_MODES.LOCAL : null));
   }
   
-  // AUTO mode: prefer local if ready, otherwise cloud
+  // AUTO mode: prefer swarm, then local, then cloud
+  if (isDiamondSwarmReady()) return AI_MODES.SWARM;
   if (isLocalAIReady()) return AI_MODES.LOCAL;
   if (isCloudAIAvailable()) return AI_MODES.CLOUD;
   return null;
@@ -542,9 +614,86 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 };
 
 /**
- * Generate text using Local AI (WebLLM)
+ * Generate text using Diamond Swarm (Primary AI Engine)
+ * Routes to the appropriate specialized agent based on task type
+ */
+const generateWithDiamondSwarm = async (prompt, options = {}) => {
+  const {
+    taskType = 'general',
+    toolId = null,
+    maxTokens = getUserTokenLimit(),
+    temperature = 0.7,
+    scrubPIIEnabled = true,
+  } = options;
+
+  // PII Scrubbing (Client-Side Privacy Firewall)
+  let scrubbedPrompt = prompt;
+  if (scrubPIIEnabled) {
+    const piiAnalysis = analyzePII(prompt);
+    if (piiAnalysis.hasPII) {
+      console.warn(`⚠️ PII Detected before Diamond Swarm call:`, piiAnalysis.types);
+      const { scrubbedText, details } = scrubPII(prompt, {
+        aggressive: true,
+        preservePartial: false
+      });
+      scrubbedPrompt = scrubbedText;
+      console.info(`🛡️ PII Scrubbed (Diamond Swarm):`, details);
+    }
+  }
+
+  // Determine the right agent based on task or tool
+  let agentId = 'auditor'; // Default
+  if (toolId) {
+    agentId = TOOL_AGENT_MAP[toolId] || 'auditor';
+  } else if (taskType) {
+    // Map task types to agents
+    const taskToAgent = {
+      'cfile': 'auditor',
+      'nexus': 'writer',
+      'statement': 'writer',
+      'personal-statement': 'writer',
+      'rating': 'rater',
+      'calculator': 'rater',
+      'tdiu': 'rater',
+      'legal': 'auditor',
+      'analysis': 'auditor',
+      'document': 'auditor',
+      'writing': 'writer',
+      'general': 'auditor'
+    };
+    agentId = taskToAgent[taskType] || 'auditor';
+  }
+
+  console.log(`💎 Diamond Swarm: Using ${agentId.toUpperCase()} agent for ${taskType || toolId || 'general'} task`);
+
+  try {
+    swarmGenerating = true;
+    
+    const result = await generateWithSwarm(scrubbedPrompt, {
+      agentId,
+      toolId,
+      maxTokens,
+      temperature
+    });
+    
+    swarmGenerating = false;
+    return result.text;
+  } catch (err) {
+    swarmGenerating = false;
+    throw new Error(`Diamond Swarm error (${agentId}): ${err.message}`);
+  }
+};
+
+/**
+ * Generate text using Local AI (Legacy WebLLM - fallback only)
  */
 const generateWithLocalAI = async (prompt, options = {}) => {
+  // First try Diamond Swarm if available
+  if (isDiamondSwarmReady()) {
+    console.log('💎 Routing to Diamond Swarm (upgraded from legacy local AI)');
+    return generateWithDiamondSwarm(prompt, options);
+  }
+
   // Check for various initialization states and provide helpful error messages
   if (localAIInitializing) {
     throw new Error('Local AI is still warming up. Please wait for the model to finish loading before sending messages.');
@@ -1027,22 +1176,33 @@ export const generateAI = async (prompt, options = {}) => {
   try {
     let text;
     let usedMode;
+    let agentUsed = null;
     
-    // Determine which AI to use
-    // preferCloud option allows callers to hint they want Cloud AI (e.g., for large documents)
+    // Determine which AI to use - Diamond Swarm is primary!
+    const useSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
     const useCloud = (options.preferCloud && isCloudAIAvailable()) || effectiveMode === AI_MODES.CLOUD;
-    const useLocal = !useCloud && effectiveMode === AI_MODES.LOCAL;
+    const useLocal = !useSwarm && !useCloud && effectiveMode === AI_MODES.LOCAL;
     
-    if (useLocal) {
+    if (useSwarm && isDiamondSwarmReady()) {
+      // 💎 Diamond Swarm - Primary AI Engine
+      text = await generateWithDiamondSwarm(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.SWARM;
+      agentUsed = getCurrentAgent() || 'auditor';
+      console.log(`💎 Generated with Diamond Swarm (${agentUsed.toUpperCase()} agent)`);
+    } else if (useLocal && isLocalAIReady()) {
+      // Legacy local AI (fallback)
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
     } else if (useCloud || isCloudAIAvailable()) {
+      // Cloud AI (Gemini - fallback)
       text = await generateWithCloudAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.CLOUD;
-    } else {
-      // Fallback: try local even if preferCloud was set but cloud unavailable
+    } else if (isLocalAIReady()) {
+      // Final fallback: try local
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
+    } else {
+      throw new Error('No AI available. Please initialize Diamond Swarm or configure a Gemini API key.');
     }
     
     // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
@@ -1092,18 +1252,33 @@ export const generateAI = async (prompt, options = {}) => {
     return { 
       text, 
       mode: usedMode,
+      ...(agentUsed && { agent: agentUsed }),
       ...(hallucinationReport && { hallucinationReport })
     };
     
   } catch (err) {
-    // If preferred mode fails, try fallback
-    const fallbackMode = effectiveMode === AI_MODES.LOCAL ? AI_MODES.CLOUD : AI_MODES.LOCAL;
-    const canFallback = fallbackMode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
+    // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
+    let fallbackMode = null;
+    let canFallback = false;
+    
+    if (effectiveMode === AI_MODES.SWARM) {
+      fallbackMode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
+      canFallback = fallbackMode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
+    } else if (effectiveMode === AI_MODES.LOCAL) {
+      fallbackMode = AI_MODES.CLOUD;
+      canFallback = isCloudAIAvailable();
+    } else {
+      fallbackMode = isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL;
+      canFallback = isDiamondSwarmReady() || isLocalAIReady();
+    }
     
     if (canFallback && !options.noFallback) {
-      console.warn(`Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`, err.message);
+      console.warn(`💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`, err.message);
       try {
-        if (fallbackMode === AI_MODES.LOCAL) {
+        if (fallbackMode === AI_MODES.SWARM) {
+          const text = await generateWithDiamondSwarm(fullPrompt, options);
+          return { text, mode: AI_MODES.SWARM, agent: getCurrentAgent(), fallback: true };
+        } else if (fallbackMode === AI_MODES.LOCAL) {
           const text = await generateWithLocalAI(fullPrompt, options);
           return { text, mode: AI_MODES.LOCAL, fallback: true };
         } else {
@@ -1111,7 +1286,7 @@ export const generateAI = async (prompt, options = {}) => {
           return { text, mode: AI_MODES.CLOUD, fallback: true };
         }
       } catch (fallbackErr) {
-        throw new Error(`Both AI modes failed. Primary: ${err.message}. Fallback: ${fallbackErr.message}`);
+        throw new Error(`All AI modes failed. Primary: ${err.message}. Fallback: ${fallbackErr.message}`);
       }
     }
     
@@ -1120,14 +1295,30 @@ export const generateAI = async (prompt, options = {}) => {
 };
 
 /**
- * Get the currently loaded local AI model name
+ * Get the currently loaded AI model name
+ * Prioritizes Diamond Swarm agents over legacy models
  */
 export const getLocalModelName = () => {
+  // Diamond Swarm takes priority
+  if (isDiamondSwarmReady()) {
+    const agent = getCurrentAgent();
+    if (agent) {
+      const agentInfo = SWARM_AGENTS[agent.toUpperCase()];
+      return agentInfo ? `💎 ${agentInfo.name}` : `💎 Diamond ${agent}`;
+    }
+    return '💎 Diamond Swarm';
+  }
+  
   const modelId = localStorage.getItem('vet_rate_local_ai_model');
   if (!modelId) return 'Local AI';  // Generic name when no specific model selected
   
+  // Diamond Swarm agents (fine-tuned VetRate models)
+  if (modelId.includes('vetrate-auditor')) return '💎 Diamond Auditor';
+  if (modelId.includes('vetrate-writer')) return '💎 Diamond Writer';
+  if (modelId.includes('vetrate-rater')) return '💎 Diamond Rater';
+  
   // Extract friendly name from model ID
-  // DeepSeek R1 Reasoning Models (NEW!)
+  // DeepSeek R1 Reasoning Models
   if (modelId.includes('DeepSeek-R1-Distill-Qwen-7B')) return 'DeepSeek R1 7B';
   if (modelId.includes('DeepSeek-R1-Distill-Llama-8B')) return 'DeepSeek R1 8B';
   if (modelId.includes('DeepSeek')) return 'DeepSeek R1';
@@ -1198,28 +1389,40 @@ export const getAIStatus = () => {
   const mode = getAIMode();
   const effectiveMode = getEffectiveAIMode();
   const localModelName = getLocalModelName();
+  const swarmStatus = getSwarmStatus();
+  const currentAgent = getCurrentAgent();
+  
+  // Check if using Diamond Swarm
+  const isSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
   
   return {
     preferredMode: mode,
     effectiveMode,
     cloudAvailable: isCloudAIAvailable(),
     localAvailable: isLocalAIReady(),
-    localInitializing: localAIInitializing,
-    localGenerating: localAIGenerating,
+    swarmAvailable: isDiamondSwarmReady(),
+    swarmStatus,
+    currentAgent,
+    localInitializing: isLocalAIInitializing(),
+    localGenerating: localAIGenerating || swarmGenerating,
     anyAvailable: isAnyAIAvailable(),
-    isPrivate: effectiveMode === AI_MODES.LOCAL,
-    cloudModelName: 'Gemini 1.5 Flash',
+    isPrivate: effectiveMode === AI_MODES.LOCAL || effectiveMode === AI_MODES.SWARM,
+    cloudModelName: 'Gemini 2.5 Flash',
     localModelName,
-    statusText: effectiveMode === AI_MODES.LOCAL 
-      ? `Local: ${localModelName}` 
-      : effectiveMode === AI_MODES.CLOUD 
-        ? 'Cloud: Gemini 1.5 Flash'
-        : 'No AI Available',
-    fullStatusText: effectiveMode === AI_MODES.LOCAL 
-      ? `🔒 ${localModelName} (Local)` 
-      : effectiveMode === AI_MODES.CLOUD 
-        ? '☁️ Gemini 1.5 Flash (Cloud)'
-        : '⚠️ No AI Available',
+    statusText: isSwarm
+      ? `💎 Diamond Swarm: ${currentAgent?.toUpperCase() || 'AUDITOR'}`
+      : effectiveMode === AI_MODES.LOCAL 
+        ? `Local: ${localModelName}` 
+        : effectiveMode === AI_MODES.CLOUD 
+          ? 'Cloud: Gemini 2.5 Flash'
+          : 'No AI Available',
+    fullStatusText: isSwarm
+      ? `💎 Diamond Swarm (${currentAgent?.toUpperCase() || 'AUDITOR'}) - 100% Private`
+      : effectiveMode === AI_MODES.LOCAL 
+        ? `🔒 ${localModelName} (Local)` 
+        : effectiveMode === AI_MODES.CLOUD 
+          ? '☁️ Gemini 2.5 Flash (Cloud)'
+          : '⚠️ No AI Available',
   };
 };
 
@@ -1229,6 +1432,21 @@ export const getAIStatus = () => {
 export const getAIDataDisclosure = () => {
   const status = getAIStatus();
   
+  if (status.effectiveMode === AI_MODES.SWARM) {
+    return {
+      title: '💎 Diamond Swarm - 100% Private',
+      description: 'All AI processing uses specialized VetRate agents running directly on your device. No data ever leaves.',
+      bullets: [
+        '✅ Your data NEVER leaves your device',
+        '✅ 3 specialized agents: Auditor, Writer, Rater',
+        '✅ Fine-tuned on official VA regulations',
+        '✅ Diamond Standard accuracy & privacy',
+      ],
+      isPrivate: true,
+      isDiamond: true,
+    };
+  }
+  
   if (status.effectiveMode === AI_MODES.LOCAL) {
     return {
       title: '🔒 100% Private - Local AI Active',
@@ -1237,7 +1455,7 @@ export const getAIDataDisclosure = () => {
         '✅ Your data NEVER leaves your device',
         '✅ Works even offline once loaded',
         '✅ No API keys required',
-        '✅ Military-grade privacy',
+        '💡 Upgrade to Diamond Swarm for specialized VA agents',
       ],
       isPrivate: true,
     };
@@ -1251,7 +1469,7 @@ export const getAIDataDisclosure = () => {
         '⚠️ Data is sent to Google\'s servers',
         '✅ No personal identifying information sent',
         '✅ Your API key, your control',
-        '💡 Switch to Local AI for 100% privacy',
+        '💡 Switch to Diamond Swarm for 100% privacy + specialized VA agents',
       ],
       isPrivate: false,
     };
@@ -1261,12 +1479,27 @@ export const getAIDataDisclosure = () => {
     title: '⚠️ No AI Available',
     description: 'Configure AI to enable intelligent features.',
     bullets: [
-      '🔒 Option 1: Enable Local AI (100% private)',
-      '☁️ Option 2: Add Gemini API key (cloud)',
+      '💎 Option 1: Enable Diamond Swarm (recommended - specialized VA agents)',
+      '🔒 Option 2: Enable Local AI (100% private)',
+      '☁️ Option 3: Add Gemini API key (cloud)',
     ],
     isPrivate: null,
   };
 };
+
+// Re-export Diamond Swarm functions for convenience
+export {
+  SWARM_AGENTS,
+  TOOL_AGENT_MAP,
+  getAgentForTool,
+  isSwarmReady,
+  isSwarmInitializing,
+  getCurrentAgent,
+  getSwarmStatus,
+  initializeSwarm,
+  switchAgent,
+  unloadSwarm
+} from './diamondSwarm';
 
 export default {
   AI_MODES,
@@ -1280,12 +1513,25 @@ export default {
   isLocalAIInitializing,
   isLocalAIVisionModel,
   getLocalAIModelId,
+  isDiamondSwarmReady,
   isCloudAIAvailable,
   isAnyAIAvailable,
   checkWebGPUSupport,
   registerLocalAIEngine,
+  registerSwarmEngine,
   generateAI,
   generateAIWithImage,
   getAIStatus,
   getAIDataDisclosure,
+  // Diamond Swarm
+  SWARM_AGENTS,
+  TOOL_AGENT_MAP,
+  getAgentForTool,
+  isSwarmReady,
+  isSwarmInitializing,
+  getCurrentAgent,
+  getSwarmStatus,
+  initializeSwarm,
+  switchAgent,
+  unloadSwarm
 };

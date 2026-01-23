@@ -30,13 +30,22 @@
       "Others charge ${{competitor_price}}+. I charge zero. Coffee donations keep this alive ☕",
       "{{validation_hours}} hours validating medical data so you can trust what you see ☕",
       "{{component_count}} components. {{total_files}} files. One mission: Help veterans ☕",
-      "Built in {{days_dev}} days with AI, but worth {{total_hours}} traditional hours. Coffee fuels innovation ☕"
+      "Built in {{days_dev}} days with AI, but worth {{total_hours}} traditional hours. Coffee fuels innovation ☕",
+      "Pay It Forward: Help Keep It Free for the next veteran in line ☕",
+      "Donate to the mission - every cup keeps a veteran's tools running ☕",
+      "Support veteran-built tools. No investors. No ads. Just coffee ☕"
     ],
     "longForm": {
       "header": "Support Vet-Rate.org",
-      "body": "This project represents {{total_hours}} hours of work ({{years_dev}} years full-time equivalent) that I'm giving away for free. While AI helped me build it in {{actual_hours}} hours, the value remains {{market_value}} worth of veteran-focused tools.\n\nI've spent {{validation_hours}} hours validating {{validation_count}} disabilities and {{research_hours}} hours reading federal regulations. Zero revenue. Zero ads. Zero data collection.\n\nIf this tool saves you from paying ${{competitor_price}}+ to predatory services or helps you secure the rating you deserve, consider buying me a coffee. It's not required - just appreciated.",
+      "body": "This project represents {{total_hours}} hours of work ({{years_dev}} years full-time equivalent) that I'm giving away for free. While AI helped me build it in {{actual_hours}} hours, the value remains {{market_value}} worth of veteran-focused tools.\n\nI've spent {{validation_hours}} hours validating {{validation_count}} disabilities and {{research_hours}} hours reading federal regulations. Zero revenue. Zero ads. Zero data collection.\n\nIf this tool saves you from paying ${{competitor_price}}+ to predatory services or helps you secure the rating you deserve, consider buying me a coffee. It's not required - just appreciated.\n\nPay It Forward: Help Keep It Free for the next veteran who needs it.",
       "cta": "Buy Me a Coffee ☕"
-    }
+    },
+    "altCtas": [
+      "Support the Mission ☕",
+      "Donate a Coffee ☕",
+      "Pay It Forward ☕",
+      "Help Keep It Free ☕"
+    ]
   },
   
   "uiMessages": {

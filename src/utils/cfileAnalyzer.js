@@ -129,10 +129,16 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
   
   try {
     // Use unified AI service - automatically chooses Cloud or Local
+    // IMPORTANT: Skip crisis check because C-Files contain medical records
+    // that may legitimately include mental health documentation with clinical
+    // terminology (e.g., "suicidal ideation documented", "PTSD diagnosis").
+    // This is clinical documentation, NOT user-expressed crisis language.
     const response = await generateAI(userPrompt, {
       temperature: 0.2,
       maxTokens: 32768,
-      expectJSON: true
+      expectJSON: true,
+      skipCrisisCheck: true, // C-Files contain clinical records, not user crisis expressions
+      toolContext: 'C-File Analyzer'
     });
     
     onProgress('Processing AI response...');
@@ -175,11 +181,31 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
       throw new Error('AI response missing required fields. Please try again.');
     }
     
+    // Ensure all array fields are initialized to prevent undefined .map() errors
+    // This handles partial AI responses gracefully
+    const sanitizedResult = {
+      ...analysisResult,
+      timeline: analysisResult.timeline || [],
+      potential_claims: analysisResult.potential_claims || [],
+      exposures: analysisResult.exposures || [],
+      combatIndicators: analysisResult.combatIndicators || [],
+      redFlags: analysisResult.redFlags || [],
+      actionItems: analysisResult.actionItems || [],
+      mentalHealth: {
+        diagnoses: analysisResult.mentalHealth?.diagnoses || [],
+        indicators: analysisResult.mentalHealth?.indicators || [],
+        stressors: analysisResult.mentalHealth?.stressors || [],
+        pages: analysisResult.mentalHealth?.pages || [],
+        ...analysisResult.mentalHealth
+      },
+      servicePeriod: analysisResult.servicePeriod || {}
+    };
+    
     onProgress('Analysis complete!');
     
     return {
       success: true,
-      analysis: analysisResult,
+      analysis: sanitizedResult,
       metadata: {
         analyzedAt: new Date().toISOString(),
         textLength: fullText.length,

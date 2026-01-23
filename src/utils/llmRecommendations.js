@@ -1,14 +1,16 @@
 /**
- * Vet-Rate.org - LLM Recommendations per Tool
- * "The Right Model for the Right Job"
+ * Vet-Rate.org - Diamond Swarm Agent Recommendations
+ * 💎 "The Diamond Standard" - Specialized Agents for Each Task
  * 
- * This utility provides intelligent recommendations for which local AI model
- * to use based on the specific tool being used. Each tool has different requirements:
- * - Document parsing needs accuracy (OCR, DD214, C-File)
- * - Creative writing needs fluency (Nexus, Statements)
- * - Analysis needs reasoning (War Room, Risk Assessment)
- * - Quick tasks need speed (Search, Calculator)
+ * This utility maps each tool to the appropriate Diamond Swarm agent:
+ * - AUDITOR: Document analysis, claim review, compliance checking
+ * - WRITER: Personal statements, nexus letters, buddy statements  
+ * - RATER: Rating calculations, bilateral factor, TDIU assessment
+ * 
+ * All agents are fine-tuned on official VA regulations and procedures.
  */
+
+import { SWARM_AGENTS, TOOL_AGENT_MAP } from './diamondSwarm';
 
 /**
  * Tool categories and their AI requirements
@@ -20,6 +22,7 @@ export const TOOL_CATEGORIES = {
     description: 'Parsing and extracting information from military/medical documents',
     requirements: ['accuracy', 'context-understanding', 'structured-output'],
     icon: '📄',
+    swarmAgent: 'auditor',
   },
   CREATIVE_WRITING: {
     id: 'creative-writing',
@@ -27,6 +30,7 @@ export const TOOL_CATEGORIES = {
     description: 'Generating persuasive, human-sounding narratives',
     requirements: ['fluency', 'empathy', 'natural-language'],
     icon: '✍️',
+    swarmAgent: 'writer',
   },
   LEGAL_ANALYSIS: {
     id: 'legal-analysis',
@@ -34,6 +38,7 @@ export const TOOL_CATEGORIES = {
     description: 'Interpreting VA regulations and procedures',
     requirements: ['precision', 'accuracy', 'zero-hallucination'],
     icon: '⚖️',
+    swarmAgent: 'auditor',
   },
   ADVERSARIAL: {
     id: 'adversarial',
@@ -41,6 +46,15 @@ export const TOOL_CATEGORIES = {
     description: 'Critical evaluation and stress-testing claims',
     requirements: ['reasoning', 'critical-thinking', 'thoroughness'],
     icon: '🎯',
+    swarmAgent: 'auditor',
+  },
+  RATING: {
+    id: 'rating',
+    label: 'Rating Calculations',
+    description: 'VA disability rating calculations and bilateral factor',
+    requirements: ['precision', 'math', 'regulatory-compliance'],
+    icon: '🧮',
+    swarmAgent: 'rater',
   },
   QUICK_TASK: {
     id: 'quick-task',
@@ -48,6 +62,7 @@ export const TOOL_CATEGORIES = {
     description: 'Fast responses for simple queries',
     requirements: ['speed', 'efficiency'],
     icon: '⚡',
+    swarmAgent: 'auditor',
   },
   VISION: {
     id: 'vision',
@@ -55,40 +70,36 @@ export const TOOL_CATEGORIES = {
     description: 'Reading scanned documents and images',
     requirements: ['vision', 'ocr', 'image-understanding'],
     icon: '👁️',
+    swarmAgent: 'auditor',
   },
 };
 
 /**
- * Tool-specific LLM recommendations
- * Each tool maps to recommended models with explanations
+ * Tool-specific Diamond Swarm agent recommendations
+ * Each tool maps to the best agent with explanations
  */
 export const TOOL_LLM_RECOMMENDATIONS = {
-  // === Document Parsing Tools ===
+  // === Document Parsing Tools - AUDITOR ===
   'dd214-analyzer': {
     name: 'DD214 Analyzer',
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
-      modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
-      modelName: 'Vet-Rate Vision Phi',
-      reason: 'Custom model - reads scanned DD214 images directly! Works in standard Chrome.',
-      badge: '👁️ Vision',
+      modelId: 'diamond-auditor',
+      modelName: '💎 Diamond Auditor',
+      reason: 'Specialized agent trained to extract service dates, MOS codes, and discharge info with high accuracy.',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC',
-        modelName: 'DeepSeek R1 7B',
-        reason: 'Best reasoning for extracting service dates, MOS codes, and discharge info from text',
-      },
-      {
-        modelId: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-        modelName: 'Qwen 2.5 3B',
-        reason: 'Good balance of accuracy and speed for text-based DD214s',
+        modelId: 'diamond-auditor',
+        modelName: '💎 Diamond Auditor',
+        reason: 'Best for DD214 analysis - trained on official military document formats',
       },
     ],
     tips: [
-      'For scanned/image DD214s, use Vet-Rate Vision Phi',
-      'For text-based PDFs, DeepSeek R1 provides superior extraction',
-      'Smaller models work fine for simple verification tasks',
+      '💎 Diamond Auditor is optimized for military document parsing',
+      'Agent automatically validates extracted data against known formats',
+      'Supports both text PDFs and OCR results from scanned images',
     ],
   },
   
@@ -96,27 +107,22 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'C-File Analyzer',
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
-      modelId: 'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC',
-      modelName: 'DeepSeek R1 7B',
-      reason: 'Chain-of-thought reasoning excels at analyzing complex multi-page claim files',
-      badge: '⭐ Recommended',
+      modelId: 'diamond-auditor',
+      modelName: '💎 Diamond Auditor',
+      reason: 'Specialized for complex multi-page VA claim files with regulatory compliance checking',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
-        modelName: 'Qwen 2.5 7B',
-        reason: 'Excellent comprehension for medical terminology and VA procedures',
-      },
-      {
-        modelId: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
-        modelName: 'Mistral 7B',
-        reason: 'Strong document understanding with good context window',
+        modelId: 'diamond-auditor',
+        modelName: '💎 Diamond Auditor',
+        reason: 'Trained on C-File formats and VA procedures',
       },
     ],
     tips: [
-      'C-Files can be 100+ pages - larger models handle context better',
-      'DeepSeek R1 is specifically trained on reasoning tasks',
-      'If you have limited VRAM, process sections separately with a 3B model',
+      '💎 Diamond Auditor handles 100+ page C-Files efficiently',
+      'Agent identifies missing evidence and compliance issues',
+      'Automatically cross-references with 38 CFR regulations',
     ],
   },
   
@@ -124,55 +130,45 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Blue Button X-Ray',
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
-      modelId: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
-      modelName: 'Qwen 2.5 7B',
-      reason: 'Excellent at parsing medical records and lab values',
-      badge: '🏥 Medical',
+      modelId: 'diamond-auditor',
+      modelName: '💎 Diamond Auditor',
+      reason: 'Expert at parsing medical records and identifying service-connected conditions',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC',
-        modelName: 'DeepSeek R1 7B',
-        reason: 'Great for finding patterns across multiple records',
-      },
-      {
-        modelId: 'Llama-3.2-3B-Instruct-q4f32_1-MLC',
-        modelName: 'Llama 3.2 3B',
-        reason: 'Fast option for processing individual records',
+        modelId: 'diamond-auditor',
+        modelName: '💎 Diamond Auditor',
+        reason: 'Trained on medical terminology and VA health records',
       },
     ],
     tips: [
-      'Medical terminology requires models with strong knowledge bases',
-      'Qwen models excel at structured data extraction',
-      'For large Blue Button exports, consider chunking the document',
+      '💎 Diamond Auditor understands medical terminology',
+      'Agent extracts condition diagnoses and treatment history',
+      'Identifies potential secondary conditions automatically',
     ],
   },
   
-  // === Creative Writing Tools ===
+  // === Creative Writing Tools - WRITER ===
   'nexus-builder': {
     name: 'Nexus Builder',
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
-      modelId: 'Qwen3-8B-q4f32_1-MLC',
-      modelName: 'Qwen 3 8B',
-      reason: 'Latest generation with exceptional natural language and medical reasoning',
-      badge: '✨ Premium',
+      modelId: 'diamond-writer',
+      modelName: '💎 Diamond Writer',
+      reason: 'Specialized for nexus letters balancing medical accuracy with persuasive writing',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
-        modelName: 'Mistral 7B',
-        reason: 'Excellent fluency for writing persuasive nexus letters',
-      },
-      {
-        modelId: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-        modelName: 'Qwen 2.5 3B',
-        reason: 'Good quality writing at faster speed',
+        modelId: 'diamond-writer',
+        modelName: '💎 Diamond Writer',
+        reason: 'Fine-tuned on successful VA nexus letter formats',
       },
     ],
     tips: [
-      'Nexus letters require balancing medical accuracy with persuasive writing',
-      'Larger models produce more natural, human-sounding prose',
+      '💎 Diamond Writer creates medically accurate, persuasive nexus letters',
+      'Agent understands the "at least as likely as not" standard',
       'Review AI output carefully - nexus letters are critical documents',
     ],
   },
@@ -181,27 +177,22 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Witness Bench',
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
-      modelId: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
-      modelName: 'Mistral 7B',
-      reason: 'Generates empathetic, natural-sounding witness interview questions',
-      badge: '💬 Conversational',
+      modelId: 'diamond-writer',
+      modelName: '💎 Diamond Writer',
+      reason: 'Generates empathetic witness statement templates and interview guides',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-        modelName: 'Qwen 2.5 3B',
-        reason: 'Fast generation for interview prep',
-      },
-      {
-        modelId: 'Llama-3.2-3B-Instruct-q4f32_1-MLC',
-        modelName: 'Llama 3.2 3B',
-        reason: 'Good for quick conversational responses',
+        modelId: 'diamond-writer',
+        modelName: '💎 Diamond Writer',
+        reason: 'Trained on effective buddy/witness statement formats',
       },
     ],
     tips: [
-      'Witness statements benefit from emotionally-aware language',
-      'Mistral excels at generating varied, non-repetitive questions',
-      'Smaller models work well for basic interview guidance',
+      '💎 Diamond Writer creates emotionally resonant statements',
+      'Agent focuses on observable behaviors and specific incidents',
+      'Templates guide witnesses on what details to include',
     ],
   },
   
@@ -209,31 +200,26 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Personal Statement Helper',
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
-      modelId: 'Qwen3-8B-q4f32_1-MLC',
-      modelName: 'Qwen 3 8B',
+      modelId: 'diamond-writer',
+      modelName: '💎 Diamond Writer',
       reason: 'Creates compelling personal narratives with proper VA formatting',
-      badge: '📝 Writing',
+      badge: '💎 Diamond',
     },
     alternatives: [
       {
-        modelId: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
-        modelName: 'Mistral 7B',
-        reason: 'Strong narrative voice for personal stories',
-      },
-      {
-        modelId: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
-        modelName: 'Hermes 3 3B',
-        reason: 'Good structure and formatting capabilities',
+        modelId: 'diamond-writer',
+        modelName: '💎 Diamond Writer',
+        reason: 'Specialized for first-person veteran narratives',
       },
     ],
     tips: [
-      'Personal statements should sound authentically human',
+      '💎 Diamond Writer creates authentic, powerful personal statements',
+      'Agent connects symptoms to daily life impact',
       'Use AI as a starting point - customize with your own voice',
-      'Larger models better capture emotional nuance',
     ],
   },
   
-  // === Legal/Regulatory Tools ===
+  // === Legal/Regulatory Tools - AUDITOR ===
   'decision-decoder': {
     name: 'Decision Decoder',
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,

@@ -131,20 +131,35 @@ class GPUDiscoveryEngine {
       const device = info.device || '';
       const description = info.description || '';
       
-      // Build GPU name - prioritize WebGL renderer info if available
+      // Build GPU name - prioritize WebGPU info
       let gpuName = description || device;
+      let usedWebGLFallback = false;
       
-      // If WebGPU info is empty, try WebGL fallback
+      // If WebGPU info is empty AND this is the first adapter, try WebGL fallback
+      // Don't use WebGL name for multiple adapters since WebGL only sees one GPU
       if ((!gpuName || gpuName.trim() === '') && this.webglInfo) {
-        gpuName = this.webglInfo.renderer;
-        console.log(`🎮 Using WebGL name: ${gpuName}`);
+        // Only use WebGL fallback if we haven't found any GPU yet
+        // This prevents misidentifying multiple GPUs with the same name
+        if (this.adapters.size === 0) {
+          gpuName = this.webglInfo.renderer;
+          usedWebGLFallback = true;
+          console.log(`🎮 Using WebGL name (first GPU): ${gpuName}`);
+        } else {
+          // For additional GPUs, construct a unique name based on hint
+          const hintLabel = hint === 'low-power' ? 'Low Power' : hint === 'high-performance' ? 'High Performance' : 'Default';
+          const vendorName = vendor.toUpperCase();
+          const archName = arch ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}` : '';
+          gpuName = `${vendorName}${archName} GPU (${hintLabel})`;
+          console.log(`🎮 Using constructed name (additional GPU): ${gpuName}`);
+        }
       }
       
       // Final fallback: construct from vendor + architecture
       if (!gpuName || gpuName.trim() === '') {
         const vendorName = vendor.toUpperCase();
         const archName = arch ? ` ${arch.charAt(0).toUpperCase()}${arch.slice(1)}` : '';
-        gpuName = `${vendorName}${archName} GPU`;
+        const hintLabel = hint === 'low-power' ? ' (Low Power)' : hint === 'high-performance' ? ' (High Performance)' : '';
+        gpuName = `${vendorName}${archName} GPU${hintLabel}`;
       }
       
       // Signature for deduplication
@@ -465,27 +480,48 @@ class GPUDiscoveryEngine {
   }
 
   // Helper to get estimated VRAM from limits
-  estimateVRAM(adapter) {
-    if (!adapter || !adapter.info) return 'Unknown';
-    
-    // First, try WebGL info if available
-    if (adapter.webglInfo && adapter.webglInfo.vram) {
-      return `${adapter.webglInfo.vram} GB`;
+  estimateVRAM(adapterEntry) {
+    try {
+      if (!adapterEntry) return 'Unknown';
+      
+      // First, try WebGL info if available
+      if (adapterEntry.webglInfo && adapterEntry.webglInfo.vram) {
+        return `${adapterEntry.webglInfo.vram} GB`;
+      }
+      
+      // Safely access the adapter's limits - adapter is nested property
+      const rawAdapter = adapterEntry.adapter;
+      if (!rawAdapter || typeof rawAdapter !== 'object') {
+        return 'Unknown';
+      }
+      
+      // Check if adapter has limits property
+      const limits = rawAdapter.limits;
+      if (!limits) {
+        // Try to get limits from info if available
+        if (adapterEntry.info && adapterEntry.info.limits) {
+          const maxBuffer = adapterEntry.info.limits.maxBufferSize || 0;
+          if (maxBuffer > 0) {
+            const estimatedGB = Math.round((maxBuffer / (1024 ** 3)) * 10) / 10;
+            return estimatedGB > 0 ? `~${estimatedGB}+ GB` : 'Unknown';
+          }
+        }
+        return 'Unknown';
+      }
+      
+      // Use maxBufferSize as a rough estimate (in GB)
+      const maxBuffer = limits.maxBufferSize || 0;
+      const estimatedGB = Math.round((maxBuffer / (1024 ** 3)) * 10) / 10;
+      
+      if (estimatedGB > 0) {
+        return `~${estimatedGB}+ GB`;
+      }
+      
+      return 'Unknown';
+    } catch (err) {
+      console.warn('🎮 Error estimating VRAM:', err.message);
+      return 'Unknown';
     }
-    
-    // Fallback to WebGPU limits estimation
-    const limits = adapter.adapter.limits;
-    if (!limits) return 'Unknown';
-    
-    // Use maxBufferSize as a rough estimate (in GB)
-    const maxBuffer = limits.maxBufferSize || 0;
-    const estimatedGB = Math.round((maxBuffer / (1024 ** 3)) * 10) / 10;
-    
-    if (estimatedGB > 0) {
-      return `~${estimatedGB}+ GB`;
-    }
-    
-    return 'Unknown';
   }
 }
 

@@ -1,20 +1,20 @@
 /**
  * Vet-Rate AI Assistant Hook
- * 💎 DIAMOND Knowledge Base - 2,161+ verified entries
- * Provides RAG-based VA claims assistance with official sources
+ * 💎 DIAMOND Knowledge Base (DKB) - Official sources only
+ * CKB (Community) is NOT loaded here - not approved for training
+ * Provides RAG-based VA claims assistance with official sources only
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 
-// Singleton instance for the knowledge base
+// Singleton instance for the knowledge base (DKB only)
 let knowledgeBase = null;
 let loadingPromise = null;
 let kbMetadata = null;
 
-// Source color mapping for UI display
+// Source color mapping for UI display (DKB sources only)
 const SOURCE_COLORS = {
   'eCFR_OFFICIAL': { color: 'text-red-400', bg: 'bg-red-900/30', label: '38 CFR' },
-  'COMMUNITY_PROVIDED': { color: 'text-blue-400', bg: 'bg-blue-900/30', label: 'Community' },
   'FEDERAL_REGISTER_OFFICIAL': { color: 'text-orange-400', bg: 'bg-orange-900/30', label: 'Fed Register' },
   'OGC_PRECEDENT_OPINION': { color: 'text-purple-400', bg: 'bg-purple-900/30', label: 'OGC Opinion' },
   'BVA_DECISIONS': { color: 'text-purple-400', bg: 'bg-purple-900/30', label: 'BVA' },
@@ -24,21 +24,28 @@ const SOURCE_COLORS = {
   'VA_OFFICIAL': { color: 'text-slate-400', bg: 'bg-slate-700/50', label: 'VA Official' },
   'SECONDARY_CONDITIONS_MATRIX': { color: 'text-cyan-400', bg: 'bg-cyan-900/30', label: 'Secondary' },
   'EAJA_STATISTICS_OFFICIAL': { color: 'text-yellow-400', bg: 'bg-yellow-900/30', label: 'EAJA Stats' },
+  // NOTE: COMMUNITY_PROVIDED is NOT included - CKB is separate and not for training
 };
 
 async function loadKnowledgeBase() {
   if (knowledgeBase) return knowledgeBase;
   if (loadingPromise) return loadingPromise;
   
+  // Load DKB only (official sources) - CKB is NOT loaded for AI training
   loadingPromise = fetch('/data/vet_rate_knowledge.json')
     .then(res => res.json())
     .then(data => {
-      knowledgeBase = data;
+      // Filter to ensure only DKB sources (no community content)
+      knowledgeBase = data.filter(entry => {
+        const source = entry.metadata?.source || '';
+        // Exclude community sources - only official DKB sources allowed
+        return source !== 'COMMUNITY_PROVIDED';
+      });
       
       // Calculate metadata
       const sourceCounts = {};
       const typeCounts = {};
-      data.forEach(entry => {
+      knowledgeBase.forEach(entry => {
         const source = entry.metadata?.source || 'Unknown';
         const type = entry.metadata?.type || 'general';
         sourceCounts[source] = (sourceCounts[source] || 0) + 1;
@@ -46,16 +53,18 @@ async function loadKnowledgeBase() {
       });
       
       kbMetadata = {
-        total: data.length,
+        total: knowledgeBase.length,
         sources: sourceCounts,
         types: typeCounts,
         status: 'DIAMOND',
+        ckbSeparate: true, // CKB is separate and not used for AI
         bvaApiPending: true // BVA full data awaiting API token
       };
       
-      console.log(`[VetRate AI] 💎 DIAMOND KB Loaded: ${data.length} entries`);
+      console.log(`[VetRate AI] 💎 DKB Loaded: ${knowledgeBase.length} official entries`);
       console.log(`[VetRate AI] Sources:`, Object.entries(sourceCounts).map(([k,v]) => `${k}: ${v}`).join(', '));
-      return data;
+      console.log(`[VetRate AI] ⚠️ CKB (Community) is separate - not loaded for AI training`);
+      return knowledgeBase;
     })
     .catch(err => {
       console.error('[VetRate AI] Failed to load knowledge base:', err);

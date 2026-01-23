@@ -37,11 +37,27 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'terser',
+    chunkSizeWarningLimit: 600, // Increase limit slightly for ML/AI libs
     rollupOptions: {
       output: {
         manualChunks: {
+          // Core React vendor chunk
           'vendor': ['react', 'react-dom'],
-          'pdf': ['jspdf', 'html2canvas']
+          
+          // PDF processing (heavy)
+          'pdf': ['jspdf', 'html2canvas', 'pdfjs-dist', 'pdf-lib'],
+          
+          // AI/ML libraries (very heavy, lazy load)
+          'ai-webllm': ['@mlc-ai/web-llm'],
+          
+          // OCR processing
+          'ocr': ['tesseract.js'],
+          
+          // Document processing
+          'docs': ['docx', 'mammoth'],
+          
+          // Storage utilities
+          'storage': ['idb-keyval']
         }
       }
     }

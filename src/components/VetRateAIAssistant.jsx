@@ -1,7 +1,8 @@
 /**
  * Vet-Rate AI Assistant Component
- * 💎 DIAMOND Knowledge Base - 2,161+ verified entries
- * RAG-based VA claims assistance with official sources
+ * 💎 DIAMOND Knowledge Base (DKB) - Official sources only
+ * CKB (Community) is separate and NOT used for AI responses
+ * RAG-based VA claims assistance with official sources only
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -39,7 +40,7 @@ const VetRateAIAssistant = ({ isOpen, onClose }) => {
     if (isReady && messages.length === 0) {
       setMessages([{
         type: 'assistant',
-        content: `Welcome to the Vet-Rate AI Assistant! 💎 **DIAMOND Knowledge Base** with ${knowledgeCount.toLocaleString()} verified entries.
+        content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** with ${knowledgeCount.toLocaleString()} official entries.
 
 **Official Sources Include:**
 • 🔴 **38 CFR Part 4** - Rating Schedule (1,070 entries)
@@ -48,6 +49,8 @@ const VetRateAIAssistant = ({ isOpen, onClose }) => {
 • 🔵 **Secondary Conditions Matrix** - 234 nexus relationships
 • 🟠 **Federal Register** - Recent VA rules (15 entries)
 • 📘 **M21-1 Manual** - VA procedures
+
+⚠️ **Note:** Community Knowledge (CKB) is maintained separately and is not used for AI responses.
 
 **Ask me about:**
 • Diagnostic codes (e.g., "What is DC 9411?")
@@ -97,11 +100,10 @@ How can I help you today?`,
 
   if (!isOpen) return null;
 
-  // Get source color info
+  // Get source color info (DKB sources only - no community)
   const getSourceStyle = (source) => {
     const styles = {
       'eCFR_OFFICIAL': { bg: 'bg-red-900/50', text: 'text-red-300', label: '38 CFR' },
-      'COMMUNITY_PROVIDED': { bg: 'bg-blue-900/50', text: 'text-blue-300', label: 'Community' },
       'FEDERAL_REGISTER_OFFICIAL': { bg: 'bg-orange-900/50', text: 'text-orange-300', label: 'Fed Register' },
       'OGC_PRECEDENT_OPINION': { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'OGC' },
       'BVA_DECISIONS': { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'BVA' },
@@ -111,6 +113,7 @@ How can I help you today?`,
       'VA_OFFICIAL': { bg: 'bg-slate-700/50', text: 'text-slate-300', label: 'VA Official' },
       'SECONDARY_CONDITIONS_MATRIX': { bg: 'bg-cyan-900/50', text: 'text-cyan-300', label: 'Secondary' },
       'EAJA_STATISTICS_OFFICIAL': { bg: 'bg-yellow-900/50', text: 'text-yellow-300', label: 'EAJA' },
+      // NOTE: COMMUNITY_PROVIDED not included - CKB is separate
     };
     return styles[source] || { bg: 'bg-slate-700', text: 'text-slate-400', label: source };
   };
@@ -166,11 +169,11 @@ How can I help you today?`,
           </button>
         </div>
 
-        {/* KB Info Panel */}
+        {/* KB Info Panel - DKB only (no community) */}
         {showKBInfo && (
           <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 text-xs">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-300 font-medium">💎 Diamond Knowledge Base Sources</span>
+              <span className="text-emerald-300 font-medium">💎 Diamond Knowledge Base (DKB) - Official Sources Only</span>
               <button onClick={() => setShowKBInfo(false)} className="text-slate-500 hover:text-slate-300">&times;</button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -179,12 +182,12 @@ How can I help you today?`,
                 <span className="text-slate-400">38 CFR: 1,070</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                <span className="text-slate-400">Community: 560</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
                 <span className="text-slate-400">Secondary Matrix: 234</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-slate-500 rounded-full"></span>
+                <span className="text-slate-400">VA Official: 159</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
@@ -198,6 +201,10 @@ How can I help you today?`,
                 <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
                 <span className="text-slate-400">Fed Register: 15</span>
               </div>
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-amber-400/80 bg-amber-900/20 px-2 py-1 rounded">
+              <Clock className="w-3 h-3" />
+              <span>👥 CKB (Community): Separate - not used for AI training</span>
             </div>
             {bvaApiPending && (
               <div className="mt-2 flex items-center gap-2 text-amber-400/80 bg-amber-900/20 px-2 py-1 rounded">
