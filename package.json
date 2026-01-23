@@ -38,10 +38,12 @@
     "check-vision": "node scripts/check-vision-model-fix.js"
   },
   "dependencies": {
-    "idb-keyval": "^6.2.1",
+    "@mlc-ai/web-llm": "^0.2.80",
+    "@wllama/wllama": "^2.3.7",
     "docx": "^9.5.1",
     "driver.js": "^1.4.0",
     "html2canvas": "^1.4.1",
+    "idb-keyval": "^6.2.1",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.11.0",
