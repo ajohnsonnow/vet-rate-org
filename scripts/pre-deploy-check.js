@@ -595,6 +595,51 @@ function checkComponentExports() {
   checks.add('Components', true);
 }
 
+// 14. Changelog Version Sync Check
+function checkChangelogSync() {
+  logSection('14. Changelog Version Sync');
+  
+  // Read package.json version
+  const packageJson = JSON.parse(readFile('package.json'));
+  const currentVersion = packageJson.version;
+  
+  // Read changelog.json
+  const changelogJson = readFile('src/data/changelog.json');
+  if (!changelogJson) {
+    logResult(`changelog.json exists`, false);
+    checks.add('Changelog sync', false);
+    return;
+  }
+  
+  const changelog = JSON.parse(changelogJson);
+  const changelogVersion = changelog.version;
+  
+  // Check if changelog version matches package.json
+  const versionMatches = changelogVersion === currentVersion;
+  logResult(`changelog.json version (${changelogVersion}) matches package.json (${currentVersion})`, versionMatches);
+  
+  // Check if there's an entry for the current version
+  const hasCurrentVersionEntry = changelog.updates?.some(u => u.version === currentVersion);
+  logResult(`changelog.json has entry for v${currentVersion}`, hasCurrentVersionEntry);
+  
+  // Check changelogGenerator.js curatedChangelog for isNew items
+  const changelogGenerator = readFile('src/utils/changelogGenerator.js');
+  const hasNewFeatures = changelogGenerator?.includes('isNew: true');
+  logResult(`changelogGenerator.js has new features marked`, hasNewFeatures);
+  
+  // Check lastUpdated is recent (within 7 days)
+  const lastUpdated = new Date(changelog.lastUpdated);
+  const daysSinceUpdate = Math.floor((Date.now() - lastUpdated) / (1000 * 60 * 60 * 24));
+  const isRecent = daysSinceUpdate <= 7;
+  logResult(`Changelog updated recently (${daysSinceUpdate} days ago)`, isRecent);
+  
+  if (!versionMatches || !hasCurrentVersionEntry) {
+    logWarning(`Run 'npm run update-changelog' to sync changelog with current version`);
+  }
+  
+  checks.add('Changelog sync', versionMatches && hasCurrentVersionEntry);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -606,7 +651,7 @@ async function main() {
   
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
-  console.log('        Vet-Rate.org Comprehensive Check (13 checks)');
+  console.log('        Vet-Rate.org Comprehensive Check (14 checks)');
   console.log('═══════════════════════════════════════════════════════════════');
   console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
   console.log(`📁 Project: ${rootDir}`);
@@ -624,12 +669,13 @@ async function main() {
   checkLegalPages();
   checkDocumentation();
   checkGlossary();
-  checkGlossarySync();         // NEW: Auto-sync glossary to User Manual
-  checkBuyMeCoffeeIntegration(); // NEW: Check funding verbiage integration
-  checkFeatureDocumentation();  // NEW: Ensure new features are documented
+  checkGlossarySync();         // Auto-sync glossary to User Manual
+  checkBuyMeCoffeeIntegration(); // Check funding verbiage integration
+  checkFeatureDocumentation();  // Ensure new features are documented
   checkBugsSquashed();
   checkArchiveCandidates();
   checkComponentExports();
+  checkChangelogSync();         // NEW: Verify changelog is synced with version
   
   // Summary
   logSection('📊 VALIDATION SUMMARY');
