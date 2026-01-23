@@ -126,11 +126,11 @@ export default function KnowledgeBaseStatus({ compact = false }) {
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs ${getColorClass(colors.base.card)} hover:${getColorClass(colors.base.nestedCard)}`}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
           title="Diamond Knowledge Base Status"
         >
         <span className={getStatusColor()}>{getStatusIcon()}</span>
-        <span className={`font-medium ${getColorClass(colors.text.secondary)}`}>
+        <span className="font-medium text-gray-700 dark:text-gray-200">
           DKB: {kbStatus.loading ? 'Loading...' : `${kbStatus.totalEntries.toLocaleString()} entries`}
         </span>
         {kbStatus.ecfrCurrent && (
