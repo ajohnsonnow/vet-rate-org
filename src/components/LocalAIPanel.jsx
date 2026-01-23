@@ -1225,12 +1225,20 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     setStreamedResponse('');
   };
 
-  // Clear test prompt and responses when model changes
+  // Clear test prompt and responses when model changes or starts loading
   useEffect(() => {
     setTestPrompt('');
     setTestResponse('');
     setStreamedResponse('');
   }, [loadedModelId]);
+
+  // Also clear when a new model starts loading
+  useEffect(() => {
+    if (isLoading) {
+      setTestResponse('');
+      setStreamedResponse('');
+    }
+  }, [isLoading]);
 
   // Handle GPU preference change
   const handleGPUChange = async (newPreference) => {
