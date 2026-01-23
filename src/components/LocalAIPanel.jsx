@@ -1235,6 +1235,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   // Also clear when a new model starts loading
   useEffect(() => {
     if (isLoading) {
+      setTestPrompt('');
       setTestResponse('');
       setStreamedResponse('');
     }
