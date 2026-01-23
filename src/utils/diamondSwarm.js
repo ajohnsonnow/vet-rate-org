@@ -417,7 +417,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         for await (const chunk of chunks) {
           const delta = chunk.choices[0]?.delta?.content || '';
           responseText += delta;
-          onStream(delta);
+          onStream(delta, responseText); // Pass both delta and full accumulated text
         }
       } else {
         // Non-streaming response
@@ -443,8 +443,15 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   }
   
   // Fallback: placeholder response when no engine available
+  const placeholderText = `[Diamond Swarm - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join('\n• ')}\n\nYour question: "${prompt.slice(0, 150)}..."`;
+  
+  // Call onStream so the UI shows the placeholder immediately
+  if (onStream) {
+    onStream(placeholderText, placeholderText);
+  }
+  
   const response = {
-    text: `[Diamond Swarm - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join('\n• ')}\n\nYour question: "${prompt.slice(0, 150)}..."`,
+    text: placeholderText,
     agent: agent.id,
     agentName: agent.name,
     model: 'loading',
