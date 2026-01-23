@@ -308,8 +308,8 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
 };
 
 // Available models organized by RECOMMENDED USE CASE
-// 💎 Diamond Swarm agents are the recommended choice for VA claims processing
-// Legacy WebLLM models are kept as fallback options
+// 💎 Diamond Swarm agents are the ONLY recommended choice for VA claims processing
+// All legacy WebLLM models have been removed - Diamond Swarm provides superior results
 const AVAILABLE_MODELS = [
   // === 💎 DIAMOND SWARM AGENTS - Specialized for VA Claims ===
   {
@@ -348,247 +348,6 @@ const AVAILABLE_MODELS = [
     category: 'diamond',
     isDiamond: true,
   },
-  // === ⚡ QUICK TASKS - Fast responses for simple queries (Legacy) ===
-  {
-    id: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
-    name: 'SmolLM2 360M (Tiny)',
-    size: '0.3 GB',
-    description: 'Ultra-tiny, works on low-end devices (Legacy)',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: Basic questions, search enhancement, simple queries',
-    vramRequired: '1 GB',
-    recommended: false,
-    category: 'ultra-light',
-    isLegacy: true,
-  },
-  {
-    id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC',
-    name: 'Llama 3.2 1B (Fastest)',
-    size: '0.7 GB',
-    description: 'Ultra-fast, good for simple queries (Legacy)',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: Secondary Scout, calculator help, quick lookups',
-    vramRequired: '2 GB',
-    recommended: false,
-    category: 'ultra-light',
-    isLegacy: true,
-  },
-  // === LIGHT (1-2 GB) - Fast and efficient (Legacy) ===
-  {
-    id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC',
-    name: 'Qwen 2.5 1.5B (Fast)',
-    size: '1.0 GB',
-    description: 'Alibaba model, excellent multilingual (Legacy)',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: Fast responses, form field suggestions',
-    vramRequired: '2 GB',
-    recommended: false,
-    category: 'light',
-    isLegacy: true,
-  },
-  {
-    id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC',
-    name: 'SmolLM2 1.7B (Efficient)',
-    size: '1.5 GB',
-    description: 'Compact but capable, low memory usage',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: Good quality on limited hardware',
-    vramRequired: '3 GB',
-    recommended: false,
-    category: 'light',
-  },
-  {
-    id: 'gemma-2-2b-it-q4f32_1-MLC',
-    name: 'Gemma 2 2B (Compact)',
-    size: '1.4 GB',
-    description: 'Google model, efficient and capable',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: General tasks with lower memory usage',
-    vramRequired: '3 GB',
-    recommended: false,
-    category: 'light',
-  },
-  {
-    id: 'Qwen3-1.7B-q4f32_1-MLC',
-    name: 'Qwen 3 1.7B (Latest)',
-    size: '1.2 GB',
-    description: 'Newest Qwen generation, cutting-edge',
-    bestFor: '⚡ Quick Tasks',
-    contextInfo: 'Best for: Modern reasoning with low memory',
-    vramRequired: '3 GB',
-    recommended: false,
-    category: 'light',
-    isNew: true,
-  },
-  // === BALANCED (2-3 GB) - Best for most users ===
-  {
-    id: 'Llama-3.2-3B-Instruct-q4f32_1-MLC',
-    name: 'Llama 3.2 3B (Balanced) ✓',
-    size: '1.8 GB',
-    description: 'Good balance of speed and quality',
-    bestFor: '📋 Forms & Writing',
-    contextInfo: 'Best for: Forms Helper, basic statements, medium documents',
-    vramRequired: '4 GB',
-    recommended: true,
-    category: 'balanced',
-  },
-  {
-    id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
-    name: 'Hermes 3 3B (Function Calling)',
-    size: '2.0 GB',
-    description: 'Supports function calling, enhanced reasoning',
-    bestFor: '📋 Forms & Writing',
-    contextInfo: 'Best for: Structured outputs and tool use',
-    vramRequired: '4 GB',
-    recommended: false,
-    category: 'balanced',
-    isNew: true,
-  },
-  {
-    id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-    name: 'Qwen 2.5 3B (Smart)',
-    size: '2.0 GB',
-    description: 'Alibaba model, strong reasoning',
-    bestFor: '📋 Forms & Writing',
-    contextInfo: 'Best for: Form completion, basic analysis',
-    vramRequired: '4 GB',
-    recommended: false,
-    category: 'balanced',
-  },
-  {
-    id: 'Phi-3.5-mini-instruct-q4f32_1-MLC',
-    name: 'Phi 3.5 Mini (Specialized)',
-    size: '2.3 GB',
-    description: 'Microsoft model, great for reasoning',
-    bestFor: '⚖️ Legal Analysis',
-    contextInfo: 'Best for: Decision Decoder, regulatory interpretation',
-    vramRequired: '4 GB',
-    recommended: false,
-    category: 'balanced',
-  },
-  {
-    id: 'Qwen3-4B-q4f32_1-MLC',
-    name: 'Qwen 3 4B (Sweet Spot)',
-    size: '2.5 GB',
-    description: 'Newest Qwen, excellent price/performance',
-    bestFor: '📋 Forms & Writing',
-    contextInfo: 'Best for: Strong reasoning with moderate resources',
-    vramRequired: '4 GB',
-    recommended: false,
-    category: 'balanced',
-    isNew: true,
-  },
-  // === POWERFUL (4-6 GB) - For serious analysis ===
-  {
-    id: 'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC',
-    name: 'DeepSeek R1 7B (Reasoning)',
-    size: '3.5 GB',
-    description: 'Chain-of-thought reasoning model. May produce verbose output.',
-    bestFor: '🧠 Simple Reasoning • 📝 Basic Q&A',
-    contextInfo: 'Note: Small distilled model - may struggle with complex prompts. Try Llama/Phi for better results.',
-    vramRequired: '6 GB',
-    recommended: false,
-    category: 'powerful',
-    isNew: false,
-    isFeatured: false,
-  },
-  {
-    id: 'Mistral-7B-Instruct-v0.3-q4f32_1-MLC',
-    name: 'Mistral 7B (Powerful)',
-    size: '4.1 GB',
-    description: 'High quality, requires more VRAM',
-    bestFor: '✍️ Creative Writing',
-    contextInfo: 'Best for: Nexus letters, witness interviews, natural prose',
-    vramRequired: '8 GB',
-    recommended: false,
-    category: 'powerful',
-  },
-  {
-    id: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
-    name: 'Qwen 2.5 7B (Premium)',
-    size: '4.5 GB',
-    description: 'Top-tier Alibaba model, excellent quality',
-    bestFor: '📄 Document Parsing • 🏥 Medical',
-    contextInfo: 'Best for: Blue Button X-Ray, medical records, lab values',
-    vramRequired: '8 GB',
-    recommended: false,
-    category: 'powerful',
-  },
-  {
-    id: 'DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC',
-    name: 'DeepSeek R1 Llama 8B (Pro)',
-    size: '4.5 GB',
-    description: 'Advanced reasoning based on Llama 3.1',
-    bestFor: '⚖️ Legal Analysis • 💼 TDIU',
-    contextInfo: 'Best for: TDIU Builder, professional-grade claim analysis',
-    vramRequired: '6 GB',
-    recommended: false,
-    category: 'powerful',
-    isNew: true,
-  },
-  {
-    id: 'Qwen3-8B-q4f32_1-MLC',
-    name: 'Qwen 3 8B (Top Tier)',
-    size: '4.8 GB',
-    description: 'Latest and most capable Qwen model',
-    bestFor: '✍️ Creative Writing',
-    contextInfo: 'Best for: Nexus Builder, personal statements, maximum quality',
-    vramRequired: '7 GB',
-    recommended: false,
-    category: 'powerful',
-    isNew: true,
-  },
-  // === VISION (Image Analysis) - DISABLED ===
-  // Vision models disabled due to image_embed function not being properly exported from WASM compilation
-  // The MLC-LLM compilation did not produce working vision capabilities
-  // TODO: Re-enable when proper vision model compilation is achieved
-  /*
-  {
-    id: 'Vet-Rate-Vision-Phi-Fast',
-    name: 'Vet-Rate Vision Phi 👁️ [DISABLED]',
-    size: '3.4 GB',
-    description: '🚧 DISABLED - Vision model compilation incomplete. Use OCR + text models instead.',
-    bestFor: '📷 DD214 & Document Analysis',
-    contextInfo: '❌ Vision functionality not working - image_embed function missing from WASM.',
-    vramRequired: '7 GB',
-    recommended: false,
-    category: 'vision',
-    isNew: false,
-    hasVision: true,
-    disabled: true,
-    disabledReason: 'vision-not-working',
-    isCustomModel: true,
-    customConfig: {
-      model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Fast',
-      model_id: 'Vet-Rate-Vision-Phi-Fast',
-      model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Fast/resolve/main/model-lib.wasm',
-    },
-  },
-  */
-  // Legacy vision model - also disabled
-  /*
-  {
-    id: 'Vet-Rate-Vision-Phi-q4f32_1',
-    name: 'Vet-Rate Vision Phi 👁️ 🚧 LEGACY',
-    size: '2.8 GB',
-    description: '🚧 LEGACY: Requires Chrome Canary with experimental WebGPU flags.',
-    bestFor: '📷 DD214 & Document Analysis',
-    contextInfo: '⚠️ Requires: Chrome Canary + --enable-dawn-features=allow_unsafe_apis flag.',
-    vramRequired: '6 GB',
-    recommended: false,
-    category: 'vision',
-    isNew: false,
-    hasVision: true,
-    disabled: true,
-    disabledReason: 'beta-experimental',
-    isCustomModel: true,
-    customConfig: {
-      model: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi',
-      model_id: 'Vet-Rate-Vision-Phi-q4f32_1',
-      model_lib: 'https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi/resolve/main/Vet-Rate-Vision-Phi-q4f32_1-webgpu.wasm',
-    },
-  },
-  */
 ];
 
 // Context for Local AI state
@@ -662,8 +421,8 @@ export const LocalAIProvider = ({ children }) => {
         // Check each model individually (skip custom models - they're not in prebuiltAppConfig)
         await Promise.all(
           AVAILABLE_MODELS.map(async (model) => {
-            // Skip cache check for custom models - WebLLM's hasModelInCache doesn't know about them
-            if (model.isCustomModel) {
+            // Skip cache check for custom models & Diamond Swarm - WebLLM's hasModelInCache doesn't know about them
+            if (model.isCustomModel || model.isDiamond) {
               return;
             }
             try {
@@ -1119,6 +878,30 @@ export const LocalAIProvider = ({ children }) => {
 
   // Generate completion
   const generate = useCallback(async (prompt, options = {}) => {
+    // 💎 Diamond Swarm models route through unifiedAIService, not WebLLM engine
+    if (selectedModel?.isDiamond || loadedModelId?.startsWith('diamond-')) {
+      const { generateText, isLocalServerAvailable } = await import('../utils/unifiedAIService');
+      
+      // Try local server first (llama.cpp with Diamond Swarm GGUF)
+      if (isLocalServerAvailable()) {
+        console.log('💎 Diamond Swarm: Using local llama.cpp server');
+        const result = await generateText(prompt, {
+          mode: 'local-server',
+          taskType: options.task || 'general',
+          ...options
+        });
+        return result;
+      }
+      
+      // Fall back to Diamond Swarm placeholder (educational info)
+      const { generateWithSwarm, getCurrentAgent } = await import('../utils/diamondSwarm');
+      console.log('💎 Diamond Swarm: Using placeholder mode (no local server)');
+      const agent = getCurrentAgent() || 'auditor';
+      const result = await generateWithSwarm(prompt, { agentId: agent, ...options });
+      return result.text;
+    }
+    
+    // Legacy WebLLM path - requires engine
     if (!engine || !isReady) {
       throw new Error('Local AI not initialized');
     }
@@ -1284,7 +1067,7 @@ export const LocalAIProvider = ({ children }) => {
       setIsGenerating(false);
       throw err;
     }
-  }, [engine, isReady]);
+  }, [engine, isReady, selectedModel, loadedModelId]);
 
   // Interrupt generation - only interrupts if there's actually a global generation in progress
   const interruptGeneration = useCallback(async () => {
