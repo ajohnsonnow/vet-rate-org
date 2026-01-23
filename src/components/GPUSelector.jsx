@@ -28,18 +28,27 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
         throw new Error("WebGPU not supported in this browser. Please use Chrome, Edge, or another Chromium browser.");
       }
       
-      const found = await gpuManager.scanForAdapters();
-      setAdapters(found);
+      // Clear previous adapters to prevent stale data
+      gpuManager.adapters?.clear?.();
       
-      if (autoSelect && found.length > 0) {
+      const found = await gpuManager.scanForAdapters();
+      
+      // Validate adapter data before setting state
+      const validAdapters = (found || []).filter(adapter => {
+        return adapter && adapter.id && adapter.info;
+      });
+      
+      setAdapters(validAdapters);
+      
+      if (autoSelect && validAdapters.length > 0) {
         // Auto-select the "High Performance" one if available
-        const best = found.find(a => a.tier === 'High Performance') || found[0];
-        if (best) await handleSelect(best.id);
+        const best = validAdapters.find(a => a.tier === 'High Performance') || validAdapters[0];
+        if (best?.id) await handleSelect(best.id);
       }
       
     } catch (err) {
       console.error('🎮 GPU scan error:', err);
-      setError(err.message);
+      setError(err?.message || 'Unknown error scanning for GPUs');
     } finally {
       setLoading(false);
     }
@@ -124,7 +133,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
           >
             <div>
               <div className="text-white font-medium flex items-center gap-2">
-                {item.info.displayName}
+                {item.info?.displayName || item.info?.device || 'Unknown GPU'}
                 {item.tier === 'High Performance' && (
                   <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
                     Recommended
@@ -137,7 +146,7 @@ const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
                 )}
               </div>
               <div className="text-sm text-gray-400 mt-1">
-                Vendor: {item.info.vendor} | Architecture: {item.info.architecture}
+                Vendor: {item.info?.vendor || 'Unknown'} | Architecture: {item.info?.architecture || 'Unknown'}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 VRAM: {gpuManager.estimateVRAM(item)} | Requested via: {item.hint || 'default'}

@@ -4,23 +4,85 @@
  * Privacy-focused: User controls what data is included
  */
 
-// Application modules/features
+// Application modules/features - DIAMOND LEVEL: All 45+ tools tracked!
 export const APP_MODULES = {
+  // Core Navigation
   SEARCH: 'Disability Search',
   DISABILITY_DETAILS: 'Disability Details View',
+  MY_PACKET: 'My Packet',
+  USER_MANUAL: 'User Manual',
+  
+  // Calculate Tools
+  TACTICAL_CALCULATOR: 'Tactical Calculator (Rating)',
+  MILLION_DOLLAR_DASHBOARD: 'Million Dollar Dashboard',
+  WHAT_IF_SANDBOX: 'What-If Sandbox',
+  RETRO_PAY_HUNTER: 'Retro Pay Hunter',
+  TIME_MACHINE: 'Time Machine (ITF Tracker)',
+  
+  // Discover Tools
   SECONDARY_SCOUT: 'Secondary Scout',
   SECONDARY_SCOUT_LAUNCHER: 'Secondary Scout Launcher',
-  NEXUS_BUILDER: 'Nexus Builder',
-  MY_PACKET: 'My Packet',
   CAP_SIMULATOR: 'C&P Exam Simulator',
+  PATHFINDER: 'Pathfinder (AI Strategy)',
+  CLAIM_NAVIGATOR: 'Claim Navigator',
+  MOS_HAZARD_MATCHER: 'MOS Hazard Matcher',
+  PACT_ACT_NAVIGATOR: 'PACT Act Navigator',
+  WEB_OF_CONDITIONS: 'Web of Conditions',
+  
+  // Build Evidence Tools
+  CFILE_ANALYZER: 'C-File Analyzer',
+  BLUE_BUTTON_XRAY: 'Blue Button X-Ray',
+  RECORD_SEARCH: 'Record Search',
+  WITNESS_BENCH: 'Witness Bench (Buddy Letters)',
+  NEXUS_BUILDER: 'Nexus Builder',
+  FORMS_HELPER: 'Forms Helper',
+  SYMPTOM_LOGGER: 'Symptom Logger',
+  PAIN_PAINTER: 'Pain Painter (Body Map)',
+  EVIDENCE_TIMELINE: 'Evidence Timeline',
+  FOIA_GENERATOR: 'FOIA Generator (Keysmith)',
+  DD214_ANALYZER: 'DD214 Analyzer',
+  
+  // Quality Control Tools
+  RED_TEAM: 'Red Team (Statement Stress Test)',
+  CLAIM_STRESS_TEST: 'Claim Stress Test (War Game)',
+  DECISION_DECODER: 'Decision Decoder',
+  DENIAL_DECODER: 'Denial Decoder',
+  SHARK_RADAR: 'Shark Radar (Scam Detector)',
+  CONSISTENCY_ENGINE: 'Consistency Engine',
+  EVIDENCE_GAP_VISUALIZER: 'Evidence Gap Visualizer',
+  RISK_ASSESSMENT: 'Risk Assessment (Poke the Bear)',
+  
+  // Maximize Rating Tools
+  TDIU_BUILDER: 'TDIU Builder',
+  STATE_BENEFIT_HUNTER: 'State Benefit Hunter',
+  THE_TRIBUNAL: 'The Tribunal (Mock Hearing)',
+  LEGISLATIVE_WATCHDOG: 'Legislative Watchdog',
+  
+  // Support & Resources
+  VSO_FINDER: 'VSO Finder',
   VA_RESOURCES: 'VA Resources Hub',
-  PDF_GENERATOR: 'PDF Generator',
-  HEADER_NAV: 'Header Navigation',
-  FOOTER: 'Footer',
-  ACCESSIBILITY_MENU: 'Accessibility Menu',
+  VA_AI_TRANSPARENCY: 'VA AI Transparency',
+  
+  // Data Management
+  BACKUP_MANAGER: 'Backup Manager',
+  CLOUD_SYNC: 'Cloud Sync Manager',
+  
+  // AI & Settings
+  AI_SETTINGS: 'AI Settings',
+  LOCAL_AI_PANEL: 'Local AI Panel',
+  AI_ASSISTANT: 'AI Navigator',
+  
+  // Modals & System
   PRIVACY_POLICY: 'Privacy Policy Modal',
   ABOUT_US: 'About Us Modal',
   CONTACT_US: 'Contact Us Modal',
+  TERMS_OF_SERVICE: 'Terms of Service',
+  HEADER_NAV: 'Header Navigation',
+  FOOTER: 'Footer',
+  ACCESSIBILITY_MENU: 'Accessibility Menu',
+  PDF_GENERATOR: 'PDF Generator',
+  
+  // Catch-all
   OTHER: 'Other/General'
 };
 
@@ -139,19 +201,80 @@ const determineCurrentView = (appState) => {
 };
 
 /**
- * Get list of active modals
+ * Get list of active modals - DIAMOND LEVEL: All 45+ tools tracked!
  */
 const getActiveModals = (appState) => {
   const modals = [];
+  
+  // Core Navigation
+  if (appState.showMyPacket) modals.push('MyPacket');
+  if (appState.showUserManual) modals.push('UserManual');
+  if (appState.showVAResources) modals.push('VAResources');
+  
+  // Calculate Tools
+  if (appState.showTacticalCalculator) modals.push('TacticalCalculator');
+  if (appState.showMillionDollarDashboard) modals.push('MillionDollarDashboard');
+  if (appState.showWhatIfSandbox) modals.push('WhatIfSandbox');
+  if (appState.showRetroPayHunter) modals.push('RetroPayHunter');
+  if (appState.showTimeMachine) modals.push('TimeMachine');
+  
+  // Discover Tools
   if (appState.showSecondaryScoutLauncher) modals.push('SecondaryScoutLauncher');
   if (appState.showSecondaryScout) modals.push('SecondaryScout');
-  if (appState.showNexusBuilder) modals.push('NexusBuilder');
-  if (appState.showMyPacket) modals.push('MyPacket');
   if (appState.showCAPSimulator) modals.push('CAPSimulator');
-  if (appState.showVAResources) modals.push('VAResources');
+  if (appState.showPathfinder) modals.push('Pathfinder');
+  if (appState.showClaimNavigator) modals.push('ClaimNavigator');
+  if (appState.showMOSHazardMatcher) modals.push('MOSHazardMatcher');
+  if (appState.showPACTActNavigator) modals.push('PACTActNavigator');
+  if (appState.showWebOfConditions) modals.push('WebOfConditions');
+  
+  // Build Evidence Tools
+  if (appState.showCFileAnalyzer) modals.push('CFileAnalyzer');
+  if (appState.showBlueButtonXRay) modals.push('BlueButtonXRay');
+  if (appState.showRecordSearch) modals.push('RecordSearch');
+  if (appState.showWitnessBench) modals.push('WitnessBench');
+  if (appState.showNexusBuilder) modals.push('NexusBuilder');
+  if (appState.showFormsHelper) modals.push('FormsHelper');
+  if (appState.showSymptomLogger) modals.push('SymptomLogger');
+  if (appState.showPainPainter) modals.push('PainPainter');
+  if (appState.showEvidenceTimeline) modals.push('EvidenceTimeline');
+  if (appState.showFOIAGenerator) modals.push('FOIAGenerator');
+  if (appState.showDD214Analyzer) modals.push('DD214Analyzer');
+  
+  // Quality Control Tools
+  if (appState.showRedTeam) modals.push('RedTeam');
+  if (appState.showClaimStressTest) modals.push('ClaimStressTest');
+  if (appState.showDecisionDecoder) modals.push('DecisionDecoder');
+  if (appState.showDenialDecoder) modals.push('DenialDecoder');
+  if (appState.showSharkRadar) modals.push('SharkRadar');
+  if (appState.showConsistencyEngine) modals.push('ConsistencyEngine');
+  if (appState.showEvidenceGapVisualizer) modals.push('EvidenceGapVisualizer');
+  if (appState.showRiskAssessment) modals.push('RiskAssessment');
+  
+  // Maximize Rating Tools
+  if (appState.showTDIUBuilder) modals.push('TDIUBuilder');
+  if (appState.showStateBenefitHunter) modals.push('StateBenefitHunter');
+  if (appState.showTheTribunal) modals.push('TheTribunal');
+  if (appState.showLegislativeWatchdog) modals.push('LegislativeWatchdog');
+  
+  // Support Tools
+  if (appState.showVSOFinder) modals.push('VSOFinder');
+  if (appState.showVAAITransparency) modals.push('VAAITransparency');
+  
+  // Data Management
+  if (appState.showBackupManager) modals.push('BackupManager');
+  if (appState.showCloudSyncManager) modals.push('CloudSyncManager');
+  
+  // AI & Settings
+  if (appState.showAISettings) modals.push('AISettings');
+  if (appState.showLocalAIPanel) modals.push('LocalAIPanel');
+  
+  // System Modals
   if (appState.showPrivacyPolicy) modals.push('PrivacyPolicy');
   if (appState.showAboutUs) modals.push('AboutUs');
   if (appState.showContactUs) modals.push('ContactUs');
+  if (appState.showTermsOfService) modals.push('TermsOfService');
+  
   return modals;
 };
 

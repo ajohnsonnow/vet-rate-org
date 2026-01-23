@@ -372,6 +372,30 @@ export const checkBilateralFactorCompliance = (conditions) => {
 };
 
 /**
+ * Get the current year's compensation rates
+ * Automatically selects the appropriate rate year based on current date
+ * @returns {Object} - The current year's rate data
+ */
+export const getCurrentYearRates = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed, so December = 11
+  
+  // VA rates effective Dec 1, so before Dec use current year, Dec onwards use next year
+  const effectiveYear = month >= 11 ? year + 1 : year;
+  
+  // Fall back to latest available year if current year not yet added
+  const availableYears = Object.keys(VA_PAY_RATES_HISTORICAL).map(Number).sort((a, b) => b - a);
+  const rateYear = availableYears.find(y => y <= effectiveYear) || availableYears[0];
+  
+  return {
+    year: rateYear,
+    rates: VA_PAY_RATES_HISTORICAL[rateYear],
+    isLatest: rateYear === availableYears[0]
+  };
+};
+
+/**
  * Common Clear and Unmistakable Error (CUE) patterns
  */
 export const CUE_PATTERNS = [

@@ -34,12 +34,66 @@ const getBaseUrl = () => VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.
 // Get the proxied URL for authenticated requests (bypasses CORS in development)
 const getProxiedUrl = () => isDevelopment ? VA_PROXY_PATH : getBaseUrl();
 
+// ============================================================================
+// RATE LIMITER
+// Prevents accidental API abuse with simple client-side throttling
+// VA API limits: ~60 requests/minute for sandbox, stricter for production
+// ============================================================================
+
+const rateLimiter = {
+  requests: [],
+  maxRequests: 30, // Conservative limit (half of VA's 60/min)
+  windowMs: 60000, // 1 minute window
+  
+  /**
+   * Check if we can make a request, throws if rate limited
+   */
+  checkLimit() {
+    const now = Date.now();
+    // Remove requests outside the window
+    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0];
+      const waitTime = Math.ceil((this.windowMs - (now - oldestRequest)) / 1000);
+      const error = new Error(`Rate limit reached. Please wait ${waitTime} seconds before making more requests.`);
+      error.code = 'RATE_LIMITED';
+      error.retryAfter = waitTime;
+      throw error;
+    }
+    
+    this.requests.push(now);
+    return true;
+  },
+  
+  /**
+   * Get current rate limit status
+   */
+  getStatus() {
+    const now = Date.now();
+    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    return {
+      remaining: this.maxRequests - this.requests.length,
+      total: this.maxRequests,
+      resetsIn: this.requests.length > 0 
+        ? Math.ceil((this.windowMs - (now - this.requests[0])) / 1000)
+        : 0
+    };
+  }
+};
+
+// Export rate limiter status for UI display
+export const getApiRateLimitStatus = () => rateLimiter.getStatus();
+
 /**
  * Generic authenticated fetch wrapper
  * Handles common error cases and adds authorization header
  * Uses Vite proxy in development to bypass CORS restrictions
  */
 async function authenticatedFetch(endpoint, accessToken, options = {}) {
+  // Check rate limit before making request
+  rateLimiter.checkLimit();
+  
   if (!accessToken) {
     throw new Error('No access token provided. Please log in first.');
   }

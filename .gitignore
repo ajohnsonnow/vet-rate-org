@@ -44,3 +44,6 @@ public/models/
 
 # Archive folder (development files)
 archive/
+# Claude tools (cloned external repo)
+.claude-tools/
+!.github/copilot-instructions.md

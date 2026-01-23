@@ -11,6 +11,8 @@
  * Reference: 38 CFR § 4.26 - Bilateral factor
  */
 
+import { VA_PAY_RATES_HISTORICAL, getCurrentYearRates } from '../data/vaPayRatesHistorical';
+
 /**
  * Calculate combined VA disability rating using official VA formula
  * Per 38 CFR § 4.25
@@ -91,20 +93,9 @@ export function calculateCombinedRating(ratings, hasBilateral = false) {
  * @returns {number} Monthly compensation amount
  */
 export function calculateMonthlyCompensation(rating, options = {}) {
-  // 2025 VA Compensation Rates (Veterans without dependents)
-  const baseRates = {
-    0: 0,
-    10: 171.23,
-    20: 338.49,
-    30: 524.31,
-    40: 755.28,
-    50: 1075.16,
-    60: 1361.88,
-    70: 1716.28,
-    80: 1995.01,
-    90: 2241.91,
-    100: 3737.85
-  };
+  // Get current year's rates dynamically from data file
+  const { rates } = getCurrentYearRates();
+  const baseRates = rates.solo;
   
   const roundedRating = Math.round(rating / 10) * 10;
   const baseRate = baseRates[roundedRating] || 0;
@@ -114,17 +105,13 @@ export function calculateMonthlyCompensation(rating, options = {}) {
   
   // Spouse adds additional compensation (30% or higher)
   if (options.hasSpouse && roundedRating >= 30) {
-    const spouseRates = {
-      30: 57.17, 40: 77.17, 50: 95.17, 60: 113.17,
-      70: 143.17, 80: 163.17, 90: 183.17, 100: 211.17
-    };
+    const spouseRates = rates.spouse;
     totalCompensation += spouseRates[roundedRating] || 0;
   }
   
   // Children add additional compensation
-  if (options.children && options.children > 0) {
-    // Simplified - actual rates vary by rating level
-    const childRate = roundedRating >= 30 ? 31.17 : 0;
+  if (options.children && options.children > 0 && roundedRating >= 30) {
+    const childRate = rates.childUnder18[roundedRating] || 0;
     totalCompensation += childRate * options.children;
   }
   
@@ -145,7 +132,7 @@ export function calculateMonthlyCompensation(rating, options = {}) {
  * ]) // true
  */
 export function checkBilateralFactor(conditions) {
-  const bilateralPairs = ['knee', 'shoulder', 'ankle', 'wrist', 'elbow', 'hip'];
+  const bilateralPairs = ['knee', 'shoulder', 'ankle', 'wrist', 'elbow', 'hip', 'foot', 'hand', 'ear', 'eye', 'arm', 'leg'];
   
   for (const bodyPart of bilateralPairs) {
     const left = conditions.find(c => 

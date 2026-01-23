@@ -1,21 +1,44 @@
 # 💎 DIAMOND Knowledge Base Architecture
 
-> **Version:** 1.0.0 | **Last Updated:** June 2025 | **Total Entries:** 1,706
+> **Version:** 2.0.0 | **Last Updated:** January 2026 | **DKB Entries:** 1,601 | **CKB Entries:** 560
 
 ## Overview
 
-The VetRate Knowledge Base has achieved **DIAMOND Standard** status with comprehensive coverage from official and community sources, all while maintaining **100% client-side privacy**.
+The VetRate Knowledge Base system now consists of two **separate** knowledge bases:
+
+1. **💎 Diamond Knowledge Base (DKB)** - Official VA sources only (training approved)
+2. **👥 Community Knowledge Base (CKB)** - Veteran community insights (NOT for training)
+
+This separation ensures that AI training uses only verified official sources while community knowledge remains available for reference.
 
 ## 📊 Knowledge Base Statistics
 
+### 💎 DKB (Diamond Knowledge Base) - Training Approved
+
 | Metric | Value |
 |--------|-------|
-| **Total Entries** | 1,706 |
-| **Official Sources** | 1,071 (eCFR 38 CFR) |
-| **Community Sources** | 635 (VeteransBenefitsKB) |
-| **Diagnostic Codes** | 731 |
-| **Rating Criteria** | 322 |
-| **Community Guides** | 635 |
+| **Total Entries** | 1,601 |
+| **eCFR Official** | 1,070 (38 CFR Part 4) |
+| **Secondary Matrix** | 234 |
+| **VA Official** | 159 |
+| **OGC Opinions** | 49 |
+| **BVA Reports** | 38 |
+| **PACT Act** | 28 |
+| **Fed Register** | 15 |
+| **M21-1** | 4 |
+| **BVA Decisions** | 3 |
+| **EAJA Stats** | 1 |
+
+### 👥 CKB (Community Knowledge Base) - Display Only
+
+| Metric | Value |
+|--------|-------|
+| **Total Entries** | 560 |
+| **Source** | VeteransBenefitsKB |
+| **Training Approved** | ❌ NO |
+| **Status** | Reference Only |
+
+⚠️ **IMPORTANT:** CKB is NOT used for AI training. Community content is displayed separately from official sources.
 
 ## 🔐 Privacy Architecture
 

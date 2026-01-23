@@ -308,43 +308,83 @@ const checkWebGPUSupport = async (forcePowerPreference = null) => {
 };
 
 // Available models organized by RECOMMENDED USE CASE
-// Each model has a bestFor field to help users choose the right one for their task
-// Note: These model IDs must match exactly what's in @mlc-ai/web-llm's prebuiltAppConfig
+// 💎 Diamond Swarm agents are the recommended choice for VA claims processing
+// Legacy WebLLM models are kept as fallback options
 const AVAILABLE_MODELS = [
-  // === ⚡ QUICK TASKS - Fast responses for simple queries ===
+  // === 💎 DIAMOND SWARM AGENTS - Specialized for VA Claims ===
+  {
+    id: 'diamond-auditor',
+    name: '💎 Diamond Auditor (Recommended)',
+    size: '4.0 GB',
+    description: 'Specialized agent for claim review, compliance, and document analysis',
+    bestFor: '🔍 Claim Review & Analysis',
+    contextInfo: 'Best for: DD214, C-File, Blue Button, Decision Decoder, compliance checking',
+    vramRequired: '6 GB',
+    recommended: true,
+    category: 'diamond',
+    isDiamond: true,
+  },
+  {
+    id: 'diamond-writer',
+    name: '💎 Diamond Writer (Creative)',
+    size: '4.0 GB',
+    description: 'Specialized agent for personal statements, nexus letters, buddy statements',
+    bestFor: '✍️ Statement Writing',
+    contextInfo: 'Best for: Personal statements, nexus letters, witness statements',
+    vramRequired: '6 GB',
+    recommended: true,
+    category: 'diamond',
+    isDiamond: true,
+  },
+  {
+    id: 'diamond-rater',
+    name: '💎 Diamond Rater (Calculations)',
+    size: '4.0 GB',
+    description: 'Specialized agent for VA rating calculations and bilateral factor',
+    bestFor: '🧮 Rating Calculations',
+    contextInfo: 'Best for: Combined ratings, bilateral factor, TDIU assessment',
+    vramRequired: '6 GB',
+    recommended: true,
+    category: 'diamond',
+    isDiamond: true,
+  },
+  // === ⚡ QUICK TASKS - Fast responses for simple queries (Legacy) ===
   {
     id: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
     name: 'SmolLM2 360M (Tiny)',
     size: '0.3 GB',
-    description: 'Ultra-tiny, works on low-end devices',
+    description: 'Ultra-tiny, works on low-end devices (Legacy)',
     bestFor: '⚡ Quick Tasks',
     contextInfo: 'Best for: Basic questions, search enhancement, simple queries',
     vramRequired: '1 GB',
     recommended: false,
     category: 'ultra-light',
+    isLegacy: true,
   },
   {
     id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC',
     name: 'Llama 3.2 1B (Fastest)',
     size: '0.7 GB',
-    description: 'Ultra-fast, good for simple queries',
+    description: 'Ultra-fast, good for simple queries (Legacy)',
     bestFor: '⚡ Quick Tasks',
     contextInfo: 'Best for: Secondary Scout, calculator help, quick lookups',
     vramRequired: '2 GB',
     recommended: false,
     category: 'ultra-light',
+    isLegacy: true,
   },
-  // === LIGHT (1-2 GB) - Fast and efficient ===
+  // === LIGHT (1-2 GB) - Fast and efficient (Legacy) ===
   {
     id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC',
     name: 'Qwen 2.5 1.5B (Fast)',
     size: '1.0 GB',
-    description: 'Alibaba model, excellent multilingual',
+    description: 'Alibaba model, excellent multilingual (Legacy)',
     bestFor: '⚡ Quick Tasks',
     contextInfo: 'Best for: Fast responses, form field suggestions',
     vramRequired: '2 GB',
     recommended: false,
     category: 'light',
+    isLegacy: true,
   },
   {
     id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC',
@@ -691,12 +731,61 @@ export const LocalAIProvider = ({ children }) => {
     }
   }, [experimentalMode, webGPUStatus.supported, webGPUStatus.checked]);
 
-  // Initialize the LLM engine
+  // Initialize the LLM engine (supports Diamond Swarm and legacy WebLLM)
   const initializeEngine = useCallback(async (modelId = selectedModel.id) => {
     setIsLoading(true);
     setError(null);
     
-    // Check if the selected model is disabled
+    // 💎 Check if this is a Diamond Swarm agent
+    if (modelId.startsWith('diamond-')) {
+      const agentId = modelId.replace('diamond-', '');
+      console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
+      
+      try {
+        const { initializeSwarm, SWARM_AGENTS } = await import('../utils/diamondSwarm');
+        const agentInfo = SWARM_AGENTS[agentId.toUpperCase()];
+        
+        setLoadProgress({
+          progress: 0,
+          text: `💎 Initializing ${agentInfo?.name || 'Diamond Agent'}...`
+        });
+        
+        await initializeSwarm(agentId, {
+          onProgress: (status) => {
+            setLoadProgress({
+              progress: status.progress || 50,
+              text: status.message || `💎 Loading ${agentInfo?.name}...`
+            });
+          },
+          onComplete: () => {
+            setLoadProgress({ progress: 100, text: '💎 Diamond Swarm ready!' });
+          },
+          onError: (err) => {
+            throw err;
+          }
+        });
+        
+        // Register with unified AI service
+        const { registerSwarmEngine } = await import('../utils/unifiedAIService');
+        registerSwarmEngine(null, true, false, agentId);
+        
+        // Update local state
+        setIsReady(true);
+        setIsLoading(false);
+        setLoadProgress({ progress: 100, text: `💎 ${agentInfo?.name} ready!` });
+        localStorage.setItem('vet_rate_local_ai_model', modelId);
+        
+        console.log(`💎 Diamond Swarm ${agentId.toUpperCase()} agent initialized successfully`);
+        return true;
+      } catch (err) {
+        console.error('💎 Diamond Swarm initialization failed:', err);
+        setError(`Diamond Swarm error: ${err.message}`);
+        setIsLoading(false);
+        return null;
+      }
+    }
+    
+    // Check if the selected model is disabled (legacy WebLLM check)
     if (selectedModel.disabled) {
       let disabledMsg;
       

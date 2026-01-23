@@ -50,29 +50,113 @@ function BugSquasher({ onClose, appState = {} }) {
     veteranEmail: '' // Optional email for follow-up
   });
 
-  // Auto-detect current module based on app state
+  // DIAMOND LEVEL: Auto-detect current module using smart context tracking
+  // Now supports ALL 45+ tools in the app!
   useEffect(() => {
-    if (!formData.module && appState) {
-      const detectedModule = detectCurrentModule(appState);
-      setFormData(prev => ({ ...prev, module: detectedModule }));
+    // First, check if a module name was passed via ReportBugLink (sessionStorage)
+    // This has HIGHEST priority since the user clicked "Bug?" from a specific tool
+    const sessionModule = sessionStorage.getItem('bugReport_currentModule');
+    if (sessionModule && !formData.module) {
+      setFormData(prev => ({ ...prev, module: sessionModule }));
+      // Clear it so it doesn't persist to next bug report
+      sessionStorage.removeItem('bugReport_currentModule');
+      return; // Don't override with appState detection
+    }
+    
+    if (appState) {
+      // Use the pre-computed currentModule from App.jsx if available
+      // This is the "Diamond Level" smart detection the user requested!
+      if (appState.currentModule && !formData.module) {
+        setFormData(prev => ({ ...prev, module: appState.currentModule }));
+      } else if (!formData.module) {
+        // Fallback to legacy detection if currentModule not available
+        const detectedModule = detectCurrentModule(appState);
+        setFormData(prev => ({ ...prev, module: detectedModule }));
+      }
     }
     
     // Auto-fill diagnostic code if viewing a condition
     if (appState.selectedResult?.diagnosticCode && !formData.diagnosticCode) {
-      setFormData(prev => ({ 
-        ...prev, 
-        diagnosticCode: appState.selectedResult.diagnosticCode 
+      setFormData(prev => ({
+        ...prev,
+        diagnosticCode: appState.selectedResult.diagnosticCode
       }));
     }
   }, [appState]);
 
+  // Legacy fallback detection (if currentModule not passed from App.jsx)
+  // DIAMOND LEVEL: Now supports ALL 45+ tools!
   const detectCurrentModule = (state) => {
-    if (state.showCAPSimulator) return APP_MODULES.CAP_SIMULATOR;
-    if (state.showNexusBuilder) return APP_MODULES.NEXUS_BUILDER;
+    // Core Navigation
     if (state.showMyPacket) return APP_MODULES.MY_PACKET;
+    if (state.showUserManual) return APP_MODULES.USER_MANUAL;
+    if (state.showVAResources) return APP_MODULES.VA_RESOURCES;
+    
+    // Calculate Tools
+    if (state.showTacticalCalculator) return APP_MODULES.TACTICAL_CALCULATOR;
+    if (state.showMillionDollarDashboard) return APP_MODULES.MILLION_DOLLAR_DASHBOARD;
+    if (state.showWhatIfSandbox) return APP_MODULES.WHAT_IF_SANDBOX;
+    if (state.showRetroPayHunter) return APP_MODULES.RETRO_PAY_HUNTER;
+    if (state.showTimeMachine) return APP_MODULES.TIME_MACHINE;
+    
+    // Discover Tools
     if (state.showSecondaryScout) return APP_MODULES.SECONDARY_SCOUT;
     if (state.showSecondaryScoutLauncher) return APP_MODULES.SECONDARY_SCOUT_LAUNCHER;
-    if (state.showVAResources) return APP_MODULES.VA_RESOURCES;
+    if (state.showCAPSimulator) return APP_MODULES.CAP_SIMULATOR;
+    if (state.showPathfinder) return APP_MODULES.PATHFINDER;
+    if (state.showClaimNavigator) return APP_MODULES.CLAIM_NAVIGATOR;
+    if (state.showMOSHazardMatcher) return APP_MODULES.MOS_HAZARD_MATCHER;
+    if (state.showPACTActNavigator) return APP_MODULES.PACT_ACT_NAVIGATOR;
+    if (state.showWebOfConditions) return APP_MODULES.WEB_OF_CONDITIONS;
+    
+    // Build Evidence Tools
+    if (state.showCFileAnalyzer) return APP_MODULES.CFILE_ANALYZER;
+    if (state.showBlueButtonXRay) return APP_MODULES.BLUE_BUTTON_XRAY;
+    if (state.showRecordSearch) return APP_MODULES.RECORD_SEARCH;
+    if (state.showWitnessBench) return APP_MODULES.WITNESS_BENCH;
+    if (state.showNexusBuilder) return APP_MODULES.NEXUS_BUILDER;
+    if (state.showFormsHelper) return APP_MODULES.FORMS_HELPER;
+    if (state.showSymptomLogger) return APP_MODULES.SYMPTOM_LOGGER;
+    if (state.showPainPainter) return APP_MODULES.PAIN_PAINTER;
+    if (state.showEvidenceTimeline) return APP_MODULES.EVIDENCE_TIMELINE;
+    if (state.showFOIAGenerator) return APP_MODULES.FOIA_GENERATOR;
+    if (state.showDD214Analyzer) return APP_MODULES.DD214_ANALYZER;
+    
+    // Quality Control Tools
+    if (state.showRedTeam) return APP_MODULES.RED_TEAM;
+    if (state.showClaimStressTest) return APP_MODULES.CLAIM_STRESS_TEST;
+    if (state.showDecisionDecoder) return APP_MODULES.DECISION_DECODER;
+    if (state.showDenialDecoder) return APP_MODULES.DENIAL_DECODER;
+    if (state.showSharkRadar) return APP_MODULES.SHARK_RADAR;
+    if (state.showConsistencyEngine) return APP_MODULES.CONSISTENCY_ENGINE;
+    if (state.showEvidenceGapVisualizer) return APP_MODULES.EVIDENCE_GAP_VISUALIZER;
+    if (state.showRiskAssessment) return APP_MODULES.RISK_ASSESSMENT;
+    
+    // Maximize Rating Tools
+    if (state.showTDIUBuilder) return APP_MODULES.TDIU_BUILDER;
+    if (state.showStateBenefitHunter) return APP_MODULES.STATE_BENEFIT_HUNTER;
+    if (state.showTheTribunal) return APP_MODULES.THE_TRIBUNAL;
+    if (state.showLegislativeWatchdog) return APP_MODULES.LEGISLATIVE_WATCHDOG;
+    
+    // Support Tools
+    if (state.showVSOFinder) return APP_MODULES.VSO_FINDER;
+    if (state.showVAAITransparency) return APP_MODULES.VA_AI_TRANSPARENCY;
+    
+    // Data Management
+    if (state.showBackupManager) return APP_MODULES.BACKUP_MANAGER;
+    if (state.showCloudSyncManager) return APP_MODULES.CLOUD_SYNC;
+    
+    // AI & Settings
+    if (state.showAISettings) return APP_MODULES.AI_SETTINGS;
+    if (state.showLocalAIPanel) return APP_MODULES.LOCAL_AI_PANEL;
+    
+    // Modals
+    if (state.showPrivacyPolicy) return APP_MODULES.PRIVACY_POLICY;
+    if (state.showAboutUs) return APP_MODULES.ABOUT_US;
+    if (state.showContactUs) return APP_MODULES.CONTACT_US;
+    if (state.showTermsOfService) return APP_MODULES.TERMS_OF_SERVICE;
+    
+    // Default fallbacks
     if (state.selectedResult) return APP_MODULES.DISABILITY_DETAILS;
     return APP_MODULES.SEARCH;
   };
