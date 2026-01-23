@@ -1210,6 +1210,20 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   const [streamedResponse, setStreamedResponse] = useState('');
   const [isTestGenerating, setIsTestGenerating] = useState(false);
   const [isChangingGPU, setIsChangingGPU] = useState(false);
+  const testAbortRef = React.useRef(null);
+
+  // Stop test generation
+  const handleStopTest = () => {
+    if (testAbortRef.current) {
+      testAbortRef.current.abort();
+      testAbortRef.current = null;
+    }
+    setIsTestGenerating(false);
+    if (streamedResponse) {
+      setTestResponse(streamedResponse + '\n\n[Generation stopped]');
+    }
+    setStreamedResponse('');
+  };
 
   // Clear test prompt and responses when model changes
   useEffect(() => {
@@ -1291,6 +1305,10 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   const handleTestGenerate = async () => {
     if (!testPrompt.trim()) return;
     
+    // Create abort controller for this generation
+    testAbortRef.current = new AbortController();
+    const signal = testAbortRef.current.signal;
+    
     setIsTestGenerating(true);
     setStreamedResponse('');
     setTestResponse('');
@@ -1300,6 +1318,9 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       const { generateWithSwarm } = await import('../utils/diamondSwarm');
       const { isLocalServerAvailable, generateText } = await import('../utils/unifiedAIService');
       
+      // Check if already aborted
+      if (signal.aborted) throw new Error('Aborted');
+      
       let responseText = '';
       
       // Try local server first
@@ -1307,24 +1328,32 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
         responseText = await generateText(testPrompt, {
           mode: 'local-server',
           taskType: 'general',
+          signal,
           onStream: (delta, full) => {
-            if (full) setStreamedResponse(full);
+            if (!signal.aborted && full) setStreamedResponse(full);
           }
         });
       } else {
         // Use Diamond Swarm directly
         const result = await generateWithSwarm(testPrompt, {
           agentId: 'auditor',
+          signal,
           onStream: (delta, full) => {
-            if (full) setStreamedResponse(full);
+            if (!signal.aborted && full) setStreamedResponse(full);
           }
         });
         responseText = result?.text || result || '';
       }
       
-      setStreamedResponse('');
-      setTestResponse(responseText || 'AI response completed.');
+      if (!signal.aborted) {
+        setStreamedResponse('');
+        setTestResponse(responseText || 'AI response completed.');
+      }
     } catch (err) {
+      if (err.name === 'AbortError' || err.message === 'Aborted') {
+        // User stopped - already handled in handleStopTest
+        return;
+      }
       console.error('Test Generate Error:', err);
       setStreamedResponse('');
       setTestResponse(`Error: ${err.message}`);
@@ -1958,13 +1987,13 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                           </button>
                         ) : (
                           <button
-                            onClick={interruptGeneration}
+                            onClick={isTestGenerating ? handleStopTest : interruptGeneration}
                             className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <rect x="6" y="6" width="12" height="12" strokeWidth="2" />
                             </svg>
-                            {isTestGenerating ? 'Processing...' : 'Stop Generating'}
+                            Stop
                           </button>
                         )}
                       </div>
