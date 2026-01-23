@@ -136,6 +136,7 @@ let swarmReady = false;
 let swarmInitializing = false;
 let loadedAgents = new Set();
 let currentAgent = null;
+let loadedModelId = null; // Tracks which model was actually loaded
 
 /**
  * GGUF Model configurations for each agent
@@ -203,7 +204,7 @@ export const getSwarmStatus = () => {
     currentAgent: currentAgent,
     mode: 'DIAMOND',
     hasEngine: webllmEngine !== null,
-    model: webllmEngine ? DIAMOND_FALLBACK_MODEL : null
+    model: loadedModelId
   };
 };
 
@@ -301,6 +302,7 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
         });
         
         loadedModel = modelId;
+        loadedModelId = modelId; // Store globally for status reporting
         console.log(`💎 WebLLM engine loaded for Diamond Swarm: ${modelId}`);
         break; // Success!
         
@@ -427,7 +429,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         text: responseText,
         agent: agent.id,
         agentName: agent.name,
-        model: DIAMOND_FALLBACK_MODEL,
+        model: loadedModelId || 'diamond-swarm',
         tokens: {
           prompt: prompt.length,
           completion: responseText.length,
