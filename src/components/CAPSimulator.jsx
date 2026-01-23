@@ -1026,7 +1026,7 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
             <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
               <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
               <h2 id="cap-simulator-title" className="text-xl sm:text-3xl font-bold">
-                C&P Exam Simulator
+                C&P Exam Simulator <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
               </h2>
             </div>
             <p className="text-emerald-100 text-sm sm:text-lg pr-8">

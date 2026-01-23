@@ -261,7 +261,7 @@ const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose, onReportBug })
           <div className="flex items-center gap-3">
             <span className="text-3xl">🧵</span>
             <div>
-              <h2 className="text-xl font-bold text-white">🧵 The Continuity Thread - Evidence Timeline</h2>
+              <h2 className="text-xl font-bold text-white">🧵 The Continuity Thread - Evidence Timeline <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
               <p className="text-sm text-slate-100">Visual nexus timeline with gap detection</p>
             </div>
           </div>

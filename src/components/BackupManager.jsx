@@ -191,7 +191,7 @@ export default function BackupManager({ onClose }) {
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-3xl font-bold mb-2">🏰 The Bunker</h2>
+              <h2 className="text-3xl font-bold mb-2">🏰 The Bunker <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
               <p className="text-blue-100">
                 Your data is YOURS. Never lose it again.
               </p>

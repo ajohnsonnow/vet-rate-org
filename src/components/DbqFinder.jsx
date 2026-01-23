@@ -206,7 +206,7 @@ const DbqFinder = ({ onClose }) => {
               <FileSearch className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">DBQ Finder</h2>
+              <h2 className="text-2xl font-bold">DBQ Finder <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
               <p className="text-teal-100 text-sm">
                 Find the right Disability Benefits Questionnaire for your condition
               </p>

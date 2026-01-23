@@ -277,6 +277,7 @@ Vet-Rate.org - Helping Veterans Win Claims`;
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 Doctor's Packet Generator
                 <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
+                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
               </h2>
               <p className="text-sm text-violet-100">AI-powered medical nexus research</p>
             </div>

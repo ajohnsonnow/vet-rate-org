@@ -366,7 +366,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 </div>
                 <div>
                   <h2 id="state-benefit-hunter-title" className="text-2xl sm:text-3xl font-bold">
-                    State Benefit Hunter
+                    State Benefit Hunter <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-green-100 text-sm sm:text-base mt-1">
                     Find the money you're leaving on the table

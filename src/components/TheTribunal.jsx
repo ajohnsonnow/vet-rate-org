@@ -640,6 +640,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                 <h2 className="text-3xl font-bold flex items-center gap-2">
                   ⚖️ The Tribunal
                   <span className="px-1.5 py-0.5 bg-gray-500 text-white text-[10px] font-bold rounded">AI</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                 </h2>
               </div>
               <p className="text-gray-300">

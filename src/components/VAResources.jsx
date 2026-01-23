@@ -421,7 +421,7 @@ const VAResources = ({ onClose, onReportBug }) => {
           </div>
           <div className="flex items-center gap-3 mb-2">
             <Globe className="h-8 w-8" />
-            <h2 id="va-resources-title" className="text-3xl font-bold">VA Resources Hub</h2>
+            <h2 id="va-resources-title" className="text-3xl font-bold">VA Resources Hub <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
           </div>
           <p className="text-blue-100 text-lg">
             Official VA programs, benefits, and support for Veterans

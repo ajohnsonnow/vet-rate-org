@@ -700,7 +700,7 @@ const TriageWizard = ({ triageState, setTriageState, onComplete, onBack }) => {
           <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 p-6 border-b border-slate-700">
             <h2 className="text-xl font-bold text-white flex items-center gap-3">
               <Target className="w-6 h-6 text-amber-500" />
-              Claim Triage Wizard
+              Claim Triage Wizard <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
             </h2>
             <p className="text-slate-300 mt-2">
               Let's determine the best path for your claim. Answer a few questions.

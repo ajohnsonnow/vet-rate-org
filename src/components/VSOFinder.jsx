@@ -212,7 +212,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                 </div>
                 <div>
                   <h2 id="vso-finder-title" className="text-2xl sm:text-3xl font-bold">
-                    VSO Finder
+                    VSO Finder <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-blue-100 text-sm sm:text-base mt-1">
                     Find FREE, Accredited Help Near You

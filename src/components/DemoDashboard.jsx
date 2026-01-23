@@ -441,7 +441,7 @@ const DemoDashboard = ({ onClose }) => {
                 </div>
                 <div>
                   <h2 id="demo-dashboard-title" className="text-2xl font-bold tracking-tight">
-                    VA.gov API System Status
+                    VA.gov API System Status <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-blue-200 text-sm mt-1 flex items-center gap-2">
                     <Terminal className="w-4 h-4" />

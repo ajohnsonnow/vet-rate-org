@@ -426,7 +426,7 @@ Sincerely,
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0 pr-10 sm:pr-0">
                 <h2 id="nexus-builder-title" className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">
-                  {existingStatement ? 'Edit Statement' : '📝 Nexus Builder'}
+                  {existingStatement ? 'Edit Statement' : '📝 Nexus Builder'} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                 </h2>
                 <p className="text-violet-100 text-sm sm:text-base">
                   {existingStatement ? 'Updating' : 'Statement'} for: <strong className="block sm:inline truncate">{condition}</strong>

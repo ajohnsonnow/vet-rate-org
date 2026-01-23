@@ -234,7 +234,7 @@ const CloudSyncManager = ({ onClose }) => {
               <div className="text-4xl">🛡️</div>
               <div>
                 <h2 className="text-xl font-bold text-blue-300 mb-2">
-                  Your Data, Your Cloud, Zero Liability
+                  Your Data, Your Cloud, Zero Liability <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                 </h2>
                 <ul className="space-y-2 text-gray-300 text-sm">
                   <li className="flex items-start gap-2">

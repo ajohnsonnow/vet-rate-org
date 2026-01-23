@@ -1439,7 +1439,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                 </div>
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold">
-                    Faraday Cage Protocol
+                    Faraday Cage Protocol <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-cyan-200 mt-1">
                     100% Local AI • Zero Data Leaves Your Device

@@ -131,7 +131,7 @@ const RegulationsReference = ({ onClose }) => {
             <Scale className="h-8 w-8" />
             <div>
               <h2 id="regulations-title" className="text-2xl font-bold">
-                38 CFR Title 38 - Your Rights & The Rules
+                38 CFR Title 38 - Your Rights & The Rules <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
               </h2>
               <p className="text-blue-200 text-sm">
                 Claims, Appeals & Pension Regulations • Know Your Rights

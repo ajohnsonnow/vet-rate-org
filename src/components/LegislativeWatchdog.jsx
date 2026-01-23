@@ -309,7 +309,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                 </div>
                 <div>
                   <h2 id="watchdog-title" className="text-2xl sm:text-3xl font-bold">
-                    Legislative Watchdog
+                    Legislative Watchdog <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-orange-100 text-sm sm:text-base mt-1">
                     VA Rule Change Radar • Never Be Blindsided

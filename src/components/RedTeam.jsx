@@ -218,6 +218,7 @@ const RedTeam = ({ onClose, onReportBug }) => {
                 <h2 id="red-team-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                   The Red Team
                   <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">AI</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                 </h2>
                 <p className="text-red-100 text-sm sm:text-base mt-1">
                   Statement Stress Test • Find Weak Language

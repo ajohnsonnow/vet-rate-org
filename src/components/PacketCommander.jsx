@@ -190,7 +190,7 @@ const PacketCommander = ({ onClose }) => {
             <div className="flex items-center gap-3">
               <span className="text-2xl">📋</span>
               <div>
-                <h2 className="text-xl font-bold">Packet Commander</h2>
+                <h2 className="text-xl font-bold">Packet Commander <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                 <p className="text-blue-100 text-sm">Generate Claim Cover Sheet / Table of Contents</p>
               </div>
             </div>

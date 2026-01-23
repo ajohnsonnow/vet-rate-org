@@ -1160,7 +1160,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
           <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h2 id="secondary-scout-launcher-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">🔍 Secondary Scout</h2>
+                <h2 id="secondary-scout-launcher-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">🔍 Secondary Scout <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                 <p className="text-blue-100 text-sm sm:text-base">
                   Discover potential secondary claims based on your conditions
                 </p>

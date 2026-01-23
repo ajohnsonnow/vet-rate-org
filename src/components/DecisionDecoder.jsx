@@ -197,6 +197,7 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
                 <h2 id="decoder-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                   Decision Decoder
                   <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                 </h2>
                 <p className="text-rose-100 text-sm sm:text-base mt-1">
                   The Denial Translator • VA Legalese → Plain English
