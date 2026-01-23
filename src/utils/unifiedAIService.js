@@ -30,6 +30,10 @@ import {
   unloadSwarm
 } from './diamondSwarm';
 
+// 💎 New backends: Wllama (browser WASM) and Local Server (llama.cpp)
+import * as wllamaService from './wllamaService';
+import * as localServerClient from './localServerClient';
+
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
 const getAISystemPrompts = async () => {
@@ -56,6 +60,15 @@ let swarmReady = false;
 let swarmGenerating = false;
 let swarmInitializingState = false;
 let swarmCurrentAgent = null;
+
+// 🌐 Wllama state (browser WASM inference)
+let wllamaReady = false;
+let wllamaInitializing = false;
+let wllamaCurrentModel = null;
+
+// 🖥️ Local Server state (llama.cpp server)
+let localServerAvailable = false;
+let localServerChecked = false;
 
 // Legacy WebLLM state (deprecated - kept for backward compatibility)
 let localAIEngine = null;
@@ -228,8 +241,10 @@ export const checkWebGPUSupport = async () => {
 export const AI_MODES = {
   CLOUD: 'cloud',
   LOCAL: 'local',
-  SWARM: 'swarm',  // 💎 Diamond Swarm - 3 specialized agents
-  AUTO: 'auto',    // Prefer swarm, fallback to local, then cloud
+  SWARM: 'swarm',           // 💎 Diamond Swarm - 3 specialized agents (WebGPU/MLC)
+  WLLAMA: 'wllama',         // 🌐 Wllama - Browser WASM inference (works everywhere)
+  LOCAL_SERVER: 'local_server', // 🖥️ llama.cpp server - Desktop inference via API
+  AUTO: 'auto',             // Prefer swarm → wllama → local_server → cloud
 };
 
 /**
@@ -415,37 +430,147 @@ export const isCloudAIAvailable = () => {
 };
 
 /**
+ * 🌐 Check if Wllama (browser WASM) is available
+ */
+export const isWllamaAvailable = () => {
+  return wllamaReady && !wllamaInitializing;
+};
+
+/**
+ * 🌐 Check if Wllama is currently initializing
+ */
+export const isWllamaInitializing = () => {
+  return wllamaInitializing;
+};
+
+/**
+ * 🌐 Initialize Wllama for browser-based inference
+ * @param {string} modelName - 'auditor' | 'writer' | 'rater'
+ * @param {function} onProgress - Progress callback
+ */
+export const initializeWllama = async (modelName = 'auditor', onProgress = null) => {
+  if (wllamaInitializing) {
+    console.log('🌐 Wllama already initializing...');
+    return false;
+  }
+  
+  try {
+    wllamaInitializing = true;
+    console.log(`🌐 Initializing Wllama with ${modelName}...`);
+    
+    const result = await wllamaService.initializeWllama(modelName, onProgress);
+    
+    if (result.success) {
+      wllamaReady = true;
+      wllamaCurrentModel = modelName;
+      console.log(`🌐 Wllama ready with ${modelName}`);
+    } else {
+      console.error('🌐 Wllama init failed:', result.error);
+    }
+    
+    wllamaInitializing = false;
+    return result.success;
+  } catch (err) {
+    console.error('🌐 Wllama init error:', err);
+    wllamaInitializing = false;
+    return false;
+  }
+};
+
+/**
+ * 🖥️ Check if local llama.cpp server is available
+ */
+export const isLocalServerAvailable = () => {
+  return localServerAvailable;
+};
+
+/**
+ * 🖥️ Check local server availability (ping the server)
+ * @param {boolean} force - Force re-check even if already checked
+ */
+export const checkLocalServer = async (force = false) => {
+  if (localServerChecked && !force) {
+    return localServerAvailable;
+  }
+  
+  try {
+    console.log('🖥️ Checking local llama.cpp server...');
+    const health = await localServerClient.checkServerHealth();
+    localServerAvailable = health.available;
+    localServerChecked = true;
+    
+    if (health.available) {
+      console.log(`🖥️ Local server available: ${health.model || 'ready'}`);
+    } else {
+      console.log('🖥️ Local server not available');
+    }
+    
+    return localServerAvailable;
+  } catch (err) {
+    console.log('🖥️ Local server check failed:', err.message);
+    localServerAvailable = false;
+    localServerChecked = true;
+    return false;
+  }
+};
+
+/**
  * Check if ANY AI is available
  */
 export const isAnyAIAvailable = () => {
-  return isCloudAIAvailable() || isLocalAIReady();
+  return isCloudAIAvailable() || isLocalAIReady() || isWllamaAvailable() || isLocalServerAvailable();
 };
 
 /**
  * Get the effective AI mode based on availability
+ * Priority: SWARM (WebGPU) → WLLAMA (WASM) → LOCAL_SERVER (llama.cpp) → LOCAL (legacy) → CLOUD
  */
 export const getEffectiveAIMode = () => {
   const preferredMode = getAIMode();
   
-  // Diamond Swarm mode (preferred)
+  // Diamond Swarm mode (preferred - WebGPU)
   if (preferredMode === AI_MODES.SWARM) {
     if (isDiamondSwarmReady()) return AI_MODES.SWARM;
+    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
+    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
     if (isLocalAIReady()) return AI_MODES.LOCAL;
+    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
+    return null;
+  }
+  
+  // Wllama mode (browser WASM - works everywhere)
+  if (preferredMode === AI_MODES.WLLAMA) {
+    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
+    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
+    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
+    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
+    return null;
+  }
+  
+  // Local Server mode (llama.cpp server)
+  if (preferredMode === AI_MODES.LOCAL_SERVER) {
+    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
+    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
+    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
     if (isCloudAIAvailable()) return AI_MODES.CLOUD;
     return null;
   }
   
   if (preferredMode === AI_MODES.LOCAL) {
     if (isDiamondSwarmReady()) return AI_MODES.SWARM; // Upgrade to swarm
+    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
+    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
     return isLocalAIReady() ? AI_MODES.LOCAL : (isCloudAIAvailable() ? AI_MODES.CLOUD : null);
   }
   
   if (preferredMode === AI_MODES.CLOUD) {
-    return isCloudAIAvailable() ? AI_MODES.CLOUD : (isDiamondSwarmReady() ? AI_MODES.SWARM : (isLocalAIReady() ? AI_MODES.LOCAL : null));
+    return isCloudAIAvailable() ? AI_MODES.CLOUD : (isDiamondSwarmReady() ? AI_MODES.SWARM : (isWllamaAvailable() ? AI_MODES.WLLAMA : (isLocalServerAvailable() ? AI_MODES.LOCAL_SERVER : (isLocalAIReady() ? AI_MODES.LOCAL : null))));
   }
   
-  // AUTO mode: prefer swarm, then local, then cloud
+  // AUTO mode: prefer swarm → wllama → local_server → local → cloud
   if (isDiamondSwarmReady()) return AI_MODES.SWARM;
+  if (isWllamaAvailable()) return AI_MODES.WLLAMA;
+  if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
   if (isLocalAIReady()) return AI_MODES.LOCAL;
   if (isCloudAIAvailable()) return AI_MODES.CLOUD;
   return null;
@@ -681,6 +806,99 @@ const generateWithDiamondSwarm = async (prompt, options = {}) => {
   } catch (err) {
     swarmGenerating = false;
     throw new Error(`Diamond Swarm error (${agentId}): ${err.message}`);
+  }
+};
+
+/**
+ * 🌐 Generate text using Wllama (Browser WASM inference)
+ */
+const generateWithWllama = async (prompt, options = {}) => {
+  const {
+    taskType = 'general',
+    maxTokens = getUserTokenLimit(),
+    temperature = 0.7,
+    scrubPIIEnabled = true,
+    onStream = null,
+  } = options;
+
+  // PII Scrubbing
+  let scrubbedPrompt = prompt;
+  if (scrubPIIEnabled) {
+    const piiAnalysis = analyzePII(prompt);
+    if (piiAnalysis.hasPII) {
+      console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
+      const { scrubbedText, details } = scrubPII(prompt, {
+        aggressive: true,
+        preservePartial: false
+      });
+      scrubbedPrompt = scrubbedText;
+      console.info(`🛡️ PII Scrubbed (Wllama):`, details);
+    }
+  }
+
+  try {
+    console.log(`🌐 Wllama: Generating with ${wllamaCurrentModel || 'auditor'} model...`);
+    
+    const result = await wllamaService.chatCompletion(scrubbedPrompt, {
+      maxTokens,
+      temperature,
+      onToken: onStream ? (token) => onStream(token) : null,
+    });
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Wllama generation failed');
+    }
+    
+    return result.text;
+  } catch (err) {
+    throw new Error(`Wllama error: ${err.message}`);
+  }
+};
+
+/**
+ * 🖥️ Generate text using Local Server (llama.cpp API)
+ */
+const generateWithLocalServer = async (prompt, options = {}) => {
+  const {
+    taskType = 'general',
+    maxTokens = getUserTokenLimit(),
+    temperature = 0.7,
+    scrubPIIEnabled = true,
+    onStream = null,
+  } = options;
+
+  // PII Scrubbing
+  let scrubbedPrompt = prompt;
+  if (scrubPIIEnabled) {
+    const piiAnalysis = analyzePII(prompt);
+    if (piiAnalysis.hasPII) {
+      console.warn(`⚠️ PII Detected before Local Server call:`, piiAnalysis.types);
+      const { scrubbedText, details } = scrubPII(prompt, {
+        aggressive: true,
+        preservePartial: false
+      });
+      scrubbedPrompt = scrubbedText;
+      console.info(`🛡️ PII Scrubbed (Local Server):`, details);
+    }
+  }
+
+  try {
+    console.log('🖥️ Local Server: Generating via llama.cpp API...');
+    
+    const result = await localServerClient.chatCompletion(scrubbedPrompt, {
+      maxTokens,
+      temperature,
+      stream: !!onStream,
+      onChunk: onStream,
+    });
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Local server generation failed');
+    }
+    
+    return result.text;
+  } catch (err) {
+    throw new Error(`Local Server error: ${err.message}`);
   }
 };
 
@@ -1178,17 +1396,30 @@ export const generateAI = async (prompt, options = {}) => {
     let usedMode;
     let agentUsed = null;
     
-    // Determine which AI to use - Diamond Swarm is primary!
+    // Determine which AI to use - Diamond Swarm is primary, then Wllama, then Local Server
     const useSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
+    const useWllama = effectiveMode === AI_MODES.WLLAMA || (!useSwarm && isWllamaAvailable());
+    const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER || (!useSwarm && !useWllama && isLocalServerAvailable());
     const useCloud = (options.preferCloud && isCloudAIAvailable()) || effectiveMode === AI_MODES.CLOUD;
-    const useLocal = !useSwarm && !useCloud && effectiveMode === AI_MODES.LOCAL;
+    const useLocal = !useSwarm && !useWllama && !useLocalServer && !useCloud && effectiveMode === AI_MODES.LOCAL;
     
     if (useSwarm && isDiamondSwarmReady()) {
-      // 💎 Diamond Swarm - Primary AI Engine
+      // 💎 Diamond Swarm - Primary AI Engine (WebGPU)
       text = await generateWithDiamondSwarm(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.SWARM;
       agentUsed = getCurrentAgent() || 'auditor';
       console.log(`💎 Generated with Diamond Swarm (${agentUsed.toUpperCase()} agent)`);
+    } else if (useWllama && isWllamaAvailable()) {
+      // 🌐 Wllama - Browser WASM inference
+      text = await generateWithWllama(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.WLLAMA;
+      agentUsed = wllamaCurrentModel || 'auditor';
+      console.log(`🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`);
+    } else if (useLocalServer && isLocalServerAvailable()) {
+      // 🖥️ Local Server - llama.cpp API
+      text = await generateWithLocalServer(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.LOCAL_SERVER;
+      console.log('🖥️ Generated with local llama.cpp server');
     } else if (useLocal && isLocalAIReady()) {
       // Legacy local AI (fallback)
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
@@ -1197,12 +1428,20 @@ export const generateAI = async (prompt, options = {}) => {
       // Cloud AI (Gemini - fallback)
       text = await generateWithCloudAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.CLOUD;
+    } else if (isWllamaAvailable()) {
+      // Fallback: Wllama
+      text = await generateWithWllama(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.WLLAMA;
+    } else if (isLocalServerAvailable()) {
+      // Fallback: Local Server
+      text = await generateWithLocalServer(fullPrompt, enhancedOptions);
+      usedMode = AI_MODES.LOCAL_SERVER;
     } else if (isLocalAIReady()) {
-      // Final fallback: try local
+      // Final fallback: try legacy local
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
     } else {
-      throw new Error('No AI available. Please initialize Diamond Swarm or configure a Gemini API key.');
+      throw new Error('No AI available. Please initialize Diamond Swarm, start the local server, or configure a Gemini API key.');
     }
     
     // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
@@ -1392,8 +1631,31 @@ export const getAIStatus = () => {
   const swarmStatus = getSwarmStatus();
   const currentAgent = getCurrentAgent();
   
-  // Check if using Diamond Swarm
+  // Check if using Diamond Swarm or other local backends
   const isSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
+  const isWllama = effectiveMode === AI_MODES.WLLAMA;
+  const isLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
+  
+  // Determine status text
+  let statusText = 'No AI Available';
+  let fullStatusText = '⚠️ No AI Available';
+  
+  if (isSwarm) {
+    statusText = `💎 Diamond Swarm: ${currentAgent?.toUpperCase() || 'AUDITOR'}`;
+    fullStatusText = `💎 Diamond Swarm (${currentAgent?.toUpperCase() || 'AUDITOR'}) - 100% Private`;
+  } else if (isWllama) {
+    statusText = `🌐 Wllama: ${wllamaCurrentModel?.toUpperCase() || 'AUDITOR'}`;
+    fullStatusText = `🌐 Wllama (Browser WASM) - 100% Private`;
+  } else if (isLocalServer) {
+    statusText = '🖥️ Local Server: llama.cpp';
+    fullStatusText = '🖥️ Local Server (llama.cpp) - 100% Private';
+  } else if (effectiveMode === AI_MODES.LOCAL) {
+    statusText = `Local: ${localModelName}`;
+    fullStatusText = `🔒 ${localModelName} (Local)`;
+  } else if (effectiveMode === AI_MODES.CLOUD) {
+    statusText = 'Cloud: Gemini 2.5 Flash';
+    fullStatusText = '☁️ Gemini 2.5 Flash (Cloud)';
+  }
   
   return {
     preferredMode: mode,
@@ -1401,28 +1663,19 @@ export const getAIStatus = () => {
     cloudAvailable: isCloudAIAvailable(),
     localAvailable: isLocalAIReady(),
     swarmAvailable: isDiamondSwarmReady(),
+    wllamaAvailable: isWllamaAvailable(),
+    localServerAvailable: isLocalServerAvailable(),
     swarmStatus,
     currentAgent,
     localInitializing: isLocalAIInitializing(),
+    wllamaInitializing: isWllamaInitializing(),
     localGenerating: localAIGenerating || swarmGenerating,
     anyAvailable: isAnyAIAvailable(),
-    isPrivate: effectiveMode === AI_MODES.LOCAL || effectiveMode === AI_MODES.SWARM,
+    isPrivate: effectiveMode !== AI_MODES.CLOUD, // All local options are private
     cloudModelName: 'Gemini 2.5 Flash',
     localModelName,
-    statusText: isSwarm
-      ? `💎 Diamond Swarm: ${currentAgent?.toUpperCase() || 'AUDITOR'}`
-      : effectiveMode === AI_MODES.LOCAL 
-        ? `Local: ${localModelName}` 
-        : effectiveMode === AI_MODES.CLOUD 
-          ? 'Cloud: Gemini 2.5 Flash'
-          : 'No AI Available',
-    fullStatusText: isSwarm
-      ? `💎 Diamond Swarm (${currentAgent?.toUpperCase() || 'AUDITOR'}) - 100% Private`
-      : effectiveMode === AI_MODES.LOCAL 
-        ? `🔒 ${localModelName} (Local)` 
-        : effectiveMode === AI_MODES.CLOUD 
-          ? '☁️ Gemini 2.5 Flash (Cloud)'
-          : '⚠️ No AI Available',
+    statusText,
+    fullStatusText,
   };
 };
 
@@ -1480,8 +1733,10 @@ export const getAIDataDisclosure = () => {
     description: 'Configure AI to enable intelligent features.',
     bullets: [
       '💎 Option 1: Enable Diamond Swarm (recommended - specialized VA agents)',
-      '🔒 Option 2: Enable Local AI (100% private)',
-      '☁️ Option 3: Add Gemini API key (cloud)',
+      '🌐 Option 2: Enable Wllama (browser WASM - works everywhere)',
+      '🖥️ Option 3: Start local llama.cpp server (desktop inference)',
+      '🔒 Option 4: Enable Local AI (100% private legacy)',
+      '☁️ Option 5: Add Gemini API key (cloud)',
     ],
     isPrivate: null,
   };
@@ -1516,6 +1771,12 @@ export default {
   isDiamondSwarmReady,
   isCloudAIAvailable,
   isAnyAIAvailable,
+  // New backends
+  isWllamaAvailable,
+  isWllamaInitializing,
+  initializeWllama,
+  isLocalServerAvailable,
+  checkLocalServer,
   checkWebGPUSupport,
   registerLocalAIEngine,
   registerSwarmEngine,
