@@ -229,8 +229,31 @@ export const registerSwarmEngine = (engine, ready, initializing = false, agentId
 // WebLLM engine reference for real inference
 let webllmEngine = null;
 
-// Fallback model for Diamond Swarm (uses WebLLM with specialized prompts)
-const DIAMOND_FALLBACK_MODEL = 'Qwen2.5-7B-Instruct-q4f32_1-MLC';
+// Fallback models for Diamond Swarm - try smaller models first to avoid cache issues
+const DIAMOND_MODELS = [
+  'Qwen2.5-3B-Instruct-q4f32_1-MLC',  // 2GB - good balance
+  'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', // 1GB - faster
+  'Llama-3.2-3B-Instruct-q4f32_1-MLC', // 1.8GB - alternative
+];
+
+/**
+ * Try to clear corrupted cache entries
+ */
+const clearCorruptedCache = async () => {
+  try {
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      for (const name of cacheNames) {
+        if (name.includes('webllm') || name.includes('mlc')) {
+          console.log(`💎 Clearing potentially corrupted cache: ${name}`);
+          await caches.delete(name);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('💎 Could not clear cache:', e);
+  }
+};
 
 /**
  * Initialize Diamond Swarm with WebLLM model loading
@@ -257,28 +280,44 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
     
     console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
     
-    // Load real WebLLM model for inference
-    try {
-      const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
-      
-      onProgress?.({ stage: 'download', message: `Downloading ${agentInfo?.name} model...`, progress: 10 });
-      
-      webllmEngine = await CreateMLCEngine(DIAMOND_FALLBACK_MODEL, {
-        initProgressCallback: (report) => {
-          const progress = Math.round(report.progress * 80) + 10; // 10-90%
-          onProgress?.({ 
-            stage: 'loading', 
-            message: report.text || `Loading ${agentInfo?.name}...`, 
-            progress 
-          });
-        },
-        logLevel: 'SILENT',
-      });
-      
-      console.log(`💎 WebLLM engine loaded for Diamond Swarm: ${DIAMOND_FALLBACK_MODEL}`);
-    } catch (webllmError) {
-      console.warn('💎 WebLLM loading failed, using placeholder mode:', webllmError.message);
-      // Continue without WebLLM - will use placeholder responses
+    // Load real WebLLM model for inference - try multiple models
+    let loadedModel = null;
+    for (const modelId of DIAMOND_MODELS) {
+      try {
+        const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+        
+        onProgress?.({ stage: 'download', message: `Downloading ${agentInfo?.name} (${modelId.split('-')[0]})...`, progress: 10 });
+        
+        webllmEngine = await CreateMLCEngine(modelId, {
+          initProgressCallback: (report) => {
+            const progress = Math.round(report.progress * 80) + 10; // 10-90%
+            onProgress?.({ 
+              stage: 'loading', 
+              message: report.text || `Loading ${agentInfo?.name}...`, 
+              progress 
+            });
+          },
+          logLevel: 'SILENT',
+        });
+        
+        loadedModel = modelId;
+        console.log(`💎 WebLLM engine loaded for Diamond Swarm: ${modelId}`);
+        break; // Success!
+        
+      } catch (modelError) {
+        console.warn(`💎 Failed to load ${modelId}:`, modelError.message);
+        
+        // If cache error, try to clear and retry once
+        if (modelError.message?.includes('Cache') && modelId === DIAMOND_MODELS[0]) {
+          console.log('💎 Attempting to clear corrupted cache...');
+          await clearCorruptedCache();
+          // Continue to next model
+        }
+      }
+    }
+    
+    if (!loadedModel) {
+      console.warn('💎 All WebLLM models failed, using placeholder mode');
     }
     
     // Mark as ready
