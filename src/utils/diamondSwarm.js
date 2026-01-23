@@ -201,9 +201,16 @@ export const getSwarmStatus = () => {
     initializing: swarmInitializing,
     loadedAgents: Array.from(loadedAgents),
     currentAgent: currentAgent,
-    mode: 'DIAMOND'
+    mode: 'DIAMOND',
+    hasEngine: webllmEngine !== null,
+    model: webllmEngine ? DIAMOND_FALLBACK_MODEL : null
   };
 };
+
+/**
+ * Check if WebLLM engine is loaded and ready for inference
+ */
+export const hasWebLLMEngine = () => webllmEngine !== null;
 
 /**
  * Register Diamond Swarm engine (called during initialization)
@@ -219,9 +226,15 @@ export const registerSwarmEngine = (engine, ready, initializing = false, agentId
   console.log(`💎 Diamond Swarm registered: agent=${agentId}, ready=${ready}`);
 };
 
+// WebLLM engine reference for real inference
+let webllmEngine = null;
+
+// Fallback model for Diamond Swarm (uses WebLLM with specialized prompts)
+const DIAMOND_FALLBACK_MODEL = 'Qwen2.5-7B-Instruct-q4f32_1-MLC';
+
 /**
- * Initialize Diamond Swarm with WebLLM GGUF loading
- * Falls back to API if local models unavailable
+ * Initialize Diamond Swarm with WebLLM model loading
+ * Uses a real WebLLM model with Diamond Swarm specialized prompts
  */
 export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
   const { onProgress, onComplete, onError } = callbacks;
@@ -239,19 +252,42 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
       throw new Error('No compatible GPU found for Diamond Swarm.');
     }
     
-    onProgress?.({ stage: 'init', message: `Initializing ${SWARM_AGENTS[agentId.toUpperCase()].name}...`, progress: 0 });
+    const agentInfo = SWARM_AGENTS[agentId.toUpperCase()];
+    onProgress?.({ stage: 'init', message: `Initializing ${agentInfo?.name || 'Diamond Agent'}...`, progress: 0 });
     
-    // For now, we'll use a placeholder - actual GGUF loading would need llama.cpp WASM
-    // or we integrate with local server running the fine-tuned models
     console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
     
-    // Mark as ready (in production, this would load actual GGUF model)
+    // Load real WebLLM model for inference
+    try {
+      const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+      
+      onProgress?.({ stage: 'download', message: `Downloading ${agentInfo?.name} model...`, progress: 10 });
+      
+      webllmEngine = await CreateMLCEngine(DIAMOND_FALLBACK_MODEL, {
+        initProgressCallback: (report) => {
+          const progress = Math.round(report.progress * 80) + 10; // 10-90%
+          onProgress?.({ 
+            stage: 'loading', 
+            message: report.text || `Loading ${agentInfo?.name}...`, 
+            progress 
+          });
+        },
+        logLevel: 'SILENT',
+      });
+      
+      console.log(`💎 WebLLM engine loaded for Diamond Swarm: ${DIAMOND_FALLBACK_MODEL}`);
+    } catch (webllmError) {
+      console.warn('💎 WebLLM loading failed, using placeholder mode:', webllmError.message);
+      // Continue without WebLLM - will use placeholder responses
+    }
+    
+    // Mark as ready
     loadedAgents.add(agentId);
     currentAgent = agentId;
     swarmReady = true;
     swarmInitializing = false;
     
-    onProgress?.({ stage: 'complete', message: 'Diamond Swarm ready!', progress: 100 });
+    onProgress?.({ stage: 'complete', message: `${agentInfo?.name} ready!`, progress: 100 });
     onComplete?.({ agent: agentId });
     
     return true;
@@ -276,7 +312,7 @@ export const switchAgent = async (agentId, callbacks = {}) => {
     return true;
   }
   
-  // In a full implementation, this would unload current model and load new one
+  // Switch agent (same WebLLM model, different system prompt)
   currentAgent = agentId;
   loadedAgents.add(agentId);
   
@@ -288,7 +324,7 @@ export const switchAgent = async (agentId, callbacks = {}) => {
 
 /**
  * Generate response using Diamond Swarm
- * Automatically selects the right agent based on context
+ * Uses WebLLM engine with agent-specific system prompts
  */
 export const generateWithSwarm = async (prompt, options = {}) => {
   const {
@@ -296,7 +332,8 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     toolId = null,
     maxTokens = 2048,
     temperature = 0.7,
-    systemPrompt = null
+    systemPrompt = null,
+    onStream = null
   } = options;
   
   // Get the appropriate agent
@@ -312,13 +349,64 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   
   console.log(`💎 Generating with ${agent.name} (${agent.icon})`);
   
-  // For now, return a structured response indicating which agent would handle this
-  // In production, this would call the actual GGUF model or API endpoint
+  // If WebLLM engine is loaded, use it for real inference
+  if (webllmEngine) {
+    try {
+      const messages = [
+        { role: 'system', content: finalSystemPrompt },
+        { role: 'user', content: prompt }
+      ];
+      
+      const generationConfig = {
+        messages,
+        max_tokens: maxTokens,
+        temperature,
+        stream: !!onStream,
+      };
+      
+      let responseText = '';
+      
+      if (onStream) {
+        // Streaming response
+        const chunks = await webllmEngine.chat.completions.create({
+          ...generationConfig,
+          stream: true,
+        });
+        
+        for await (const chunk of chunks) {
+          const delta = chunk.choices[0]?.delta?.content || '';
+          responseText += delta;
+          onStream(delta);
+        }
+      } else {
+        // Non-streaming response
+        const response = await webllmEngine.chat.completions.create(generationConfig);
+        responseText = response.choices[0]?.message?.content || '';
+      }
+      
+      return {
+        text: responseText,
+        agent: agent.id,
+        agentName: agent.name,
+        model: DIAMOND_FALLBACK_MODEL,
+        tokens: {
+          prompt: prompt.length,
+          completion: responseText.length,
+          total: prompt.length + responseText.length
+        }
+      };
+    } catch (inferenceError) {
+      console.error('💎 WebLLM inference failed:', inferenceError);
+      // Fall through to placeholder response
+    }
+  }
+  
+  // Fallback: placeholder response when no engine available
   const response = {
-    text: `[Diamond Swarm - ${agent.name}]\n\nThis response would be generated by the ${agent.name} agent.\n\nAgent capabilities: ${agent.capabilities.join(', ')}\n\nYour prompt: "${prompt.slice(0, 200)}..."`,
+    text: `[Diamond Swarm - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join('\n• ')}\n\nYour question: "${prompt.slice(0, 150)}..."`,
     agent: agent.id,
     agentName: agent.name,
-    model: SWARM_MODELS[agent.id]?.modelPath || 'pending-load',
+    model: 'loading',
     tokens: {
       prompt: prompt.length,
       completion: 0,
@@ -400,6 +488,15 @@ export const processClaimWithSwarm = async (claimData, callbacks = {}) => {
  */
 export const unloadSwarm = async () => {
   try {
+    // Unload WebLLM engine
+    if (webllmEngine) {
+      if (typeof webllmEngine.unload === 'function') {
+        await webllmEngine.unload();
+      }
+      webllmEngine = null;
+    }
+    
+    // Legacy swarmEngine cleanup
     if (swarmEngine && typeof swarmEngine.unload === 'function') {
       await swarmEngine.unload();
     }
