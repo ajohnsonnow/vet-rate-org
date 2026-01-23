@@ -26,7 +26,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
 
   // Luna's purr-sonal treat fund messages (first paw account!)
   const lunaMessages = [
-    "*Meow!* I've been testing this code with my paws for MONTHS! Every donation = extra Fancy Feast for me! 😻",
+    "*Meow!* I've been testing this code with my paws for MONTHS! Every donation = extra Churu for me! 😻",
     "*purrrr* My wish list: More treats, more catnip, and a comfy spot to supervise dad's coding sessions! 🐾",
     "Listen human, I PERSONALLY inspect every keystroke. $5-10 keeps my quality control standards high! 😸",
     "*meow meow* I promise to walk across the keyboard LESS... if there are treats involved. Maybe. No guarantees. 😹",

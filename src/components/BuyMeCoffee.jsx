@@ -87,7 +87,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*meow* You're C&P ready! 📋",
       body: context.conditionName
         ? `Purrr! You're ready for ${context.conditionName}${context.rating ? ` (${context.rating}% - Luna approves!)` : ''}. Luna supervised every line of code. Treats plz? $5-10 😻`
-        : "*purrrr* You're SO prepared! Luna demands payment in... I mean, donations keep me in Fancy Feast! $5-10? 🐾",
+        : "*purrrr* You're SO prepared! Luna demands payment in... I mean, donations keep me in Churu! $5-10? 🐾",
       cta: "Luna's Treat Fund! 🐱",
       icon: "✅"
     },
@@ -111,7 +111,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*purr* PDF downloaded! 📄",
       body: context.conditionName 
         ? `*Meow!* Your ${context.conditionName} guide is ready! Luna personally tested the download button. Treats? $5-10? 😻`
-        : "*purrrrr* Free guides = hungry Luna! $5-10 keeps me in Fancy Feast while dad codes more features! 🐾",
+        : "*purrrrr* Free guides = hungry Luna! $5-10 keeps me in Churu while dad codes more features! 🐾",
       cta: "Luna Wants Treats! 🐱",
       icon: "📥"
     },
@@ -141,7 +141,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*purr* Speaking VA now! 📖",
       body: context.term
         ? `*Meow!* Now you know \"${context.term}\"! Luna sat on this glossary while dad typed it. Treats? $5-10? 😻`
-        : "*purrrrr* Using big words helps win claims! Luna thinks teaching you is worth $5-10 in Fancy Feast! 🐾",
+        : "*purrrrr* Using big words helps win claims! Luna thinks teaching you is worth $5-10 in Churu! 🐾",
       cta: "Treats Plz! 🐱",
       icon: "🗣️"
     },
@@ -166,7 +166,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*meow* Connections revealed! 🕸️",
       body: context.condition
         ? `*Purrrr* ${context.condition} links found! Luna tested every connection by pawing at the screen. $5-10 = happy Luna! 😸`
-        : "*meow meow* You found secret connections! Luna thinks that's worth $5-10 in Fancy Feast! 🐾",
+        : "*meow meow* You found secret connections! Luna thinks that's worth $5-10 in Churu! 🐾",
       cta: "Treats for Luna! 🐱",
       icon: "🔗"
     },
@@ -181,7 +181,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
         ? `*Purrrr* ${context.count || 'ALL'} forms! Luna supervised this download (by sleeping on the keyboard). $5-10 = treats! 😻`
         : context.action === 'pre-fill'
           ? `*Meow!* Ready for ${context.formName || 'your doctor'}! Luna pre-filled this (with paw prints). Treats? $5-10? 🐾`
-          : `*purr* ${context.formName || 'This DBQ'} is offline! Luna approves. $5-10 keeps me in Fancy Feast! 😸`,
+          : `*purr* ${context.formName || 'This DBQ'} is offline! Luna approves. $5-10 keeps me in Churu! 😸`,
       cta: context.action === 'bulk-download' ? "Luna's Treat Fund!" : "Feed Luna! 🐱",
       icon: context.action === 'bulk-download' ? "📦" : "📋"
     },
@@ -190,7 +190,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*purr* TDIU case built! 📋",
       body: context.impact
         ? "*Meow!* Your statement is ready! Luna watched you type EVERY word (while napping). Worth $5-10 in treats? 😻"
-        : "*purrrrr* Professional TDIU statement done! Luna thinks that's worth Fancy Feast! $5-10? 🐾",
+        : "*purrrrr* Professional TDIU statement done! Luna thinks that's worth Churu! $5-10? 🐾",
       cta: "Treats Plz! 🐱",
       icon: "🏆"
     },
@@ -213,7 +213,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*purr purr* Records analyzed! 🩺",
       body: context.count
         ? `*MEOW!* ${context.count} medical records scanned! Luna's AI helped (while she napped on the GPU). Treats? $5-10? 😻`
-        : "*purrrrr* Medical records = claim intel! Luna wants Fancy Feast for this AI magic! $5-10! 🐾",
+        : "*purrrrr* Medical records = claim intel! Luna wants Churu for this AI magic! $5-10! 🐾",
       cta: "Luna's AI Fund! 🐱",
       icon: "📊"
     },
@@ -229,7 +229,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*purr* Claim protected! 🛡️",
       body: context.risks
         ? `*MEOW!* ${context.risks} risk${context.risks > 1 ? 's' : ''} found before VA saw them! Luna's protection = $5-10 in treats! 😻`
-        : "*purrrrr* Vulnerabilities = found! Luna protected you! Worth Fancy Feast? $5-10? 🐾",
+        : "*purrrrr* Vulnerabilities = found! Luna protected you! Worth Churu? $5-10? 🐾",
       cta: "Feed Luna! 🐱",
       icon: "⚠️"
     },
@@ -253,7 +253,7 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss, compon
       headline: "*MEOW* State benefits found! 🏛️",
       body: context.state
         ? `*Purrrr* ${context.state} veteran benefits discovered! Luna researched all 50 states (exhausting!). $5-10 treats? 😸`
-        : "*meow meow* Hidden state benefits = found! Luna wants Fancy Feast for this detective work! $5-10! 🐾",
+        : "*meow meow* Hidden state benefits = found! Luna wants Churu for this detective work! $5-10! 🐾",
       cta: "Feed Luna! 🐱",
       icon: "🗺️"
     }
