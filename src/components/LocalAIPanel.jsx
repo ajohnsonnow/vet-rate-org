@@ -878,8 +878,11 @@ export const LocalAIProvider = ({ children }) => {
 
   // Generate completion
   const generate = useCallback(async (prompt, options = {}) => {
+    console.log('🔧 Generate: Called with isDiamond =', selectedModel?.isDiamond, 'loadedModelId =', loadedModelId);
+    
     // 💎 Diamond Swarm models route through diamondSwarm service
     if (selectedModel?.isDiamond || loadedModelId?.startsWith('diamond-')) {
+      console.log('🔧 Generate: Taking Diamond Swarm path');
       const { generateWithSwarm, getCurrentAgent, hasWebLLMEngine } = await import('../utils/diamondSwarm');
       const { isLocalServerAvailable } = await import('../utils/unifiedAIService');
       
@@ -892,6 +895,7 @@ export const LocalAIProvider = ({ children }) => {
           taskType: options.task || 'general',
           ...options
         });
+        console.log('🔧 Generate: Local server returned:', typeof result, result?.slice?.(0, 50));
         return result;
       }
       
@@ -903,7 +907,9 @@ export const LocalAIProvider = ({ children }) => {
       }
       
       const agent = getCurrentAgent() || 'auditor';
+      console.log('🔧 Generate: Calling generateWithSwarm with agent:', agent);
       const result = await generateWithSwarm(prompt, { agentId: agent, ...options });
+      console.log('🔧 Generate: generateWithSwarm returned:', typeof result, 'text:', result?.text?.slice?.(0, 50));
       return result.text;
     }
     
@@ -1202,6 +1208,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   const [testPrompt, setTestPrompt] = useState('');
   const [testResponse, setTestResponse] = useState('');
   const [streamedResponse, setStreamedResponse] = useState('');
+  const [isTestGenerating, setIsTestGenerating] = useState(false);
   const [isChangingGPU, setIsChangingGPU] = useState(false);
 
   // Clear test prompt and responses when model changes
@@ -1280,25 +1287,49 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     }
   };
 
-  // Handle test generation
+  // Handle test generation - Direct call to Diamond Swarm for reliability
   const handleTestGenerate = async () => {
     if (!testPrompt.trim()) return;
     
+    setIsTestGenerating(true);
     setStreamedResponse('');
     setTestResponse('');
     
     try {
-      const fullResponse = await generate(testPrompt, {
-        onStream: (delta, full) => {
-          setStreamedResponse(full);
-        },
-      });
-      // Once complete, clear streaming and set final response
+      // Direct import and call to avoid context issues
+      const { generateWithSwarm } = await import('../utils/diamondSwarm');
+      const { isLocalServerAvailable, generateText } = await import('../utils/unifiedAIService');
+      
+      let responseText = '';
+      
+      // Try local server first
+      if (isLocalServerAvailable()) {
+        responseText = await generateText(testPrompt, {
+          mode: 'local-server',
+          taskType: 'general',
+          onStream: (delta, full) => {
+            if (full) setStreamedResponse(full);
+          }
+        });
+      } else {
+        // Use Diamond Swarm directly
+        const result = await generateWithSwarm(testPrompt, {
+          agentId: 'auditor',
+          onStream: (delta, full) => {
+            if (full) setStreamedResponse(full);
+          }
+        });
+        responseText = result?.text || result || '';
+      }
+      
       setStreamedResponse('');
-      setTestResponse(fullResponse);
+      setTestResponse(responseText || 'AI response completed.');
     } catch (err) {
+      console.error('Test Generate Error:', err);
       setStreamedResponse('');
       setTestResponse(`Error: ${err.message}`);
+    } finally {
+      setIsTestGenerating(false);
     }
   };
 
@@ -1916,7 +1947,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                         rows={3}
                       />
                       <div className="flex gap-2">
-                        {!isGenerating ? (
+                        {!isTestGenerating && !isGenerating ? (
                           <button
                             onClick={handleTestGenerate}
                             disabled={!testPrompt.trim()}
@@ -1933,11 +1964,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <rect x="6" y="6" width="12" height="12" strokeWidth="2" />
                             </svg>
-                            Stop Generating
+                            {isTestGenerating ? 'Processing...' : 'Stop Generating'}
                           </button>
                         )}
                       </div>
-                      {isGenerating && (
+                      {(isTestGenerating || isGenerating) && (
                         <div className="flex items-center justify-center gap-2 text-sm text-cyan-400">
                           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -1948,12 +1979,14 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                       )}
                     </div>
 
-                    {/* Response */}
-                    {(streamedResponse || testResponse) && (
+                    {/* Response - Always show when generating or has content */}
+                    {(isTestGenerating || streamedResponse || testResponse) && (
                       <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
-                        <p className="text-sm text-gray-400 mb-2">Response:</p>
+                        <p className="text-sm text-gray-400 mb-2">
+                          {isTestGenerating && !streamedResponse && !testResponse ? '⏳ Processing...' : 'Response:'}
+                        </p>
                         <p className="text-white whitespace-pre-wrap">
-                          {streamedResponse || testResponse}
+                          {streamedResponse || testResponse || (isTestGenerating ? 'Waiting for AI response...' : '')}
                         </p>
                       </div>
                     )}
