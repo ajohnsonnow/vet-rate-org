@@ -878,13 +878,15 @@ export const LocalAIProvider = ({ children }) => {
 
   // Generate completion
   const generate = useCallback(async (prompt, options = {}) => {
-    // 💎 Diamond Swarm models route through unifiedAIService, not WebLLM engine
+    // 💎 Diamond Swarm models route through diamondSwarm service
     if (selectedModel?.isDiamond || loadedModelId?.startsWith('diamond-')) {
-      const { generateText, isLocalServerAvailable } = await import('../utils/unifiedAIService');
+      const { generateWithSwarm, getCurrentAgent, hasWebLLMEngine } = await import('../utils/diamondSwarm');
+      const { isLocalServerAvailable } = await import('../utils/unifiedAIService');
       
       // Try local server first (llama.cpp with Diamond Swarm GGUF)
       if (isLocalServerAvailable()) {
         console.log('💎 Diamond Swarm: Using local llama.cpp server');
+        const { generateText } = await import('../utils/unifiedAIService');
         const result = await generateText(prompt, {
           mode: 'local-server',
           taskType: options.task || 'general',
@@ -893,9 +895,13 @@ export const LocalAIProvider = ({ children }) => {
         return result;
       }
       
-      // Fall back to Diamond Swarm placeholder (educational info)
-      const { generateWithSwarm, getCurrentAgent } = await import('../utils/diamondSwarm');
-      console.log('💎 Diamond Swarm: Using placeholder mode (no local server)');
+      // Use WebLLM engine if loaded (loaded by initializeSwarm)
+      if (hasWebLLMEngine()) {
+        console.log('💎 Diamond Swarm: Using WebLLM engine');
+      } else {
+        console.log('💎 Diamond Swarm: WebLLM still loading, using placeholder');
+      }
+      
       const agent = getCurrentAgent() || 'auditor';
       const result = await generateWithSwarm(prompt, { agentId: agent, ...options });
       return result.text;
