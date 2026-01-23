@@ -209,7 +209,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               ← Back to condition list
             </button>
             <h2 className="text-2xl font-bold text-white mb-1">
-              {currentDBQ.condition_name}
+              {currentDBQ.condition_name} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
             </h2>
             <p className="text-sm text-gray-400">
               Diagnostic Code: {currentDBQ.diagnostic_code} • {currentDBQ.cfr_reference}

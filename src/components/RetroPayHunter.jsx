@@ -488,6 +488,7 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
                   <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                     Retroactive Pay Hunter
                     <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI</span>
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                   </h2>
                   <p className="text-yellow-100 mt-1">
                     "You Owe Me Money" - Find Missed Payments

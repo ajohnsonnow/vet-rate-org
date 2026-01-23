@@ -324,7 +324,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 </div>
                 <div>
                   <h2 id="calculator-title" className="text-2xl sm:text-3xl font-bold">
-                    Tactical Calculator
+                    Tactical Calculator <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-blue-100 text-sm sm:text-base mt-1">
                     VA Math • Bilateral Factor • Gap Analysis • Pay Estimator

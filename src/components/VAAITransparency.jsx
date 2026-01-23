@@ -631,7 +631,7 @@ const VAAITransparency = ({ onClose }) => {
                 <Brain className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-white">VA AI Transparency Hub</h2>
+                <h2 className="text-3xl font-bold text-white">VA AI Transparency Hub <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                 <p className="text-blue-100 text-sm mt-1">Understanding How VA Uses Artificial Intelligence</p>
               </div>
             </div>

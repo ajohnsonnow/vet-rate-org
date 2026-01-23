@@ -905,7 +905,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           <div className="flex items-center gap-3">
             <span className="text-3xl">📜</span>
             <div>
-              <h2 className="text-xl font-bold text-white">DD214 Analyzer</h2>
+              <h2 className="text-xl font-bold text-white">DD214 Analyzer <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span></h2>
               <p className="text-sm text-blue-200">Extract & analyze your service records</p>
             </div>
           </div>

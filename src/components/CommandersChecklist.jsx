@@ -285,7 +285,7 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
         } text-white p-6`}>
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2">🎖️ Commander's Checklist</h2>
+              <h2 className="text-3xl font-bold mb-2">🎖️ Commander's Checklist <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
               <p className="text-blue-100">
                 Your mission briefing and progress tracker
               </p>

@@ -3890,7 +3890,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   const renderFormSelection = () => (
     <div className="space-y-4">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">📋 VA Forms Helper</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">📋 VA Forms Helper <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
         <p className="text-gray-600 dark:text-gray-400">
           Select a form to get guided help filling it out. We'll generate a draft you can review and submit.
         </p>

@@ -309,7 +309,7 @@ const VaIntegrationTest = ({ onClose }) => {
                   <Shield className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 id="va-integration-title" className="text-2xl font-bold">VA.gov Integration Demo</h2>
+                  <h2 id="va-integration-title" className="text-2xl font-bold">VA.gov Integration Demo <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                   <p className="text-blue-200 text-sm mt-1">
                     Production Access Demonstration • Sandbox Environment
                   </p>

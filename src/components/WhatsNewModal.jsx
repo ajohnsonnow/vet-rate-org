@@ -104,7 +104,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                   <Gift className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">What's New in Vet-Rate.org</h2>
+                  <h2 className="text-2xl font-bold">What's New in Vet-Rate.org <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                   <p className="text-emerald-100 text-sm">Version {version} • Fresh Intel</p>
                 </div>
               </div>

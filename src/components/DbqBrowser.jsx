@@ -393,7 +393,7 @@ export default function DbqBrowser({ onClose }) {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              📋 DBQ Library
+              📋 DBQ Library <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
             </h2>
             <p className="text-indigo-100 mt-1">
               Browse, download, and pre-fill Disability Benefits Questionnaires

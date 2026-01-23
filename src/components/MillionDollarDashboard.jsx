@@ -360,7 +360,7 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                 </div>
                 <div>
                   <h2 id="million-dollar-dashboard-title" className="text-2xl sm:text-3xl font-bold text-black">
-                    Million Dollar Dashboard
+                    Million Dollar Dashboard <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                   </h2>
                   <p className="text-yellow-800 text-sm sm:text-base mt-1">
                     Lifetime Value Financial Projector

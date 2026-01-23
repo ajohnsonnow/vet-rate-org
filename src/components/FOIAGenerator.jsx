@@ -1015,7 +1015,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔑</span>
               <div>
-                <h2 className="text-xl font-bold text-white">The Keysmith</h2>
+                <h2 className="text-xl font-bold text-white">The Keysmith <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span></h2>
                 <p className="text-sm text-amber-100">FOIA / C-File Request Generator</p>
               </div>
             </div>

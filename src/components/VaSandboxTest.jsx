@@ -394,7 +394,7 @@ const VaSandboxTest = ({ onClose }) => {
                   <ListChecks className="w-8 h-8" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">VA Sandbox Validation Dashboard</h2>
+                  <h2 className="text-2xl font-bold">VA Sandbox Validation Dashboard <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                   <p className="text-green-200 text-sm mt-1">
                     Production Access Demo • All APIs Tested
                   </p>

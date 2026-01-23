@@ -775,6 +775,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                 <h2 id="symptom-logger-title" className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                   Symptom Logger
                   <AIStatusBadge status={aiStatus} />
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                 </h2>
                 <p className="text-white/80 text-sm sm:text-base mt-1">
                   The 50% Maker • Track Frequency for VA Ratings
