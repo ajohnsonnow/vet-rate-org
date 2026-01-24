@@ -47,12 +47,12 @@ const VSOFinder = ({ onClose, onReportBug }) => {
 
   const handleAISearch = async () => {
     if (zipCode.length !== 5) {
-      setError('Please enter a valid 5-digit ZIP code.');
+      setError(t('vsoFinder', 'invalidZipCode'));
       return;
     }
 
     if (!isAIAvailable()) {
-      setError('AI features are not available. Please add your Gemini API key in Settings to use the AI Locator.');
+      setError(t('vsoFinder', 'aiNotAvailable'));
       return;
     }
 
@@ -66,11 +66,11 @@ const VSOFinder = ({ onClose, onReportBug }) => {
       if (response.success) {
         setResults(response.data);
       } else {
-        setError(response.error || 'Failed to find VSOs. Please try the official VA search.');
+        setError(response.error || t('vsoFinder', 'searchFailed'));
       }
     } catch (err) {
       console.error('VSO search error:', err);
-      setError('An error occurred. Please try the official VA search instead.');
+      setError(t('vsoFinder', 'errorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
     if (!aiQuestion.trim()) return;
     
     if (!isAIAvailable()) {
-      setError('AI features require an API key. Please configure AI in Settings.');
+      setError(t('vsoFinder', 'aiRequiresKey'));
       return;
     }
 
@@ -109,13 +109,27 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
       if (aiText) {
         setAIResponse(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
       } else {
-        setError('Failed to get AI response.');
+        setError(t('vsoFinder', 'failedAIResponse'));
       }
     } catch (err) {
       console.error('AI consultation error:', err);
-      setError('An error occurred during AI consultation.');
+      setError(t('vsoFinder', 'aiConsultationError'));
     } finally {
       setIsAIThinking(false);
+    }
+  };
+
+  // Get organization type label
+  const getOrgTypeLabel = (type) => {
+    switch (type) {
+      case 'County VSO':
+        return t('vsoFinder', 'countyVSO');
+      case 'State VA Office':
+        return t('vsoFinder', 'stateVAOffice');
+      case 'National Organization':
+        return t('vsoFinder', 'nationalOrganization');
+      default:
+        return type;
     }
   };
 
@@ -152,7 +166,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
               {org.name}
             </h4>
             <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-300 rounded-full mt-1">
-              {org.type}
+              {getOrgTypeLabel(org.type)}
             </span>
             
             {org.address && (
@@ -177,7 +191,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   rel="noopener noreferrer" 
                   className="text-blue-600 dark:text-blue-400 hover:underline break-all"
                 >
-                  Visit Website
+                  {t('vsoFinder', 'visitWebsite')}
                 </a>
               </p>
             )}
@@ -215,20 +229,20 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                 </div>
                 <div>
                   <h2 id="vso-finder-title" className="text-2xl sm:text-3xl font-bold">
-                    VSO Finder <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                    {t('vsoFinder', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span>
                   </h2>
                   <p className="text-blue-100 text-sm sm:text-base mt-1">
-                    Find FREE, Accredited Help Near You
+                    {t('vsoFinder', 'subtitle')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <AIStatusBadge onClick={() => setShowAISettings(!showAISettings)} />
-                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="VSO Finder" />}
+                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName={t('vsoFinder', 'title')} />}
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
+                  aria-label={t('vsoFinder', 'close')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -245,18 +259,16 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
               <div className="flex items-start gap-3">
                 <span className="text-3xl flex-shrink-0">⚠️</span>
                 <div>
-                  <h3 className="font-bold text-red-800 dark:text-red-200 text-lg">BEWARE OF CLAIM SHARKS!</h3>
+                  <h3 className="font-bold text-red-800 dark:text-red-200 text-lg">{t('vsoFinder', 'bewareClaimSharks')}</h3>
                   <div className="text-sm text-red-700 dark:text-red-300 mt-2 space-y-2">
                     <p>
-                      <strong>🚫 NEVER pay fees for filing an initial VA disability claim!</strong>
+                      <strong>🚫 {t('vsoFinder', 'neverPayFees')}</strong>
                     </p>
                     <p>
-                      Legitimate VSOs provide FREE assistance. If someone asks for money upfront 
-                      to file your claim, they are likely a predatory "Claim Shark."
+                      {t('vsoFinder', 'legitimateVSOsFree')}
                     </p>
                     <p className="font-medium">
-                      Always verify your representative is <strong>ACCREDITED</strong> with the VA 
-                      before signing any appointment forms.
+                      {t('vsoFinder', 'alwaysVerify')}
                     </p>
                   </div>
                 </div>
@@ -266,19 +278,19 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
             {/* Search Form */}
             <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Find Accredited Help
+                {t('vsoFinder', 'findAccreditedHelp')}
               </h3>
               
               {/* ZIP Code Input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Your ZIP Code
+                  {t('vsoFinder', 'yourZipCode')}
                 </label>
                 <input
                   type="text"
                   value={zipCode}
                   onChange={handleZipCodeChange}
-                  placeholder="Enter 5-digit ZIP code"
+                  placeholder={t('vsoFinder', 'enterZipCode')}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg tracking-wider"
                   maxLength={5}
                 />
@@ -292,7 +304,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   className="px-6 py-4 bg-gradient-to-r from-sky-700 to-cyan-700 text-white rounded-lg font-bold text-base hover:from-sky-800 hover:to-cyan-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
                   <span>🏛️</span>
-                  <span>Search Official VA Database</span>
+                  <span>{t('vsoFinder', 'searchOfficialVA')}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -310,19 +322,19 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                       </svg>
-                      <span>Searching...</span>
+                      <span>{t('vsoFinder', 'searching')}</span>
                     </>
                   ) : (
                     <>
                       <span>✨</span>
-                      <span>Find Local VSOs via AI</span>
+                      <span>{t('vsoFinder', 'findLocalVSOsAI')}</span>
                     </>
                   )}
                 </button>
               </div>
 
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                The Official VA Database is the authoritative source. AI results should be verified.
+                {t('vsoFinder', 'officialVADisclaimer')}
               </p>
             </div>
 
@@ -331,11 +343,11 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl">🤖</span>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Ask AI About VSO Representation
+                  {t('vsoFinder', 'askAIAboutVSO')}
                 </h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Have questions about VSOs, accreditation, or how to choose representation? Ask our AI advisor.
+                {t('vsoFinder', 'aiConsultationDesc')}
               </p>
               
               <div className="space-y-3">
@@ -343,7 +355,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   <textarea
                     value={aiQuestion}
                     onChange={(e) => setAIQuestion(e.target.value)}
-                    placeholder="Example: What's the difference between a County VSO and a National VSO like DAV?"
+                    placeholder={t('vsoFinder', 'aiQuestionPlaceholder')}
                     className="w-full px-4 py-3 pr-14 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
                     rows={3}
                   />
@@ -365,12 +377,12 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                       </svg>
-                      <span>Consulting AI...</span>
+                      <span>{t('vsoFinder', 'consultingAI')}</span>
                     </>
                   ) : (
                     <>
                       <span>💬</span>
-                      <span>Get AI Advice</span>
+                      <span>{t('vsoFinder', 'getAIAdvice')}</span>
                     </>
                   )}
                 </button>
@@ -379,7 +391,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
                     <div className="flex items-start gap-2 mb-2">
                       <span className="text-xl">💡</span>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">AI Advisor Response:</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">{t('vsoFinder', 'aiAdvisorResponse')}</h4>
                     </div>
                     <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {aiResponse}
@@ -421,9 +433,9 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                       <span className="text-xl">📍</span>
-                      Local VSOs Near {results.zipCode}
+                      {t('vsoFinder', 'localVSOsNear')} {results.zipCode}
                       <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 text-sm rounded-full">
-                        {results.organizations.length} found
+                        {results.organizations.length} {t('vsoFinder', 'found')}
                       </span>
                     </h3>
                     
@@ -438,7 +450,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                       <span className="text-xl">🇺🇸</span>
-                      National VSO Resources
+                      {t('vsoFinder', 'nationalVSOResources')}
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -464,7 +476,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                               rel="noopener noreferrer"
                               className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                             >
-                              Find Local Office
+                              {t('vsoFinder', 'findLocalOffice')}
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
@@ -482,8 +494,8 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                     <div className="flex items-center gap-3">
                       <span className="text-xl">✅</span>
                       <div>
-                        <p className="font-medium text-green-800 dark:text-green-200">Verify Accreditation</p>
-                        <p className="text-sm text-green-600 dark:text-green-300">Always confirm your VSO is officially accredited</p>
+                        <p className="font-medium text-green-800 dark:text-green-200">{t('vsoFinder', 'verifyAccreditation')}</p>
+                        <p className="text-sm text-green-600 dark:text-green-300">{t('vsoFinder', 'alwaysConfirmVSO')}</p>
                       </div>
                     </div>
                     <a
@@ -492,7 +504,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                      <span>Verify at VA.gov</span>
+                      <span>{t('vsoFinder', 'verifyAtVA')}</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
@@ -503,9 +515,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                 {/* Disclaimer */}
                 <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    <strong>⚠️ Disclaimer:</strong> This information is provided for educational purposes. 
-                    AI-generated results may not be complete or current. Always verify VSO information and 
-                    accreditation status through the official VA database before signing any appointment forms.
+                    <strong>⚠️ {t('vsoFinder', 'disclaimer')}</strong> {t('vsoFinder', 'disclaimerText')}
                   </p>
                 </div>
               </div>
@@ -521,24 +531,24 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                   </div>
                 </div>
                 <p className="text-lg font-medium text-sky-700 dark:text-sky-300">
-                  Searching for VSOs near {zipCode}...
+                  {t('vsoFinder', 'searchingForVSOs')} {zipCode}...
                 </p>
                 <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
-                  Finding accredited representatives in your area
+                  {t('vsoFinder', 'findingAccredited')}
                 </p>
                 <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500 max-w-xs mx-auto">
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🏛️</span> Checking County VSOs...
+                    <span className="animate-pulse">🏛️</span> {t('vsoFinder', 'checkingCountyVSOs')}
                   </p>
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🏢</span> Finding State VA Offices...
+                    <span className="animate-pulse">🏢</span> {t('vsoFinder', 'findingStateVA')}
                   </p>
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🎖️</span> Locating National Organizations...
+                    <span className="animate-pulse">🎖️</span> {t('vsoFinder', 'locatingNationalOrgs')}
                   </p>
                 </div>
                 <p className="text-xs text-sky-600 dark:text-sky-400 mt-4">
-                  This usually takes 10-30 seconds
+                  {t('vsoFinder', 'usuallyTakes')}
                 </p>
               </div>
             )}
@@ -547,9 +557,9 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
             {!results && !isLoading && !error && (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <div className="text-6xl mb-4">🔍</div>
-                <p className="text-lg">Enter your ZIP code to find help near you</p>
+                <p className="text-lg">{t('vsoFinder', 'enterZipToFind')}</p>
                 <p className="text-sm mt-2">
-                  We'll help you find County VSOs, State VA Offices, and National Organizations like DAV, VFW, and American Legion
+                  {t('vsoFinder', 'willHelpFind')}
                 </p>
               </div>
             )}
@@ -558,21 +568,17 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
             <div className="mt-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl p-5 border border-blue-200 dark:border-blue-700">
               <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
                 <span>ℹ️</span>
-                What is a VSO?
+                {t('vsoFinder', 'whatIsVSO')}
               </h3>
               <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
                 <p>
-                  <strong>Veterans Service Organizations (VSOs)</strong> are non-profit organizations that 
-                  provide FREE assistance to veterans with VA claims. They employ accredited representatives 
-                  who can legally represent you before the VA.
+                  <strong>{t('vsoFinder', 'vsoExplanation')}</strong>
                 </p>
                 <p>
-                  <strong>Common VSOs include:</strong> Disabled American Veterans (DAV), Veterans of Foreign Wars (VFW), 
-                  American Legion, and your County Veterans Service Office.
+                  <strong>{t('vsoFinder', 'commonVSOs')}</strong> {t('vsoFinder', 'commonVSOsList')}
                 </p>
                 <p>
-                  <strong>Why use a VSO?</strong> They know the VA system, can access your records, attend 
-                  hearings with you, and help ensure you get the benefits you've earned - all at <strong>NO COST</strong>.
+                  <strong>{t('vsoFinder', 'whyUseVSO')}</strong> {t('vsoFinder', 'whyUseVSOText')}
                 </p>
               </div>
             </div>
@@ -586,7 +592,7 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                 onClick={onClose}
                 className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
-                Close
+                {t('vsoFinder', 'close')}
               </button>
             </div>
           </div>

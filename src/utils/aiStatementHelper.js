@@ -1283,9 +1283,68 @@ export const stressTestStatement = async (statement) => {
  */
 
 /**
- * Build prompt for decision decoding
+ * Estimate token count from text
+ * Rough estimate: ~4 characters = 1 token for English text
+ * This is conservative to avoid context overflow
  */
-const buildDecisionDecoderPrompt = (decisionText) => {
+const estimateTokenCount = (text) => {
+  if (!text) return 0;
+  return Math.ceil(text.length / 3.5); // Slightly conservative estimate
+};
+
+/**
+ * Smart truncation for large documents
+ * Preserves the beginning and end of documents (most important parts)
+ * while removing middle content if needed
+ *
+ * @param {string} text - The full document text
+ * @param {number} maxTokens - Maximum tokens to allow
+ * @returns {{ text: string, wasTruncated: boolean, originalTokens: number }}
+ */
+const smartTruncateForAI = (text, maxTokens = 2500) => {
+  if (!text) return { text: '', wasTruncated: false, originalTokens: 0 };
+  
+  const originalTokens = estimateTokenCount(text);
+  
+  // If within limit, return as-is
+  if (originalTokens <= maxTokens) {
+    return { text, wasTruncated: false, originalTokens };
+  }
+  
+  // Calculate max characters (using same ratio)
+  const maxChars = Math.floor(maxTokens * 3.5);
+  
+  // VA decision letters: important content is usually at the beginning (decision)
+  // and end (appeal rights, reasons for decision)
+  // Strategy: Keep first 60% and last 40% of allowed space
+  const firstPartChars = Math.floor(maxChars * 0.6);
+  const lastPartChars = maxChars - firstPartChars - 100; // 100 chars for truncation notice
+  
+  const firstPart = text.slice(0, firstPartChars);
+  const lastPart = text.slice(-lastPartChars);
+  
+  // Find clean break points (sentence endings)
+  const firstPartClean = firstPart.slice(0, firstPart.lastIndexOf('. ') + 1) || firstPart;
+  const lastPartStart = lastPart.indexOf('. ');
+  const lastPartClean = lastPartStart > 0 ? lastPart.slice(lastPartStart + 2) : lastPart;
+  
+  const truncatedText = `${firstPartClean.trim()}\n\n[... Document truncated for AI processing - middle section omitted ...]\n\n${lastPartClean.trim()}`;
+  
+  console.log(`📏 Smart truncation: ${originalTokens} tokens → ~${estimateTokenCount(truncatedText)} tokens`);
+  
+  return {
+    text: truncatedText,
+    wasTruncated: true,
+    originalTokens,
+    truncatedTokens: estimateTokenCount(truncatedText)
+  };
+};
+
+/**
+ * Build prompt for decision decoding
+ * Now with smart truncation to prevent context overflow
+ */
+const buildDecisionDecoderPrompt = (decisionText, truncationInfo = null) => {
   return `You are a VA Claims Appeals Expert who translates confusing VA decision letters into plain English.
 
 A veteran received this VA decision and doesn't understand what it means:
@@ -1330,6 +1389,7 @@ Be empathetic but professional. This veteran is confused and possibly upset. Hel
 
 /**
  * Decode a VA decision letter using Gemini AI
+ * Now with smart truncation to prevent context overflow for Local AI (4096 token limit)
  * @param {string} decisionText - The decision letter text to analyze
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
@@ -1339,7 +1399,15 @@ export const decodeDecision = async (decisionText) => {
     return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
   }
 
-  const prompt = buildDecisionDecoderPrompt(decisionText);
+  // Smart truncation to fit within Local AI context window
+  // Reserve ~1500 tokens for prompt template + output, leaving ~2500 for input text
+  const truncation = smartTruncateForAI(decisionText, 2500);
+  
+  if (truncation.wasTruncated) {
+    console.log(`📏 Decision text truncated: ${truncation.originalTokens} → ${truncation.truncatedTokens} tokens`);
+  }
+
+  const prompt = buildDecisionDecoderPrompt(truncation.text, truncation);
 
   try {
     // Use unified AI service
@@ -1371,7 +1439,7 @@ export const decodeDecision = async (decisionText) => {
       
       const decodedData = JSON.parse(cleanedText);
       
-      // Include fallback info in response for UI to show helpful message
+      // Include fallback info and truncation info in response for UI to show helpful messages
       return {
         success: true,
         data: decodedData,
@@ -1380,6 +1448,13 @@ export const decodeDecision = async (decisionText) => {
           usedFallback: true,
           fallbackReason,
           fallbackNote
+        }),
+        // Pass through truncation info so UI can show notice about truncated content
+        ...(truncation.wasTruncated && {
+          wasTruncated: true,
+          originalTokens: truncation.originalTokens,
+          truncatedTokens: truncation.truncatedTokens,
+          truncationNote: `Your document was too large (${truncation.originalTokens} tokens). We analyzed the first and last sections to fit within AI limits.`
         })
       };
     } catch (parseError) {

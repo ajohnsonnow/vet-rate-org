@@ -3892,12 +3892,12 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   const renderFormSelection = () => (
     <div className="space-y-4">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">📋 VA Forms Helper <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">📋 {t('formsHelper', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('formsHelper', 'beta')}</span></h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Select a form to get guided help filling it out. We'll generate a draft you can review and submit.
+          {t('formsHelper', 'selectFormPrompt')}
         </p>
         <span className="inline-block mt-2 px-3 py-1 bg-va-blue/10 dark:bg-va-gold/10 text-va-blue dark:text-va-gold text-sm font-medium rounded-full">
-          {forms.length} Forms Available
+          {forms.length} {t('formsHelper', 'formsAvailable')}
         </span>
       </div>
 
@@ -3923,7 +3923,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          {hasVeteranProfile() ? 'Edit Your Profile' : 'Set Up Profile (Enter Info Once!)'}
+          {hasVeteranProfile() ? t('formsHelper', 'editYourProfile') : t('formsHelper', 'setUpProfile')}
         </button>
         <button
           onClick={handleBackup}
@@ -3932,7 +3932,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          Backup All Data
+          {t('formsHelper', 'backupAllData')}
         </button>
         <button
           onClick={handleRestoreClick}
@@ -3941,7 +3941,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Restore from Backup
+          {t('formsHelper', 'restoreFromBackup')}
         </button>
       </div>
 
@@ -3964,26 +3964,26 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              Your Information (Enter Once, Use Everywhere!)
+              {t('formsHelper', 'profileTitle')}
             </h3>
             {profileSaved && (
               <span className="text-green-600 dark:text-green-400 text-sm font-medium flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Saved!
+                {t('formsHelper', 'saved')}
               </span>
             )}
           </div>
           
           <p className="text-sm text-blue-800 dark:text-blue-300 mb-4">
-            Enter your information here once and it will automatically fill in ALL VA forms. Your data stays 100% on your device.
+            {t('formsHelper', 'profileDesc')}
           </p>
 
           <div className="grid gap-4 md:grid-cols-3 mb-4">
             {/* Name Fields */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'firstName')} *</label>
               <input
                 type="text"
                 value={veteranProfile.firstName || ''}
@@ -3993,7 +3993,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Middle Initial</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'middleInitial')}</label>
               <input
                 type="text"
                 value={veteranProfile.middleInitial || ''}
@@ -4004,7 +4004,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'lastName')} *</label>
               <input
                 type="text"
                 value={veteranProfile.lastName || ''}
@@ -4018,7 +4018,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <div className="grid gap-4 md:grid-cols-3 mb-4">
             {/* SSN, DOB, VA File Number */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last 4 of SSN *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'ssnLast4')} *</label>
               <input
                 type="text"
                 value={veteranProfile.ssn || ''}
@@ -4027,10 +4027,10 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                 placeholder="1234"
                 maxLength={4}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Most forms only need last 4</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('formsHelper', 'ssnLast4Helper')}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'dateOfBirth')} *</label>
               <input
                 type="date"
                 value={veteranProfile.dob || ''}
@@ -4039,13 +4039,13 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VA File Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'vaFileNumber')}</label>
               <input
                 type="text"
                 value={veteranProfile.vaFileNumber || ''}
                 onChange={(e) => handleProfileChange('vaFileNumber', e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-                placeholder="Optional - if different from SSN"
+                placeholder={t('formsHelper', 'vaFileNumberPlaceholder')}
               />
             </div>
           </div>
@@ -4053,7 +4053,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <div className="grid gap-4 md:grid-cols-3 mb-4">
             {/* Phone, Email, Branch */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'phoneNumber')}</label>
               <input
                 type="tel"
                 value={veteranProfile.phone || ''}
@@ -4334,7 +4334,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-green-800 dark:text-green-200 font-medium">
-              Profile saved! Your info will auto-fill in all forms.
+              {t('formsHelper', 'profileSavedMsg')}
             </span>
           </div>
           <button 
@@ -4351,10 +4351,9 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
         <div className="flex items-start gap-3">
           <span className="text-2xl">💡</span>
           <div>
-            <h3 className="font-bold text-purple-900 dark:text-purple-200">Pro Tip: Buddy Statements Are Powerful!</h3>
+            <h3 className="font-bold text-purple-900 dark:text-purple-200">{t('formsHelper', 'proTip')} {t('formsHelper', 'buddyStatementsPowerful')}</h3>
             <p className="text-sm text-purple-800 dark:text-purple-300 mt-1">
-              Many veterans don't realize that statements from family, friends, and fellow service members can be <strong>critical evidence</strong> for their claim. 
-              These "buddy statements" help prove symptoms, in-service events, and daily impact - especially when medical records are incomplete.
+              {t('formsHelper', 'buddyStatementsDesc')}
             </p>
           </div>
         </div>
@@ -4396,7 +4395,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
       {/* Quick links section */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">📎 Quick Links to Official VA Forms</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">📎 {t('formsHelper', 'quickLinksToForms')}</h3>
         <div className="flex flex-wrap gap-2">
           {forms.map(form => (
             <a
@@ -4434,7 +4433,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
         {/* Tips */}
         <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
-          <h3 className="font-bold text-green-900 dark:text-green-200 mb-2">💡 Tips for Success</h3>
+          <h3 className="font-bold text-green-900 dark:text-green-200 mb-2">💡 {t('formsHelper', 'tipsForSuccess')}</h3>
           <ul className="space-y-1">
             {selectedForm.tips.map((tip, i) => (
               <li key={i} className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2">
@@ -4455,7 +4454,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
-              Start Guided Builder
+              {t('formsHelper', 'startGuidedBuilder')}
             </button>
           ) : (
             <a
@@ -4467,7 +4466,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              Go to VA.gov Form
+              {t('formsHelper', 'goToVAForm')}
             </a>
           )}
           <a
@@ -4476,7 +4475,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             rel="noopener noreferrer"
             className="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium flex items-center gap-2 transition-colors text-gray-700 dark:text-gray-300"
           >
-            Official Form ↗
+            {t('formsHelper', 'officialForm')} ↗
           </a>
         </div>
 
@@ -4484,7 +4483,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           onClick={() => setSelectedForm(null)}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
         >
-          ← Back to all forms
+          ← {t('formsHelper', 'backToAllForms')}
         </button>
       </div>
     );
@@ -4545,7 +4544,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               onClick={handleFinishWizard}
               className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
             >
-              Generate Statement
+              {t('formsHelper', 'generateStatement')}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -4893,8 +4892,8 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📋</span>
                 <div>
-                  <h2 className="text-xl font-bold">VA Forms Helper</h2>
-                  <p className="text-violet-100 text-sm">Guided help for VA claim forms</p>
+                  <h2 className="text-xl font-bold">{t('formsHelper', 'title')}</h2>
+                  <p className="text-violet-100 text-sm">{t('formsHelper', 'subtitle')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

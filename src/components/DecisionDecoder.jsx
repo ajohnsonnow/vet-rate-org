@@ -279,7 +279,10 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           // Pass through fallback info to show helpful notice
           _usedFallback: response.usedFallback,
           _fallbackReason: response.fallbackReason,
-          _fallbackNote: response.fallbackNote
+          _fallbackNote: response.fallbackNote,
+          // Pass through truncation info to show helpful notice
+          _wasTruncated: response.wasTruncated,
+          _truncationNote: response.truncationNote
         });
       } else {
         // Check for context overflow error - show helpful message
@@ -695,6 +698,26 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                             </p>
                             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                               {results._fallbackNote || 'Your document was too large for Local AI (4096 tokens). Cloud AI with 1M token context was used instead.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Document Truncation Notice (when document was trimmed to fit Local AI) */}
+                    {results._wasTruncated && (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <span className="text-amber-500">✂️</span>
+                          <div>
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                              Large Document Trimmed
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                              {results._truncationNote || 'Your document was condensed to fit within AI limits. The beginning and end were analyzed (where key decisions are usually found).'}
+                            </p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                              💡 Tip: For more complete analysis, paste only the "Reasons for Decision" section.
                             </p>
                           </div>
                         </div>
