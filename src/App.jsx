@@ -1279,6 +1279,38 @@ function App() {
           <h2 className="text-2xl font-bold text-violet-700 dark:text-violet-300 text-center mb-2 mt-12">📋 Build Your Evidence</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Gather medical records, fill out forms, and create supporting statements</p>
 
+          {/* Muster Call CTA - Full Width - Featured */}
+          <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-blue-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-6 hover:shadow-xl transition-all mb-6">
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-pulse"></div>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 relative">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="bg-blue-100 dark:bg-blue-800/50 rounded-xl p-3 flex-shrink-0">
+                  <span className="text-3xl">📋</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                    Muster Call
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">AI</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <strong>Drop your entire VA file</strong> - 32+ claim letters, 320MB C-File, poor-quality DD214s. AI analyzes everything, 
+                    auto-populates your profile, and generates a comprehensive action plan. What would take weeks, done in minutes.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMusterCall(true)}
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
+              >
+                🎯 Answer the Call
+              </button>
+            </div>
+          </div>
+
           {/* C-File Analyzer CTA - Full Width - Featured */}
           <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-violet-50 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-violet-900/40 border-2 border-violet-300 dark:border-violet-700 rounded-xl p-6 hover:shadow-xl transition-all mb-6">
             {/* Shimmer Effect */}
@@ -1311,33 +1343,6 @@ function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Muster Call CTA */}
-            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-blue-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
-              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
-                  <span className="text-3xl">📋</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1 flex items-center justify-center gap-2">
-                    Muster Call
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">AI</span>
-                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    <strong>Drop your entire VA file</strong> - 32+ claim letters, 320MB C-File, poor-quality DD214s. AI analyzes everything, 
-                    auto-populates your profile, and generates a comprehensive action plan. What would take weeks, done in minutes.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowMusterCall(true)}
-                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
-              >
-                🎯 Answer the Call
-              </button>
-            </div>
-
             {/* Blue Button X-Ray CTA */}
             <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-violet-50 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-violet-900/40 border-2 border-violet-300 dark:border-violet-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               <div className="flex items-center justify-center gap-4 mb-4 flex-col">
