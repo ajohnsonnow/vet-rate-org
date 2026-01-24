@@ -57,14 +57,15 @@ export {
 // Re-export Voice Orchestrator Service
 export { getVoiceOrchestrator, VoiceOrchestrator } from '../services/VoiceOrchestrator';
 
+// Import for the quick setup function
+import { initializeVoiceEngine } from './voiceEngine';
+import { initializePanicKey } from './safetyRedirect';
+
 /**
  * Quick setup function for voice features
  * Call this on app initialization
  */
 export const initializeCompassionateVoice = () => {
-  const { initializeVoiceEngine } = require('./voiceEngine');
-  const { initializePanicKey } = require('./safetyRedirect');
-  
   initializeVoiceEngine();
   initializePanicKey();
   
