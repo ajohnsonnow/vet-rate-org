@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -7,7 +8,7 @@ import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIServi
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import { useVaBenefitsRef, CLAIM_PHASES } from '../hooks/useVaBenefitsRef';
-import { analyzePDF, OCR_STATES, formatFileSize } from '../utils/ocr';
+import { analyzePDF, analyzeImage, OCR_STATES, formatFileSize, isImageFile, isPDFFile } from '../utils/ocr';
 
 /**
  * DecisionDecoder Component - "The Denial Translator"
@@ -23,7 +24,8 @@ import { analyzePDF, OCR_STATES, formatFileSize } from '../utils/ocr';
  * - ACTION PLAN: "Get a Nexus Letter from a private physician, or request an Independent Medical Opinion."
  */
 
-const DecisionDecoder = ({ onClose, onReportBug }) => {
+const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [denialText, setDenialText] = useState('');
@@ -34,14 +36,16 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
-  const [inputMethod, setInputMethod] = useState('paste'); // 'paste' or 'pdf'
+  const [inputMethod, setInputMethod] = useState('paste'); // 'paste' or 'file'
   
-  // PDF Drop-In state
-  const [pdfFile, setPdfFile] = useState(null);
-  const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
-  const [pdfIsDragging, setPdfIsDragging] = useState(false);
-  const [pdfError, setPdfError] = useState(null);
-  const pdfFileInputRef = useRef(null);
+  // File Drop-In state (PDF or Image)
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileType, setFileType] = useState(null); // 'pdf' or 'image'
+  const [ocrProgress, setOcrProgress] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
   
   // Benefits Reference hook for claim phase explanations
   const { getClaimPhaseInfo, getAllClaimPhases } = useVaBenefitsRef();
@@ -54,72 +58,111 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // PDF Drop-In handlers
-  const handlePdfDragOver = (e) => {
+  // File Drop-In handlers (PDF or Image)
+  const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setPdfIsDragging(true);
+    setIsDragging(true);
   };
 
-  const handlePdfDragLeave = (e) => {
+  const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setPdfIsDragging(false);
+    setIsDragging(false);
   };
 
-  const handlePdfDrop = async (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setPdfIsDragging(false);
+    setIsDragging(false);
     
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type === 'application/pdf') {
-        await processPdfFile(file);
-      } else {
-        setPdfError('Please drop a PDF file (VA decision letter, denial letter, etc.)');
-      }
+      await processFile(file);
     }
   };
 
-  const handlePdfFileChange = async (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      await processFile(file);
+    }
+  };
+
+  const processFile = async (file) => {
+    // Reset state
+    setUploadedFile(file);
+    setFileError(null);
+    setDenialText('');
+    setImagePreview(null);
+    
+    // Determine file type
+    if (isPDFFile(file)) {
+      setFileType('pdf');
       await processPdfFile(file);
+    } else if (isImageFile(file)) {
+      setFileType('image');
+      await processImageFile(file);
+    } else {
+      setFileError('Unsupported file type. Please upload a PDF or image (PNG, JPG, JPEG, GIF, BMP, WEBP).');
+      setUploadedFile(null);
     }
   };
 
   const processPdfFile = async (file) => {
-    setPdfFile(file);
-    setPdfError(null);
-    setDenialText('');
-    
     try {
       const result = await analyzePDF(file, (progress) => {
-        setPdfOcrProgress(progress);
+        setOcrProgress(progress);
+      });
+      
+      if (result.text) {
+        setDenialText(result.text);
+      } else {
+        setFileError('Failed to extract text from PDF');
+      }
+    } catch (err) {
+      console.error('PDF processing error:', err);
+      setFileError('Failed to process PDF. Please try again or paste the text manually.');
+    }
+    
+    setOcrProgress(null);
+  };
+
+  const processImageFile = async (file) => {
+    try {
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+      
+      // Run OCR
+      const result = await analyzeImage(file, (progress) => {
+        setOcrProgress(progress);
       });
       
       if (result.success && result.text) {
         setDenialText(result.text);
       } else {
-        setPdfError(result.error || 'Failed to extract text from PDF');
+        setFileError(result.error || 'Failed to extract text from image. Try a clearer screenshot.');
       }
     } catch (err) {
-      console.error('PDF processing error:', err);
-      setPdfError('Failed to process PDF. Please try again or paste the text manually.');
+      console.error('Image processing error:', err);
+      setFileError('Failed to process image. Please try again or paste the text manually.');
     }
     
-    setPdfOcrProgress(null);
+    setOcrProgress(null);
   };
 
-  const handleRemovePdf = () => {
-    setPdfFile(null);
-    setPdfOcrProgress(null);
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setFileType(null);
+    setOcrProgress(null);
     setDenialText('');
-    setPdfError(null);
-    if (pdfFileInputRef.current) {
-      pdfFileInputRef.current.value = '';
+    setFileError(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -270,14 +313,14 @@ const DecisionDecoder = ({ onClose, onReportBug }) => {
                     📋 Paste Text
                   </button>
                   <button
-                    onClick={() => setInputMethod('pdf')}
+                    onClick={() => setInputMethod('file')}
                     className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                      inputMethod === 'pdf'
+                      inputMethod === 'file'
                         ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                     }`}
                   >
-                    📄 Drop-In PDF
+                    📷 Drop-In File
                   </button>
                 </div>
 
@@ -310,26 +353,26 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                   </>
                 )}
 
-                {/* PDF Drop-In */}
-                {inputMethod === 'pdf' && (
+                {/* File Drop-In (PDF or Image) */}
+                {inputMethod === 'file' && (
                   <div>
                     {/* Drop Zone - only show if no file */}
-                    {!pdfFile && !pdfOcrProgress && (
+                    {!uploadedFile && !ocrProgress && (
                       <div
-                        onDragOver={handlePdfDragOver}
-                        onDragLeave={handlePdfDragLeave}
-                        onDrop={handlePdfDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
                         className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                          pdfIsDragging
+                          isDragging
                             ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
                             : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10'
                         }`}
                       >
                         <input
-                          ref={pdfFileInputRef}
+                          ref={fileInputRef}
                           type="file"
-                          accept=".pdf"
-                          onChange={handlePdfFileChange}
+                          accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp,image/*"
+                          onChange={handleFileChange}
                           className="hidden"
                         />
                         <div className="flex flex-col items-center gap-4">
@@ -340,68 +383,80 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                           </div>
                           <div>
                             <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                              Drop your PDF here
+                              Drop your file or screenshot here
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                               or{' '}
                               <button
-                                onClick={() => pdfFileInputRef.current?.click()}
+                                onClick={() => fileInputRef.current?.click()}
                                 className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
                               >
                                 browse to select
                               </button>
                             </p>
                           </div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                            Supports: VA Decision Letter, Denial Letter, Rating Decision (PDF)
+                          <div className="flex flex-wrap gap-2 justify-center text-xs text-gray-400 dark:text-gray-500 mt-2">
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📄 PDF</span>
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📷 PNG</span>
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">🖼️ JPG</span>
+                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📸 Screenshot</span>
                           </div>
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            💡 Tip: Take a screenshot of your VA letter and drop it here!
+                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* OCR Progress */}
-                    {pdfOcrProgress && (
+                    {ocrProgress && (
                       <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
                           <span className="font-medium text-purple-800 dark:text-purple-200">
-                            {pdfOcrProgress.state === OCR_STATES.LOADING ? 'Loading PDF...' :
-                             pdfOcrProgress.state === OCR_STATES.EXTRACTING ? 'Extracting text...' :
-                             pdfOcrProgress.state === OCR_STATES.OCR_PROCESSING ? 'Running OCR on scanned pages...' :
-                             'Processing...'}
+                            {ocrProgress.state === OCR_STATES.LOADING ? `Loading ${fileType === 'pdf' ? 'PDF' : 'image'}...` :
+                             ocrProgress.state === OCR_STATES.EXTRACTING_TEXT ? 'Extracting text...' :
+                             ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS ? 'Running OCR analysis...' :
+                             ocrProgress.message || 'Processing...'}
                           </span>
                         </div>
-                        {pdfOcrProgress.progress > 0 && (
+                        {ocrProgress.progress > 0 && (
                           <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
                             <div
                               className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${pdfOcrProgress.progress}%` }}
+                              style={{ width: `${ocrProgress.progress}%` }}
                             />
                           </div>
                         )}
-                        {pdfOcrProgress.message && (
-                          <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">{pdfOcrProgress.message}</p>
+                        {ocrProgress.message && (
+                          <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">{ocrProgress.message}</p>
                         )}
                       </div>
                     )}
 
                     {/* File Selected */}
-                    {pdfFile && !pdfOcrProgress && (
+                    {uploadedFile && !ocrProgress && (
                       <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
-                              <svg className="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
+                              {fileType === 'pdf' ? (
+                                <svg className="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              ) : (
+                                <span className="text-xl">📷</span>
+                              )}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">{pdfFile.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(pdfFile.size)}</p>
+                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">{uploadedFile.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {formatFileSize(uploadedFile.size)} • {fileType === 'pdf' ? 'PDF Document' : 'Image'}
+                              </p>
                             </div>
                           </div>
                           <button
-                            onClick={handleRemovePdf}
+                            onClick={handleRemoveFile}
                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             title="Remove file"
                           >
@@ -411,20 +466,31 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                           </button>
                         </div>
 
+                        {/* Image Preview */}
+                        {fileType === 'image' && imagePreview && (
+                          <div className="mb-3 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                            <img
+                              src={imagePreview}
+                              alt="Screenshot preview"
+                              className="max-h-48 w-full object-contain bg-gray-50 dark:bg-gray-900"
+                            />
+                          </div>
+                        )}
+
                         {/* Error Display */}
-                        {pdfError && (
+                        {fileError && (
                           <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
                             <div className="flex items-start gap-2">
                               <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              <p className="text-sm text-red-700 dark:text-red-300">{pdfError}</p>
+                              <p className="text-sm text-red-700 dark:text-red-300">{fileError}</p>
                             </div>
                           </div>
                         )}
 
                         {/* Success - text extracted */}
-                        {denialText && !pdfError && (
+                        {denialText && !fileError && (
                           <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
                             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                               <span className="text-green-500">✓</span>
@@ -437,7 +503,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 
                     {/* Privacy Note */}
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                      🔒 Your PDF is processed locally in your browser - nothing is sent to any server.
+                      🔒 Your file is processed locally in your browser - nothing is sent to any server.
                     </p>
                   </div>
                 )}
