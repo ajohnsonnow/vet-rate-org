@@ -428,11 +428,11 @@ Sincerely,
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0 pr-10 sm:pr-0">
                 <h2 id="nexus-builder-title" className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate">
-                  {existingStatement ? 'Edit Statement' : '📝 Nexus Builder'} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                  {existingStatement ? t('nexusBuilder.editStatement') : `📝 ${t('nexusBuilder.title')}`} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('nexusBuilder.beta')}</span>
                 </h2>
                 <p className="text-violet-100 text-sm sm:text-base">
-                  {existingStatement ? 'Updating' : 'Statement'} for: <strong className="block sm:inline truncate">{condition}</strong>
-                  {isSecondary && <span className="block sm:inline text-xs sm:text-sm"> (Secondary to {primaryCondition})</span>}
+                  {existingStatement ? t('nexusBuilder.updatingFor') : t('nexusBuilder.statementFor')} <strong className="block sm:inline truncate">{condition}</strong>
+                  {isSecondary && <span className="block sm:inline text-xs sm:text-sm"> ({t('nexusBuilder.secondaryTo')} {primaryCondition})</span>}
                 </p>
               </div>
               <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
@@ -442,7 +442,7 @@ Sincerely,
                 <button
                   onClick={onClose}
                   className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Close"
+                  aria-label={t('nexusBuilder.close')}
                 >
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -460,7 +460,7 @@ Sincerely,
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-sm text-blue-800 dark:text-blue-100">
-                  <strong>Editing Mode:</strong> Your previous answers have been loaded. Make changes as needed.
+                  <strong>{t('nexusBuilder.editingMode')}</strong> {t('nexusBuilder.editingModeDesc')}
                 </span>
               </div>
             )}
@@ -468,13 +468,13 @@ Sincerely,
               <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
                   <span>💡</span>
-                  <span><strong>Tip:</strong> Click the sparkle ✨ icon next to any field for AI writing suggestions!</span>
+                  <span><strong>{t('nexusBuilder.aiTip')}</strong> {t('nexusBuilder.aiTipText')}</span>
                 </div>
               </div>
             )}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Step {step} of {totalSteps}</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round((step / totalSteps) * 100)}% Complete</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('nexusBuilder.stepOf', { current: step, total: totalSteps })}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round((step / totalSteps) * 100)}% {t('nexusBuilder.complete')}</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
@@ -488,32 +488,32 @@ Sincerely,
             {/* Step 1: Timeline */}
             {step === 1 && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Timeline Information</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('nexusBuilder.timelineInfo')}</h3>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    When did you first notice symptoms of {condition}?
+                    {t('nexusBuilder.whenFirstNotice', { condition })}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., Spring 2020, June 2019, After deployment in 2018"
+                    placeholder={t('nexusBuilder.onsetPlaceholder')}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
                     value={answers.symptomOnsetDate}
                     onChange={(e) => updateAnswer('symptomOnsetDate', e.target.value)}
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Approximate dates are acceptable</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('nexusBuilder.approximateDates')}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Have you sought medical treatment for this condition?
+                    {t('nexusBuilder.soughtTreatment')}
                   </label>
                   <div className="space-y-2">
                     {[
-                      { value: 'yes-va', label: 'Yes, through the VA' },
-                      { value: 'yes-private', label: 'Yes, through private healthcare' },
-                      { value: 'both', label: 'Both VA and private' },
-                      { value: 'no', label: 'No formal treatment yet' }
+                      { value: 'yes-va', label: t('nexusBuilder.yesVA') },
+                      { value: 'yes-private', label: t('nexusBuilder.yesPrivate') },
+                      { value: 'both', label: t('nexusBuilder.yesBoth') },
+                      { value: 'no', label: t('nexusBuilder.noTreatment') }
                     ].map(option => (
                       <label key={option.value} className="flex items-center p-3 border dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                         <input
@@ -535,11 +535,11 @@ Sincerely,
             {/* Step 2: Bridge (Secondary Claims Only) */}
             {step === 2 && isSecondary && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Connection (Nexus) to Your Service-Connected Condition</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('nexusBuilder.connectionTitle')}</h3>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    How does your {primaryCondition} cause or aggravate your {condition}?
+                    {t('nexusBuilder.howCausesAggravates', { primary: primaryCondition, condition })}
                   </label>
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {aggravationOptions.map(option => (
@@ -561,7 +561,7 @@ Sincerely,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Explain in your own words how {primaryCondition} affects your {condition}:
+                      {t('nexusBuilder.explainInOwnWords', { primary: primaryCondition, condition })}
                     </label>
                     {isAIAvailable() && (
                       <button
@@ -571,9 +571,9 @@ Sincerely,
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         {fieldHelping === 'aggravationExplanation' ? (
-                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('nexusBuilder.writing')}</>
                         ) : (
-                          <><span>✨</span> AI Help</>
+                          <><span>✨</span> {t('nexusBuilder.aiHelp')}</>
                         )}
                       </button>
                     )}
@@ -617,7 +617,7 @@ Sincerely,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Describe a specific recent incident where these two conditions interacted:
+                      {t('nexusBuilder.describeIncident')}
                     </label>
                     {isAIAvailable() && (
                       <button
@@ -627,9 +627,9 @@ Sincerely,
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         {fieldHelping === 'specificIncident' ? (
-                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('nexusBuilder.writing')}</>
                         ) : (
-                          <><span>✨</span> AI Help</>
+                          <><span>✨</span> {t('nexusBuilder.aiHelp')}</>
                         )}
                       </button>
                     )}
@@ -675,12 +675,12 @@ Sincerely,
             {/* Step 3 (or 2 for primary): Severity and Daily Impact */}
             {((step === 3 && isSecondary) || (step === 2 && !isSecondary)) && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Severity and Daily Impact</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('nexusBuilder.severityTitle')}</h3>
                 
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      How does {condition} affect your ability to work?
+                      {t('nexusBuilder.howAffectsWork', { condition })}
                     </label>
                     {isAIAvailable() && (
                       <button
@@ -690,9 +690,9 @@ Sincerely,
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         {fieldHelping === 'workImpact' ? (
-                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('nexusBuilder.writing')}</>
                         ) : (
-                          <><span>✨</span> AI Help</>
+                          <><span>✨</span> {t('nexusBuilder.aiHelp')}</>
                         )}
                       </button>
                     )}
@@ -729,7 +729,7 @@ Sincerely,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      How does {condition} affect your social and family life?
+                      {t('nexusBuilder.howAffectsSocial', { condition })}
                     </label>
                     {isAIAvailable() && (
                       <button
@@ -739,9 +739,9 @@ Sincerely,
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         {fieldHelping === 'socialImpact' ? (
-                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('nexusBuilder.writing')}</>
                         ) : (
-                          <><span>✨</span> AI Help</>
+                          <><span>✨</span> {t('nexusBuilder.aiHelp')}</>
                         )}
                       </button>
                     )}
@@ -778,7 +778,7 @@ Sincerely,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Provide specific examples of how this condition limits your daily activities:
+                      {t('nexusBuilder.specificExamples')}
                     </label>
                     {isAIAvailable() && (
                       <button
@@ -788,9 +788,9 @@ Sincerely,
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         {fieldHelping === 'specificExamples' ? (
-                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Writing...</>
+                          <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('nexusBuilder.writing')}</>
                         ) : (
-                          <><span>✨</span> AI Help</>
+                          <><span>✨</span> {t('nexusBuilder.aiHelp')}</>
                         )}
                       </button>
                     )}
@@ -830,7 +830,7 @@ Sincerely,
             {step === totalSteps && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Review Your Statement</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('nexusBuilder.reviewTitle')}</h3>
                   
                   {/* AI Mode Display and Enhancement Button */}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -846,7 +846,7 @@ Sincerely,
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
-                      ✨ Enhance with AI
+                      ✨ {t('nexusBuilder.enhanceWithAI')}
                     </button>
                   )}
                   </div>
@@ -858,14 +858,14 @@ Sincerely,
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      AI is writing...
+                      {t('nexusBuilder.aiIsWriting')}
                     </div>
                   )}
                   
                   {/* Toggle between versions */}
                   {aiEnhancedStatement && !isEnhancing && (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Version:</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{t('nexusBuilder.versionLabel')}</span>
                       <button
                         onClick={toggleStatementVersion}
                         className={`px-3 py-1 rounded-l-lg text-sm font-medium transition-colors ${
@@ -874,7 +874,7 @@ Sincerely,
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
                         }`}
                       >
-                        Standard
+                        {t('nexusBuilder.standardVersion')}
                       </button>
                       <button
                         onClick={toggleStatementVersion}
@@ -884,7 +884,7 @@ Sincerely,
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
                         }`}
                       >
-                        ✨ AI Enhanced
+                        ✨ {t('nexusBuilder.aiEnhanced')}
                       </button>
                     </div>
                   )}
@@ -902,7 +902,7 @@ Sincerely,
                         onClick={handleRequestAIEnhance}
                         className="text-sm text-red-600 dark:text-red-400 underline mt-1 hover:text-red-800 dark:hover:text-red-200"
                       >
-                        Try again
+                        {t('nexusBuilder.tryAgain')}
                       </button>
                     </div>
                   </div>
@@ -915,7 +915,7 @@ Sincerely,
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                     <span className="text-sm text-purple-700 dark:text-purple-300">
-                      ✨ AI-enhanced statement • Powered by Google Gemini • <span className="opacity-75">Review before downloading</span>
+                      ✨ {t('nexusBuilder.aiPoweredBy')}
                     </span>
                   </div>
                 )}
@@ -929,10 +929,10 @@ Sincerely,
                 <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
                   <DraftWatermark variant="banner" />
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Statement in Support of Claim (VA Form 21-4138)</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{t('nexusBuilder.statementFormTitle')}</h4>
                     {useAIVersion && aiEnhancedStatement && (
                       <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
-                        ✨ AI Enhanced
+                        ✨ {t('nexusBuilder.aiEnhanced')}
                       </span>
                     )}
                   </div>
@@ -945,8 +945,8 @@ Sincerely,
 
                 {/* Doctor's Cheat Sheet with Medical Disclaimer */}
                 <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Doctor's Cheat Sheet</h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Hand this to your healthcare provider to help them document the nexus</p>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('nexusBuilder.doctorsCheatSheet')}</h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">{t('nexusBuilder.doctorsCheatSheetDesc')}</p>
                   <div className="prose prose-sm max-w-none">
                     <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
                       {generateDoctorNote()}
@@ -967,12 +967,9 @@ Sincerely,
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Doctor's Packet Generator (AI)</h4>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('nexusBuilder.doctorsPacketTitle')}</h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                          Generate a comprehensive medical research brief explaining the pathophysiological connection between 
-                          <span className="font-medium text-purple-700 dark:text-purple-300"> {primaryCondition}</span> and 
-                          <span className="font-medium text-purple-700 dark:text-purple-300"> {condition}</span>.
-                          Includes medical literature references and a physician template letter.
+                          {t('nexusBuilder.doctorsPacketDesc', { primary: primaryCondition, secondary: condition })}
                         </p>
                         <button
                           onClick={() => setShowDoctorsPacket(true)}
@@ -981,7 +978,7 @@ Sincerely,
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                           </svg>
-                          Generate Doctor's Packet
+                          {t('nexusBuilder.generateDoctorsPacket')}
                         </button>
                       </div>
                     </div>
@@ -997,7 +994,7 @@ Sincerely,
                 disabled={step === 1}
                 className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Back
+                {t('nexusBuilder.back')}
               </button>
               
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -1006,7 +1003,7 @@ Sincerely,
                     onClick={handleNext}
                     className="px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base"
                   >
-                    Next Step
+                    {t('nexusBuilder.nextStep')}
                   </button>
                 )}
                 
@@ -1024,10 +1021,10 @@ Sincerely,
                       <button
                         onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                         disabled={!isCertified}
-                        title={!isCertified ? 'Please certify that you have reviewed this document first' : ''}
+                        title={!isCertified ? t('nexusBuilder.certifyBeforeDownload') : ''}
                         className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-500 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
-                        <span className="hidden sm:inline">Download </span>Statement
+                        {t('nexusBuilder.downloadStatement')}
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -1042,7 +1039,7 @@ Sincerely,
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            Text (.txt)
+                            {t('nexusBuilder.textFormat')}
                           </button>
                           <button
                             onClick={() => handleDownload('docx')}
@@ -1051,7 +1048,7 @@ Sincerely,
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
-                            Word (.docx)
+                            {t('nexusBuilder.wordFormat')}
                           </button>
                           <button
                             onClick={() => handleDownload('pdf')}
@@ -1060,7 +1057,7 @@ Sincerely,
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
-                            PDF (.pdf)
+                            {t('nexusBuilder.pdfFormat')}
                           </button>
                         </div>
                       )}
@@ -1068,10 +1065,10 @@ Sincerely,
                     <button
                       onClick={handleFinish}
                       disabled={!isCertified}
-                      title={!isCertified ? 'Please certify that you have reviewed this document first' : ''}
+                      title={!isCertified ? t('nexusBuilder.certifyBeforeDownload') : ''}
                       className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save to Packet
+                      {t('nexusBuilder.saveToPacket')}
                     </button>
                   </>
                 )}

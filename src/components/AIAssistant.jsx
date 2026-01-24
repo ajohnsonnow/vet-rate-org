@@ -117,19 +117,7 @@ const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
     if (!hasSeenWelcome) {
       setMessages([{
         role: 'assistant',
-        content: `👋 **Welcome to The Navigator!**
-
-💡 **TIP:** Grab the header to drag me anywhere on your screen!
-
-I'm your AI guide for Vet-Rate.org and the VA claims process. I can help you:
-
-• **Explain any VA term or acronym** - Just ask "What is TDIU?" or "Explain service connection"
-• **Guide you through tools** - "How do I use the Rating Calculator?"
-• **Answer claims questions** - "What evidence do I need for PTSD?"
-• **Recommend next steps** - "What should I do after my C&P exam?"
-• **Find the right tool** - "I need help with a nexus letter"
-
-**Try asking me anything!** I use VA regulations (38 CFR) to give accurate answers.`,
+        content: t('aiAssistant', 'welcomeMessage'),
         timestamp: new Date()
       }]);
       localStorage.setItem('vet_rate_ai_assistant_welcomed', 'true');
@@ -239,18 +227,18 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Navigator AI error:', error);
-      let errorMessage = 'I encountered an error. Please try again.';
+      let errorMessage = t('aiAssistant', 'errorGeneric');
       
       if (error.message === 'CRISIS_DETECTED') {
-        errorMessage = '⚠️ I detected language that may indicate distress. Please reach out to the Veterans Crisis Line: **Call 988, Press 1** or text 838255. You can also chat at VeteransCrisisLine.net. Help is available 24/7.';
+        errorMessage = t('aiAssistant', 'errorCrisis');
       } else if (error.message.includes('No AI available')) {
-        errorMessage = '⚠️ AI is not configured. Please set up Cloud AI (Gemini API key) or Local AI in Settings.';
+        errorMessage = t('aiAssistant', 'errorNoAI');
       } else if (error.message.includes('temporarily disabled')) {
-        errorMessage = '⚠️ AI features are temporarily unavailable. Please try again later.';
+        errorMessage = t('aiAssistant', 'errorDisabled');
       } else if (error.message.includes('empty response')) {
-        errorMessage = '⚠️ AI returned an empty response. This can happen with Local AI sometimes. Please try:\n• Rephrasing your question\n• Using a shorter prompt\n• Checking if the model is fully loaded';
+        errorMessage = t('aiAssistant', 'errorEmptyResponse');
       } else if (error.message.includes('not initialized') || error.message.includes('not loaded')) {
-        errorMessage = '⚠️ Local AI is not ready yet. Please wait for the model to finish loading, or configure Cloud AI in Settings.';
+        errorMessage = t('aiAssistant', 'errorNotReady');
       } else if (error.message) {
         errorMessage = `⚠️ ${error.message}`;
       }
@@ -270,44 +258,44 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
   const getQuickQuestions = () => {
     const questions = {
       'Home': [
-        'What should I do first to file a claim?',
-        'How does the VA rating system work?',
-        'What tools should I use for a PTSD claim?'
+        t('aiAssistant', 'quickQ_home1'),
+        t('aiAssistant', 'quickQ_home2'),
+        t('aiAssistant', 'quickQ_home3')
       ],
       'Disability Search': [
-        'How do I find the right diagnostic code?',
-        'What does "bilateral factor" mean?',
-        'Can you explain how ratings are assigned?'
+        t('aiAssistant', 'quickQ_search1'),
+        t('aiAssistant', 'quickQ_search2'),
+        t('aiAssistant', 'quickQ_search3')
       ],
       'Rating Calculator': [
-        'How does VA math work?',
-        'What is the bilateral factor?',
-        'Can I get 100% with multiple conditions?'
+        t('aiAssistant', 'quickQ_calc1'),
+        t('aiAssistant', 'quickQ_calc2'),
+        t('aiAssistant', 'quickQ_calc3')
       ],
       'Secondary Scout': [
-        'What are secondary conditions?',
-        'How do I prove a condition is secondary?',
-        'What evidence do I need for secondary claims?'
+        t('aiAssistant', 'quickQ_secondary1'),
+        t('aiAssistant', 'quickQ_secondary2'),
+        t('aiAssistant', 'quickQ_secondary3')
       ],
       'C-File Analyzer': [
-        'How do I get my C-File?',
-        'What should I look for in my C-File?',
-        'Can you help me analyze a denial?'
+        t('aiAssistant', 'quickQ_cfile1'),
+        t('aiAssistant', 'quickQ_cfile2'),
+        t('aiAssistant', 'quickQ_cfile3')
       ],
       'Nexus Builder': [
-        'What is a nexus letter?',
-        'What should a nexus letter include?',
-        'Do I need a doctor to write this?'
+        t('aiAssistant', 'quickQ_nexus1'),
+        t('aiAssistant', 'quickQ_nexus2'),
+        t('aiAssistant', 'quickQ_nexus3')
       ],
       'PACT Act Navigator': [
-        'Am I covered under the PACT Act?',
-        'What are presumptive conditions?',
-        'How do I file a PACT Act claim?'
+        t('aiAssistant', 'quickQ_pact1'),
+        t('aiAssistant', 'quickQ_pact2'),
+        t('aiAssistant', 'quickQ_pact3')
       ],
       'TDIU Builder': [
-        'What is TDIU?',
-        'Do I qualify for TDIU?',
-        'What evidence do I need for TDIU?'
+        t('aiAssistant', 'quickQ_tdiu1'),
+        t('aiAssistant', 'quickQ_tdiu2'),
+        t('aiAssistant', 'quickQ_tdiu3')
       ]
     };
 
@@ -352,14 +340,14 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
         onMouseDown={handleMouseDown}
         style={{ left: `${position.x}px`, top: `${position.y}px` }}
         className="fixed z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group cursor-move"
-        title="Drag to move • Click to open AI Navigator"
+        title={t('aiAssistant', 'minimizedTooltip')}
       >
         <div className="relative pointer-events-none">
           <span className="text-2xl">🧭</span>
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
         </div>
         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Click to expand Navigator 💬
+          {t('aiAssistant', 'clickToExpand')}
         </div>
       </button>
     );
@@ -377,8 +365,8 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 <span className="text-3xl">🧭</span>
               </div>
               <div>
-                <h3 className="font-bold text-xl">The Navigator</h3>
-                <p className="text-sm text-blue-100">AI Claims Assistant • Expanded View</p>
+                <h3 className="font-bold text-xl">{t('aiAssistant', 'title')}</h3>
+                <p className="text-sm text-blue-100">{t('aiAssistant', 'subtitleExpanded')}</p>
               </div>
             </div>
             
@@ -396,7 +384,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
               <button
                 onClick={() => setIsExpanded(false)}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                title="Shrink to floating window"
+                title={t('aiAssistant', 'shrinkTooltip')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
@@ -406,7 +394,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 <button
                   onClick={onClose}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  title="Close"
+                  title={t('common', 'close')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -457,7 +445,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                     </span>
                     {msg.mode && (
                       <span className="text-xs opacity-70">
-                        {msg.mode === 'local' ? '🔒 Local' : '☁️ Cloud'}
+                        {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
                       </span>
                     )}
                   </div>
@@ -473,7 +461,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                     <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                     <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Analyzing your question...</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('aiAssistant', 'analyzing')}</span>
                 </div>
               </div>
             )}
@@ -484,7 +472,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
           {/* Quick Questions - Horizontal */}
           {messages.length <= 1 && !isLoading && (
             <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Quick questions:</p>
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">{t('aiAssistant', 'quickQuestions')}</p>
               <div className="flex flex-wrap gap-2">
                 {getQuickQuestions().map((q, idx) => (
                   <button
@@ -507,7 +495,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={isHelperMode ? "Ask me anything about VA claims... or tap the mic to speak" : "Ask me anything about VA claims, regulations, or how to use Vet-Rate tools..."}
+                  placeholder={isHelperMode ? t('aiAssistant', 'placeholderHelper') : t('aiAssistant', 'placeholder')}
                   className="w-full px-4 py-3 pr-14 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base"
                   rows={3}
                   disabled={isLoading}
@@ -528,11 +516,11 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
-                <span className="font-medium">Send</span>
+                <span className="font-medium">{t('aiAssistant', 'send')}</span>
               </button>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Press Enter to send • Shift+Enter for new line • 🎤 Voice input available {isHelperMode && '• 💝 Helper Mode Active'}
+              {t('aiAssistant', 'keyboardHints')} {isHelperMode && t('aiAssistant', 'helperModeActive')}
             </p>
           </div>
         </div>
@@ -555,12 +543,12 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
             <span className="text-2xl">🧭</span>
           </div>
           <div>
-            <h3 className="font-bold text-lg">The Navigator</h3>
+            <h3 className="font-bold text-lg">{t('aiAssistant', 'title')}</h3>
             <p className="text-xs text-blue-100 flex items-center gap-1">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
               </svg>
-              Drag to move anywhere
+              {t('aiAssistant', 'dragToMove')}
             </p>
           </div>
         </div>
@@ -579,7 +567,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsExpanded(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title="Expand to full screen"
+            title={t('aiAssistant', 'expandTooltip')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -588,7 +576,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"
-            title="Minimize"
+            title={t('aiAssistant', 'minimizeTooltip')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -598,7 +586,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-white/20 rounded transition-colors"
-              title="Close"
+              title={t('common', 'close')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -649,7 +637,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 </span>
                 {msg.mode && (
                   <span className="text-xs opacity-70">
-                    {msg.mode === 'local' ? '🔒 Local' : '☁️ Cloud'}
+                    {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
                   </span>
                 )}
               </div>
@@ -665,7 +653,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Analyzing...</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('aiAssistant', 'analyzingShort')}</span>
             </div>
           </div>
         )}
@@ -676,7 +664,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
       {/* Quick Questions */}
       {messages.length <= 1 && !isLoading && (
         <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Quick questions:</p>
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">{t('aiAssistant', 'quickQuestions')}</p>
           <div className="space-y-1">
             {getQuickQuestions().map((q, idx) => (
               <button
@@ -699,7 +687,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isHelperMode ? "Ask me anything about VA claims... or tap the mic" : "Ask me anything... or tap the mic"}
+              placeholder={isHelperMode ? t('aiAssistant', 'placeholderHelperShort') : t('aiAssistant', 'placeholderShort')}
               className="w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               rows={2}
               disabled={isLoading}
@@ -723,7 +711,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Press Enter to send • 🎤 Tap mic to speak (stays on your device) {isHelperMode && '• 💝 Helper Mode Active'}
+          {t('aiAssistant', 'keyboardHintsShort')} {isHelperMode && t('aiAssistant', 'helperModeActive')}
         </p>
       </div>
     </div>
