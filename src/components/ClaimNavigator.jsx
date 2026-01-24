@@ -23,7 +23,8 @@ import {
   GitBranch, RefreshCw, FilePlus, Gavel, X, Edit3, Trash2, Download,
   Upload, HelpCircle, Target, Award, ExternalLink, ChevronLeft,
   Stethoscope, Link as LinkIcon, Users, Shield, Clipboard, Loader,
-  BarChart2, Settings, Info, Play, Flag
+  BarChart2, Settings, Info, Play, Flag, MessageSquare, Lightbulb,
+  RefreshCcw
 } from 'lucide-react';
 
 // Schema and engine imports
@@ -608,6 +609,185 @@ const Dashboard = ({ claims, analysis, statistics, milestoneProgress, onSelectCl
             })}
           </div>
         )}
+      </div>
+      
+      {/* Community Insights - Reddit-style veteran tips */}
+      <CommunityInsightsPanel />
+    </div>
+  );
+};
+
+// ============================================
+// COMMUNITY INSIGHTS PANEL
+// ============================================
+const CommunityInsightsPanel = () => {
+  const [tips, setTips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  // Load community knowledge on mount
+  useEffect(() => {
+    const loadCommunityTips = async () => {
+      try {
+        const response = await fetch('/data/community_knowledge.json');
+        if (!response.ok) throw new Error('Failed to load community knowledge');
+        const data = await response.json();
+        
+        // Filter for actionable tips and format them
+        const actionableTips = (data.entries || [])
+          .filter(entry => {
+            // Filter for entries with practical tips
+            const output = entry.output || '';
+            return (
+              output.length > 50 && 
+              output.length < 800 &&
+              !output.includes('Skip to Content') &&
+              (output.includes('IMPORTANT') || 
+               output.includes('TIP') || 
+               output.includes('NOTE') ||
+               entry.metadata?.section_title)
+            );
+          })
+          .slice(0, 50) // Limit to 50 tips
+          .map(entry => ({
+            id: Math.random().toString(36).substr(2, 9),
+            title: entry.metadata?.section_title || entry.instruction || 'Veteran Insight',
+            content: entry.output
+              .replace('⚠️ COMMUNITY GUIDANCE (Not Official VA Regulations):\n\n', '')
+              .replace(/\n\nSource:.*$/, '')
+              .trim(),
+            source: entry.metadata?.source_name || 'Veteran Community',
+            category: entry.metadata?.page_title || 'General'
+          }));
+        
+        // Shuffle for variety
+        const shuffled = actionableTips.sort(() => Math.random() - 0.5);
+        setTips(shuffled);
+      } catch (error) {
+        console.log('[Navigator] Community tips unavailable:', error.message);
+        // Provide fallback tips
+        setTips([
+          {
+            id: 'fallback1',
+            title: 'File Intent to File First',
+            content: 'IMPORTANT: File an Intent to File (ITF) before gathering evidence. This protects your effective date for up to 1 year while you build your claim.',
+            source: 'Veteran Community',
+            category: 'Filing Tips'
+          },
+          {
+            id: 'fallback2',
+            title: 'The "Big 3" Evidence',
+            content: 'Every successful claim needs three things: (1) Current diagnosis, (2) In-service event/stressor, (3) Medical nexus linking them. Missing any of these = denial.',
+            source: 'Veteran Community',
+            category: 'Evidence'
+          },
+          {
+            id: 'fallback3',
+            title: 'C&P Exam Preparation',
+            content: 'Before your C&P exam: Review your medical records, document your worst days, bring a list of symptoms, and be honest about how your condition affects daily life.',
+            source: 'Veteran Community',
+            category: 'C&P Exams'
+          }
+        ]);
+      }
+      setLoading(false);
+    };
+    
+    loadCommunityTips();
+  }, []);
+
+  const nextTip = () => {
+    setCurrentTipIndex((prev) => (prev + 1) % tips.length);
+  };
+
+  const prevTip = () => {
+    setCurrentTipIndex((prev) => (prev - 1 + tips.length) % tips.length);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-4">
+        <div className="flex items-center gap-2 text-orange-400">
+          <Loader className="w-4 h-4 animate-spin" />
+          <span className="text-sm">Loading veteran insights...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (tips.length === 0) return null;
+
+  const currentTip = tips[currentTipIndex];
+
+  return (
+    <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-orange-500/20 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-orange-500/20 rounded-lg">
+            <MessageSquare className="w-4 h-4 text-orange-400" />
+          </div>
+          <div>
+            <h3 className="text-orange-400 font-semibold text-sm">Community Insights</h3>
+            <p className="text-xs text-slate-500">Reddit-style tips from fellow veterans</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-slate-500">{currentTipIndex + 1}/{tips.length}</span>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-1 text-slate-400 hover:text-white transition-colors"
+            title={expanded ? 'Collapse' : 'Expand'}
+          >
+            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Current Tip */}
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <Lightbulb className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-white font-medium text-sm">{currentTip.title}</h4>
+            <p className={`text-slate-300 text-sm mt-1 ${expanded ? '' : 'line-clamp-3'}`}>
+              {currentTip.content}
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs text-orange-400/70 bg-orange-500/10 px-2 py-0.5 rounded">
+                {currentTip.category}
+              </span>
+              <span className="text-xs text-slate-500">via {currentTip.source}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-orange-500/20">
+          <button
+            onClick={prevTip}
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-orange-400 transition-colors"
+          >
+            <ChevronLeft className="w-3 h-3" />
+            Previous
+          </button>
+          <button
+            onClick={nextTip}
+            className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
+          >
+            Next Tip
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="px-4 py-2 bg-slate-900/50 border-t border-orange-500/20">
+        <p className="text-xs text-slate-500 flex items-center gap-1">
+          <Info className="w-3 h-3" />
+          Community guidance - not official VA policy. Always verify with official sources.
+        </p>
       </div>
     </div>
   );
