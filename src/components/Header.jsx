@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AccessibilityMenu from './AccessibilityMenu';
 import FundingModal from './FundingModal';
+import LanguageSelector from './LanguageSelector';
 import HelperModeToggle from './HelperModeToggle';
 import KnowledgeBaseStatus from './KnowledgeBaseStatus';
 import VersionDropdown from './VersionDropdown';
@@ -951,6 +952,9 @@ function Header({
 
             {/* Helper Mode Toggle (Spouse/Caregiver Mode) */}
             <HelperModeToggle compact />
+
+            {/* Language Selector - Full app language switching */}
+            <LanguageSelector variant="compact" />
 
             {/* Accessibility Menu */}
             <AccessibilityMenu />

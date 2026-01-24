@@ -364,6 +364,22 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
               )}
             </div>
             
+            {/* DKB Enhancement Notice */}
+            <div className="p-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">💎</span>
+                <div>
+                  <p className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+                    Enhanced with Diamond Knowledge Base
+                  </p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                    Gemini is trained on 1,600+ VA regulations, BVA decisions, and 38 CFR citations 
+                    for accurate, veteran-specific answers.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             {/* Show positive message for legacy devices */}
             {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED || deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">

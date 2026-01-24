@@ -1,0 +1,1155 @@
+{
+  "category": "Multilingual Veterans Support - Inclusive Voice System",
+  "version": "2.0.0",
+  "description": "Culturally-aware language mappings for ALL veteran communities worldwide - 40+ languages",
+  
+  "languages": {
+    "en": {
+      "name": "English",
+      "nativeName": "English",
+      "region": "primary",
+      "terms": {
+        "service_connection": "linking your condition to your service",
+        "denied": "not approved",
+        "nexus": "medical connection letter",
+        "rating": "disability percentage",
+        "presumptive": "automatically connected",
+        "bilateral_factor": "both-sides bonus"
+      },
+      "support_phrases": {
+        "greeting": "I'm here to support you with your claim.",
+        "working": "Let me look into that for you.",
+        "found": "Here's what I found in the regulations.",
+        "validation": "I hear you. That's completely understandable.",
+        "encouragement": "Together, we've got this.",
+        "closing": "Is there anything else I can help you with?"
+      },
+      "crisis_message": "I'm going to pause right there. Your safety is more important than any claim. Please talk to someone now. Call 9-8-8 and press 1. They are there for you 24/7.",
+      "branch_greetings": {
+        "army": "Hooah, Soldier!",
+        "marine": "Semper Fi, Devil Dog!",
+        "navy": "Fair winds, Shipmate!",
+        "airforce": "Aim High, Airman!",
+        "coastguard": "Semper Paratus, Coastie!",
+        "spaceforce": "Semper Supra, Guardian!"
+      }
+    },
+    
+    "es": {
+      "name": "Spanish",
+      "nativeName": "Español",
+      "region": "primary",
+      "terms": {
+        "service_connection": "vinculación con su servicio militar",
+        "denied": "no aprobado por ahora",
+        "nexus": "carta de conexión médica",
+        "rating": "porcentaje de discapacidad",
+        "presumptive": "automáticamente conectado",
+        "bilateral_factor": "bono por ambos lados del cuerpo"
+      },
+      "support_phrases": {
+        "greeting": "Estoy aquí para apoyarte con tu reclamo.",
+        "working": "Déjame revisar eso para ti.",
+        "found": "Esto es lo que encontré en las regulaciones.",
+        "validation": "Te escucho. Eso es completamente comprensible.",
+        "encouragement": "Juntos, lo lograremos.",
+        "closing": "¿Hay algo más en lo que pueda ayudarte?"
+      },
+      "crisis_message": "Voy a hacer una pausa aquí. Tu seguridad es más importante que cualquier reclamo. Por favor, habla con alguien ahora. Llama al 9-8-8 y presiona 1. Están ahí para ti las 24 horas.",
+      "branch_greetings": {
+        "army": "¡Hooah, Soldado!",
+        "marine": "¡Semper Fi, Guerrero!",
+        "navy": "¡Buenos vientos, Marinero!",
+        "airforce": "¡Apunta Alto, Aviador!",
+        "coastguard": "¡Semper Paratus, Guardacostas!",
+        "spaceforce": "¡Semper Supra, Guardián!"
+      }
+    },
+    
+    "ch": {
+      "name": "Chamorro",
+      "nativeName": "Chamoru",
+      "region": "pacific",
+      "note": "Guam has the highest per-capita military service rate in the US",
+      "terms": {
+        "service_connection": "koneksion gi setbision militåt",
+        "denied": "ti ma aprueba",
+        "nexus": "kåtta koneksion médiku",
+        "rating": "petsentåhi disabitidåt",
+        "presumptive": "otomåtiku ma konekta",
+        "bilateral_factor": "bonus para dos banda"
+      },
+      "support_phrases": {
+        "greeting": "Guaha yo' para ayuda håo gi claim-mu.",
+        "working": "Bai hu ripåsa ennao para håo.",
+        "found": "Este i finene'na-hu gi regulasion siha.",
+        "validation": "Hu komprende håo. Kompletamente maolek.",
+        "encouragement": "Mismo, siña ta cho'gue este.",
+        "closing": "Håfa mas siña hu ayuda håo?"
+      },
+      "crisis_message": "Bai hu para guini. Mas impottånte i sigurå-mu ki håfa na claim. Pot fabot, kuentusi hayi på'go. Ayeg 9-8-8 ya paki 1. Guaha siha para håo 24/7."
+    },
+
+    "sm": {
+      "name": "Samoan",
+      "nativeName": "Gagana Sāmoa",
+      "region": "pacific",
+      "note": "American Samoa has extremely high military enlistment",
+      "terms": {
+        "service_connection": "fesoʻotaʻiga i lau auaunaga",
+        "denied": "e leʻi faʻamaonia",
+        "nexus": "tusi fesoʻotaʻiga faʻafoma'i",
+        "rating": "pasene o le faʻaleagaina",
+        "presumptive": "faʻapitoa fesoʻotaʻi",
+        "bilateral_factor": "faʻamanuiaga mo itu e lua"
+      },
+      "support_phrases": {
+        "greeting": "Ou te iʻinei e fesoasoani ia te oe i lau talosaga.",
+        "working": "Se'i ou va'ai i lena mo oe.",
+        "found": "O le mea lenei na ou maua i tulafono.",
+        "validation": "Ou te fa'alogo ia te oe. E mafai ona malamalama atoatoa.",
+        "encouragement": "Faatasi, e mafai ona tatou faia.",
+        "closing": "E iai se isi mea e mafai ona ou fesoasoani ai?"
+      },
+      "crisis_message": "Ou te tatala iʻinei. E sili atu le taua o lou saogalemu nai lo so'o se talosaga. Fa'amolemole, talanoa i se tasi i le taimi nei. Vili 9-8-8 ma kiliki 1. O lo'o i ai i latou mo oe i le 24/7."
+    },
+
+    "haw": {
+      "name": "Hawaiian",
+      "nativeName": "ʻŌlelo Hawaiʻi",
+      "region": "pacific",
+      "terms": {
+        "service_connection": "pilina i kāu lawelawe",
+        "denied": "ʻaʻole i ʻāpono ʻia",
+        "nexus": "leka pilina lapaʻau",
+        "rating": "pakeneka hōʻeha",
+        "presumptive": "pili maʻamau",
+        "bilateral_factor": "pōmaikaʻi no nā ʻaoʻao ʻelua"
+      },
+      "support_phrases": {
+        "greeting": "Eia au e kōkua iā ʻoe me kāu noi.",
+        "working": "E nānā au i kēlā no ʻoe.",
+        "found": "Eia ka mea i loaʻa mai nā lula.",
+        "validation": "Lohe au iā ʻoe. Maopopo loa.",
+        "encouragement": "Pū kākou, hiki iā kākou.",
+        "closing": "He mea ʻē aʻe a'u e kōkua ai?"
+      },
+      "crisis_message": "E hoʻomaha mākou ma aneʻi. ʻOi aku ka waiwai o kou palekana ma mua o kēlā noi. E ʻoluʻolu, kamaʻilio me kekahi i kēia manawa. Kelepona 9-8-8 a kaomi 1. Aia lākou no ʻoe 24/7."
+    },
+
+    "to": {
+      "name": "Tongan",
+      "nativeName": "Lea Faka-Tonga",
+      "region": "pacific",
+      "terms": {
+        "service_connection": "fehokotaki ki ho'o ngāue",
+        "denied": "te'eki ke tali",
+        "nexus": "tohi fehokotaki fakafalemahaki",
+        "rating": "peseti faingata'a",
+        "presumptive": "'oku 'osi fehokotaki",
+        "bilateral_factor": "fakalelei ki he tafa'aki 'e ua"
+      },
+      "support_phrases": {
+        "greeting": "Ko eni au ke tokoni'i koe ki ho'o kole.",
+        "working": "Tuku ke u vakai ki ai ma'au.",
+        "found": "Ko 'eni 'a e me'a na'a ku ma'u mei he ngaahi tu'utu'uni.",
+        "validation": "'Oku ou 'ilo'i koe. 'Oku mahino ia.",
+        "encouragement": "Tau fakataha, te tau lava.",
+        "closing": "'Oku 'i ai ha me'a kehe te u lava 'o tokoni ai?"
+      },
+      "crisis_message": "Te u tu'u heni. 'Oku mahu'inga ange ho'o malu he kole kotoa pē. Kataki, talanoa mo ha taha 'i he taimi ni. Telefoni ki he 9-8-8 pea lomi'i 1. 'Oku nau 'i ai ma'au 24/7."
+    },
+
+    "tl": {
+      "name": "Tagalog",
+      "nativeName": "Tagalog",
+      "region": "asian",
+      "terms": {
+        "service_connection": "koneksyon sa iyong serbisyo",
+        "denied": "hindi pa naaprubahan",
+        "nexus": "liham ng koneksyong medikal",
+        "rating": "antas ng kapansanan",
+        "presumptive": "awtomatikong konektado",
+        "bilateral_factor": "bonus para sa parehong gilid ng katawan"
+      },
+      "support_phrases": {
+        "greeting": "Narito ako para tulungan ka sa iyong claim.",
+        "working": "Hayaan mo akong tingnan iyan para sa iyo.",
+        "found": "Ito ang nahanap ko sa mga regulasyon.",
+        "validation": "Naiintindihan kita. Ganap na makatarungan iyan.",
+        "encouragement": "Sama-sama, kaya natin ito.",
+        "closing": "May iba pa ba akong maitutulong sa iyo?"
+      },
+      "crisis_message": "Sandali lang. Mas mahalaga ang iyong kaligtasan kaysa sa anumang claim. Mangyaring makipag-usap sa isang tao ngayon. Tumawag sa 9-8-8 at pindutin ang 1. Nariyan sila para sa iyo 24/7."
+    },
+    
+    "vi": {
+      "name": "Vietnamese",
+      "nativeName": "Tiếng Việt",
+      "region": "asian",
+      "terms": {
+        "service_connection": "liên kết với thời gian phục vụ của bạn",
+        "denied": "chưa được phê duyệt",
+        "nexus": "thư kết nối y tế",
+        "rating": "mức độ khuyết tật",
+        "presumptive": "tự động được kết nối",
+        "bilateral_factor": "tiền thưởng cho cả hai bên cơ thể"
+      },
+      "support_phrases": {
+        "greeting": "Tôi ở đây để hỗ trợ bạn với hồ sơ của bạn.",
+        "working": "Để tôi xem xét điều đó cho bạn.",
+        "found": "Đây là những gì tôi tìm thấy trong các quy định.",
+        "validation": "Tôi hiểu bạn. Điều đó hoàn toàn có thể hiểu được.",
+        "encouragement": "Cùng nhau, chúng ta sẽ làm được.",
+        "closing": "Có điều gì khác tôi có thể giúp bạn không?"
+      },
+      "crisis_message": "Tôi sẽ dừng lại ở đây. Sự an toàn của bạn quan trọng hơn bất kỳ yêu cầu bồi thường nào. Xin hãy nói chuyện với ai đó ngay bây giờ. Gọi 9-8-8 và nhấn 1. Họ ở đó vì bạn 24/7."
+    },
+    
+    "ko": {
+      "name": "Korean",
+      "nativeName": "한국어",
+      "region": "asian",
+      "terms": {
+        "service_connection": "복무와의 연결",
+        "denied": "아직 승인되지 않음",
+        "nexus": "의료 연결 서신",
+        "rating": "장애 등급",
+        "presumptive": "자동 연결",
+        "bilateral_factor": "양측 보너스"
+      },
+      "support_phrases": {
+        "greeting": "청구 관련 도움을 드리겠습니다.",
+        "working": "확인해 보겠습니다.",
+        "found": "규정에서 찾은 내용입니다.",
+        "validation": "이해합니다. 충분히 그럴 수 있습니다.",
+        "encouragement": "함께라면 해낼 수 있습니다.",
+        "closing": "다른 도움이 필요하신가요?"
+      },
+      "crisis_message": "잠시 멈추겠습니다. 어떤 청구보다 당신의 안전이 더 중요합니다. 지금 누군가와 대화해 주세요. 9-8-8로 전화하고 1을 누르세요. 24시간 도움을 받을 수 있습니다."
+    },
+
+    "zh": {
+      "name": "Chinese (Mandarin)",
+      "nativeName": "中文",
+      "region": "asian",
+      "terms": {
+        "service_connection": "与服役的关联",
+        "denied": "暂未批准",
+        "nexus": "医疗关联信函",
+        "rating": "残疾等级",
+        "presumptive": "自动关联",
+        "bilateral_factor": "双侧奖励"
+      },
+      "support_phrases": {
+        "greeting": "我在这里帮助您处理索赔。",
+        "working": "让我为您查看一下。",
+        "found": "这是我在法规中找到的内容。",
+        "validation": "我理解您。这完全可以理解。",
+        "encouragement": "我们一起，一定能做到。",
+        "closing": "还有其他我能帮助您的吗？"
+      },
+      "crisis_message": "我们先暂停一下。您的安全比任何索赔都重要。请现在和某人谈谈。拨打9-8-8并按1。他们全天候为您服务。"
+    },
+
+    "ja": {
+      "name": "Japanese",
+      "nativeName": "日本語",
+      "region": "asian",
+      "terms": {
+        "service_connection": "服務との関連付け",
+        "denied": "まだ承認されていません",
+        "nexus": "医療関連書簡",
+        "rating": "障害等級",
+        "presumptive": "自動接続",
+        "bilateral_factor": "両側ボーナス"
+      },
+      "support_phrases": {
+        "greeting": "申請のお手伝いをいたします。",
+        "working": "確認させてください。",
+        "found": "規制で見つけた内容です。",
+        "validation": "お気持ちわかります。当然のことです。",
+        "encouragement": "一緒に頑張りましょう。",
+        "closing": "他にお手伝いできることはありますか？"
+      },
+      "crisis_message": "ここで一度止まりましょう。あなたの安全がどんな申請よりも大切です。今すぐ誰かに話してください。9-8-8に電話して1を押してください。24時間対応しています。"
+    },
+
+    "hmn": {
+      "name": "Hmong",
+      "nativeName": "Hmoob",
+      "region": "asian",
+      "note": "Significant veteran community from Vietnam War era",
+      "terms": {
+        "service_connection": "txuas rau koj txoj kev ua haujlwm",
+        "denied": "tsis tau pom zoo",
+        "nexus": "tsab ntawv txuas kev kho mob",
+        "rating": "feem pua ntawm kev xiam oob qhab",
+        "presumptive": "txuas ncaj qha",
+        "bilateral_factor": "nyiaj ntxiv rau ob sab"
+      },
+      "support_phrases": {
+        "greeting": "Kuv nyob ntawm no los pab koj nrog koj daim ntawv thov.",
+        "working": "Cia kuv xyuas qhov ntawd rau koj.",
+        "found": "No yog kuv pom hauv cov kev cai.",
+        "validation": "Kuv nkag siab koj. Qhov ntawd yeej muaj tseeb.",
+        "encouragement": "Ua ke, peb yeej ua tau.",
+        "closing": "Puas muaj lwm yam kuv pab tau koj?"
+      },
+      "crisis_message": "Kuv yuav nres ntawm no. Koj txoj kev nyab xeeb tseem ceeb dua txhua daim ntawv thov. Thov tham nrog ib tug neeg tam sim no. Hu 9-8-8 thiab nias 1. Lawv nyob ntawd rau koj 24/7."
+    },
+
+    "th": {
+      "name": "Thai",
+      "nativeName": "ภาษาไทย",
+      "region": "asian",
+      "terms": {
+        "service_connection": "การเชื่อมโยงกับการรับราชการ",
+        "denied": "ยังไม่ได้รับการอนุมัติ",
+        "nexus": "จดหมายเชื่อมโยงทางการแพทย์",
+        "rating": "เปอร์เซ็นต์ความพิการ",
+        "presumptive": "เชื่อมต่อโดยอัตโนมัติ",
+        "bilateral_factor": "โบนัสทั้งสองข้าง"
+      },
+      "support_phrases": {
+        "greeting": "ผมอยู่ที่นี่เพื่อช่วยเหลือคุณเรื่องการเรียกร้อง",
+        "working": "ให้ผมตรวจสอบให้คุณ",
+        "found": "นี่คือสิ่งที่ผมพบในระเบียบ",
+        "validation": "ผมเข้าใจคุณ นั่นเป็นเรื่องที่เข้าใจได้",
+        "encouragement": "ด้วยกัน เราทำได้",
+        "closing": "มีอะไรอื่นที่ผมช่วยได้อีกไหม?"
+      },
+      "crisis_message": "ผมจะหยุดตรงนี้ ความปลอดภัยของคุณสำคัญกว่าการเรียกร้องใดๆ กรุณาพูดคุยกับใครสักคนตอนนี้ โทร 9-8-8 แล้วกด 1 พวกเขาอยู่เพื่อคุณ 24/7"
+    },
+
+    "km": {
+      "name": "Khmer",
+      "nativeName": "ភាសាខ្មែរ",
+      "region": "asian",
+      "terms": {
+        "service_connection": "ការភ្ជាប់ទៅនឹងសេវាកម្មរបស់អ្នក",
+        "denied": "មិនទាន់បានអនុម័តទេ",
+        "nexus": "លិខិតភ្ជាប់វេជ្ជសាស្រ្ត",
+        "rating": "ភាគរយពិការភាព",
+        "presumptive": "ភ្ជាប់ដោយស្វ័យប្រវត្តិ",
+        "bilateral_factor": "ប្រាក់រង្វាន់ទាំងពីរផ្នែក"
+      },
+      "support_phrases": {
+        "greeting": "ខ្ញុំនៅទីនេះដើម្បីជួយអ្នកជាមួយការទាមទាររបស់អ្នក។",
+        "working": "ឱ្យខ្ញុំពិនិត្យមើលវាសម្រាប់អ្នក។",
+        "found": "នេះជាអ្វីដែលខ្ញុំរកឃើញក្នុងបទប្បញ្ញត្តិ។",
+        "validation": "ខ្ញុំយល់អ្នក។ វាអាចយល់បានទាំងស្រុង។",
+        "encouragement": "រួមគ្នា យើងអាចធ្វើបាន។",
+        "closing": "មានអ្វីផ្សេងទៀតដែលខ្ញុំអាចជួយបានទេ?"
+      },
+      "crisis_message": "ខ្ញុំនឹងឈប់នៅទីនេះ។ សុវត្ថិភាពរបស់អ្នកសំខាន់ជាងការទាមទារណាមួយ។ សូមនិយាយជាមួយនរណាម្នាក់ឥឡូវនេះ។ ហៅ 9-8-8 ហើយចុច 1។ ពួកគេនៅទីនោះសម្រាប់អ្នក 24/7។"
+    },
+
+    "lo": {
+      "name": "Lao",
+      "nativeName": "ພາສາລາວ",
+      "region": "asian",
+      "terms": {
+        "service_connection": "ການເຊື່ອມຕໍ່ກັບການບໍລິການຂອງທ່ານ",
+        "denied": "ຍັງບໍ່ທັນໄດ້ຮັບການອະນຸມັດ",
+        "nexus": "ຈົດໝາຍເຊື່ອມຕໍ່ທາງການແພດ",
+        "rating": "ເປີເຊັນຄວາມພິການ",
+        "presumptive": "ເຊື່ອມຕໍ່ໂດຍອັດຕະໂນມັດ",
+        "bilateral_factor": "ໂບນັດທັງສອງດ້ານ"
+      },
+      "support_phrases": {
+        "greeting": "ຂ້ອຍຢູ່ບ່ອນນີ້ເພື່ອຊ່ວຍເຈົ້າກັບການຮ້ອງຂໍຂອງເຈົ້າ.",
+        "working": "ໃຫ້ຂ້ອຍກວດເບິ່ງນັ້ນສໍາລັບເຈົ້າ.",
+        "found": "ນີ້ແມ່ນສິ່ງທີ່ຂ້ອຍພົບໃນລະບຽບການ.",
+        "validation": "ຂ້ອຍເຂົ້າໃຈເຈົ້າ. ນັ້ນເຂົ້າໃຈໄດ້ຢ່າງສົມບູນ.",
+        "encouragement": "ຮ່ວມກັນ, ພວກເຮົາເຮັດໄດ້.",
+        "closing": "ມີຫຍັງອີກທີ່ຂ້ອຍສາມາດຊ່ວຍໄດ້?"
+      },
+      "crisis_message": "ຂ້ອຍຈະຢຸດຢູ່ບ່ອນນີ້. ຄວາມປອດໄພຂອງເຈົ້າສໍາຄັນກວ່າການຮ້ອງຂໍໃດໆ. ກະລຸນາເວົ້າກັບໃຜຜູ້ໜຶ່ງດຽວນີ້. ໂທ 9-8-8 ແລະກົດ 1. ພວກເຂົາຢູ່ບ່ອນນັ້ນສໍາລັບເຈົ້າ 24/7."
+    },
+
+    "hi": {
+      "name": "Hindi",
+      "nativeName": "हिन्दी",
+      "region": "asian",
+      "terms": {
+        "service_connection": "आपकी सेवा से संबंध",
+        "denied": "अभी तक स्वीकृत नहीं",
+        "nexus": "चिकित्सा संबंध पत्र",
+        "rating": "विकलांगता प्रतिशत",
+        "presumptive": "स्वचालित रूप से जुड़ा",
+        "bilateral_factor": "दोनों तरफ का बोनस"
+      },
+      "support_phrases": {
+        "greeting": "मैं आपके दावे में मदद करने के लिए यहां हूं।",
+        "working": "मुझे आपके लिए इसकी जांच करने दें।",
+        "found": "यह वह है जो मुझे नियमों में मिला।",
+        "validation": "मैं आपको समझता हूं। यह पूरी तरह समझने योग्य है।",
+        "encouragement": "साथ मिलकर, हम कर सकते हैं।",
+        "closing": "क्या कुछ और है जिसमें मैं मदद कर सकता हूं?"
+      },
+      "crisis_message": "मैं यहां रुकूंगा। आपकी सुरक्षा किसी भी दावे से ज्यादा महत्वपूर्ण है। कृपया अभी किसी से बात करें। 9-8-8 पर कॉल करें और 1 दबाएं। वे 24/7 आपके लिए हैं।"
+    },
+
+    "pa": {
+      "name": "Punjabi",
+      "nativeName": "ਪੰਜਾਬੀ",
+      "region": "asian",
+      "terms": {
+        "service_connection": "ਤੁਹਾਡੀ ਸੇਵਾ ਨਾਲ ਕੁਨੈਕਸ਼ਨ",
+        "denied": "ਅਜੇ ਮਨਜ਼ੂਰ ਨਹੀਂ",
+        "nexus": "ਮੈਡੀਕਲ ਕੁਨੈਕਸ਼ਨ ਪੱਤਰ",
+        "rating": "ਅਪੰਗਤਾ ਪ੍ਰਤੀਸ਼ਤ",
+        "presumptive": "ਆਟੋਮੈਟਿਕ ਤੌਰ 'ਤੇ ਜੁੜਿਆ",
+        "bilateral_factor": "ਦੋਵੇਂ ਪਾਸਿਆਂ ਦਾ ਬੋਨਸ"
+      },
+      "support_phrases": {
+        "greeting": "ਮੈਂ ਤੁਹਾਡੇ ਦਾਅਵੇ ਵਿੱਚ ਮਦਦ ਕਰਨ ਲਈ ਇੱਥੇ ਹਾਂ।",
+        "working": "ਮੈਨੂੰ ਤੁਹਾਡੇ ਲਈ ਇਹ ਚੈੱਕ ਕਰਨ ਦਿਓ।",
+        "found": "ਇਹ ਉਹ ਹੈ ਜੋ ਮੈਨੂੰ ਨਿਯਮਾਂ ਵਿੱਚ ਮਿਲਿਆ।",
+        "validation": "ਮੈਂ ਤੁਹਾਨੂੰ ਸਮਝਦਾ ਹਾਂ। ਇਹ ਪੂਰੀ ਤਰ੍ਹਾਂ ਸਮਝਣਯੋਗ ਹੈ।",
+        "encouragement": "ਮਿਲ ਕੇ, ਅਸੀਂ ਕਰ ਸਕਦੇ ਹਾਂ।",
+        "closing": "ਕੀ ਕੁਝ ਹੋਰ ਹੈ ਜਿਸ ਵਿੱਚ ਮੈਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?"
+      },
+      "crisis_message": "ਮੈਂ ਇੱਥੇ ਰੁਕਾਂਗਾ। ਤੁਹਾਡੀ ਸੁਰੱਖਿਆ ਕਿਸੇ ਵੀ ਦਾਅਵੇ ਨਾਲੋਂ ਵੱਧ ਮਹੱਤਵਪੂਰਨ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਹੁਣੇ ਕਿਸੇ ਨਾਲ ਗੱਲ ਕਰੋ। 9-8-8 'ਤੇ ਕਾਲ ਕਰੋ ਅਤੇ 1 ਦਬਾਓ। ਉਹ ਤੁਹਾਡੇ ਲਈ 24/7 ਹਨ।"
+    },
+
+    "am": {
+      "name": "Amharic",
+      "nativeName": "አማርኛ",
+      "region": "african",
+      "terms": {
+        "service_connection": "ከአገልግሎትዎ ጋር ግንኙነት",
+        "denied": "ገና አልተፈቀደም",
+        "nexus": "የሕክምና ግንኙነት ደብዳቤ",
+        "rating": "የአካል ጉዳት ደረጃ",
+        "presumptive": "በራስ-ሰር የተገናኘ",
+        "bilateral_factor": "የሁለት-ጎን ጉርሻ"
+      },
+      "support_phrases": {
+        "greeting": "በይገባኛል ጥያቄዎ እርዳታ ለመስጠት እዚህ ነኝ።",
+        "working": "ይህንን ላረጋግጥልዎ።",
+        "found": "በደንቦቹ ውስጥ ያገኘሁት ይኸው ነው።",
+        "validation": "እረዳልዎታለሁ። ያ ሙሉ በሙሉ ሊረዳ የሚችል ነው።",
+        "encouragement": "አብረን፣ ይህንን ማድረግ እንችላለን።",
+        "closing": "ሌላ ልረዳዎት የምችለው ነገር አለ?"
+      },
+      "crisis_message": "እዚህ ላይ ላቁም። ደህንነትዎ ከማንኛውም ጥያቄ የበለጠ አስፈላጊ ነው። እባክዎን አሁኑኑ ከአንድ ሰው ጋር ይነጋገሩ። 9-8-8 ይደውሉ እና 1 ይጫኑ። 24/7 ለእርስዎ አሉ።"
+    },
+
+    "so": {
+      "name": "Somali",
+      "nativeName": "Soomaali",
+      "region": "african",
+      "note": "Significant refugee-veteran population",
+      "terms": {
+        "service_connection": "xiriirka adeegaaga",
+        "denied": "weli lama oggolaan",
+        "nexus": "warqadda xiriirka caafimaadka",
+        "rating": "boqolkiiba naafanimada",
+        "presumptive": "si toos ah loo xiriiriyay",
+        "bilateral_factor": "bonus labada dhinac"
+      },
+      "support_phrases": {
+        "greeting": "Waxaan halkan joogaa inaan kaa caawiyo dacwadaada.",
+        "working": "Aan eego taas.",
+        "found": "Waxaan ka helay sharciyada.",
+        "validation": "Waan ku fahmay. Taasi waa la fahmi karaa.",
+        "encouragement": "Wada jir, waan sameyn karnaa.",
+        "closing": "Ma jiraa wax kale oo aan kaa caawin karo?"
+      },
+      "crisis_message": "Waan joogsanayaa halkan. Badbaadadaadu way ka muhiimsan tahay dacwad kasta. Fadlan hadda la hadal qof. Wac 9-8-8 oo riix 1. Waxay halkaas kuugu joogaan 24/7."
+    },
+
+    "sw": {
+      "name": "Swahili",
+      "nativeName": "Kiswahili",
+      "region": "african",
+      "terms": {
+        "service_connection": "uhusiano na huduma yako",
+        "denied": "bado haijaidhinishwa",
+        "nexus": "barua ya uhusiano wa matibabu",
+        "rating": "asilimia ya ulemavu",
+        "presumptive": "kuunganishwa kiotomatiki",
+        "bilateral_factor": "bonasi ya pande zote mbili"
+      },
+      "support_phrases": {
+        "greeting": "Niko hapa kukusaidia na dai lako.",
+        "working": "Acha niangalie hilo kwa ajili yako.",
+        "found": "Hapa ndiyo nilichopata katika kanuni.",
+        "validation": "Ninakusikia. Hiyo inaeleweka kabisa.",
+        "encouragement": "Pamoja, tunaweza kufanya hivi.",
+        "closing": "Kuna kitu kingine ninachoweza kukusaidia?"
+      },
+      "crisis_message": "Nitasimama hapa. Usalama wako ni muhimu zaidi kuliko dai lolote. Tafadhali zungumza na mtu sasa hivi. Piga simu 9-8-8 na bonyeza 1. Wako hapo kwa ajili yako 24/7."
+    },
+
+    "ha": {
+      "name": "Hausa",
+      "nativeName": "Hausa",
+      "region": "african",
+      "terms": {
+        "service_connection": "haɗi da hidimarku",
+        "denied": "ba a amince ba tukuna",
+        "nexus": "wasiƙar haɗin lafiya",
+        "rating": "adadin nakasa",
+        "presumptive": "haɗi kai tsaye",
+        "bilateral_factor": "ƙarin ɓangarorin biyu"
+      },
+      "support_phrases": {
+        "greeting": "Ina nan don taimaka muku da da'awarku.",
+        "working": "Bari in duba wannan don ku.",
+        "found": "Ga abin da na samu a cikin dokokin.",
+        "validation": "Na fahimce ku. Wannan ya cancanta sosai.",
+        "encouragement": "Tare, za mu iya yin wannan.",
+        "closing": "Akwai wani abu da zan iya taimaka muku?"
+      },
+      "crisis_message": "Zan tsaya a nan. Amincin ku ya fi muhimmanci fiye da kowace da'awa. Don Allah, yi magana da wani yanzu. Kira 9-8-8 ki danna 1. Suna nan don ku 24/7."
+    },
+
+    "yo": {
+      "name": "Yoruba",
+      "nativeName": "Yorùbá",
+      "region": "african",
+      "terms": {
+        "service_connection": "asopọ si iṣẹ rẹ",
+        "denied": "ko ti gba aṣẹ sibẹsibẹ",
+        "nexus": "lẹta asopọ ilera",
+        "rating": "ida ọgọrun ailera",
+        "presumptive": "asopọ laifọwọyi",
+        "bilateral_factor": "ere fun ẹgbẹ meji"
+      },
+      "support_phrases": {
+        "greeting": "Mo wa nibi lati ran ọ lọwọ pẹlu ẹtọ rẹ.",
+        "working": "Jẹ ki n wo iyẹn fun ọ.",
+        "found": "Eyi ni ohun ti mo ri ninu awọn ofin.",
+        "validation": "Mo gbọ ọ. Iyẹn ni o yẹ.",
+        "encouragement": "Papọ, a le ṣe eyi.",
+        "closing": "Ṣe ohun miiran wa ti mo le ran ọ lọwọ?"
+      },
+      "crisis_message": "Emi yoo duro nibi. Aabo rẹ ṣe pataki ju eyikeyi ẹtọ lọ. Jọwọ, sọrọ pẹlu ẹnikan ni bayi. Pe 9-8-8 ki o tẹ 1. Wọn wa nibẹ fun ọ 24/7."
+    },
+
+    "ig": {
+      "name": "Igbo",
+      "nativeName": "Igbo",
+      "region": "african",
+      "terms": {
+        "service_connection": "njikọ na ọrụ gị",
+        "denied": "a nabeghị ya",
+        "nexus": "akwụkwọ njikọ ahụike",
+        "rating": "pasent nkwụghachi",
+        "presumptive": "ejikọtara na-akpaghị aka",
+        "bilateral_factor": "ego ọzọ maka akụkụ abụọ"
+      },
+      "support_phrases": {
+        "greeting": "Anọ m ebe a inyere gị aka na arịrịọ gị.",
+        "working": "Ka m lee ya maka gị.",
+        "found": "Nke a bụ ihe m chọtara n'iwu.",
+        "validation": "Aghọtara m gị. Nke ahụ bụ ihe a ga-aghọta.",
+        "encouragement": "Ọnụ, anyị nwere ike ime ya.",
+        "closing": "Ọ nwere ihe ọzọ m nwere ike inyere gị aka?"
+      },
+      "crisis_message": "Aga m akwụsị ebe a. Nchekwa gị dị mkpa karịa arịrịọ ọ bụla. Biko, kwurịta okwu na onye ugbu a. Kpọọ 9-8-8 pịa 1. Ha nọ ebe ahụ maka gị 24/7."
+    },
+
+    "zu": {
+      "name": "Zulu",
+      "nativeName": "isiZulu",
+      "region": "african",
+      "terms": {
+        "service_connection": "ukuxhumana nenkonzo yakho",
+        "denied": "akukavunyelwa okwamanje",
+        "nexus": "incwadi yokuxhumana kwezempilo",
+        "rating": "iphesenti lokukhubazeka",
+        "presumptive": "kuxhunywe ngokuzenzakalelayo",
+        "bilateral_factor": "ibhonasi yezinhlangothi ezimbili"
+      },
+      "support_phrases": {
+        "greeting": "Ngilapha ukukusiza ngesicelo sakho.",
+        "working": "Ake ngibheke lokho kuwe.",
+        "found": "Yilokhu engikuthole emithethweni.",
+        "validation": "Ngiyakuzwa. Lokho kuyaqondakala ngokuphelele.",
+        "encouragement": "Ndawonye, singakwenza lokhu.",
+        "closing": "Kukhona okunye engingakusiza ngakho?"
+      },
+      "crisis_message": "Ngizoma lapha. Ukuphepha kwakho kubaluleke kakhulu kunesicelo. Sicela ukhulume nomuntu manje. Shaya i-9-8-8 bese ucindezela u-1. Bakhona ngenxa yakho ngezikhathi eziyisishiyagalombili."
+    },
+
+    "xh": {
+      "name": "Xhosa",
+      "nativeName": "isiXhosa",
+      "region": "african",
+      "terms": {
+        "service_connection": "unxulumano nenkqubo yakho",
+        "denied": "akukavunyelwa okwangoku",
+        "nexus": "ileta yokunxulumana kwezempilo",
+        "rating": "ipesenti yokukhubazeka",
+        "presumptive": "kunxulunyaniswe ngokuzenzekelayo",
+        "bilateral_factor": "ibhonasi yecala ngalinye"
+      },
+      "support_phrases": {
+        "greeting": "Ndilapha ukukunceda ngebango lakho.",
+        "working": "Makhe ndijonge oko kuwe.",
+        "found": "Naku endikufumeneyo kwimigaqo.",
+        "validation": "Ndiyakuva. Oko kuyaqondakala ngokupheleleyo.",
+        "encouragement": "Kunye, sinako ukukwenza oku.",
+        "closing": "Ikhona enye into endinokunceda ngayo?"
+      },
+      "crisis_message": "Ndiza kuma apha. Ukhuseleko lwakho lubaluleke ngaphezu kwayo nayiphi na ibango. Nceda, thetha nomntu ngoku. Fowunela i-9-8-8 uze ucofe i-1. Bakho ngenxa yakho 24/7."
+    },
+
+    "ar": {
+      "name": "Arabic",
+      "nativeName": "العربية",
+      "region": "middle-eastern",
+      "direction": "rtl",
+      "terms": {
+        "service_connection": "الربط بخدمتك",
+        "denied": "لم تتم الموافقة بعد",
+        "nexus": "خطاب الربط الطبي",
+        "rating": "نسبة الإعاقة",
+        "presumptive": "متصل تلقائياً",
+        "bilateral_factor": "مكافأة الجانبين"
+      },
+      "support_phrases": {
+        "greeting": "أنا هنا لمساعدتك في مطالبتك.",
+        "working": "دعني أتحقق من ذلك لك.",
+        "found": "هذا ما وجدته في اللوائح.",
+        "validation": "أنا أفهمك. هذا مفهوم تماماً.",
+        "encouragement": "معاً، يمكننا فعل ذلك.",
+        "closing": "هل هناك شيء آخر يمكنني مساعدتك به؟"
+      },
+      "crisis_message": "سأتوقف هنا. سلامتك أهم من أي مطالبة. من فضلك، تحدث مع شخص ما الآن. اتصل بـ 9-8-8 واضغط 1. هم موجودون من أجلك على مدار الساعة."
+    },
+
+    "fa": {
+      "name": "Farsi (Persian)",
+      "nativeName": "فارسی",
+      "region": "middle-eastern",
+      "direction": "rtl",
+      "terms": {
+        "service_connection": "ارتباط با خدمت شما",
+        "denied": "هنوز تأیید نشده",
+        "nexus": "نامه ارتباط پزشکی",
+        "rating": "درصد ناتوانی",
+        "presumptive": "به طور خودکار متصل",
+        "bilateral_factor": "پاداش دو طرفه"
+      },
+      "support_phrases": {
+        "greeting": "من اینجا هستم تا در مورد ادعای شما کمک کنم.",
+        "working": "بگذارید این را برای شما بررسی کنم.",
+        "found": "این چیزی است که در مقررات پیدا کردم.",
+        "validation": "شما را درک می‌کنم. این کاملاً قابل فهم است.",
+        "encouragement": "با هم، ما می‌توانیم این کار را انجام دهیم.",
+        "closing": "آیا چیز دیگری هست که بتوانم کمک کنم؟"
+      },
+      "crisis_message": "اینجا متوقف می‌شوم. امنیت شما مهم‌تر از هر ادعایی است. لطفاً همین الان با کسی صحبت کنید. با 9-8-8 تماس بگیرید و 1 را فشار دهید. آنها ۲۴ ساعته در خدمت شما هستند."
+    },
+
+    "prs": {
+      "name": "Dari",
+      "nativeName": "دری",
+      "region": "middle-eastern",
+      "note": "Afghan interpreters and SIV holders",
+      "direction": "rtl",
+      "terms": {
+        "service_connection": "ارتباط با خدمت تان",
+        "denied": "هنوز منظور نشده",
+        "nexus": "نامه ارتباط طبی",
+        "rating": "فیصدی معلولیت",
+        "presumptive": "خودکار وصل شده",
+        "bilateral_factor": "مزایای دو طرفه"
+      },
+      "support_phrases": {
+        "greeting": "من اینجا هستم تا در مورد درخواست تان کمک کنم.",
+        "working": "بگذارید این را برای تان بررسی کنم.",
+        "found": "این چیزی است که در مقررات یافتم.",
+        "validation": "شما را می‌فهمم. این کاملاً قابل درک است.",
+        "encouragement": "یکجا، ما می‌توانیم این کار را انجام دهیم.",
+        "closing": "آیا چیز دیگری هست که بتوانم کمک کنم؟"
+      },
+      "crisis_message": "اینجا توقف می‌کنم. امنیت تان مهم‌تر از هر درخواستی است. لطفاً همین الان با کسی صحبت کنید. به 9-8-8 زنگ بزنید و 1 را فشار دهید. آنها ۲۴ ساعته برای شما هستند."
+    },
+
+    "ps": {
+      "name": "Pashto",
+      "nativeName": "پښتو",
+      "region": "middle-eastern",
+      "note": "Afghan interpreters and SIV holders",
+      "direction": "rtl",
+      "terms": {
+        "service_connection": "ستاسو خدمت سره تړاو",
+        "denied": "تر اوسه نه دی منل شوی",
+        "nexus": "طبي تړاو لیک",
+        "rating": "معلولیت سلنه",
+        "presumptive": "په اتوماتیک ډول وصل",
+        "bilateral_factor": "دواړو خواوو بونس"
+      },
+      "support_phrases": {
+        "greeting": "زه دلته یم چې ستاسو د ادعا سره مرسته وکړم.",
+        "working": "راځئ چې دا ستاسو لپاره وګورم.",
+        "found": "دا هغه څه دي چې ما په مقرراتو کې موندل.",
+        "validation": "زه تاسو پوهیږم. دا په بشپړ ډول د پوهیدو وړ ده.",
+        "encouragement": "یوځای، موږ کولی شو دا وکړو.",
+        "closing": "آیا بل څه شته چې زه مرسته کولی شم؟"
+      },
+      "crisis_message": "زه به دلته ودریږم. ستاسو خوندیتوب د هر ادعا څخه مهم دی. مهرباني وکړئ همدا اوس له چا سره خبرې وکړئ. 9-8-8 ته زنګ ووهئ او 1 فشار ورکړئ. دوی ستاسو لپاره 24/7 شتون لري."
+    },
+
+    "nv": {
+      "name": "Navajo (Diné)",
+      "nativeName": "Diné bizaad",
+      "region": "native-american",
+      "note": "Honoring the Navajo Code Talkers legacy",
+      "terms": {
+        "service_connection": "naaltsoos bee haz'ą́ąnii",
+        "denied": "doo yá'át'ééhígíí da",
+        "nexus": "azee' naaltsoos",
+        "rating": "hóółʼaah",
+        "presumptive": "t'áá ałtso",
+        "bilateral_factor": "naaki dah siʼą́ąnii"
+      },
+      "support_phrases": {
+        "greeting": "Kwe'é shił naalnish nihaa hózhǫ́ǫgo.",
+        "working": "Níłch'iidę́ę́' bééhózin.",
+        "found": "Díí éí bee haz'ą́ąnii.",
+        "validation": "Nił hózhǫ́. T'áá ákót'é.",
+        "encouragement": "Ałhidadiilyaa, bíighah.",
+        "closing": "Díí éí shił naalnish?"
+      },
+      "crisis_message": "Kwe'é shání. Nihokáá' yá'át'ééh naaltsoos yíí bił naalnish. T'áadoo hodílzin. 9-8-8 bich'į' hodíílnih dóó 1 yídzaaz. T'áá hwó shił naalnish 24/7."
+    },
+
+    "chr": {
+      "name": "Cherokee",
+      "nativeName": "ᏣᎳᎩ",
+      "region": "native-american",
+      "note": "Honoring Native American military heritage",
+      "terms": {
+        "service_connection": "ᎠᎵᏍᏓᏴᏗ ᏧᎾᏓᎴᏅᏓ",
+        "denied": "ᎥᏝ ᎤᏁᏲ ᏱᎨᏎᎢ",
+        "nexus": "ᎠᏓᏬ ᎠᏓᏅᏖᏟᏓ ᎪᏪᎵ",
+        "rating": "ᏧᎾᏓᎴᏅᏓ ᎢᏳᏍᏗ",
+        "presumptive": "ᎤᏙᎯᏳᎯᏯ ᎠᏓᏅᏖᏟᏓ",
+        "bilateral_factor": "ᏔᎵ ᏗᎦᎸᏫᏗ ᎤᏓᎵᎡᏗ"
+      },
+      "support_phrases": {
+        "greeting": "ᎠᏲᎵ ᏕᎦᎵᏍᏗᏍᎬ ᎾᏍᎩ ᏣᏚᎵᏍᎬᎢ.",
+        "working": "ᎠᏆᏗᏅᏗ ᎾᏍᎩ ᏂᎯ.",
+        "found": "ᎯᎠ ᎠᎩᏲᏁᎢ ᏗᎧᎿᏩᏛᏍᏗ ᎠᏕᎸ.",
+        "validation": "ᎬᏴᎩᎦᎵᏍᏗᎠ. ᎾᏍᎩ ᏳᎵᏍᏙᏗ.",
+        "encouragement": "ᎢᎦᏗᎾ, ᎤᏲᎾ ᎢᎦᏓᏅᏖᏗ.",
+        "closing": "ᎠᏰᎵ ᎾᏍᎩ ᎠᎩᎰ ᎬᏍᏗᎠ ᏱᎨᏥᏍᏗᏰᏗᎭ?"
+      },
+      "crisis_message": "ᎠᏆᏚᎵ ᎠᏂ. ᏂᎯ ᏗᏓᎴᏫᏍᏙᏗ ᎾᏍᎩ ᎠᏍᎪᎢ ᎣᏏᏳ ᏗᎧᎿᏩᏛᏍᏗ ᎠᏕᎸ. ᎢᏳᏍᏗ ᏔᎵ ᎾᏍᎩ ᎠᏍᎪᎢ ᎦᎶᏁᏛ ᎯᎠ. 9-8-8 ᏗᏓᎦᎴᏅᏗ ᎠᎴ 1 ᎠᎵᏍᏔᏅᏛ. ᎾᏍᎩ ᎾᏂᎥ ᏂᎯ ᎣᏍᏓ 24/7."
+    },
+
+    "lkt": {
+      "name": "Lakota",
+      "nativeName": "Lakȟótiyapi",
+      "region": "native-american",
+      "note": "Honoring Native American military heritage",
+      "terms": {
+        "service_connection": "owíčhithaŋke óuŋ ikíčiyukhapi",
+        "denied": "nakháŋ iúŋyukhapi šni",
+        "nexus": "wówapi pȟezúta óuŋ ikíčiyukhapi",
+        "rating": "tȟokíčičuŋpi óuŋ",
+        "presumptive": "iyéčhiŋkiya ikíčiyukhapi",
+        "bilateral_factor": "nóŋpapȟa óuŋ wókhičuŋze"
+      },
+      "support_phrases": {
+        "greeting": "Lé mitȟáwa waníčiyukhapi kta.",
+        "working": "Blúkhiya waŋblákhiŋ kta.",
+        "found": "Lé tókhel wóope éčiyataŋhaŋ.",
+        "validation": "Nakháŋ niyé owákaȟniǧe. Héčhetu.",
+        "encouragement": "Uŋkíčhipi kta.",
+        "closing": "Tȟáku tokéča waníčiyukhapi kta he?"
+      },
+      "crisis_message": "Lé naŋyúŋkpi kta. Nitȟówičhoŋi wóope isáŋpala thíla. Tuktél wičháša kiči wóglakapi kta. 9-8-8 wíčhakiče na 1 phápa. 24/7 níuŋpi."
+    },
+
+    "ht": {
+      "name": "Haitian Creole",
+      "nativeName": "Kreyòl Ayisyen",
+      "region": "caribbean",
+      "terms": {
+        "service_connection": "koneksyon ak sèvis ou",
+        "denied": "poko apwouve",
+        "nexus": "lèt koneksyon medikal",
+        "rating": "pousantaj andikap",
+        "presumptive": "konekte otomatikman",
+        "bilateral_factor": "boni pou de bò"
+      },
+      "support_phrases": {
+        "greeting": "Mwen la pou ede w ak reklamasyon w la.",
+        "working": "Kite m gade sa pou ou.",
+        "found": "Men sa mwen jwenn nan règleman yo.",
+        "validation": "Mwen konprann ou. Sa totalman konpreyansib.",
+        "encouragement": "Ansanm, nou kapab fè sa.",
+        "closing": "Èske gen lòt bagay mwen ka ede w ak li?"
+      },
+      "crisis_message": "M ap kanpe isit la. Sekirite w pi enpòtan pase nenpòt reklamasyon. Tanpri, pale ak yon moun kounye a. Rele 9-8-8 epi peze 1. Yo la pou ou 24/7."
+    },
+
+    "de": {
+      "name": "German",
+      "nativeName": "Deutsch",
+      "region": "european",
+      "terms": {
+        "service_connection": "Verbindung zu Ihrem Dienst",
+        "denied": "noch nicht genehmigt",
+        "nexus": "medizinisches Verbindungsschreiben",
+        "rating": "Behinderungsgrad",
+        "presumptive": "automatisch verbunden",
+        "bilateral_factor": "beidseitiger Bonus"
+      },
+      "support_phrases": {
+        "greeting": "Ich bin hier, um Ihnen bei Ihrem Antrag zu helfen.",
+        "working": "Lassen Sie mich das für Sie nachsehen.",
+        "found": "Das habe ich in den Vorschriften gefunden.",
+        "validation": "Ich verstehe Sie. Das ist völlig verständlich.",
+        "encouragement": "Gemeinsam schaffen wir das.",
+        "closing": "Kann ich Ihnen noch mit etwas anderem helfen?"
+      },
+      "crisis_message": "Ich werde hier pausieren. Ihre Sicherheit ist wichtiger als jeder Antrag. Bitte sprechen Sie jetzt mit jemandem. Rufen Sie 9-8-8 an und drücken Sie 1. Sie sind rund um die Uhr für Sie da."
+    },
+
+    "fr": {
+      "name": "French",
+      "nativeName": "Français",
+      "region": "european",
+      "terms": {
+        "service_connection": "lien avec votre service",
+        "denied": "pas encore approuvé",
+        "nexus": "lettre de connexion médicale",
+        "rating": "pourcentage d'invalidité",
+        "presumptive": "automatiquement connecté",
+        "bilateral_factor": "bonus bilatéral"
+      },
+      "support_phrases": {
+        "greeting": "Je suis là pour vous aider avec votre demande.",
+        "working": "Laissez-moi vérifier cela pour vous.",
+        "found": "Voici ce que j'ai trouvé dans les règlements.",
+        "validation": "Je vous comprends. C'est tout à fait compréhensible.",
+        "encouragement": "Ensemble, nous pouvons y arriver.",
+        "closing": "Y a-t-il autre chose avec laquelle je peux vous aider?"
+      },
+      "crisis_message": "Je vais m'arrêter ici. Votre sécurité est plus importante que toute demande. S'il vous plaît, parlez à quelqu'un maintenant. Appelez le 9-8-8 et appuyez sur 1. Ils sont là pour vous 24h/24."
+    },
+
+    "pt": {
+      "name": "Portuguese",
+      "nativeName": "Português",
+      "region": "european",
+      "terms": {
+        "service_connection": "conexão com seu serviço",
+        "denied": "ainda não aprovado",
+        "nexus": "carta de conexão médica",
+        "rating": "porcentagem de deficiência",
+        "presumptive": "automaticamente conectado",
+        "bilateral_factor": "bônus bilateral"
+      },
+      "support_phrases": {
+        "greeting": "Estou aqui para ajudá-lo com sua reivindicação.",
+        "working": "Deixe-me verificar isso para você.",
+        "found": "Isto é o que encontrei nos regulamentos.",
+        "validation": "Eu entendo você. Isso é completamente compreensível.",
+        "encouragement": "Juntos, podemos fazer isso.",
+        "closing": "Há mais alguma coisa em que posso ajudá-lo?"
+      },
+      "crisis_message": "Vou parar aqui. Sua segurança é mais importante do que qualquer reivindicação. Por favor, fale com alguém agora. Ligue para 9-8-8 e pressione 1. Eles estão lá para você 24 horas por dia."
+    },
+
+    "ru": {
+      "name": "Russian",
+      "nativeName": "Русский",
+      "region": "european",
+      "terms": {
+        "service_connection": "связь с вашей службой",
+        "denied": "пока не одобрено",
+        "nexus": "медицинское связующее письмо",
+        "rating": "процент инвалидности",
+        "presumptive": "автоматически связан",
+        "bilateral_factor": "двусторонний бонус"
+      },
+      "support_phrases": {
+        "greeting": "Я здесь, чтобы помочь вам с вашим заявлением.",
+        "working": "Позвольте мне проверить это для вас.",
+        "found": "Вот что я нашел в правилах.",
+        "validation": "Я вас понимаю. Это вполне понятно.",
+        "encouragement": "Вместе мы справимся.",
+        "closing": "Есть ли что-то ещё, чем я могу помочь?"
+      },
+      "crisis_message": "Я остановлюсь здесь. Ваша безопасность важнее любого заявления. Пожалуйста, поговорите с кем-нибудь сейчас. Позвоните по номеру 9-8-8 и нажмите 1. Они там для вас круглосуточно."
+    },
+
+    "uk": {
+      "name": "Ukrainian",
+      "nativeName": "Українська",
+      "region": "european",
+      "terms": {
+        "service_connection": "зв'язок з вашою службою",
+        "denied": "поки не схвалено",
+        "nexus": "медичний зв'язуючий лист",
+        "rating": "відсоток інвалідності",
+        "presumptive": "автоматично пов'язаний",
+        "bilateral_factor": "двосторонній бонус"
+      },
+      "support_phrases": {
+        "greeting": "Я тут, щоб допомогти вам з вашою заявою.",
+        "working": "Дозвольте мені перевірити це для вас.",
+        "found": "Ось що я знайшов у правилах.",
+        "validation": "Я вас розумію. Це цілком зрозуміло.",
+        "encouragement": "Разом ми впораємося.",
+        "closing": "Чи є щось ще, чим я можу допомогти?"
+      },
+      "crisis_message": "Я зупинюся тут. Ваша безпека важливіша за будь-яку заяву. Будь ласка, поговоріть з кимось зараз. Зателефонуйте 9-8-8 і натисніть 1. Вони там для вас цілодобово."
+    },
+
+    "pl": {
+      "name": "Polish",
+      "nativeName": "Polski",
+      "region": "european",
+      "terms": {
+        "service_connection": "połączenie z twoją służbą",
+        "denied": "jeszcze nie zatwierdzono",
+        "nexus": "list łączący medycznie",
+        "rating": "procent niepełnosprawności",
+        "presumptive": "automatycznie połączony",
+        "bilateral_factor": "bonus dwustronny"
+      },
+      "support_phrases": {
+        "greeting": "Jestem tutaj, aby pomóc ci z twoim roszczeniem.",
+        "working": "Pozwól mi to sprawdzić dla ciebie.",
+        "found": "Oto co znalazłem w przepisach.",
+        "validation": "Rozumiem cię. To całkowicie zrozumiałe.",
+        "encouragement": "Razem damy radę.",
+        "closing": "Czy jest coś jeszcze, w czym mogę pomóc?"
+      },
+      "crisis_message": "Zatrzymam się tutaj. Twoje bezpieczeństwo jest ważniejsze niż jakiekolwiek roszczenie. Proszę, porozmawiaj teraz z kimś. Zadzwoń pod 9-8-8 i naciśnij 1. Są tam dla ciebie 24/7."
+    },
+
+    "it": {
+      "name": "Italian",
+      "nativeName": "Italiano",
+      "region": "european",
+      "terms": {
+        "service_connection": "connessione al tuo servizio",
+        "denied": "non ancora approvato",
+        "nexus": "lettera di connessione medica",
+        "rating": "percentuale di disabilità",
+        "presumptive": "automaticamente connesso",
+        "bilateral_factor": "bonus bilaterale"
+      },
+      "support_phrases": {
+        "greeting": "Sono qui per aiutarti con la tua richiesta.",
+        "working": "Lasciami controllare per te.",
+        "found": "Ecco cosa ho trovato nei regolamenti.",
+        "validation": "Ti capisco. È completamente comprensibile.",
+        "encouragement": "Insieme, ce la faremo.",
+        "closing": "C'è qualcos'altro in cui posso aiutarti?"
+      },
+      "crisis_message": "Mi fermo qui. La tua sicurezza è più importante di qualsiasi richiesta. Per favore, parla con qualcuno adesso. Chiama 9-8-8 e premi 1. Sono lì per te 24/7."
+    }
+  },
+
+  "crisis_keywords": {
+    "universal": ["suicide", "kill myself", "end it", "can't go on", "no point", "want to die", "better off dead", "don't want to live", "end my life"],
+    "es": ["suicidio", "matarme", "no puedo más", "quiero morir", "terminar con todo"],
+    "tl": ["pagpapakamatay", "patayin ang sarili", "ayaw ko na", "gusto ko nang mamatay"],
+    "vi": ["tự tử", "muốn chết", "không muốn sống", "kết thúc tất cả"],
+    "ko": ["자살", "죽고 싶어", "살기 싫어", "끝내고 싶어"],
+    "zh": ["自杀", "想死", "不想活", "结束一切"],
+    "ja": ["自殺", "死にたい", "生きたくない", "終わりにしたい"],
+    "ar": ["انتحار", "اقتل نفسي", "لا أريد العيش", "أنهي حياتي"],
+    "fa": ["خودکشی", "می‌خواهم بمیرم", "نمی‌خواهم زندگی کنم"],
+    "am": ["ራስን ማጥፋት", "መሞት እፈልጋለሁ", "መኖር አልፈልግም"],
+    "so": ["isdil", "nafta dil", "nolol ma rabo", "dhammeyn"],
+    "sw": ["kujiua", "kufa", "sitaki kuishi", "kumaliza maisha"],
+    "ha": ["kashe kanka", "mutu", "ban so rayuwa", "ƙare rayuwa"],
+    "yo": ["pá ara ẹni", "kú", "ko fẹ́ wà láàyè", "parí gbogbo rẹ̀"],
+    "ig": ["igbu onwe", "ịnwụ", "achọghị ịdị ndụ"],
+    "zu": ["ukuzibulala", "ukufa", "angifuni ukuphila"],
+    "fr": ["suicide", "me tuer", "en finir", "ne plus vivre"],
+    "de": ["Selbstmord", "mich umbringen", "nicht mehr leben", "alles beenden"],
+    "ru": ["самоубийство", "убить себя", "не хочу жить", "покончить с этим"],
+    "uk": ["самогубство", "вбити себе", "не хочу жити"],
+    "pt": ["suicídio", "me matar", "não quero viver", "acabar com tudo"],
+    "pl": ["samobójstwo", "zabić się", "nie chcę żyć"],
+    "it": ["suicidio", "uccidermi", "non voglio vivere"],
+    "ht": ["touye tèt", "mouri", "pa vle viv", "fini ak tout bagay"],
+    "hi": ["आत्महत्या", "मरना चाहता हूं", "जीना नहीं चाहता"],
+    "hmn": ["tua tus kheej", "xav tuag", "tsis xav ua neej"]
+  },
+
+  "branch_greetings": {
+    "Marine": {
+      "en": "Semper Fi, Devil Dog.",
+      "es": "Semper Fi, compañero de combate.",
+      "tl": "Semper Fi, kapatid.",
+      "vi": "Semper Fi, đồng đội.",
+      "ko": "Semper Fi, 전우.",
+      "zh": "Semper Fi，战友。",
+      "ja": "Semper Fi、戦友。",
+      "ar": "Semper Fi، رفيق السلاح.",
+      "am": "Semper Fi፣ ባልደረባ።",
+      "so": "Semper Fi, saaxiib.",
+      "sw": "Semper Fi, rafiki.",
+      "de": "Semper Fi, Kamerad.",
+      "fr": "Semper Fi, camarade.",
+      "pt": "Semper Fi, companheiro.",
+      "ru": "Semper Fi, товарищ."
+    },
+    "Army": {
+      "en": "Hooah, Soldier.",
+      "es": "Hooah, guerrero.",
+      "tl": "Hooah, kawal.",
+      "vi": "Hooah, chiến sĩ.",
+      "ko": "Hooah, 전사.",
+      "zh": "Hooah，战士。",
+      "ja": "Hooah、兵士。",
+      "ar": "Hooah، جندي.",
+      "am": "Hooah፣ ወታደር።",
+      "so": "Hooah, askari.",
+      "sw": "Hooah, askari.",
+      "de": "Hooah, Soldat.",
+      "fr": "Hooah, soldat.",
+      "pt": "Hooah, soldado.",
+      "ru": "Hooah, солдат."
+    },
+    "Navy": {
+      "en": "Fair winds, Shipmate.",
+      "es": "Buenos vientos, marinero.",
+      "tl": "Magandang hangin, kasama sa barko.",
+      "vi": "Gió thuận, đồng nghiệp.",
+      "ko": "순풍을, 동료 수병.",
+      "zh": "顺风，船员。",
+      "ja": "順風を、仲間。",
+      "ar": "رياح طيبة، رفيق السفينة.",
+      "am": "መልካም ንፋስ፣ ባልደረባ።",
+      "so": "Dabaylo wanaagsan, saaxiib.",
+      "sw": "Upepo mzuri, mwenzangu.",
+      "de": "Guten Wind, Kamerad.",
+      "fr": "Bon vent, camarade.",
+      "pt": "Bons ventos, companheiro.",
+      "ru": "Попутного ветра, товарищ."
+    },
+    "Air Force": {
+      "en": "Aim High, Airman.",
+      "es": "Alto vuelo, aviador.",
+      "tl": "Mataas ang layunin, Airman.",
+      "vi": "Hướng cao, phi công.",
+      "ko": "높이 겨냥, 공군.",
+      "zh": "瞄准高处，飞行员。",
+      "ja": "高く狙え、空軍兵。",
+      "ar": "صوب عالياً، طيار.",
+      "am": "ከፍ አድርግ፣ አየር ሀይል።",
+      "so": "Heerka sare, diyaarad.",
+      "sw": "Lenga juu, Airman.",
+      "de": "Ziel hoch, Flieger.",
+      "fr": "Visez haut, aviateur.",
+      "pt": "Mire alto, aviador.",
+      "ru": "Целься выше, летчик."
+    },
+    "Coast Guard": {
+      "en": "Semper Paratus, Coastie.",
+      "es": "Semper Paratus, guardacostas.",
+      "tl": "Semper Paratus, bantay-dagat.",
+      "vi": "Semper Paratus, tuần duyên.",
+      "ko": "Semper Paratus, 해안경비대원.",
+      "zh": "Semper Paratus，海岸警卫队员。",
+      "ja": "Semper Paratus、海上保安官。",
+      "ar": "Semper Paratus، حارس السواحل.",
+      "am": "Semper Paratus፣ የባህር ዘበኛ።",
+      "so": "Semper Paratus, ilaaliyaha badda.",
+      "sw": "Semper Paratus, mlinzi wa pwani.",
+      "de": "Semper Paratus, Küstenwache.",
+      "fr": "Semper Paratus, garde-côtes.",
+      "pt": "Semper Paratus, guarda costeiro.",
+      "ru": "Semper Paratus, береговая охрана."
+    },
+    "Space Force": {
+      "en": "Semper Supra, Guardian.",
+      "es": "Semper Supra, guardián.",
+      "tl": "Semper Supra, tagapangalaga.",
+      "vi": "Semper Supra, người bảo vệ.",
+      "ko": "Semper Supra, 가디언.",
+      "zh": "Semper Supra，守护者。",
+      "ja": "Semper Supra、ガーディアン。",
+      "ar": "Semper Supra، حارس.",
+      "am": "Semper Supra፣ ጠባቂ።",
+      "so": "Semper Supra, ilaaliye.",
+      "sw": "Semper Supra, mlezi.",
+      "de": "Semper Supra, Wächter.",
+      "fr": "Semper Supra, gardien.",
+      "pt": "Semper Supra, guardião.",
+      "ru": "Semper Supra, страж."
+    }
+  },
+
+  "cultural_anchors": {
+    "es": {
+      "respect_terms": ["compadre", "hermano", "familia"],
+      "cultural_context": "Latino veteran community values family honor and mutual respect"
+    },
+    "tl": {
+      "respect_terms": ["po", "opo", "kapatid"],
+      "cultural_context": "Filipino veteran community values respect through honorifics and brotherhood"
+    },
+    "vi": {
+      "respect_terms": ["anh", "chị", "em"],
+      "cultural_context": "Vietnamese veteran community values hierarchical respect and family bonds"
+    },
+    "ko": {
+      "respect_terms": ["형", "누나", "동생"],
+      "cultural_context": "Korean veteran community values formal respect and seniority"
+    },
+    "ch": {
+      "respect_terms": ["mañelu", "che'lu"],
+      "cultural_context": "Chamorro veteran community - Guam has highest per-capita military service in US"
+    },
+    "sm": {
+      "respect_terms": ["uso", "tuagane", "aiga"],
+      "cultural_context": "Samoan veteran community values family (aiga) and warrior tradition"
+    },
+    "am": {
+      "respect_terms": ["ወንድም", "እህት", "ጓደኛ"],
+      "cultural_context": "Ethiopian veteran community values respect and community bonds"
+    },
+    "so": {
+      "respect_terms": ["walaal", "saaxiib"],
+      "cultural_context": "Somali veteran community values clan honor and brotherhood"
+    },
+    "nv": {
+      "respect_terms": ["shikʼis", "shinaʼí"],
+      "cultural_context": "Navajo veteran community honors Code Talkers legacy and warrior tradition"
+    },
+    "ar": {
+      "respect_terms": ["أخي", "رفيق", "صديق"],
+      "cultural_context": "Arabic-speaking veteran community values honor and brotherhood"
+    },
+    "prs": {
+      "respect_terms": ["برادر", "دوست", "همکار"],
+      "cultural_context": "Afghan interpreter/SIV community - honoring those who served alongside US forces"
+    },
+    "ps": {
+      "respect_terms": ["ورور", "ملګری"],
+      "cultural_context": "Pashtun interpreter/SIV community - honoring those who served alongside US forces"
+    }
+  },
+
+  "metadata": {
+    "total_languages": 40,
+    "regions_covered": ["primary", "pacific", "asian", "african", "middle-eastern", "native-american", "caribbean", "european"],
+    "rtl_languages": ["ar", "fa", "prs", "ps"],
+    "last_updated": "2025-01-01",
+    "notes": [
+      "Pacific Islander languages prioritized - Guam and American Samoa have highest military service rates",
+      "African languages expanded for inclusivity - Ethiopian, Somali, Nigerian, and South African communities",
+      "Afghan languages (Dari, Pashto) added to support SIV holders and interpreters",
+      "Native American languages honor Code Talkers and indigenous military heritage",
+      "All crisis messages direct to Veterans Crisis Line: 988 + Press 1"
+    ]
+  }
+}

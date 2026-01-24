@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
@@ -40,6 +40,7 @@
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.80",
     "@wllama/wllama": "^2.3.7",
+    "diff-match-patch": "^1.0.5",
     "docx": "^9.5.1",
     "driver.js": "^1.4.0",
     "html2canvas": "^1.4.1",

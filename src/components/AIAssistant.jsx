@@ -25,6 +25,7 @@ const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // New: expanded modal view
   const [position, setPosition] = useState(() => {
     const saved = localStorage.getItem('vet_rate_navigator_position');
     return saved ? JSON.parse(saved) : { 
@@ -362,6 +363,181 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
     );
   }
 
+  // Expanded full-screen modal view
+  if (isExpanded) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-3xl">🧭</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-xl">The Navigator</h3>
+                <p className="text-sm text-blue-100">AI Claims Assistant • Expanded View</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {/* AI Status Button */}
+              {onOpenAISettings && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AIStatusBadge 
+                    onClick={onOpenAISettings} 
+                    className="text-sm"
+                    showLabel={true}
+                  />
+                </div>
+              )}
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                title="Shrink to floating window"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                </svg>
+              </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Messages - Larger area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900/30">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-xl p-4 ${
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : msg.isError
+                      ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-900 dark:text-red-100'
+                      : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                  }`}
+                >
+                  {/* Markdown-style formatting */}
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {msg.content.split('\n').map((line, i) => {
+                      // Bold
+                      if (line.startsWith('**') && line.endsWith('**')) {
+                        return <p key={i} className="font-bold mb-2">{line.slice(2, -2)}</p>;
+                      }
+                      // Bullet point
+                      if (line.startsWith('• ') || line.startsWith('- ')) {
+                        return <li key={i} className="ml-4">{line.slice(2)}</li>;
+                      }
+                      // Regular text
+                      if (line.trim()) {
+                        return <p key={i} className="mb-2">{line}</p>;
+                      }
+                      return <br key={i} />;
+                    })}
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20 dark:border-gray-600">
+                    <span className="text-xs opacity-70">
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {msg.mode && (
+                      <span className="text-xs opacity-70">
+                        {msg.mode === 'local' ? '🔒 Local' : '☁️ Cloud'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Analyzing your question...</span>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Questions - Horizontal */}
+          {messages.length <= 1 && !isLoading && (
+            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Quick questions:</p>
+              <div className="flex flex-wrap gap-2">
+                {getQuickQuestions().map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setInput(q)}
+                    className="text-xs px-3 py-2 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full border border-gray-200 dark:border-gray-700 transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input - Larger in expanded mode */}
+          <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isHelperMode ? "Ask me anything about VA claims... or tap the mic to speak" : "Ask me anything about VA claims, regulations, or how to use Vet-Rate tools..."}
+                  className="w-full px-4 py-3 pr-14 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base"
+                  rows={3}
+                  disabled={isLoading}
+                />
+                <div className="absolute right-3 top-3">
+                  <VoiceInputButton
+                    onTranscript={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                    size="md"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl transition-colors self-end flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <span className="font-medium">Send</span>
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              Press Enter to send • Shift+Enter for new line • 🎤 Voice input available {isHelperMode && '• 💝 Helper Mode Active'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       id="tour-ai-navigator-expanded"
@@ -398,6 +574,15 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
               />
             </div>
           )}
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="p-1.5 hover:bg-white/20 rounded transition-colors"
+            title="Expand to full screen"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
           <button
             onClick={() => setIsMinimized(true)}
             className="p-1.5 hover:bg-white/20 rounded transition-colors"

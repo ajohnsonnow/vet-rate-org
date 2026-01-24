@@ -281,7 +281,7 @@ const VoiceInputButton = ({
             </svg>
             <div>
               <p className="font-medium text-green-400 mb-1">Speak instead of typing</p>
-              <p className="text-gray-300 leading-relaxed">Click to talk. Your voice is processed by your browser—nothing is sent to our servers. 100% private.</p>
+              <p className="text-gray-300 leading-relaxed">Click to talk. Your voice is processed by your browser - nothing is sent to our servers. 100% private.</p>
             </div>
           </div>
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
@@ -325,7 +325,7 @@ const VoiceInputButton = ({
                 <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <span>Your voice is processed by your browser only—we never hear or store your audio.</span>
+                <span>Your voice is processed by your browser only - we never hear or store your audio.</span>
               </p>
             </div>
 

@@ -121,6 +121,9 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
         <>
           <span className="w-3 h-3 bg-blue-400 rounded-full" />
           <span className="text-base">{status.cloudModelName}</span>
+          <span className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium" title="Enhanced with Diamond Knowledge Base - 1,600+ VA regulations">
+            💎 DKB
+          </span>
         </>
       );
     }
@@ -139,7 +142,7 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
     if (status.effectiveMode === AI_MODES.WLLAMA) return 'Wllama (Browser) - 100% Private';
     if (status.effectiveMode === AI_MODES.LOCAL_SERVER) return 'Local Server (llama.cpp) - 100% Private';
     if (status.effectiveMode === AI_MODES.LOCAL) return `${status.localModelName} - 100% Private`;
-    if (status.effectiveMode === AI_MODES.CLOUD) return `${status.cloudModelName} - Cloud`;
+    if (status.effectiveMode === AI_MODES.CLOUD) return `${status.cloudModelName} - Cloud (💎 DKB Enhanced)`;
     return 'No AI configured - Click to set up';
   };
 

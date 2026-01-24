@@ -16,19 +16,24 @@ const HelperModeToggle = ({ compact = false }) => {
   const [showInfo, setShowInfo] = useState(false);
 
   if (compact) {
-    // Compact version for header
+    // Compact version for header - more prominent with gradient and clear purpose
     return (
       <button
         onClick={toggleHelperMode}
-        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+        className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 shadow-md hover:shadow-lg group ${
           isHelperMode
-            ? 'bg-pink-500 text-white shadow-md'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900/30'
+            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-300'
+            : 'bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 text-pink-700 dark:text-pink-300 border border-pink-300/50 dark:border-pink-600/50 hover:from-pink-200 hover:to-rose-200 dark:hover:from-pink-800/60 dark:hover:to-rose-800/60'
         }`}
-        title={isHelperMode ? 'Helper Mode Active - Click to deactivate' : 'Activate Helper Mode for simplified language'}
+        title={isHelperMode ? 'Helper Mode Active - Jargon translated to plain English' : 'I\'m helping a veteran - Click for simplified language'}
       >
-        <span>{isHelperMode ? '💝' : '🤝'}</span>
-        <span className="hidden sm:inline">{isHelperMode ? 'Helper Mode ON' : 'I\'m Helping'}</span>
+        <span className="text-lg">{isHelperMode ? '💝' : '🤝'}</span>
+        <span className="hidden sm:inline">{isHelperMode ? 'Helper ON' : 'Helping'}</span>
+        {!isHelperMode && (
+          <span className="hidden lg:inline text-[10px] px-1 py-0.5 bg-pink-500 text-white rounded font-bold group-hover:animate-pulse">
+            Caregiver?
+          </span>
+        )}
       </button>
     );
   }

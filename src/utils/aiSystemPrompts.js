@@ -881,6 +881,185 @@ export function validateAIResponse(response, context = {}) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT INJECTION FOR GEMINI
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Cache for DKB data
+let dkbCache = null;
+let dkbLoadingPromise = null;
+
+/**
+ * Load the Diamond Knowledge Base (DKB) for context injection
+ * This allows Gemini to access our validated VA data
+ */
+async function loadDKB() {
+  if (dkbCache) return dkbCache;
+  if (dkbLoadingPromise) return dkbLoadingPromise;
+  
+  dkbLoadingPromise = fetch('/data/diamond_knowledge.json')
+    .then(res => res.json())
+    .then(data => {
+      dkbCache = data;
+      console.log(`[DKB] 💎 Loaded ${data.entries?.length || 0} Diamond Knowledge Base entries for AI context`);
+      return data;
+    })
+    .catch(err => {
+      console.error('[DKB] Failed to load Diamond Knowledge Base:', err);
+      return null;
+    });
+  
+  return dkbLoadingPromise;
+}
+
+/**
+ * Search DKB for relevant entries based on user query
+ * Uses TF-IDF style matching with source boosting
+ * @param {string} query - User's question or prompt
+ * @param {number} topK - Number of results to return (default 10)
+ * @returns {Array} Relevant DKB entries with context
+ */
+export async function searchDKB(query, topK = 10) {
+  const dkb = await loadDKB();
+  if (!dkb || !dkb.entries) return [];
+  
+  const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryLower = query.toLowerCase();
+  
+  // Detect query intent for boosting
+  const isSecondaryQuery = queryLower.includes('secondary') || queryLower.includes('nexus') || queryLower.includes('caused by');
+  const isPACTQuery = queryLower.includes('pact') || queryLower.includes('toxic') || queryLower.includes('burn pit');
+  const isRatingQuery = queryLower.includes('rating') || queryLower.includes('percentage') || queryLower.includes('criteria');
+  const isBVAQuery = queryLower.includes('bva') || queryLower.includes('appeal') || queryLower.includes('board');
+  const isDCQuery = /\b\d{4}\b/.test(query); // Looking for diagnostic codes
+  
+  const scored = dkb.entries.map(entry => {
+    const instruction = (entry.instruction || '').toLowerCase();
+    const output = (entry.output || '').toLowerCase();
+    const source = entry.metadata?.source || '';
+    const type = entry.metadata?.type || '';
+    let score = 0;
+    
+    // Term matching
+    for (const term of queryTerms) {
+      if (instruction.includes(term)) score += 2;
+      if (output.includes(term)) score += 1;
+      
+      // Boost for diagnostic code matches
+      if (isDCQuery && entry.metadata?.dc && query.includes(entry.metadata.dc)) {
+        score += 10;
+      }
+      
+      // Boost for condition name matches
+      if (entry.metadata?.condition_name?.toLowerCase().includes(term)) {
+        score += 3;
+      }
+    }
+    
+    // Source-based boosting
+    if (source === 'eCFR_OFFICIAL') score *= 1.3;
+    if (source === 'OGC_PRECEDENT_OPINION') score *= 1.4;
+    if (source === 'BVA_DECISIONS' || source === 'BVA_REPORTS_OFFICIAL') score *= 1.2;
+    
+    // Intent-based boosting
+    if (isSecondaryQuery && source === 'SECONDARY_CONDITIONS_MATRIX') score *= 2.5;
+    if (isPACTQuery && source === 'PACT_ACT_OFFICIAL') score *= 2.5;
+    if (isRatingQuery && type === 'rating_criteria') score *= 2;
+    if (isBVAQuery && (source.includes('BVA') || source.includes('OGC'))) score *= 2;
+    
+    return { entry, score };
+  });
+  
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+    .map(s => s.entry);
+}
+
+/**
+ * Build DKB context string for injection into AI prompts
+ * This makes Gemini "smart" on our validated VA data
+ * @param {string} query - User's question
+ * @param {Object} options - Configuration options
+ * @returns {Promise<string>} Formatted DKB context
+ */
+export async function buildDKBContext(query, options = {}) {
+  const {
+    maxEntries = 10,
+    maxChars = 8000, // Keep under token limits
+    includeSourceUrls = true,
+  } = options;
+  
+  const relevantEntries = await searchDKB(query, maxEntries);
+  
+  if (relevantEntries.length === 0) {
+    return '';
+  }
+  
+  let context = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
+The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
+Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
+Use this data to provide accurate, regulation-based answers.
+
+`;
+
+  let charCount = context.length;
+  let entryCount = 0;
+  
+  for (const entry of relevantEntries) {
+    const entryText = formatDKBEntry(entry, includeSourceUrls);
+    
+    if (charCount + entryText.length > maxChars) break;
+    
+    context += entryText;
+    charCount += entryText.length;
+    entryCount++;
+  }
+  
+  context += `\n[${entryCount} relevant DKB entries provided from ${relevantEntries[0]?.metadata?.source || 'official sources'}]
+=== END DKB CONTEXT ===\n`;
+
+  return context;
+}
+
+/**
+ * Format a single DKB entry for context injection
+ */
+function formatDKBEntry(entry, includeSourceUrl = true) {
+  let text = `---\n`;
+  text += `Q: ${entry.instruction}\n`;
+  text += `A: ${entry.output}\n`;
+  
+  if (entry.metadata) {
+    const m = entry.metadata;
+    if (m.cfr_section) text += `Source: ${m.cfr_section}\n`;
+    if (m.dc) text += `Diagnostic Code: ${m.dc}\n`;
+    if (includeSourceUrl && m.source_url) text += `Reference: ${m.source_url}\n`;
+  }
+  
+  return text;
+}
+
+/**
+ * Enhanced buildSystemPrompt that auto-injects DKB context
+ * Call this when using Gemini to make it "smart" on VA claims
+ */
+export async function buildSystemPromptWithDKB(query, options = {}) {
+  // Get base system prompt
+  const basePrompt = buildSystemPrompt(options);
+  
+  // Get relevant DKB context
+  const dkbContext = await buildDKBContext(query, {
+    maxEntries: options.maxDKBEntries || 10,
+    maxChars: options.maxDKBChars || 8000,
+    includeSourceUrls: options.includeDKBSourceUrls !== false,
+  });
+  
+  // Combine: base + DKB context
+  return basePrompt + dkbContext;
+}
+
 export default {
   VET_RATE_APP_CONTEXT,
   KEY_REGULATIONS_SUMMARY,
@@ -896,6 +1075,9 @@ export default {
   DD214_MULTI_DOCUMENT_SYSTEM_PROMPT,
   ANTI_HALLUCINATION_SUFFIX,
   buildSystemPrompt,
+  buildSystemPromptWithDKB,
+  buildDKBContext,
+  searchDKB,
   gatherVeteranContext,
   validateAIResponse,
 };

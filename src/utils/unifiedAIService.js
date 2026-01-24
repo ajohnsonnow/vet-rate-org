@@ -589,6 +589,7 @@ const getGeminiApiKey = () => {
 
 /**
  * Generate text using Cloud AI (Gemini)
+ * 💎 Now enhanced with DKB (Diamond Knowledge Base) context injection
  */
 const generateWithCloudAI = async (prompt, options = {}) => {
   const apiKey = getGeminiApiKey();
@@ -596,15 +597,34 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     throw new Error('Gemini API key not configured');
   }
 
-  // Build comprehensive system prompt if not provided (lazy load)
-  const { buildSystemPrompt } = await getAISystemPrompts();
-  const defaultSystemPrompt = buildSystemPrompt({
+  // 💎 Build comprehensive system prompt with DKB context injection
+  const { buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
+  
+  // Get base system prompt
+  let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || 'general',
     toolContext: options.toolContext,
     includeAppContext: true,
     includeRegulations: true,
     includeVeteranData: true,
   });
+  
+  // 💎 Inject DKB context based on user's prompt (makes Gemini "smart" on VA data)
+  const useDKB = options.useDKB !== false; // Enabled by default
+  if (useDKB) {
+    try {
+      const dkbContext = await buildDKBContext(prompt, {
+        maxEntries: options.maxDKBEntries || 10,
+        maxChars: options.maxDKBChars || 8000,
+      });
+      if (dkbContext) {
+        defaultSystemPrompt += dkbContext;
+        console.log('[Gemini] 💎 DKB context injected for enhanced VA knowledge');
+      }
+    } catch (dkbError) {
+      console.warn('[Gemini] DKB context injection failed, continuing without:', dkbError.message);
+    }
+  }
 
   const {
     systemPrompt = defaultSystemPrompt,
