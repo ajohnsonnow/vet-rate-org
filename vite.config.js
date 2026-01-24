@@ -49,6 +49,8 @@ export default defineConfig({
           
           // AI/ML libraries (very heavy, lazy load)
           'ai-webllm': ['@mlc-ai/web-llm'],
+          // Note: @wllama/wllama is excluded from manual chunks due to ESM/Node.js worker code issues
+          // It's loaded dynamically via wllamaService.js
           
           // OCR processing
           'ocr': ['tesseract.js'],
@@ -63,6 +65,8 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'jspdf', 'html2canvas']
+    include: ['react', 'react-dom', 'jspdf', 'html2canvas'],
+    // Exclude wllama from pre-bundling as it contains WASM workers with Node.js code strings
+    exclude: ['@wllama/wllama']
   }
 })
