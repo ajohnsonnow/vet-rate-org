@@ -34,47 +34,122 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
     return () => clearInterval(interval);
   }, []);
 
+  // Check if any local/private AI is active
+  const isPrivateAI = status.effectiveMode === AI_MODES.SWARM || 
+                      status.effectiveMode === AI_MODES.LOCAL || 
+                      status.effectiveMode === AI_MODES.WLLAMA ||
+                      status.effectiveMode === AI_MODES.LOCAL_SERVER;
+
   const getBadgeStyle = () => {
     // Show warming up state
-    if (status.localInitializing) {
+    if (status.localInitializing || status.wllamaInitializing) {
       return 'bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse';
     }
+    // Diamond Swarm - purple/diamond
+    if (status.effectiveMode === AI_MODES.SWARM) {
+      return 'bg-purple-500/30 text-purple-300 border-purple-400 shadow-purple-500/50 shadow-md';
+    }
+    // Wllama - teal
+    if (status.effectiveMode === AI_MODES.WLLAMA) {
+      return 'bg-teal-500/30 text-teal-300 border-teal-400 shadow-teal-500/50 shadow-md';
+    }
+    // Local Server - green
+    if (status.effectiveMode === AI_MODES.LOCAL_SERVER) {
+      return 'bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md';
+    }
+    // Legacy local mode - green
     if (status.effectiveMode === AI_MODES.LOCAL) {
       return 'bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md';
     }
+    // Cloud - blue
     if (status.effectiveMode === AI_MODES.CLOUD) {
       return 'bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md';
     }
+    // No AI available - yellow warning
     return 'bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse';
+  };
+
+  const getDisplayContent = () => {
+    // Warming up state
+    if (status.localInitializing || status.wllamaInitializing) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
+          <span className="text-base">Warming up...</span>
+        </>
+      );
+    }
+    // Diamond Swarm
+    if (status.effectiveMode === AI_MODES.SWARM) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-purple-400 rounded-full animate-pulse" />
+          <span className="text-base">Diamond Swarm</span>
+        </>
+      );
+    }
+    // Wllama
+    if (status.effectiveMode === AI_MODES.WLLAMA) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-teal-400 rounded-full animate-pulse" />
+          <span className="text-base">Wllama</span>
+        </>
+      );
+    }
+    // Local Server
+    if (status.effectiveMode === AI_MODES.LOCAL_SERVER) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          <span className="text-base">Local Server</span>
+        </>
+      );
+    }
+    // Legacy local mode
+    if (status.effectiveMode === AI_MODES.LOCAL) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          <span className="text-base">{status.localModelName}</span>
+        </>
+      );
+    }
+    // Cloud
+    if (status.effectiveMode === AI_MODES.CLOUD) {
+      return (
+        <>
+          <span className="w-3 h-3 bg-blue-400 rounded-full" />
+          <span className="text-base">{status.cloudModelName}</span>
+        </>
+      );
+    }
+    // No AI
+    return (
+      <>
+        <span className="w-3 h-3 bg-gray-400 rounded-full" />
+        <span className="text-base">No AI</span>
+      </>
+    );
+  };
+
+  const getTooltip = () => {
+    if (status.localInitializing || status.wllamaInitializing) return 'AI is warming up...';
+    if (status.effectiveMode === AI_MODES.SWARM) return 'Diamond Swarm - 100% Private';
+    if (status.effectiveMode === AI_MODES.WLLAMA) return 'Wllama (Browser) - 100% Private';
+    if (status.effectiveMode === AI_MODES.LOCAL_SERVER) return 'Local Server (llama.cpp) - 100% Private';
+    if (status.effectiveMode === AI_MODES.LOCAL) return `${status.localModelName} - 100% Private`;
+    if (status.effectiveMode === AI_MODES.CLOUD) return `${status.cloudModelName} - Cloud`;
+    return 'No AI configured - Click to set up';
   };
 
   return (
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${getBadgeStyle()} ${className}`}
-      title={status.localInitializing ? 'Local AI is warming up...' : status.isPrivate ? `Local AI: ${status.localModelName} - 100% Private` : `Cloud AI: ${status.cloudModelName} - Click to configure`}
+      title={getTooltip()}
     >
-      {status.localInitializing ? (
-        <>
-          <span className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
-          <span className="text-base">⏳ Warming up...</span>
-        </>
-      ) : status.effectiveMode === AI_MODES.LOCAL ? (
-        <>
-          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-base">🔒 {status.localModelName}</span>
-        </>
-      ) : status.effectiveMode === AI_MODES.CLOUD ? (
-        <>
-          <span className="w-3 h-3 bg-blue-400 rounded-full" />
-          <span className="text-base">☁️ {status.cloudModelName}</span>
-        </>
-      ) : (
-        <>
-          <span className="w-3 h-3 bg-gray-400 rounded-full" />
-          <span className="text-base">⚠️ No AI</span>
-        </>
-      )}
+      {getDisplayContent()}
     </button>
   );
 };
