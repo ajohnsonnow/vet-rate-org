@@ -205,8 +205,11 @@ export const BODY_PARTS = {
  * Formula: A + B(1-A) where A and B are decimals
  * Example: 50% + 30% = 0.5 + 0.3(1-0.5) = 0.5 + 0.15 = 0.65 = 65%
  * 
- * CRITICAL: No intermediate rounding - only round to 1 decimal for precision
- * This matches VA Combined Ratings Table (38 CFR § 4.25)
+ * CRITICAL: The VA Combined Ratings Table (38 CFR § 4.25) uses WHOLE NUMBERS.
+ * When you look up "88 combined with 20" you get 90, not 90.4.
+ * Each step must be rounded to a whole number to match official VA calculations.
+ * 
+ * This matches how VA.gov, DAV, and Hill & Ponton calculators work.
  */
 export const combineTwoRatings = (rating1, rating2) => {
   // Validate inputs
@@ -221,8 +224,9 @@ export const combineTwoRatings = (rating1, rating2) => {
   
   const a = rating1 / 100;
   const b = rating2 / 100;
-  // Round to 1 decimal to match VA table precision
-  const result = Math.round((a + b * (1 - a)) * 100 * 10) / 10;
+  // Round to WHOLE NUMBER to match VA Combined Ratings Table
+  // The table uses whole numbers, so 88 + 20 = 90 (not 90.4)
+  const result = Math.round((a + b * (1 - a)) * 100);
   return result;
 };
 
