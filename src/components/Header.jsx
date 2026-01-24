@@ -15,7 +15,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 function Header({ 
   // Core Navigation
-  onMyPacketClick, 
+  onMyPacketClick,
+  onKnowledgeBaseClick,
   onUserManualClick,
   onVAResourcesClick,
   // Calculate Your Rating (Blue)
@@ -251,6 +252,17 @@ function Header({
               aria-label={t('tools', 'myPacket')}
             >
               📁 {t('tools', 'myPacket')}
+            </button>
+
+            {/* Knowledge Base - AI-powered knowledge graph */}
+            <button
+              onClick={onKnowledgeBaseClick}
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+              title="Knowledge Base"
+              aria-label="Knowledge Base"
+            >
+              📚 Knowledge Base
+              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
             </button>
             
             {/* Tools Dropdown - Main feature tools */}

@@ -198,7 +198,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </div>
         </div>
         
-        <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="overflow-y-auto px-6 py-6" style={{ maxHeight: 'calc(100vh - 240px)' }}>
           
           {/* THE VET-RATE PROMISE - Trust Beacon */}
           <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">

@@ -100,6 +100,7 @@ export const TOOLKIT_CATEGORIES = [
       { name: 'Cloud Sync', description: 'Back up to YOUR Google Drive (encrypted)', isNew: true },
       { name: 'VA.gov Integration', description: 'Connect to VA.gov APIs - view claims, service history, and appeals (Demo Ready)', isNew: true },
       { name: 'My Packet', description: 'Save and manage all your claims evidence in one place' },
+      { name: 'Knowledge Base', description: 'AI-powered knowledge graph built from your documents', isNew: true },
       { name: 'VA Resources Hub', description: 'Direct links to official VA programs, crisis support, and benefits' },
       { name: 'User Manual', description: 'Comprehensive guide to using every feature' },
     ]
