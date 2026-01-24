@@ -10,6 +10,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Context for redaction state
 const RedactionContext = createContext();
@@ -58,6 +59,7 @@ export const Redactable = ({
   className = '',
   alwaysShow = false
 }) => {
+  const { t } = useLanguage();
   const { isRedacting } = useRedaction();
 
   if (!isRedacting || alwaysShow) {
@@ -93,6 +95,7 @@ export const Redactable = ({
 
 // Toggle component for navbar/header
 export const RedactionToggle = ({ className = '' }) => {
+  const { t } = useLanguage();
   const { isRedacting, toggleRedaction } = useRedaction();
 
   return (

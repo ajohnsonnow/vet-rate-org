@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useContext, createContext } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { registerLocalAIEngine } from '../utils/unifiedAIService';
 import ToolCardButton from './ToolCardButton';
 import ReportBugLink from './ReportBugLink';
@@ -1193,6 +1194,7 @@ export const LocalAIProvider = ({ children }) => {
  * UI for managing and using local AI
  */
 const LocalAIPanel = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   const {
     webGPUStatus,
     isLoading,

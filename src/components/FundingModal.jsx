@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useColorSchemas } from '../hooks/useColorSchemas';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * FundingModal - Modal with multiple ways to support Vet-Rate.org
@@ -11,6 +12,7 @@ import { useColorSchemas } from '../hooks/useColorSchemas';
  * @param {object} componentStats - Optional stats about the component { name, hours, lines, description }
  */
 function FundingModal({ show, onClose, componentStats = null }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(show);
   

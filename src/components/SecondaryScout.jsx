@@ -10,6 +10,7 @@ import { findSecondaryClaims, getSecondaryClaimsSummary, filterByProbability } f
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage.js';
 import BuyMeCoffee from './BuyMeCoffee';
 import DoctorsPacket from './DoctorsPacket';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * SecondaryScout Component
@@ -17,6 +18,7 @@ import DoctorsPacket from './DoctorsPacket';
  * Displays potential secondary claims based on user's service-connected disabilities
  */
 const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpenAISettings }) => {
+  const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -205,7 +207,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
             </div>
             <div className="ml-3">
               <p className="text-sm text-blue-700">
-                Enter your current service-connected disabilities to discover potential secondary claims you may be eligible for under 38 CFR § 3.310.
+                {t('secondaryScoutSection.enterDisabilitiesInfo')}
               </p>
             </div>
           </div>
@@ -218,9 +220,9 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">🔍 Secondary Scout</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">🔍 {t('secondaryScoutSection.title')}</h1>
         <p className="text-gray-600">
-          Potential secondary claims based on your service-connected disabilities (38 CFR § 3.310)
+          {t('secondaryScoutSection.potentialClaimsSubtitle')}
         </p>
       </div>
 
@@ -229,19 +231,19 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
             <div className="text-2xl font-bold text-gray-900">{summary.totalSuggestions}</div>
-            <div className="text-sm text-gray-600">📊 Total Suggestions</div>
+            <div className="text-sm text-gray-600">📊 {t('secondaryScoutSection.totalSuggestions')}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-500">
             <div className="text-2xl font-bold text-gray-900">{summary.highProbability}</div>
-            <div className="text-sm text-gray-600">🔥 High Probability</div>
+            <div className="text-sm text-gray-600">🔥 {t('secondaryScoutSection.highProbability')}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
             <div className="text-2xl font-bold text-gray-900">{summary.byMechanism.medication}</div>
-            <div className="text-sm text-gray-600">💊 Medication-Related</div>
+            <div className="text-sm text-gray-600">💊 {t('secondaryScoutSection.medicationRelated')}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
             <div className="text-2xl font-bold text-gray-900">{summary.byMechanism.alteredGait}</div>
-            <div className="text-sm text-gray-600">🚶 Biomechanical</div>
+            <div className="text-sm text-gray-600">🚶 {t('secondaryScoutSection.biomechanical')}</div>
           </div>
         </div>
       )}
@@ -250,7 +252,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Filter by Probability:</label>
+            <label className="text-sm font-medium text-gray-700">{t('secondaryScoutSection.filterByProbability')}:</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setProbabilityFilter('High')}
@@ -260,7 +262,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                High Only
+                {t('secondaryScoutSection.highOnly')}
               </button>
               <button
                 onClick={() => setProbabilityFilter('Medium')}
@@ -270,7 +272,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                High & Medium
+                {t('secondaryScoutSection.highAndMedium')}
               </button>
             </div>
           </div>
@@ -279,14 +281,14 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
               onClick={selectAllFiltered}
               className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
             >
-              Select All
+              {t('secondaryScoutSection.selectAll')}
             </button>
             {selectedForPacket.size > 0 && (
               <button
                 onClick={clearSelection}
                 className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
               >
-                Clear Selection
+                {t('secondaryScoutSection.clearSelection')}
               </button>
             )}
           </div>
@@ -327,11 +329,11 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <span className="font-semibold text-sm sm:text-base">
-                {selectedForPacket.size} claim{selectedForPacket.size > 1 ? 's' : ''} selected
+                {selectedForPacket.size} {t('secondaryScoutSection.claimsSelected', { count: selectedForPacket.size })}
               </span>
               {getUnsavedSelectedCount() < selectedForPacket.size && (
                 <span className="text-blue-200 text-xs sm:text-sm hidden sm:inline">
-                  ({selectedForPacket.size - getUnsavedSelectedCount()} saved)
+                  ({selectedForPacket.size - getUnsavedSelectedCount()} {t('secondaryScoutSection.saved')})
                 </span>
               )}
             </div>
@@ -344,12 +346,12 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span className="hidden xs:inline">Add to </span>Packet
+                {t('secondaryScoutSection.addToPacket')}
               </button>
               <button
                 onClick={clearSelection}
                 className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
-                title="Clear selection"
+                title={t('secondaryScoutSection.clearSelection')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -362,7 +364,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
 
       {filteredSuggestions.length === 0 && suggestions.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          No suggestions match the current filter. Try selecting "High & Medium".
+          {t('secondaryScoutSection.noSuggestionsFilter')}
         </div>
       )}
 
@@ -376,9 +378,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
           </div>
           <div className="ml-3">
             <p className="text-sm text-yellow-700">
-              <strong>Important:</strong> These suggestions are educational tools based on 38 CFR § 3.310 principles. 
-              Consult with a VA-accredited representative or medical professional before filing a secondary claim. 
-              A medical nexus opinion from a qualified physician is required to establish service connection.
+              <strong>{t('secondaryScoutSection.important')}:</strong> {t('secondaryScoutSection.disclaimerText')}
             </p>
           </div>
         </div>
@@ -457,7 +457,7 @@ const SecondaryConditionCard = ({
               ) : null}
             </div>
             {isSaved && (
-              <span className="text-xs text-green-600 font-medium mt-1 block">Saved</span>
+              <span className="text-xs text-green-600 font-medium mt-1 block">{t('secondaryScoutSection.saved')}</span>
             )}
           </div>
           <div className="flex-1">
@@ -465,11 +465,11 @@ const SecondaryConditionCard = ({
               {suggestion.secondaryCondition}
             </h3>
             <p className="text-sm text-gray-600 mb-3">
-              Secondary to: <span className="font-medium text-gray-800">{suggestion.primaryCondition}</span>
+              {t('secondaryScoutSection.secondaryTo')}: <span className="font-medium text-gray-800">{suggestion.primaryCondition}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getProbabilityBadgeColor(suggestion.probability)}`}>
-                {suggestion.probability} Probability
+                {suggestion.probability === 'High' ? t('secondaryScoutSection.highProbability') : t('secondaryScoutSection.mediumProbability')}
               </span>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getMechanismBadgeColor(suggestion.mechanism)}`}>
                 {suggestion.mechanism}
@@ -481,7 +481,7 @@ const SecondaryConditionCard = ({
               )}
               {suggestion.warning && (
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-                  ⚠️ Medication-Related
+                  ⚠️ {t('secondaryScoutSection.medicationRelated')}
                 </span>
               )}
             </div>
@@ -508,7 +508,7 @@ const SecondaryConditionCard = ({
               <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Medical Nexus Theory
+              {t('secondaryScoutSection.nexusTheory')}
             </h4>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
               <p className="text-sm text-gray-800 leading-relaxed">
@@ -519,8 +519,8 @@ const SecondaryConditionCard = ({
 
           {/* Mechanism Explanation */}
           <div className="mb-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">Connection Type</h4>
-            <MechanismExplanation mechanism={suggestion.mechanism} />
+            <h4 className="text-lg font-semibold text-gray-900 mb-3">{t('secondaryScoutSection.connectionType')}</h4>
+            <MechanismExplanation mechanism={suggestion.mechanism} t={t} />
           </div>
 
           {/* Warning if applicable */}
@@ -534,7 +534,7 @@ const SecondaryConditionCard = ({
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-amber-800">
-                    <strong>Note:</strong> {suggestion.warning}
+                    <strong>{t('secondaryScoutSection.note')}:</strong> {suggestion.warning}
                   </p>
                 </div>
               </div>
@@ -544,7 +544,7 @@ const SecondaryConditionCard = ({
           {/* Medical Evidence (Literature Support) */}
           {(suggestion.medicalEvidence || suggestion.medicalCitations) && (suggestion.medicalEvidence || suggestion.medicalCitations).length > 0 && (
             <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Medical Literature Support</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">{t('secondaryScoutSection.medicalLiteratureSupport')}</h4>
               {suggestion.evidenceType && (
                 <p className="text-xs text-gray-500 mb-2 italic">{suggestion.evidenceType}</p>
               )}
@@ -573,7 +573,7 @@ const SecondaryConditionCard = ({
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Build Statement (VA Form 21-4138)
+              {t('secondaryScoutSection.buildStatement')}
             </button>
             
             {/* Doctor's Packet Button - AI-powered nexus research */}
@@ -587,7 +587,7 @@ const SecondaryConditionCard = ({
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              Get Doctor's Packet (AI)
+              {t('secondaryScoutSection.getDoctorsPacket')}
             </button>
             
             <button 
@@ -610,14 +610,14 @@ const SecondaryConditionCard = ({
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Saved (View Packet)
+                  {t('secondaryScoutSection.savedViewPacket')}
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
-                  Save for Later
+                  {t('secondaryScoutSection.saveForLater')}
                 </>
               )}
             </button>
@@ -631,25 +631,25 @@ const SecondaryConditionCard = ({
 /**
  * Mechanism Explanation Component
  */
-const MechanismExplanation = ({ mechanism }) => {
+const MechanismExplanation = ({ mechanism, t }) => {
   const explanations = {
     'Direct': {
       icon: '🎯',
-      title: 'Direct Causation',
-      description: 'The primary service-connected condition directly causes the secondary condition through physiological or psychological mechanisms. This is the most straightforward type of secondary connection.',
-      example: 'Example: PTSD directly causes anxiety through chronic stress responses and hyperarousal.'
+      titleKey: 'directCausation',
+      descriptionKey: 'directCausationDesc',
+      exampleKey: 'directCausationExample'
     },
     'Medication': {
       icon: '💊',
-      title: 'Iatrogenic (Medication-Induced)',
-      description: 'The medications or treatments necessary to manage the primary service-connected condition cause the secondary condition as a side effect. This is also called "proximate cause via treatment."',
-      example: 'Example: NSAIDs taken for back pain cause GERD by disrupting the gastric mucosal barrier.'
+      titleKey: 'iatrogenic',
+      descriptionKey: 'iatrogenicDesc',
+      exampleKey: 'iatrogenicExample'
     },
     'Altered Gait': {
       icon: '🚶',
-      title: 'Biomechanical Compensation',
-      description: 'The primary condition requires altered movement patterns, posture, or gait that place abnormal stress on other body parts, causing or aggravating secondary conditions. This is part of the "kinetic chain" concept.',
-      example: 'Example: A right knee injury causes altered gait, placing excess stress on the left knee and lumbar spine.'
+      titleKey: 'biomechanicalCompensation',
+      descriptionKey: 'biomechanicalCompensationDesc',
+      exampleKey: 'biomechanicalCompensationExample'
     }
   };
 
@@ -660,9 +660,9 @@ const MechanismExplanation = ({ mechanism }) => {
       <div className="flex items-start">
         <span className="text-3xl mr-3">{info.icon}</span>
         <div>
-          <h5 className="font-semibold text-gray-900 mb-1">{info.title}</h5>
-          <p className="text-sm text-gray-700 mb-2">{info.description}</p>
-          <p className="text-sm text-gray-600 italic">{info.example}</p>
+          <h5 className="font-semibold text-gray-900 mb-1">{t(`secondaryScoutSection.${info.titleKey}`)}</h5>
+          <p className="text-sm text-gray-700 mb-2">{t(`secondaryScoutSection.${info.descriptionKey}`)}</p>
+          <p className="text-sm text-gray-600 italic">{t(`secondaryScoutSection.${info.exampleKey}`)}</p>
         </div>
       </div>
     </div>

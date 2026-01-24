@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, ExternalLink, Info, Shield, Brain, AlertCircle, CheckCircle, Lock, Activity, FileText, Users, TrendingUp, Eye, MessageCircle, Scale } from 'lucide-react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * VAAITransparency Component
@@ -12,6 +13,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
  * from department.va.gov/ai/
  */
 const VAAITransparency = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [activeTab, setActiveTab] = useState('overview');

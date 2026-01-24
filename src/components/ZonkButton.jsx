@@ -10,6 +10,7 @@
 
 import React, { useState } from 'react';
 import { Smile, PartyPopper, Coffee } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ZONK_MESSAGES = [
   {
@@ -60,6 +61,7 @@ const MEMES = [
 ];
 
 const ZonkButton = ({ className = '' }) => {
+  const { t } = useLanguage();
   const [showZonk, setShowZonk] = useState(false);
   const [zonkData, setZonkData] = useState(null);
   const [clickCount, setClickCount] = useState(0);

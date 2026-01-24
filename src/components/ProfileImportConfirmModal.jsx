@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 /**
@@ -20,6 +21,7 @@ const ProfileImportConfirmModal = ({
   onConfirm, 
   onCancel 
 }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [editableData, setEditableData] = useState({});

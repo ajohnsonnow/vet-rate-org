@@ -15,6 +15,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, 
   FileText, 
@@ -90,6 +91,8 @@ const DBQ_CATEGORIES = [
 const DBQ_PREFIXES = ['21-0960'];
 
 const DbqFinder = ({ onClose }) => {
+  const { t } = useLanguage();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

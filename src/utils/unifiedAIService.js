@@ -1516,6 +1516,51 @@ export const generateAI = async (prompt, options = {}) => {
     };
     
   } catch (err) {
+    const errorMsg = err.message || '';
+    
+    // 🔥 CONTEXT WINDOW OVERFLOW HANDLING
+    // When Local AI (4096 tokens) can't handle large input, auto-fallback to Cloud AI (1M tokens)
+    const isContextOverflow = errorMsg.includes('ContextWindowSizeExceeded') ||
+                              errorMsg.includes('context window') ||
+                              errorMsg.includes('prompt tokens exceed');
+    
+    if (isContextOverflow) {
+      console.warn('📏 Context window overflow detected - document too large for Local AI');
+      
+      // Try Cloud AI (Gemini has 1M token context window)
+      if (isCloudAIAvailable() && !options.noFallback) {
+        console.log('☁️ Auto-falling back to Cloud AI for large document...');
+        try {
+          const text = await generateWithCloudAI(fullPrompt, {
+            ...enhancedOptions,
+            // Use minimal system prompt for large documents to save tokens
+            systemPrompt: options.systemPrompt || null,
+          });
+          return {
+            text,
+            mode: AI_MODES.CLOUD,
+            fallback: true,
+            fallbackReason: 'context_overflow',
+            note: 'Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.'
+          };
+        } catch (cloudErr) {
+          console.error('☁️ Cloud AI fallback also failed:', cloudErr.message);
+          throw new Error(
+            `Document is too large for Local AI (4096 token limit) and Cloud AI also failed. ` +
+            `Please try with a shorter document, or paste only the most important sections of your decision letter.`
+          );
+        }
+      } else {
+        // No Cloud AI available - give helpful error
+        throw new Error(
+          `📏 Document is too large for Local AI (4096 token limit). ` +
+          `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
+          `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
+          `3) Try uploading fewer pages at once.`
+        );
+      }
+    }
+    
     // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
     let fallbackMode = null;
     let canFallback = false;

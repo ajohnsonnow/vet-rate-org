@@ -10,8 +10,10 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const LoadingBunker = ({ message = 'Loading Bunker...', size = 'medium' }) => {
+  const { t } = useLanguage();
   const sizeClasses = {
     small: 'h-8 w-8 border-2',
     medium: 'h-12 w-12 border-3',

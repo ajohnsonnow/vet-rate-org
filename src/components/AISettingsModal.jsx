@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { AIModeSelector } from './AIModeSelector';
 import { getAIStatus, isCloudAIAvailable, isLocalAIReady, unloadLocalAI } from '../utils/unifiedAIService';
@@ -17,6 +18,7 @@ import PresetSelector from './PresetSelector';
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
 const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [apiKey, setApiKey] = useState('');

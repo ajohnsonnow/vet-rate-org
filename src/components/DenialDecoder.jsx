@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Camera, Upload, FileText, AlertCircle, CheckCircle, Loader, Eye, Lightbulb } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
@@ -54,6 +55,7 @@ Return ONLY valid JSON (no markdown, no code fences):
 Now analyze this denial letter text:`;
 
 const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
+  const { t } = useLanguage();
   const [step, setStep] = useState('upload'); // upload, processing, analyzing, results
   const [extractedText, setExtractedText] = useState('');
   const [analysis, setAnalysis] = useState(null);

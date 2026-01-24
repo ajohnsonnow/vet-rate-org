@@ -3,6 +3,7 @@ import { X, ExternalLink, Phone, AlertTriangle, Shield, Heart, Brain, Home, User
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import RegulationsReference from './RegulationsReference';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * VAResources Component
@@ -13,6 +14,7 @@ import RegulationsReference from './RegulationsReference';
  * and specialized veteran programs.
  */
 const VAResources = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
@@ -37,364 +39,364 @@ const VAResources = ({ onClose, onReportBug }) => {
   const resourceCategories = [
     {
       id: 'pactAct',
-      title: 'PACT Act & Toxic Exposure Benefits',
+      title: t('vaResources.pactActToxicExposure'),
       icon: <Shield className="h-6 w-6" />,
       iconBg: 'bg-amber-100 dark:bg-amber-900/30',
       iconColor: 'text-amber-600 dark:text-amber-400',
-      description: 'The largest expansion of VA health care and benefits in history',
+      description: t('vaResources.pactActCategoryDesc'),
       highlight: true,
       resources: [
         {
-          name: 'PACT Act Overview',
+          name: t('vaResources.pactActOverview'),
           url: 'https://www.va.gov/resources/the-pact-act-and-your-va-benefits/',
-          description: 'Learn about eligibility, presumptive conditions, and how to file claims',
+          description: t('vaResources.pactActOverviewDesc'),
           phone: '800-698-2411',
           important: true
         },
         {
-          name: 'File a Disability Claim',
+          name: t('vaResources.fileDisabilityClaim'),
           url: 'https://www.va.gov/disability/file-disability-claim-form-21-526ez/',
-          description: 'Submit your PACT Act-related disability claim online',
+          description: t('vaResources.fileDisabilityClaimDesc'),
           important: true
         },
         {
-          name: 'Apply for VA Health Care',
+          name: t('vaResources.applyVAHealthCare'),
           url: 'https://www.va.gov/health-care/apply-for-health-care-form-10-10ez/',
-          description: 'Expanded eligibility under PACT Act - apply now',
+          description: t('vaResources.applyVAHealthCareDesc'),
           important: true
         },
         {
-          name: 'PACT Act Performance Dashboard',
+          name: t('vaResources.pactActDashboard'),
           url: 'https://department.va.gov/pactdata/',
-          description: 'Track VA\'s progress on PACT Act implementation'
+          description: t('vaResources.pactActDashboardDesc')
         },
         {
-          name: 'Camp Lejeune Water Contamination',
+          name: t('vaResources.campLejeune'),
           url: 'https://www.va.gov/disability/eligibility/hazardous-materials-exposure/camp-lejeune-water-contamination',
-          description: 'Information for veterans exposed to contaminated water at Camp Lejeune'
+          description: t('vaResources.campLejeuneDesc')
         }
       ],
       keyInfo: [
-        'Adds 20+ presumptive conditions for burn pits, Agent Orange, and toxic exposures',
-        'Expands eligibility for Vietnam, Gulf War, and post-9/11 Veterans',
-        'No need to prove service connection for presumptive conditions',
-        'Free toxic exposure screening for all enrolled Veterans'
+        t('vaResources.pactKeyInfo1'),
+        t('vaResources.pactKeyInfo2'),
+        t('vaResources.pactKeyInfo3'),
+        t('vaResources.pactKeyInfo4')
       ]
     },
     {
       id: 'exposures',
-      title: 'Military Environmental Exposures',
+      title: t('vaResources.militaryExposures'),
       icon: <Leaf className="h-6 w-6" />,
       iconBg: 'bg-green-100 dark:bg-green-900/30',
       iconColor: 'text-green-600 dark:text-green-400',
-      description: 'Information about toxic exposures and health assessments',
+      description: t('vaResources.militaryExposuresDesc'),
       resources: [
         {
-          name: 'Military Exposures Overview',
+          name: t('vaResources.militaryExposuresOverview'),
           url: 'https://www.publichealth.va.gov/exposures/index.asp',
-          description: 'Comprehensive information on chemical, physical, and environmental hazards'
+          description: t('vaResources.militaryExposuresOverviewDesc')
         },
         {
-          name: 'Military Environmental Exposures Assessment (MEEA)',
+          name: t('vaResources.meeaAssessment'),
           url: 'https://www.publichealth.va.gov/MEEA/index.asp',
-          description: 'Free 60-minute evaluation for exposure-related health concerns',
+          description: t('vaResources.meeaAssessmentDesc'),
           important: true
         },
         {
-          name: 'VET-HOME Telehealth MEEAs',
+          name: t('vaResources.vetHomeTelehealth'),
           url: 'https://vethome.va.gov/',
-          description: 'Free telehealth assessments available nationwide',
+          description: t('vaResources.vetHomeTelehealthDesc'),
           phone: '833-633-8846'
         },
         {
-          name: 'Agent Orange Information',
+          name: t('vaResources.agentOrange'),
           url: 'https://www.publichealth.va.gov/exposures/agentorange/conditions/index.asp',
-          description: 'Agent Orange related diseases and presumptive locations'
+          description: t('vaResources.agentOrangeDesc')
         },
         {
-          name: 'Gulf War Veterans\' Illnesses',
+          name: t('vaResources.gulfWarIllnesses'),
           url: 'https://www.publichealth.va.gov/exposures/gulfwar/index.asp',
-          description: 'Information for Gulf War era Veterans'
+          description: t('vaResources.gulfWarIllnessesDesc')
         },
         {
-          name: 'Burn Pit & Airborne Hazards',
+          name: t('vaResources.burnPitHazards'),
           url: 'https://www.publichealth.va.gov/exposures/burnpits/index.asp',
-          description: 'Health information for burn pit and airborne hazard exposure',
+          description: t('vaResources.burnPitHazardsDesc'),
           important: true
         },
         {
-          name: 'Airborne Hazards and Open Burn Pit Registry',
+          name: t('vaResources.burnPitRegistry'),
           url: 'https://www.publichealth.va.gov/exposures/burnpits/registry.asp',
-          description: 'Register your exposure and track health over time - helps VA research'
+          description: t('vaResources.burnPitRegistryDesc')
         },
         {
-          name: 'Environmental Health Coordinators',
+          name: t('vaResources.envHealthCoordinators'),
           url: 'https://www.publichealth.va.gov/exposures/coordinators.asp',
-          description: 'Find your local Environmental Health Coordinator'
+          description: t('vaResources.envHealthCoordinatorsDesc')
         }
       ],
       keyInfo: [
-        'Toxic Exposure Screening (TES) every 5 years for enrolled Veterans',
-        'MEEA is not required for disability claims but can support them',
-        'Exposure categories: chemicals, radiation, air pollutants, warfare agents',
-        'Wars covered: Vietnam, Gulf War, Iraq, Afghanistan, and more'
+        t('vaResources.exposuresKeyInfo1'),
+        t('vaResources.exposuresKeyInfo2'),
+        t('vaResources.exposuresKeyInfo3'),
+        t('vaResources.exposuresKeyInfo4')
       ]
     },
     {
       id: 'mentalHealth',
-      title: 'Mental Health & PTSD',
+      title: t('vaResources.mentalHealthPTSD'),
       icon: <Brain className="h-6 w-6" />,
       iconBg: 'bg-purple-100 dark:bg-purple-900/30',
       iconColor: 'text-purple-600 dark:text-purple-400',
-      description: '24/7 crisis support and comprehensive mental health services',
+      description: t('vaResources.mentalHealthDesc'),
       resources: [
         {
-          name: 'Veterans Crisis Line',
+          name: t('vaResources.veteransCrisisLineResource'),
           url: 'https://www.veteranscrisisline.net/',
-          description: 'Immediate crisis support available 24/7',
+          description: t('vaResources.veteransCrisisLineDesc'),
           phone: '988 (Press 1)',
           urgent: true
         },
         {
-          name: 'VA Mental Health Services',
+          name: t('vaResources.vaMentalHealthServices'),
           url: 'https://www.mentalhealth.va.gov/',
-          description: 'Treatment options, resources, and appointment information'
+          description: t('vaResources.vaMentalHealthServicesDesc')
         },
         {
-          name: 'PTSD: National Center for PTSD',
+          name: t('vaResources.ptsdCenter'),
           url: 'https://www.ptsd.va.gov/',
-          description: 'World\'s leading research and educational center on PTSD',
+          description: t('vaResources.ptsdCenterDesc'),
           important: true
         },
         {
-          name: 'PTSD Treatment Decision Aid',
+          name: t('vaResources.ptsdDecisionAid'),
           url: 'https://www.ptsd.va.gov/apps/decisionaid/',
-          description: 'Interactive tool to explore treatment options'
+          description: t('vaResources.ptsdDecisionAidDesc')
         },
         {
-          name: 'AboutFace - Veteran Stories',
+          name: t('vaResources.aboutFace'),
           url: 'https://www.ptsd.va.gov/apps/aboutface/',
-          description: 'Videos of Veterans sharing their PTSD experiences'
+          description: t('vaResources.aboutFaceDesc')
         },
         {
-          name: 'Make the Connection',
+          name: t('vaResources.makeTheConnection'),
           url: 'https://www.maketheconnection.net/',
-          description: 'Veteran stories and resources for mental health'
+          description: t('vaResources.makeTheConnectionDesc')
         },
         {
-          name: 'Military Sexual Trauma (MST)',
+          name: t('vaResources.mstSupport'),
           url: 'https://www.mentalhealth.va.gov/msthome/index.asp',
-          description: 'Support and treatment for survivors of MST'
+          description: t('vaResources.mstSupportDesc')
         },
         {
-          name: 'Substance Use Treatment',
+          name: t('vaResources.substanceUseTreatment'),
           url: 'https://www.mentalhealth.va.gov/substance-use/index.asp',
-          description: 'Help for substance use disorders'
+          description: t('vaResources.substanceUseTreatmentDesc')
         }
       ],
       keyInfo: [
-        'No copays for first 3 outpatient mental health visits per year (through 2027)',
-        'PTSD and MST treatment available even without discharge upgrade',
-        'Telehealth and in-person options available',
-        'Effective treatments include CPT, PE, and EMDR therapy'
+        t('vaResources.mentalHealthKeyInfo1'),
+        t('vaResources.mentalHealthKeyInfo2'),
+        t('vaResources.mentalHealthKeyInfo3'),
+        t('vaResources.mentalHealthKeyInfo4')
       ]
     },
     {
       id: 'specializedPrograms',
-      title: 'Specialized Veteran Programs',
+      title: t('vaResources.specializedPrograms'),
       icon: <Users className="h-6 w-6" />,
       iconBg: 'bg-blue-100 dark:bg-blue-900/30',
       iconColor: 'text-blue-600 dark:text-blue-400',
-      description: 'Programs for specific veteran populations and needs',
+      description: t('vaResources.specializedProgramsDesc'),
       resources: [
         {
-          name: 'Homeless Veterans Programs',
+          name: t('vaResources.homelessVeteransPrograms'),
           url: 'https://www.va.gov/homeless/',
-          description: 'Housing assistance, outreach, and support services',
+          description: t('vaResources.homelessVeteransProgramsDesc'),
           phone: '877-424-3838',
           important: true
         },
         {
-          name: 'Center for Women Veterans',
+          name: t('vaResources.centerWomenVeterans'),
           url: 'https://www.va.gov/womenvet/',
-          description: 'Benefits, services, and resources for women Veterans',
+          description: t('vaResources.centerWomenVeteransDesc'),
           phone: '855-829-6636'
         },
         {
-          name: 'Center for Minority Veterans',
+          name: t('vaResources.centerMinorityVeterans'),
           url: 'https://www.va.gov/centerforminorityveterans/',
-          description: 'Advocacy and outreach for minority Veterans'
+          description: t('vaResources.centerMinorityVeteransDesc')
         },
         {
-          name: 'LGBTQ+ Veteran Care Program',
+          name: t('vaResources.lgbtqCareProgram'),
           url: 'https://www.patientcare.va.gov/lgbt/',
-          description: 'Health care and support for LGBTQ+ Veterans with dedicated coordinators at every VA facility',
+          description: t('vaResources.lgbtqCareProgramDesc'),
           important: true
         },
         {
-          name: 'Find Your LGBTQ+ Veteran Care Coordinator',
+          name: t('vaResources.findLgbtqCoordinator'),
           url: 'https://www.patientcare.va.gov/LGBT/VAFacilities.asp',
-          description: 'Connect with a dedicated LGBTQ+ VCC at your local VA - available at every medical center'
+          description: t('vaResources.findLgbtqCoordinatorDesc')
         },
         {
-          name: 'Discharge Upgrade for LGBTQ+ Veterans',
+          name: t('vaResources.dischargeUpgradeLgbtq'),
           url: 'https://www.va.gov/resources/discharge-upgrade-for-lgbtq-veterans/',
-          description: 'If discharged due to sexual orientation or gender identity, you may qualify for a discharge upgrade and full benefits'
+          description: t('vaResources.dischargeUpgradeLgbtqDesc')
         },
         {
-          name: 'Adaptive Sports & Special Events',
+          name: t('vaResources.adaptiveSports'),
           url: 'https://department.va.gov/veteran-sports/',
-          description: 'Paralympic sports, events, and recreation programs'
+          description: t('vaResources.adaptiveSportsDesc')
         },
         {
-          name: 'Veteran Small Business Programs',
+          name: t('vaResources.veteranSmallBusiness'),
           url: 'https://www.va.gov/osdbu/',
-          description: 'Support for Veteran-owned small businesses'
+          description: t('vaResources.veteranSmallBusinessDesc')
         },
         {
-          name: 'National Resource Directory',
+          name: t('vaResources.nationalResourceDirectory'),
           url: 'https://nrd.gov/',
-          description: 'DoD/VA comprehensive database connecting service members, veterans, families, and caregivers to 10,000+ vetted resources nationwide',
+          description: t('vaResources.nationalResourceDirectoryDesc'),
           important: true
         }
       ]
     },
     {
       id: 'healthCare',
-      title: 'Health Care & Eligibility',
+      title: t('vaResources.healthCareEligibility'),
       icon: <Heart className="h-6 w-6" />,
       iconBg: 'bg-red-100 dark:bg-red-900/30',
       iconColor: 'text-red-600 dark:text-red-400',
-      description: 'Apply for VA health care and understand eligibility',
+      description: t('vaResources.healthCareDesc'),
       resources: [
         {
-          name: 'Health Care Eligibility',
+          name: t('vaResources.healthCareEligibilityResource'),
           url: 'https://www.va.gov/health-care/eligibility/',
-          description: 'Find out if you qualify for VA health care'
+          description: t('vaResources.healthCareEligibilityDesc')
         },
         {
-          name: 'Apply for Health Care',
+          name: t('vaResources.applyVAHealthCare'),
           url: 'https://www.va.gov/health-care/apply-for-health-care-form-10-10ez/',
-          description: 'Submit your application online',
+          description: t('vaResources.applyVAHealthCareDesc'),
           important: true
         },
         {
-          name: 'Priority Groups',
+          name: t('vaResources.priorityGroups'),
           url: 'https://www.va.gov/health-care/eligibility/priority-groups',
-          description: 'Understand how priority groups affect your benefits'
+          description: t('vaResources.priorityGroupsDesc')
         },
         {
-          name: 'VA Health Care Access & Quality',
+          name: t('vaResources.vaHealthCareAccess'),
           url: 'https://www.accesstocare.va.gov/',
-          description: 'Compare wait times and quality at VA facilities'
+          description: t('vaResources.vaHealthCareAccessDesc')
         },
         {
-          name: 'Find a VA Location',
+          name: t('vaResources.findVALocation'),
           url: 'https://www.va.gov/find-locations/',
-          description: 'Locate VA medical centers, clinics, and Vet Centers'
+          description: t('vaResources.findVALocationDesc')
         },
         {
-          name: 'My HealtheVet',
+          name: t('vaResources.myHealtheVet'),
           url: 'https://www.va.gov/health-care/manage-health/',
-          description: 'Manage your health care and prescriptions online'
+          description: t('vaResources.myHealtheVetDesc')
         }
       ],
       keyInfo: [
-        'Expanded eligibility for toxic exposure Veterans under PACT Act',
-        '10-year enhanced eligibility for combat Veterans',
-        'No enrollment fee for VA health care',
-        'Copays may be waived based on disability rating or income'
+        t('vaResources.healthCareKeyInfo1'),
+        t('vaResources.healthCareKeyInfo2'),
+        t('vaResources.healthCareKeyInfo3'),
+        t('vaResources.healthCareKeyInfo4')
       ]
     },
     {
       id: 'benefits',
-      title: 'Benefits & Support',
+      title: t('vaResources.benefitsSupport'),
       icon: <Briefcase className="h-6 w-6" />,
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
       iconColor: 'text-indigo-600 dark:text-indigo-400',
-      description: 'Disability compensation, education, housing, and more',
+      description: t('vaResources.benefitsSupportDesc'),
       resources: [
         {
-          name: 'VA Outreach Events',
+          name: t('vaResources.vaOutreachEvents'),
           url: 'https://www.va.gov/outreach-and-events/events/',
-          description: 'Find VA events and town halls near you'
+          description: t('vaResources.vaOutreachEventsDesc')
         },
         {
-          name: 'Get Help from a VSO',
+          name: t('vaResources.getHelpVSO'),
           url: 'https://www.va.gov/get-help-from-accredited-representative',
-          description: 'Free help filing claims from accredited representatives'
+          description: t('vaResources.getHelpVSODesc')
         },
         {
-          name: 'VA Forms',
+          name: t('vaResources.vaForms'),
           url: 'https://www.va.gov/forms/',
-          description: 'Find and download official VA forms'
+          description: t('vaResources.vaFormsDesc')
         },
         {
-          name: 'VA Mobile Apps',
+          name: t('vaResources.vaMobileApps'),
           url: 'https://www.mobile.va.gov/appstore/',
-          description: 'Official VA apps for managing benefits'
+          description: t('vaResources.vaMobileAppsDesc')
         },
         {
-          name: 'State VA Offices',
+          name: t('vaResources.stateVAOffices'),
           url: 'https://department.va.gov/about/state-departments-of-veterans-affairs-office-locations/',
-          description: 'Find your state Veterans Affairs office'
+          description: t('vaResources.stateVAOfficesDesc')
         },
         {
-          name: 'Your VA Welcome Kit',
+          name: t('vaResources.vaWelcomeKit'),
           url: 'https://www.va.gov/welcome-kit/',
-          description: 'Comprehensive guide to VA benefits and services'
+          description: t('vaResources.vaWelcomeKitDesc')
         }
       ]
     },
     {
       id: 'regulations',
-      title: '38 CFR Part 3 - Your Rights & The Rules',
+      title: t('vaResources.regulationsRights'),
       icon: <Scale className="h-6 w-6" />,
       iconBg: 'bg-slate-100 dark:bg-slate-900/30',
       iconColor: 'text-slate-600 dark:text-slate-400',
-      description: 'Know the regulations VA must follow when deciding your claim',
+      description: t('vaResources.regulationsDesc'),
       resources: [
         {
-          name: '38 CFR Part 3 Regulations Reference',
+          name: t('vaResources.regulationsReference'),
           url: '#',
-          description: 'Interactive guide to all major claims regulations, deadlines, forms, and your rights',
+          description: t('vaResources.regulationsReferenceDesc'),
           isInternal: true,
           important: true
         },
         {
-          name: '38 CFR Part 3 - Full Text (eCFR)',
+          name: t('vaResources.ecfrPart3'),
           url: 'https://www.ecfr.gov/current/title-38/chapter-I/part-3',
-          description: 'Official regulations governing adjudication of claims'
+          description: t('vaResources.ecfrPart3Desc')
         },
         {
-          name: '38 CFR Part 4 - Rating Schedule (eCFR)',
+          name: t('vaResources.ecfrPart4'),
           url: 'https://www.ecfr.gov/current/title-38/chapter-I/part-4',
-          description: 'Official disability rating criteria and diagnostic codes'
+          description: t('vaResources.ecfrPart4Desc')
         },
         {
-          name: 'M21-1 Adjudication Manual',
+          name: t('vaResources.m21Manual'),
           url: 'https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/content/554400000014201/M21-1-Adjudication-Procedures-Manual',
-          description: 'VA internal manual for processing disability claims',
+          description: t('vaResources.m21ManualDesc'),
           important: true
         },
         {
-          name: 'Board of Veterans Appeals (BVA)',
+          name: t('vaResources.bvaAppeals'),
           url: 'https://www.bva.va.gov/',
-          description: 'Appeal decisions directly to VA\'s highest internal authority'
+          description: t('vaResources.bvaAppealsDesc')
         },
         {
-          name: 'Decision Review Process',
+          name: t('vaResources.decisionReviewProcess'),
           url: 'https://www.va.gov/decision-reviews/',
-          description: 'Understand your options: Supplemental Claim, Higher-Level Review, or Board Appeal',
+          description: t('vaResources.decisionReviewProcessDesc'),
           important: true
         }
       ],
       keyInfo: [
-        'Benefit of the Doubt (§3.102): When evidence is equal, the tie goes to you',
-        'Duty to Assist (§3.159): VA must help gather evidence for your claim',
-        'Intent to File (§3.155): Protects your effective date for up to 1 year',
-        'Rating Stabilization (§3.344): Ratings held 5+ years have extra protection',
-        'One Year from Decision: File appeal within 1 year or decision becomes final'
+        t('vaResources.regulationsKeyInfo1'),
+        t('vaResources.regulationsKeyInfo2'),
+        t('vaResources.regulationsKeyInfo3'),
+        t('vaResources.regulationsKeyInfo4'),
+        t('vaResources.regulationsKeyInfo5')
       ]
     }
   ];
@@ -414,17 +416,17 @@ const VAResources = ({ onClose, onReportBug }) => {
             <button
               onClick={onClose}
               className="text-white hover:text-gray-200 transition-colors"
-              aria-label="Close VA Resources"
+              aria-label={t('vaResources.closeVaResources')}
             >
               <X className="h-6 w-6" />
             </button>
           </div>
           <div className="flex items-center gap-3 mb-2">
             <Globe className="h-8 w-8" />
-            <h2 id="va-resources-title" className="text-3xl font-bold">VA Resources Hub <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+            <h2 id="va-resources-title" className="text-3xl font-bold">{t('vaResources.title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common.beta')}</span></h2>
           </div>
           <p className="text-blue-100 text-lg">
-            Official VA programs, benefits, and support for Veterans
+            {t('vaResources.subtitle')}
           </p>
         </div>
 
@@ -432,11 +434,11 @@ const VAResources = ({ onClose, onReportBug }) => {
         <div className="bg-red-600 dark:bg-red-700 text-white px-6 py-3 flex items-center justify-center gap-4 flex-shrink-0">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
           <div className="text-center">
-            <span className="font-semibold">Veterans Crisis Line:</span>{' '}
-            <a href="tel:988" className="underline font-bold">Dial 988, Press 1</a> |{' '}
-            <span>Text 838255</span> |{' '}
+            <span className="font-semibold">{t('vaResources.veteransCrisisLine')}</span>{' '}
+            <a href="tel:988" className="underline font-bold">{t('vaResources.dialPress1')}</a> |{' '}
+            <span>{t('vaResources.text838255')}</span> |{' '}
             <a href="https://www.veteranscrisisline.net/get-help-now/chat" target="_blank" rel="noopener noreferrer" className="underline">
-              Chat Online 24/7
+              {t('vaResources.chatOnline247')}
             </a>
           </div>
         </div>
@@ -451,11 +453,10 @@ const VAResources = ({ onClose, onReportBug }) => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">
-                  PACT Act: Largest VA Health Care Expansion in History
+                  {t('vaResources.pactActTitle')}
                 </h3>
                 <p className="text-amber-800 dark:text-amber-200 mb-3">
-                  If you served in Vietnam, the Gulf War, Iraq, Afghanistan, or any combat zone after 9/11, 
-                  you may now be eligible for VA health care and benefits - even if you were denied before.
+                  {t('vaResources.pactActDescription')}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -464,7 +465,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                   >
-                    Learn About PACT Act
+                    {t('vaResources.learnAboutPactAct')}
                     <ExternalLink className="h-4 w-4" />
                   </a>
                   <a
@@ -473,7 +474,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                   >
-                    File a Claim Now
+                    {t('vaResources.fileClaimNow')}
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
@@ -524,7 +525,7 @@ const VAResources = ({ onClose, onReportBug }) => {
                   {/* Key Info Box */}
                   {category.keyInfo && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Key Information:</h4>
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">{t('vaResources.keyInformation')}</h4>
                       <ul className="space-y-1">
                         {category.keyInfo.map((info, idx) => (
                           <li key={idx} className="text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2">
@@ -616,18 +617,18 @@ const VAResources = ({ onClose, onReportBug }) => {
           {/* Footer Info */}
           <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mt-6">
             <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              <strong>Need Help?</strong> Call the VA main information line at{' '}
+              <strong>{t('vaResources.needHelp')}</strong> {t('vaResources.callMainLine')}{' '}
               <a href="tel:1-800-698-2411" className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">
                 800-698-2411
               </a>{' '}
-              (TTY: 711) or{' '}
+              {t('vaResources.tty711')} {t('vaResources.orFindVSO')}{' '}
               <a 
                 href="https://www.va.gov/get-help-from-accredited-representative" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-blue-600 dark:text-blue-400 hover:underline"
               >
-                find a VSO to help with your claim
+                {t('vaResources.findVSOHelp')}
               </a>.
             </p>
           </div>

@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const DictationButton = ({ 
   onTranscript,
@@ -17,6 +18,7 @@ const DictationButton = ({
   className = '',
   size = 'md' // 'sm', 'md', 'lg'
 }) => {
+  const { t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [error, setError] = useState('');

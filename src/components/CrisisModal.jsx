@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { CRISIS_RESOURCES, getCrisisMessage } from '../utils/crisisInterceptor';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * CrisisModal Component
@@ -19,6 +20,7 @@ import { CRISIS_RESOURCES, getCrisisMessage } from '../utils/crisisInterceptor';
  * - High contrast, accessible design
  */
 const CrisisModal = ({ severity = 'high', source = 'application' }) => {
+  const { t } = useLanguage();
   const message = getCrisisMessage(severity);
 
   const handleCallClick = () => {
@@ -64,10 +66,10 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
             id="crisis-modal-title" 
             className="text-3xl font-bold text-gray-900 dark:text-white mb-2"
           >
-            We Care About You
+            {t('crisisModal', 'weCareAboutYou')}
           </h1>
           <p className="text-xl font-semibold text-red-600 dark:text-red-400">
-            You Are Not Alone
+            {t('crisisModal', 'youAreNotAlone')}
           </p>
         </div>
 
@@ -80,7 +82,7 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
             {message}
           </p>
           <p className="text-base text-gray-600 dark:text-gray-400">
-            This application has been paused. <strong>Please connect with a trained crisis counselor immediately.</strong>
+            {t('crisisModal', 'applicationPaused')}
           </p>
         </div>
 
@@ -106,21 +108,21 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
               />
             </svg>
             <div className="text-left">
-              <div className="text-xl">Veterans Crisis Line</div>
+              <div className="text-xl">{t('crisisModal', 'veteransCrisisLine')}</div>
               <div className="text-3xl font-extrabold tracking-wide">
                 {CRISIS_RESOURCES.phone.display}
               </div>
             </div>
           </button>
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Available 24/7 - Confidential support from fellow veterans
+            {t('crisisModal', 'available247')}
           </p>
         </div>
 
         {/* Alternative Contact Methods */}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
           <p className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-            Other Ways to Connect:
+            {t('crisisModal', 'otherWaysToConnect')}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -145,7 +147,7 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
                 />
               </svg>
               <div>
-                <div className="text-xs">Text</div>
+                <div className="text-xs">{t('crisisModal', 'textNow')}</div>
                 <div className="font-bold">{CRISIS_RESOURCES.text.number}</div>
               </div>
             </a>
@@ -171,8 +173,8 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
                 />
               </svg>
               <div>
-                <div className="text-xs">Online Chat</div>
-                <div className="font-bold text-sm">VeteransCrisisLine.net</div>
+                <div className="text-xs">{t('crisisModal', 'onlineChat')}</div>
+                <div className="font-bold text-sm">{t('crisisModal', 'chatWebsite')}</div>
               </div>
             </button>
           </div>
@@ -181,15 +183,14 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
         {/* Footer Message */}
         <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
-            <strong>You matter.</strong> Crisis counselors understand what you're going through. 
-            They are specially trained veterans and responders who can help. This is confidential and free.
+            {t('crisisModal', 'youMatter')}
           </p>
         </div>
 
         {/* International Users */}
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            International users: <a 
+            {t('crisisModal', 'internationalUsers')} <a 
               href={`tel:${CRISIS_RESOURCES.international.phone}`}
               className="underline hover:text-red-600 dark:hover:text-red-400"
             >
@@ -201,8 +202,7 @@ const CrisisModal = ({ severity = 'high', source = 'application' }) => {
 
       {/* Screen Reader Announcement */}
       <div className="sr-only" role="status" aria-live="assertive">
-        Crisis intervention activated. Veterans Crisis Line contact information is displayed. 
-        Call 988 and press 1 for immediate support.
+        {t('crisisModal', 'screenReaderAnnouncement')}
       </div>
     </div>
   );

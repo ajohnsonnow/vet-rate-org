@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getAIDataDisclosure } from '../utils/aiStatementHelper';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
@@ -15,6 +16,7 @@ const AIConsentModal = ({
   onCancel, 
   statementType = 'personal' // 'personal', 'buddy', or 'ptsd'
 }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(isOpen);
   
   if (!isOpen) return null;

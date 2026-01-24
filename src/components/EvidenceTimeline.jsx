@@ -7,11 +7,13 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import { getTimelineEvents, saveTimelineEvents, addTimelineEvent, removeTimelineEvent } from '../utils/veteranProfile';
 import ReportBugLink from './ReportBugLink';
 
 const EvidenceTimeline = ({ events = [], onEventsUpdate, onClose, onReportBug }) => {
+  const { t } = useLanguage();
   // Load persisted events on mount, fallback to props
   const [timelineEvents, setTimelineEvents] = useState(() => {
     const persisted = getTimelineEvents();

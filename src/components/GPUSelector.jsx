@@ -8,8 +8,10 @@
 import React, { useState, useEffect } from 'react';
 import { gpuManager } from '../utils/WebGPUManager';
 import { AlertTriangle, Cpu, CheckCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
+  const { t } = useLanguage();
   const [adapters, setAdapters] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);

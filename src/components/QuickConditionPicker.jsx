@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import disabilityData from '../data/disabilityData.json';
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * QuickConditionPicker Component
@@ -9,6 +10,7 @@ import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
+  const { t } = useLanguage();
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
   const [expandedSystems, setExpandedSystems] = useState(new Set());

@@ -13,10 +13,12 @@
  */
 
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import useConsistencyCheck, { getHealthStatus } from '../utils/useConsistencyCheck';
 import AIConsistencyAnalyzer from './AIConsistencyAnalyzer';
 
 export default function ConsistencyEngine({ onClose }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('rules'); // 'rules' or 'ai'
   const { contradictions, isChecking, lastCheck, refresh, criticalCount, highCount, mediumCount, totalCount } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);

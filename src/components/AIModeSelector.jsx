@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   AI_MODES, 
   getAIMode, 
@@ -24,6 +25,7 @@ import {
  * @param {boolean} showLabel - Show full label with Local/Cloud designation
  */
 export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) => {
+  const { t } = useLanguage();
   const [status, setStatus] = useState(getAIStatus());
   
   useEffect(() => {

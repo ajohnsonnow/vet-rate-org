@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import dbqLogicMap from '../data/dbq_logic_map.json';
 import disabilityData from '../data/disabilityData.json';
@@ -75,6 +76,7 @@ const getTipsForCondition = (conditionType) => {
  * Main ExamPrepRoom Component
  */
 const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   const [selectedCondition, setSelectedCondition] = useState(preselectedCondition);

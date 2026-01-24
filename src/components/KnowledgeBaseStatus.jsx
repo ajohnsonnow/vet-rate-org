@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import disabilityDataJson from '../data/disabilityData.json';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 
@@ -20,6 +21,7 @@ const disabilityData = disabilityDataJson.disabilities || [];
  * Also displays Community Knowledge Base (CKB) separately - not for training
  */
 export default function KnowledgeBaseStatus({ compact = false }) {
+  const { t } = useLanguage();
   const { getColorClass, colors, getDropdownClasses } = useColorSchemas();
   const dropdownClasses = getDropdownClasses();
   

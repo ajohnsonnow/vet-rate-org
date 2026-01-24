@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -217,6 +218,7 @@ const SYMPTOM_TYPES = {
 };
 
 const SymptomLogger = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const symptomLoggerContentRef = useRef(null);

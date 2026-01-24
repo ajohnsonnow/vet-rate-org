@@ -8,8 +8,10 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AIWarningBanner = ({ className = '' }) => {
+  const { t } = useLanguage();
   return (
     <div className={`bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 ${className}`}>
       <div className="flex items-start gap-3">

@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme, THEME_MODES, COLOR_BLIND_MODES } from '../contexts/ThemeContext';
 
 // LocalStorage key for Gemini API key (BYOK)
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
 export default function AccessibilityMenu() {
+  const { t } = useLanguage();
+  
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);

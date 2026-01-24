@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { getTotalToolCount } from '../data/toolkitData';
@@ -163,6 +164,7 @@ const tourStyles = `
 `;
 
 const BootCampTour = ({ forceShow = false, onComplete }) => {
+  const { t } = useLanguage();
   const [tourDriver, setTourDriver] = useState(null);
 
   useEffect(() => {

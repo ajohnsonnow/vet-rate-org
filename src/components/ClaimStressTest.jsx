@@ -7,12 +7,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getSavedClaims, getStatement, getAllStatements } from '../utils/claimsStorage';
 import { getVeteranProfile, getSavedForms } from '../utils/veteranProfile';
 import ReportBugLink from './ReportBugLink';
 import VoiceInputButton from './VoiceInput';
 
 const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
+  const { t } = useLanguage();
   const [testResults, setTestResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [practiceAnswers, setPracticeAnswers] = useState({});

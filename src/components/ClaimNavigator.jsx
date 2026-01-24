@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Map, Plus, ChevronRight, ChevronDown, AlertTriangle, AlertCircle,
   CheckCircle, Circle, Clock, Calendar, FileText, Scale, TrendingUp,
@@ -104,6 +105,7 @@ const UrgencyIcons = {
 // MAIN COMPONENT
 // ============================================
 const ClaimNavigator = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   // State
   const [claims, setClaims] = useState([]);
   const [selectedClaim, setSelectedClaim] = useState(null);

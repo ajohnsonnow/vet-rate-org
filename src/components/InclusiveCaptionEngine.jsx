@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * InclusiveCaptionEngine Component
@@ -18,6 +19,7 @@ const InclusiveCaptionEngine = ({
   onApprove,
   className = ''
 }) => {
+  const { t } = useLanguage();
   const [isMinimized, setIsMinimized] = useState(false);
   const [highlightedWord, setHighlightedWord] = useState('');
   const captionRef = useRef(null);

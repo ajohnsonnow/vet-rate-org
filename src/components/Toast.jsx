@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * Toast severity levels
@@ -22,6 +23,7 @@ export const ToastType = {
  * Individual Toast component
  */
 const Toast = ({ id, type, title, message, action, duration, onClose, onAction }) => {
+  const { t } = useLanguage();
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {

@@ -7,8 +7,10 @@
 
 import React from 'react';
 import { useVaAuth } from '../hooks/useVaAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function VaLoginButton() {
+  const { t } = useLanguage();
   const { isAuthenticated, isLoading, userInfo, error, login, logout } = useVaAuth();
 
   // Loading state

@@ -8,9 +8,11 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const MissionProtocol = ({ onClose }) => {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 

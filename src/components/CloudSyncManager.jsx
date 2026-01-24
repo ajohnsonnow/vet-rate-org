@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import ToolCardButton from './ToolCardButton';
 import {
@@ -22,6 +23,7 @@ import {
 import { exportAllData, importAllData } from '../utils/storage';
 
 const CloudSyncManager = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   const [isInitialized, setIsInitialized] = useState(false);

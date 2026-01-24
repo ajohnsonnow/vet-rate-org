@@ -2,6 +2,7 @@
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * EvidenceImporter Component - "The Wearable Data Bridge"
@@ -269,6 +270,7 @@ function parseCSV(text) {
 }
 
 const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [dragActive, setDragActive] = useState(false);

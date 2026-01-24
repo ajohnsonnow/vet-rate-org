@@ -5,8 +5,11 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const CrisisOverlay = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
+  
   if (!isOpen) return null;
 
   const handleCall = () => {

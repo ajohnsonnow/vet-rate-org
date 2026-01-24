@@ -5,6 +5,7 @@ import ShareButton, { PIISensitive } from './ShareButton';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import VAGovRatingPaster from './VAGovRatingPaster';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   calculateVARating,
   calculateCompensation,
@@ -37,6 +38,7 @@ import {
 
 const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capSimulatorResults = [], onClearCapResults }) => {
   useBodyScrollLock(true);
+  const { t } = useLanguage();
   
   // Ref for screenshot capture
   const calculatorContentRef = useRef(null);
@@ -105,7 +107,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   // Save current calculator conditions as "My Ratings"
   const handleSaveAsMyRatings = () => {
     if (conditions.length === 0) {
-      alert('Add some conditions in the Calculator tab first!');
+      alert(t('tacticalCalc', 'addSomeConditionsFirst'));
       return;
     }
     saveMyRatings(conditions);
@@ -179,7 +181,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   // Handle adding a condition
   const handleAddCondition = () => {
     if (!newCondition.bodyPart) {
-      alert('Please select a body part.');
+      alert(t('tacticalCalc', 'pleaseSelectBodyPart'));
       return;
     }
     
@@ -226,7 +228,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
   // Handle saving edited condition
   const handleSaveEdit = () => {
     if (!editForm.bodyPart) {
-      alert('Please select a body part.');
+      alert(t('tacticalCalc', 'pleaseSelectBodyPart'));
       return;
     }
     
@@ -324,10 +326,10 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 </div>
                 <div>
                   <h2 id="calculator-title" className="text-2xl sm:text-3xl font-bold">
-                    Tactical Calculator <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                    {t('tacticalCalc', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span>
                   </h2>
                   <p className="text-blue-100 text-sm sm:text-base mt-1">
-                    VA Math • Bilateral Factor • Gap Analysis • Pay Estimator
+                    {t('tacticalCalc', 'subtitle')}
                   </p>
                 </div>
               </div>
@@ -355,12 +357,12 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           <div className="px-3 sm:px-6 pt-3 sm:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
             <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
               {[
-                { id: 'myratings', label: '⭐ My Ratings', shortLabel: '⭐ Mine', icon: '⭐' },
-                ...(capResults.length > 0 ? [{ id: 'capresults', label: '🏥 C&P Results', shortLabel: '🏥 C&P', icon: '🏥', badge: capResults.length }] : []),
-                { id: 'calculator', label: '🧮 Calculator', shortLabel: '🧮 Calc', icon: '🧮' },
-                { id: 'paycheck', label: '💵 Paycheck', shortLabel: '💵 Pay', icon: '💵' },
-                { id: 'whatif', label: '🎯 What-If', shortLabel: '🎯 If', icon: '🎯' },
-                { id: 'rates', label: '📊 2026 Rates', shortLabel: '📊 Rates', icon: '📊' },
+                { id: 'myratings', label: t('tacticalCalc', 'myRatingsTab'), shortLabel: '⭐ ' + t('tacticalCalc', 'myRatings'), icon: '⭐' },
+                ...(capResults.length > 0 ? [{ id: 'capresults', label: t('tacticalCalc', 'capResultsTab'), shortLabel: '🏥 C&P', icon: '🏥', badge: capResults.length }] : []),
+                { id: 'calculator', label: t('tacticalCalc', 'calculatorTab'), shortLabel: '🧮 ' + t('tacticalCalc', 'calculator'), icon: '🧮' },
+                { id: 'paycheck', label: t('tacticalCalc', 'paycheckTab'), shortLabel: '💵 ' + t('tacticalCalc', 'paycheck'), icon: '💵' },
+                { id: 'whatif', label: t('tacticalCalc', 'whatIfTab'), shortLabel: '🎯 ' + t('tacticalCalc', 'whatIf'), icon: '🎯' },
+                { id: 'rates', label: t('tacticalCalc', 'ratesTab'), shortLabel: '📊 ' + t('tacticalCalc', 'rates2026'), icon: '📊' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -397,9 +399,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       <span className="text-xl">⭐</span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-amber-800 dark:text-amber-200">My VA Ratings</h3>
+                      <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('tacticalCalc', 'myVARatings')}</h3>
                       <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        Save your actual service-connected disability ratings here. They'll be saved locally on your device and can be used across the app.
+                        {t('tacticalCalc', 'myVARatingsDesc')}
                       </p>
                     </div>
                   </div>
@@ -409,7 +411,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {showSaveConfirm && (
                   <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-center gap-2">
                     <span className="text-green-600 dark:text-green-400">✓</span>
-                    <span className="text-green-700 dark:text-green-300 text-sm">Ratings saved successfully!</span>
+                    <span className="text-green-700 dark:text-green-300 text-sm">{t('tacticalCalc', 'ratingsSavedSuccess')}</span>
                   </div>
                 )}
 
@@ -417,13 +419,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {/* My Saved Ratings List */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-800 dark:text-gray-200">Saved Ratings</h4>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200">{t('tacticalCalc', 'savedRatings')}</h4>
                       {myRatings.length > 0 && (
                         <button
                           onClick={handleLoadMyRatings}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          Load into Calculator →
+                          {t('tacticalCalc', 'loadIntoCalculator')}
                         </button>
                       )}
                     </div>
@@ -431,22 +433,22 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     {myRatings.length === 0 ? (
                       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
                         <span className="text-4xl mb-3 block">📋</span>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">No ratings saved yet</p>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">{t('tacticalCalc', 'noRatingsSavedYet')}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                          Paste your ratings directly from VA.gov or add them in the Calculator tab.
+                          {t('tacticalCalc', 'pasteRatingsDesc')}
                         </p>
                         <div className="space-y-2">
                           <button
                             onClick={() => setShowVAGovPaster(true)}
                             className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
                           >
-                            <span className="text-lg">📋</span> Paste from VA.gov
+                            <span className="text-lg">📋</span> {t('tacticalCalc', 'pasteFromVAGov')}
                           </button>
                           <button
                             onClick={() => setActiveTab('calculator')}
                             className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                           >
-                            Or Add in Calculator
+                            {t('tacticalCalc', 'orAddInCalculator')}
                           </button>
                         </div>
                       </div>
@@ -496,7 +498,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           onClick={() => setShowVAGovPaster(true)}
                           className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
                         >
-                          <span>📋</span> Paste from VA.gov
+                          <span>📋</span> {t('tacticalCalc', 'pasteFromVAGov')}
                         </button>
                       )}
 
@@ -506,7 +508,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           onClick={handleSaveAsMyRatings}
                           className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                         >
-                          <span>⭐</span> Save Calculator Conditions as My Ratings
+                          <span>⭐</span> {t('tacticalCalc', 'saveCalcConditions')}
                         </button>
                       )}
                     </div>
@@ -518,23 +520,23 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       <>
                         {/* Combined Rating Display */}
                         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-6 text-center">
-                          <p className="text-blue-100 text-sm mb-2">My Combined VA Rating</p>
+                          <p className="text-blue-100 text-sm mb-2">{t('tacticalCalc', 'myCombinedRating')}</p>
                           <div className="text-5xl font-bold mb-2">{myRatingsResults.combinedRating}%</div>
                           {myRatingsResults.bilateralFactor > 0 && (
                             <p className="text-blue-200 text-sm">
-                              Includes {myRatingsResults.bilateralFactor.toFixed(1)}% Bilateral Factor
+                              {t('tacticalCalc', 'includesBilateral')} {myRatingsResults.bilateralFactor.toFixed(1)}%
                             </p>
                           )}
                         </div>
 
                         {/* Monthly Pay Estimate */}
                         <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
-                          <p className="text-green-100 text-sm mb-2">Estimated Monthly Pay (Solo)</p>
+                          <p className="text-green-100 text-sm mb-2">{t('tacticalCalc', 'estimatedMonthlyPaySolo')}</p>
                           <div className="text-4xl font-bold">
                             ${VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating]?.toLocaleString() || '0'}
                           </div>
                           <p className="text-green-200 text-sm mt-2">
-                            ${((VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating] || 0) * 12).toLocaleString()}/year
+                            ${((VA_PAY_RATES_2026.solo[myRatingsResults.combinedRating] || 0) * 12).toLocaleString()}/{t('tacticalCalc', 'yearlyPay').toLowerCase()}
                           </p>
                         </div>
 
@@ -542,22 +544,22 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         <div className="grid grid-cols-2 gap-3">
                           <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{myRatings.length}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Conditions</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{t('tacticalCalc', 'conditions')}</div>
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{myRatingsResults.rawScore}%</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Raw Score</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{t('tacticalCalc', 'rawScore')}</div>
                           </div>
                         </div>
 
                         {/* Gap Analysis */}
                         {myRatingsResults.combinedRating < 100 && (
                           <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
-                            <h5 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Gap to Next Tier</h5>
+                            <h5 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">{t('tacticalCalc', 'gapToNext')}</h5>
                             <p className="text-sm text-purple-700 dark:text-purple-300">
-                              You're <strong>{myRatingsResults.gapToNextTier}%</strong> away from the next rating tier.
+                              <strong>{myRatingsResults.gapToNextTier}%</strong> {t('tacticalCalc', 'awayFromNextTier')}
                               {myRatingsResults.combinedRating < 100 && myRatingsResults.combinedRating >= 90 && (
-                                <span className="block mt-1">So close to 100%! Use What-If to explore options.</span>
+                                <span className="block mt-1">{t('tacticalCalc', 'closeToHundred')}</span>
                               )}
                             </p>
                           </div>
@@ -567,7 +569,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         {myRatingsPyramiding.hasPotentialPyramiding && (
                           <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-lg p-4">
                             <h5 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                              <span>⚠️</span> Pyramiding Alert
+                              <span>⚠️</span> {t('tacticalCalc', 'pyramidingAlert')}
                             </h5>
                             <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
                               {myRatingsPyramiding.summary}
@@ -591,7 +593,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 text-center">
                         <span className="text-6xl mb-4 block opacity-30">📊</span>
                         <p className="text-gray-500 dark:text-gray-400">
-                          Save your ratings to see your combined rating and pay estimate here.
+                          {t('tacticalCalc', 'saveRatingsToSee')}
                         </p>
                       </div>
                     )}
@@ -604,13 +606,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <span className="text-xl">💡</span>
                     <div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Pro Tip:</strong> Your saved ratings can be used to:
+                        <strong>{t('tacticalCalc', 'proTip')}:</strong> {t('tacticalCalc', 'proTipDesc')}
                       </p>
                       <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
-                        <li>Quick-load into the Calculator for what-if scenarios</li>
-                        <li>Pre-populate Secondary Scout with your service-connected conditions</li>
-                        <li>Track your rating progress over time</li>
-                        <li>Calculate accurate paycheck estimates with dependents</li>
+                        <li>{t('tacticalCalc', 'proTipItem1')}</li>
+                        <li>{t('tacticalCalc', 'proTipItem2')}</li>
+                        <li>{t('tacticalCalc', 'proTipItem3')}</li>
+                        <li>{t('tacticalCalc', 'proTipItem4')}</li>
                       </ul>
                     </div>
                   </div>
@@ -628,9 +630,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       <span className="text-xl">🏥</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-teal-900 dark:text-teal-100">C&P Simulator Results</h3>
+                      <h3 className="font-bold text-teal-900 dark:text-teal-100">{t('tacticalCalc', 'capSimulatorResults')}</h3>
                       <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
-                        These ratings were predicted from your C&P Exam simulations. Add them to your calculator to see the combined rating impact!
+                        {t('tacticalCalc', 'capSimulatorDesc')}
                       </p>
                     </div>
                     <button
@@ -641,7 +643,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       }}
                       className="text-sm text-teal-600 dark:text-teal-400 hover:underline"
                     >
-                      Clear All
+                      {t('tacticalCalc', 'clearAll')}
                     </button>
                   </div>
                 </div>
@@ -697,7 +699,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           }}
                           className="flex-1 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                         >
-                          <span>🧮</span> Add to Calculator
+                          <span>🧮</span> {t('tacticalCalc', 'addToCalculator')}
                         </button>
                         <button
                           onClick={() => {
@@ -716,7 +718,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           }}
                           className="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                         >
-                          <span>⭐</span> Save to My Ratings
+                          <span>⭐</span> {t('tacticalCalc', 'saveToMyRatings')}
                         </button>
                       </div>
                     </div>
@@ -726,9 +728,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {/* Calculate Combined if we add all */}
                 {capResults.length > 0 && (
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Quick Preview</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">{t('tacticalCalc', 'quickPreview')}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      If you add all {capResults.length} C&P result{capResults.length !== 1 ? 's' : ''} to your existing conditions:
+                      {t('tacticalCalc', 'ifYouAddAll')}
                     </p>
                     
                     {(() => {
@@ -748,15 +750,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                             <div className="text-2xl font-bold text-blue-600">{conditions.length}</div>
-                            <div className="text-xs text-gray-500">Current</div>
+                            <div className="text-xs text-gray-500">{t('tacticalCalc', 'current')}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                             <div className="text-2xl font-bold text-teal-600">+{capResults.length}</div>
-                            <div className="text-xs text-gray-500">From C&P</div>
+                            <div className="text-xs text-gray-500">{t('tacticalCalc', 'fromCAP')}</div>
                           </div>
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                             <div className="text-2xl font-bold text-green-600">{previewResults.combinedRating}%</div>
-                            <div className="text-xs text-gray-500">Combined</div>
+                            <div className="text-xs text-gray-500">{t('tacticalCalc', 'combined')}</div>
                           </div>
                         </div>
                       );
@@ -781,7 +783,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       }}
                       className="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition-colors"
                     >
-                      Add All to Calculator
+                      {t('tacticalCalc', 'addAllToCalculator')}
                     </button>
                   </div>
                 )}
@@ -792,8 +794,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <span className="text-xl">💡</span>
                     <div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Remember:</strong> C&P Simulator predictions are based on your self-reported answers. 
-                        The actual rating from the VA may differ based on the examiner's findings and all evidence in your file.
+                        <strong>{t('common', 'remember') || 'Remember'}:</strong> {t('tacticalCalc', 'capRemember')}
                       </p>
                     </div>
                   </div>
@@ -810,13 +811,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {myRatings.length > 0 && conditions.length === 0 && (
                     <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700 flex items-center justify-between flex-shrink-0">
                       <span className="text-sm text-amber-700 dark:text-amber-300">
-                        ⭐ You have {myRatings.length} saved rating{myRatings.length !== 1 ? 's' : ''}
+                        ⭐ {t('tacticalCalc', 'youHaveSavedRatings')} ({myRatings.length})
                       </span>
                       <button
                         onClick={handleLoadMyRatings}
                         className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
                       >
-                        Load Now →
+                        {t('tacticalCalc', 'loadNow')}
                       </button>
                     </div>
                   )}
@@ -824,14 +825,14 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {/* Add Condition Form */}
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                      <span>➕</span> Add Rated Condition
+                      <span>➕</span> {t('tacticalCalc', 'addRatedCondition')}
                     </h3>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Body Part */}
                       <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Body Part / Condition Type
+                          {t('tacticalCalc', 'bodyPartConditionType')}
                         </label>
                         <select
                           value={newCondition.bodyPart}
@@ -846,13 +847,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           }}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         >
-                          <option value="">-- Select --</option>
-                          <optgroup label="Extremities (Can be Bilateral)">
+                          <option value="">{t('tacticalCalc', 'select')}</option>
+                          <optgroup label={t('tacticalCalc', 'extremitiesBilateral')}>
                             {BODY_PARTS.extremities.map(bp => (
                               <option key={bp.value} value={bp.value}>{bp.label}</option>
                             ))}
                           </optgroup>
-                          <optgroup label="Other Body Systems">
+                          <optgroup label={t('tacticalCalc', 'otherBodySystems')}>
                             {BODY_PARTS.other.map(bp => (
                               <option key={bp.value} value={bp.value}>{bp.label}</option>
                             ))}
@@ -864,17 +865,17 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       {canBeBilateral && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Side
+                            {t('tacticalCalc', 'side')}
                           </label>
                           <select
                             value={newCondition.side}
                             onChange={(e) => setNewCondition(prev => ({ ...prev, side: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           >
-                            <option value="none">Not Bilateral</option>
-                            <option value="left">Left</option>
-                            <option value="right">Right</option>
-                            <option value="bilateral">Both (Bilateral)</option>
+                            <option value="none">{t('tacticalCalc', 'notBilateral')}</option>
+                            <option value="left">{t('tacticalCalc', 'left')}</option>
+                            <option value="right">{t('tacticalCalc', 'right')}</option>
+                            <option value="bilateral">{t('tacticalCalc', 'bothBilateral')}</option>
                           </select>
                         </div>
                       )}
@@ -882,7 +883,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       {/* Rating */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Rating %
+                          {t('tacticalCalc', 'ratingPercent')}
                         </label>
                         <select
                           value={newCondition.rating}
@@ -898,13 +899,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       {/* Custom Name (optional) */}
                       <div className={canBeBilateral ? 'sm:col-span-2' : ''}>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Custom Label (optional)
+                          {t('tacticalCalc', 'customLabelOptional')}
                         </label>
                         <input
                           type="text"
                           value={newCondition.name}
                           onChange={(e) => setNewCondition(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="e.g., Tinnitus, PTSD, etc."
+                          placeholder={t('tacticalCalc', 'customLabelPlaceholder')}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -915,20 +916,20 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       disabled={!newCondition.bodyPart}
                       className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      ➕ Add to Calculator
+                      {t('tacticalCalc', 'addToCalculatorBtn')}
                     </button>
                   </div>
 
                   {/* Conditions List - Expands to fill remaining space */}
                   <div className="flex flex-col flex-1 min-h-0">
                     <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
-                      <span>📋 Your Rated Conditions ({conditions.length})</span>
+                      <span>📋 {t('tacticalCalc', 'yourRatedConditions')} ({conditions.length})</span>
                       {conditions.length > 0 && (
                         <button
                           onClick={() => setConditions([])}
                           className="text-xs text-red-600 hover:text-red-700"
                         >
-                          Clear All
+                          {t('tacticalCalc', 'clearAll')}
                         </button>
                       )}
                     </h3>
@@ -936,8 +937,8 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     {conditions.length === 0 ? (
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl">
                         <div className="text-4xl mb-2">📝</div>
-                        <p>No conditions added yet.</p>
-                        <p className="text-sm mt-1">Add your service-connected ratings above.</p>
+                        <p>{t('tacticalCalc', 'noConditionsYet')}</p>
+                        <p className="text-sm mt-1">{t('tacticalCalc', 'noConditionsAddYours')}</p>
                       </div>
                     ) : (
                       <div className="space-y-2 overflow-y-auto flex-1 pr-2">{/*  Removed max-h-64, added flex-1 */}
@@ -1000,9 +1001,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
                     <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
                       <span className="text-lg">✓</span>
-                      <span className="font-medium">Verified per 38 CFR § 4.25 & § 4.26</span>
+                      <span className="font-medium">{t('tacticalCalc', 'verifiedPer')}</span>
                       <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
-                        Matches VA.gov
+                        {t('tacticalCalc', 'matchesVAGov')}
                       </span>
                     </div>
                   </div>
@@ -1017,21 +1018,21 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
                             {results.combinedRating}%
                           </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Combined</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">{t('tacticalCalc', 'combined')}</span>
                         </div>
                       </div>
                       
                       {/* Details */}
                       <div className="space-y-2">
                         <div className="text-center">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Raw Score</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{t('tacticalCalc', 'rawScore')}</p>
                           <p className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
                             {results.rawScore}%
                           </p>
                         </div>
                         {results.bilateralFactor > 0 && (
                           <div className="text-center px-3 py-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                            <p className="text-xs text-purple-600 dark:text-purple-400">Bilateral Factor</p>
+                            <p className="text-xs text-purple-600 dark:text-purple-400">{t('tacticalCalc', 'bilateralFactor')}</p>
                             <p className="font-semibold text-purple-700 dark:text-purple-300">
                               +{results.bilateralFactor}%
                             </p>
@@ -1045,7 +1046,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {pyramiding.hasPotentialPyramiding && (
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 dark:border-yellow-600 rounded-xl p-4">
                       <h4 className="font-bold text-yellow-800 dark:text-yellow-300 mb-3 flex items-center gap-2">
-                        <span>⚠️</span> Pyramiding Alert
+                        <span>⚠️</span> {t('tacticalCalc', 'pyramidingAlert')}
                       </h4>
                       <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
                         {pyramiding.summary}
@@ -1074,14 +1075,14 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                             </p>
                             {warning.conditions && (
                               <div className="mt-2 text-xs text-gray-700 dark:text-gray-300">
-                                <strong>Affected conditions:</strong> {warning.conditions.join(', ')}
+                                <strong>{t('tacticalCalc', 'affectedConditions')}:</strong> {warning.conditions.join(', ')}
                               </div>
                             )}
                           </div>
                         ))}
                       </div>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
-                        Note: This is an automated check. Consult your C-file and 38 CFR schedules to confirm.
+                        {t('tacticalCalc', 'automatedCheck')}
                       </p>
                     </div>
                   )}
@@ -1089,14 +1090,14 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {/* Gap Analysis */}
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                     <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                      <span>🎯</span> Gap Analysis
+                      <span>🎯</span> {t('tacticalCalc', 'gapAnalysis')}
                     </h4>
                     
                     {results.combinedRating >= 100 ? (
                       <div className="text-center py-4">
                         <span className="text-4xl">🎉</span>
                         <p className="text-green-600 dark:text-green-400 font-bold text-lg mt-2">
-                          You've reached 100%!
+                          {t('tacticalCalc', 'youveReached100')}
                         </p>
                       </div>
                     ) : (
@@ -1104,10 +1105,10 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         {/* Gap to next tier */}
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">
-                            Gap to {results.nextTier}%:
+                            {t('tacticalCalc', 'gapTo')} {results.nextTier}%:
                           </span>
                           <span className="font-semibold text-orange-600 dark:text-orange-400">
-                            {results.gapToNext10}% away
+                            {results.gapToNext10}% {t('tacticalCalc', 'away')}
                           </span>
                         </div>
                         
@@ -1123,7 +1124,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         {results.combinedRating < 90 && (
                           <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
                             <p className="text-sm text-amber-700 dark:text-amber-300">
-                              <strong>To reach 90%:</strong> You need approximately <strong>{ratingNeededFor90}%</strong> more in new ratings.
+                              <strong>{t('tacticalCalc', 'toReach90')}</strong> {t('tacticalCalc', 'needApprox')} <strong>{ratingNeededFor90}%</strong> {t('tacticalCalc', 'moreInNewRatings')}.
                             </p>
                           </div>
                         )}
@@ -1131,7 +1132,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         {results.combinedRating < 100 && (
                           <div className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
                             <p className="text-sm text-green-700 dark:text-green-300">
-                              <strong>To reach 100%:</strong> You need approximately <strong>{ratingNeededFor100}%</strong> more in new ratings.
+                              <strong>{t('tacticalCalc', 'toReach100')}</strong> {t('tacticalCalc', 'needApprox')} <strong>{ratingNeededFor100}%</strong> {t('tacticalCalc', 'moreInNewRatings')}.
                             </p>
                           </div>
                         )}
@@ -1143,7 +1144,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-green-600 dark:text-green-400">Monthly Pay (Solo)</p>
+                        <p className="text-sm text-green-600 dark:text-green-400">{t('tacticalCalc', 'monthlyPaySolo')}</p>
                         <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                           ${VA_PAY_RATES_2026.solo[results.combinedRating]?.toLocaleString() || '0'}
                         </p>
@@ -1152,7 +1153,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         onClick={() => setActiveTab('paycheck')}
                         className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
                       >
-                        Add Dependents →
+                        {t('tacticalCalc', 'addDependents')}
                       </button>
                     </div>
                   </div>
@@ -1163,14 +1164,14 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
                   >
                     <span>{showSteps ? '▼' : '▶'}</span>
-                    {showSteps ? 'Hide' : 'Show'} Calculation Steps
+                    {showSteps ? t('tacticalCalc', 'hideCalculationSteps') : t('tacticalCalc', 'showCalculationSteps')}
                   </button>
                   
                   {showSteps && results.calculationSteps.length > 0 && (
                     <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 space-y-3">
                       <div className="text-xs text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
                         <span>📋</span>
-                        <span>Per 38 CFR § 4.25 & § 4.26 - Official VA Combined Ratings Method</span>
+                        <span>{t('tacticalCalc', 'officialVAMethod')}</span>
                       </div>
                       {results.calculationSteps.map((step, idx) => (
                         <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-blue-500">
@@ -1229,9 +1230,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       ))}
                       <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
                         <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                          <div className="font-semibold">✓ Calculation Verified</div>
-                          <div>This matches VA.gov, DAV, and Hill & Ponton calculators</div>
-                          <div>Using official VA Combined Ratings Table method</div>
+                          <div className="font-semibold">✓ {t('tacticalCalc', 'calculationVerified')}</div>
+                          <div>{t('tacticalCalc', 'matchesCalculators')}</div>
+                          <div>{t('tacticalCalc', 'usingOfficialMethod')}</div>
                         </div>
                       </div>
                     </div>
@@ -1246,12 +1247,12 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {/* Dependents Input */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>👨‍👩‍👧‍👦</span> Your Dependents
+                    <span>👨‍👩‍👧‍👦</span> {t('tacticalCalc', 'yourDependents')}
                   </h3>
                   
                   <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
                     <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      <strong>Note:</strong> Dependent benefits only apply at 30% or higher combined rating.
+                      <strong>{t('common', 'note') || 'Note'}:</strong> {t('tacticalCalc', 'dependentNote')}
                     </p>
                   </div>
 
@@ -1269,9 +1270,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <div>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">💑 Married</span>
+                        <span className="font-medium text-gray-800 dark:text-gray-200">💑 {t('tacticalCalc', 'married')}</span>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          +${VA_PAY_RATES_2026.spouse[results.combinedRating] || 0}/mo at your rating
+                          +${VA_PAY_RATES_2026.spouse[results.combinedRating] || 0}/mo {t('tacticalCalc', 'atYourRating')}
                         </p>
                       </div>
                     </label>
@@ -1286,9 +1287,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                           className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">🏥 Spouse Needs Aid & Attendance</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">🏥 {t('tacticalCalc', 'spouseAidAttendance')}</span>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Additional +${VA_PAY_RATES_2026.spouseAidAttendance[results.combinedRating] || 0}/mo
+                            {t('common', 'additional') || 'Additional'} +${VA_PAY_RATES_2026.spouseAidAttendance[results.combinedRating] || 0}/mo
                           </p>
                         </div>
                       </label>
@@ -1298,7 +1299,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">👶 Children Under 18</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">👶 {t('tacticalCalc', 'childrenUnder18')}</span>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             +${VA_PAY_RATES_2026.childUnder18[results.combinedRating] || 0}/mo each
                           </p>
@@ -1325,7 +1326,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">🎓 Children 18-23 in School</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">🎓 {t('tacticalCalc', 'childrenInSchool')}</span>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             +${VA_PAY_RATES_2026.childSchool[results.combinedRating] || 0}/mo each
                           </p>
@@ -1352,7 +1353,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-gray-800 dark:text-gray-200">👴 Dependent Parents</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">👴 {t('tacticalCalc', 'dependentParents')}</span>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             1: +${VA_PAY_RATES_2026.parentOne[results.combinedRating] || 0}/mo | 2: +${VA_PAY_RATES_2026.parentTwo[results.combinedRating] || 0}/mo
                           </p>
@@ -1380,60 +1381,60 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {/* Pay Results */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>💰</span> Your Estimated Pay (2025 Rates)
+                    <span>💰</span> {t('tacticalCalc', 'yourEstimatedPay')}
                   </h3>
 
                   {/* Big Pay Display */}
                   <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white text-center">
-                    <p className="text-green-100 text-sm">Monthly Compensation</p>
+                    <p className="text-green-100 text-sm">{t('tacticalCalc', 'monthlyCompensation')}</p>
                     <p className="text-5xl font-bold my-2">
                       ${compensation.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                     <p className="text-green-100">
-                      ${compensation.annualTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}/year
+                      ${compensation.annualTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}/{t('tacticalCalc', 'yearlyPay').toLowerCase()}
                     </p>
                   </div>
 
                   {/* Breakdown */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💵 Breakdown</h4>
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💵 {t('tacticalCalc', 'breakdown')}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Base Rate ({results.combinedRating}%)</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'baseRate')} ({results.combinedRating}%)</span>
                         <span className="font-medium">${compensation.breakdown.baseRate.toLocaleString()}</span>
                       </div>
                       {compensation.breakdown.spouseAddition > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ Spouse</span>
+                          <span>+ {t('tacticalCalc', 'spouse')}</span>
                           <span>+${compensation.breakdown.spouseAddition.toLocaleString()}</span>
                         </div>
                       )}
                       {compensation.breakdown.spouseAidAttendanceAddition > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ Spouse A&A</span>
+                          <span>+ {t('tacticalCalc', 'spouseAA')}</span>
                           <span>+${compensation.breakdown.spouseAidAttendanceAddition.toLocaleString()}</span>
                         </div>
                       )}
                       {compensation.breakdown.childrenUnder18Addition > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ Children Under 18</span>
+                          <span>+ {t('tacticalCalc', 'childrenUnder18')}</span>
                           <span>+${compensation.breakdown.childrenUnder18Addition.toLocaleString()}</span>
                         </div>
                       )}
                       {compensation.breakdown.childrenSchoolAddition > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ Children in School</span>
+                          <span>+ {t('tacticalCalc', 'childrenInSchool')}</span>
                           <span>+${compensation.breakdown.childrenSchoolAddition.toLocaleString()}</span>
                         </div>
                       )}
                       {compensation.breakdown.parentsAddition > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
-                          <span>+ Dependent Parent(s)</span>
+                          <span>+ {t('tacticalCalc', 'dependentParents')}</span>
                           <span>+${compensation.breakdown.parentsAddition.toLocaleString()}</span>
                         </div>
                       )}
                       <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
-                        <span>Total</span>
+                        <span>{t('tacticalCalc', 'total')}</span>
                         <span>${compensation.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
@@ -1443,8 +1444,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {results.combinedRating === 100 && (
                     <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>💡 SMC Note:</strong> At 100%, you may qualify for Special Monthly Compensation (SMC) 
-                        if you have additional disabilities rated 60%+ or loss of use. This calculator shows base rates only.
+                        <strong>💡 {t('tacticalCalc', 'smcNote')}</strong>
                       </p>
                     </div>
                   )}
@@ -1458,19 +1458,19 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {/* Scenario Input */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>🎯</span> What If I Got Another Rating?
+                    <span>🎯</span> {t('tacticalCalc', 'whatIfQuestion')}
                   </h3>
                   
                   <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      See how adding a new rating would change your combined percentage and monthly pay.
+                      {t('tacticalCalc', 'whatIfDesc')}
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        New Rating Percentage
+                        {t('tacticalCalc', 'newRatingPercentage')}
                       </label>
                       <div className="grid grid-cols-6 gap-2">
                         {ratingOptions.filter(r => r > 0).map(r => (
@@ -1498,10 +1498,10 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       />
                       <div>
                         <span className="font-medium text-purple-800 dark:text-purple-200">
-                          🔄 This would be a bilateral condition
+                          🔄 {t('tacticalCalc', 'wouldBeBilateral')}
                         </span>
                         <p className="text-xs text-purple-600 dark:text-purple-400">
-                          Adds 10% bilateral factor boost
+                          {t('tacticalCalc', 'addsBilateralBoost')}
                         </p>
                       </div>
                     </label>
@@ -1511,24 +1511,24 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {/* What-If Results */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <span>📊</span> Projected Impact
+                    <span>📊</span> {t('tacticalCalc', 'projectedImpact')}
                   </h3>
 
                   {/* Before/After Comparison */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-4 text-center">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Current</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('tacticalCalc', 'current')}</p>
                       <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">
                         {whatIfResults.currentRating}%
                       </p>
-                      <p className="text-xs text-gray-500">Raw: {whatIfResults.currentRaw}%</p>
+                      <p className="text-xs text-gray-500">{t('tacticalCalc', 'rawScore')}: {whatIfResults.currentRaw}%</p>
                     </div>
                     <div className="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 rounded-xl p-4 text-center border-2 border-green-300 dark:border-green-700">
-                      <p className="text-sm text-green-600 dark:text-green-400 mb-1">With +{whatIfRating}%</p>
+                      <p className="text-sm text-green-600 dark:text-green-400 mb-1">{t('common', 'with') || 'With'} +{whatIfRating}%</p>
                       <p className="text-3xl font-bold text-green-700 dark:text-green-300">
                         {whatIfResults.newRating}%
                       </p>
-                      <p className="text-xs text-green-600">Raw: {whatIfResults.newRaw}%</p>
+                      <p className="text-xs text-green-600">{t('tacticalCalc', 'rawScore')}: {whatIfResults.newRaw}%</p>
                     </div>
                   </div>
 
@@ -1539,7 +1539,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700'
                   }`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-700 dark:text-gray-300">Rating Change:</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('tacticalCalc', 'ratingChange')}:</span>
                       <span className={`font-bold text-xl ${
                         whatIfResults.ratingIncrease > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
                       }`}>
@@ -1550,25 +1550,25 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
 
                   {/* Pay Comparison */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💰 Pay Comparison (Solo)</h4>
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">💰 {t('tacticalCalc', 'payComparisonSolo')}</h4>
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Current ({whatIfResults.currentRating}%)</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'current')} ({whatIfResults.currentRating}%)</span>
                         <span>${VA_PAY_RATES_2026.solo[whatIfResults.currentRating]?.toLocaleString() || 0}/mo</span>
                       </div>
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Projected ({whatIfResults.newRating}%)</span>
+                        <span>{t('tacticalCalc', 'projected')} ({whatIfResults.newRating}%)</span>
                         <span>${VA_PAY_RATES_2026.solo[whatIfResults.newRating]?.toLocaleString() || 0}/mo</span>
                       </div>
                       <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
-                        <span>Monthly Increase</span>
+                        <span>{t('tacticalCalc', 'monthlyIncrease')}</span>
                         <span className="text-green-600 dark:text-green-400">
                           +${((VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) - (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)).toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                        <span>Annual Increase</span>
+                        <span>{t('tacticalCalc', 'annualIncrease')}</span>
                         <span>
                           +${(((VA_PAY_RATES_2026.solo[whatIfResults.newRating] || 0) - (VA_PAY_RATES_2026.solo[whatIfResults.currentRating] || 0)) * 12).toLocaleString()}
                         </span>
@@ -1579,8 +1579,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   {/* Pathfinder Hook */}
                   <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
                     <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                      <strong>💡 Pro Tip:</strong> Use our Pathfinder tool to discover secondary conditions 
-                      that could help you reach your target rating!
+                      <strong>💡 {t('tacticalCalc', 'proTip')}:</strong> {t('tacticalCalc', 'pathfinderTip')}
                     </p>
                   </div>
                 </div>
@@ -1597,9 +1596,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       <span className="text-xl">📊</span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-green-800 dark:text-green-200">2026 VA Disability Compensation Rates</h3>
+                      <h3 className="font-bold text-green-800 dark:text-green-200">{t('tacticalCalc', 'vaDisabilityRates2026')}</h3>
                       <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                        Effective December 1, 2025 • Source: <a href="https://www.va.gov/disability/compensation-rates/veteran-rates/" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">VA.gov</a>
+                        {t('tacticalCalc', 'effectiveDate')} • {t('tacticalCalc', 'source')}: <a href="https://www.va.gov/disability/compensation-rates/veteran-rates/" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">VA.gov</a>
                       </p>
                     </div>
                   </div>
@@ -1609,10 +1608,10 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                     <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center text-sm">💰</span>
-                    Veterans with 10% to 20% Rating
+                    {t('tacticalCalc', 'veteransWith10to20')}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    Note: At 10-20%, you won't receive a higher rate even if you have dependents.
+                    {t('tacticalCalc', 'noDependentBenefits')}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
@@ -1630,15 +1629,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                     <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center text-sm">👤</span>
-                    Veteran Alone (No Dependents)
+                    {t('tacticalCalc', 'veteranAlone')}
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Rating</th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Monthly</th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Annual</th>
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'rating')}</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'monthly')}</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'annual')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1662,15 +1661,15 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                     <span className="w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-lg flex items-center justify-center text-sm">💑</span>
-                    With Spouse (No Children or Parents)
+                    {t('tacticalCalc', 'withSpouse')}
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Rating</th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Monthly</th>
-                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">Spouse Add</th>
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'rating')}</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'monthly')}</th>
+                          <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'spouseAdd')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1694,16 +1693,16 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
                     <span className="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center text-sm">➕</span>
-                    Additional Amounts for Dependents
+                    {t('tacticalCalc', 'additionalAmounts')}
                   </h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    These amounts are added to your base rate at 30%+ rating.
+                    {t('tacticalCalc', 'additionalAmountsNote')}
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b dark:border-gray-700">
-                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">Dependent Type</th>
+                          <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">{t('tacticalCalc', 'dependentType')}</th>
                           <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">30%</th>
                           <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">50%</th>
                           <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">70%</th>
@@ -1712,49 +1711,49 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                       </thead>
                       <tbody>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">Spouse</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'spouse')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouse[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">Spouse A&A</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'spouseAA')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.spouseAidAttendance[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">First Child</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'firstChild')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.firstChild[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">Each Add'l Child &lt;18</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'addlChildUnder18')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childUnder18[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">Child 18+ in School</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'childSchool')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.childSchool[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">1 Parent</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'oneParent')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[70]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentOne[100]}</td>
                         </tr>
                         <tr className="border-b dark:border-gray-700">
-                          <td className="py-2 px-3 text-gray-900 dark:text-white">2 Parents</td>
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{t('tacticalCalc', 'twoParents')}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[30]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[50]}</td>
                           <td className="py-2 px-3 text-right text-green-600 dark:text-green-400">+${VA_PAY_RATES_2026.parentTwo[70]}</td>
@@ -1769,18 +1768,18 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
                     <div className="text-3xl font-bold">$3,938.58</div>
-                    <div className="text-green-100 text-sm">100% Veteran Alone</div>
-                    <div className="text-green-100 text-xs mt-1">$47,262.96/year</div>
+                    <div className="text-green-100 text-sm">{t('tacticalCalc', 'veteranAlone100')}</div>
+                    <div className="text-green-100 text-xs mt-1">$47,262.96/{t('tacticalCalc', 'year')}</div>
                   </div>
                   <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl p-4">
                     <div className="text-3xl font-bold">$4,158.17</div>
-                    <div className="text-blue-100 text-sm">100% with Spouse</div>
-                    <div className="text-blue-100 text-xs mt-1">$49,898.04/year</div>
+                    <div className="text-blue-100 text-sm">{t('tacticalCalc', 'withSpouse100')}</div>
+                    <div className="text-blue-100 text-xs mt-1">$49,898.04/{t('tacticalCalc', 'year')}</div>
                   </div>
                   <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-4">
                     <div className="text-3xl font-bold">$4,318.99</div>
-                    <div className="text-purple-100 text-sm">100% with Spouse + Child</div>
-                    <div className="text-purple-100 text-xs mt-1">$51,827.88/year</div>
+                    <div className="text-purple-100 text-sm">{t('tacticalCalc', 'withSpouseChild100')}</div>
+                    <div className="text-purple-100 text-xs mt-1">$51,827.88/{t('tacticalCalc', 'year')}</div>
                   </div>
                 </div>
 
@@ -1790,8 +1789,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                     <span className="text-xl">ℹ️</span>
                     <div>
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Cost-of-Living Adjustment (COLA):</strong> VA is required by law to match the COLA 
-                        percentage applied to Social Security benefits. This ensures your benefits keep up with inflation.
+                        <strong>{t('tacticalCalc', 'colaTitle')}:</strong> {t('tacticalCalc', 'colaDescription')}
                       </p>
                       <a 
                         href="https://www.ssa.gov/cola/" 
@@ -1799,7 +1797,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-block"
                       >
-                        Learn more about COLA on SSA.gov →
+                        {t('tacticalCalc', 'learnMoreCola')} →
                       </a>
                     </div>
                   </div>
@@ -1812,8 +1810,8 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                <p>📋 Based on 38 CFR § 4.25 (Combined Ratings) and 2026 VA Pay Rates (Effective Dec 1, 2025)</p>
-                <p>This is an estimate. Actual payments may vary.</p>
+                <p>📋 {t('tacticalCalc', 'footerCFR')}</p>
+                <p>{t('tacticalCalc', 'footerDisclaimer')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <BuyMeCoffee 
@@ -1825,7 +1823,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   onClick={onClose}
                   className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
-                  Close
+                  {t('tacticalCalc', 'close')}
                 </button>
               </div>
             </div>
@@ -1848,7 +1846,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-xl font-bold">Edit Condition</h3>
+              <h3 className="text-xl font-bold">{t('tacticalCalc', 'editCondition')}</h3>
               <p className="text-blue-100 text-sm mt-1">Update rating and bilateral status</p>
             </div>
             
@@ -1857,36 +1855,36 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
               {/* Condition Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Condition Name
+                  {t('tacticalCalc', 'conditionName')}
                 </label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="e.g., PTSD, Knee Pain"
+                  placeholder={t('tacticalCalc', 'conditionPlaceholder')}
                 />
               </div>
               
               {/* Body Part */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Body Part / System
+                  {t('tacticalCalc', 'bodyPartSystem')}
                 </label>
                 <select
                   value={editForm.bodyPart}
                   onChange={(e) => setEditForm({ ...editForm, bodyPart: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">Select body part...</option>
-                  <optgroup label="Extremities (Can be Bilateral)">
+                  <option value="">{t('tacticalCalc', 'selectBodyPart')}</option>
+                  <optgroup label={t('tacticalCalc', 'extremitiesGroup')}>
                     {BODY_PARTS.extremities.map(bp => (
                       <option key={bp.value} value={bp.value}>
                         {bp.label}
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="Other Body Systems">
+                  <optgroup label={t('tacticalCalc', 'otherSystems')}>
                     {BODY_PARTS.other.map(bp => (
                       <option key={bp.value} value={bp.value}>
                         {bp.label}
@@ -1899,7 +1897,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
               {/* Rating Percentage */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Rating Percentage
+                  {t('tacticalCalc', 'ratingPercentage')}
                 </label>
                 <select
                   value={editForm.rating}
@@ -1916,20 +1914,20 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
               {editForm.bodyPart && allBodyParts.find(bp => bp.value === editForm.bodyPart)?.canBeBilateral && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Side (Bilateral Factor)
+                    {t('tacticalCalc', 'sideBilateral')}
                   </label>
                   <select
                     value={editForm.side}
                     onChange={(e) => setEditForm({ ...editForm, side: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
-                    <option value="none">Not Bilateral</option>
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                    <option value="bilateral">Both Sides</option>
+                    <option value="none">{t('tacticalCalc', 'notBilateral')}</option>
+                    <option value="left">{t('tacticalCalc', 'left')}</option>
+                    <option value="right">{t('tacticalCalc', 'right')}</option>
+                    <option value="bilateral">{t('tacticalCalc', 'bothSides')}</option>
                   </select>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    💡 If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26
+                    💡 {t('tacticalCalc', 'bilateralHint')}
                   </p>
                 </div>
               )}
@@ -1940,10 +1938,9 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                   <div className="flex gap-2">
                     <span className="text-lg">🔄</span>
                     <div className="text-sm text-purple-700 dark:text-purple-300">
-                      <p className="font-semibold">Bilateral Factor Will Apply</p>
+                      <p className="font-semibold">{t('tacticalCalc', 'bilateralWillApply')}</p>
                       <p className="text-xs mt-1">
-                        Per 38 CFR § 4.26, if you have paired extremities rated (left + right), 
-                        you'll get an additional 10% boost to the combined bilateral rating.
+                        {t('tacticalCalc', 'bilateralExplanation')}
                       </p>
                     </div>
                   </div>
@@ -1957,13 +1954,13 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 onClick={handleCancelEdit}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
-                Cancel
+                {t('tacticalCalc', 'cancel')}
               </button>
               <button
                 onClick={handleSaveEdit}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Save Changes
+                {t('tacticalCalc', 'saveChanges')}
               </button>
             </div>
           </div>

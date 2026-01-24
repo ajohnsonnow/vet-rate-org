@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * Floating Bug Report Button
  * A fixed-position button that's accessible from anywhere in the app
  */
 function FloatingBugButton({ onClick }) {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 

@@ -10,9 +10,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { AI_PRESETS } from '../utils/unifiedAIService';
 
 const PresetSelector = ({ value, onChange, className = '' }) => {
+  const { t } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState(value || 'BALANCED');
   const [showDetails, setShowDetails] = useState(false);
 

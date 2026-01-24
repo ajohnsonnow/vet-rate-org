@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useScreenshot } from '../hooks/useScreenshot';
 import { getPainMaps, savePainMap } from '../utils/veteranProfile';
@@ -150,6 +151,7 @@ const PAIN_TYPES = {
 };
 
 const PainPainter = ({ onClose, onExport, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // View state - Standard Views matching VA DBQ diagrams

@@ -16,11 +16,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generateAI } from '../utils/unifiedAIService';
 import { useHelperMode } from '../contexts/HelperModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getTotalToolCount } from '../data/toolkitData';
 import { AIStatusBadge } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
 
 const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

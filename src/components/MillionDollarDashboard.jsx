@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
@@ -232,6 +233,7 @@ const calculateLifetimeValue = (currentAge, rating, hasSpouse, numChildren, stat
 };
 
 export default function MillionDollarDashboard({ onClose, onReportBug }) {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // Input state

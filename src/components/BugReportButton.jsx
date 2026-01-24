@@ -7,12 +7,14 @@
  */
 
 import AnimatedBug from './AnimatedBug';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BugReportButton = ({ 
   onClick, 
   variant = 'header', // 'header', 'footer', 'compact'
   className = '' 
 }) => {
+  const { t } = useLanguage();
   const variants = {
     header: 'text-xs text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1',
     footer: 'text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1 group',

@@ -11,6 +11,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useHelperMode } from '../contexts/HelperModeContext';
 import { hasUnsavedChanges } from '../utils/dataPersistence';
 import { useColorSchemas } from '../hooks/useColorSchemas';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function Header({ 
   // Core Navigation
@@ -71,6 +72,7 @@ function Header({
   const { isDark, toggleTheme } = useTheme();
   const { isHelperMode } = useHelperMode();
   const { getDropdownClasses, getColorClass, colors } = useColorSchemas();
+  const { t } = useLanguage();
   const dropdownClasses = getDropdownClasses();
   
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
@@ -206,7 +208,7 @@ function Header({
             <div>
               <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap">Vet-Rate.org</h1>
               <p className="text-green-100 dark:text-gray-300 text-sm md:text-base whitespace-nowrap">
-                Free VA Claims Toolkit for Veterans
+                {t('header', 'subtitle')}
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <KnowledgeBaseStatus compact />
@@ -222,10 +224,10 @@ function Header({
               id="tour-help-btn"
               onClick={onUserManualClick}
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="User Manual - Documentation & Help"
-              aria-label="Open User Manual for documentation and help"
+              title={t('common', 'help')}
+              aria-label={t('common', 'help')}
             >
-              ❓ Help
+              ❓ {t('common', 'help')}
             </button>
             
             {/* Workflow Guide - Step-by-step mission briefings */}
@@ -233,11 +235,11 @@ function Header({
               id="tour-workflow-guide-btn"
               onClick={onWorkflowGuideClick}
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
-              title="Workflow Guide - Step-by-step mission briefings"
-              aria-label="Open Workflow Guide for step-by-step mission briefings"
+              title={t('tools', 'missions')}
+              aria-label={t('tools', 'missions')}
             >
-              🗺️ Missions
-              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
+              🗺️ {t('tools', 'missions')}
+              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
             </button>
             
             {/* My Packet - Where users save everything */}
@@ -245,10 +247,10 @@ function Header({
               id="tour-my-packet-btn"
               onClick={onMyPacketClick}
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="My Packet - View saved claims"
-              aria-label="Open My Packet to view your saved claims"
+              title={t('tools', 'myPacket')}
+              aria-label={t('tools', 'myPacket')}
             >
-              📁 My Packet
+              📁 {t('tools', 'myPacket')}
             </button>
             
             {/* Tools Dropdown - Main feature tools */}
@@ -257,11 +259,11 @@ function Header({
                 onClick={() => setShowToolsMenu(!showToolsMenu)}
                 onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
-                title="Claims Tools"
+                title={t('common', 'tools')}
                 aria-expanded={showToolsMenu}
                 aria-haspopup="true"
               >
-                🛠️ Tools
+                🛠️ {t('common', 'tools')}
                 <svg className={`w-4 h-4 transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -275,18 +277,18 @@ function Header({
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-blue-700 dark:text-blue-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        📊 Calculate Your Rating
+                        📊 {t('toolsMenu', 'calculateYourRating')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onTacticalCalculatorClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40 bg-white/50 dark:bg-blue-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🧮 Tactical Calculator
-                          <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">CORE</span>
+                          🧮 {t('tools', 'tacticalCalculator')}
+                          <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">{t('common', 'core').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          VA Math calculator with 2026 rates
+                          {t('tools', 'tacticalCalculatorDesc')}
                         </p>
                       </button>
                       <button
@@ -294,11 +296,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💰 Million Dollar Dashboard
+                          💰 {t('tools', 'millionDollarDashboard')}
                           <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded animate-pulse">WOW</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          See your lifetime benefits value
+                          {t('tools', 'millionDollarDashboardDesc')}
                         </p>
                       </button>
                       <button
@@ -306,11 +308,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎯 What-If Sandbox
+                          🎯 {t('tools', 'whatIfSandbox')}
                           <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">DRAG&DROP</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Scenario planner with real VA math
+                          {t('tools', 'whatIfSandboxDesc')}
                         </p>
                       </button>
                       <button
@@ -318,12 +320,12 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⏰ Retro Pay Hunter
+                          ⏰ {t('tools', 'retroPayHunter')}
                           <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">💰</span>
                           <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find missed back pay & CUE claims
+                          {t('tools', 'retroPayHunterDesc')}
                         </p>
                       </button>
                       <button
@@ -331,11 +333,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-blue-100 dark:hover:bg-blue-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📅 Time Machine
+                          📅 {t('tools', 'timeMachine')}
                           <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">ITF</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Intent to File countdown & backpay tracker
+                          {t('tools', 'timeMachineDesc')}
                         </p>
                       </button>
                     </div>
@@ -344,18 +346,18 @@ function Header({
                     <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-teal-700 dark:text-teal-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
-                        🔍 Discover Your Claims
+                        🔍 {t('toolsMenu', 'discoverYourClaims')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onSecondaryScoutClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔍 Secondary Scout
+                          🔍 {t('tools', 'secondaryScout')}
                           <span className="px-1.5 py-0.5 bg-teal-600 text-white text-[10px] font-bold rounded">INSTANT</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Quick lookup: 500+ known secondary connections
+                          {t('tools', 'secondaryScoutDesc')}
                         </p>
                       </button>
                       <button
@@ -363,10 +365,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ✅ C&P Exam Simulator
+                          ✅ {t('tools', 'capSimulator')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Practice with DBQ-aligned exam questions + Exam Prep
+                          {t('tools', 'capSimulatorDesc')}
                         </p>
                       </button>
                       <button
@@ -374,11 +376,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🧭 Pathfinder
+                          🧭 {t('tools', 'pathfinder')}
                           <span className="px-1.5 py-0.5 bg-teal-600 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          AI strategy: increases, secondaries & next steps
+                          {t('tools', 'pathfinderDesc')}
                         </p>
                       </button>
                       <button
@@ -386,11 +388,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40 bg-white/50 dark:bg-teal-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🗺️ Claim Navigator
-                          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded animate-pulse">NEW</span>
+                          🗺️ {t('tools', 'claimNavigator')}
+                          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded animate-pulse">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-teal-600 dark:text-teal-400">
-                          Mission Control: Track claims, deadlines & next steps
+                          {t('tools', 'claimNavigatorDesc')}
                         </p>
                       </button>
                       <button
@@ -398,10 +400,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎖️ MOS Hazard Matcher
+                          🎖️ {t('tools', 'mosHazardMatcher')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find injuries linked to your MOS
+                          {t('tools', 'mosHazardMatcherDesc')}
                         </p>
                       </button>
                       <button
@@ -409,11 +411,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40 bg-white/50 dark:bg-teal-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ☢️ PACT Act Navigator
+                          ☢️ {t('tools', 'pactActNavigator')}
                           <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">HOT</span>
                         </span>
                         <p className="text-xs mt-0.5 text-teal-700 dark:text-teal-400">
-                          Find your presumptive conditions
+                          {t('tools', 'pactActNavigatorDesc')}
                         </p>
                       </button>
                       <button
@@ -421,11 +423,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🕸️ Web of Conditions
+                          🕸️ {t('tools', 'webOfConditions')}
                           <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">INTERACTIVE</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Visual map of connected conditions
+                          {t('tools', 'webOfConditionsDesc')}
                         </p>
                       </button>
                     </div>
@@ -434,19 +436,19 @@ function Header({
                     <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-violet-700 dark:text-violet-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-violet-500 rounded-full"></span>
-                        📋 Build Your Evidence
+                        📋 {t('toolsMenu', 'buildYourEvidence')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onCFileAnalyzerClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40 bg-white/50 dark:bg-violet-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔬 C-File AI Analyzer
+                          🔬 {t('tools', 'cFileAnalyzer')}
                           <span className="px-1.5 py-0.5 bg-violet-600 text-white text-[10px] font-bold rounded">AI</span>
-                          <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">FREE</span>
+                          <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">{t('common', 'free').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-violet-600 dark:text-violet-400">
-                          AI analysis of your claims file (worth $500+)
+                          {t('tools', 'cFileAnalyzerDesc')}
                         </p>
                       </button>
                       <button
@@ -454,11 +456,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💙 Blue Button X-Ray
+                          💙 {t('tools', 'blueButtonXRay')}
                           <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Analyze VA Blue Button health records
+                          {t('tools', 'blueButtonXRayDesc')}
                         </p>
                       </button>
                       <button
@@ -466,11 +468,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔍 PDF Evidence Finder
-                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          🔍 {t('tools', 'recordSearch')}
+                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Search 2,000+ page STRs for keywords
+                          {t('tools', 'recordSearchDesc')}
                         </p>
                       </button>
                       <button
@@ -478,11 +480,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          👥 Witness Bench
+                          👥 {t('tools', 'witnessBench')}
                           <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          AI-assisted buddy statement generator
+                          {t('tools', 'witnessBenchDesc')}
                         </p>
                       </button>
                       <button
@@ -490,10 +492,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔗 Nexus Builder
+                          🔗 {t('tools', 'nexusBuilder')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Build medical connection arguments
+                          {t('tools', 'nexusBuilderDesc')}
                         </p>
                       </button>
                       <button
@@ -501,11 +503,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ✏️ Forms Helper
+                          ✏️ {t('tools', 'formsHelper')}
                           <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">16+</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Guided VA forms with Auto-Scribe
+                          {t('tools', 'formsHelperDesc')}
                         </p>
                       </button>
                       <button
@@ -513,10 +515,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📝 Symptom Logger
+                          📝 {t('tools', 'symptomLogger')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Track symptoms with timestamp evidence
+                          {t('tools', 'symptomLoggerDesc')}
                         </p>
                       </button>
                       <button
@@ -524,10 +526,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🎯 Somatic Target
+                          🎯 {t('tools', 'somaticTarget')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Interactive body map selector
+                          {t('tools', 'somaticTargetDesc')}
                         </p>
                       </button>
                       <button
@@ -535,11 +537,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🧵 Evidence Timeline
-                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          🧵 {t('tools', 'evidenceTimeline')}
+                          <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Visual continuity tracker with gap detection
+                          {t('tools', 'evidenceTimelineDesc')}
                         </p>
                       </button>
                       <button
@@ -547,10 +549,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-violet-100 dark:hover:bg-violet-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔑 FOIA Keysmith
+                          🔑 {t('tools', 'foiaKeysmith')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Generate FOIA requests for records
+                          {t('tools', 'foiaKeysmithDesc')}
                         </p>
                       </button>
                     </div>
@@ -559,18 +561,18 @@ function Header({
                     <div className="bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-rose-700 dark:text-rose-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        ✅ Quality Control
+                        ✅ {t('toolsMenu', 'qualityControl')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onRedTeamClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔴 Red Team
+                          🔴 {t('tools', 'redTeam')}
                           <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Devil's advocate for your claims
+                          {t('tools', 'redTeamDesc')}
                         </p>
                       </button>
                       <button
@@ -578,11 +580,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⚔️ The War Game
+                          ⚔️ {t('tools', 'theWarGame')}
                           <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Skeptical Examiner stress-tests your claim
+                          {t('tools', 'theWarGameDesc')}
                         </p>
                       </button>
                       <button
@@ -590,11 +592,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📄 Decision Decoder
+                          📄 {t('tools', 'decisionDecoder')}
                           <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Analyze VA decision letters
+                          {t('tools', 'decisionDecoderDesc')}
                         </p>
                       </button>
                       <button
@@ -602,12 +604,12 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40 bg-white/50 dark:bg-rose-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔍 Denials Decoder
+                          🔍 {t('tools', 'denialsDecoder')}
                           <span className="px-1.5 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded">AI</span>
-                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-rose-600 dark:text-rose-400">
-                          Scan denial letters & decode in plain English
+                          {t('tools', 'denialsDecoderDesc')}
                         </p>
                       </button>
                       <button
@@ -615,10 +617,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🦈 Shark Radar
+                          🦈 {t('tools', 'sharkRadar')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Identify and avoid claims predators
+                          {t('tools', 'sharkRadarDesc')}
                         </p>
                       </button>
                       <button
@@ -626,11 +628,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔍 Consistency Engine
+                          🔍 {t('tools', 'consistencyEngine')}
                           <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Auto-detect contradictions before VA finds them
+                          {t('tools', 'consistencyEngineDesc')}
                         </p>
                       </button>
                       <button
@@ -638,11 +640,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔗 Evidence Gap Finder
-                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          🔗 {t('tools', 'evidenceGapFinder')}
+                          <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          See exactly what evidence is missing
+                          {t('tools', 'evidenceGapFinderDesc')}
                         </p>
                       </button>
                       <button
@@ -650,11 +652,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-rose-100 dark:hover:bg-rose-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🐻 Risk Assessment
+                          🐻 {t('tools', 'riskAssessment')}
                           <span className="px-1.5 py-0.5 bg-rose-500 text-white text-[10px] font-bold rounded">DEFENSE</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Check protections before filing
+                          {t('tools', 'riskAssessmentDesc')}
                         </p>
                       </button>
                     </div>
@@ -663,18 +665,18 @@ function Header({
                     <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-lg p-2 mb-2">
                       <p className="text-xs text-amber-700 dark:text-amber-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                        💰 Maximize Your Rating
+                        💰 {t('toolsMenu', 'maximizeYourRating')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onTDIUBuilderClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💼 TDIU Builder
+                          💼 {t('tools', 'tdiuBuilder')}
                           <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">100%</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Total Disability Individual Unemployability
+                          {t('tools', 'tdiuBuilderDesc')}
                         </p>
                       </button>
                       <button
@@ -682,12 +684,12 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40 bg-white/50 dark:bg-amber-800/30"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          💵 State Benefit Hunter
+                          💵 {t('tools', 'stateBenefitHunter')}
                           <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded animate-pulse">$$$</span>
                           <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-amber-600 dark:text-amber-400">
-                          Find state-specific veteran benefits
+                          {t('tools', 'stateBenefitHunterDesc')}
                         </p>
                       </button>
                       <button
@@ -695,11 +697,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          ⚖️ The Tribunal
+                          ⚖️ {t('tools', 'theTribunal')}
                           <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded">VOICE</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Mock BVA hearing simulator
+                          {t('tools', 'theTribunalDesc')}
                         </p>
                       </button>
                       <button
@@ -707,12 +709,12 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📡 Legislative Watchdog
+                          📡 {t('tools', 'legislativeWatchdog')}
                           <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</span>
                           <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Track VA rule changes & new presumptives
+                          {t('tools', 'legislativeWatchdogDesc')}
                         </p>
                       </button>
                     </div>
@@ -721,19 +723,19 @@ function Header({
                     <div className="bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 rounded-lg p-2">
                       <p className="text-xs text-sky-700 dark:text-sky-300 px-2 py-1 font-bold uppercase tracking-wide flex items-center gap-2">
                         <span className="w-2 h-2 bg-sky-500 rounded-full"></span>
-                        🤝 Support & Resources
+                        🤝 {t('toolsMenu', 'supportResources')}
                       </p>
                       <button
                         onClick={() => { setShowToolsMenu(false); onVSOFinderClick?.(); }}
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🤝 VSO Finder
-                          <span className="px-1.5 py-0.5 bg-sky-600 text-white text-[10px] font-bold rounded">FREE</span>
+                          🤝 {t('tools', 'vsoFinder')}
+                          <span className="px-1.5 py-0.5 bg-sky-600 text-white text-[10px] font-bold rounded">{t('common', 'free').toUpperCase()}</span>
                           <span className="px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">AI</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Find free accredited representation
+                          {t('tools', 'vsoFinderDesc')}
                         </p>
                       </button>
                       <button
@@ -741,11 +743,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🏰 The Bunker
-                          <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          🏰 {t('tools', 'theBunker')}
+                          <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Export/Import your data - never lose it
+                          {t('tools', 'theBunkerDesc')}
                         </p>
                       </button>
                       <button
@@ -753,11 +755,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📤 Google Drive Backup
-                          <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">NEW</span>
+                          📤 {t('tools', 'googleDriveBackup')}
+                          <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Sync your packet to YOUR Google Drive
+                          {t('tools', 'googleDriveBackupDesc')}
                         </p>
                       </button>
                       <button
@@ -765,11 +767,11 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          🔗 VA.gov Integration
+                          🔗 {t('tools', 'vaIntegration')}
                           <span className="px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">DEMO</span>
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Connect to VA.gov APIs (OAuth 2.0)
+                          {t('tools', 'vaIntegrationDesc')}
                         </p>
                       </button>
                       <button
@@ -777,10 +779,10 @@ function Header({
                         className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
                       >
                         <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                          📖 User Manual
+                          📖 {t('header', 'userManual')}
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
-                          Complete guide to all features
+                          {t('header', 'userManualDesc')}
                         </p>
                       </button>
                     </div>
@@ -796,11 +798,11 @@ function Header({
                 onClick={() => setShowResourcesMenu(!showResourcesMenu)}
                 onBlur={() => setTimeout(() => setShowResourcesMenu(false), 200)}
                 className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
-                title="Veteran Resources"
+                title={t('header', 'veteranResources')}
                 aria-expanded={showResourcesMenu}
                 aria-haspopup="true"
               >
-                🎖️ <span className="hidden lg:inline">Resources</span><span className="lg:hidden">VA Links</span>
+                🎖️ <span className="hidden lg:inline">{t('header', 'resources')}</span><span className="lg:hidden">{t('header', 'vaLinks')}</span>
                 <svg className={`w-4 h-4 transition-transform ${showResourcesMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -810,7 +812,7 @@ function Header({
                 <div className={`fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-72 rounded-lg shadow-xl z-50 overflow-hidden max-h-[70vh] sm:max-h-[80vh] overflow-y-auto ${dropdownClasses.menu.replace('absolute mt-2', '')}`}>
                   <div className="p-2">
                     <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-1 font-semibold uppercase tracking-wide">
-                      Veteran Resources
+                      {t('header', 'veteranResources')}
                     </p>
                     
                     {/* VA Resources Hub Button */}
@@ -822,10 +824,10 @@ function Header({
                       className="w-full text-left block px-3 py-2 rounded-md transition-colors bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border-l-4 border-green-600 mb-2"
                     >
                       <span className="font-medium text-green-700 dark:text-green-100">
-                        🌐 VA Resources Hub
+                        🌐 {t('header', 'vaResourcesHub')}
                       </span>
                       <p className="text-xs mt-0.5 text-green-600 dark:text-green-400">
-                        Comprehensive VA benefits & programs guide
+                        {t('header', 'vaResourcesHubDesc')}
                       </p>
                     </button>
                     
@@ -875,28 +877,28 @@ function Header({
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="VA Disability Benefits"
-              aria-label="Visit VA Disability Benefits page (opens in new tab)"
+              title={t('header', 'disabilityBenefits')}
+              aria-label={`${t('header', 'disabilityBenefits')} (opens in new tab)`}
             >
-              🏛️ <span className="hidden lg:inline">Disability Benefits</span><span className="lg:hidden">VA</span>
+              🏛️ <span className="hidden lg:inline">{t('header', 'disabilityBenefits')}</span><span className="lg:hidden">{t('header', 'va')}</span>
             </a>
             <a
               href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title="eCFR 38 Part 4"
-              aria-label="Visit official eCFR Rating Schedule (opens in new tab)"
+              title={t('header', 'ratingSchedule')}
+              aria-label={`${t('header', 'ratingSchedule')} (opens in new tab)`}
             >
-              ⚖️ <span className="hidden lg:inline">Rating Schedule</span><span className="lg:hidden">eCFR</span>
+              ⚖️ <span className="hidden lg:inline">{t('header', 'ratingSchedule')}</span><span className="lg:hidden">{t('header', 'ecfr')}</span>
             </a>
             
             {/* Quick Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold"
-              aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-              title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              aria-label={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
+              title={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
             >
               {isDark ? (
                 <svg className="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -913,8 +915,8 @@ function Header({
             <button
               onClick={onLegislativeWatchdogClick}
               className="p-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative"
-              aria-label="Legislative Watchdog - VA Rule Change Alerts"
-              title="Legislative Watchdog - Track VA rule changes"
+              aria-label={t('tools', 'legislativeWatchdog')}
+              title={t('header', 'legislativeWatchdogTooltip')}
             >
               <span className="text-lg">📡</span>
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full animate-pulse"></span>
@@ -927,8 +929,8 @@ function Header({
             <button
               onClick={onBackupManagerClick}
               className={`p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative group ${shouldPulseBackup ? 'animate-pulse-glow' : ''}`}
-              aria-label="The Bunker - Backup Your Data"
-              title={shouldPulseBackup ? "⚠️ You have unsaved changes! Click to backup your data." : "The Bunker - Export/Import your data"}
+              aria-label={t('tools', 'theBunker')}
+              title={shouldPulseBackup ? `⚠️ ${t('header', 'theBunkerUnsaved')}` : t('header', 'theBunkerTooltip')}
             >
               <span className="text-lg">🏰</span>
               {shouldPulseBackup && (
@@ -943,8 +945,8 @@ function Header({
             <button
               onClick={onTimeMachineClick}
               className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative group"
-              aria-label="Time Machine - Intent to File Countdown"
-              title="Time Machine - Track your ITF deadline"
+              aria-label={t('tools', 'timeMachine')}
+              title={t('header', 'timeMachineTooltip')}
             >
               <span className="text-lg">⏰</span>
               <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-white text-[8px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity">NEW</span>
@@ -963,25 +965,25 @@ function Header({
             <button
               onClick={onFeatureRequestClick}
               className="inline-flex items-center gap-1.5 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              title="Have an idea? Submit a feature request!"
-              aria-label="Submit a Feature Request"
+              title={t('header', 'featureRequestTooltip')}
+              aria-label={t('buttons', 'featureRequest')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              <span className="hidden lg:inline">Ideas?</span>
+              <span className="hidden lg:inline">{t('header', 'ideas')}</span>
             </button>
             
             <button
               onClick={() => setShowFundingModal(true)}
               className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 hover:scale-105 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white animate-pulse-subtle"
-              title="Support Vet-Rate.org - Help keep this free for veterans"
-              aria-label="Back the Mission - Support Vet-Rate.org"
+              title={t('header', 'supportTooltip')}
+              aria-label={t('header', 'backTheMission')}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
               </svg>
-              <span className="hidden md:inline">Back the Mission</span>
+              <span className="hidden md:inline">{t('header', 'backTheMission')}</span>
             </button>
           </nav>
         </div>

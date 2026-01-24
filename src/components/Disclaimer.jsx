@@ -1,7 +1,10 @@
 import React from 'react';
 import { Info, Shield, BookOpen, Lock } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function Disclaimer({ compact = false }) {
+  const { t } = useLanguage();
+
   if (compact) {
     // Enhanced inline disclaimer focused on trust, education, and privacy
     return (
@@ -11,35 +14,26 @@ function Disclaimer({ compact = false }) {
             <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-2">
               <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Educational Resource</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Not legal or medical advice</p>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">{t('disclaimer', 'educationalResource')}</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('disclaimer', 'notLegalAdvice')}</p>
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="bg-green-100 dark:bg-green-900/30 rounded-full p-2">
               <Lock className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Your Privacy</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">No data collected or sold</p>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">{t('disclaimer', 'yourPrivacy')}</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('disclaimer', 'noDataCollected')}</p>
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="bg-amber-100 dark:bg-amber-900/30 rounded-full p-2">
               <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200">Veteran-Built</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">By a service-disabled vet</p>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">{t('disclaimer', 'veteranBuilt')}</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('disclaimer', 'byServiceDisabledVet')}</p>
           </div>
         </div>
         <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
-          For official claims assistance, consult an accredited{' '}
-          <a 
-            href="https://www.va.gov/vso/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-          >
-            VSO
-          </a>
-          {' '}or VA representative.
+          {t('disclaimer', 'consultVSO')}
         </p>
       </div>
     );
@@ -62,19 +56,16 @@ function Disclaimer({ compact = false }) {
           
           {/* Title */}
           <h3 id="disclaimer-title" className="text-lg font-bold text-amber-800 dark:text-amber-200 mb-3 tracking-wide">
-            ⚠️ IMPORTANT DISCLAIMER
+            ⚠️ {t('disclaimer', 'importantDisclaimer')}
           </h3>
           
           {/* Content */}
           <div className="text-amber-700 dark:text-amber-100 space-y-3 max-w-2xl">
             <p>
-              <strong className="text-amber-800 dark:text-amber-200">Vet-Rate.org is an informational resource</strong> created by a disabled veteran. 
-              This is not a Veterans Service Organization (VSO) or law firm. This website is for{' '}
-              <strong className="text-amber-800 dark:text-amber-200">informational purposes only</strong> and does not constitute legal, medical, or official VA guidance.
+              <strong className="text-amber-800 dark:text-amber-200">Vet-Rate.org</strong> {t('disclaimer', 'informationalOnly')}.
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-400">
-              For official assistance with your disability claim, please consult with an accredited VSO, 
-              VA Regional Office representative, or qualified attorney. Always verify information with official VA sources.
+              {t('disclaimer', 'consultVSO')}
             </p>
           </div>
         </div>

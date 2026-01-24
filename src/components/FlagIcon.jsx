@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Map language/region codes to their flag-icons country codes
 // Some languages don't have country flags, so we use alternatives
@@ -89,6 +90,7 @@ const FALLBACK_ICONS = {
  * @param {string} fallbackEmoji - Emoji to show if no flag available (from language data)
  */
 const FlagIcon = ({ langCode, size = 'md', className = '', rounded = true, fallbackEmoji }) => {
+  const { t } = useLanguage();
   const countryCode = FLAG_CODE_MAP[langCode];
   const fallback = fallbackEmoji || FALLBACK_ICONS[langCode];
   

@@ -7,6 +7,7 @@
  */
 
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Likelihood styles
 const LIKELIHOOD_STYLES = {
@@ -23,6 +24,7 @@ const NEXUS_STYLES = {
 };
 
 export default function CFileClaimsCards({ claims = [] }) {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState('all');
   const [expandedClaim, setExpandedClaim] = useState(null);
   

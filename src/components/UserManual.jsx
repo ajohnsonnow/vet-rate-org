@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { resetTourState, triggerTourRestart } from './BootCampTour';
 import { getTotalToolCount } from '../data/toolkitData';
 import { PROJECT_STATS } from '../data/projectStats';
@@ -3809,6 +3810,8 @@ const renderContent = (content, onClose) => {
 };
 
 const UserManual = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
+  
   const [currentSection, setCurrentSection] = useState('home');
   const [expandedSections, setExpandedSections] = useState(['getting-started']);
   const [searchQuery, setSearchQuery] = useState('');

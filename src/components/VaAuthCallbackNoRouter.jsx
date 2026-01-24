@@ -8,8 +8,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useVaAuth } from '../hooks/useVaAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function VaAuthCallbackNoRouter() {
+  const { t } = useLanguage();
   const { handleCallback } = useVaAuth();
   const [status, setStatus] = useState('processing');
   const [errorMessage, setErrorMessage] = useState(null);

@@ -14,6 +14,7 @@
  */
 
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { CONSISTENCY_CHECK_PROMPT, SOLO_STATEMENT_ANALYSIS_PROMPT } from '../utils/consistencyPrompts';
 import DiffHighlighter, { IssueCard } from './common/DiffHighlighter';
@@ -23,6 +24,7 @@ import RedditCopyButton from './common/RedditCopyButton';
  * AIConsistencyAnalyzer - The Cross-Examination Tool
  */
 const AIConsistencyAnalyzer = ({ onBack }) => {
+  const { t } = useLanguage();
   const [referenceText, setReferenceText] = useState('');
   const [targetText, setTargetText] = useState('');
   const [analysis, setAnalysis] = useState(null);

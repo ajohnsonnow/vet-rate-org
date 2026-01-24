@@ -11,6 +11,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { verifyPin } from '../utils/secureStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 const WARNING_TIME = 2 * 60 * 1000; // Warning 2 minutes before lock
@@ -21,6 +22,7 @@ const SessionGuardian = ({
   onUnlock,
   requirePin = true
 }) => {
+  const { t } = useLanguage();
   // State
   const [isLocked, setIsLocked] = useState(false);
   const [showWarning, setShowWarning] = useState(false);

@@ -7,8 +7,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BodyMapSelector = ({ onSymptomUpdate, existingSymptoms = [], onLogToSymptomLogger, onClose }) => {
+  const { t } = useLanguage();
   const [view, setView] = useState('front'); // 'front' or 'back'
   const [selectedZone, setSelectedZone] = useState(null);
   const [symptoms, setSymptoms] = useState(existingSymptoms);

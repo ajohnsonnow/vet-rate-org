@@ -9,9 +9,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
 
 export default function WhatIfSandbox({ onClose }) {
+  const { t } = useLanguage();
   const [currentConditions, setCurrentConditions] = useState([]);
   const [availableConditions, setAvailableConditions] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);

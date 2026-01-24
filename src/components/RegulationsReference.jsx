@@ -3,6 +3,7 @@ import { X, ExternalLink, ChevronDown, ChevronUp, BookOpen, Scale, Shield, FileT
 import cfr3Regulations from '../data/cfr3Regulations.json';
 import title38Regulations from '../data/title38Regulations.json';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * RegulationsReference Component
@@ -13,6 +14,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
  */
 const RegulationsReference = ({ onClose }) => {
   useBodyScrollLock(true);
+  const { t } = useLanguage();
   
   const [expandedCategories, setExpandedCategories] = useState({
     'reasonable-doubt': true // Open the most important one by default

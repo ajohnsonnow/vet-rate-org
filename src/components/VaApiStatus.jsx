@@ -11,6 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { useVaApiStatus, useVaFeatureStatus } from '../hooks/useVaApiStatus';
 import { STATUS_LEVELS, getStatusPageUrl } from '../utils/vaApiStatus';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // ============================================================================
 // VA API STATUS BANNER - Shows when there are issues
@@ -21,6 +22,7 @@ import { STATUS_LEVELS, getStatusPageUrl } from '../utils/vaApiStatus';
  * Only shows when there are actual problems
  */
 export function VaApiStatusBanner({ onDismiss }) {
+  const { t } = useLanguage();
   const { summary, loading, statusPageUrl, hasIssues } = useVaApiStatus({
     autoFetch: true,
     enablePolling: true,
@@ -112,6 +114,7 @@ export function VaApiStatusBanner({ onDismiss }) {
  * Good for headers, footers, or toolbars
  */
 export function VaApiStatusIndicator({ showLabel = true, size = 'md' }) {
+  const { t } = useLanguage();
   const { summary, loading, statusPageUrl, hasIssues, status } = useVaApiStatus();
   
   const sizeClasses = {
@@ -169,6 +172,7 @@ export function VaApiStatusIndicator({ showLabel = true, size = 'md' }) {
  * Use near features that depend on VA APIs
  */
 export function VaFeatureStatusBadge({ feature, showDetails = false }) {
+  const { t } = useLanguage();
   const { 
     status, 
     statusInfo, 
@@ -256,6 +260,7 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
  * Good for settings pages or dedicated status views
  */
 export function VaApiStatusPanel() {
+  const { t } = useLanguage();
   const { 
     status, 
     loading, 
@@ -462,6 +467,7 @@ export function VaApiStatusPanel() {
  * Helps users understand if it's a VA issue
  */
 export function VaApiErrorMessage({ feature, error, onRetry }) {
+  const { t } = useLanguage();
   const featureStatus = useVaFeatureStatus(feature);
   const isVaIssue = featureStatus.hasIssues;
 

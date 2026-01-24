@@ -20,6 +20,7 @@ import {
   copyDbqSummaryToClipboard,
   getSubjectiveQuestions,
 } from '../utils/pdfDbqFiller';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * DbqShareMenu - Secure sharing interface for draft DBQs
@@ -30,6 +31,7 @@ import {
  * @param {function} props.onClose - Callback when menu is closed
  */
 export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('download');
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState(null);

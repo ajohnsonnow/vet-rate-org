@@ -274,9 +274,20 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
       console.log('[DecisionDecoder] AI response:', response);
       
       if (response.success) {
-        setResults(response.data);
+        setResults({
+          ...response.data,
+          // Pass through fallback info to show helpful notice
+          _usedFallback: response.usedFallback,
+          _fallbackReason: response.fallbackReason,
+          _fallbackNote: response.fallbackNote
+        });
       } else {
-        setError(response.error || 'Failed to decode decision. Please try again.');
+        // Check for context overflow error - show helpful message
+        if (response.isContextOverflow) {
+          setError(response.error);
+        } else {
+          setError(response.error || 'Failed to decode decision. Please try again.');
+        }
       }
     } catch (err) {
       console.error('[DecisionDecoder] Decode error:', err);
@@ -673,6 +684,23 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 
                 {results && (
                   <div className="space-y-4">
+                    {/* Cloud AI Fallback Notice (when document was too large for Local AI) */}
+                    {results._usedFallback && results._fallbackReason === 'context_overflow' && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <span className="text-blue-500">☁️</span>
+                          <div>
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              Processed with Cloud AI
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              {results._fallbackNote || 'Your document was too large for Local AI (4096 tokens). Cloud AI with 1M token context was used instead.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Decision Type Badge */}
                     {results.decision_type && (
                       <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm border ${getDecisionTypeColor(results.decision_type)}`}>

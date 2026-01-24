@@ -1,8 +1,10 @@
 import React from 'react';
 import { PACTActBadge } from './PACTActIndicator';
 import StaleDataIndicator from './StaleDataIndicator';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function SearchResultCard({ result, onSelect, isSelected }) {
+  const { t } = useLanguage();
   return (
     <button
       onClick={onSelect}

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { 
   getProviders, 
@@ -45,6 +46,7 @@ import { exportAllData, importAllData } from '../utils/storage';
 import ToolCardButton from './ToolCardButton';
 
 const MultiCloudManager = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   // UI State

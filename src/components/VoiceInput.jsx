@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * VoiceInput Component
@@ -144,6 +145,7 @@ const VoiceInputButton = ({
   showLabel = false,
   showPrivacyHint = true
 }) => {
+  const { t } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
   const [showSafetyPrompt, setShowSafetyPrompt] = useState(false);
   const [hasConfirmedSafety, setHasConfirmedSafety] = useState(() => {

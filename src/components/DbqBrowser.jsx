@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   isDbqCached,
   downloadAndCacheDbq,
@@ -53,6 +54,8 @@ const CATEGORY_ICONS = {
  * @param {function} props.onClose - Callback when browser is closed
  */
 export default function DbqBrowser({ onClose }) {
+  const { t } = useLanguage();
+  
   // State
   const [dbqForms, setDbqForms] = useState([]);
   const [filteredForms, setFilteredForms] = useState([]);

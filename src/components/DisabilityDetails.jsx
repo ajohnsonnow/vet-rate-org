@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import PDFButton from './PDFButton';
 import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 import { PACTActInfoCard, PACTActBadge } from './PACTActIndicator';
 import StaleDataIndicator from './StaleDataIndicator';
 import FundingModal from './FundingModal';
 
 function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSecondaryConditionClick }) {
+  const { t } = useLanguage();
   const [expandedSection, setExpandedSection] = useState('documentation');
   const [isSaved, setIsSaved] = useState(isClaimSaved(result.conditionName, null));
   const [showFundingModal, setShowFundingModal] = useState(false);

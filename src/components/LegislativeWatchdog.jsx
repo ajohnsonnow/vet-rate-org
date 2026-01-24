@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -120,6 +121,7 @@ const URGENCY_COLORS = {
 };
 
 const LegislativeWatchdog = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [loading, setLoading] = useState(true);

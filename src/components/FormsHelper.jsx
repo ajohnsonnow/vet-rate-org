@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
@@ -29,6 +30,7 @@ import {
  * especially buddy/lay statements which are notoriously difficult to get.
  */
 const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // AI Status monitoring

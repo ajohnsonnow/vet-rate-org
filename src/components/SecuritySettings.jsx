@@ -12,12 +12,14 @@ import React, { useState, useEffect } from 'react';
 import { RedactionToggle } from './RedactionMode';
 import { getVaultStatus } from '../utils/secureStorage';
 import ZonkButton from './ZonkButton';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const SecuritySettings = ({ 
   isOpen, 
   onClose,
   securityContext 
 }) => {
+  const { t } = useLanguage();
   const [vaultStatus, setVaultStatus] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 

@@ -15,6 +15,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useScreenshot } from '../hooks/useScreenshot';
 import ToolCardButton from './ToolCardButton';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * ShareButton Component
@@ -32,6 +33,7 @@ const ShareButton = ({
   className = '',
   onCapture,
 }) => {
+  const { t } = useLanguage();
   const [showMenu, setShowMenu] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   analyzeStrategy, 
   getProbabilityColors, 
@@ -247,6 +248,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
  * Main Pathfinder Component
  */
 export default function Pathfinder({ onNavigate, onOpenAISettings }) {
+  const { t } = useLanguage();
   const [ratings, setRatings] = useState([{ condition: '', rating: '' }]);
   const [additionalContext, setAdditionalContext] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);

@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   getSystemInfo,
   getAppState,
@@ -61,6 +62,8 @@ const APP_MODULES = {
 };
 
 function FeatureRequest({ onClose, appState = {} }) {
+  const { t } = useLanguage();
+  
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 

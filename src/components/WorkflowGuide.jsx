@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   X, ChevronRight, CheckCircle, Circle, Play, Map, 
   FileText, TrendingUp, GitBranch, Scale, Gavel, 
@@ -769,6 +770,7 @@ const saveWorkflowProgress = (progress) => {
 // MAIN COMPONENT
 // ============================================
 export default function WorkflowGuide({ onClose, onToolSelect }) {
+  const { t } = useLanguage();
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [progress, setProgress] = useState(loadWorkflowProgress);
   

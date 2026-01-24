@@ -4,9 +4,11 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 import { PROJECT_STATS } from '../data/projectStats';
 import { getTotalToolCount } from '../data/toolkitData';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function DisclaimerSplash({ onAcknowledge }) {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useLanguage();
 
   // Lock body scroll when modal is visible
   useBodyScrollLock(isVisible);
@@ -51,10 +53,10 @@ function DisclaimerSplash({ onAcknowledge }) {
             />
           </div>
           <h1 id="splash-title" className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Welcome, Fellow Veteran 🎖️
+            {t('splash', 'welcomeVeteran')} 🎖️
           </h1>
           <p className="text-green-100 text-lg">
-            Your complete VA claims toolkit - built by one of your own
+            {t('splash', 'yourClaimsToolkit')}
           </p>
         </div>
 
@@ -63,13 +65,10 @@ function DisclaimerSplash({ onAcknowledge }) {
           {/* Personal Message */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
-              <span className="font-semibold">From one veteran to another:</span> I built this complete claims arsenal because 
-              navigating the VA disability system shouldn't feel like another deployment. Here you'll find <strong>{getTotalToolCount()} professional-grade tools</strong> covering 
-              everything from initial research through appeals - <strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} rated conditions</strong>, advanced calculators, AI document analysis, C&P exam prep, 
-              and complete evidence builders. All free, no tricks, no sales pitches.
+              <span className="font-semibold">{t('splash', 'fromOneVeteran')}</span> {t('splash', 'personalMessage')} {t('splash', 'coveringEverything')} - <strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} {t('splash', 'ratedConditions')}</strong>, {t('splash', 'advancedCalculators')} {t('splash', 'allFreeNoTricks')}
             </p>
             <p className="text-blue-600 dark:text-blue-100 text-xs mt-2 italic">
-              - A fellow service-disabled veteran
+              - {t('splash', 'fellowDisabledVeteran')}
             </p>
           </div>
 
@@ -77,71 +76,69 @@ function DisclaimerSplash({ onAcknowledge }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <div className="flex flex-col items-center text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <Lock className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
-              <span className="text-xs font-medium text-green-800 dark:text-green-200">No Login Required</span>
-              <span className="text-xs text-green-600 dark:text-green-400">Your privacy matters</span>
+              <span className="text-xs font-medium text-green-800 dark:text-green-200">{t('splash', 'noLoginRequired')}</span>
+              <span className="text-xs text-green-600 dark:text-green-400">{t('splash', 'yourPrivacyMatters')}</span>
             </div>
             <div className="flex flex-col items-center text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <Sparkles className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
-              <span className="text-xs font-medium text-green-800 dark:text-green-200">100% Free</span>
-              <span className="text-xs text-green-600 dark:text-green-400">No hidden fees ever</span>
+              <span className="text-xs font-medium text-green-800 dark:text-green-200">{t('splash', 'hundredPercentFree')}</span>
+              <span className="text-xs text-green-600 dark:text-green-400">{t('splash', 'noHiddenFees')}</span>
             </div>
             <div className="flex flex-col items-center text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <Shield className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
-              <span className="text-xs font-medium text-green-800 dark:text-green-200">No Data Sold</span>
-              <span className="text-xs text-green-600 dark:text-green-400">You're not tracked</span>
+              <span className="text-xs font-medium text-green-800 dark:text-green-200">{t('splash', 'noDataSold')}</span>
+              <span className="text-xs text-green-600 dark:text-green-400">{t('splash', 'youAreNotTracked')}</span>
             </div>
           </div>
 
           {/* What You Can Do Here */}
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-              Your Claims Arsenal Includes
+              {t('splash', 'yourClaimsArsenal')}
             </h2>
             <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} conditions</strong> with official VA rating criteria from 38 CFR Part 4</span>
+                <span><strong>{PROJECT_STATS.disabilitiesValidated.toLocaleString()} {t('splash', 'conditionsWithCriteria')}</strong></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Tactical Calculator</strong> - combined ratings with 2026 pay rates & lifetime projections</span>
+                <span><strong>{t('splash', 'tacticalCalculator')}</strong> - {t('splash', 'tacticalCalculatorDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Secondary Scout</strong> - discover 500+ linked conditions to maximize your rating</span>
+                <span><strong>{t('splash', 'secondaryScout')}</strong> - {t('splash', 'secondaryScoutDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>C&P Exam Simulator</strong> - practice with DBQ-aligned questions</span>
+                <span><strong>{t('splash', 'cpExamSimulator')}</strong> - {t('splash', 'cpExamSimulatorDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>C-File AI Analyzer</strong> - what others charge $500+ for, FREE</span>
+                <span><strong>{t('splash', 'cFileAiAnalyzer')}</strong> - {t('splash', 'cFileAiAnalyzerDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Forms Helper & Evidence Builders</strong> - nexus statements, buddy statements, symptom tracking</span>
+                <span><strong>{t('splash', 'formsHelperEvidence')}</strong> - {t('splash', 'formsHelperEvidenceDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>Strategic Tools</strong> - Pathfinder, Risk Assessment, VSO Finder, State Benefits</span>
+                <span><strong>{t('splash', 'strategicTools')}</strong> - {t('splash', 'strategicToolsDesc')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-600 font-bold">✓</span>
-                <span><strong>My Packet</strong> - organize all evidence and track your claims</span>
+                <span><strong>{t('splash', 'myPacket')}</strong> - {t('splash', 'myPacketDesc')}</span>
               </li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic text-center">
-              🎖️ {getTotalToolCount()} professional tools - everything from research to appeal. All free.
+              🎖️ {getTotalToolCount()} {t('splash', 'professionalToolsFooter')}
             </p>
           </div>
 
           {/* Important Note - Softened */}
           <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-sm">
             <p className="text-gray-600 dark:text-gray-300">
-              <span className="font-medium">Quick note:</span> This is an educational resource, not a VSO or law firm. 
-              For official claims assistance, your local <a href="https://www.va.gov/vso/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline">VSO</a> is 
-              a great free resource.
+              <span className="font-medium">{t('splash', 'quickNote')}</span> {t('splash', 'notVSOOrLawFirm')}
             </p>
           </div>
 
@@ -150,11 +147,11 @@ function DisclaimerSplash({ onAcknowledge }) {
             onClick={handleAcknowledge}
             className="w-full bg-gradient-to-r from-va-blue to-green-700 hover:from-green-700 hover:to-va-blue text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg"
           >
-            Enter Vet-Rate.org
+            {t('splash', 'enterVetRate')}
           </button>
 
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
-            Thank you for your service. Let's get you the information you deserve.
+            {t('splash', 'thankYouForService')}
           </p>
         </div>
       </div>

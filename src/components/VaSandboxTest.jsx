@@ -42,6 +42,7 @@ import { VA_FACILITIES_API_KEY } from '../config/vaAuth';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import DbqFinder from './DbqFinder';
 import ClaimEvidenceUpload from './ClaimEvidenceUpload';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Icons
 import { 
@@ -80,6 +81,7 @@ import {
 } from 'lucide-react';
 
 const VaSandboxTest = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // Power User Feature States
