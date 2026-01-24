@@ -24,7 +24,7 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAI
 // Conservative token limits (leaving room for system prompt + response)
 const TOKEN_LIMITS = {
   GEMINI: 800000,      // 800K tokens (conservative for 1M context)
-  LOCAL: 3000,         // 3K tokens (conservative for 4K context)
+  LOCAL: 1500,         // 1.5K tokens (VERY conservative for 4K context - system prompt is ~1K)
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
@@ -613,9 +613,10 @@ function parseApproxDate(dateStr) {
  * @param {string} apiKey - User's Gemini API key (optional if using Local AI)
  * @param {string} fullText - Extracted text from the C-File with page markers
  * @param {Function} onProgress - Progress callback (status, {current, total, phase})
+ * @param {AbortController} abortController - Optional abort controller to cancel analysis
  * @returns {Promise<Object>} - Structured analysis results
  */
-export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
+export async function analyzeCFile(apiKey, fullText, onProgress = () => {}, abortController = null) {
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
     throw new Error('No AI available. Please set up an API key or enable Local AI.');
@@ -666,6 +667,11 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
   const chunkResults = [];
   
   for (let i = 0; i < chunks.length; i++) {
+    // Check if aborted
+    if (abortController?.signal.aborted) {
+      throw new Error('Analysis cancelled by user');
+    }
+    
     const chunk = chunks[i];
     const chunkNum = i + 1;
     
@@ -688,6 +694,12 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}) {
       });
     } catch (error) {
       console.error(`Error analyzing chunk ${chunkNum}:`, error);
+      
+      // Special handling for context window errors
+      if (error.message?.includes('context window') || error.message?.includes('ContextWindowSizeExceededError')) {
+        throw new Error(`Context window exceeded. This document is too large for the current AI model. Try using Cloud AI (Gemini) instead, or split your document into smaller files.`);
+      }
+      
       // Continue with other chunks even if one fails
       onProgress(`⚠️ Chunk ${chunkNum} failed, continuing...`, {
         phase: 'chunk-error',

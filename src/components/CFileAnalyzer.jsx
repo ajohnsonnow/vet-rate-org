@@ -36,6 +36,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
   const [chunkProgress, setChunkProgress] = useState({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
   const [error, setError] = useState(null);
+  const abortControllerRef = useRef(null);
   
   // Analysis metadata (for showing chunks processed)
   const [analysisMetadata, setAnalysisMetadata] = useState(null);
@@ -97,6 +98,14 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     }
   }, [t]);
   
+  // Stop analysis
+  const handleStopAnalysis = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setProcessingStage('Stopping analysis...');
+    }
+  }, []);
+  
   // Start analysis process
   const handleStartAnalysis = useCallback(() => {
     if (!file) {
@@ -121,6 +130,9 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     setIsProcessing(true);
     setError(null);
     setChunkProgress({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
+    
+    // Create abort controller
+    abortControllerRef.current = new AbortController();
     
     try {
       // Stage 1: Read the file
@@ -163,7 +175,8 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               endPage: progressData.endPage || 0
             });
           }
-        }
+        },
+        abortControllerRef.current // Pass abort controller
       );
       
       setAnalysisResult(result.analysis);
@@ -172,11 +185,18 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || t('cfileAnalyzer', 'analysisError'));
+      
+      // Check if it was a cancellation
+      if (err.message === 'Analysis cancelled by user') {
+        setError('Analysis stopped by user');
+      } else {
+        setError(err.message || t('cfileAnalyzer', 'analysisError'));
+      }
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
     }
-  }, [file]);
+  }, [file, t]);
   
   // Reset to start over
   const handleReset = useCallback(() => {
@@ -436,6 +456,17 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           ) : (
             <>⚡ {t('cfileAnalyzer', 'largeFileMayTake')}</>
           )}
+        </div>
+        
+        {/* Stop Button */}
+        <div className="mt-6">
+          <button
+            onClick={handleStopAnalysis}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+          >
+            <span>🛑</span>
+            <span>Stop Analyzing</span>
+          </button>
         </div>
       </div>
     );
