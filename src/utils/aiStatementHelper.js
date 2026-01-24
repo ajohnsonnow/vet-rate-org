@@ -1297,11 +1297,15 @@ const estimateTokenCount = (text) => {
  * Preserves the beginning and end of documents (most important parts)
  * while removing middle content if needed
  *
+ * IMPORTANT: Local AI models have 4096 token context window
+ * Our prompt template uses ~600 tokens, so we limit input to ~1200 tokens
+ * This leaves room for the AI's response (~2000 tokens)
+ *
  * @param {string} text - The full document text
- * @param {number} maxTokens - Maximum tokens to allow
+ * @param {number} maxTokens - Maximum tokens to allow (default 1200 for Local AI safety)
  * @returns {{ text: string, wasTruncated: boolean, originalTokens: number }}
  */
-const smartTruncateForAI = (text, maxTokens = 2500) => {
+const smartTruncateForAI = (text, maxTokens = 1200) => {
   if (!text) return { text: '', wasTruncated: false, originalTokens: 0 };
   
   const originalTokens = estimateTokenCount(text);
@@ -1400,8 +1404,12 @@ export const decodeDecision = async (decisionText) => {
   }
 
   // Smart truncation to fit within Local AI context window
-  // Reserve ~1500 tokens for prompt template + output, leaving ~2500 for input text
-  const truncation = smartTruncateForAI(decisionText, 2500);
+  // Local AI has 4096 token limit. Our prompt template is ~600 tokens.
+  // We need to leave ~1500 tokens for AI response.
+  // So max input text is: 4096 - 600 (prompt) - 1500 (response) = ~2000 tokens
+  // BUT generateAI adds its own system prompt (~500 tokens), so we limit input to 1200 tokens
+  // to be safe: 1200 (input) + 600 (our prompt) + 500 (system prompt) + 1500 (response) = 3800 < 4096
+  const truncation = smartTruncateForAI(decisionText, 1200);
   
   if (truncation.wasTruncated) {
     console.log(`📏 Decision text truncated: ${truncation.originalTokens} → ${truncation.truncatedTokens} tokens`);
@@ -1410,11 +1418,16 @@ export const decodeDecision = async (decisionText) => {
   const prompt = buildDecisionDecoderPrompt(truncation.text, truncation);
 
   try {
-    // Use unified AI service
+    // Use unified AI service with minimal system prompt
+    // The decision decoder prompt already includes all necessary context
     const response = await generateAI(prompt, {
       temperature: 0.3,
-      maxTokens: 2048,
-      expectJSON: true
+      maxTokens: 1500, // Reduced from 2048 to leave room for context
+      expectJSON: true,
+      // Tell generateAI to use a minimal/empty system prompt since our prompt is self-contained
+      systemPrompt: 'You are a VA claims expert. Respond only with valid JSON.',
+      taskType: 'legal', // Use legal preset for accuracy
+      skipValidation: true, // We'll validate the JSON ourselves
     });
     
     // generateAI returns { text, mode, fallback?, fallbackReason?, note? } object
@@ -1429,12 +1442,32 @@ export const decodeDecision = async (decisionText) => {
 
     const textStr = typeof text === 'string' ? text : JSON.stringify(text);
 
+    // Better JSON parsing with multiple fallback strategies
     try {
       let cleanedText = textStr.trim();
+      
+      // Remove markdown code blocks
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      // Try to extract JSON if the response has extra text
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedText = jsonMatch[0];
+      }
+      
+      // Check if response is an error message (not JSON)
+      if (cleanedText.startsWith('[') && !cleanedText.startsWith('[{')) {
+        // Likely an error message like "[Diamond Swarm..."
+        console.error('AI returned error message instead of JSON:', cleanedText.substring(0, 200));
+        return {
+          success: false,
+          error: 'AI model is still loading or encountered an error. Please wait a moment and try again.',
+          isModelLoading: cleanedText.includes('loading') || cleanedText.includes('wait')
+        };
       }
       
       const decodedData = JSON.parse(cleanedText);
@@ -1458,19 +1491,49 @@ export const decodeDecision = async (decisionText) => {
         })
       };
     } catch (parseError) {
-      console.error('Failed to parse decision decoder JSON:', parseError, textStr);
-      return { success: false, error: 'Failed to parse decision. Please try again.' };
+      console.error(' Failed to parse decision decoder JSON:', parseError, textStr);
+      
+      // Check if the AI response indicates it's still loading
+      const lowerText = textStr.toLowerCase();
+      if (lowerText.includes('loading') || lowerText.includes('wait') || lowerText.includes('initializing')) {
+        return {
+          success: false,
+          error: 'AI model is still loading. Please wait for the model to fully load and try again.',
+          isModelLoading: true
+        };
+      }
+      
+      // Check if it looks like a partial/cut-off response
+      if (!textStr.includes('}') || textStr.length < 50) {
+        return {
+          success: false,
+          error: 'AI response was incomplete. This may be due to token limits. Please try with a shorter excerpt of your decision letter.',
+          isIncomplete: true
+        };
+      }
+      
+      return { success: false, error: 'Failed to parse AI response. Please try again.' };
     }
   } catch (error) {
     console.error('Decision decoder error:', error);
     
     // Check for context overflow error and provide helpful message
     const errorMsg = error.message || '';
-    if (errorMsg.includes('too large') || errorMsg.includes('context') || errorMsg.includes('4096')) {
+    if (errorMsg.includes('too large') || errorMsg.includes('context') || errorMsg.includes('4096') ||
+        errorMsg.includes('ContextWindowSizeExceeded') || errorMsg.includes('prompt tokens exceed')) {
       return {
         success: false,
-        error: errorMsg,
+        error: 'Document is too large for AI processing. Please try pasting only the "Reasons for Decision" section of your letter.',
         isContextOverflow: true
+      };
+    }
+    
+    // Check for model loading errors
+    if (errorMsg.includes('warming up') || errorMsg.includes('not loaded') || errorMsg.includes('not ready')) {
+      return {
+        success: false,
+        error: 'AI model is still loading. Please wait for the model to fully load and try again.',
+        isModelLoading: true
       };
     }
     
