@@ -2502,6 +2502,7 @@ function App() {
             setShowRedTeam(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2524,6 +2525,7 @@ function App() {
             setShowDecisionDecoder(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2582,6 +2584,7 @@ function App() {
             setShowRiskAssessment(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2593,6 +2596,7 @@ function App() {
             setShowTDIUBuilder(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       
@@ -2708,6 +2712,7 @@ function App() {
             setShowTheTribunal(false);
             setShowBugSquasher(true);
           }}
+          onOpenAISettings={() => setShowAISettings(true)}
         />
       )}
       

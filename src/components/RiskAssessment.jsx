@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
@@ -142,7 +143,8 @@ const calculateAge = (birthYear) => {
   return currentYear - birthYear;
 };
 
-export default function RiskAssessment({ onClose, onReportBug }) {
+export default function RiskAssessment({ onClose, onReportBug, onOpenAISettings }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -19,7 +20,8 @@ import VoiceInputButton from './VoiceInput';
  * without rewriting it (that would be fake) - just highlights issues and suggests clinical equivalents.
  */
 
-const RedTeam = ({ onClose, onReportBug }) => {
+const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [draftStatement, setDraftStatement] = useState('');
