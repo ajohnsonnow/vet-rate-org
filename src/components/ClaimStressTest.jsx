@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getSavedClaims, getStatement, getAllStatements } from '../utils/claimsStorage';
 import { getVeteranProfile, getSavedForms } from '../utils/veteranProfile';
+import { isAnyAIAvailable, generateAI } from '../utils/unifiedAIService';
 import ReportBugLink from './ReportBugLink';
 import VoiceInputButton from './VoiceInput';
 

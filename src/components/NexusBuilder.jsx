@@ -18,6 +18,7 @@ import { isAIAvailable, enhancePersonalStatement, generateFieldSuggestion } from
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import { getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
+import AIModelQuickLoad from './AIModelQuickLoad';
 
 /**
  * NexusBuilder Component
@@ -464,6 +465,20 @@ Sincerely,
                 </span>
               </div>
             )}
+            {/* AI Model Quick Load */}
+            {!isAnyAIAvailable() && (
+              <div className="mb-4">
+                <AIModelQuickLoad 
+                  toolId="nexus-builder"
+                  onLoadComplete={(agent) => {
+                    console.log('AI loaded for Nexus Builder:', agent.name);
+                  }}
+                  compact={false}
+                  showFullDropdown={true}
+                />
+              </div>
+            )}
+
             {!existingStatement && isAnyAIAvailable() && (
               <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">

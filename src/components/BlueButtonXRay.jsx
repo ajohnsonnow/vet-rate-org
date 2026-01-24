@@ -18,6 +18,7 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import AIModelQuickLoad from './AIModelQuickLoad';
 import ReportBugLink from './ReportBugLink';
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
@@ -819,19 +820,15 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
               </div>
             </div>
             
-            {/* AI Status Warning */}
+            {/* AI Model Quick Load */}
             {!isAnyAIAvailable() && (
-              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                      (100% private) or enter your Gemini API key.
-                    </p>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <AIModelQuickLoad 
+                  toolId="bluebutton-xray"
+                  onLoadComplete={(agent) => console.log('AI loaded for BlueButton XRay:', agent.name)}
+                  compact={false}
+                  showFullDropdown={true}
+                />
               </div>
             )}
             

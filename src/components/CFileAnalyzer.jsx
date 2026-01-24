@@ -14,6 +14,7 @@ import { analyzeCFile, getCFilePrivacyDisclosure, estimateChunks, getContextWind
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import AIModelQuickLoad from './AIModelQuickLoad';
 import ReportBugLink from './ReportBugLink';
 
 // Sub-components for the dashboard
@@ -185,12 +186,20 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       
     } catch (err) {
       console.error('Analysis error:', err);
+      console.error('Error stack:', err.stack);
+      console.error('Error details:', {
+        message: err.message,
+        name: err.name,
+        cause: err.cause
+      });
       
       // Check if it was a cancellation
       if (err.message === 'Analysis cancelled by user') {
         setError('Analysis stopped by user');
       } else {
-        setError(err.message || t('cfileAnalyzer', 'analysisError'));
+        // Provide detailed error message
+        const errorMessage = err.message || err.toString() || t('cfileAnalyzer', 'analysisError');
+        setError(errorMessage);
       }
     } finally {
       setIsProcessing(false);
@@ -304,18 +313,15 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         </div>
       )}
       
-      {/* AI Status Warning */}
+      {/* AI Model Quick Load */}
       {!isAnyAIAvailable() && (
-        <div className="mt-6 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">⚠️</span>
-            <div className="text-amber-800 dark:text-amber-200">
-              <p className="font-semibold">{t('cfileAnalyzer', 'aiRequiredForAnalysis')}</p>
-              <p className="text-sm mt-1">
-                {t('cfileAnalyzer', 'aiRequiredDesc')}
-              </p>
-            </div>
-          </div>
+        <div className="mt-6">
+          <AIModelQuickLoad 
+            toolId="cfile-analyzer"
+            onLoadComplete={(agent) => console.log('AI loaded for C-File Analyzer:', agent.name)}
+            compact={false}
+            showFullDropdown={true}
+          />
         </div>
       )}
       

@@ -4,8 +4,8 @@ import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { searchVSOs, isAIAvailable } from '../utils/aiStatementHelper';
-import { generateAI } from '../utils/unifiedAIService';
+import { searchVSOs } from '../utils/aiStatementHelper';
+import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
 
@@ -51,7 +51,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
       return;
     }
 
-    if (!isAIAvailable()) {
+    if (!isAnyAIAvailable()) {
       setError(t('vsoFinder', 'aiNotAvailable'));
       return;
     }
@@ -79,7 +79,7 @@ const VSOFinder = ({ onClose, onReportBug }) => {
   const handleAIQuestion = async () => {
     if (!aiQuestion.trim()) return;
     
-    if (!isAIAvailable()) {
+    if (!isAnyAIAvailable()) {
       setError(t('vsoFinder', 'aiRequiresKey'));
       return;
     }

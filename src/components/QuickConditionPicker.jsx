@@ -6,7 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 /**
  * QuickConditionPicker Component
  * A compact homepage widget to quickly select conditions and add them to My Packet
- * Dynamically loads all 751 conditions from disabilityData.json
+ * Dynamically loads all conditions from disabilityData.json (count computed at runtime)
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {

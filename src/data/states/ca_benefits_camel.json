@@ -1,0 +1,212 @@
+{
+  "state": "California",
+  "stateCode": "CA",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://www.calvet.ca.gov/",
+  "dataStatus": "needs_validation",
+  "validator": null,
+  "benefits": [
+    {
+      "category": "Property Tax",
+      "benefitName": "Basic Disabled Veterans Property Tax Exemption",
+      "description": "$4,000 property value exemption for disabled veterans",
+      "value": "$4,000 property value exemption",
+      "estimatedAnnualValue": 80,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "California resident",
+          "Honorable discharge"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Assessor's Office",
+        "form": "BOE-261",
+        "deadline": "February 15 annually",
+        "renewalRequired": true,
+        "documentation": [
+          "DD-214",
+          "Proof of California residency"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.boe.ca.gov/proptaxes/veteransexemption.htm"
+      },
+      "legalCitation": {
+        "statute": "California Revenue and Taxation Code §205",
+        "effectiveDate": null,
+        "lastAmended": "2021-01-01"
+      },
+      "sources": [
+        {
+          "url": "https://www.calvet.ca.gov/veteran-services-benefits/property-tax",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Property Tax",
+      "benefitName": "100% Disabled Veterans Enhanced Exemption",
+      "description": "Up to $161,083 property value exemption for 100% disabled veterans",
+      "value": "$161,083 exemption (2026)",
+      "estimatedAnnualValue": 3500,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "California resident",
+          "Primary residence",
+          "Household income under $69,304 (2026)"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Assessor's Office",
+        "form": "BOE-261-G",
+        "deadline": "February 15 annually",
+        "renewalRequired": true,
+        "documentation": [
+          "DD-214",
+          "VA rating letter showing 100%",
+          "Proof of income",
+          "Proof of California residency"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.boe.ca.gov/proptaxes/pdf/boe261g.pdf"
+      },
+      "legalCitation": {
+        "statute": "California Revenue and Taxation Code §205.5",
+        "effectiveDate": null,
+        "lastAmended": "2024-01-01"
+      },
+      "sources": [
+        {
+          "url": "https://www.calvet.ca.gov/veteran-services-benefits/property-tax",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Vehicle",
+      "benefitName": "Disabled Veteran License Plates",
+      "description": "Free special license plates and parking placard for disabled veterans",
+      "value": "Waived registration fees + parking privileges",
+      "estimatedAnnualValue": 75,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "California resident",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "California DMV",
+        "form": "REG 256",
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA disability verification",
+          "Medical certification"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.dmv.ca.gov/portal/vehicle-registration/license-plates-decals-and-placards/special-interest-and-personalized-license-plates/disabled-person-license-plates-dp-and-placards/"
+      },
+      "legalCitation": {
+        "statute": "California Vehicle Code §5007",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.dmv.ca.gov/portal/vehicle-registration/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Education",
+      "benefitName": "CalVet College Fee Waiver",
+      "description": "Waived enrollment fees at California community colleges and CSU/UC system",
+      "value": "Free tuition at public colleges (enrollment fees waived)",
+      "estimatedAnnualValue": 1800,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "California resident for 1+ year",
+          "Veteran OR dependent of 100% P&T veteran",
+          "Enrolled in undergraduate program"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "California Student Aid Commission / College Financial Aid Office",
+        "form": "CalVet College Fee Waiver Application",
+        "deadline": "Before each semester",
+        "renewalRequired": true,
+        "documentation": [
+          "DD-214",
+          "Certificate of Eligibility from VA",
+          "Proof of California residency"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.calvet.ca.gov/veteran-services-benefits/education"
+      },
+      "legalCitation": {
+        "statute": "California Education Code §68120-68122",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.calvet.ca.gov/veteran-services-benefits/education",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Recreation",
+      "benefitName": "Disabled Veteran Hunting/Fishing License",
+      "description": "Reduced-fee hunting and fishing licenses for disabled veterans",
+      "value": "50% discount on licenses",
+      "estimatedAnnualValue": 50,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "California resident",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "California Department of Fish and Wildlife",
+        "form": null,
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA rating letter"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://wildlife.ca.gov/Licensing/Hunting"
+      },
+      "legalCitation": null,
+      "sources": [
+        {
+          "url": "https://wildlife.ca.gov/licensing",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    }
+  ]
+}

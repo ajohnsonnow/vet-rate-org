@@ -1,0 +1,37 @@
+# State Benefits Scraper Requirements
+# Install with: pip install -r requirements.txt
+
+# Core scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+html5lib>=1.1
+
+# JavaScript rendering (for dynamic sites)
+selenium>=4.15.0
+webdriver-manager>=4.0.1
+
+# Data validation
+pydantic>=2.5.0
+jsonschema>=4.20.0
+
+# Date handling
+python-dateutil>=2.8.2
+
+# Rate limiting
+ratelimit>=2.2.1
+
+# Parsing helpers
+html-table-parser-python3>=0.3.0
+pypdf2>=3.0.0  # For parsing PDF benefit documents
+
+# Logging and monitoring
+colorlog>=6.8.0
+tqdm>=4.66.0  # Progress bars
+
+# HTTP caching (reduce repeated requests)
+requests-cache>=1.1.1
+
+# Optional: For advanced parsing
+pandas>=2.1.0
+tabulate>=0.9.0

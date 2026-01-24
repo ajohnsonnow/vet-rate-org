@@ -18,6 +18,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSuggestionModal from './LanguageSuggestionModal';
 import VeteranTranslator from './VeteranTranslator';
+import UnityLanguageTutor from './UnityLanguageTutor';
 import FlagIcon from './FlagIcon';
 
 // Language regions for organized display
@@ -54,6 +55,7 @@ const LanguageSelector = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [showTranslator, setShowTranslator] = useState(false);
+  const [showLanguageTutor, setShowLanguageTutor] = useState(false);
   const dropdownRef = useRef(null);
   const currentLang = getCurrentLanguage();
   const availableLanguages = getAvailableLanguages();
@@ -145,14 +147,20 @@ const LanguageSelector = ({
                           onClick={() => handleLanguageChange(lang.code)}
                           className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                      transition-colors ${language === lang.code ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-300'}`}
+                          title={lang.note || `Switch to ${lang.name}`}
                         >
                           <span className="w-6 flex items-center justify-center">
                             <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />
                           </span>
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm truncate block">{lang.nativeName}</span>
-                            {lang.name !== lang.nativeName && (
-                              <span className="text-xs text-gray-500 truncate block">{lang.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{lang.nativeName}</span>
+                              {lang.name !== lang.nativeName && (
+                                <span className="text-xs text-gray-500">({lang.name})</span>
+                              )}
+                            </div>
+                            {lang.note && (
+                              <span className="text-[10px] text-cyan-400 truncate block">{lang.note}</span>
                             )}
                           </div>
                           {language === lang.code && (
@@ -172,11 +180,17 @@ const LanguageSelector = ({
                     onClick={() => handleLanguageChange(lang.code)}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                transition-colors ${language === lang.code ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-300'}`}
+                    title={lang.note || `Switch to ${lang.name}`}
                   >
                     <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />
-                    <span className="text-sm">{lang.nativeName}</span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="text-sm font-medium">{lang.nativeName}</span>
+                      {lang.name !== lang.nativeName && (
+                        <span className="text-xs text-gray-500">({lang.name})</span>
+                      )}
+                    </div>
                     {language === lang.code && (
-                      <svg className="w-4 h-4 ml-auto text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -193,14 +207,20 @@ const LanguageSelector = ({
             
             {/* Footer note */}
             <div className="px-3 py-2 border-t border-gray-800 bg-gray-900/50 space-y-2">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowTranslator(true); setIsOpen(false); }}
-                  className="flex-1 px-2 py-1.5 bg-gradient-to-r from-amber-600/30 to-orange-600/30 hover:from-amber-600/50 hover:to-orange-600/50 text-amber-300 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 border border-amber-500/30"
+                  className="px-2 py-1.5 bg-gradient-to-r from-amber-600/30 to-orange-600/30 hover:from-amber-600/50 hover:to-orange-600/50 text-amber-300 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 border border-amber-500/30"
                 >
                   <span>🤝</span>
-                  <span>Veteran Translator</span>
-                  <span className="px-1 py-0.5 bg-amber-500 text-[8px] text-white font-bold rounded">NEW</span>
+                  <span>Translator</span>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowLanguageTutor(true); setIsOpen(false); }}
+                  className="px-2 py-1.5 bg-gradient-to-r from-indigo-600/30 to-purple-600/30 hover:from-indigo-600/50 hover:to-purple-600/50 text-indigo-300 text-xs rounded-lg transition-colors flex items-center justify-center gap-1 border border-indigo-500/30"
+                >
+                  <span>🎓</span>
+                  <span>Learn</span>
                 </button>
               </div>
               <button
@@ -211,7 +231,7 @@ const LanguageSelector = ({
                 <span>Suggest a Language</span>
               </button>
               <p className="text-[10px] text-gray-500 text-center">
-                🌍 40+ languages supported • VA forms remain in English
+                🌍 {availableLanguages.length}+ languages supported • NATO & Coalition Forces included • VA forms remain in English
               </p>
             </div>
           </div>
@@ -227,6 +247,10 @@ const LanguageSelector = ({
           isOpen={showTranslator} 
           onClose={() => setShowTranslator(false)}
           onReportBug={onReportBug}
+        />
+        <UnityLanguageTutor
+          isOpen={showLanguageTutor}
+          onClose={() => setShowLanguageTutor(false)}
         />
       </div>
     );
@@ -359,24 +383,31 @@ const LanguageSelector = ({
           
           {/* Footer */}
           <div className="px-4 py-3 border-t border-gray-800 bg-gray-900/80 space-y-3">
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => { setShowTranslator(true); setIsOpen(false); }}
-                className="flex-1 px-3 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                className="px-3 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 <span>🤝</span>
-                <span>Veteran Translator</span>
+                <span>Translator</span>
+              </button>
+              <button
+                onClick={() => { setShowLanguageTutor(true); setIsOpen(false); }}
+                className="px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+              >
+                <span>🎓</span>
+                <span>Learn</span>
               </button>
               <button
                 onClick={() => { setShowSuggestionModal(true); setIsOpen(false); }}
-                className="flex-1 px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                className="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 <span>💡</span>
-                <span>Suggest a Language</span>
+                <span>Suggest</span>
               </button>
             </div>
             <p className="text-xs text-gray-500 text-center">
-              🎖️ Supporting 40+ languages for ALL service members • Built by veterans, for veterans
+              🎖️ Supporting {availableLanguages.length}+ languages for ALL service members • NATO & Coalition Forces • Built by veterans, for veterans
             </p>
           </div>
         </div>
@@ -387,6 +418,15 @@ const LanguageSelector = ({
         isOpen={showSuggestionModal} 
         onClose={() => setShowSuggestionModal(false)}
         onReportBug={onReportBug}
+      />
+      <VeteranTranslator 
+        isOpen={showTranslator} 
+        onClose={() => setShowTranslator(false)}
+        onReportBug={onReportBug}
+      />
+      <UnityLanguageTutor
+        isOpen={showLanguageTutor}
+        onClose={() => setShowLanguageTutor(false)}
       />
       <VeteranTranslator 
         isOpen={showTranslator} 

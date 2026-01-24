@@ -15,6 +15,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import Tesseract from 'tesseract.js';
+import { preprocessImageForOCR, detectOptimalPreprocessing, PREPROCESS_OPTIONS } from './imagePreprocessor';
 
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -275,8 +276,16 @@ async function runOCROnPDF(pdf, pagesToOCR, onProgress) {
         viewport: viewport,
       }).promise;
       
-      // Get canvas data URL for Tesseract
-      const imageData = canvas.toDataURL('image/png');
+      // ENHANCEMENT: Apply preprocessing for poor-quality scans
+      // Detect optimal preprocessing level based on image quality
+      const preprocessLevel = detectOptimalPreprocessing(canvas);
+      console.log(`📄 Page ${i}: Using ${preprocessLevel} preprocessing`);
+      
+      // Preprocess the canvas if needed
+      const processedCanvas = preprocessImageForOCR(canvas, preprocessLevel);
+      
+      // Get canvas data URL for Tesseract (use processed canvas)
+      const imageData = processedCanvas.toDataURL('image/png');
       
       // Run OCR - progress is reported via the logger callback set during worker creation
       const result = await worker.recognize(imageData);

@@ -26,7 +26,7 @@ export const PROJECT_STATS = {
   majorTools: parseNumeric(dynamicStats.major_tools) || 40,
   supportingComponents: 75,
   utilities: parseNumeric(dynamicStats.utility_count) || 49,
-  disabilitiesValidated: parseNumeric(dynamicStats.validation_count) || 751,
+  disabilitiesValidated: parseNumeric(dynamicStats.validation_count) || 748,
   
   // Content Counts (matches README.md)
   vaForms: parseNumeric(dynamicStats.forms_supported) || 16,

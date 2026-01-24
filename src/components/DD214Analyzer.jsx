@@ -17,6 +17,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { generateAI, generateAIWithImage, getAIStatus, isAnyAIAvailable, isLocalAIReady, isLocalAIVisionModel } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import AIModelQuickLoad from './AIModelQuickLoad';
 import ReportBugLink from './ReportBugLink';
 import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFileSupported, getFileTypeLabel, getAcceptString, renderPDFToImages } from '../utils/documentAnalyzer';
 import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVeteranProfile } from '../utils/veteranProfile';
@@ -944,6 +945,21 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               </div>
             </div>
           </div>
+
+          {/* AI Model Quick Load */}
+          {!aiStatus.anyAvailable && (
+            <div className="mb-4">
+              <AIModelQuickLoad 
+                toolId="dd214-analyzer"
+                onLoadComplete={(agent) => {
+                  console.log('AI loaded for DD214 Analyzer:', agent.name);
+                  setAIStatus(getAIStatus());
+                }}
+                compact={false}
+                showFullDropdown={true}
+              />
+            </div>
+          )}
 
           {/* Input Method Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 /**
@@ -6,16 +6,49 @@ import { useLanguage } from '../contexts/LanguageContext';
  * Luna is here to encourage and support veterans on their claims journey.
  * No money, no donations - just warm, supportive encouragement.
  * 
+ * Luna now pops up randomly around the center of the screen with fun animations! 🐱✨
+ * 
  * @param {boolean} show - Whether to show the popup
  * @param {string} trigger - What action triggered this (search, secondary-scout, cap-sim, etc.)
  * @param {object} context - Additional context about the action
  * @param {function} onDismiss - Optional callback when dismissed
  */
+
+// Fun entrance animations for Luna
+const ENTRANCE_ANIMATIONS = [
+  'animate-luna-bounce-in',      // Bouncy entrance
+  'animate-luna-slide-up',       // Slides up
+  'animate-luna-pop-in',         // Pop/scale effect
+  'animate-luna-swing-in',       // Swings in like a cat jumping
+  'animate-luna-fade-zoom',      // Fade + zoom combo
+];
+
+// Random position zones (avoiding corners where other UI elements live)
+const POSITION_ZONES = [
+  { top: '30%', left: '50%', transform: 'translate(-50%, -50%)' },  // Center-upper
+  { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },  // Dead center
+  { top: '40%', left: '30%', transform: 'translate(-50%, -50%)' },  // Center-left
+  { top: '40%', left: '70%', transform: 'translate(-50%, -50%)' },  // Center-right
+  { top: '35%', left: '40%', transform: 'translate(-50%, -50%)' },  // Upper-left-ish
+  { top: '35%', left: '60%', transform: 'translate(-50%, -50%)' },  // Upper-right-ish
+  { top: '45%', left: '45%', transform: 'translate(-50%, -50%)' },  // Slightly off-center
+];
+
+// Cat-themed emojis for extra fun
+const CAT_EMOJIS = ['😺', '😸', '🐱', '😻', '😽', '🐾', '✨'];
+
 function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss }) {
   const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [sessionDismissCount, setSessionDismissCount] = useState(0);
+  
+  // Randomize position and animation when Luna appears
+  const { position, animation, extraEmoji } = useMemo(() => ({
+    position: POSITION_ZONES[Math.floor(Math.random() * POSITION_ZONES.length)],
+    animation: ENTRANCE_ANIMATIONS[Math.floor(Math.random() * ENTRANCE_ANIMATIONS.length)],
+    extraEmoji: CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)]
+  }), [trigger]); // Re-randomize when trigger changes
 
   // Show with a slight delay for better UX
   useEffect(() => {
@@ -240,42 +273,58 @@ function BuyMeCoffee({ show, trigger = 'search', context = {}, onDismiss }) {
   const msg = messages[trigger] || messages['search'];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in max-w-[calc(100vw-2rem)] sm:max-w-xs">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 border border-blue-200 dark:border-blue-700 relative">
+    <div 
+      className={`fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
+      style={{
+        top: position.top,
+        left: position.left,
+        transform: position.transform
+      }}
+    >
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+        {/* Decorative cat ears on top */}
+        <div className="absolute -top-3 left-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
+        <div className="absolute -top-3 right-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
+        
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute -top-2 -right-2 bg-gray-100 dark:bg-gray-700 rounded-full p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition shadow-md"
-          aria-label="Dismiss"
+          className="absolute -top-2 -right-2 bg-purple-100 dark:bg-purple-700 rounded-full p-1.5 text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600 transition shadow-md hover:scale-110"
+          aria-label="Dismiss Luna"
         >
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </button>
 
-        {/* Headline with icon */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">{msg.icon}</span>
-          <span className="font-bold text-gray-900 dark:text-white text-sm">{msg.headline}</span>
+        {/* Headline with icon and extra cat emoji */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xl">{msg.icon}</span>
+          <span className="font-bold text-gray-900 dark:text-white text-base">{msg.headline}</span>
+          <span className="text-lg animate-bounce">{extraEmoji}</span>
         </div>
 
-        <div className="flex items-start gap-3">
-          {/* Luna photo - calm, supportive presence */}
-          <img 
-            src="/images/NaptimeLuna.jpg" 
-            alt="Luna - Your calm companion"
-            className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-blue-300 dark:border-blue-600 shadow-sm"
-          />
+        <div className="flex items-start gap-4">
+          {/* Luna photo - now larger and with fun border */}
+          <div className="relative flex-shrink-0">
+            <img 
+              src="/images/NaptimeLuna.jpg" 
+              alt="Luna - Your calm companion"
+              className="w-16 h-16 rounded-full object-cover border-3 border-purple-400 dark:border-purple-500 shadow-lg animate-pulse-subtle"
+            />
+            {/* Floating paw print */}
+            <span className="absolute -bottom-1 -right-1 text-lg animate-wiggle">🐾</span>
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               {msg.body}
             </p>
           </div>
         </div>
         
-        {/* Encouraging footer */}
-        <p className="text-[10px] text-blue-500 dark:text-blue-400 text-center mt-3 italic">
-          Luna's here whenever you need a moment of calm. 🐱💙
+        {/* Encouraging footer with sparkles */}
+        <p className="text-xs text-purple-500 dark:text-purple-400 text-center mt-4 italic">
+          ✨ Luna's here whenever you need a moment of calm ✨ 🐱💜
         </p>
       </div>
     </div>
