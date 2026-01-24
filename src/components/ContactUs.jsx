@@ -56,13 +56,13 @@ const ContactUs = ({ onClose, onReportBug }) => {
     >
       <div className={`${modalClasses.content} max-w-2xl my-8`}>
         <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
-          <h2 id="contact-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>📧 Contact Us</h2>
+          <h2 id="contact-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>📧 {t('contactUs', 'title')}</h2>
           <div className="flex items-center gap-3">
             {onReportBug && <ReportBugLink onClick={onReportBug} variant="auto" moduleName="Contact Us" />}
             <button
               onClick={onClose}
               className={`text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
-              aria-label="Close"
+              aria-label={t('common', 'close')}
             >
               ×
             </button>
@@ -72,8 +72,7 @@ const ContactUs = ({ onClose, onReportBug }) => {
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           <section className="mb-6">
             <p className="text-gray-700 mb-4">
-              Have questions, feedback, or suggestions? I'd love to hear from you! Whether you've found an error, 
-              want to suggest a feature, or just want to say thanks, feel free to reach out.
+              {t('contactUs', 'introText')}
             </p>
           </section>
 
@@ -82,14 +81,14 @@ const ContactUs = ({ onClose, onReportBug }) => {
               <svg className="mx-auto mb-4 w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <h3 className="text-xl font-bold text-green-800 mb-2">Your email client will open shortly!</h3>
-              <p className="text-green-700">Thank you for reaching out. We'll get back to you as soon as possible.</p>
+              <h3 className="text-xl font-bold text-green-800 mb-2">{t('contactUs', 'successTitle')}</h3>
+              <p className="text-green-700">{t('contactUs', 'successMessage')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Your Name *
+                  {t('contactUs', 'nameLabel')} *
                 </label>
                 <input
                   type="text"
@@ -99,13 +98,13 @@ const ContactUs = ({ onClose, onReportBug }) => {
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John Doe"
+                  placeholder={t('contactUs', 'namePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Your Email *
+                  {t('contactUs', 'emailLabel')} *
                 </label>
                 <input
                   type="email"
@@ -115,13 +114,13 @@ const ContactUs = ({ onClose, onReportBug }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="john.doe@example.com"
+                  placeholder={t('contactUs', 'emailPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Subject
+                  {t('contactUs', 'subjectLabel')}
                 </label>
                 <input
                   type="text"
@@ -130,13 +129,13 @@ const ContactUs = ({ onClose, onReportBug }) => {
                   value={formData.subject}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Question about rating criteria"
+                  placeholder={t('contactUs', 'subjectPlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Message *
+                  {t('contactUs', 'messageLabel')} *
                 </label>
                 <textarea
                   id="message"
@@ -146,14 +145,13 @@ const ContactUs = ({ onClose, onReportBug }) => {
                   onChange={handleChange}
                   rows="6"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  placeholder="Tell us what's on your mind..."
+                  placeholder={t('contactUs', 'messagePlaceholder')}
                 ></textarea>
               </div>
 
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> This will open your default email client. If you prefer, you can 
-                  email us directly at{' '}
+                  <strong>{t('contactUs', 'noteLabel')}:</strong> {t('contactUs', 'noteText')}{' '}
                   <a href="mailto:Anth@StructuredForGrowth.com" className="underline">
                     Anth@StructuredForGrowth.com
                   </a>
@@ -164,16 +162,16 @@ const ContactUs = ({ onClose, onReportBug }) => {
                 type="submit"
                 className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Send Message
+                {t('contactUs', 'sendButton')}
               </button>
             </form>
           )}
 
           <section className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Other Ways to Connect</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-3">{t('contactUs', 'otherWaysTitle')}</h3>
             <ul className="space-y-2 text-gray-700">
               <li>
-                <strong>GitHub:</strong>{' '}
+                <strong>{t('contactUs', 'githubLabel')}:</strong>{' '}
                 <a 
                   href="https://github.com/ajohnsonnow/vet-rate-org" 
                   target="_blank" 
@@ -184,41 +182,38 @@ const ContactUs = ({ onClose, onReportBug }) => {
                 </a>
               </li>
               <li>
-                <strong>Report an Issue:</strong> Found a bug? Open an issue on our{' '}
+                <strong>{t('contactUs', 'reportIssueLabel')}:</strong> {t('contactUs', 'reportIssueText')}{' '}
                 <a 
                   href="https://github.com/ajohnsonnow/vet-rate-org/issues" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  GitHub Issues page
+                  {t('contactUs', 'githubIssuesPage')}
                 </a>
               </li>
             </ul>
           </section>
 
           <section className="mt-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Frequently Asked Questions</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-3">{t('contactUs', 'faqTitle')}</h3>
             <div className="space-y-3">
               <div>
-                <p className="font-semibold text-gray-800">Q: Is this an official VA website?</p>
+                <p className="font-semibold text-gray-800">{t('contactUs', 'faq1Question')}</p>
                 <p className="text-gray-700 text-sm">
-                  No, Vet-Rate.org is an independent educational tool created by a service-connected disabled 
-                  veteran. This site is not affiliated with the U.S. Department of Veterans Affairs.
+                  {t('contactUs', 'faq1Answer')}
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-gray-800">Q: Do you provide legal or medical advice?</p>
+                <p className="font-semibold text-gray-800">{t('contactUs', 'faq2Question')}</p>
                 <p className="text-gray-700 text-sm">
-                  No, this tool is for educational purposes only. Please consult qualified professionals for 
-                  advice specific to your situation.
+                  {t('contactUs', 'faq2Answer')}
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-gray-800">Q: How can I support this project?</p>
+                <p className="font-semibold text-gray-800">{t('contactUs', 'faq3Question')}</p>
                 <p className="text-gray-700 text-sm">
-                  Share it with fellow veterans! You can also support this project by 
-                  donating via Buy Me a Coffee or simply by using the tool and providing feedback.
+                  {t('contactUs', 'faq3Answer')}
                 </p>
               </div>
             </div>
@@ -230,7 +225,7 @@ const ContactUs = ({ onClose, onReportBug }) => {
             onClick={onClose}
             className="w-full md:w-auto px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
-            Close
+            {t('common', 'close')}
           </button>
         </div>
       </div>

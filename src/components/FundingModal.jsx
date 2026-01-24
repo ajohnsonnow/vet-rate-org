@@ -28,24 +28,24 @@ function FundingModal({ show, onClose, componentStats = null }) {
 
   // Luna's purr-sonal treat fund messages (first paw account!)
   const lunaMessages = [
-    "*Meow!* I've been testing this code with my paws for MONTHS! Every donation = extra Churu for me! 😻",
-    "*purrrr* My wish list: More treats, more catnip, and a comfy spot to supervise dad's coding sessions! 🐾",
-    "Listen human, I PERSONALLY inspect every keystroke. $5-10 keeps my quality control standards high! 😸",
-    "*meow meow* I promise to walk across the keyboard LESS... if there are treats involved. Maybe. No guarantees. 😹",
-    "*purrrr* Fun fact: I've knocked over dad's coffee 47 times while he built this. I deserve treats for that dedication! ☕😼",
+    t('fundingModal.lunaMsg1'),
+    t('fundingModal.lunaMsg2'),
+    t('fundingModal.lunaMsg3'),
+    t('fundingModal.lunaMsg4'),
+    t('fundingModal.lunaMsg5'),
   ];
   
   // Midnight's upgrade fund messages  
   const midnightMessages = [
-    "Midnight dreams of: AMD Ryzen 9 9950X3D (a new brain!) and RTX 5090 (another heart!) 🖥️",
-    "Midnight: 'I've compiled 100K+ lines of code! I deserve a 9950X3D brain transplant!' 💻",
-    "Help Midnight grow: 5090 graphics = faster AI, 9950X3D = more veteran tools built! 🚀",
-    "Midnight's upgrade fund: Because 128GB RAM is 'just barely enough' for development 😅",
+    t('fundingModal.midnightMsg1'),
+    t('fundingModal.midnightMsg2'),
+    t('fundingModal.midnightMsg3'),
+    t('fundingModal.midnightMsg4'),
   ];
 
   const fundingOptions = [
     {
-      name: 'Buy Me a Coffee',
+      name: t('fundingModal.buyMeACoffee'),
       url: 'https://buymeacoffee.com/vetrate',
       icon: '☕',
       color: 'bg-yellow-400 hover:bg-yellow-500',
@@ -54,7 +54,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
       description: 'vet-rate.org'
     },
     {
-      name: 'PayPal',
+      name: t('fundingModal.paypal'),
       url: 'https://paypal.me/ajohnsonnow',
       icon: '💳',
       color: 'bg-blue-600 hover:bg-blue-700',
@@ -63,7 +63,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
       description: 'ajohnsonnow'
     },
     {
-      name: 'Cash App',
+      name: t('fundingModal.cashApp'),
       url: 'https://cash.app/$ajnow',
       icon: '💵',
       color: 'bg-green-600 hover:bg-green-700',
@@ -72,7 +72,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
       description: '$ajnow'
     },
     {
-      name: 'Venmo',
+      name: t('fundingModal.venmo'),
       url: 'https://venmo.com/ajnow',
       icon: '📱',
       color: 'bg-sky-600 hover:bg-sky-700',
@@ -107,12 +107,12 @@ function FundingModal({ show, onClose, componentStats = null }) {
           <div className="flex justify-center mb-3">
             <img 
               src="/images/ReadyForHerCloseup.jpg" 
-              alt="Luna - Chief Treat Officer"
+              alt={t('fundingModal.lunaAlt')}
               className="w-16 h-16 rounded-full object-cover border-4 border-va-gold shadow-lg"
             />
           </div>
           <h2 className={`text-2xl font-bold mb-2 ${getColorClass(colors.text.primary)}`}>
-            😸 Luna's Treat Fund
+            {t('fundingModal.title')}
           </h2>
           
           {/* Component-specific stats */}
@@ -123,10 +123,10 @@ function FundingModal({ show, onClose, componentStats = null }) {
               </p>
               <div className={`flex justify-center gap-4 text-xs ${getColorClass(colors.text.tertiary)}`}>
                 <div>
-                  <span className="font-semibold">⏱️ {componentStats.hours} hrs</span> to build
+                  <span className="font-semibold">⏱️ {componentStats.hours} {t('fundingModal.hrsToBuild')}</span> {t('fundingModal.toBuild')}
                 </div>
                 <div>
-                  <span className="font-semibold">📝 {componentStats.lines.toLocaleString()} lines</span> of code
+                  <span className="font-semibold">📝 {componentStats.lines.toLocaleString()} {t('fundingModal.linesOfCode')}</span> {t('fundingModal.ofCode')}
                 </div>
               </div>
               {componentStats.description && (
@@ -138,8 +138,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
           )}
           
           <p className={`text-sm ${getColorClass(colors.text.secondary)}`}>
-            *Meow!* Luna promises: 100% goes to keeping this free for veterans (and treats for me).
-            No ads, no tracking, no data selling - just a cat helping vets help vets! *purrrr* 🐾
+            {t('fundingModal.missionStatement')}
           </p>
         </div>
 
@@ -168,27 +167,27 @@ function FundingModal({ show, onClose, componentStats = null }) {
         {/* Fun Dev Team Funding Goals */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <p className={`text-xs text-center mb-2 ${getColorClass(colors.text.muted)}`}>
-            Where does your support go?
+            {t('fundingModal.whereDoesSupport')}
           </p>
           <div className="flex justify-center gap-4">
             {/* Luna's Treat Fund */}
             <button
               onClick={() => { setShowLunaMessage(!showLunaMessage); setShowMidnightMessage(false); }}
               className="flex flex-col items-center p-2 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors group"
-              title="Luna's Treat Fund"
+              title={t('fundingModal.lunaTreats')}
             >
               <span className="text-2xl group-hover:animate-bounce">🐱</span>
-              <span className="text-xs text-pink-600 dark:text-pink-400 font-medium">Luna's Treats</span>
+              <span className="text-xs text-pink-600 dark:text-pink-400 font-medium">{t('fundingModal.lunaTreats')}</span>
             </button>
             
             {/* Midnight's Upgrade Fund */}
             <button
               onClick={() => { setShowMidnightMessage(!showMidnightMessage); setShowLunaMessage(false); }}
               className="flex flex-col items-center p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
-              title="Midnight's Upgrade Fund"
+              title={t('fundingModal.midnightUpgrades')}
             >
               <span className="text-2xl group-hover:animate-pulse">🖥️</span>
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Midnight Upgrades</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t('fundingModal.midnightUpgrades')}</span>
             </button>
           </div>
           
@@ -213,7 +212,7 @@ function FundingModal({ show, onClose, componentStats = null }) {
 
         {/* Luna's purr-sonal thank you */}
         <p className={`text-center text-xs mt-4 ${getColorClass(colors.text.muted)}`}>
-          *Purrrr* Thank you for supporting veteran-built tools (and Luna's treat fund)! 😸💚
+          {t('fundingModal.thankYou')}
         </p>
       </div>
     </div>

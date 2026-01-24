@@ -269,9 +269,9 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       stageRadius: 8,
       popoverClass: 'vetrate-tour-popover',
       progressText: '',
-      nextBtnText: 'Next →',
-      prevBtnText: '← Back',
-      doneBtnText: 'Start My Claim! 🚀',
+      nextBtnText: t('bootCampTour', 'nextBtn'),
+      prevBtnText: t('bootCampTour', 'prevBtn'),
+      doneBtnText: t('bootCampTour', 'doneBtn'),
       smoothScroll: true,
       onDestroyStarted: () => {
         // Show footer again when tour ends
@@ -288,18 +288,18 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         // Welcome Intro
         {
           popover: {
-            title: '🎖️ Welcome to Vet-Rate.org',
+            title: t('bootCampTour', 'welcomeTitle'),
             description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>Let's show you around!</strong> This quick tour covers the essentials so you know exactly where to start.
+                  <strong>${t('bootCampTour', 'welcomeIntro')}</strong> ${t('bootCampTour', 'welcomeSubtitle')}
                 </p>
                 <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 15px;">
-                  Takes about 60 seconds. You can skip or exit anytime.
+                  ${t('bootCampTour', 'welcomeDuration')}
                 </p>
                 <div style="margin-top: 20px; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #fbbf24; font-weight: 600; margin: 0;">
-                    💡 You can restart this tour anytime from the Help menu.
+                    ${t('bootCampTour', 'welcomeTip')}
                   </p>
                 </div>
               </div>
@@ -312,17 +312,17 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-search-section',
           popover: {
-            title: '🔍 Start With Search',
+            title: t('bootCampTour', 'searchTitle'),
             description: `
-              <p><strong>This search bar is where most people begin.</strong></p>
-              <p style="margin-top: 10px;">Look up any VA disability condition by:</p>
+              <p><strong>${t('bootCampTour', 'searchIntro')}</strong></p>
+              <p style="margin-top: 10px;">${t('bootCampTour', 'searchLookup')}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Name: Try "PTSD" or "tinnitus"</li>
-                <li>Body part: "knee" or "shoulder"</li>
-                <li>Diagnostic code: "9411" or "6260"</li>
+                <li>${t('bootCampTour', 'searchByName')}</li>
+                <li>${t('bootCampTour', 'searchByBody')}</li>
+                <li>${t('bootCampTour', 'searchByCode')}</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                We cover <strong>all ${PROJECT_STATS.disabilitiesValidated} conditions</strong> from the official VA rating schedule.
+                ${t('bootCampTour', 'searchCoverage').replace('{count}', PROJECT_STATS.disabilitiesValidated)}
               </p>
             `,
             side: 'bottom',
@@ -337,14 +337,14 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-quick-picker',
           popover: {
-            title: '⚡ Quick Add (Skip the Search)',
+            title: t('bootCampTour', 'quickPickerTitle'),
             description: `
-              <p><strong>Already know what you're claiming?</strong> Use this shortcut!</p>
+              <p><strong>${t('bootCampTour', 'quickPickerIntro')}</strong> ${t('bootCampTour', 'quickPickerShortcut')}</p>
               <p style="margin-top: 10px;">
-                The Quick Picker lets you add conditions directly to your packet without searching.
+                ${t('bootCampTour', 'quickPickerDesc')}
               </p>
               <p style="color: #c8a961; margin-top: 10px; font-weight: 600;">
-                Just click → Pick a body system → Select your condition → Done!
+                ${t('bootCampTour', 'quickPickerHowTo')}
               </p>
             `,
             side: 'right',
@@ -366,18 +366,18 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-my-packet-btn',
           popover: {
-            title: '📦 Your Personal Workspace',
+            title: t('bootCampTour', 'myPacketTitle'),
             description: `
-              <p><strong>This is "My Packet" - your claims command center.</strong></p>
-              <p style="margin-top: 10px;">Everything you save appears here:</p>
+              <p><strong>${t('bootCampTour', 'myPacketIntro')}</strong></p>
+              <p style="margin-top: 10px;">${t('bootCampTour', 'myPacketEverything')}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>All your tracked conditions</li>
-                <li>Personal statements you've written</li>
-                <li>Evidence checklist and progress</li>
-                <li>Documents and notes</li>
+                <li>${t('bootCampTour', 'myPacketConditions')}</li>
+                <li>${t('bootCampTour', 'myPacketStatements')}</li>
+                <li>${t('bootCampTour', 'myPacketEvidence')}</li>
+                <li>${t('bootCampTour', 'myPacketDocs')}</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>Think of it as your claim's home base.</strong>
+                <strong>${t('bootCampTour', 'myPacketHomeBase')}</strong>
               </p>
             `,
             side: 'bottom',
@@ -391,18 +391,18 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-workflow-guide-btn',
           popover: {
-            title: '🗺️ Step-by-Step Guides',
+            title: t('bootCampTour', 'workflowTitle'),
             description: `
-              <p><strong>Not sure what to do first?</strong> This button has you covered.</p>
-              <p style="margin-top: 10px;">The Workflow Guide walks you through:</p>
+              <p><strong>${t('bootCampTour', 'workflowIntro')}</strong> ${t('bootCampTour', 'workflowCovered')}</p>
+              <p style="margin-top: 10px;">${t('bootCampTour', 'workflowWalks')}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>📝 Filing your first claim</li>
-                <li>🔄 Appealing a denial</li>
-                <li>⬆️ Increasing an existing rating</li>
-                <li>🎖️ Applying for special benefits (TDIU/SMC)</li>
+                <li>${t('bootCampTour', 'workflowFirstClaim')}</li>
+                <li>${t('bootCampTour', 'workflowAppeal')}</li>
+                <li>${t('bootCampTour', 'workflowIncrease')}</li>
+                <li>${t('bootCampTour', 'workflowSpecial')}</li>
               </ul>
               <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
-                Completely lost? <strong>Start here!</strong>
+                ${t('bootCampTour', 'workflowLost')} <strong>${t('bootCampTour', 'workflowStartHere')}</strong>
               </p>
             `,
             side: 'bottom',
@@ -416,18 +416,18 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-tools-dropdown',
           popover: {
-            title: '🛠️ Your Claims Toolkit',
+            title: t('bootCampTour', 'toolsTitle'),
             description: `
-              <p><strong>Ready for the advanced features?</strong> We've got ${getTotalToolCount()}+ specialized tools:</p>
+              <p><strong>${t('bootCampTour', 'toolsIntro')}</strong> ${t('bootCampTour', 'toolsCount').replace('{count}', getTotalToolCount())}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>🔍 <strong>Secondary Scout</strong> - Discover related conditions</li>
-                <li>✅ <strong>C&P Simulator</strong> - Practice for your exam</li>
-                <li>🧮 <strong>Rating Calculator</strong> - Calculate your total %</li>
-                <li>📝 <strong>Nexus Builder</strong> - Generate medical statements</li>
-                <li>...and 35+ more!</li>
+                <li>${t('bootCampTour', 'toolsSecondaryScout')}</li>
+                <li>${t('bootCampTour', 'toolsCPSimulator')}</li>
+                <li>${t('bootCampTour', 'toolsCalculator')}</li>
+                <li>${t('bootCampTour', 'toolsNexus')}</li>
+                <li>${t('bootCampTour', 'toolsMore')}</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                Click "Tools" whenever you need something specific.
+                ${t('bootCampTour', 'toolsClickAnytime')}
               </p>
             `,
             side: 'bottom',
@@ -440,24 +440,24 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         // AI Navigator - Show as centered popover with arrow pointing to bottom-left
         {
           popover: {
-            title: '🧭 Your AI Assistant',
+            title: t('bootCampTour', 'navigatorTitle'),
             description: `
               <div style="text-align: center;">
                 <p style="font-size: 2.5rem; margin-bottom: 10px;">↙️</p>
-                <p><strong>Look in the bottom-left corner!</strong></p>
-                <p style="margin-top: 10px;">The 🧭 button opens <strong>The Navigator</strong> - your personal claims guide!</p>
-                <p style="margin-top: 10px;">The Navigator can:</p>
+                <p><strong>${t('bootCampTour', 'navigatorLookCorner')}</strong></p>
+                <p style="margin-top: 10px;">${t('bootCampTour', 'navigatorOpens')}</p>
+                <p style="margin-top: 10px;">${t('bootCampTour', 'navigatorCan')}</p>
                 <ul style="margin: 10px 0; padding-left: 20px; text-align: left;">
-                  <li>💬 Answer questions about the VA process</li>
-                  <li>📚 Explain confusing regulations in plain English</li>
-                  <li>🤝 Walk you through any tool</li>
-                  <li>🎯 Suggest what to do next</li>
+                  <li>${t('bootCampTour', 'navigatorAnswer')}</li>
+                  <li>${t('bootCampTour', 'navigatorExplain')}</li>
+                  <li>${t('bootCampTour', 'navigatorWalk')}</li>
+                  <li>${t('bootCampTour', 'navigatorSuggest')}</li>
                 </ul>
                 <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
-                  💡 Pro tip: You can drag it anywhere on your screen!
+                  ${t('bootCampTour', 'navigatorDrag')}
                 </p>
                 <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                  We'll open it for you at the end of this tour!
+                  ${t('bootCampTour', 'navigatorOpenEnd')}
                 </p>
               </div>
             `,
@@ -468,18 +468,18 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         {
           element: '#tour-help-btn',
           popover: {
-            title: '📖 When You Need Help',
+            title: t('bootCampTour', 'helpTitle'),
             description: `
-              <p><strong>Stuck? Confused?</strong> The User Manual is your friend.</p>
-              <p style="margin-top: 10px;">Inside you'll find:</p>
+              <p><strong>${t('bootCampTour', 'helpStuck')}</strong> ${t('bootCampTour', 'helpFriend')}</p>
+              <p style="margin-top: 10px;">${t('bootCampTour', 'helpInside')}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Complete documentation for every tool</li>
-                <li>Step-by-step how-to guides</li>
-                <li>Answers to common questions</li>
-                <li>A way to restart this tour</li>
+                <li>${t('bootCampTour', 'helpDocs')}</li>
+                <li>${t('bootCampTour', 'helpGuides')}</li>
+                <li>${t('bootCampTour', 'helpFAQ')}</li>
+                <li>${t('bootCampTour', 'helpRestart')}</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>💾 Don't forget to backup your data regularly!</strong>
+                <strong>${t('bootCampTour', 'helpBackup')}</strong>
               </p>
             `,
             side: 'bottom',
@@ -492,25 +492,25 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         // Final screen
         {
           popover: {
-            title: '🚀 You\'re All Set!',
+            title: t('bootCampTour', 'finalTitle'),
             description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>That's the tour!</strong> You now know the essentials.
+                  <strong>${t('bootCampTour', 'finalThatsIt')}</strong> ${t('bootCampTour', 'finalKnowEssentials')}
                 </p>
                 
                 <div style="margin: 20px 0; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #22c55e; font-weight: 600; margin: 0;">
-                    ✅ Want to see an example? Click "Load Demo Data" to explore a sample claim with all the features filled out.
+                    ${t('bootCampTour', 'finalDemoData')}
                   </p>
                 </div>
                 
                 <p style="color: #9ca3af; font-size: 0.9rem; margin-top: 15px;">
-                  Remember: The 📖 Help menu and 🧭 Navigator are always here if you need guidance.
+                  ${t('bootCampTour', 'finalRemember')}
                 </p>
                 
                 <p style="color: #c8a961; font-weight: 700; margin-top: 20px; font-size: 1rem;">
-                  "Built by a Veteran, For Veterans."
+                  ${t('bootCampTour', 'finalMotto')}
                 </p>
               </div>
             `,

@@ -3820,6 +3820,138 @@ const UserManual = ({ onClose, onReportBug }) => {
   // Get current content
   const currentContent = documentationContent[currentSection] || documentationContent.home;
   
+  // Helper to get translated navigation title
+  const getNavTitle = (id, fallbackTitle) => {
+    const navKeyMap = {
+      'home': 'navHome',
+      'getting-started': 'navGettingStarted',
+      'first-visit': 'navFirstVisit',
+      'interface-overview': 'navInterfaceOverview',
+      'accessibility': 'navAccessibility',
+      'search': 'navSearchExplore',
+      'how-to-search': 'navHowToSearch',
+      'search-results': 'navSearchResults',
+      'disability-details': 'navDisabilityDetails',
+      'rating-criteria': 'navRatingCriteria',
+      'tactical-calculator': 'navTacticalCalculator',
+      'calc-overview': 'navCalcOverview',
+      'calc-bilateral': 'navCalcBilateral',
+      'calc-dependents': 'navCalcDependents',
+      'calc-what-if': 'navCalcWhatIf',
+      'secondary-scout': 'navSecondaryScout',
+      'scout-launching': 'navScoutLaunching',
+      'scout-results': 'navScoutResults',
+      'scout-add-to-packet': 'navScoutAddToPacket',
+      'cp-exam-simulator': 'navCPExamSimulator',
+      'simulator-getting-started': 'navSimulatorGettingStarted',
+      'condition-selection': 'navConditionSelection',
+      'taking-simulation': 'navTakingSimulation',
+      'simulator-results': 'navSimulatorResults',
+      'flashcards': 'navFlashcards',
+      'dbq-library': 'navDBQLibrary',
+      'dbq-overview': 'navDBQOverview',
+      'dbq-browse': 'navDBQBrowse',
+      'dbq-usage': 'navDBQUsage',
+      'pathfinder': 'navPathfinder',
+      'workflow-guide': 'navWorkflowGuide',
+      'workflow-overview': 'navWorkflowOverview',
+      'workflow-progress': 'navWorkflowProgress',
+      'cfile-analyzer': 'navCFileAnalyzer',
+      'cfile-what-is': 'navCFileWhatIs',
+      'cfile-upload': 'navCFileUpload',
+      'cfile-analysis': 'navCFileAnalysis',
+      'blue-button': 'navBlueButtonXRay',
+      'blue-overview': 'navBlueOverview',
+      'blue-extract': 'navBlueExtract',
+      'witness-bench': 'navWitnessBench',
+      'witness-overview': 'navWitnessOverview',
+      'witness-interview': 'navWitnessInterview',
+      'witness-output': 'navWitnessOutput',
+      'nexus-builder': 'navNexusBuilder',
+      'what-is-nexus': 'navWhatIsNexus',
+      'building-statement': 'navBuildingStatement',
+      'doctor-cheat-sheet': 'navDoctorCheatSheet',
+      'download-options': 'navDownloadOptions',
+      'forms-helper': 'navFormsHelper',
+      'available-forms': 'navAvailableForms',
+      'buddy-statements': 'navBuddyStatements',
+      'intent-to-file': 'navIntentToFile',
+      'ptsd-stressor': 'navPTSDStressor',
+      'veteran-profile': 'navVeteranProfile',
+      'red-team': 'navRedTeamSimulator',
+      'red-overview': 'navRedOverview',
+      'red-analysis': 'navRedAnalysis',
+      'decision-decoder': 'navDecisionDecoder',
+      'decoder-overview': 'navDecoderOverview',
+      'decoder-upload': 'navDecoderUpload',
+      'decoder-appeal': 'navDecoderAppeal',
+      'shark-radar': 'navSharkRadar',
+      'tdiu-builder': 'navTDIUBuilder',
+      'tdiu-overview': 'navTDIUOverview',
+      'tdiu-eligibility': 'navTDIUEligibility',
+      'risk-assessment': 'navRiskAssessment',
+      'symptom-logger': 'navSymptomLogger',
+      'symptom-overview': 'navSymptomOverview',
+      'symptom-logging': 'navSymptomLogging',
+      'symptom-reports': 'navSymptomReports',
+      'pact-act': 'navPACTActNavigator',
+      'pact-overview': 'navPACTOverview',
+      'pact-conditions': 'navPACTConditions',
+      'pact-locations': 'navPACTLocations',
+      'foia-generator': 'navFOIAKeysmith',
+      'million-dollar': 'navMillionDollar',
+      'mos-matcher': 'navMOSHazardMatcher',
+      'web-conditions': 'navWebOfConditions',
+      'vso-finder': 'navVSOFinder',
+      'state-benefits': 'navStateBenefitHunter',
+      'my-packet': 'navMyPacket',
+      'managing-claims': 'navManagingClaims',
+      'saved-forms': 'navSavedForms',
+      'backup-restore': 'navBackupRestore',
+      'exporting-data': 'navExportingData',
+      'va-resources': 'navVAResources',
+      'online-portals': 'navOnlinePortals',
+      'phone-numbers': 'navPhoneNumbers',
+      'external-resources': 'navExternalResources',
+      'settings': 'navSettings',
+      'display-mode': 'navDisplayMode',
+      'accessibility-options': 'navAccessibilityOptions',
+      'data-management': 'navDataManagement',
+      'ai-settings': 'navAISettings',
+      'local-ai-overview': 'navLocalAIOverview',
+      'model-selection': 'navModelSelection',
+      'cloud-vs-local': 'navCloudVsLocal',
+    };
+    const key = navKeyMap[id];
+    if (key) {
+      const translated = t('userManual', key);
+      if (translated !== key) return translated;
+    }
+    return fallbackTitle;
+  };
+  
+  // Helper to get translated category title
+  const getCategoryTitle = (title) => {
+    const catKeyMap = {
+      'Getting Started': 'catGettingStarted',
+      'Search & Explore': 'catSearchExplore',
+      '📊 Calculate': 'catCalculate',
+      '🔍 Discover': 'catDiscover',
+      '📋 Build Evidence': 'catBuildEvidence',
+      '🎯 Quality Control': 'catQualityControl',
+      '⚡ Advanced Strategy': 'catAdvancedStrategy',
+      '💎 Shock & Awe': 'catShockAwe',
+      '🤝 Support': 'catSupport',
+      '📁 Data & Settings': 'catDataSettings',
+    };
+    const key = catKeyMap[title];
+    if (key) {
+      const translated = t('userManual', key);
+      if (translated !== key) return translated;
+    }
+    return title;
+  };
+  
   // Toggle section expansion
   const toggleSection = (sectionId) => {
     setExpandedSections(prev => 
@@ -3861,7 +3993,7 @@ const UserManual = ({ onClose, onReportBug }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="font-bold">📖 User Manual</h1>
+          <h1 className="font-bold">{t('userManual', 'title')}</h1>
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -3877,7 +4009,7 @@ const UserManual = ({ onClose, onReportBug }) => {
           <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-lg font-bold flex items-center gap-2">
-                📖 User Manual
+                {t('userManual', 'title')}
               </h1>
               <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3890,7 +4022,7 @@ const UserManual = ({ onClose, onReportBug }) => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search documentation..."
+                placeholder={t('userManual', 'searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
@@ -3904,7 +4036,7 @@ const UserManual = ({ onClose, onReportBug }) => {
           {/* Search results */}
           {searchQuery.trim() && (
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">SEARCH RESULTS</h3>
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('userManual', 'searchResults')}</h3>
               {searchResults.length > 0 ? (
                 <div className="space-y-1">
                   {searchResults.map(([id, content]) => (
@@ -3917,12 +4049,12 @@ const UserManual = ({ onClose, onReportBug }) => {
                       }}
                       className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                     >
-                      {content.title}
+                      {getNavTitle(id, content.title)}
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">No results found</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('userManual', 'noResultsFound')}</p>
               )}
             </div>
           )}
@@ -3934,7 +4066,7 @@ const UserManual = ({ onClose, onReportBug }) => {
                 {/* Category Headers */}
                 {section.isCategory ? (
                   <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                    {section.title}
+                    {getCategoryTitle(section.title)}
                   </div>
                 ) : section.children ? (
                   <>
@@ -3944,7 +4076,7 @@ const UserManual = ({ onClose, onReportBug }) => {
                     >
                       <span className="flex items-center gap-2">
                         <span>{section.icon}</span>
-                        <span>{section.title}</span>
+                        <span>{getNavTitle(section.id, section.title)}</span>
                       </span>
                       <svg 
                         className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? 'rotate-90' : ''}`} 
@@ -3968,7 +4100,7 @@ const UserManual = ({ onClose, onReportBug }) => {
                               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                         >
-                          Overview
+                          {t('userManual', 'overview')}
                         </button>
                         {section.children.map((child) => (
                           <button
@@ -3983,7 +4115,7 @@ const UserManual = ({ onClose, onReportBug }) => {
                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                           >
-                            {child.title}
+                            {getNavTitle(child.id, child.title)}
                           </button>
                         ))}
                       </div>
@@ -4002,7 +4134,7 @@ const UserManual = ({ onClose, onReportBug }) => {
                     }`}
                   >
                     <span>{section.icon}</span>
-                    <span>{section.title}</span>
+                    <span>{getNavTitle(section.id, section.title)}</span>
                   </button>
                 )}
               </div>
@@ -4022,7 +4154,7 @@ const UserManual = ({ onClose, onReportBug }) => {
               }}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
             >
-              🎓 Start Interactive Tour
+              {t('userManual', 'startTour')}
             </button>
           </div>
           
@@ -4032,7 +4164,7 @@ const UserManual = ({ onClose, onReportBug }) => {
               onClick={onReportBug}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
             >
-              🐛 Report a Bug
+              {t('userManual', 'reportBug')}
             </button>
           </div>
           </div>
@@ -4047,19 +4179,19 @@ const UserManual = ({ onClose, onReportBug }) => {
                 onClick={() => setCurrentSection('home')}
                 className="hover:text-va-blue dark:hover:text-va-gold"
               >
-                Home
+                {t('userManual', 'home')}
               </button>
               {currentSection !== 'home' && (
                 <>
                   <span className="mx-2">/</span>
-                  <span className="text-gray-900 dark:text-white">{currentContent.title}</span>
+                  <span className="text-gray-900 dark:text-white">{getNavTitle(currentSection, currentContent.title)}</span>
                 </>
               )}
             </nav>
             
             {/* Title */}
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-              {currentContent.title}
+              {getNavTitle(currentSection, currentContent.title)}
             </h1>
             
             {/* Content */}
@@ -4073,13 +4205,13 @@ const UserManual = ({ onClose, onReportBug }) => {
                 onClick={() => setCurrentSection('home')}
                 className="flex items-center gap-2 text-va-blue dark:text-va-gold hover:underline"
               >
-                ← Back to Home
+                {t('userManual', 'backToHome')}
               </button>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
               >
-                Close Manual
+                {t('userManual', 'closeManual')}
               </button>
             </div>
           </div>

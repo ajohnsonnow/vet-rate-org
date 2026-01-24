@@ -119,7 +119,8 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
     const response = await generateAI(userPrompt, {
       temperature: 0.4,
       maxTokens: 8192,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // Strategy analysis returns opportunities, not diagnostic codes
     });
     
     // generateAI returns { text, mode } object - extract the text content

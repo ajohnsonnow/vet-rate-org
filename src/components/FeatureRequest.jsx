@@ -25,41 +25,48 @@ const DEVELOPER_EMAIL = 'Anth@StructuredForGrowth.com';
 // FormSubmit.co endpoint - sends directly to developer's email without opening email client
 const FORMSUBMIT_URL = 'https://formsubmit.co/ajax/Anth@StructuredForGrowth.com';
 
-// Feature request categories
-const FEATURE_CATEGORIES = {
-  NEW_TOOL: 'New Tool/Feature',
-  ENHANCEMENT: 'Improvement to Existing Tool',
-  UI_UX: 'User Interface/Experience',
-  ACCESSIBILITY: 'Accessibility',
-  INTEGRATION: 'VA Integration/API',
-  MOBILE: 'Mobile Experience',
-  DATA: 'Data/Calculations',
-  DOCUMENTATION: 'Documentation/Help',
-  OTHER: 'Other'
+// Feature request categories - keys for translation
+const FEATURE_CATEGORY_KEYS = [
+  'NEW_TOOL',
+  'ENHANCEMENT',
+  'UI_UX',
+  'ACCESSIBILITY',
+  'INTEGRATION',
+  'MOBILE',
+  'DATA',
+  'DOCUMENTATION',
+  'OTHER'
+];
+
+// Priority levels - keys for translation
+const PRIORITY_LEVEL_KEYS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+const PRIORITY_EMOJIS = {
+  CRITICAL: '🔥',
+  HIGH: '⚡',
+  MEDIUM: '💡',
+  LOW: '💭'
+};
+const PRIORITY_VALUES = {
+  CRITICAL: 'critical',
+  HIGH: 'high',
+  MEDIUM: 'medium',
+  LOW: 'low'
 };
 
-// Priority levels
-const PRIORITY_LEVELS = {
-  CRITICAL: { value: 'critical', label: 'Critical Need', emoji: '🔥', desc: 'Missing feature blocking my claim process' },
-  HIGH: { value: 'high', label: 'High Priority', emoji: '⚡', desc: 'Would significantly improve my workflow' },
-  MEDIUM: { value: 'medium', label: 'Medium Priority', emoji: '💡', desc: 'Nice to have, would make things easier' },
-  LOW: { value: 'low', label: 'Low Priority', emoji: '💭', desc: 'Idea for the future, no rush' }
-};
-
-// Modules for context
-const APP_MODULES = {
-  SEARCH: 'Search / Condition Lookup',
-  CAP_SIMULATOR: 'C&P Exam Simulator',
-  NEXUS_BUILDER: 'Nexus Letter Builder',
-  MY_PACKET: 'My Packet',
-  SECONDARY_SCOUT: 'Secondary Scout',
-  TACTICAL_CALCULATOR: 'Tactical Calculator',
-  CFILE_ANALYZER: 'C-File Analyzer',
-  FORMS_HELPER: 'Forms Helper',
-  VSO_FINDER: 'VSO Finder',
-  GENERAL: 'General / Site-wide',
-  OTHER: 'Other'
-};
+// Modules for context - keys for translation
+const APP_MODULE_KEYS = [
+  'SEARCH',
+  'CAP_SIMULATOR',
+  'NEXUS_BUILDER',
+  'MY_PACKET',
+  'SECONDARY_SCOUT',
+  'TACTICAL_CALCULATOR',
+  'CFILE_ANALYZER',
+  'FORMS_HELPER',
+  'VSO_FINDER',
+  'GENERAL',
+  'OTHER'
+];
 
 function FeatureRequest({ onClose, appState = {} }) {
   const { t } = useLanguage();
@@ -109,7 +116,7 @@ function FeatureRequest({ onClose, appState = {} }) {
     // Validate email when it changes
     if (field === 'veteranEmail') {
       if (value && value.trim() !== '' && !isValidEmail(value)) {
-        setEmailError('Please enter a valid email address (e.g., name@example.com)');
+        setEmailError(t('featureRequest', 'emailInvalidError'));
       } else {
         setEmailError('');
       }
@@ -119,6 +126,10 @@ function FeatureRequest({ onClose, appState = {} }) {
   const formatFeatureRequest = () => {
     const systemInfo = getSystemInfo();
     const timestamp = new Date().toISOString();
+    const priorityLabel = formData.priority ? t('featureRequest', `priority${formData.priority}Label`) : t('featureRequest', 'notSpecified');
+    const priorityEmoji = formData.priority ? PRIORITY_EMOJIS[formData.priority] : '';
+    const moduleLabel = formData.module ? t('featureRequest', `module${formData.module}`) : '';
+    const categoryLabel = formData.category ? t('featureRequest', `category${formData.category}`) : '';
     
     return `
 ╔══════════════════════════════════════════════════════════════╗
@@ -131,9 +142,9 @@ function FeatureRequest({ onClose, appState = {} }) {
 📋 REQUEST DETAILS
 ───────────────────────────────────────────────────────────────
 Title: ${formData.title}
-Category: ${formData.category}
-Priority: ${formData.priority?.label || 'Not specified'} ${formData.priority?.emoji || ''}
-Related Module: ${formData.module}
+Category: ${categoryLabel}
+Priority: ${priorityLabel} ${priorityEmoji}
+Related Module: ${moduleLabel}
 
 📝 DESCRIPTION
 ───────────────────────────────────────────────────────────────
@@ -141,19 +152,19 @@ ${formData.description}
 
 🎯 PROBLEM THIS WOULD SOLVE
 ───────────────────────────────────────────────────────────────
-${formData.problemSolved || 'Not specified'}
+${formData.problemSolved || t('featureRequest', 'notSpecified')}
 
 💭 PROPOSED SOLUTION
 ───────────────────────────────────────────────────────────────
-${formData.proposedSolution || 'Not specified'}
+${formData.proposedSolution || t('featureRequest', 'notSpecified')}
 
 🔄 ALTERNATIVES CONSIDERED
 ───────────────────────────────────────────────────────────────
-${formData.alternativesConsidered || 'None mentioned'}
+${formData.alternativesConsidered || t('featureRequest', 'noneMentioned')}
 
 📎 ADDITIONAL CONTEXT
 ───────────────────────────────────────────────────────────────
-${formData.additionalContext || 'None'}
+${formData.additionalContext || t('common', 'none')}
 
 🖥️ SYSTEM INFO
 ───────────────────────────────────────────────────────────────
@@ -163,7 +174,7 @@ App Version: ${systemInfo.appVersion}
 
 📎 END OF FEATURE REQUEST
 ───────────────────────────────────────────────────────────────
-Thank you for helping make Vet-Rate.org better for all veterans!
+${t('featureRequest', 'thankYouMessage')}
 `.trim();
   };
 
@@ -186,7 +197,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
           
           await saveFeatureRequest({
             request_id: featureId,
-            priority: formData.priority?.value || 'medium',
+            priority: PRIORITY_VALUES[formData.priority] || 'medium',
             category: formData.category,
             module: formData.module,
             title: formData.title,
@@ -205,7 +216,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
           console.warn('IndexedDB save failed, using localStorage fallback:', storageError);
           saveFeatureToLocalStorage({
             request_id: featureId,
-            priority: formData.priority?.value,
+            priority: PRIORITY_VALUES[formData.priority],
             category: formData.category,
             module: formData.module,
             title: formData.title,
@@ -221,7 +232,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
       // === Send via FormSubmit.co API (stays in-browser, no email client!) ===
       // Note: This is best-effort. Local save is the primary success path.
       try {
-        const priorityLabel = formData.priority?.label || 'Feature';
+        const priorityLabel = formData.priority ? t('featureRequest', `priority${formData.priority}Label`) : 'Feature';
         
         const formPayload = {
           _subject: `[${featureId}] ${priorityLabel} - ${formData.title}`,
@@ -232,11 +243,11 @@ Thank you for helping make Vet-Rate.org better for all veterans!
           priority: priorityLabel,
           module: formData.module,
           description: formData.description,
-          problem_solved: formData.problemSolved || 'Not specified',
-          proposed_solution: formData.proposedSolution || 'Not specified',
-          alternatives: formData.alternativesConsidered || 'None mentioned',
-          additional_context: formData.additionalContext || 'None',
-          veteran_email: formData.veteranEmail || 'Anonymous (no reply requested)',
+          problem_solved: formData.problemSolved || t('featureRequest', 'notSpecified'),
+          proposed_solution: formData.proposedSolution || t('featureRequest', 'notSpecified'),
+          alternatives: formData.alternativesConsidered || t('featureRequest', 'noneMentioned'),
+          additional_context: formData.additionalContext || t('common', 'none'),
+          veteran_email: formData.veteranEmail || t('featureRequest', 'anonymousNoReply'),
           submitted_at: new Date().toISOString(),
           full_report: generatedReport
         };
@@ -274,7 +285,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
       
     } catch (error) {
       console.error('Submit error:', error);
-      setSubmitError('Could not send request. Your request was saved locally. The report is copied to your clipboard - you can email it manually to ' + DEVELOPER_EMAIL);
+      setSubmitError(t('featureRequest', 'submitErrorMessage') + ' ' + DEVELOPER_EMAIL);
       setSubmitting(false);
     }
   };
@@ -304,14 +315,14 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">💡 Feature Request</h2>
-                  <p className="text-purple-100 text-sm">Share your ideas to make Vet-Rate.org better</p>
+                  <h2 className="text-2xl font-bold">💡 {t('featureRequest', 'title')}</h2>
+                  <p className="text-purple-100 text-sm">{t('featureRequest', 'subtitle')}</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Close feature request"
+                aria-label={t('featureRequest', 'closeAriaLabel')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -339,9 +350,9 @@ Thank you for helping make Vet-Rate.org better for all veterans!
               ))}
             </div>
             <div className="flex text-xs text-purple-100 mt-2">
-              <span className="flex-1 text-center">Category & Priority</span>
-              <span className="flex-1 text-center">Your Idea</span>
-              <span className="flex-1 text-center">Review & Submit</span>
+              <span className="flex-1 text-center">{t('featureRequest', 'step1Label')}</span>
+              <span className="flex-1 text-center">{t('featureRequest', 'step2Label')}</span>
+              <span className="flex-1 text-center">{t('featureRequest', 'step3Label')}</span>
             </div>
           </div>
 
@@ -352,24 +363,23 @@ Thank you for helping make Vet-Rate.org better for all veterans!
               <div className="space-y-6">
                 <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
                   <p className="text-sm text-purple-800 dark:text-purple-200">
-                    <strong>💡 Your ideas matter!</strong> Every feature on Vet-Rate.org came from veteran feedback. 
-                    Share your idea and help me build tools that make a difference.
+                    <strong>💡 {t('featureRequest', 'ideasMatterTitle')}</strong> {t('featureRequest', 'ideasMatterText')}
                   </p>
                 </div>
 
                 {/* Category Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Feature Category <span className="text-red-500">*</span>
+                    {t('featureRequest', 'categoryLabel')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => handleInputChange('category', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="">Select a category...</option>
-                    {Object.entries(FEATURE_CATEGORIES).map(([key, value]) => (
-                      <option key={key} value={value}>{value}</option>
+                    <option value="">{t('featureRequest', 'selectCategoryPlaceholder')}</option>
+                    {FEATURE_CATEGORY_KEYS.map((key) => (
+                      <option key={key} value={key}>{t('featureRequest', `category${key}`)}</option>
                     ))}
                   </select>
                 </div>
@@ -377,15 +387,15 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Related Module */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Related Module (optional)
+                    {t('featureRequest', 'relatedModuleLabel')}
                   </label>
                   <select
                     value={formData.module}
                     onChange={(e) => handleInputChange('module', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    {Object.entries(APP_MODULES).map(([key, value]) => (
-                      <option key={key} value={value}>{value}</option>
+                    {APP_MODULE_KEYS.map((key) => (
+                      <option key={key} value={key}>{t('featureRequest', `module${key}`)}</option>
                     ))}
                   </select>
                 </div>
@@ -393,24 +403,24 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Priority */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    How important is this to you? <span className="text-red-500">*</span>
+                    {t('featureRequest', 'priorityLabel')} <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {Object.entries(PRIORITY_LEVELS).map(([key, priority]) => (
+                    {PRIORITY_LEVEL_KEYS.map((key) => (
                       <button
                         key={key}
-                        onClick={() => handleInputChange('priority', priority)}
+                        onClick={() => handleInputChange('priority', key)}
                         className={`p-3 rounded-lg border-2 text-left transition-all ${
-                          formData.priority?.value === priority.value
+                          formData.priority === key
                             ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
                             : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">{priority.emoji}</span>
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{priority.label}</span>
+                          <span className="text-lg">{PRIORITY_EMOJIS[key]}</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('featureRequest', `priority${key}Label`)}</span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{priority.desc}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('featureRequest', `priority${key}Desc`)}</p>
                       </button>
                     ))}
                   </div>
@@ -424,13 +434,13 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Feature Title */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Feature Title <span className="text-red-500">*</span>
+                    {t('featureRequest', 'featureTitleLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Brief title for your feature idea..."
+                    placeholder={t('featureRequest', 'featureTitlePlaceholder')}
                     maxLength={100}
                     className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                       formData.title.trim().length > 0 && formData.title.trim().length < 5
@@ -446,20 +456,20 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                         : 'text-gray-500 dark:text-gray-400'
                   }`}>
                     {formData.title.trim().length >= 5 
-                      ? `✓ ${formData.title.length}/100 characters` 
-                      : `${formData.title.trim().length}/5 minimum characters required`}
+                      ? `✓ ${formData.title.length}/100 ${t('featureRequest', 'characters')}` 
+                      : `${formData.title.trim().length}/5 ${t('featureRequest', 'minCharsRequired')}`}
                   </p>
                 </div>
 
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Describe Your Idea <span className="text-red-500">*</span>
+                    {t('featureRequest', 'describeIdeaLabel')} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Explain your feature idea in detail. What would it do? How would it work?"
+                    placeholder={t('featureRequest', 'describeIdeaPlaceholder')}
                     rows={4}
                     className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${
                       formData.description.trim().length > 0 && formData.description.trim().length < 20
@@ -475,20 +485,20 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                         : 'text-gray-500 dark:text-gray-400'
                   }`}>
                     {formData.description.trim().length >= 20 
-                      ? `✓ ${formData.description.trim().length} characters` 
-                      : `${formData.description.trim().length}/20 minimum characters required`}
+                      ? `✓ ${formData.description.trim().length} ${t('featureRequest', 'characters')}` 
+                      : `${formData.description.trim().length}/20 ${t('featureRequest', 'minCharsRequired')}`}
                   </p>
                 </div>
 
                 {/* Problem Solved */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    What problem would this solve?
+                    {t('featureRequest', 'problemSolvedLabel')}
                   </label>
                   <textarea
                     value={formData.problemSolved}
                     onChange={(e) => handleInputChange('problemSolved', e.target.value)}
-                    placeholder="What pain point or challenge would this feature address?"
+                    placeholder={t('featureRequest', 'problemSolvedPlaceholder')}
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   />
@@ -497,12 +507,12 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Proposed Solution */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Your Proposed Solution (optional)
+                    {t('featureRequest', 'proposedSolutionLabel')}
                   </label>
                   <textarea
                     value={formData.proposedSolution}
                     onChange={(e) => handleInputChange('proposedSolution', e.target.value)}
-                    placeholder="If you have specific ideas for how this could be implemented..."
+                    placeholder={t('featureRequest', 'proposedSolutionPlaceholder')}
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   />
@@ -511,12 +521,12 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Alternatives Considered */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Alternatives You've Considered (optional)
+                    {t('featureRequest', 'alternativesLabel')}
                   </label>
                   <textarea
                     value={formData.alternativesConsidered}
                     onChange={(e) => handleInputChange('alternativesConsidered', e.target.value)}
-                    placeholder="Have you tried any workarounds? What other solutions have you considered?"
+                    placeholder={t('featureRequest', 'alternativesPlaceholder')}
                     rows={2}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   />
@@ -525,12 +535,12 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Additional Context */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Additional Context
+                    {t('featureRequest', 'additionalContextLabel')}
                   </label>
                   <textarea
                     value={formData.additionalContext}
                     onChange={(e) => handleInputChange('additionalContext', e.target.value)}
-                    placeholder="Any other details, screenshots links, or examples that would help explain your idea?"
+                    placeholder={t('featureRequest', 'additionalContextPlaceholder')}
                     rows={2}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   />
@@ -539,7 +549,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {/* Privacy & Tracking Options */}
                 <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 space-y-4">
                   <h4 className="text-sm font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
-                    <span>🔒</span> Privacy & Tracking Options
+                    <span>🔒</span> {t('featureRequest', 'privacyTrackingTitle')}
                   </h4>
                   
                   {/* Save to My Tickets */}
@@ -551,9 +561,9 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                       className="mt-1 w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                     />
                     <div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Save to My Tickets</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('featureRequest', 'saveToMyTicketsLabel')}</span>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Track this request in your My Packet. You'll be notified when it's implemented!
+                        {t('featureRequest', 'saveToMyTicketsDesc')}
                       </p>
                     </div>
                   </label>
@@ -561,7 +571,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                   {/* Optional Email */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Email Address (Optional)
+                      {t('featureRequest', 'emailOptionalLabel')}
                     </label>
                     <input
                       type="email"
@@ -580,7 +590,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                       </p>
                     ) : (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
-                        We respect your privacy. Leave blank to stay anonymous. Only fill this in if you'd like me to email you when the feature is added.
+                        {t('featureRequest', 'emailPrivacyNote')}
                       </p>
                     )}
                   </div>
@@ -602,25 +612,25 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                       </div>
                     </div>
                     <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
-                      Request Saved Successfully! 🎉
+                      {t('featureRequest', 'successTitle')} 🎉
                     </h3>
                     <p className="text-green-700 dark:text-green-100 mb-4">
-                      Your feature request has been <strong>saved to My Tickets</strong> and the report is copied to your clipboard!
+                      {t('featureRequest', 'successMessage')}
                     </p>
                     <div className="bg-green-100 dark:bg-green-800/50 rounded-lg p-4 mb-4 text-left">
-                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ What happens next:</h4>
+                      <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ {t('featureRequest', 'whatHappensNext')}</h4>
                       <ul className="text-sm text-green-700 dark:text-green-100 space-y-1">
-                        <li>• I'll review your idea personally</li>
-                        {formData.saveToMyTickets && <li>• Check "My Tickets" in My Packet for status updates</li>}
-                        {formData.veteranEmail && <li>• I'll email you when this feature is implemented</li>}
+                        <li>• {t('featureRequest', 'nextStepReview')}</li>
+                        {formData.saveToMyTickets && <li>• {t('featureRequest', 'nextStepCheckTickets')}</li>}
+                        {formData.veteranEmail && <li>• {t('featureRequest', 'nextStepEmailNotify')}</li>}
                       </ul>
                     </div>
                     <p className="text-sm text-green-600 dark:text-green-400">
-                      Request ID: <span className="font-mono font-bold">{featureId}</span>
+                      {t('featureRequest', 'requestIdLabel')}: <span className="font-mono font-bold">{featureId}</span>
                     </p>
                     {formData.saveToMyTickets && (
                       <p className="text-xs text-green-600 dark:text-green-400 mt-2 italic">
-                        Saved to your My Tickets for tracking
+                        {t('featureRequest', 'savedToTicketsNote')}
                       </p>
                     )}
                   </div>
@@ -632,7 +642,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                          Feature request ready! Review it below and click "Submit Request" to send it directly.
+                          {t('featureRequest', 'requestReadyMessage')}
                         </span>
                       </div>
                     </div>
@@ -656,14 +666,14 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            Copied!
+                            {t('featureRequest', 'copied')}
                           </>
                         ) : (
                           <>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                             </svg>
-                            Copy
+                            {t('featureRequest', 'copy')}
                           </>
                         )}
                       </button>
@@ -692,20 +702,20 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Submitting Request...
+                          {t('featureRequest', 'submittingRequest')}
                         </>
                       ) : (
                         <>
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
-                          Submit Request
+                          {t('featureRequest', 'submitRequestButton')}
                         </>
                       )}
                     </button>
 
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Sends directly to the developer - no email app needed!
+                      {t('featureRequest', 'sendDirectlyNote')}
                     </p>
                   </>
                 )}
@@ -724,7 +734,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                   : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'
               }`}
             >
-              {step === 1 ? 'Cancel' : (submitted ? 'Close' : '← Back')}
+              {step === 1 ? t('common', 'cancel') : (submitted ? t('common', 'close') : `← ${t('common', 'back')}`)}
             </button>
 
             {step < 3 ? (
@@ -732,13 +742,13 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 {step === 2 && !canProceedStep2 && (
                   <p className="text-xs text-red-500 dark:text-red-400">
                     {formData.title.trim().length < 5 && formData.description.trim().length < 20
-                      ? '⚠️ Title (5+ chars) and description (20+ chars) required'
+                      ? `⚠️ ${t('featureRequest', 'validationTitleAndDesc')}`
                       : formData.title.trim().length < 5
-                        ? '⚠️ Title needs at least 5 characters'
+                        ? `⚠️ ${t('featureRequest', 'validationTitleOnly')}`
                         : formData.description.trim().length < 20
-                          ? '⚠️ Description needs at least 20 characters'
+                          ? `⚠️ ${t('featureRequest', 'validationDescOnly')}`
                           : emailError
-                            ? '⚠️ Fix email format to continue'
+                            ? `⚠️ ${t('featureRequest', 'validationEmailFix')}`
                             : ''}
                   </p>
                 )}
@@ -751,7 +761,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {step === 2 ? 'Generate Request →' : 'Next →'}
+                  {step === 2 ? `${t('featureRequest', 'generateRequestButton')} →` : `${t('common', 'next')} →`}
                 </button>
               </div>
             ) : (
@@ -759,7 +769,7 @@ Thank you for helping make Vet-Rate.org better for all veterans!
                 onClick={onClose}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
-                Done
+                {t('featureRequest', 'doneButton')}
               </button>
             )}
           </div>

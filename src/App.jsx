@@ -136,8 +136,6 @@ import { useAIAssistant } from './hooks/useAIAssistant';
 import './index.css';
 
 function App() {
-  console.log('🚀 App component mounting...');
-  
   // Toast notification system
   const { toasts, onClose, onAction } = useToast();
   

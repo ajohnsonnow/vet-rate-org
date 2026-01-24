@@ -72,11 +72,11 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             onFocus={() => {
               if (suggestions.length > 0) setShowSuggestions(true);
             }}
-            placeholder="Search by condition name (PTSD, arthritis), diagnostic code (9411, 5002), or synonym (posttraumatic stress)..."
+            placeholder={t('searchBar', 'placeholder')}
             className="w-full pl-12 pr-12 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:border-va-blue focus:ring-2 focus:ring-va-blue focus:ring-opacity-50 transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
             autoComplete="off"
             disabled={isLoading}
-            aria-label="Search disabilities"
+            aria-label={t('searchBar', 'ariaLabel')}
             role="combobox"
             aria-expanded={showSuggestions && suggestions.length > 0}
             aria-haspopup="listbox"
@@ -86,7 +86,7 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             <button
               onClick={onClear}
               className="absolute right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
-              aria-label="Clear search"
+              aria-label={t('searchBar', 'clearSearch')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path
@@ -104,7 +104,7 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
           <div 
             id="search-suggestions"
             role="listbox"
-            aria-label="Search suggestions"
+            aria-label={t('searchBar', 'suggestionsLabel')}
             className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => (
@@ -123,7 +123,7 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             ))}
             {/* Hint to close dropdown */}
             <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 text-center border-t border-gray-200 dark:border-gray-700">
-              Click a suggestion or press Escape to close
+              {t('searchBar', 'suggestionHint')}
             </div>
           </div>
         )}
@@ -131,7 +131,7 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
 
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          <span className="font-semibold">Examples:</span> Try "PTSD", "9411", "arthritis", "migraine", "5002", "posttraumatic stress disorder"
+          <span className="font-semibold">{t('searchBar', 'examplesLabel')}</span> {t('searchBar', 'examplesText')}
         </p>
       </div>
     </div>

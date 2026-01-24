@@ -1470,7 +1470,9 @@ export const generateAI = async (prompt, options = {}) => {
       try {
         const validation = validateHallucinations(text);
         
-        if (validation.rejected && validation.rejected.length > 0) {
+        // Only process if validation actually found diagnostic codes to check
+        // (skipped=true means response didn't contain diagnostic codes)
+        if (!validation.skipped && validation.rejected && validation.rejected.length > 0) {
           console.warn('🚫 Hallucination Trap triggered:', validation.rejected);
           hallucinationReport = {
             filtered: validation.rejected,

@@ -10,7 +10,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
-import { analyzeCFile, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
+import { analyzeCFile, getCFilePrivacyDisclosure, estimateChunks, getContextWindowInfo } from '../utils/cfileAnalyzer';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
@@ -34,7 +34,11 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState('');
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
+  const [chunkProgress, setChunkProgress] = useState({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
   const [error, setError] = useState(null);
+  
+  // Analysis metadata (for showing chunks processed)
+  const [analysisMetadata, setAnalysisMetadata] = useState(null);
   
   // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
@@ -61,14 +65,14 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     const droppedFile = e.dataTransfer?.files?.[0];
     if (droppedFile) {
       if (droppedFile.type !== 'application/pdf') {
-        setError('Please drop in a PDF file.');
+        setError(t('cfileAnalyzer.pleaseDropPdf'));
         return;
       }
       setFile(droppedFile);
       setError(null);
       setAnalysisResult(null);
     }
-  }, []);
+  }, [t]);
   
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -84,31 +88,31 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== 'application/pdf') {
-        setError('Please upload a PDF file.');
+        setError(t('cfileAnalyzer.pleaseUploadPdf'));
         return;
       }
       setFile(selectedFile);
       setError(null);
       setAnalysisResult(null);
     }
-  }, []);
+  }, [t]);
   
   // Start analysis process
   const handleStartAnalysis = useCallback(() => {
     if (!file) {
-      setError('Please drop in a file first.');
+      setError(t('cfileAnalyzer.pleaseDropFileFirst'));
       return;
     }
     
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
-      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setError(t('cfileAnalyzer.noAiAvailable'));
       setShowAISettings(true);
       return;
     }
     
     setShowPrivacyConsent(true);
-  }, [file]);
+  }, [file, t]);
   
   // Process the file after consent
   const handleConsentAndProcess = useCallback(async () => {
@@ -116,14 +120,15 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     setShowPrivacyConsent(false);
     setIsProcessing(true);
     setError(null);
+    setChunkProgress({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
     
     try {
       // Stage 1: Read the file
-      setProcessingStage('Reading PDF file...');
+      setProcessingStage(t('cfileAnalyzer.readingPdf'));
       const arrayBuffer = await readFileAsArrayBuffer(file);
       
       // Stage 2: Extract text
-      setProcessingStage('Extracting text from PDF...');
+      setProcessingStage(t('cfileAnalyzer.extractingText'));
       const extractionResult = await ripTextFromPdf(
         arrayBuffer,
         (current, total) => setExtractionProgress({ current, total })
@@ -132,8 +137,8 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       // Check if the PDF has actual text
       if (!extractionResult.hasText) {
         setError(
-          `This PDF appears to be a scanned image with minimal text (${extractionResult.avgCharsPerPage} characters per page average). ` +
-          'Please use OCR software (like Adobe Acrobat "Recognize Text" or a free online OCR tool) to make it searchable first, then drop it in again.'
+          `${t('cfileAnalyzer.scannedImageError')} (${extractionResult.avgCharsPerPage} characters per page average). ` +
+          t('cfileAnalyzer.scannedImageSolution')
         );
         setIsProcessing(false);
         return;
@@ -141,20 +146,33 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       
       setExtractedText(extractionResult);
       
-      // Stage 3: Analyze with AI (uses unified AI service - no API key needed here)
-      setProcessingStage('Analyzing with AI...');
+      // Stage 3: Analyze with AI (uses unified AI service with automatic chunking)
+      setProcessingStage(t('cfileAnalyzer.analyzingWithAi'));
       const result = await analyzeCFile(
         null, // API key handled by unified AI service
         extractionResult.text,
-        (status) => setProcessingStage(status)
+        (status, progressData) => {
+          setProcessingStage(status);
+          // Handle multi-chunk progress data
+          if (progressData) {
+            setChunkProgress({
+              current: progressData.current || 0,
+              total: progressData.total || 0,
+              phase: progressData.phase || '',
+              startPage: progressData.startPage || 0,
+              endPage: progressData.endPage || 0
+            });
+          }
+        }
       );
       
       setAnalysisResult(result.analysis);
+      setAnalysisMetadata(result.metadata);
       setProcessingStage('');
       
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || 'An error occurred during analysis.');
+      setError(err.message || t('cfileAnalyzer.analysisError'));
     } finally {
       setIsProcessing(false);
     }
@@ -168,6 +186,8 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     setError(null);
     setProcessingStage('');
     setExtractionProgress({ current: 0, total: 0 });
+    setChunkProgress({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
+    setAnalysisMetadata(null);
     setHasConsented(false);
   }, []);
   
@@ -179,10 +199,9 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         <div className="flex items-start gap-3">
           <span className="text-2xl">⚠️</span>
           <div>
-            <h3 className="font-bold text-amber-800 dark:text-amber-200">Security Notice</h3>
+            <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('cfileAnalyzer.securityNotice')}</h3>
             <p className="text-amber-700 dark:text-amber-300 text-sm">
-              Your C-File contains highly sensitive information. This tool processes everything locally in your browser.
-              Only the extracted text is sent to Google's AI service using YOUR API key. We never see or store your data.
+              {t('cfileAnalyzer.securityNoticeDesc')}
             </p>
           </div>
         </div>
@@ -193,7 +212,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
           <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
             <span>💡</span>
-            <span><strong>Tip:</strong> Large C-Files work great! Gemini can process up to 2,000 pages in one pass.</span>
+            <span><strong>{t('cfileAnalyzer.unlimitedFileSize')}</strong> {t('cfileAnalyzer.unlimitedFileSizeDesc')}</span>
           </div>
         </div>
       )}
@@ -236,20 +255,20 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               }}
               className="text-sm text-red-600 hover:text-red-800 dark:text-red-400"
             >
-              Remove and choose different file
+              {t('cfileAnalyzer.removeFile')}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="text-5xl">📁</div>
             <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Drop your C-File PDF here
+              {t('cfileAnalyzer.dropYourCFile')}
             </div>
             <div className="text-gray-600 dark:text-gray-400">
-              or click to browse
+              {t('cfileAnalyzer.orClickToBrowse')}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-500">
-              Supports PDF files up to 500MB
+              {t('cfileAnalyzer.supportsPdfUpTo')}
             </div>
           </div>
         )}
@@ -271,10 +290,9 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           <div className="flex items-start gap-3">
             <span className="text-xl">⚠️</span>
             <div className="text-amber-800 dark:text-amber-200">
-              <p className="font-semibold">AI Required for Analysis</p>
+              <p className="font-semibold">{t('cfileAnalyzer.aiRequiredForAnalysis')}</p>
               <p className="text-sm mt-1">
-                Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                (100% private) or enter your Gemini API key.
+                {t('cfileAnalyzer.aiRequiredDesc')}
               </p>
             </div>
           </div>
@@ -291,13 +309,13 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
           }`}
         >
-          🔍 Analyze My C-File
+          🔍 {t('cfileAnalyzer.analyzeMyFile')}
         </button>
       </div>
       
       {file && (
         <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          Estimated processing time: {estimateProcessingTime(Math.ceil(file.size / 5000))}
+          {t('cfileAnalyzer.estimatedProcessingTime')} {estimateProcessingTime(Math.ceil(file.size / 5000))}
         </div>
       )}
     </div>
@@ -309,7 +327,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-            🔒 Privacy & Data Handling
+            🔒 {t('cfileAnalyzer.privacyDataHandling')}
           </h2>
           
           <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -323,13 +341,13 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               onClick={() => setShowPrivacyConsent(false)}
               className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              Cancel
+              {t('cfileAnalyzer.cancel')}
             </button>
             <button
               onClick={handleConsentAndProcess}
               className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
-              I Understand - Start Analysis
+              {t('cfileAnalyzer.iUnderstandStart')}
             </button>
           </div>
         </div>
@@ -338,39 +356,90 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
   );
   
   // Render processing state
-  const renderProcessing = () => (
-    <div className="max-w-2xl mx-auto text-center py-12">
-      <div className="mb-8">
-        <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
-      </div>
-      
-      <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-        Analyzing Your C-File...
-      </h3>
-      
-      <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-        {processingStage}
-      </p>
-      
-      {extractionProgress.total > 0 && processingStage.includes('Extracting') && (
-        <div className="max-w-md mx-auto">
-          <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-            <div
-              className="bg-blue-500 h-full transition-all duration-300"
-              style={{ width: `${(extractionProgress.current / extractionProgress.total) * 100}%` }}
-            ></div>
-          </div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Page {extractionProgress.current} of {extractionProgress.total}
-          </p>
+  const renderProcessing = () => {
+    const isMultiChunk = chunkProgress.total > 1;
+    const chunkPercent = chunkProgress.total > 0
+      ? Math.round((chunkProgress.current / chunkProgress.total) * 100)
+      : 0;
+    
+    return (
+      <div className="max-w-2xl mx-auto text-center py-12">
+        <div className="mb-8">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
         </div>
-      )}
-      
-      <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
-        ⚡ Large files may take several minutes. Please keep this tab open.
+        
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+          {isMultiChunk ? `📦 ${t('cfileAnalyzer.processingLargeCFile')}` : t('cfileAnalyzer.analyzingYourCFile')}
+        </h3>
+        
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+          {processingStage}
+        </p>
+        
+        {/* PDF Extraction Progress */}
+        {extractionProgress.total > 0 && processingStage.includes('Extracting') && (
+          <div className="max-w-md mx-auto mb-6">
+            <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-300"
+                style={{ width: `${(extractionProgress.current / extractionProgress.total) * 100}%` }}
+              ></div>
+            </div>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {t('cfileAnalyzer.page')} {extractionProgress.current} / {extractionProgress.total}
+            </p>
+          </div>
+        )}
+        
+        {/* Multi-Chunk Progress */}
+        {isMultiChunk && chunkProgress.phase === 'analyze' && (
+          <div className="max-w-md mx-auto mb-6">
+            <div className="bg-violet-100 dark:bg-violet-900/30 rounded-xl p-4 border border-violet-300 dark:border-violet-700">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-violet-800 dark:text-violet-200">
+                  {t('cfileAnalyzer.chunkOf').replace('{current}', chunkProgress.current).replace('{total}', chunkProgress.total)}
+                </span>
+                <span className="text-sm font-bold text-violet-600 dark:text-violet-400">
+                  {chunkPercent}%
+                </span>
+              </div>
+              <div className="bg-violet-200 dark:bg-violet-800 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-violet-500 to-purple-500 h-full transition-all duration-500"
+                  style={{ width: `${chunkPercent}%` }}
+                ></div>
+              </div>
+              {chunkProgress.startPage > 0 && (
+                <p className="mt-2 text-xs text-violet-600 dark:text-violet-400">
+                  📄 {t('cfileAnalyzer.analyzingPages').replace('{start}', chunkProgress.startPage).replace('{end}', chunkProgress.endPage)}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Merging Phase */}
+        {chunkProgress.phase === 'merge' && (
+          <div className="max-w-md mx-auto mb-6">
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 rounded-xl p-4 border border-emerald-300 dark:border-emerald-700">
+              <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+                <span className="animate-pulse">🔀</span>
+                <span className="font-medium">{t('cfileAnalyzer.mergingChunks').replace('{total}', chunkProgress.total)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+          {isMultiChunk ? (
+            <>⚡ {t('cfileAnalyzer.largeFileDetected').replace('{total}', chunkProgress.total)}</>
+          ) : (
+            <>⚡ {t('cfileAnalyzer.largeFileMayTake')}</>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
   
   // Render the analysis dashboard
   const renderDashboard = () => (
@@ -380,17 +449,24 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              ✅ Analysis Complete
+              ✅ {t('cfileAnalyzer.analysisComplete')}
             </h2>
             <p className="mt-1 opacity-90">
-              {file?.name} • {extractedText?.pageCount} pages analyzed • {extractedText?.totalCharacters?.toLocaleString()} characters extracted
+              {file?.name} • {extractedText?.pageCount} {t('cfileAnalyzer.pagesAnalyzed')} • {extractedText?.totalCharacters?.toLocaleString()} {t('cfileAnalyzer.charactersExtracted')}
             </p>
+            {/* Multi-chunk indicator */}
+            {analysisMetadata?.chunksProcessed > 1 && (
+              <p className="mt-1 text-sm opacity-75 flex items-center gap-2">
+                📦 {t('cfileAnalyzer.processedInChunks').replace('{count}', analysisMetadata.chunksProcessed)}
+                {analysisMetadata.aiMode && <span className="px-2 py-0.5 bg-white/20 rounded text-xs">{analysisMetadata.aiMode}</span>}
+              </p>
+            )}
           </div>
           <button
             onClick={handleReset}
             className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
           >
-            Analyze Another File
+            {t('cfileAnalyzer.analyzeAnotherFile')}
           </button>
         </div>
       </div>
@@ -398,7 +474,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       {/* Executive Summary */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-          📋 Executive Summary
+          📋 {t('cfileAnalyzer.executiveSummary')}
         </h3>
         <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
           {analysisResult.summary}
@@ -408,25 +484,25 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             {analysisResult.servicePeriod.branch && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Branch</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.branch')}</div>
                 <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.branch}</div>
               </div>
             )}
             {analysisResult.servicePeriod.mos && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">MOS</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.mos')}</div>
                 <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.mos}</div>
               </div>
             )}
             {analysisResult.servicePeriod.entryDate && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Entry Date</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.entryDate')}</div>
                 <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.entryDate}</div>
               </div>
             )}
             {analysisResult.servicePeriod.separationDate && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">Separation Date</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.separationDate')}</div>
                 <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.separationDate}</div>
               </div>
             )}
@@ -437,11 +513,11 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {[
-          { id: 'claims', label: '🎯 Potential Claims', count: analysisResult.potential_claims?.length },
-          { id: 'timeline', label: '📅 Timeline', count: analysisResult.timeline?.length },
-          { id: 'exposures', label: '☢️ Exposures', count: analysisResult.exposures?.length },
-          { id: 'mental', label: '🧠 Mental Health' },
-          { id: 'actions', label: '✅ Action Items', count: analysisResult.actionItems?.length },
+          { id: 'claims', label: `🎯 ${t('cfileAnalyzer.tabPotentialClaims')}`, count: analysisResult.potential_claims?.length },
+          { id: 'timeline', label: `📅 ${t('cfileAnalyzer.tabTimeline')}`, count: analysisResult.timeline?.length },
+          { id: 'exposures', label: `☢️ ${t('cfileAnalyzer.tabExposures')}`, count: analysisResult.exposures?.length },
+          { id: 'mental', label: `🧠 ${t('cfileAnalyzer.tabMentalHealth')}` },
+          { id: 'actions', label: `✅ ${t('cfileAnalyzer.tabActionItems')}`, count: analysisResult.actionItems?.length },
         ].map(tab => (
           <button
             key={tab.id}
@@ -474,7 +550,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         
         {activeTab === 'exposures' && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Toxic Exposures & Presumptive Conditions</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer.toxicExposures')}</h3>
             {analysisResult.exposures?.length > 0 ? (
               <div className="space-y-4">
                 {analysisResult.exposures.map((exposure, idx) => (
@@ -487,13 +563,13 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                       </div>
                       {exposure.page_number && (
                         <span className="text-xs bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-1 rounded">
-                          Page {exposure.page_number}
+                          {t('cfileAnalyzer.page')} {exposure.page_number}
                         </span>
                       )}
                     </div>
                     {exposure.presumptive_conditions?.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-xs font-semibold text-orange-800 dark:text-orange-200 mb-1">Presumptive Conditions:</p>
+                        <p className="text-xs font-semibold text-orange-800 dark:text-orange-200 mb-1">{t('cfileAnalyzer.presumptiveConditions')}</p>
                         <div className="flex flex-wrap gap-1">
                           {exposure.presumptive_conditions.map((condition, i) => (
                             <span key={i} className="text-xs bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded">
@@ -507,19 +583,19 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No toxic exposures identified in the records.</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.noExposuresFound')}</p>
             )}
           </div>
         )}
         
         {activeTab === 'mental' && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Mental Health Indicators</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer.mentalHealthIndicators')}</h3>
             {analysisResult.mentalHealth && (
               <div className="space-y-4">
                 {analysisResult.mentalHealth.diagnoses?.length > 0 && (
                   <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                    <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">Diagnoses Found</h4>
+                    <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">{t('cfileAnalyzer.diagnosesFound')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysisResult.mentalHealth.diagnoses.map((dx, i) => (
                         <span key={i} className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm">
@@ -532,7 +608,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 
                 {analysisResult.mentalHealth.indicators?.length > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">Indicators</h4>
+                    <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">{t('cfileAnalyzer.indicators')}</h4>
                     <ul className="list-disc list-inside text-blue-700 dark:text-blue-300 text-sm space-y-1">
                       {analysisResult.mentalHealth.indicators.map((indicator, i) => (
                         <li key={i}>{indicator}</li>
@@ -543,7 +619,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 
                 {analysisResult.mentalHealth.stressors?.length > 0 && (
                   <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                    <h4 className="font-bold text-amber-800 dark:text-amber-200 mb-2">Documented Stressors</h4>
+                    <h4 className="font-bold text-amber-800 dark:text-amber-200 mb-2">{t('cfileAnalyzer.documentedStressors')}</h4>
                     <ul className="list-disc list-inside text-amber-700 dark:text-amber-300 text-sm space-y-1">
                       {analysisResult.mentalHealth.stressors.map((stressor, i) => (
                         <li key={i}>{stressor}</li>
@@ -554,7 +630,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 
                 {analysisResult.mentalHealth.pages?.length > 0 && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    📄 See pages: {analysisResult.mentalHealth.pages.join(', ')}
+                    📄 {t('cfileAnalyzer.seePages')} {analysisResult.mentalHealth.pages.join(', ')}
                   </p>
                 )}
               </div>
@@ -562,14 +638,14 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
             {(!analysisResult.mentalHealth || 
               (!analysisResult.mentalHealth.diagnoses?.length && 
                !analysisResult.mentalHealth.indicators?.length)) && (
-              <p className="text-gray-500 dark:text-gray-400">No mental health indicators identified in the records.</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.noMentalHealthIndicators')}</p>
             )}
           </div>
         )}
         
         {activeTab === 'actions' && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Recommended Next Steps</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer.recommendedNextSteps')}</h3>
             {analysisResult.actionItems?.length > 0 ? (
               <div className="space-y-3">
                 {analysisResult.actionItems.map((action, idx) => (
@@ -582,7 +658,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No specific action items identified.</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer.noActionItems')}</p>
             )}
           </div>
         )}
@@ -592,7 +668,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       {analysisResult.redFlags?.length > 0 && (
         <div className="mt-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-6">
           <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
-            🚨 Attention Needed
+            🚨 {t('cfileAnalyzer.attentionNeeded')}
           </h3>
           <div className="space-y-3">
             {analysisResult.redFlags.map((flag, idx) => (
@@ -601,7 +677,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                   <p className="font-medium text-red-800 dark:text-red-200">{flag.issue}</p>
                   {flag.page_number && (
                     <span className="text-xs bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 px-2 py-1 rounded">
-                      Page {flag.page_number}
+                      {t('cfileAnalyzer.page')} {flag.page_number}
                     </span>
                   )}
                 </div>
@@ -620,7 +696,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       {analysisResult.combatIndicators?.length > 0 && (
         <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-xl p-6">
           <h3 className="text-lg font-bold text-indigo-800 dark:text-indigo-200 mb-4 flex items-center gap-2">
-            🎖️ Combat Indicators Found
+            🎖️ {t('cfileAnalyzer.combatIndicatorsFound')}
           </h3>
           <div className="space-y-3">
             {analysisResult.combatIndicators.map((indicator, idx) => (
@@ -633,7 +709,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 </div>
                 {indicator.page_number && (
                   <span className="text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-200 px-2 py-1 rounded">
-                    Page {indicator.page_number}
+                    {t('cfileAnalyzer.page')} {indicator.page_number}
                   </span>
                 )}
               </div>
@@ -660,18 +736,18 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               <span className="text-3xl">🔬</span>
               <div>
                 <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  C-File Analyzer
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
+                  {t('cfileAnalyzer.title')}
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('cfileAnalyzer.ai')}</span>
                 </h1>
                 <p className="text-sm text-violet-100">
-                  AI-powered claims evidence discovery
+                  {t('cfileAnalyzer.subtitle')}
                 </p>
               </div>
               <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
-                BETA
+                {t('cfileAnalyzer.beta')}
               </span>
               <span className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1" title="VA also uses AI for document classification in claims processing">
-                🤖 VA Uses Similar AI
+                🤖 {t('cfileAnalyzer.vaUsesSimilarAi')}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -682,7 +758,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-                aria-label="Close C-File Analyzer"
+                aria-label={t('cfileAnalyzer.closeCFileAnalyzer')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -708,9 +784,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         {/* Footer Disclaimer */}
         <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
-            ⚠️ This tool provides general information only and is not legal or medical advice. 
-            AI analysis may contain errors. Always verify findings with your official records and consult with a 
-            VA-accredited representative for claims decisions.
+            ⚠️ {t('cfileAnalyzer.footerDisclaimer')}
           </p>
         </div>
       </div>

@@ -201,11 +201,11 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
             <FileText className="w-8 h-8" />
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                The Denials Decoder
-                <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">AI</span>
+                {t('denialDecoder.title')}
+                <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">{t('denialDecoder.ai')}</span>
               </h2>
               <p className="text-blue-100 text-sm mt-1">
-                Scan your VA denial letter for plain-English analysis
+                {t('denialDecoder.subtitle')}
               </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                aria-label="Close"
+                aria-label={t('common.close')}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -236,12 +236,12 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-green-900">
-                  <p className="font-semibold mb-1">100% Privacy Protected</p>
+                  <p className="font-semibold mb-1">{t('denialDecoder.privacyProtected')}</p>
                   <p className="text-green-800">
-                    OCR processing happens <strong>locally in your browser</strong>. 
+                    {t('denialDecoder.ocrProcessingLocal')}{' '}
                     {aiStatus.effectiveMode === AI_MODES.LOCAL 
-                      ? ' AI analysis also runs locally - your data never leaves your device!'
-                      : ' Only the extracted text (not the image) is sent to AI for analysis.'}
+                      ? t('denialDecoder.aiAnalysisLocal')
+                      : t('denialDecoder.onlyTextSentToAi')}
                   </p>
                 </div>
               </div>
@@ -253,10 +253,9 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
                 <div className="flex items-start gap-3">
                   <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-amber-900">
-                    <p className="font-semibold mb-1">AI Required</p>
+                    <p className="font-semibold mb-1">{t('denialDecoder.aiRequired')}</p>
                     <p className="text-amber-800">
-                      Click the <strong>AI button</strong> in the header above to load your secure Local AI 
-                      or enter your Gemini API key to analyze denial letters.
+                      {t('denialDecoder.aiSetupMessage')}
                     </p>
                   </div>
                 </div>
@@ -280,8 +279,8 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               >
                 <Camera className="w-12 h-12 text-blue-600" />
                 <div className="text-center">
-                  <p className="font-semibold text-gray-900">Take Photo</p>
-                  <p className="text-xs text-gray-600 mt-1">Use your camera</p>
+                  <p className="font-semibold text-gray-900">{t('denialDecoder.takePhoto')}</p>
+                  <p className="text-xs text-gray-600 mt-1">{t('denialDecoder.useYourCamera')}</p>
                 </div>
               </button>
 
@@ -292,8 +291,8 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               >
                 <Upload className="w-12 h-12 text-blue-600" />
                 <div className="text-center">
-                  <p className="font-semibold text-gray-900">Drop In Image</p>
-                  <p className="text-xs text-gray-600 mt-1">Select from files</p>
+                  <p className="font-semibold text-gray-900">{t('denialDecoder.uploadImage')}</p>
+                  <p className="text-xs text-gray-600 mt-1">{t('denialDecoder.selectFromFiles')}</p>
                 </div>
               </button>
 
@@ -316,12 +315,12 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
 
             {/* Tips */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-blue-900 mb-2">📸 Tips for Best Results:</p>
+              <p className="text-sm font-semibold text-blue-900 mb-2">{t('denialDecoder.tipsTitle')}</p>
               <ul className="text-xs text-blue-800 space-y-1 ml-4 list-disc">
-                <li>Make sure the letter is well-lit and flat</li>
-                <li>Avoid shadows and glare</li>
-                <li>Capture the entire page if possible</li>
-                <li>Hold your phone steady for a clear shot</li>
+                <li>{t('denialDecoder.tipWellLit')}</li>
+                <li>{t('denialDecoder.tipNoShadows')}</li>
+                <li>{t('denialDecoder.tipEntirePage')}</li>
+                <li>{t('denialDecoder.tipSteady')}</li>
               </ul>
             </div>
           </div>
@@ -332,10 +331,10 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
           <div className="text-center py-12">
             <Loader className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
             <p className="text-lg font-semibold text-gray-900 mb-2">
-              Reading Your Letter...
+              {t('denialDecoder.readingLetter')}
             </p>
             <p className="text-sm text-gray-600 mb-4">
-              Processing locally on your device
+              {t('denialDecoder.processingLocally')}
             </p>
             <div className="max-w-md mx-auto bg-gray-200 rounded-full h-3 overflow-hidden">
               <div
@@ -352,10 +351,10 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
           <div className="text-center py-12">
             <Loader className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
             <p className="text-lg font-semibold text-gray-900 mb-2">
-              Analyzing Denial Reason...
+              {t('denialDecoder.analyzingDenialReason')}
             </p>
             <p className="text-sm text-gray-600">
-              Translating legalese into plain English
+              {t('denialDecoder.translatingLegalese')}
             </p>
           </div>
         )}
@@ -365,18 +364,18 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
           <div className="space-y-6">
             {/* Main Analysis */}
             <div className={`border-2 rounded-lg p-6 ${getUrgencyColor(analysis.urgency)}`}>
-              <h3 className="text-xl font-bold mb-2">Why They Denied Your Claim:</h3>
+              <h3 className="text-xl font-bold mb-2">{t('denialDecoder.whyDenied')}</h3>
               <p className="text-lg font-semibold mb-4">{analysis.denialReason}</p>
               
               <h4 className="font-semibold text-sm uppercase tracking-wide mb-2">
-                In Plain English:
+                {t('denialDecoder.inPlainEnglish')}
               </h4>
               <p className="text-base leading-relaxed mb-4">
                 {analysis.simplifiedExplanation}
               </p>
 
               <h4 className="font-semibold text-sm uppercase tracking-wide mb-2">
-                What Was Missing:
+                {t('denialDecoder.whatWasMissing')}
               </h4>
               <p className="text-base leading-relaxed">
                 {analysis.whatWasMissing}
@@ -389,7 +388,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
                   <div>
-                    <p className="font-bold text-red-900">Appeal Deadline:</p>
+                    <p className="font-bold text-red-900">{t('denialDecoder.appealDeadline')}</p>
                     <p className="text-red-800">{analysis.appealDeadline}</p>
                   </div>
                 </div>
@@ -400,7 +399,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
             <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Lightbulb className="w-6 h-6 text-yellow-600" />
-                <h3 className="text-lg font-bold text-gray-900">Your Next Steps:</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t('denialDecoder.yourNextSteps')}</h3>
               </div>
               <ol className="space-y-3">
                 {analysis.nextSteps.map((step, index) => (
@@ -421,7 +420,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-2 mx-auto"
               >
                 <Eye className="w-4 h-4" />
-                {showRawText ? 'Hide' : 'Show'} Extracted Text
+                {showRawText ? t('denialDecoder.hideExtractedText') : t('denialDecoder.showExtractedText')}
               </button>
               
               {showRawText && (
@@ -439,14 +438,14 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
                 onClick={handleReset}
                 className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
-                Scan Another Letter
+                {t('denialDecoder.scanAnotherLetter')}
               </button>
               {onClose && (
                 <button
                   onClick={onClose}
                   className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
                 >
-                  Close
+                  {t('common.close')}
                 </button>
               )}
             </div>

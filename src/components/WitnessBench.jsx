@@ -25,44 +25,46 @@ import VoiceInputButton from './VoiceInput';
 
 /**
  * Relationship types that affect the interview questions
+ * Labels are translation keys that get resolved via getRelationshipLabel()
  */
 const RELATIONSHIP_TYPES = [
-  { value: 'spouse', label: 'Spouse / Partner', icon: '💑' },
-  { value: 'parent', label: 'Parent', icon: '👨‍👩‍👧' },
-  { value: 'child', label: 'Adult Child', icon: '👨‍👧' },
-  { value: 'sibling', label: 'Sibling', icon: '👫' },
-  { value: 'friend', label: 'Close Friend', icon: '🤝' },
-  { value: 'buddy', label: 'Battle Buddy / Fellow Veteran', icon: '🎖️' },
-  { value: 'coworker', label: 'Coworker / Supervisor', icon: '💼' },
-  { value: 'neighbor', label: 'Neighbor', icon: '🏠' },
+  { value: 'spouse', labelKey: 'relationshipSpouse', icon: '💑' },
+  { value: 'parent', labelKey: 'relationshipParent', icon: '👨‍👩‍👧' },
+  { value: 'child', labelKey: 'relationshipChild', icon: '👨‍👧' },
+  { value: 'sibling', labelKey: 'relationshipSibling', icon: '👫' },
+  { value: 'friend', labelKey: 'relationshipFriend', icon: '🤝' },
+  { value: 'buddy', labelKey: 'relationshipBuddy', icon: '🎖️' },
+  { value: 'coworker', labelKey: 'relationshipCoworker', icon: '💼' },
+  { value: 'neighbor', labelKey: 'relationshipNeighbor', icon: '🏠' },
 ];
 
 /**
  * Common condition categories for tailored questions
+ * Labels are translation keys that get resolved via t()
  */
 const CONDITION_CATEGORIES = {
   mental: {
-    label: 'Mental Health (PTSD, Depression, Anxiety)',
+    labelKey: 'categoryMental',
     conditions: ['ptsd', 'depression', 'anxiety', 'bipolar', 'panic', 'sleep', 'insomnia', 'nightmare']
   },
   physical: {
-    label: 'Musculoskeletal / Pain (Back, Knee, Neck)',
+    labelKey: 'categoryPhysical',
     conditions: ['back', 'spine', 'knee', 'shoulder', 'neck', 'arthritis', 'pain', 'mobility', 'fibromyalgia']
   },
   neurological: {
-    label: 'Neurological (TBI, Headaches, Neuropathy)',
+    labelKey: 'categoryNeurological',
     conditions: ['tbi', 'headache', 'migraine', 'neuropathy', 'tremor', 'memory', 'cognitive']
   },
   hearing: {
-    label: 'Hearing / Tinnitus',
+    labelKey: 'categoryHearing',
     conditions: ['hearing', 'tinnitus', 'deaf', 'ear']
   },
   respiratory: {
-    label: 'Respiratory (Asthma, Sleep Apnea, COPD)',
+    labelKey: 'categoryRespiratory',
     conditions: ['asthma', 'breathing', 'sleep apnea', 'copd', 'lung']
   },
   other: {
-    label: 'Other Condition',
+    labelKey: 'categoryOther',
     conditions: []
   }
 };
@@ -368,6 +370,12 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   
+  // Helper function to get translated relationship label
+  const getRelationshipLabel = (relationshipValue) => {
+    const rel = RELATIONSHIP_TYPES.find(r => r.value === relationshipValue);
+    return rel ? t('witnessBench', rel.labelKey) : relationshipValue;
+  };
+  
   // Ref for screenshot/share functionality
   const witnessContentRef = useRef(null);
   
@@ -406,13 +414,13 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         status: 'Evidence Gathered',
         evidence: [{
           type: 'Buddy Statement',
-          description: `Lay/Witness Statement (Form 21-10210) from ${RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label}`,
+          description: `Lay/Witness Statement (Form 21-10210) from ${getRelationshipLabel(relationship)}`,
           statement: generatedStatement,
           relationship: relationship,
           witness: witnessName,
           dateSaved: new Date().toISOString()
         }],
-        notes: `Buddy statement from ${RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label} regarding observable behaviors and functional impacts.`
+        notes: `Buddy statement from ${getRelationshipLabel(relationship)} regarding observable behaviors and functional impacts.`
       };
       
       const success = saveClaim(claim);
@@ -444,7 +452,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
    */
   const startInterview = useCallback(async () => {
     if (!relationship || !condition) {
-      setError('Please select a relationship and enter the condition.');
+      setError(t('witnessBench', 'selectRelationshipAndCondition'));
       return;
     }
     
@@ -595,7 +603,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedStatement);
-      alert('Statement copied to clipboard!');
+      alert(t('witnessBench', 'statementCopied'));
     } catch (err) {
       console.error('Copy failed:', err);
     }
@@ -609,7 +617,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       {/* Who is writing this? */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          Step 1: Who is writing this statement?
+          {t('witnessBench', 'step1Title')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {RELATIONSHIP_TYPES.map((type) => (
@@ -623,7 +631,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               }`}
             >
               <span className="text-2xl block mb-1">{type.icon}</span>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{type.label}</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('witnessBench', type.labelKey)}</span>
             </button>
           ))}
         </div>
@@ -632,34 +640,34 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       {/* What condition? */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          Step 2: What condition is the veteran claiming?
+          {t('witnessBench', 'step2Title')}
         </h3>
         <input
           type="text"
           value={condition}
           onChange={(e) => setCondition(e.target.value)}
-          placeholder="e.g., PTSD, Lower Back Pain, Tinnitus, Sleep Apnea"
+          placeholder={t('witnessBench', 'conditionPlaceholder')}
           className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all"
         />
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          Enter the specific condition or disability being claimed
+          {t('witnessBench', 'conditionHelpText')}
         </p>
       </div>
       
       {/* Witness Name */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          Step 3: Witness Name
+          {t('witnessBench', 'step3Title')}
         </h3>
         <input
           type="text"
           value={witnessName}
           onChange={(e) => setWitnessName(e.target.value)}
-          placeholder="e.g., Jane Smith, John Doe"
+          placeholder={t('witnessBench', 'witnessNamePlaceholder')}
           className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all"
         />
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          Full name of the person providing this witness statement
+          {t('witnessBench', 'witnessNameHelpText')}
         </p>
       </div>
       
@@ -668,17 +676,17 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-              🤖 AI-Powered Interview
+              🤖 {t('witnessBench', 'aiPoweredInterview')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {aiAvailable 
-                ? 'Generate custom interview questions tailored to the relationship and condition'
-                : 'AI not configured - using standard interview questions'
+                ? t('witnessBench', 'aiAvailableDesc')
+                : t('witnessBench', 'aiNotConfigured')
               }
             </p>
             {aiAvailable && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                Using: {aiStatus.mode === AI_MODES.LOCAL ? '🔒 Local AI (Private)' : '☁️ Cloud AI (Gemini)'}
+                {aiStatus.mode === AI_MODES.LOCAL ? t('witnessBench', 'usingLocalAI') : t('witnessBench', 'usingCloudAI')}
               </p>
             )}
           </div>
@@ -698,15 +706,14 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               onClick={onOpenAISettings}
               className="px-3 py-2 text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/40 transition-colors"
             >
-              ⚙️ Configure AI
+              ⚙️ {t('witnessBench', 'configureAI')}
             </button>
           )}
         </div>
         {!aiAvailable && (
           <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              💡 <strong>Standard questions work great!</strong> AI is optional and creates additional 
-              tailored questions based on the specific relationship and condition.
+              💡 <strong>{t('witnessBench', 'standardQuestionsWork')}</strong> {t('witnessBench', 'aiOptionalNote')}
             </p>
           </div>
         )}
@@ -728,12 +735,12 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         {isLoadingQuestions ? (
           <>
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-            <span>Preparing Interview...</span>
+            <span>{t('witnessBench', 'preparingInterview')}</span>
           </>
         ) : (
           <>
             <span>📝</span>
-            <span>Start Interview</span>
+            <span>{t('witnessBench', 'startInterview')}</span>
           </>
         )}
       </button>
@@ -754,10 +761,10 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Question {currentQuestionIndex + 1} of {questions.length}
+              {t('witnessBench', 'questionOf').replace('{current}', currentQuestionIndex + 1).replace('{total}', questions.length)}
             </span>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              {answeredCount} answered
+              {answeredCount} {t('witnessBench', 'answered')}
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -808,7 +815,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
           </div>
           
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            🎤 <strong>Voice Input:</strong> Click the microphone to speak - your voice stays on your device, not our servers. Be specific with examples.
+            🎤 <strong>{t('voice', 'enableVoice').split(' ')[0]}:</strong> {t('witnessBench', 'voiceInputTip')}
           </p>
         </div>
         
@@ -819,7 +826,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             disabled={currentQuestionIndex === 0}
             className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ← Previous
+            {t('witnessBench', 'previous')}
           </button>
           
           {currentQuestionIndex < questions.length - 1 ? (
@@ -827,7 +834,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
               className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
             >
-              Next →
+              {t('witnessBench', 'next')}
             </button>
           ) : (
             <button
@@ -838,12 +845,12 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               {isGeneratingStatement ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  <span>Generating...</span>
+                  <span>{t('witnessBench', 'generating')}</span>
                 </>
               ) : (
                 <>
                   <span>📄</span>
-                  <span>Generate Statement</span>
+                  <span>{t('witnessBench', 'generateStatement')}</span>
                 </>
               )}
             </button>
@@ -852,7 +859,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         
         {/* Question Navigator */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">Jump to question:</p>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">{t('witnessBench', 'jumpToQuestion')}</p>
           <div className="flex flex-wrap gap-2">
             {questions.map((q, index) => (
               <button
@@ -887,9 +894,9 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             <span className="text-4xl">✅</span>
           </div>
           <div>
-            <h3 className="text-2xl font-bold">Statement Generated!</h3>
+            <h3 className="text-2xl font-bold">{t('witnessBench', 'statementGenerated')}</h3>
             <p className="text-green-100">
-              Review, edit if needed, then download for VA Form 21-10210
+              {t('witnessBench', 'reviewEditDownload')}
             </p>
           </div>
         </div>
@@ -899,21 +906,21 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
         <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-            📄 Your Buddy Statement
+            📄 {t('witnessBench', 'yourBuddyStatement')}
           </h3>
           <div className="flex gap-2">
             <button
               onClick={copyToClipboard}
               className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
             >
-              📋 Copy
+              📋 {t('witnessBench', 'copy')}
             </button>
             <div className="relative">
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                 className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
               >
-                📥 Download
+                📥 {t('witnessBench', 'download')}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -929,19 +936,19 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
                         : 'text-gray-700 dark:text-gray-200'
                     }`}
                   >
-                    {savedToPacket ? '✅ Saved to My Packet' : '📁 Save to My Packet'}
+                    {savedToPacket ? `✅ ${t('witnessBench', 'savedToMyPacket')}` : `📁 ${t('witnessBench', 'saveToMyPacket')}`}
                   </button>
                   <button
                     onClick={() => { downloadPDF(); setShowDownloadMenu(false); }}
                     className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
-                    📑 Download as PDF
+                    📑 {t('witnessBench', 'downloadAsPDF')}
                   </button>
                   <button
                     onClick={() => { downloadDOCX(); setShowDownloadMenu(false); }}
                     className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-b-lg transition-colors"
                   >
-                    📝 Download as DOCX
+                    📝 {t('witnessBench', 'downloadAsDOCX')}
                   </button>
                 </div>
               )}
@@ -964,12 +971,12 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         <div className="flex items-start gap-3">
           <span className="text-2xl">📋</span>
           <div>
-            <h3 className="font-bold text-amber-800 dark:text-amber-200">Next Steps:</h3>
+            <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('witnessBench', 'nextStepsTitle')}</h3>
             <ol className="text-amber-700 dark:text-amber-300 text-sm mt-2 list-decimal list-inside space-y-1">
-              <li>Review and edit the statement for accuracy</li>
-              <li>Have the witness read and approve the final version</li>
-              <li>Witness signs and dates the statement</li>
-              <li>Submit with your VA claim as supporting evidence</li>
+              <li>{t('witnessBench', 'nextStep1')}</li>
+              <li>{t('witnessBench', 'nextStep2')}</li>
+              <li>{t('witnessBench', 'nextStep3')}</li>
+              <li>{t('witnessBench', 'nextStep4')}</li>
             </ol>
           </div>
         </div>
@@ -988,7 +995,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
         }}
         className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
       >
-        🔄 Start New Statement
+        🔄 {t('witnessBench', 'startNewStatement')}
       </button>
     </div>
   );
@@ -1010,11 +1017,11 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               <span className="text-3xl">👥</span>
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  The Witness Bench
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">AI</span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
+                  {t('witnessBench', 'title')}
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('witnessBench', 'aiBadge')}</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">{t('witnessBench', 'betaBadge')}</span>
                 </h2>
-                <p className="text-sm text-violet-100">Buddy Letter Wizard (VA Form 21-10210)</p>
+                <p className="text-sm text-violet-100">{t('witnessBench', 'subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1047,10 +1054,9 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-bold text-purple-800 dark:text-purple-200">Why Buddy Statements Matter</h3>
+                  <h3 className="font-bold text-purple-800 dark:text-purple-200">{t('witnessBench', 'whyBuddyStatementsMatter')}</h3>
                   <p className="text-purple-700 dark:text-purple-300 text-sm mt-1">
-                    Veterans often <strong>downplay their symptoms</strong>. A spouse who sees them scream in their sleep, 
-                    or a friend who watches them struggle to walk, provides <strong>powerful third-party evidence</strong> the VA takes seriously.
+                    {t('witnessBench', 'buddyStatementExplanation')}
                   </p>
                 </div>
               </div>
@@ -1062,10 +1068,9 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💡</span>
                   <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
+                    <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('witnessBench', 'aiRequiredTitle')}</h3>
                     <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                      (100% private) or enter your Gemini API key.
+                      {t('witnessBench', 'aiRequiredExplanation')}
                     </p>
                   </div>
                 </div>

@@ -494,7 +494,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                             </button>
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            📄 PDFs • 📷 Images • 📸 Screenshots — <strong>Multiple files supported!</strong>
+                            📄 PDFs • 📷 Images • 📸 Screenshots - <strong>Multiple files supported!</strong>
                           </p>
                         </div>
                       </div>
@@ -630,7 +630,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                               <span className="text-green-500">✓</span>
                               <span className="text-sm font-medium">
-                                Combined text ready — {denialText.length} total characters from {uploadedFiles.filter(f => f.extractedText).length} file(s)
+                                Combined text ready - {denialText.length} total characters from {uploadedFiles.filter(f => f.extractedText).length} file(s)
                               </span>
                             </div>
                           </div>

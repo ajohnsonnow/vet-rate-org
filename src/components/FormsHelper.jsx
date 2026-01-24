@@ -4063,7 +4063,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'emailAddress')}</label>
               <input
                 type="email"
                 value={veteranProfile.email || ''}
@@ -4073,13 +4073,13 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Branch</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'serviceBranch')}</label>
               <select
                 value={veteranProfile.branch || ''}
                 onChange={(e) => handleProfileChange('branch', e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
               >
-                <option value="">Select Branch</option>
+                <option value="">{t('formsHelper', 'selectBranch')}</option>
                 <option value="Army">Army</option>
                 <option value="Navy">Navy</option>
                 <option value="Air Force">Air Force</option>
@@ -4095,7 +4095,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <div className="grid gap-4 md:grid-cols-4 mb-4">
             {/* Address */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'streetAddress')}</label>
               <input
                 type="text"
                 value={veteranProfile.street || ''}
@@ -4105,7 +4105,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apt/Unit</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'aptUnit')}</label>
               <input
                 type="text"
                 value={veteranProfile.apt || ''}
@@ -4115,7 +4115,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'city')}</label>
               <input
                 type="text"
                 value={veteranProfile.city || ''}
@@ -4128,7 +4128,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
           <div className="grid gap-4 md:grid-cols-3 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'state')}</label>
               <input
                 type="text"
                 value={veteranProfile.state || ''}
@@ -4139,7 +4139,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ZIP Code</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'zipCode')}</label>
               <input
                 type="text"
                 value={veteranProfile.zip || ''}
@@ -4150,7 +4150,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Country</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('formsHelper', 'country')}</label>
               <input
                 type="text"
                 value={veteranProfile.country || 'United States'}
@@ -4166,7 +4166,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              Military Service Details (for form autofill)
+              {t('formsHelper', 'militaryServiceDetails')}
             </summary>
             <div className="p-4 bg-white dark:bg-gray-800 rounded-b-lg space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
@@ -4268,14 +4268,12 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              Sensitive Information (Full SSN - Optional)
-              <span className="ml-auto text-xs text-amber-700 dark:text-amber-400">⚠️ Local storage only</span>
+              {t('formsHelper', 'sensitiveInfoOptional')}
+              <span className="ml-auto text-xs text-amber-700 dark:text-amber-400">⚠️ {t('formsHelper', 'localStorageOnly')}</span>
             </summary>
             <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-b-lg space-y-4">
               <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
-                <strong>⚠️ Privacy Notice:</strong> Full SSN is only needed for certain forms. This data is stored 
-                <strong> locally on your device only</strong> and is never sent to any server. 
-                Clear your browser data to remove this information.
+                <strong>⚠️ {t('formsHelper', 'privacyNotice')}:</strong> {t('formsHelper', 'privacyNoticeText')}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -4311,7 +4309,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
           <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              🔒 Your data is stored locally on your device. Nothing is sent to any server.
+              🔒 {t('formsHelper', 'privacyLocalStorage')}
             </p>
             <button
               onClick={handleSaveProfile}
@@ -4320,7 +4318,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Save Profile
+              {t('formsHelper', 'saveProfile')}
             </button>
           </div>
         </div>
@@ -4341,7 +4339,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             onClick={() => setShowProfileSetup(true)}
             className="text-sm text-green-700 dark:text-green-300 underline hover:no-underline"
           >
-            Edit
+            {t('formsHelper', 'edit')}
           </button>
         </div>
       )}
@@ -4501,7 +4499,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
         {/* Progress bar */}
         <div className="mb-6">
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
-            <span>Step {currentStep} of {steps.length}</span>
+            <span>{t('formsHelper', 'stepOf').replace('{current}', currentStep).replace('{total}', steps.length)}</span>
             <span>{selectedForm?.name}</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -4536,7 +4534,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             }}
             className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
           >
-            ← Back
+            ← {t('formsHelper', 'back')}
           </button>
           
           {isLastStep ? (
@@ -4554,7 +4552,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               onClick={() => setCurrentStep(prev => prev + 1)}
               className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
             >
-              Next
+              {t('formsHelper', 'next')}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -4577,9 +4575,9 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <div className="flex items-center gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <h3 className="font-bold text-green-900 dark:text-green-200">Statement Generated!</h3>
+              <h3 className="font-bold text-green-900 dark:text-green-200">{t('formsHelper', 'statementGenerated')}</h3>
               <p className="text-sm text-green-800 dark:text-green-300">
-                Review your statement below, then download. You can get a ready-to-sign PDF or text formats.
+                {t('formsHelper', 'statementGeneratedDesc')}
               </p>
             </div>
           </div>
@@ -4593,7 +4591,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                 <span className="text-3xl">✨</span>
                 <div>
                   <h3 className="font-bold text-purple-900 dark:text-purple-200 text-lg flex items-center gap-2">
-                    AI Statement Assistant
+                    {t('formsHelper', 'aiStatementAssistant')}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       aiStatus.effectiveMode === AI_MODES.LOCAL 
                         ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' 
@@ -4603,16 +4601,15 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                     </span>
                   </h3>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
-                    Enhance your statement with AI to make it more professional and compelling. 
-                    Uses the "Three Pillars" approach for effective VA claim statements.
+                    {t('formsHelper', 'aiEnhanceDesc')}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400 mt-2">
                     <span>💡</span>
-                    <span><strong>Tip:</strong> All AI models work great for statement writing!</span>
+                    <span><strong>{t('formsHelper', 'tip')}:</strong> {t('formsHelper', 'aiTipAllModels')}</span>
                   </div>
                   {aiStatus.effectiveMode === AI_MODES.LOCAL && (
                     <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      ✅ 100% Private - Your data never leaves your device
+                      ✅ {t('formsHelper', 'aiPrivateNotice')}
                     </p>
                   )}
                 </div>
@@ -4631,14 +4628,14 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Enhancing...
+                        {t('formsHelper', 'enhancing')}
                       </>
                     ) : (
                       <>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Enhance with AI
+                        {t('formsHelper', 'enhanceWithAI')}
                       </>
                     )}
                   </button>
@@ -4652,7 +4649,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                           : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
                       }`}
                     >
-                      ✨ AI Version
+                      ✨ {t('formsHelper', 'aiVersion')}
                     </button>
                     <button
                       onClick={toggleAIVersion}
@@ -4662,7 +4659,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                           : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
                       }`}
                     >
-                      📝 Original
+                      📝 {t('formsHelper', 'original')}
                     </button>
                   </div>
                 )}
@@ -4679,7 +4676,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             {/* Version indicator */}
             {aiEnhancedContent && (
               <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-                {showAIVersion ? '✨ Viewing AI-enhanced version' : '📝 Viewing original template version'}
+                {showAIVersion ? `✨ ${t('formsHelper', 'viewingAIVersion')}` : `📝 ${t('formsHelper', 'viewingOriginal')}`}
               </div>
             )}
           </div>
@@ -4692,9 +4689,9 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <div className="flex items-start gap-3">
                 <span className="text-2xl">✨</span>
                 <div>
-                  <h3 className="font-bold text-amber-900 dark:text-amber-200">AI Enhancement Available</h3>
+                  <h3 className="font-bold text-amber-900 dark:text-amber-200">{t('formsHelper', 'aiEnhancementAvailable')}</h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    This form can be enhanced with AI to make your statement more professional and compelling using the "Three Pillars" approach.
+                    {t('formsHelper', 'aiEnhancementAvailableDesc')}
                   </p>
                 </div>
               </div>
@@ -4702,7 +4699,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
                 onClick={onOpenAISettings}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
               >
-                ⚙️ Configure AI
+                ⚙️ {t('formsHelper', 'configureAI')}
               </button>
             </div>
           </div>
@@ -4711,9 +4708,9 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
         {/* Download Options - Prominent */}
         <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
           <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <span className="text-xl">📥</span> Download Your Form
+            <span className="text-xl">📥</span> {t('formsHelper', 'downloadYourForm')}
             {showAIVersion && aiEnhancedContent && (
-              <span className="text-sm font-normal text-purple-600 dark:text-purple-400">(AI-Enhanced)</span>
+              <span className="text-sm font-normal text-purple-600 dark:text-purple-400">({t('formsHelper', 'aiEnhanced')})</span>
             )}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -4724,8 +4721,8 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             >
               <span className="text-2xl">📋</span>
               <div className="text-left">
-                <div className="font-bold">Official VA Form PDF</div>
-                <div className="text-sm text-blue-100">Ready to sign & submit</div>
+                <div className="font-bold">{t('formsHelper', 'officialVAFormPdf')}</div>
+                <div className="text-sm text-blue-100">{t('formsHelper', 'readyToSign')}</div>
               </div>
             </button>
             
@@ -4762,8 +4759,8 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             <div className="flex items-center gap-3">
               <span className="text-2xl">📦</span>
               <div>
-                <h3 className="font-bold text-purple-900 dark:text-purple-200">Save to My Packet</h3>
-                <p className="text-sm text-purple-700 dark:text-purple-300">Keep this form with your other claims for easy access and backup</p>
+                <h3 className="font-bold text-purple-900 dark:text-purple-200">{t('formsHelper', 'saveToMyPacket')}</h3>
+                <p className="text-sm text-purple-700 dark:text-purple-300">{t('formsHelper', 'saveToPacketDesc')}</p>
               </div>
             </div>
             <button
@@ -4773,7 +4770,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
               </svg>
-              Save to Packet
+              {t('formsHelper', 'saveToPacketBtn')}
             </button>
           </div>
         </div>
@@ -4794,7 +4791,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <details className="group" open={showAIVersion && aiEnhancedContent}>
             <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
               <span className="font-medium text-gray-700 dark:text-gray-300">
-                📄 Text Preview {showAIVersion && aiEnhancedContent ? '(AI-Enhanced)' : ''} (click to expand)
+                📄 {t('formsHelper', 'textPreview')} {showAIVersion && aiEnhancedContent ? `(${t('formsHelper', 'aiEnhanced')})` : ''} ({t('formsHelper', 'clickToExpand')})
               </span>
               <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -4808,13 +4805,13 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
         {/* Next steps */}
         <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-          <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">📋 Next Steps</h3>
+          <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">📋 {t('formsHelper', 'nextSteps')}</h3>
           <ol className="list-decimal list-inside text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
-            <li><strong>Download</strong> the "Official VA Form PDF" above - it's already filled out!</li>
-            <li><strong>Review</strong> the PDF to make sure all information is correct</li>
-            <li><strong>Print</strong> the completed form</li>
-            <li><strong>Sign</strong> and date where indicated</li>
-            <li><strong>Submit</strong> online at <a href={selectedForm?.link} target="_blank" rel="noopener noreferrer" className="underline font-bold">VA.gov</a> or mail to your VA Regional Office</li>
+            <li><strong>{t('formsHelper', 'download')}</strong> {t('formsHelper', 'nextStepDownload')}</li>
+            <li><strong>{t('formsHelper', 'review')}</strong> {t('formsHelper', 'nextStepReview')}</li>
+            <li><strong>{t('formsHelper', 'print')}</strong> {t('formsHelper', 'nextStepPrint')}</li>
+            <li><strong>{t('formsHelper', 'sign')}</strong> {t('formsHelper', 'nextStepSign')}</li>
+            <li><strong>{t('formsHelper', 'submit')}</strong> {t('formsHelper', 'nextStepSubmit')} <a href={selectedForm?.link} target="_blank" rel="noopener noreferrer" className="underline font-bold">VA.gov</a> {t('formsHelper', 'orMailTo')}</li>
           </ol>
         </div>
 
@@ -4829,7 +4826,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             }}
             className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
           >
-            ← Edit Answers
+            ← {t('formsHelper', 'editAnswers')}
           </button>
           <button
             onClick={() => {
@@ -4842,7 +4839,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             }}
             className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
           >
-            Start New Form
+            {t('formsHelper', 'startNewForm')}
           </button>
           <a
             href={selectedForm?.link}
@@ -4850,7 +4847,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
             rel="noopener noreferrer"
             className="px-4 py-2 bg-va-gold hover:bg-yellow-400 text-va-blue rounded-lg font-bold flex items-center gap-2"
           >
-            Submit at VA.gov
+            {t('formsHelper', 'submitAtVA')}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -4927,7 +4924,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
           <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
             <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
               <p>
-                📌 All data stays in your browser. We never store your personal information.
+                📌 {t('formsHelper', 'footerPrivacy')}
               </p>
               <BuyMeCoffee show={true} trigger="forms-helper" />
             </div>
