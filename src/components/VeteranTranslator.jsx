@@ -18,6 +18,8 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useLanguage } from '../contexts/LanguageContext';
 import VoiceInputButton from './VoiceInput';
 import multilingualTone from '../config/multilingualTone.json';
+import ReportBugLink from './ReportBugLink';
+import FlagIcon from './FlagIcon';
 
 // Quick phrases for VA medical center situations
 const QUICK_PHRASES = {
@@ -61,7 +63,7 @@ const getTranslation = (text, fromLang, toLang) => {
   };
 };
 
-const VeteranTranslator = ({ isOpen, onClose }) => {
+const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
   useBodyScrollLock(isOpen);
   
   const { SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
@@ -125,6 +127,9 @@ const VeteranTranslator = ({ isOpen, onClose }) => {
       fromLang,
       isMe,
       timestamp: new Date(),
+      // Store language codes for FlagIcon rendering
+      fromLangCode: isMe ? myLanguage : theirLanguage,
+      toLangCode: isMe ? theirLanguage : myLanguage,
       fromFlag: isMe ? myLangObj?.flag : theirLangObj?.flag,
       toFlag: isMe ? theirLangObj?.flag : myLangObj?.flag,
     }]);
@@ -180,14 +185,17 @@ const VeteranTranslator = ({ isOpen, onClose }) => {
               <p className="text-sm text-amber-100">Connect across language barriers</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Veteran Translator" />}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Language Selectors */}
@@ -335,9 +343,9 @@ const VeteranTranslator = ({ isOpen, onClose }) => {
                         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
                     }`}>
                       <div className="flex items-center gap-2 mb-1">
-                        <span>{msg.fromFlag}</span>
+                        <FlagIcon langCode={msg.fromLangCode} size="xs" fallbackEmoji={msg.fromFlag} />
                         <span className="text-xs opacity-70">→</span>
-                        <span>{msg.toFlag}</span>
+                        <FlagIcon langCode={msg.toLangCode} size="xs" fallbackEmoji={msg.toFlag} />
                       </div>
                       <p className="text-sm">{msg.text}</p>
                       <div className="flex items-center justify-between mt-2">
