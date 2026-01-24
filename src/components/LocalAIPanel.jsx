@@ -1224,7 +1224,40 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   const [streamedResponse, setStreamedResponse] = useState('');
   const [isTestGenerating, setIsTestGenerating] = useState(false);
   const [isChangingGPU, setIsChangingGPU] = useState(false);
+  const [lunaTestMessage, setLunaTestMessage] = useState(null);
   const testAbortRef = React.useRef(null);
+
+  // Generate contextual Luna message based on loaded AI model
+  const getLunaTestMessage = () => {
+    // Diamond Swarm agents get special messages
+    if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
+      const agentMessages = {
+        'diamond-auditor': "*Meow!* 💎 Testing the Diamond Auditor! This one's trained to sniff out claim issues like I sniff out treats! Watch it analyze those VA regulations! 😸",
+        'diamond-writer': "*Purrrr* 💎 Diamond Writer test time! This fuzzy brain helper writes statements better than I write on keyboards (which is pretty good, actually). 📝😺",
+        'diamond-rater': "*Mrrrow!* 💎 Testing Diamond Rater! It calculates ratings faster than I calculate my treat schedule. Math whiskers activated! 🧮😸",
+      };
+      return agentMessages[loadedModelId] || "*Meow!* 💎 Testing our Diamond Swarm AI! These veteran-trained models are purr-fectly tuned for VA claims! 😸✨";
+    }
+    
+    // Generic local AI message
+    return "*Meow!* 🧠 Testing your local Neural Engine! All this AI magic happens right on YOUR device - no data leaves your computer. Luna approves of this privacy! *purrrr* 🛡️😸";
+  };
+
+  // Generate Luna's completion celebration message
+  const getLunaCompletionMessage = () => {
+    // Diamond Swarm agents get special completion messages
+    if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
+      const completionMessages = {
+        'diamond-auditor': "*Purrrrr!* 💎✨ Knowledge test complete! The Diamond Auditor nailed it! This AI knows VA regulations better than most VSOs. Your claims just got a whole lot stronger! 😸🎉",
+        'diamond-writer': "*Mrrrrrow!* 💎✨ Test passed with flying whiskers! Diamond Writer's ready to craft those statements! Watch those nexus letters practically write themselves! 📝😺",
+        'diamond-rater': "*Meow meow!* 💎✨ Knowledge test SUCCESS! Diamond Rater's math whiskers are on point! It knows the combined ratings formula like I know my treat jar location! 🧮😸🎊",
+      };
+      return completionMessages[loadedModelId] || "*PURRRR!* 💎✨ Knowledge test PASSED! Your Diamond Swarm AI is veteran-ready! Time to put this knowledge to work on your claim! 😸🚀";
+    }
+    
+    // Generic local AI completion message
+    return "*Happy meow!* 🎉 Knowledge test complete! Your local AI passed with flying colors! All that power running right on YOUR device - no cloud needed! Luna is SO proud! *purrrr* 🛡️😸✨";
+  };
 
   // Stop test generation
   const handleStopTest = () => {
@@ -1336,6 +1369,9 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     setStreamedResponse('');
     setTestResponse('');
     
+    // Show Luna's contextual message for the loaded AI
+    setLunaTestMessage(getLunaTestMessage());
+    
     try {
       // Direct import and call to avoid context issues
       const { generateWithSwarm } = await import('../utils/diamondSwarm');
@@ -1371,6 +1407,10 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       if (!signal.aborted) {
         setStreamedResponse('');
         setTestResponse(responseText || 'AI response completed.');
+        
+        // Show Luna's completion celebration message
+        const completionMessage = getLunaCompletionMessage();
+        setLunaTestMessage(completionMessage);
       }
     } catch (err) {
       if (err.name === 'AbortError' || err.message === 'Aborted') {
@@ -2000,6 +2040,32 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                         Run Knowledge Test ⚡
                       </button>
                     </div>
+
+                    {/* Luna's Test Message - Shows contextual message for loaded AI */}
+                    {lunaTestMessage && (
+                      <div className="mb-4 p-4 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30 border border-purple-500/40 rounded-lg animate-luna-bounce-in">
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl flex-shrink-0">😸</span>
+                          <div className="flex-1">
+                            <p className="text-purple-200 text-sm italic">
+                              {lunaTestMessage}
+                            </p>
+                            <p className="text-purple-400/60 text-xs mt-2">
+                              — Luna, Chief Treat Officer 🐾
+                            </p>
+                          </div>
+                          <button 
+                            onClick={() => setLunaTestMessage(null)}
+                            className="text-purple-400/60 hover:text-purple-300 transition-colors"
+                            aria-label="Dismiss Luna's message"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Test Input */}
                     <div className="space-y-3">
