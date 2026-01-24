@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
@@ -20,6 +21,7 @@ import VoiceInputButton from './VoiceInput';
  */
 
 const VSOFinder = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [zipCode, setZipCode] = useState('');
@@ -506,6 +508,38 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
                     accreditation status through the official VA database before signing any appointment forms.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="text-center py-12">
+                <div className="relative mb-6 inline-block">
+                  <div className="text-6xl animate-pulse">🤝</div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 border-4 border-sky-200 dark:border-sky-800 border-t-sky-500 rounded-full animate-spin"></div>
+                  </div>
+                </div>
+                <p className="text-lg font-medium text-sky-700 dark:text-sky-300">
+                  Searching for VSOs near {zipCode}...
+                </p>
+                <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                  Finding accredited representatives in your area
+                </p>
+                <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500 max-w-xs mx-auto">
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🏛️</span> Checking County VSOs...
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🏢</span> Finding State VA Offices...
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🎖️</span> Locating National Organizations...
+                  </p>
+                </div>
+                <p className="text-xs text-sky-600 dark:text-sky-400 mt-4">
+                  This usually takes 10-30 seconds
+                </p>
               </div>
             )}
 

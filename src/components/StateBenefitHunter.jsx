@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -174,6 +175,7 @@ const CATEGORY_CONFIG = {
 };
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [selectedState, setSelectedState] = useState('');
@@ -641,6 +643,38 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                     This tool uses AI to compile publicly available information and may contain inaccuracies.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="text-center py-12">
+                <div className="relative mb-6 inline-block">
+                  <div className="text-6xl animate-pulse">💰</div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 border-4 border-green-200 dark:border-green-800 border-t-green-500 rounded-full animate-spin"></div>
+                  </div>
+                </div>
+                <p className="text-lg font-medium text-green-700 dark:text-green-300">
+                  Hunting for your benefits...
+                </p>
+                <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                  Searching {getStateName(selectedState)} veteran programs
+                </p>
+                <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500 max-w-xs mx-auto">
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🏠</span> Checking property tax exemptions...
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🚗</span> Finding vehicle benefits...
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="animate-pulse">🎓</span> Discovering education programs...
+                  </p>
+                </div>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-4">
+                  This usually takes 10-30 seconds
+                </p>
               </div>
             )}
 

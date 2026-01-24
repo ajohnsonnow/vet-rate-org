@@ -611,6 +611,40 @@ Example: 'My back hurts sometimes after standing for a while, but I try to push 
                   </div>
                 )}
 
+                {/* Loading State */}
+                {isLoading && (
+                  <div className="h-full flex items-center justify-center py-12 text-center">
+                    <div className="max-w-sm">
+                      <div className="relative mb-6">
+                        <div className="text-6xl animate-pulse">🎖️</div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-20 h-20 border-4 border-red-200 dark:border-red-800 border-t-red-500 rounded-full animate-spin"></div>
+                        </div>
+                      </div>
+                      <p className="text-lg font-medium text-red-700 dark:text-red-300">
+                        Drill Sergeant is reviewing...
+                      </p>
+                      <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                        Scanning for weak language that hurts your claim
+                      </p>
+                      <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500">
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">🔍</span> Finding minimizing phrases...
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">💪</span> Checking for "tough guy" language...
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">📊</span> Scoring clinical effectiveness...
+                        </p>
+                      </div>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-4">
+                        This usually takes 10-30 seconds
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Empty State */}
                 {!results && !isLoading && !error && (
                   <div className="h-full flex items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
