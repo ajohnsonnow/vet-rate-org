@@ -618,178 +618,171 @@ const Dashboard = ({ claims, analysis, statistics, milestoneProgress, onSelectCl
 };
 
 // ============================================
-// COMMUNITY INSIGHTS PANEL
+// COMMUNITY INSIGHTS PANEL (COMING SOON)
 // ============================================
 const CommunityInsightsPanel = () => {
-  const [tips, setTips] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
-
-  // Load community knowledge on mount
-  useEffect(() => {
-    const loadCommunityTips = async () => {
-      try {
-        const response = await fetch('/data/community_knowledge.json');
-        if (!response.ok) throw new Error('Failed to load community knowledge');
-        const data = await response.json();
-        
-        // Filter for actionable tips and format them
-        const actionableTips = (data.entries || [])
-          .filter(entry => {
-            // Filter for entries with practical tips
-            const output = entry.output || '';
-            return (
-              output.length > 50 && 
-              output.length < 800 &&
-              !output.includes('Skip to Content') &&
-              (output.includes('IMPORTANT') || 
-               output.includes('TIP') || 
-               output.includes('NOTE') ||
-               entry.metadata?.section_title)
-            );
-          })
-          .slice(0, 50) // Limit to 50 tips
-          .map(entry => ({
-            id: Math.random().toString(36).substr(2, 9),
-            title: entry.metadata?.section_title || entry.instruction || 'Veteran Insight',
-            content: entry.output
-              .replace('⚠️ COMMUNITY GUIDANCE (Not Official VA Regulations):\n\n', '')
-              .replace(/\n\nSource:.*$/, '')
-              .trim(),
-            source: entry.metadata?.source_name || 'Veteran Community',
-            category: entry.metadata?.page_title || 'General'
-          }));
-        
-        // Shuffle for variety
-        const shuffled = actionableTips.sort(() => Math.random() - 0.5);
-        setTips(shuffled);
-      } catch (error) {
-        console.log('[Navigator] Community tips unavailable:', error.message);
-        // Provide fallback tips
-        setTips([
-          {
-            id: 'fallback1',
-            title: 'File Intent to File First',
-            content: 'IMPORTANT: File an Intent to File (ITF) before gathering evidence. This protects your effective date for up to 1 year while you build your claim.',
-            source: 'Veteran Community',
-            category: 'Filing Tips'
-          },
-          {
-            id: 'fallback2',
-            title: 'The "Big 3" Evidence',
-            content: 'Every successful claim needs three things: (1) Current diagnosis, (2) In-service event/stressor, (3) Medical nexus linking them. Missing any of these = denial.',
-            source: 'Veteran Community',
-            category: 'Evidence'
-          },
-          {
-            id: 'fallback3',
-            title: 'C&P Exam Preparation',
-            content: 'Before your C&P exam: Review your medical records, document your worst days, bring a list of symptoms, and be honest about how your condition affects daily life.',
-            source: 'Veteran Community',
-            category: 'C&P Exams'
-          }
-        ]);
-      }
-      setLoading(false);
-    };
-    
-    loadCommunityTips();
-  }, []);
-
-  const nextTip = () => {
-    setCurrentTipIndex((prev) => (prev + 1) % tips.length);
-  };
-
-  const prevTip = () => {
-    setCurrentTipIndex((prev) => (prev - 1 + tips.length) % tips.length);
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl p-4">
-        <div className="flex items-center gap-2 text-orange-400">
-          <Loader className="w-4 h-4 animate-spin" />
-          <span className="text-sm">Loading veteran insights...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (tips.length === 0) return null;
-
-  const currentTip = tips[currentTipIndex];
-
   return (
-    <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-xl overflow-hidden">
+    <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 border border-slate-600/50 rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-orange-500/20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-orange-500/20 rounded-lg">
-            <MessageSquare className="w-4 h-4 text-orange-400" />
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-orange-500/20 rounded-lg">
+            <MessageSquare className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <h3 className="text-orange-400 font-semibold text-sm">Community Insights</h3>
-            <p className="text-xs text-slate-500">Reddit-style tips from fellow veterans</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-slate-500">{currentTipIndex + 1}/{tips.length}</span>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-1 text-slate-400 hover:text-white transition-colors"
-            title={expanded ? 'Collapse' : 'Expand'}
-          >
-            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Current Tip */}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <h4 className="text-white font-medium text-sm">{currentTip.title}</h4>
-            <p className={`text-slate-300 text-sm mt-1 ${expanded ? '' : 'line-clamp-3'}`}>
-              {currentTip.content}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-orange-400/70 bg-orange-500/10 px-2 py-0.5 rounded">
-                {currentTip.category}
+            <div className="flex items-center gap-2">
+              <h3 className="text-white font-semibold">Community Insights</h3>
+              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded-full uppercase">
+                Coming Soon
               </span>
-              <span className="text-xs text-slate-500">via {currentTip.source}</span>
             </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Reddit-style tips from fellow veterans
+            </p>
           </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-orange-500/20">
-          <button
-            onClick={prevTip}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-orange-400 transition-colors"
-          >
-            <ChevronLeft className="w-3 h-3" />
-            Previous
-          </button>
-          <button
-            onClick={nextTip}
-            className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
-          >
-            Next Tip
-            <ChevronRight className="w-3 h-3" />
-          </button>
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div className="px-4 py-2 bg-slate-900/50 border-t border-orange-500/20">
-        <p className="text-xs text-slate-500 flex items-center gap-1">
-          <Info className="w-3 h-3" />
-          Community guidance - not official VA policy. Always verify with official sources.
-        </p>
+      {/* Coming Soon Content */}
+      <div className="px-4 pb-4">
+        <div className="bg-slate-900/50 rounded-lg p-4 text-center">
+          <Lightbulb className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+          <p className="text-slate-400 text-sm">
+            We're working on bringing you curated insights from the veteran community.
+          </p>
+          <p className="text-slate-500 text-xs mt-2">
+            Tips, strategies, and real experiences from r/VeteransBenefits and other veteran forums.
+          </p>
+        </div>
       </div>
     </div>
+  );
+};
+
+// ============================================
+// REDDIT SUMMARY GENERATOR
+// ============================================
+/**
+ * Generates a Reddit-style BLUF summary from Navigator analysis
+ * @param {Object} analysis - The claim analysis object
+ * @param {Object} claim - The claim object
+ * @returns {string} Reddit-formatted summary
+ */
+const generateRedditSummary = (analysis, claim) => {
+  if (!analysis || !claim) return '';
+  
+  const lines = [];
+  
+  // BLUF (Bottom Line Up Front)
+  lines.push(`**BLUF**: ${claim.conditionName} claim - ${analysis.overallStatus || 'In Progress'} (${analysis.completeness || 0}% ready)`);
+  lines.push('');
+  
+  // Claim Type
+  const claimTypeLabels = {
+    ORIGINAL: 'Original Claim',
+    INCREASE: 'Increase Claim',
+    SECONDARY: 'Secondary Claim',
+    SUPPLEMENTAL: 'Supplemental Claim',
+    HLR: 'Higher-Level Review',
+    BOARD_APPEAL: 'Board Appeal'
+  };
+  lines.push(`**Claim Type**: ${claimTypeLabels[claim.claimType] || claim.claimType}`);
+  lines.push('');
+  
+  // Warnings (if any)
+  if (analysis.warnings?.length > 0) {
+    lines.push('**⚠️ Warnings**:');
+    analysis.warnings.slice(0, 3).forEach(w => {
+      lines.push(`* ${w.title}`);
+    });
+    lines.push('');
+  }
+  
+  // Top Actions
+  if (analysis.actions?.length > 0) {
+    lines.push('**Next Steps**:');
+    analysis.actions.slice(0, 3).forEach((action, idx) => {
+      const emoji = action.urgency === 'CRITICAL' ? '🔴' : action.urgency === 'HIGH' ? '🟠' : '🟢';
+      lines.push(`${idx + 1}. ${emoji} ${action.title}`);
+    });
+    lines.push('');
+  }
+  
+  // Evidence Status
+  const checklist = claim.evidenceChecklist || {};
+  const hasDiagnosis = checklist.diagnosis ? '✅' : '❌';
+  const hasNexus = checklist.nexus ? '✅' : '❌';
+  const hasEvent = checklist.inServiceEvent ? '✅' : '❌';
+  
+  lines.push('**Big 3 Evidence**:');
+  lines.push(`| Evidence | Status |`);
+  lines.push(`|:--|:--:|`);
+  lines.push(`| Current Diagnosis | ${hasDiagnosis} |`);
+  lines.push(`| Nexus Letter | ${hasNexus} |`);
+  lines.push(`| In-Service Event | ${hasEvent} |`);
+  lines.push('');
+  
+  // Footer
+  lines.push('---');
+  lines.push('*Generated by [Vet-Rate.org](https://vet-rate.org) Navigator*');
+  
+  return lines.join('\n');
+};
+
+/**
+ * Copy text to clipboard with Reddit formatting
+ */
+const copyRedditSummary = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    return false;
+  }
+};
+
+// ============================================
+// REDDIT COPY BUTTON FOR NAVIGATOR
+// ============================================
+const RedditSummaryButton = ({ analysis, claim }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = async () => {
+    const summary = generateRedditSummary(analysis, claim);
+    const success = await copyRedditSummary(summary);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  
+  if (!analysis || !claim) return null;
+  
+  return (
+    <button
+      onClick={handleCopy}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        copied 
+          ? 'bg-green-500 text-white' 
+          : 'bg-orange-500 hover:bg-orange-600 text-white'
+      }`}
+      title="Copy Reddit-formatted summary"
+    >
+      {copied ? (
+        <>
+          <CheckCircle className="w-3.5 h-3.5" />
+          Copied!
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+          </svg>
+          Reddit Summary
+        </>
+      )}
+    </button>
   );
 };
 
@@ -1148,6 +1141,7 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
                 <Clipboard className="w-4 h-4" />
                 Evidence Checklist
               </button>
+              <RedditSummaryButton analysis={analysis} claim={claim} />
             </div>
           </div>
         </div>
