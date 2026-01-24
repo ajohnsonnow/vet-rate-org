@@ -183,7 +183,7 @@ const ProofTab = () => (
         <div>Backend: <span className="line-through">None</span> ❌</div>
         <div>Database: <span className="line-through">None</span> ❌</div>
         <div>API Server: <span className="line-through">None</span> ❌</div>
-        <div>Analytics: <span className="line-through">None</span> ❌</div>
+        <div>Analytics: GoatCounter (privacy-first) 🔒</div>
         <div className="mt-2 text-gray-400">// Just static files served to your browser</div>
       </div>
 
@@ -221,6 +221,11 @@ const ProofTab = () => (
             <td className="border border-gray-300 dark:border-gray-600 p-2 text-yellow-700 dark:text-yellow-400">⚠️ Symptoms only</td>
           </tr>
           <tr>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">gc.zgo.at (GoatCounter)</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">Privacy-first page view analytics</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">❌ No PII</td>
+          </tr>
+          <tr>
             <td className="border border-gray-300 dark:border-gray-600 p-2"><em>Anything else</em></td>
             <td className="border border-gray-300 dark:border-gray-600 p-2 font-bold">Should NOT exist</td>
             <td className="border border-gray-300 dark:border-gray-600 p-2 text-red-700 dark:text-red-400 font-bold">🚨 Report it!</td>
@@ -228,13 +233,24 @@ const ProofTab = () => (
         </tbody>
       </table>
 
+      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4 mt-4 mb-4">
+        <p className="font-bold text-blue-900 dark:text-blue-200">🔒 About GoatCounter Analytics:</p>
+        <ul className="list-disc ml-5 mt-2 text-blue-800 dark:text-blue-300 text-sm">
+          <li>Open-source, privacy-first analytics</li>
+          <li>No cookies, no fingerprinting, no tracking across sites</li>
+          <li>Only counts page views and referrers</li>
+          <li>GDPR-compliant by design</li>
+          <li>See: <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener noreferrer" className="underline">GoatCounter Privacy Policy</a></li>
+        </ul>
+      </div>
+
       <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mt-4">
         <p className="font-bold text-red-900 dark:text-red-200">🚨 If you see requests to:</p>
         <ul className="list-disc ml-5 mt-2 text-red-800 dark:text-red-300 text-sm">
           <li>analytics.google.com</li>
           <li>facebook.com/pixel</li>
-          <li>Any tracking domain</li>
-          <li>Any non-vet-rate.org API</li>
+          <li>Any other tracking domain</li>
+          <li>Any unknown API</li>
         </ul>
         <p className="mt-2 text-red-800 dark:text-red-300 font-semibold">
           → Report it immediately via Bug Squasher. That would mean we've been compromised.

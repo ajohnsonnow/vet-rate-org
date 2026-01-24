@@ -35,7 +35,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
         
         <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           <p className={`text-sm mb-6 ${getColorClass(colors.text.secondary)}`}>
-            <strong>Last Updated:</strong> January 19, 2026
+            <strong>Last Updated:</strong> January 23, 2026
           </p>
 
           <section className="mb-6">
@@ -63,11 +63,50 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
               <li>Search queries or browsing history</li>
             </ul>
 
-            <h4 className="text-lg font-semibold text-gray-800 mb-2">2.2 Automatically Collected Information</h4>
+            <h4 className="text-lg font-semibold text-gray-800 mb-2">2.2 Minimal Analytics (GoatCounter)</h4>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-3">
+              <p className="text-gray-700 mb-2">
+                <strong>Transparency:</strong> We use{' '}
+                <a href="https://www.goatcounter.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">GoatCounter</a>,
+                a privacy-respecting, open-source analytics tool to understand basic site usage.
+              </p>
+              <p className="text-gray-700 mb-2">
+                <strong>What GoatCounter collects:</strong>
+              </p>
+              <ul className="list-disc list-inside text-gray-700 mb-2 ml-4">
+                <li>Page views (which pages are visited)</li>
+                <li>Referrer (how you found the site)</li>
+                <li>Browser type and screen size (aggregated)</li>
+                <li>Country-level location (no city or precise location)</li>
+              </ul>
+              <p className="text-gray-700 mb-2">
+                <strong>What GoatCounter does NOT collect:</strong>
+              </p>
+              <ul className="list-disc list-inside text-gray-700 mb-2 ml-4">
+                <li>No cookies are used</li>
+                <li>No personal identifiers or fingerprinting</li>
+                <li>No tracking across sites</li>
+                <li>No IP address storage</li>
+                <li>No advertising profiles</li>
+              </ul>
+              <p className="text-gray-700 text-sm">
+                GoatCounter is GDPR-compliant by design. You can{' '}
+                <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">read their privacy policy</a>.
+              </p>
+            </div>
+
+            <h4 className="text-lg font-semibold text-gray-800 mb-2">2.3 Hosting Metrics (Render.com)</h4>
+            <p className="text-gray-700 mb-3">
+              Our hosting provider (Render.com) collects standard server logs including IP addresses, timestamps, and 
+              request URLs. This is standard for all web hosting and is required for security and abuse prevention. 
+              These logs are not used for tracking or advertising.
+            </p>
+
+            <h4 className="text-lg font-semibold text-gray-800 mb-2">2.4 No Advertising Networks</h4>
             <p className="text-gray-700 mb-3">
               <strong>This site does not use advertising networks or third-party trackers.</strong> To protect veteran 
               privacy, I have intentionally avoided implementing any tracking technologies that could collect 
-              your data. Your searches and browsing activity on this site remain completely private.
+              your personal data or create advertising profiles.
             </p>
           </section>
 
@@ -155,8 +194,9 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
             <h3 className="text-xl font-bold text-gray-800 mb-3">9. Security</h3>
             <p className="text-gray-700 mb-3">
               This application operates entirely client-side and does not transmit or store PII. Your 
-              searches and interactions remain private on your device. No third-party 
-              advertising or tracking services are used that could compromise your privacy.
+              searches and interactions remain private on your device. We use only GoatCounter for 
+              minimal, privacy-respecting analytics. No advertising networks or invasive tracking 
+              services are used.
             </p>
           </section>
 
@@ -179,8 +219,9 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           <div className="bg-green-50 border-l-4 border-green-500 p-4 mt-6">
             <p className="text-sm text-green-800">
               <strong>🛡️ Privacy-First Design:</strong> Vet-Rate.org is built with veteran privacy as a top priority. 
-              This site does not collect, store, or transmit your personal information. No advertising networks 
-              or third-party trackers are used. Your searches and disability research remain completely private.
+              This site does not collect, store, or transmit your personal information. We use only GoatCounter 
+              for minimal, cookie-free analytics. No advertising networks or invasive trackers are used. 
+              Your searches and disability research remain completely private.
             </p>
           </div>
         </div>
