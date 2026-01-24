@@ -6,6 +6,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { searchVSOs, isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * VSOFinder Component
@@ -336,13 +337,21 @@ Be encouraging, informative, and emphasize that legitimate VSO help is FREE.`;
               </p>
               
               <div className="space-y-3">
-                <textarea
-                  value={aiQuestion}
-                  onChange={(e) => setAIQuestion(e.target.value)}
-                  placeholder="Example: What's the difference between a County VSO and a National VSO like DAV?"
-                  className="w-full px-4 py-3 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
-                  rows={3}
-                />
+                <div className="relative">
+                  <textarea
+                    value={aiQuestion}
+                    onChange={(e) => setAIQuestion(e.target.value)}
+                    placeholder="Example: What's the difference between a County VSO and a National VSO like DAV?"
+                    className="w-full px-4 py-3 pr-14 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                    rows={3}
+                  />
+                  <div className="absolute right-3 top-3">
+                    <VoiceInputButton
+                      onTranscript={(text) => setAIQuestion(prev => prev ? `${prev} ${text}` : text)}
+                      size="sm"
+                    />
+                  </div>
+                </div>
                 <button
                   onClick={handleAIQuestion}
                   disabled={isAIThinking || !aiQuestion.trim()}

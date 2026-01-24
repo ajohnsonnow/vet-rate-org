@@ -5,6 +5,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { searchStateBenefits, isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * StateBenefitHunter Component
@@ -507,13 +508,21 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               </p>
               
               <div className="space-y-3">
-                <textarea
-                  value={aiQuestion}
-                  onChange={(e) => setAIQuestion(e.target.value)}
-                  placeholder="Example: What property tax exemptions am I eligible for with my rating? How do I apply?"
-                  className="w-full px-4 py-3 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
-                  rows={3}
-                />
+                <div className="relative">
+                  <textarea
+                    value={aiQuestion}
+                    onChange={(e) => setAIQuestion(e.target.value)}
+                    placeholder="Example: What property tax exemptions am I eligible for with my rating? How do I apply?"
+                    className="w-full px-4 py-3 pr-14 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                    rows={3}
+                  />
+                  <div className="absolute right-3 top-3">
+                    <VoiceInputButton
+                      onTranscript={(text) => setAIQuestion(prev => prev ? `${prev} ${text}` : text)}
+                      size="sm"
+                    />
+                  </div>
+                </div>
                 <button
                   onClick={handleAIConsultation}
                   disabled={isAIThinking || !aiQuestion.trim()}

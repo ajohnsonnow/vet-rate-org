@@ -20,6 +20,7 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import ShareButton from './ShareButton';
 import ReportBugLink from './ReportBugLink';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * Relationship types that affect the interview questions
@@ -774,26 +775,38 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             </h3>
           </div>
           
-          <textarea
-            value={answers[currentQuestion.id] || ''}
-            onChange={(e) => updateAnswer(currentQuestion.id, e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                if (currentQuestionIndex < questions.length - 1) {
-                  setCurrentQuestionIndex(prev => prev + 1);
-                } else if (answeredCount >= 3 && !isGeneratingStatement) {
-                  generateStatement();
+          <div className="relative">
+            <textarea
+              value={answers[currentQuestion.id] || ''}
+              onChange={(e) => updateAnswer(currentQuestion.id, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault();
+                  if (currentQuestionIndex < questions.length - 1) {
+                    setCurrentQuestionIndex(prev => prev + 1);
+                  } else if (answeredCount >= 3 && !isGeneratingStatement) {
+                    generateStatement();
+                  }
                 }
-              }
-            }}
-            placeholder={`${currentQuestion.placeholder}\n\n💡 Tip: Press Ctrl+Enter to advance, Shift+Enter for new line`}
-            rows={6}
-            className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all resize-none"
-          />
+              }}
+              placeholder={`${currentQuestion.placeholder}\n\n💡 Tip: Press Ctrl+Enter to advance, or use the microphone to speak your answer`}
+              rows={6}
+              className="w-full p-4 pr-14 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all resize-none"
+            />
+            {/* Voice Input Button */}
+            <div className="absolute right-3 top-3">
+              <VoiceInputButton
+                onTranscript={(text) => {
+                  const current = answers[currentQuestion.id] || '';
+                  updateAnswer(currentQuestion.id, current ? `${current} ${text}` : text);
+                }}
+                size="md"
+              />
+            </div>
+          </div>
           
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            💡 <strong>Tip:</strong> Be specific! Include exact examples, times, and details you have personally witnessed.
+            🎤 <strong>Voice Input:</strong> Click the microphone to speak your answer. Be specific with examples and details.
           </p>
         </div>
         

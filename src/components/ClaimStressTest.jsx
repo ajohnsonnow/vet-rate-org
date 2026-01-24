@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { getSavedClaims, getStatement, getAllStatements } from '../utils/claimsStorage';
 import { getVeteranProfile, getSavedForms } from '../utils/veteranProfile';
 import ReportBugLink from './ReportBugLink';
+import VoiceInputButton from './VoiceInput';
 
 const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
   const [testResults, setTestResults] = useState(null);
@@ -447,12 +448,20 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
           <label className="block text-gray-300 font-semibold mb-2">
             {hasPacketData ? 'Or paste your text manually:' : 'Paste Your Personal Statement or Nexus Letter:'}
           </label>
-          <textarea
-            value={selectedClaim}
-            onChange={(e) => setSelectedClaim(e.target.value)}
-            placeholder="Paste your claim text here. Include dates, medical terms, and service connection details..."
-            className="w-full h-48 bg-gray-800 border border-gray-700 rounded p-3 text-white resize-none focus:border-red-500 focus:outline-none"
-          />
+          <div className="relative">
+            <textarea
+              value={selectedClaim}
+              onChange={(e) => setSelectedClaim(e.target.value)}
+              placeholder="Paste your claim text here, or use the microphone to speak. Include dates, medical terms, and service connection details..."
+              className="w-full h-48 bg-gray-800 border border-gray-700 rounded p-3 pr-14 text-white resize-none focus:border-red-500 focus:outline-none"
+            />
+            <div className="absolute right-3 top-3">
+              <VoiceInputButton
+                onTranscript={(text) => setSelectedClaim(prev => prev ? `${prev} ${text}` : text)}
+                size="md"
+              />
+            </div>
+          </div>
           
           <button
             onClick={runStressTest}
@@ -525,14 +534,22 @@ const ClaimStressTest = ({ claimData = {}, onClose, onReportBug }) => {
                   {/* Practice Answer */}
                   <div>
                     <label className="block text-gray-400 text-sm mb-1">
-                      Your Practice Answer:
+                      Your Practice Answer (use microphone to speak):
                     </label>
-                    <textarea
-                      value={practiceAnswers[idx] || ''}
-                      onChange={(e) => handleAnswerChange(idx, e.target.value)}
-                      placeholder="Type your response here. Be specific, provide dates, and reference evidence..."
-                      className="w-full h-24 bg-gray-700 border border-gray-600 rounded p-2 text-white text-sm resize-none focus:border-yellow-500 focus:outline-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={practiceAnswers[idx] || ''}
+                        onChange={(e) => handleAnswerChange(idx, e.target.value)}
+                        placeholder="Type or speak your response. Be specific, provide dates, and reference evidence..."
+                        className="w-full h-24 bg-gray-700 border border-gray-600 rounded p-2 pr-12 text-white text-sm resize-none focus:border-yellow-500 focus:outline-none"
+                      />
+                      <div className="absolute right-2 top-2">
+                        <VoiceInputButton
+                          onTranscript={(text) => handleAnswerChange(idx, (practiceAnswers[idx] || '') + (practiceAnswers[idx] ? ' ' : '') + text)}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
