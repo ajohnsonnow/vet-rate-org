@@ -7,6 +7,7 @@ import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIServi
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import { analyzePDF, OCR_STATES, formatFileSize } from '../utils/ocr';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * RedTeam Component - "The Statement Stress Test"
@@ -306,17 +307,25 @@ const RedTeam = ({ onClose, onReportBug }) => {
                 {inputMethod === 'paste' && (
                   <>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      📝 Paste Your Draft Statement
+                      📝 Paste Your Draft Statement (or use microphone to speak)
                     </label>
-                    <textarea
-                      value={draftStatement}
-                      onChange={(e) => setDraftStatement(e.target.value)}
-                      placeholder="Paste your Statement in Support of Claim, Personal Statement, or any written testimony here...
+                    <div className="relative">
+                      <textarea
+                        value={draftStatement}
+                        onChange={(e) => setDraftStatement(e.target.value)}
+                        placeholder="Paste or speak your Statement in Support of Claim, Personal Statement, or any written testimony here...
 
 Example: 'My back hurts sometimes after standing for a while, but I try to push through it. I've learned to manage the pain by taking breaks.'"
-                      rows={12}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                    />
+                        rows={12}
+                        className="w-full px-4 py-3 pr-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                      />
+                      <div className="absolute right-3 top-3">
+                        <VoiceInputButton
+                          onTranscript={(text) => setDraftStatement(prev => prev ? `${prev} ${text}` : text)}
+                          size="md"
+                        />
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {draftStatement.length} characters

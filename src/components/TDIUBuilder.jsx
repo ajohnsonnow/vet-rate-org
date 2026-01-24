@@ -26,6 +26,7 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/un
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import ShareButton from './ShareButton';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * Common disability categories for quick selection
@@ -649,20 +650,28 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Why did you stop working?
             </label>
-            <textarea
-              value={workHistory.reasonLeft}
-              onChange={(e) => setWorkHistory(prev => ({ ...prev, reasonLeft: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                  e.preventDefault();
-                  const nextField = document.querySelector('textarea[placeholder*="tried a desk job"]');
-                  if (nextField) nextField.focus();
-                }
-              }}
-              placeholder="e.g., Back pain made it impossible to stand for my shifts. I had to take too many sick days. (Ctrl+Enter to next field, Shift+Enter for new line)"
-              rows={3}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
-            />
+            <div className="relative">
+              <textarea
+                value={workHistory.reasonLeft}
+                onChange={(e) => setWorkHistory(prev => ({ ...prev, reasonLeft: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    const nextField = document.querySelector('textarea[placeholder*="tried a desk job"]');
+                    if (nextField) nextField.focus();
+                  }
+                }}
+                placeholder="e.g., Back pain made it impossible to stand for my shifts. I had to take too many sick days. (Use mic to speak your answer)"
+                rows={3}
+                className="w-full p-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
+              />
+              <div className="absolute right-2 top-2">
+                <VoiceInputButton
+                  onTranscript={(text) => setWorkHistory(prev => ({ ...prev, reasonLeft: prev.reasonLeft ? `${prev.reasonLeft} ${text}` : text }))}
+                  size="sm"
+                />
+              </div>
+            </div>
           </div>
           
           <div>
@@ -688,21 +697,29 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Have you tried to work since leaving your last job? What happened?
             </label>
-            <textarea
-              value={workHistory.triedToWork}
-              onChange={(e) => setWorkHistory(prev => ({ ...prev, triedToWork: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                  e.preventDefault();
-                  if (disabilities.length > 0 && step === 2) {
-                    handleGenerate();
+            <div className="relative">
+              <textarea
+                value={workHistory.triedToWork}
+                onChange={(e) => setWorkHistory(prev => ({ ...prev, triedToWork: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    if (disabilities.length > 0 && step === 2) {
+                      handleGenerate();
+                    }
                   }
-                }
-              }}
-              placeholder="e.g., I tried a desk job but couldn't sit for more than 15 minutes without severe pain. (Ctrl+Enter to generate analysis, Shift+Enter for new line)"
-              rows={3}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
-            />
+                }}
+                placeholder="e.g., I tried a desk job but couldn't sit for more than 15 minutes without severe pain. (Use mic to speak your answer)"
+                rows={3}
+                className="w-full p-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 resize-none"
+              />
+              <div className="absolute right-2 top-2">
+                <VoiceInputButton
+                  onTranscript={(text) => setWorkHistory(prev => ({ ...prev, triedToWork: prev.triedToWork ? `${prev.triedToWork} ${text}` : text }))}
+                  size="sm"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

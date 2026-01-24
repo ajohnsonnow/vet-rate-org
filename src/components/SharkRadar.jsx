@@ -16,6 +16,7 @@ import {
 } from '../utils/sharkRadar';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import VoiceInputButton from './VoiceInput';
 
 // Icons
 const SharkIcon = () => (
@@ -251,20 +252,28 @@ export default function SharkRadar() {
           {/* Input Section */}
           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-600 mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Paste Contract or Email Text
+              Paste Contract or Email Text (or use microphone to read aloud)
             </label>
-            <textarea
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Paste the contract, agreement, email, or marketing material from a VA claim consulting company here...
+            <div className="relative">
+              <textarea
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Paste the contract, agreement, email, or marketing material from a VA claim consulting company here...
 
 Example red flags to look for:
 • 'We charge 5x your monthly increase'
 • 'Provide your VA.gov login credentials'
 • 'Guaranteed 100% rating'
 • 'Pay $3,000 upfront to start'"
-              className="w-full h-64 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-            />
+                className="w-full h-64 px-4 py-3 pr-14 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              />
+              <div className="absolute right-3 top-3">
+                <VoiceInputButton
+                  onTranscript={(text) => setTextInput(prev => prev ? `${prev} ${text}` : text)}
+                  size="md"
+                />
+              </div>
+            </div>
             
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">

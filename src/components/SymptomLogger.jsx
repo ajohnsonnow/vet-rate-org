@@ -7,6 +7,7 @@ import { FocusToggle } from '../contexts/FocusModeContext';
 import ShareButton from './ShareButton';
 import { generateAI, getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
+import VoiceInputButton from './VoiceInput';
 
 /**
  * SymptomLogger Component - "The 50% Maker"
@@ -1153,19 +1154,25 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                       <textarea
                         value={newLog.notes}
                         onChange={(e) => setNewLog(prev => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Describe what happened, impact on your day, etc."
+                        placeholder="Describe what happened, impact on your day, etc. Use the microphone to speak."
                         rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
+                        className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 resize-none"
                       />
-                      {aiStatus.available && (
-                        <button
-                          onClick={() => generateAISuggestion('notes')}
-                          disabled={isAIGenerating === 'notes'}
-                          className="absolute right-2 top-2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
-                        >
-                          {isAIGenerating === 'notes' ? '...' : '✨ AI Notes'}
-                        </button>
-                      )}
+                      <div className="absolute right-2 top-2 flex gap-1">
+                        <VoiceInputButton
+                          onTranscript={(text) => setNewLog(prev => ({ ...prev, notes: prev.notes ? `${prev.notes} ${text}` : text }))}
+                          size="sm"
+                        />
+                        {aiStatus.available && (
+                          <button
+                            onClick={() => generateAISuggestion('notes')}
+                            disabled={isAIGenerating === 'notes'}
+                            className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
+                          >
+                            {isAIGenerating === 'notes' ? '...' : '✨ AI'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     {aiError && (
                       <p className="text-xs text-red-500 mt-1">{aiError}</p>
