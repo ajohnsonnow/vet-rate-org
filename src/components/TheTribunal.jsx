@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getVeteranProfile } from '../utils/veteranProfile';
 import { getSavedClaims } from '../utils/claimsStorage';
 import { generateAI, getAIStatus } from '../utils/unifiedAIService';
@@ -73,7 +74,8 @@ const TRIBUNAL_QUESTIONS = [
   }
 ];
 
-export default function TheTribunal({ onClose, onReportBug }) {
+export default function TheTribunal({ onClose, onReportBug, onOpenAISettings }) {
+  const { t } = useLanguage();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);

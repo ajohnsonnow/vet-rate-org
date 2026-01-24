@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
@@ -203,7 +204,8 @@ const getTemplateImpact = (condition, symptom) => {
   return `This functional limitation significantly impacts the veteran's ability to perform essential job functions in a competitive employment environment.`;
 };
 
-export default function TDIUBuilder({ onClose, onReportBug }) {
+export default function TDIUBuilder({ onClose, onReportBug, onOpenAISettings }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   
