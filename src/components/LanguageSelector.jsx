@@ -18,6 +18,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSuggestionModal from './LanguageSuggestionModal';
 import VeteranTranslator from './VeteranTranslator';
+import FlagIcon from './FlagIcon';
 
 // Language regions for organized display
 const LANGUAGE_REGIONS = [
@@ -38,6 +39,7 @@ const LANGUAGE_REGIONS = [
  * @param {boolean} showNativeName - Show native language name
  * @param {boolean} groupByRegion - Group languages by region (default true for dropdown)
  * @param {string} className - Additional CSS classes
+ * @param {function} onReportBug - Handler for bug reporting (passed to child modals)
  */
 const LanguageSelector = ({ 
   variant = 'dropdown', 
@@ -45,6 +47,7 @@ const LanguageSelector = ({
   showNativeName = true,
   groupByRegion = true,
   className = '',
+  onReportBug,
 }) => {
   const { language, setLanguage, getCurrentLanguage, getAvailableLanguages, t, SUPPORTED_LANGUAGES } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -97,7 +100,7 @@ const LanguageSelector = ({
           aria-label={t('language', 'selectLanguage')}
           title={`Language: ${currentLang.nativeName} (Click to change)`}
         >
-          {showFlag && <span className="text-lg">{currentLang.flag}</span>}
+          {showFlag && <FlagIcon langCode={language} size="sm" fallbackEmoji={currentLang.flag} />}
           <span className="text-sm font-semibold text-white uppercase">{language}</span>
           <svg className="w-3 h-3 text-cyan-200 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -143,7 +146,9 @@ const LanguageSelector = ({
                           className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                      transition-colors ${language === lang.code ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-300'}`}
                         >
-                          <span className="text-lg w-6 text-center">{lang.flag}</span>
+                          <span className="w-6 flex items-center justify-center">
+                            <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />
+                          </span>
                           <div className="flex-1 min-w-0">
                             <span className="text-sm truncate block">{lang.nativeName}</span>
                             {lang.name !== lang.nativeName && (
@@ -168,7 +173,7 @@ const LanguageSelector = ({
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 
                                transition-colors ${language === lang.code ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-300'}`}
                   >
-                    <span className="text-lg">{lang.flag}</span>
+                    <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />
                     <span className="text-sm">{lang.nativeName}</span>
                     {language === lang.code && (
                       <svg className="w-4 h-4 ml-auto text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +182,7 @@ const LanguageSelector = ({
                     )}
                   </button>
                 ))
-              )}
+              )}}
               
               {filteredLanguages.length === 0 && (
                 <div className="px-3 py-4 text-center text-gray-500 text-sm">
@@ -215,11 +220,13 @@ const LanguageSelector = ({
         {/* Modals */}
         <LanguageSuggestionModal 
           isOpen={showSuggestionModal} 
-          onClose={() => setShowSuggestionModal(false)} 
+          onClose={() => setShowSuggestionModal(false)}
+          onReportBug={onReportBug}
         />
         <VeteranTranslator 
           isOpen={showTranslator} 
-          onClose={() => setShowTranslator(false)} 
+          onClose={() => setShowTranslator(false)}
+          onReportBug={onReportBug}
         />
       </div>
     );
@@ -240,7 +247,7 @@ const LanguageSelector = ({
                          ? 'bg-cyan-900/30 border-cyan-500 text-cyan-300' 
                          : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'}`}
           >
-            {showFlag && <span className="text-lg">{lang.flag}</span>}
+            {showFlag && <FlagIcon langCode={lang.code} size="sm" fallbackEmoji={lang.flag} />}
             <span className="text-sm font-medium">{showNativeName ? lang.nativeName : lang.name}</span>
           </button>
         ))}
@@ -265,7 +272,7 @@ const LanguageSelector = ({
                    border border-gray-700 hover:border-cyan-500/50 transition-all w-full"
         aria-label={t('language', 'selectLanguage')}
       >
-        {showFlag && <span className="text-2xl">{currentLang.flag}</span>}
+        {showFlag && <FlagIcon langCode={language} size="lg" fallbackEmoji={currentLang.flag} />}
         <div className="flex-1 text-left">
           <div className="text-white font-medium">{currentLang.nativeName}</div>
           {showNativeName && currentLang.name !== currentLang.nativeName && (
@@ -320,7 +327,7 @@ const LanguageSelector = ({
                       className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-800 
                                  transition-colors ${language === lang.code ? 'bg-cyan-900/20' : ''}`}
                     >
-                      <span className="text-2xl">{lang.flag}</span>
+                      <FlagIcon langCode={lang.code} size="lg" fallbackEmoji={lang.flag} />
                       <div className="flex-1">
                         <div className={`font-medium ${language === lang.code ? 'text-cyan-400' : 'text-white'}`}>
                           {lang.nativeName}
@@ -378,11 +385,13 @@ const LanguageSelector = ({
       {/* Modals */}
       <LanguageSuggestionModal 
         isOpen={showSuggestionModal} 
-        onClose={() => setShowSuggestionModal(false)} 
+        onClose={() => setShowSuggestionModal(false)}
+        onReportBug={onReportBug}
       />
       <VeteranTranslator 
         isOpen={showTranslator} 
-        onClose={() => setShowTranslator(false)} 
+        onClose={() => setShowTranslator(false)}
+        onReportBug={onReportBug}
       />
     </div>
   );
