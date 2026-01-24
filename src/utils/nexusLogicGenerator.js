@@ -87,7 +87,8 @@ Explain how the primary condition causes or aggravates the secondary condition.`
     const response = await generateAI(userPrompt, {
       temperature: 0.3,
       maxTokens: 4096,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // Nexus research returns medical mechanisms, not diagnostic codes
     });
     
     // generateAI returns { text, mode } object - extract the text content

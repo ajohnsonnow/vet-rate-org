@@ -35,55 +35,55 @@ import {
 } from 'lucide-react';
 import { searchForms, formatForms } from '../api/vaSandbox';
 
-// Common DBQ categories for quick access
+// Common DBQ categories for quick access - translation keys
 const DBQ_CATEGORIES = [
   { 
-    label: 'Mental Health', 
+    labelKey: 'catMentalHealth', 
     queries: ['PTSD', 'Mental Disorders', 'Eating Disorders', 'TBI'],
     icon: '🧠',
-    description: 'Depression, PTSD, anxiety, TBI, and other psychological conditions'
+    descKey: 'catMentalHealthDesc'
   },
   { 
-    label: 'Musculoskeletal', 
+    labelKey: 'catMusculoskeletal', 
     queries: ['Knee', 'Back', 'Shoulder', 'Neck', 'Hip', 'Ankle', 'Wrist'],
     icon: '🦴',
-    description: 'Joint conditions, range of motion, arthritis, spine issues'
+    descKey: 'catMusculoskeletalDesc'
   },
   { 
-    label: 'Respiratory', 
+    labelKey: 'catRespiratory', 
     queries: ['Sleep Apnea', 'Respiratory', 'Sinusitis', 'Rhinitis'],
     icon: '🫁',
-    description: 'Sleep apnea, breathing conditions, sinus problems'
+    descKey: 'catRespiratoryDesc'
   },
   { 
-    label: 'Cardiovascular', 
+    labelKey: 'catCardiovascular', 
     queries: ['Heart', 'Hypertension', 'Artery'],
     icon: '❤️',
-    description: 'Heart conditions, high blood pressure, circulation'
+    descKey: 'catCardiovascularDesc'
   },
   { 
-    label: 'Neurological', 
+    labelKey: 'catNeurological', 
     queries: ['Headaches', 'Migraine', 'Peripheral Nerves', 'Seizures'],
     icon: '⚡',
-    description: 'Migraines, nerve damage, seizures, neuropathy'
+    descKey: 'catNeurologicalDesc'
   },
   { 
-    label: 'Digestive', 
+    labelKey: 'catDigestive', 
     queries: ['GERD', 'Intestinal', 'Liver', 'Stomach'],
     icon: '🩺',
-    description: 'GERD, IBS, liver conditions, digestive disorders'
+    descKey: 'catDigestiveDesc'
   },
   { 
-    label: 'Skin', 
+    labelKey: 'catSkin', 
     queries: ['Skin Diseases', 'Scars', 'Burns'],
     icon: '🩹',
-    description: 'Skin conditions, scars, burn injuries'
+    descKey: 'catSkinDesc'
   },
   { 
-    label: 'Hearing/Vision', 
+    labelKey: 'catHearingVision', 
     queries: ['Hearing Loss', 'Tinnitus', 'Eye', 'Vision'],
     icon: '👁️',
-    description: 'Hearing loss, tinnitus, eye conditions'
+    descKey: 'catHearingVisionDesc'
   },
 ];
 
@@ -149,7 +149,7 @@ const DbqFinder = ({ onClose }) => {
   // Search for DBQ forms
   const handleSearch = useCallback(async (query) => {
     if (!query || query.length < 2) {
-      setError('Please enter at least 2 characters to search');
+      setError(t('dbqFinder', 'minCharsError'));
       return;
     }
 
@@ -169,11 +169,11 @@ const DbqFinder = ({ onClose }) => {
       saveRecentSearch(query);
       
       if (sorted.length === 0) {
-        setError(`No DBQ forms found for "${query}". Try a different search term or browse categories below.`);
+        setError(t('dbqFinder', 'noResultsError').replace('{query}', query));
       }
     } catch (err) {
       console.error('[DBQ Finder] Search error:', err);
-      setError(err.message || 'Failed to search forms. Please try again.');
+      setError(err.message || t('dbqFinder', 'searchError'));
     } finally {
       setIsLoading(false);
     }
@@ -209,9 +209,9 @@ const DbqFinder = ({ onClose }) => {
               <FileSearch className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">DBQ Finder <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+              <h2 className="text-2xl font-bold">{t('dbqFinder', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span></h2>
               <p className="text-teal-100 text-sm">
-                Find the right Disability Benefits Questionnaire for your condition
+                {t('dbqFinder', 'subtitle')}
               </p>
             </div>
           </div>
@@ -225,16 +225,13 @@ const DbqFinder = ({ onClose }) => {
               <div className="flex items-start gap-3">
                 <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-bold text-amber-800 dark:text-amber-200 mb-1">What is a DBQ?</h3>
-                  <p className="text-sm text-amber-700 dark:text-amber-300">
-                    A <strong>Disability Benefits Questionnaire (DBQ)</strong> is a standardized VA form that your 
-                    private doctor can fill out to document your condition. Having a completed DBQ can 
-                    <strong> eliminate the need for a VA C&P exam</strong> and speeds up your claim.
-                  </p>
+                  <h3 className="font-bold text-amber-800 dark:text-amber-200 mb-1">{t('dbqFinder', 'whatIsDbq')}</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300" dangerouslySetInnerHTML={{ __html: t('dbqFinder', 'dbqDescription') }} />
                 </div>
                 <button 
                   onClick={() => setShowInfo(false)}
                   className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
+                  aria-label={t('common', 'close')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -250,7 +247,7 @@ const DbqFinder = ({ onClose }) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by condition (e.g., Sleep Apnea, PTSD, Knee Pain...)"
+                placeholder={t('dbqFinder', 'searchPlaceholder')}
                 className="w-full pl-12 pr-24 py-4 text-lg rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-teal-500 dark:focus:border-teal-400 focus:outline-none transition-colors"
               />
               <button
@@ -263,7 +260,7 @@ const DbqFinder = ({ onClose }) => {
                 ) : (
                   <Search className="w-4 h-4" />
                 )}
-                Search
+                {t('common', 'search')}
               </button>
             </div>
           </form>
@@ -271,7 +268,7 @@ const DbqFinder = ({ onClose }) => {
           {/* Recent Searches */}
           {recentSearches.length > 0 && !results.length && !isLoading && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Recent Searches</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t('dbqFinder', 'recentSearches')}</h3>
               <div className="flex flex-wrap gap-2">
                 {recentSearches.map((search, idx) => (
                   <button
@@ -299,7 +296,7 @@ const DbqFinder = ({ onClose }) => {
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                Found {results.length} DBQ Form{results.length !== 1 ? 's' : ''}
+                {t('dbqFinder', 'foundForms').replace('{count}', results.length).replace('{s}', results.length !== 1 ? 's' : '')}
               </h3>
               <div className="space-y-3">
                 {results.map((form, idx) => (
@@ -316,7 +313,7 @@ const DbqFinder = ({ onClose }) => {
                           {form.name?.startsWith('21-0960') && (
                             <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-medium rounded flex items-center gap-1">
                               <Sparkles className="w-3 h-3" />
-                              Official DBQ
+                              {t('dbqFinder', 'officialDbq')}
                             </span>
                           )}
                         </div>
@@ -325,7 +322,7 @@ const DbqFinder = ({ onClose }) => {
                         </h4>
                         {form.lastRevision && (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Last Updated: {form.lastRevision} • {form.pages} page{form.pages !== 1 ? 's' : ''}
+                            {t('dbqFinder', 'lastUpdated')}: {form.lastRevision} • {form.pages} {t('dbqFinder', 'pages')}{form.pages !== 1 ? '' : ''}
                           </p>
                         )}
                       </div>
@@ -338,7 +335,7 @@ const DbqFinder = ({ onClose }) => {
                             className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
                           >
                             <Download className="w-4 h-4" />
-                            Download PDF
+                            {t('dbqFinder', 'downloadPdf')}
                           </a>
                         )}
                         {form.formToolUrl && (
@@ -349,7 +346,7 @@ const DbqFinder = ({ onClose }) => {
                             className="flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors text-sm"
                           >
                             <ExternalLink className="w-4 h-4" />
-                            Online Tool
+                            {t('dbqFinder', 'onlineTool')}
                           </a>
                         )}
                       </div>
@@ -370,7 +367,7 @@ const DbqFinder = ({ onClose }) => {
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                Browse by Category
+                {t('dbqFinder', 'browseByCategory')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {DBQ_CATEGORIES.map((category, idx) => (
@@ -385,8 +382,8 @@ const DbqFinder = ({ onClose }) => {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{category.icon}</span>
                         <div className="text-left">
-                          <h4 className="font-semibold text-gray-900 dark:text-white">{category.label}</h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{category.description}</p>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">{t('dbqFinder', category.labelKey)}</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{t('dbqFinder', category.descKey)}</p>
                         </div>
                       </div>
                       {expandedCategory === idx ? (
@@ -422,13 +419,13 @@ const DbqFinder = ({ onClose }) => {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <Info className="w-4 h-4" />
-              <span>Forms fetched directly from VA.gov • Always current</span>
+              <span>{t('dbqFinder', 'footerNote')}</span>
             </div>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              Close
+              {t('common', 'close')}
             </button>
           </div>
         </div>

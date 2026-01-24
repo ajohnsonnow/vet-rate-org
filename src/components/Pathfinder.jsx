@@ -112,7 +112,7 @@ const RATING_OPTIONS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 /**
  * Rating Input Row Component
  */
-const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
+const RatingInput = ({ rating, index, onUpdate, onRemove, t }) => {
   // Ensure we always have defined values for controlled inputs
   const conditionValue = rating.condition || '';
   const ratingValue = rating.rating || '';
@@ -126,7 +126,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
             type="text"
             value={conditionValue}
             onChange={(e) => onUpdate(index, 'condition', e.target.value)}
-            placeholder="Enter condition name..."
+            placeholder={t('pathfinder', 'enterConditionName')}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
           />
         ) : (
@@ -142,7 +142,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
             }}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500"
           >
-            <option value="">Select condition...</option>
+            <option value="">{t('pathfinder', 'selectCondition')}</option>
             {COMMON_CONDITIONS.map(c => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -174,7 +174,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove }) => {
 /**
  * Opportunity Card Component
  */
-const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
+const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam, t }) => {
   const probColors = getProbabilityColors(opportunity.win_probability);
   
   return (
@@ -185,16 +185,16 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
             {opportunity.proposed_condition}
           </h4>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Secondary to: <span className="font-medium">{opportunity.primary_source}</span>
+            {t('pathfinder', 'secondaryTo')} <span className="font-medium">{opportunity.primary_source}</span>
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${probColors.bg} ${probColors.text}`}>
-            {opportunity.win_probability} Probability
+            {opportunity.win_probability} {t('pathfinder', 'probability')}
           </span>
           {opportunity.typical_rating && (
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              Typical: {opportunity.typical_rating}
+              {t('pathfinder', 'typical')} {opportunity.typical_rating}
             </span>
           )}
         </div>
@@ -213,7 +213,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
       {opportunity.evidence_needed && (
         <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-3 mb-3">
           <p className="text-xs text-teal-800 dark:text-teal-300">
-            <strong>Evidence Needed:</strong> {opportunity.evidence_needed}
+            <strong>{t('pathfinder', 'evidenceNeeded')}</strong> {opportunity.evidence_needed}
           </p>
         </div>
       )}
@@ -221,7 +221,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
       {opportunity.next_step && (
         <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-4">
           <p className="text-xs text-green-800 dark:text-green-300">
-            <strong>Next Step:</strong> {opportunity.next_step}
+            <strong>{t('pathfinder', 'nextStep')}</strong> {opportunity.next_step}
           </p>
         </div>
       )}
@@ -231,13 +231,13 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam }) => {
           onClick={() => onBuildNexus(opportunity)}
           className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
         >
-          Build Nexus <ArrowRightIcon />
+          {t('pathfinder', 'buildNexus')} <ArrowRightIcon />
         </button>
         <button
           onClick={() => onPracticeExam(opportunity)}
           className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm"
         >
-          Practice Exam <ArrowRightIcon />
+          {t('pathfinder', 'practiceExam')} <ArrowRightIcon />
         </button>
       </div>
     </div>
@@ -341,7 +341,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
     if (!file) return;
     
     if (!isFileSupported(file)) {
-      setError(`Unsupported file type. Please use PDF, Word (.docx), Text, or RTF files.`);
+      setError(t('pathfinder', 'errorUnsupportedFile'));
       return;
     }
     
@@ -389,7 +389,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
       } else {
         // No structured ratings found, just use the text as context
         setAdditionalContext(result.text);
-        alert(`No structured ratings found in the document. The text has been added as additional context. Please enter your ratings manually.`);
+        alert(t('pathfinder', 'noRatingsExtracted'));
       }
       
       setShowDropInModal(false);
@@ -398,7 +398,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
       
     } catch (err) {
       console.error('File processing error:', err);
-      setError(`Failed to process file: ${err.message}`);
+      setError(`${t('pathfinder', 'errorProcessingFile')} ${err.message}`);
     } finally {
       setIsProcessingFile(false);
     }
@@ -414,7 +414,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
       }));
       setRatings(formatted);
     } else {
-      alert('No saved ratings found. Use "Paste from VA.gov" or enter ratings in Secondary Scout first.');
+      alert(t('pathfinder', 'errorNoSavedRatings'));
     }
   };
   
@@ -442,13 +442,13 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
     const validRatings = ratings.filter(r => r.condition.trim());
     
     if (validRatings.length === 0) {
-      setError('Please add at least one current rating');
+      setError(t('pathfinder', 'errorAddRating'));
       return;
     }
     
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
-      setError('No AI available. Please set up an API key or enable Local AI in settings.');
+      setError(t('pathfinder', 'errorNoAI'));
       setShowAISettings(true);
       return;
     }
@@ -505,10 +505,9 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
           <LLMRecommendationBadge toolId="pathfinder" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">The Pathfinder</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('pathfinder', 'title')}</h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Strategic claims analysis powered by AI. Enter your current ratings and discover 
-          high-probability secondary claims you may be missing.
+          {t('pathfinder', 'subtitle')}
         </p>
       </div>
       
@@ -519,9 +518,9 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full mb-3">
               <TargetIcon />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Privacy First</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{t('pathfinder', 'privacyFirst')}</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Before analyzing, please review how we protect your information.
+              {t('pathfinder', 'privacyReviewPrompt')}
             </p>
           </div>
           
@@ -533,7 +532,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             onClick={handleConsent}
             className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
           >
-            <CheckIcon /> I Understand, Continue
+            <CheckIcon /> {t('pathfinder', 'iUnderstandContinue')}
           </button>
         </div>
       ) : (
@@ -544,10 +543,9 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               <div className="flex items-start gap-3">
                 <span className="text-xl">💡</span>
                 <div className="text-sm text-amber-900 dark:text-amber-100">
-                  <p className="font-semibold mb-1">AI Required for Analysis</p>
+                  <p className="font-semibold mb-1">{t('pathfinder', 'aiRequiredTitle')}</p>
                   <p className="text-amber-800 dark:text-amber-200">
-                    Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                    (100% private) or enter your Gemini API key.
+                    {t('pathfinder', 'aiRequiredDesc')}
                   </p>
                 </div>
               </div>
@@ -556,7 +554,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
               <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
                 <span>💡</span>
-                <span><strong>Tip:</strong> All AI models analyze your ratings quickly. Strategy generation takes just seconds!</span>
+                <span><strong>{t('pathfinder', 'aiTip')}</strong> {t('pathfinder', 'aiTipText')}</span>
               </div>
             </div>
           )}
@@ -565,7 +563,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Your Current Service-Connected Ratings
+                {t('pathfinder', 'currentRatingsTitle')}
               </h2>
               <div className="flex items-center gap-2">
                 {hasMyRatings() && (
@@ -573,33 +571,33 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                     onClick={handleLoadMyRatings}
                     className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
                   >
-                    📊 Load My Ratings
+                    📊 {t('pathfinder', 'loadMyRatings')}
                   </button>
                 )}
                 <button
                   onClick={() => setShowVAGovPaster(true)}
                   className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
                 >
-                  📋 Paste from VA.gov
+                  📋 {t('pathfinder', 'pasteFromVaGov')}
                 </button>
                 <button
                   onClick={() => setShowDropInModal(true)}
                   className="text-sm px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1.5"
                 >
-                  📄 Drop In File
+                  📄 {t('pathfinder', 'dropInFile')}
                 </button>
                 <button
                   onClick={loadFromPacket}
                   className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
                 >
-                  Load from My Packet
+                  {t('pathfinder', 'loadFromPacket')}
                 </button>
               </div>
             </div>
             
             {loadedFromPacket && (
               <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
-                ✓ Loaded conditions from your saved packet. Add rating percentages if known.
+                ✓ {t('pathfinder', 'loadedFromPacket')}
               </div>
             )}
             
@@ -611,6 +609,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                   index={index}
                   onUpdate={updateRating}
                   onRemove={removeRating}
+                  t={t}
                 />
               ))}
             </div>
@@ -619,18 +618,18 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               onClick={addRating}
               className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:border-teal-500 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
             >
-              <PlusIcon /> Add Another Rating
+              <PlusIcon /> {t('pathfinder', 'addAnotherRating')}
             </button>
             
             {/* Additional Context */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Additional Context (Optional)
+                {t('pathfinder', 'additionalContext')}
               </label>
               <textarea
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder="Symptoms you experience, medications you take, or any other relevant information..."
+                placeholder={t('pathfinder', 'additionalContextPlaceholder')}
                 className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
               />
             </div>
@@ -641,7 +640,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                 onClick={handleClear}
                 className="px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                Clear All
+                {t('pathfinder', 'clearAll')}
               </button>
               <button
                 onClick={handleAnalyze}
@@ -654,11 +653,11 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Analyzing Strategy...
+                    {t('pathfinder', 'analyzingStrategy')}
                   </>
                 ) : (
                   <>
-                    <SparklesIcon /> Analyze My Strategy
+                    <SparklesIcon /> {t('pathfinder', 'analyzeMyStrategy')}
                   </>
                 )}
               </button>
@@ -685,20 +684,20 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                     <ChartIcon />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">Strategy Analysis</h3>
+                    <h3 className="text-xl font-bold mb-2">{t('pathfinder', 'strategyAnalysis')}</h3>
                     <p className="text-white">{results.data.strategy_analysis}</p>
                     
                     {(results.data.current_estimated_combined || results.data.potential_combined) && (
                       <div className="flex gap-6 mt-4">
                         {results.data.current_estimated_combined && (
                           <div>
-                            <div className="text-sm text-white/80">Current Estimated</div>
+                            <div className="text-sm text-white/80">{t('pathfinder', 'currentEstimated')}</div>
                             <div className="text-2xl font-bold">{results.data.current_estimated_combined}</div>
                           </div>
                         )}
                         {results.data.potential_combined && (
                           <div>
-                            <div className="text-sm text-white/80">Potential With Opportunities</div>
+                            <div className="text-sm text-white/80">{t('pathfinder', 'potentialWithOpportunities')}</div>
                             <div className="text-2xl font-bold flex items-center gap-2">
                               {results.data.potential_combined}
                               <TrendingUpIcon />
@@ -715,7 +714,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               {results.data.opportunities && results.data.opportunities.length > 0 && (
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <TargetIcon /> Strategic Opportunities ({results.data.opportunities.length})
+                    <TargetIcon /> {t('pathfinder', 'strategicOpportunities')} ({results.data.opportunities.length})
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     {results.data.opportunities.map((opp, index) => (
@@ -724,6 +723,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                         opportunity={opp}
                         onBuildNexus={handleBuildNexus}
                         onPracticeExam={handlePracticeExam}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -734,7 +734,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               {results.data.missing_diagnoses && results.data.missing_diagnoses.length > 0 && (
                 <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
                   <h3 className="text-lg font-bold text-purple-900 dark:text-purple-200 mb-4 flex items-center gap-2">
-                    <LightbulbIcon /> Potential Undiagnosed Conditions
+                    <LightbulbIcon /> {t('pathfinder', 'potentialUndiagnosedConditions')}
                   </h3>
                   <div className="space-y-4">
                     {results.data.missing_diagnoses.map((item, index) => (
@@ -743,7 +743,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                           {item.condition}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                          Linked to: {item.linked_to}
+                          {t('pathfinder', 'linkedTo')} {item.linked_to}
                         </div>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                           {item.reasoning}
@@ -763,7 +763,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               {results.data.increase_opportunities && results.data.increase_opportunities.length > 0 && (
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
                   <h3 className="text-lg font-bold text-green-900 dark:text-green-200 mb-4 flex items-center gap-2">
-                    <TrendingUpIcon /> Potential Rating Increases
+                    <TrendingUpIcon /> {t('pathfinder', 'potentialRatingIncreases')}
                   </h3>
                   <div className="space-y-4">
                     {results.data.increase_opportunities.map((item, index) => (
@@ -779,10 +779,10 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                           </div>
                         </div>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                          <strong>Criteria:</strong> {item.criteria}
+                          <strong>{t('pathfinder', 'criteria')}</strong> {item.criteria}
                         </p>
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          <strong>Action:</strong> {item.action}
+                          <strong>{t('pathfinder', 'action')}</strong> {item.action}
                         </p>
                       </div>
                     ))}
@@ -794,7 +794,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
               {results.data.strategic_notes && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
                   <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-2">
-                    <InfoIcon /> Strategic Notes
+                    <InfoIcon /> {t('pathfinder', 'strategicNotes')}
                   </h4>
                   <p className="text-sm text-amber-700 dark:text-amber-400">
                     {results.data.strategic_notes}
@@ -808,7 +808,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                   onClick={() => setResults(null)}
                   className="px-6 py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors font-medium"
                 >
-                  Analyze Different Ratings
+                  {t('pathfinder', 'analyzeDifferentRatings')}
                 </button>
               </div>
             </div>
@@ -819,7 +819,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             onClick={() => setShowPrivacy(!showPrivacy)}
             className="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
           >
-            <InfoIcon /> {showPrivacy ? 'Hide' : 'View'} Privacy Information
+            <InfoIcon /> {showPrivacy ? t('pathfinder', 'hidePrivacyInfo') : t('pathfinder', 'viewPrivacyInfo')}
           </button>
           
           {showPrivacy && (
@@ -847,10 +847,10 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  📄 Upload Document
+                  📄 {t('pathfinder', 'uploadDocument')}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Upload VA decision letter, rating sheet, or notes
+                  {t('pathfinder', 'uploadDocumentDesc')}
                 </p>
               </div>
               <button
@@ -876,13 +876,13 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                 >
                   <div className="text-6xl mb-4">📄</div>
                   <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Drop file here or click to browse
+                    {t('pathfinder', 'dropFileHere')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Supports: PDF, Word (.docx), Text, RTF
+                    {t('pathfinder', 'supportsFormats')}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    Maximum file size: 50MB
+                    {t('pathfinder', 'maxFileSize')}
                   </p>
                   <input
                     ref={fileInputRef}
@@ -940,7 +940,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                   {/* Info */}
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      💡 <strong>What happens next:</strong> We'll extract any ratings found in your document and pre-fill the form. You can review and edit before analyzing.
+                      💡 <strong>{t('pathfinder', 'whatHappensNext')}</strong> {t('pathfinder', 'whatHappensNextDesc')}
                     </p>
                   </div>
                   
@@ -953,11 +953,11 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
                     {isProcessingFile ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Processing...
+                        {t('pathfinder', 'processing')}
                       </>
                     ) : (
                       <>
-                        ✨ Extract & Load
+                        ✨ {t('pathfinder', 'extractAndLoad')}
                       </>
                     )}
                   </button>

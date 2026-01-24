@@ -19,46 +19,23 @@ import disabilityData from '../data/disabilityData.json';
 
 /**
  * Strategic tips for specific DBQ question types
+ * Uses translation keys that map to examPrepRoom section
  */
-const STRATEGIC_TIPS = {
-  prostrating: {
-    title: "What 'Prostrating' Really Means",
-    content: "The CFR defines 'prostrating' as attacks so severe you MUST stop all activity and lie down, usually in a dark/quiet room. If you can 'power through' the pain, it's NOT prostrating. Be honest-if you sometimes have to lie down, say that specifically."
-  },
-  rom: {
-    title: "Range of Motion (ROM) Testing",
-    content: "Stop moving EXACTLY when you first feel pain or discomfort. Do NOT push past the pain to show the examiner you're 'trying.' If you demonstrate a full range of motion, they will mark you as 'Normal' regardless of how much it hurts."
-  },
-  flare_ups: {
-    title: "Flare-Ups Matter More Than You Think",
-    content: "The VA rates you based on your WORST flare-ups, not your average day. If your back 'locks up' 3-4 times per year requiring bed rest, that's a flare-up. Document the frequency, duration, and what triggers them."
-  },
-  social_impairment: {
-    title: "Occupational and Social Impairment Keywords",
-    content: "For mental health claims, use these specific terms if they apply to you: 'panic attacks,' 'memory loss,' 'difficulty concentrating,' 'suicidal ideation,' 'neglecting hygiene,' 'inability to establish relationships.' These are the exact phrases in the rating criteria."
-  },
-  medication_side_effects: {
-    title: "Medication Side Effects Count",
-    content: "The medications you take for your service-connected condition can affect your rating. Mention side effects like: drowsiness affecting work, weight gain, sexual dysfunction, GI distress. These are 'residuals of treatment' and factor into your rating."
-  },
-  sleep_disturbance: {
-    title: "Sleep Issues Are Powerful Evidence",
-    content: "Chronic sleep impairment affects nearly every condition rating. Be specific: How many hours do you sleep? Do you wake up? How often? Do you have nightmares? Sleep separately from your spouse? This impacts both mental and physical ratings."
-  },
-  frequency: {
-    title: "Frequency Determines Your Rating",
-    content: "Don't just say 'often' or 'sometimes.' The examiner needs specifics: 'Once per month,' 'Three times per week,' '10-15 episodes per year.' Keep a symptom log for 30 days before your exam if possible."
-  },
-  loss_of_use: {
-    title: "Loss of Use = Higher Rating",
-    content: "If you can't perform a specific function (e.g., can't grip tools, can't squat, can't climb stairs), say that explicitly. Partial loss of use still qualifies. Example: 'I can no longer tie my shoes without assistance' is more powerful than 'My hands hurt.'"
-  }
+const STRATEGIC_TIPS_KEYS = {
+  prostrating: { titleKey: 'tipProstrating', contentKey: 'tipProstrationContent' },
+  rom: { titleKey: 'tipRom', contentKey: 'tipRomContent' },
+  flare_ups: { titleKey: 'tipFlareUps', contentKey: 'tipFlareUpsContent' },
+  social_impairment: { titleKey: 'tipSocialImpairment', contentKey: 'tipSocialImpairmentContent' },
+  medication_side_effects: { titleKey: 'tipMedicationSideEffects', contentKey: 'tipMedicationSideEffectsContent' },
+  sleep_disturbance: { titleKey: 'tipSleepDisturbance', contentKey: 'tipSleepDisturbanceContent' },
+  frequency: { titleKey: 'tipFrequency', contentKey: 'tipFrequencyContent' },
+  loss_of_use: { titleKey: 'tipLossOfUse', contentKey: 'tipLossOfUseContent' }
 };
 
 /**
- * Map condition types to relevant strategic tips
+ * Map condition types to relevant strategic tips keys
  */
-const getTipsForCondition = (conditionType) => {
+const getTipsKeysForCondition = (conditionType) => {
   const tipMap = {
     migraines: ['prostrating', 'frequency', 'medication_side_effects', 'social_impairment'],
     mental_health: ['social_impairment', 'sleep_disturbance', 'frequency', 'medication_side_effects'],
@@ -104,8 +81,8 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
       setCurrentDBQ(dbq);
       
       // Determine relevant tips based on condition type
-      const tips = getTipsForCondition(selectedCondition);
-      setRelevantTips(tips.map(tipKey => ({ key: tipKey, ...STRATEGIC_TIPS[tipKey] })));
+      const tipKeys = getTipsKeysForCondition(selectedCondition);
+      setRelevantTips(tipKeys.map(tipKey => ({ key: tipKey, ...STRATEGIC_TIPS_KEYS[tipKey] })));
     } else {
       setCurrentDBQ(null);
       setRelevantTips([]);
@@ -133,16 +110,15 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
           <div className="text-4xl">📋</div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-cyan-300 mb-2">
-              The Open Book Test
+              {t('examPrepRoom', 'openBookTest')}
             </h2>
             <p className="text-gray-300 text-lg mb-4">
-              Your C&P examiner isn't improvising-they're checking boxes on a standardized form called a{' '}
-              <span className="font-bold text-white">Disability Benefits Questionnaire (DBQ)</span>.
+              {t('examPrepRoom', 'openBookDescription1')}{' '}
+              <span className="font-bold text-white">{t('examPrepRoom', 'dbqFull')}</span>.
             </p>
             <p className="text-gray-300">
-              This tool shows you the <span className="font-bold text-cyan-300">exact questions</span> they'll ask 
-              and <span className="font-bold text-cyan-300">strategic tips</span> on how to answer honestly without 
-              underselling your symptoms.
+              {t('examPrepRoom', 'openBookDescription2')} <span className="font-bold text-cyan-300">{t('examPrepRoom', 'exactQuestions')}</span> {t('examPrepRoom', 'theyWillAskAnd')}{' '}
+              <span className="font-bold text-cyan-300">{t('examPrepRoom', 'strategicTips')}</span> {t('examPrepRoom', 'howToAnswerHonestly')}
             </p>
           </div>
         </div>
@@ -151,13 +127,13 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
       {/* Search Bar */}
       <div>
         <label className="block text-sm font-semibold text-gray-300 mb-2">
-          Search for your condition:
+          {t('examPrepRoom', 'searchForCondition')}
         </label>
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="e.g., PTSD, Knee, Tinnitus, Migraine..."
+          placeholder={t('examPrepRoom', 'searchPlaceholder')}
           className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
       </div>
@@ -165,7 +141,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
       {/* Condition List */}
       <div>
         <h3 className="text-lg font-bold text-gray-200 mb-3">
-          Select a condition ({filteredConditions.length} available):
+          {t('examPrepRoom', 'selectCondition')} ({filteredConditions.length} {t('examPrepRoom', 'available')}):
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
           {filteredConditions.map((cond) => (
@@ -188,8 +164,8 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
       {filteredConditions.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-4">🔍</div>
-          <p>No conditions found matching "{searchTerm}"</p>
-          <p className="text-sm mt-2">Try a different search term or browse all conditions above.</p>
+          <p>{t('examPrepRoom', 'noConditionsFound')} "{searchTerm}"</p>
+          <p className="text-sm mt-2">{t('examPrepRoom', 'tryDifferentSearch')}</p>
         </div>
       )}
     </div>
@@ -208,13 +184,13 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               onClick={handleBack}
               className="text-cyan-400 hover:text-cyan-300 text-sm mb-2 flex items-center gap-2"
             >
-              ← Back to condition list
+              {t('examPrepRoom', 'backToConditionList')}
             </button>
             <h2 className="text-2xl font-bold text-white mb-1">
-              {currentDBQ.condition_name} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+              {currentDBQ.condition_name} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span>
             </h2>
             <p className="text-sm text-gray-400">
-              Diagnostic Code: {currentDBQ.diagnostic_code} • {currentDBQ.cfr_reference}
+              {t('examPrepRoom', 'diagnosticCode')}: {currentDBQ.diagnostic_code} • {currentDBQ.cfr_reference}
             </p>
           </div>
         </div>
@@ -226,10 +202,10 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               <div className="text-3xl">💡</div>
               <div>
                 <h3 className="text-xl font-bold text-yellow-300 mb-2">
-                  Strategic Tips for This Condition
+                  {t('examPrepRoom', 'strategicTipsForCondition')}
                 </h3>
                 <p className="text-gray-300 text-sm">
-                  These tips help you answer honestly while ensuring the examiner understands the full impact of your condition.
+                  {t('examPrepRoom', 'tipsHelpYouAnswer')}
                 </p>
               </div>
             </div>
@@ -237,10 +213,10 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               {relevantTips.map((tip) => (
                 <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
                   <h4 className="font-bold text-yellow-200 mb-2">
-                    ⚠️ {tip.title}
+                    ⚠️ {t('examPrepRoom', tip.titleKey)}
                   </h4>
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    {tip.content}
+                    {t('examPrepRoom', tip.contentKey)}
                   </p>
                 </div>
               ))}
@@ -252,10 +228,10 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {currentDBQ.tipping_points && currentDBQ.tipping_points.length > 0 && (
           <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
             <h3 className="text-xl font-bold text-cyan-300 mb-4">
-              📋 Questions the Examiner Will Ask
+              📋 {t('examPrepRoom', 'questionsExaminerWillAsk')}
             </h3>
             <p className="text-gray-400 text-sm mb-6">
-              These are the actual questions from the DBQ form. Click each one to see what the examiner is really looking for.
+              {t('examPrepRoom', 'actualQuestionsFromDBQ')}
             </p>
             <div className="space-y-3">
               {currentDBQ.tipping_points.map((q, index) => (
@@ -274,7 +250,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       </div>
                       {q.required && (
                         <span className="inline-block mt-2 text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded">
-                          Required Question
+                          {t('examPrepRoom', 'requiredQuestion')}
                         </span>
                       )}
                     </div>
@@ -288,7 +264,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {/* Intent */}
                       <div>
                         <h4 className="text-sm font-bold text-yellow-300 mb-2">
-                          🎯 What They're Really Looking For:
+                          🎯 {t('examPrepRoom', 'whatTheyReallyLookingFor')}
                         </h4>
                         <p className="text-gray-300 text-sm leading-relaxed">
                           {q.intent}
@@ -299,7 +275,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {q.definition && (
                         <div>
                           <h4 className="text-sm font-bold text-blue-300 mb-2">
-                            📖 Official Definition:
+                            📖 {t('examPrepRoom', 'officialDefinition')}
                           </h4>
                           <p className="text-gray-300 text-sm leading-relaxed">
                             {q.definition}
@@ -311,7 +287,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {q.options && q.options.length > 0 && (
                         <div>
                           <h4 className="text-sm font-bold text-green-300 mb-2">
-                            ✅ Possible Answers:
+                            ✅ {t('examPrepRoom', 'possibleAnswers')}
                           </h4>
                           <div className="space-y-2">
                             {q.options.map((opt, i) => (
@@ -334,7 +310,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                                   <p className="text-white font-medium">{opt.label}</p>
                                   {opt.weight > 0 && (
                                     <p className="text-xs text-gray-400 mt-1">
-                                      Impact level: {opt.weight}/3
+                                      {t('examPrepRoom', 'impactLevel')}: {opt.weight}/3
                                     </p>
                                   )}
                                 </div>
@@ -354,7 +330,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {/* Additional Notes Section */}
         {currentDBQ.notes && (
           <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
-            <h4 className="font-bold text-blue-300 mb-2">📝 Important Notes:</h4>
+            <h4 className="font-bold text-blue-300 mb-2">📝 {t('examPrepRoom', 'importantNotes')}</h4>
             <p className="text-gray-300 text-sm">{currentDBQ.notes}</p>
           </div>
         )}
@@ -362,24 +338,23 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {/* Bottom CTA */}
         <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
           <h3 className="text-lg font-bold text-cyan-300 mb-3">
-            Ready for Your Exam
+            {t('examPrepRoom', 'readyForExam')}
           </h3>
           <p className="text-gray-300 mb-4">
-            Now you know exactly what questions are coming. Walk in prepared, answer honestly, and don't undersell 
-            your symptoms. The examiner is checking boxes-make sure they check the right ones.
+            {t('examPrepRoom', 'readyDescription')}
           </p>
           <div className="flex gap-3">
             <button
               onClick={handleBack}
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
-              ← View Another Condition
+              {t('examPrepRoom', 'viewAnotherCondition')}
             </button>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
             >
-              Close Prep Room
+              {t('examPrepRoom', 'closePrepRoom')}
             </button>
           </div>
         </div>
@@ -396,17 +371,17 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
             <div className="text-3xl">📋</div>
             <div>
               <h1 className="text-xl font-bold text-white">
-                Exam Prep Room
+                {t('examPrepRoom', 'title')}
               </h1>
               <p className="text-cyan-100 text-sm">
-                See the DBQ before the examiner does
+                {t('examPrepRoom', 'subtitle')}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
-            aria-label="Close"
+            aria-label={t('common', 'close')}
           >
             ×
           </button>

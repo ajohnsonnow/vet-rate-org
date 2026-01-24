@@ -1025,7 +1025,8 @@ export const searchStateBenefits = async (state, rating) => {
     const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // State benefits JSON doesn't contain diagnostic codes
     });
     
     // generateAI returns { text, mode } object - extract the text content
@@ -1135,7 +1136,8 @@ export const searchVSOs = async (zipCode) => {
     const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // VSO finder JSON doesn't contain diagnostic codes
     });
     
     // generateAI returns { text, mode } object - extract the text content
@@ -1242,7 +1244,8 @@ export const stressTestStatement = async (statement) => {
     const response = await generateAI(prompt, {
       temperature: 0.4,
       maxTokens: 2048,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
     });
     
     // generateAI returns { text, mode } object - extract the text content
@@ -1428,6 +1431,7 @@ export const decodeDecision = async (decisionText) => {
       systemPrompt: 'You are a VA claims expert. Respond only with valid JSON.',
       taskType: 'legal', // Use legal preset for accuracy
       skipValidation: true, // We'll validate the JSON ourselves
+      skipHallucinationCheck: true, // Decision decoder returns plain_english analysis, NOT diagnostic codes
     });
     
     // generateAI returns { text, mode, fallback?, fallbackReason?, note? } object
@@ -1460,7 +1464,8 @@ export const decodeDecision = async (decisionText) => {
       }
       
       // Check if response is an error message (not JSON)
-      if (cleanedText.startsWith('[') && !cleanedText.startsWith('[{')) {
+      // Note: '[]' is valid JSON (empty array), so we check specifically for error-like patterns
+      if (cleanedText.startsWith('[') && !cleanedText.startsWith('[{') && cleanedText !== '[]') {
         // Likely an error message like "[Diamond Swarm..."
         console.error('AI returned error message instead of JSON:', cleanedText.substring(0, 200));
         return {

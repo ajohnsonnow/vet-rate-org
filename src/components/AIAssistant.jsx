@@ -20,6 +20,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getTotalToolCount } from '../data/toolkitData';
 import { AIStatusBadge } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
+import { useRedditClipboard } from '../hooks/useRedditClipboard';
+import { autoSummarizeIfLong } from '../utils/redditSummarizer';
 
 const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const { t } = useLanguage();
@@ -40,6 +42,48 @@ const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const { isHelperMode } = useHelperMode();
+  
+  // Reddit-style copy functionality ("Squared Away Standard")
+  const { copyToClipboard } = useRedditClipboard();
+  const [copiedMessageIdx, setCopiedMessageIdx] = useState(null);
+  const [summaryStates, setSummaryStates] = useState({}); // { [idx]: { isSummarizing, summary, error } }
+  
+  // Handler to copy message and show confirmation
+  const handleCopyMessage = async (content, idx) => {
+    const success = await copyToClipboard(content);
+    if (success) {
+      setCopiedMessageIdx(idx);
+      setTimeout(() => setCopiedMessageIdx(null), 2000);
+    }
+  };
+
+  // Handler to summarize a long response
+  const handleSummarize = async (content, idx) => {
+    setSummaryStates(prev => ({ ...prev, [idx]: { isSummarizing: true } }));
+    try {
+      const result = await autoSummarizeIfLong(content, '', { forceSummary: true });
+      setSummaryStates(prev => ({
+        ...prev,
+        [idx]: {
+          isSummarizing: false,
+          summary: result.summary || 'Unable to generate summary.',
+          hasSummary: true
+        }
+      }));
+    } catch (error) {
+      console.error('Summarization error:', error);
+      setSummaryStates(prev => ({
+        ...prev,
+        [idx]: { isSummarizing: false, error: 'Summary failed. Try again.' }
+      }));
+    }
+  };
+
+  // Check if a message is long enough to warrant a summary button
+  const isLongMessage = (content) => {
+    if (!content) return false;
+    return content.trim().split(/\s+/).length > 300;
+  };
 
   // Save position to localStorage when it changes
   useEffect(() => {
@@ -443,12 +487,86 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                     <span className="text-xs opacity-70">
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    {msg.mode && (
-                      <span className="text-xs opacity-70">
-                        {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* Reddit Copy Button - Only for assistant messages */}
+                      {msg.role === 'assistant' && !msg.isError && (
+                        <button
+                          onClick={() => handleCopyMessage(msg.content, idx)}
+                          className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
+                          title="Copy for Reddit (with eCFR links & privacy redaction)"
+                        >
+                          {copiedMessageIdx === idx ? (
+                            <>
+                              <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-green-500">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                              </svg>
+                              <span>Reddit</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {/* Summarize Button - Only for long assistant messages without existing summary */}
+                      {msg.role === 'assistant' && !msg.isError && isLongMessage(msg.content) && !summaryStates[idx]?.hasSummary && (
+                        <button
+                          onClick={() => handleSummarize(msg.content, idx)}
+                          disabled={summaryStates[idx]?.isSummarizing}
+                          className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
+                          title="Generate BLUF summary for Reddit"
+                        >
+                          {summaryStates[idx]?.isSummarizing ? (
+                            <>
+                              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Summarizing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+                              </svg>
+                              <span>BLUF</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {msg.mode && (
+                        <span className="text-xs opacity-70">
+                          {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Summary Section - Shows when BLUF has been generated */}
+                  {summaryStates[idx]?.hasSummary && (
+                    <div className="mt-2 pt-2 border-t border-purple-300 dark:border-purple-700">
+                      <div className="flex items-center gap-1 mb-1">
+                        <svg className="w-3 h-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">BLUF Summary</span>
+                        <button
+                          onClick={() => handleCopyMessage(summaryStates[idx].summary, `summary-${idx}`)}
+                          className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
+                          title="Copy summary for Reddit"
+                        >
+                          {copiedMessageIdx === `summary-${idx}` ? '✓' : '📋'}
+                        </button>
+                      </div>
+                      <div className="text-xs text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/30 rounded p-2">
+                        {summaryStates[idx].summary}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -635,12 +753,86 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
                 <span className="text-xs opacity-70">
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
-                {msg.mode && (
-                  <span className="text-xs opacity-70">
-                    {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Reddit Copy Button - Only for assistant messages */}
+                  {msg.role === 'assistant' && !msg.isError && (
+                    <button
+                      onClick={() => handleCopyMessage(msg.content, idx)}
+                      className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-blue-500 dark:hover:text-blue-400"
+                      title="Copy for Reddit (with eCFR links & privacy redaction)"
+                    >
+                      {copiedMessageIdx === idx ? (
+                        <>
+                          <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-green-500">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          </svg>
+                          <span>Reddit</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {/* Summarize Button - Only for long assistant messages without existing summary */}
+                  {msg.role === 'assistant' && !msg.isError && isLongMessage(msg.content) && !summaryStates[idx]?.hasSummary && (
+                    <button
+                      onClick={() => handleSummarize(msg.content, idx)}
+                      disabled={summaryStates[idx]?.isSummarizing}
+                      className="text-xs opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1 hover:text-purple-500 dark:hover:text-purple-400 disabled:opacity-50"
+                      title="Generate BLUF summary for Reddit"
+                    >
+                      {summaryStates[idx]?.isSummarizing ? (
+                        <>
+                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Summarizing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+                          </svg>
+                          <span>BLUF</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {msg.mode && (
+                    <span className="text-xs opacity-70">
+                      {msg.mode === 'local' ? t('aiAssistant', 'modeLocal') : t('aiAssistant', 'modeCloud')}
+                    </span>
+                  )}
+                </div>
               </div>
+              
+              {/* Summary Section - Shows when BLUF has been generated */}
+              {summaryStates[idx]?.hasSummary && (
+                <div className="mt-2 pt-2 border-t border-purple-300 dark:border-purple-700">
+                  <div className="flex items-center gap-1 mb-1">
+                    <svg className="w-3 h-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                    <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">BLUF Summary</span>
+                    <button
+                      onClick={() => handleCopyMessage(summaryStates[idx].summary, `summary-${idx}`)}
+                      className="ml-auto text-xs opacity-70 hover:opacity-100 hover:text-blue-500"
+                      title="Copy summary for Reddit"
+                    >
+                      {copiedMessageIdx === `summary-${idx}` ? '✓' : '📋'}
+                    </button>
+                  </div>
+                  <div className="text-xs text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/30 rounded p-2">
+                    {summaryStates[idx].summary}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -270,7 +270,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     const files = Array.from(e.dataTransfer.files).filter(f => isFileSupported(f));
     console.log('📁 Supported files:', files.map(f => f.name));
     if (files.length === 0) {
-      setError('Please drop supported files: PDF, Word (.docx), Text (.txt), or RTF');
+      setError(t('dd214Analyzer', 'unsupportedFormat'));
       return;
     }
     
@@ -315,7 +315,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     );
     
     if (unprocessedFiles.length === 0) {
-      setError('All files have already been processed.');
+      setError(t('dd214Analyzer', 'allFilesProcessed'));
       return;
     }
 
@@ -456,16 +456,16 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     // If no text has been extracted, prompt user to run OCR
     if (!combinedText && !useVisionAnalysis) {
       if (hasPDFFiles || droppedFiles.length > 0) {
-        setError('Please click "Run OCR" first to extract text from your PDF files, then analyze.');
+        setError(t('dd214Analyzer', 'runOcrFirst'));
       } else {
-        setError('Please paste DD214 text or drop in PDF files first.');
+        setError(t('dd214Analyzer', 'pasteOrDropFirst'));
       }
       setIsGenerating(false); // Reset since we're returning early
       return;
     }
 
     if (!aiStatus.anyAvailable) {
-      setError('AI is not available. Please configure AI settings first.');
+      setError(t('dd214Analyzer', 'aiNotAvailable'));
       setIsGenerating(false); // Reset since we're returning early
       return;
     }
@@ -656,7 +656,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         console.log('✅ Parsed JSON data:', data);
       } catch (parseError) {
         console.error('JSON parse error:', parseError, 'Content:', content);
-        throw new Error('Could not parse AI response. Please try again.');
+        throw new Error(t('dd214Analyzer', 'parseError'));
       }
 
       setAnalysisResult(data);
@@ -669,7 +669,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || 'Analysis failed. Please try again.');
+      setError(err.message || t('dd214Analyzer', 'analysisFailed'));
     } finally {
       setIsGenerating(false);
     }
@@ -808,7 +808,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
       
     } catch (err) {
       console.error('Save error:', err);
-      setError('Failed to prepare data for import. Please try again.');
+      setError(t('dd214Analyzer', 'prepareError'));
     }
   };
 
@@ -866,11 +866,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
       // Success message
       const fieldCount = Object.keys(selectedFields).length;
-      alert(`✅ DD214 data saved!\n• Service history updated\n• ${analysisResult.awards?.length || 0} awards recorded\n• ${fieldCount} profile field${fieldCount !== 1 ? 's' : ''} imported`);
+      alert(`✅ ${t('dd214Analyzer', 'dd214DataSaved')}\n• ${t('dd214Analyzer', 'serviceHistoryUpdated')}\n• ${analysisResult.awards?.length || 0} ${t('dd214Analyzer', 'awardsRecorded')}\n• ${fieldCount} ${t('dd214Analyzer', 'profileFieldsImported')}`);
       
     } catch (err) {
       console.error('Save error:', err);
-      setError('Failed to save results. Please try again.');
+      setError(t('dd214Analyzer', 'saveFailed'));
       setShowProfileImportModal(false);
     }
   };
@@ -907,8 +907,8 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           <div className="flex items-center gap-3">
             <span className="text-3xl">📜</span>
             <div>
-              <h2 className="text-xl font-bold text-white">DD214 Analyzer <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span></h2>
-              <p className="text-sm text-blue-200">Extract & analyze your service records</p>
+              <h2 className="text-xl font-bold text-white">{t('dd214Analyzer', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">{t('dd214Analyzer', 'beta')}</span></h2>
+              <p className="text-sm text-blue-200">{t('dd214Analyzer', 'subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -918,7 +918,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             <button
               onClick={onClose}
               className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
+              aria-label={t('dd214Analyzer', 'close')}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -935,11 +935,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             <div className="flex items-start gap-3">
               <span className="text-2xl">🔒</span>
               <div>
-                <h3 className="font-semibold text-green-800 dark:text-green-200">100% Private Processing</h3>
+                <h3 className="font-semibold text-green-800 dark:text-green-200">{t('dd214Analyzer', 'privateProcessing')}</h3>
                 <p className="text-sm text-green-700 dark:text-green-300">
                   {aiStatus.isPrivate 
-                    ? "Your DD214 is processed entirely on your device. Nothing is sent to external servers."
-                    : "Using Cloud AI - your data is sent to Google's servers for processing. For maximum privacy, switch to Local AI in settings."}
+                    ? t('dd214Analyzer', 'privateProcessingLocal')
+                    : t('dd214Analyzer', 'privateProcessingCloud')}
                 </p>
               </div>
             </div>
@@ -955,7 +955,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
               }`}
             >
-              📋 Paste Text
+              📋 {t('dd214Analyzer', 'pasteText')}
             </button>
             <button
               onClick={() => setInputMethod('upload')}
@@ -965,7 +965,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
               }`}
             >
-              📄 Drop In PDF {extractedTexts.length > 0 && `(${extractedTexts.length})`}
+              📄 {t('dd214Analyzer', 'dropInPdf')} {extractedTexts.length > 0 && `(${extractedTexts.length})`}
             </button>
             <button
               onClick={() => setInputMethod('manual')}
@@ -975,7 +975,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
               }`}
             >
-              ✏️ Manual Entry
+              ✏️ {t('dd214Analyzer', 'manualEntry')}
             </button>
           </div>
 
@@ -983,17 +983,17 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           {inputMethod === 'paste' && (
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Paste your DD214 text below:
+                {t('dd214Analyzer', 'pasteYourDD214')}
               </label>
               <textarea
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
-                placeholder="Copy text from your DD214 PDF and paste here...&#10;&#10;Tip: If you have multiple DD214s (re-enlistments), paste them all together. The AI will identify and consolidate them."
+                placeholder={t('dd214Analyzer', 'pasteTextPlaceholder')}
                 rows={10}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                ⚠️ Your DD214 contains sensitive PII. Data stays on your device only.
+                {t('dd214Analyzer', 'piiWarning')}
               </p>
             </div>
           )}
@@ -1006,23 +1006,22 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                   <span className="text-4xl">✏️</span>
                   <div className="flex-1">
                     <h3 className="font-bold text-blue-900 dark:text-blue-100 text-lg mb-2">
-                      Build Your DD214 Manually
+                      {t('dd214Analyzer', 'buildManually')}
                     </h3>
                     <p className="text-blue-800 dark:text-blue-200 mb-4">
-                      Type or paste information directly into DD214 form fields. Perfect for when you have a physical DD214 
-                      or want to enter specific information block-by-block.
+                      {t('dd214Analyzer', 'manualEntryDesc')}
                     </p>
                     <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 mb-4">
-                      <li>• 📋 All standard DD214 blocks included</li>
-                      <li>• 💾 Save multiple DD214s to My Packet</li>
-                      <li>• 🔒 Data stays 100% on your device</li>
-                      <li>• ✅ Guided form with field labels</li>
+                      <li>• 📋 {t('dd214Analyzer', 'allBlocksIncluded')}</li>
+                      <li>• 💾 {t('dd214Analyzer', 'saveMultipleDD214s')}</li>
+                      <li>• 🔒 {t('dd214Analyzer', 'dataStaysPrivate')}</li>
+                      <li>• ✅ {t('dd214Analyzer', 'guidedFormLabels')}</li>
                     </ul>
                     <button
                       onClick={() => setShowFormBuilder(true)}
                       className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg"
                     >
-                      📝 Open Form Builder
+                      📝 {t('dd214Analyzer', 'openFormBuilder')}
                     </button>
                   </div>
                 </div>
@@ -1052,10 +1051,10 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <p className="text-gray-600 dark:text-gray-400 font-medium">
-                  {isDragging ? '📥 Drop PDF files here' : '📄 Drag & drop DD214 PDFs or click to browse'}
+                  {isDragging ? `📥 ${t('dd214Analyzer', 'dropPdfFiles')}` : `📄 ${t('dd214Analyzer', 'dragDropOrClick')}`}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                  Supports PDF, Word (.docx), Text, RTF • Scanned PDFs auto-OCR • Multiple files OK
+                  {t('dd214Analyzer', 'supportedFormats')}
                 </p>
                 <input
                   ref={fileInputRef}
@@ -1080,7 +1079,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-700 dark:text-gray-300">
-                  📁 Loaded Files ({Math.max(droppedFiles.length, originalPDFFiles.length)})
+                  📁 {t('dd214Analyzer', 'loadedFiles')} ({Math.max(droppedFiles.length, originalPDFFiles.length)})
                 </h4>
                 {/* OCR Button - only show if there are unprocessed files */}
                 {(droppedFiles.length > 0 ? droppedFiles : originalPDFFiles).some(f => !extractedTexts.some(et => et.filename === f.name)) && (
@@ -1092,11 +1091,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                     {isProcessing ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Processing...
+                        {t('dd214Analyzer', 'processing')}
                       </>
                     ) : (
                       <>
-                        🔍 Run OCR
+                        🔍 {t('dd214Analyzer', 'runOcr')}
                       </>
                     )}
                   </button>
@@ -1125,12 +1124,12 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                           {formatFileSize(file.size)}
                           {isProcessed && processedData && (
                             <span className="ml-2 text-green-600 dark:text-green-400">
-                              • {processedData.pageCount} pages • {processedData.method === 'ocr' ? '🔍 OCR' : processedData.method === 'hybrid' ? '🔍 Hybrid' : '📝 Text'}
+                              • {processedData.pageCount} {t('dd214Analyzer', 'pages')} • {processedData.method === 'ocr' ? `🔍 ${t('dd214Analyzer', 'ocr')}` : processedData.method === 'hybrid' ? `🔍 ${t('dd214Analyzer', 'hybrid')}` : `📝 ${t('dd214Analyzer', 'text')}`}
                             </span>
                           )}
                           {!isProcessed && (
                             <span className="ml-2 text-amber-600 dark:text-amber-400">
-                              • Ready for OCR or Vision AI
+                              • {t('dd214Analyzer', 'readyForOcrOrVision')}
                             </span>
                           )}
                         </p>
@@ -1152,8 +1151,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {(droppedFiles.length > 0 || originalPDFFiles.length > 0) && !extractedTexts.length && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    <span className="font-semibold">📄 Files loaded!</span>
-                    {' '}Click "Run OCR" above to extract text from your PDF, then "Analyze with AI".
+                    <span className="font-semibold">📄 {t('dd214Analyzer', 'filesLoadedTip')}</span>
                   </p>
                 </div>
               )}
@@ -1166,7 +1164,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
                 <div>
-                  <h3 className="font-semibold text-red-800 dark:text-red-200">Error</h3>
+                  <h3 className="font-semibold text-red-800 dark:text-red-200">{t('dd214Analyzer', 'error')}</h3>
                   <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
@@ -1178,10 +1176,10 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                  ✅ Analysis Complete
+                  ✅ {t('dd214Analyzer', 'analysisComplete')}
                   {analysisResult.dd214Count > 1 && (
                     <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded-full">
-                      {analysisResult.dd214Count} DD214s consolidated
+                      {analysisResult.dd214Count} {t('dd214Analyzer', 'dd214sConsolidated')}
                     </span>
                   )}
                 </h3>
@@ -1190,26 +1188,26 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {/* Service Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Branch</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.branch || 'N/A'}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'branch')}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.branch || t('dd214Analyzer', 'na')}</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">MOS</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'mos')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">
                     {typeof analysisResult.mos === 'object' 
                       ? (analysisResult.mos?.code || JSON.stringify(analysisResult.mos)) 
-                      : (analysisResult.mos || 'N/A')}
+                      : (analysisResult.mos || t('dd214Analyzer', 'na'))}
                   </p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Time in Service</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'timeInService')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">
-                    {analysisResult.yearsService ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m` : 'N/A'}
+                    {analysisResult.yearsService ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m` : t('dd214Analyzer', 'na')}
                   </p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Separation</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationDate || 'N/A'}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'separation')}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationDate || t('dd214Analyzer', 'na')}</p>
                 </div>
               </div>
 
@@ -1217,7 +1215,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {analysisResult.combatService?.hasVerifiedCombat && (
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
                   <h4 className="font-bold text-red-800 dark:text-red-200 flex items-center gap-2 mb-2">
-                    ⚔️ Combat Service Verified
+                    ⚔️ {t('dd214Analyzer', 'combatServiceVerified')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {analysisResult.combatService.indicators?.map((indicator, idx) => (
@@ -1233,7 +1231,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {analysisResult.awards && analysisResult.awards.length > 0 && (
                 <div>
                   <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-3">
-                    🎖️ Awards & Decorations ({analysisResult.awards.length})
+                    🎖️ {t('dd214Analyzer', 'awardsDecorations')} ({analysisResult.awards.length})
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                     {analysisResult.awards.map((award, idx) => (
@@ -1250,7 +1248,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                         </p>
                         {award.devices && award.devices.length > 0 && (
                           <p className="text-xs text-gray-600 dark:text-gray-400">
-                            w/ {award.devices.join(', ')}
+                            {t('dd214Analyzer', 'with')} {award.devices.join(', ')}
                           </p>
                         )}
                       </div>
@@ -1262,7 +1260,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {/* Extraction Notes */}
               {analysisResult.extractionNotes && analysisResult.extractionNotes.length > 0 && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
-                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200 text-sm mb-1">📝 Notes</h4>
+                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200 text-sm mb-1">📝 {t('dd214Analyzer', 'notes')}</h4>
                   <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
                     {analysisResult.extractionNotes.map((note, idx) => (
                       <li key={idx}>• {note}</li>
@@ -1284,7 +1282,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                 onClick={handleClearAll}
                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors text-sm"
               >
-                Clear All
+                {t('dd214Analyzer', 'clearAll')}
               </button>
             )}
             
@@ -1293,7 +1291,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                 onClick={handleSaveResults}
                 className="px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
               >
-                💾 Save to Profile
+                💾 {t('dd214Analyzer', 'saveToProfile')}
               </button>
             )}
             
@@ -1305,11 +1303,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               {isGenerating ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Analyzing...
+                  {t('dd214Analyzer', 'analyzing')}
                 </>
               ) : (
                 <>
-                  🤖 Analyze with AI
+                  🤖 {t('dd214Analyzer', 'analyzeWithAi')}
                 </>
               )}
             </button>
@@ -1347,6 +1345,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
  */
 const SavedDD214List = () => {
   const [savedDD214s, setSavedDD214s] = useState([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const history = getServiceHistory();
@@ -1362,7 +1361,7 @@ const SavedDD214List = () => {
     <div className="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
       <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
         <span>📚</span>
-        <span>Saved DD214s ({savedDD214s.length})</span>
+        <span>{t('dd214Analyzer', 'savedDD214s')} ({savedDD214s.length})</span>
       </h4>
       <div className="space-y-2">
         {savedDD214s.map((dd214, index) => (
@@ -1370,16 +1369,16 @@ const SavedDD214List = () => {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {dd214.fullName || 'Untitled DD214'}
+                  {dd214.fullName || t('dd214Analyzer', 'untitledDD214')}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
                   {dd214.branch && <span className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">{dd214.branch}</span>}
-                  {dd214.separationDate && <span>Sep: {new Date(dd214.separationDate).toLocaleDateString()}</span>}
+                  {dd214.separationDate && <span>{t('dd214Analyzer', 'sep')} {new Date(dd214.separationDate).toLocaleDateString()}</span>}
                   {dd214.characterOfService && <span>{dd214.characterOfService}</span>}
                 </div>
               </div>
               <span className="text-xs text-gray-500 dark:text-gray-500">
-                {dd214.source === 'manual-entry' ? '✏️ Manual' : '🤖 AI'}
+                {dd214.source === 'manual-entry' ? `✏️ ${t('dd214Analyzer', 'manual')}` : `🤖 ${t('dd214Analyzer', 'ai')}`}
               </span>
             </div>
           </div>

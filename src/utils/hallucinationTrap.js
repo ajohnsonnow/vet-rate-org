@@ -246,14 +246,49 @@ export const validateAIResponse = (aiResponse) => {
     let conditions = [];
     
     if (Array.isArray(data)) {
-      conditions = data;
+      // Check if this array contains condition-like objects (with diagnostic codes)
+      // If not, skip validation (e.g., arrays of strings, action items, etc.)
+      const hasConditionObjects = data.some(item => 
+        item && typeof item === 'object' && 
+        (item.diagnosticCode || item.code || item.dc || item.diagnostic_code)
+      );
+      
+      if (hasConditionObjects || data.length === 0) {
+        conditions = data;
+      } else {
+        // Array doesn't contain diagnostic code objects - pass through unchanged
+        return {
+          success: true,
+          safeData: data,
+          rejected: [],
+          skipped: true,
+          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 }
+        };
+      }
     } else if (data.conditions && Array.isArray(data.conditions)) {
       conditions = data.conditions;
     } else if (data.results && Array.isArray(data.results)) {
       conditions = data.results;
+    } else if (data.potential_claims && Array.isArray(data.potential_claims)) {
+      // C-File analyzer format
+      conditions = data.potential_claims;
     } else if (typeof data === 'object') {
-      // Single condition object
-      conditions = [data];
+      // Check if this looks like a condition object (has diagnosticCode, code, or dc)
+      // If not, it's probably a different response format (like DecisionDecoder)
+      // and we should skip validation
+      const hasConditionFields = data.diagnosticCode || data.code || data.dc || data.diagnostic_code;
+      if (hasConditionFields) {
+        conditions = [data];
+      } else {
+        // Not a diagnostic code response - pass through unchanged
+        return {
+          success: true,
+          safeData: data,
+          rejected: [],
+          skipped: true,  // Indicate we skipped validation for non-condition response
+          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 }
+        };
+      }
     } else {
       return {
         success: false,

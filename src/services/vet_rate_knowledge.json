@@ -13644,7 +13644,7 @@
   {
     "instruction": "Can Major Depressive Disorder be claimed as secondary to Tinnitus (Ringing in Ears)?",
     "input": "",
-    "output": "Yes. Under 38 CFR § 3.310, Major Depressive Disorder (DC 9434) can potentially be claimed as secondary to service-connected Tinnitus (Ringing in Ears) (DC 6260).\n\n**Nexus Theory:**\nThe veteran's service-connected tinnitus proximately causes or aggravates major depressive disorder through chronic distress and neurobiological mechanisms. Persistent tinnitus creates an uncontrollable stressor that depletes coping resources and induces feelings of helplessness characteristic of depression. Tinnitus-induced sleep deprivation disrupts mood-regulating neurotransmitters (serotonin, norepinephrine), precipitating depressive episodes. The chronic intrusive nature of tinnitus impairs concentration, social engagement, and quality of life, leading to anhedonia and withdrawal. Neuroimaging studies demonstrate overlapping brain regions affected by both tinnitus and depression, particularly involving limbic and attentional networks.\n\n**Probability:** High\n\n**Supporting Medical Evidence:**\n- Pinto et al., 'Tinnitus and depression,' Hear Res 2014\n- Langguth et al., 'Tinnitus and depression,' World J Biol Psychiatry 2011\n- Geocze et al., 'Depression and quality of life in tinnitus,' Braz J Otorhinolaryngol 2013",
+    "output": "Yes. Under 38 CFR § 3.310, Major Depressive Disorder (DC 9434) can potentially be claimed as secondary to service-connected Tinnitus (Ringing in Ears) (DC 6260).\n\n**Nexus Theory:**\nThe veteran's service-connected tinnitus proximately causes or aggravates major depressive disorder through chronic distress and neurobiological mechanisms. Persistent tinnitus creates ongoing psychological distress that depletes coping resources and induces feelings of helplessness characteristic of depression. Tinnitus-induced sleep deprivation disrupts mood-regulating neurotransmitters (serotonin, norepinephrine), precipitating depressive episodes. The chronic intrusive nature of tinnitus impairs concentration, social engagement, and quality of life, leading to anhedonia and withdrawal. Neuroimaging studies demonstrate overlapping brain regions affected by both tinnitus and depression, particularly involving limbic and attentional networks.\n\n**Probability:** High\n\n**Supporting Medical Evidence:**\n- Pinto et al., 'Tinnitus and depression,' Hear Res 2014\n- Langguth et al., 'Tinnitus and depression,' World J Biol Psychiatry 2011\n- Geocze et al., 'Depression and quality of life in tinnitus,' Braz J Otorhinolaryngol 2013",
     "metadata": {
       "source": "38CFR_3.310",
       "type": "secondary_nexus",
@@ -13655,7 +13655,7 @@
   {
     "instruction": "What is the nexus between Tinnitus (Ringing in Ears) and Major Depressive Disorder?",
     "input": "",
-    "output": "The veteran's service-connected tinnitus proximately causes or aggravates major depressive disorder through chronic distress and neurobiological mechanisms. Persistent tinnitus creates an uncontrollable stressor that depletes coping resources and induces feelings of helplessness characteristic of depression. Tinnitus-induced sleep deprivation disrupts mood-regulating neurotransmitters (serotonin, norepinephrine), precipitating depressive episodes. The chronic intrusive nature of tinnitus impairs concentration, social engagement, and quality of life, leading to anhedonia and withdrawal. Neuroimaging studies demonstrate overlapping brain regions affected by both tinnitus and depression, particularly involving limbic and attentional networks.",
+    "output": "The veteran's service-connected tinnitus proximately causes or aggravates major depressive disorder through chronic distress and neurobiological mechanisms. Persistent tinnitus creates ongoing psychological distress that depletes coping resources and induces feelings of helplessness characteristic of depression. Tinnitus-induced sleep deprivation disrupts mood-regulating neurotransmitters (serotonin, norepinephrine), precipitating depressive episodes. The chronic intrusive nature of tinnitus impairs concentration, social engagement, and quality of life, leading to anhedonia and withdrawal. Neuroimaging studies demonstrate overlapping brain regions affected by both tinnitus and depression, particularly involving limbic and attentional networks.",
     "metadata": {
       "source": "38CFR_3.310",
       "type": "nexus_theory",
@@ -15122,6 +15122,50 @@
       "hierarchy_level": 3,
       "color_code": "GREEN",
       "citation": "BVA-Sleep-Apnea-Sample-003"
+    }
+  },
+  {
+    "instruction": "What is the difference between PTSD service connection and MDD service connection requirements?",
+    "input": "",
+    "output": "IMPORTANT DISTINCTION - PTSD vs MDD/Other Mental Health Service Connection:\n\n**PTSD (38 CFR § 3.304(f)):**\n- Requires a verified 'stressor' event\n- Must have DSM-5 PTSD diagnosis linked to that specific stressor\n- Combat veterans have relaxed stressor verification\n- Use terms: 'stressor event', 'fear of hostile military activity'\n\n**MDD/Anxiety/Other Mental Health (38 CFR § 3.303):**\n- Uses standard service connection rules: in-service incurrence OR aggravation\n- Does NOT require a 'stressor' - that's PTSD-specific language\n- Use terms: 'in-service incurrence', 'in-service event', 'aggravation during service'\n- An in-service miscarriage, for example, is an 'in-service event' that could lead to MDD - NOT a 'stressor' (that's PTSD terminology)\n\n**Common Error:** Calling an in-service event a 'stressor' when claiming MDD instead of PTSD. The correct framing for MDD is: the in-service event (miscarriage, injury, loss) caused or aggravated the current depression.\n\nSource: 38 CFR § 3.303, 38 CFR § 3.304(f)",
+    "metadata": {
+      "source": "VET_RATE_GUIDANCE",
+      "hierarchy_level": 1,
+      "color_code": "BLUE",
+      "citation": "38 CFR § 3.303, 38 CFR § 3.304(f)"
+    }
+  },
+  {
+    "instruction": "What determines mental health disability rating percentages under 38 CFR 4.130?",
+    "input": "",
+    "output": "Mental Health Rating Criteria (38 CFR § 4.130) - What ACTUALLY Determines Your Percentage:\n\n**Rating is based SOLELY on CURRENT occupational and social impairment:**\n- How your symptoms affect work reliability TODAY\n- How your symptoms affect relationships TODAY\n- Current judgment, thinking, mood, behavior\n\n**Rating is NOT based on:**\n- How severe the triggering event was\n- Whether you received treatment in service\n- How 'unfair' the lack of past support was\n- Delayed treatment (this doesn't increase your rating)\n\n**Rating Levels (General Formula for Mental Disorders):**\n- 100%: TOTAL occupational AND social impairment\n- 70%: Deficiencies in MOST areas (work, school, family, judgment, thinking, mood)\n- 50%: Reduced reliability and productivity\n- 30%: Occasional decrease in work efficiency\n- 10%: Mild symptoms with minor impact\n- 0%: Diagnosed but symptoms don't impair function\n\n**Key Case Law:** Per Mauerhan v. Principi, the listed symptoms are examples, not requirements. Focus on documenting your CURRENT functional impairment.\n\nSource: 38 CFR § 4.130, Mauerhan v. Principi",
+    "metadata": {
+      "source": "VET_RATE_GUIDANCE",
+      "hierarchy_level": 1,
+      "color_code": "BLUE",
+      "citation": "38 CFR § 4.130"
+    }
+  },
+  {
+    "instruction": "What evidence matters most for mental health claims?",
+    "input": "",
+    "output": "Evidence Hierarchy for Mental Health Claims (What Actually Matters):\n\n**1. Service Treatment Records (STRs)**\n- In-service documentation of symptoms or treatment\n- Shows 'in-service incurrence'\n- If you sought help during service, this is powerful evidence\n\n**2. C&P Examination Findings**\n- The VA's own medical opinion\n- Often carries significant weight in decisions\n- Prepare by documenting your WORST days, not your best\n\n**3. Continuity of Treatment**\n- Timeline from service to present showing ongoing symptoms\n- Gap in treatment requires explanation (many veterans suffer in silence - this is understandable)\n\n**4. Current Diagnosis**\n- From a licensed mental health provider (psychiatrist, psychologist, LCSW)\n- Must meet DSM-5 criteria\n\n**5. Nexus Letter**\n- CAN be helpful but is NOT always 'the most critical piece'\n- In many cases, STRs + C&P exam carry more weight\n- A nexus letter helps when other evidence is ambiguous\n\n**6. Personal/Buddy Statements**\n- Describe CURRENT functional impairment\n- Specific examples: missed work, relationship problems, daily struggles\n\n**Common Misconception:** Nexus letters are often oversold. If you have clear in-service documentation and a current diagnosis, the C&P exam opinion may be decisive regardless of private nexus letters.\n\nSource: 38 CFR § 3.159, VA Adjudication Manual",
+    "metadata": {
+      "source": "VET_RATE_GUIDANCE",
+      "hierarchy_level": 1,
+      "color_code": "BLUE",
+      "citation": "38 CFR § 3.159"
+    }
+  },
+  {
+    "instruction": "What is the difference between a PTSD stressor and a chronic stressor?",
+    "input": "",
+    "output": "IMPORTANT TERMINOLOGY CLARIFICATION - 'Stressor' Has Different Meanings:\n\n**LEGAL 'Stressor' (PTSD Claims - 38 CFR § 3.304(f)):**\n- A specific traumatic EVENT during service\n- Required for PTSD service connection\n- Examples: combat exposure, MST, witnessing death, IED explosion\n- Must be verified through service records OR credible lay evidence\n- This is a LEGAL requirement, not just medical terminology\n\n**MEDICAL 'Chronic Stressor' (Secondary Claims):**\n- An ongoing source of stress that affects health over time\n- Medical/psychological terminology, not VA legal terminology\n- Examples: chronic pain, tinnitus, sleep deprivation\n- Used in nexus theories explaining how one condition causes another\n\n**Why This Matters:**\n- For MDD, Anxiety, or other mental health conditions (NOT PTSD), you typically prove:\n  - In-service INCURRENCE (symptoms started in service) OR\n  - In-service AGGRAVATION (pre-existing condition worsened)\n  - NOT a 'stressor event' like PTSD requires\n\n**Example - Secondary MDD from Tinnitus:**\n- CORRECT: 'Chronic tinnitus causes ongoing psychological distress leading to depression'\n- INCORRECT: 'The stressor of tinnitus caused depression' (mixing legal/medical terms)\n\nDon't confuse medical causation language with the specific legal requirements for PTSD claims.\n\nSource: 38 CFR § 3.304(f), VA Adjudication Manual",
+    "metadata": {
+      "source": "VET_RATE_GUIDANCE",
+      "hierarchy_level": 1,
+      "color_code": "BLUE",
+      "citation": "38 CFR § 3.304(f)"
     }
   }
 ]

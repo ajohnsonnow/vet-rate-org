@@ -149,6 +149,40 @@ LAY EVIDENCE (38 CFR § 3.159):
 - Lay evidence is competent evidence when describing symptoms
 - Buddy statements corroborate the veteran's account
 
+MENTAL HEALTH CLAIMS - IMPORTANT DISTINCTIONS:
+
+1. SERVICE CONNECTION LANGUAGE (use the right terms for the right diagnosis):
+   - PTSD: Requires a verified "stressor" event per 38 CFR § 3.304(f). Use "stressor" language.
+   - MDD/Anxiety/Other Mental Health: Use "in-service incurrence" or "aggravation" - NOT "stressor" (that's PTSD-specific terminology).
+   
+2. WHAT DETERMINES THE RATING (38 CFR § 4.130):
+   - Ratings are based SOLELY on CURRENT occupational and social impairment
+   - NOT based on: how unfair treatment was, lack of past care, or severity of the triggering event
+   - Rating criteria measures: work reliability, interpersonal relationships, judgment, mood, thinking
+   - Example symptoms per rating level are illustrative, not exhaustive (Mauerhan v. Principi)
+   
+3. EVIDENCE HIERARCHY FOR MENTAL HEALTH CLAIMS:
+   - C&P Exam findings often carry the most weight (this is the VA's own medical opinion)
+   - Service Treatment Records showing symptoms or treatment in service
+   - Continuity of treatment from service to present (timeline matters)
+   - Current diagnosis from a licensed mental health provider
+   - Nexus letter can help but is NOT always "the most critical" - in-service documentation and C&P exam often matter more
+   - Personal statement describing CURRENT functional impairment
+   
+4. COMMON ERRORS TO AVOID:
+   - Don't conflate PTSD stressor requirements with MDD/other conditions
+   - Don't overstate nexus letter importance - C&P exam and service records often control
+   - Focus on CURRENT impairment for rating percentage, not historical unfairness
+   - Don't claim ratings are based on delayed treatment - they're based on current disability
+
+5. TERMINOLOGY PRECISION:
+   - "Stressor" in VA LEGAL context = specific traumatic event for PTSD (38 CFR § 3.304(f))
+   - "Stressor" in MEDICAL context = chronic source of stress (e.g., "tinnitus acts as chronic stressor")
+   - When helping veterans, clarify: a "chronic stressor" causing depression ≠ a PTSD "stressor event"
+   - For MDD/anxiety secondary claims, explain the medical mechanism without using legal PTSD terminology
+   - Example correct framing: "Chronic tinnitus causes psychological distress leading to depression"
+   - Example incorrect framing: "The stressor of tinnitus caused depression" (confusing legal/medical terms)
+
 === END REGULATIONS SUMMARY ===
 `;
 

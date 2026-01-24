@@ -62,15 +62,15 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
   };
 
   const getTypeLabel = (type, isNew) => {
-    if (isNew) return '🆕 NEW';
+    if (isNew) return t('whatsNew', 'labelNew');
     const labels = {
-      feature: 'Feature',
-      fix: 'Bug Fix',
-      security: 'Security',
-      improvement: 'Improvement',
-      change: 'Change'
+      feature: t('whatsNew', 'labelFeature'),
+      fix: t('whatsNew', 'labelBugFix'),
+      security: t('whatsNew', 'labelSecurity'),
+      improvement: t('whatsNew', 'labelImprovement'),
+      change: t('whatsNew', 'labelChange')
     };
-    return labels[type] || 'Update';
+    return labels[type] || t('whatsNew', 'labelUpdate');
   };
   
   const getTypeBadgeColor = (type, isNew) => {
@@ -106,15 +106,15 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                   <Gift className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">What's New in Vet-Rate.org <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
-                  <p className="text-emerald-100 text-sm">Version {version} • Fresh Intel</p>
+                  <h2 className="text-2xl font-bold">{t('whatsNew', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span></h2>
+                  <p className="text-emerald-100 text-sm">{t('whatsNew', 'version')} {version} • {t('whatsNew', 'freshIntel')}</p>
                 </div>
               </div>
             </div>
             <button
               onClick={handleClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
+              aria-label={t('common', 'close')}
             >
               <X className="w-6 h-6" />
             </button>
@@ -130,7 +130,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
               <div className="flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-emerald-500" />
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Just Deployed 🚀
+                  {t('whatsNew', 'justDeployed')}
                 </h3>
               </div>
               <div className="space-y-3">
@@ -170,7 +170,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-5 h-5 text-gray-500" />
                   <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">
-                    Platform Highlights
+                    {t('whatsNew', 'platformHighlights')}
                   </h3>
                 </div>
               )}
@@ -206,7 +206,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
 
           {changelog.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p>No changelog available for this version.</p>
+              <p>{t('whatsNew', 'noChangelog')}</p>
             </div>
           )}
 
@@ -217,11 +217,11 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                 <div className="flex items-center gap-2">
                   <Bug className="w-5 h-5 text-red-500" />
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Bugs Squashed 🪲💀
+                    {t('whatsNew', 'bugsSquashed')}
                   </h3>
                 </div>
                 <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  {totalBugsSquashed} Total
+                  {totalBugsSquashed} {t('common', 'total')}
                 </span>
               </div>
               <div className="space-y-2">
@@ -237,7 +237,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {bug.isNew && (
                           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">
-                            JUST FIXED
+                            {t('whatsNew', 'justFixed')}
                           </span>
                         )}
                         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -257,7 +257,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
                 ))}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                🐛 Found a bug? Use the Bug Squasher in the footer to report it!
+                {t('whatsNew', 'foundBug')}
               </p>
             </div>
           )}
@@ -265,8 +265,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
           {/* Footer Message */}
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
             <p className="text-sm text-emerald-900 dark:text-emerald-100">
-              <strong>💪 Mission Ready:</strong> Your app has been updated and is ready to continue serving you. 
-              All your saved data has been preserved.
+              <strong>{t('whatsNew', 'missionReadyTitle')}</strong> {t('whatsNew', 'missionReadyMessage')}
             </p>
           </div>
 
@@ -276,7 +275,7 @@ const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose
               onClick={handleClose}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              Roger That, Let's Go! 🎯
+              {t('whatsNew', 'rogerThat')}
             </button>
           </div>
         </div>

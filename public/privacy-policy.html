@@ -10,7 +10,7 @@
   2. Run: npm run build (auto-syncs) OR npm run sync-legal-pages
   3. This HTML will be regenerated automatically
   
-  Generated: 2026-01-24T08:21:42.974Z
+  Generated: 2026-01-24T10:21:28.026Z
   Generator: scripts/sync-legal-pages.js
 -->
 <html lang="en">
@@ -20,7 +20,7 @@
     <title>Privacy Policy - Vet-Rate.org</title>
     <meta name="description" content="Vet-Rate.org Privacy Policy - How we protect your data with our privacy-first, browser-based approach.">
     <meta name="generator" content="Vet-Rate.org Legal Pages Auto-Generator">
-    <meta name="generated-date" content="2026-01-24T08:21:42.974Z">
+    <meta name="generated-date" content="2026-01-24T10:21:28.026Z">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <style>
     * {
@@ -336,132 +336,123 @@
 
 
         <section >
-        <h3 >1. Introduction</h3>
+        <h3 >{t('privacyPolicy', 'section1Title')}</h3>
         <p >
-              Welcome to Vet-Rate.org. I'm a service-connected disabled veteran who built this site to help 
-              fellow veterans navigate the VA disability rating process. This Privacy Policy explains how 
-              information is handled when you visit this website. By using this site, you agree to the 
-              practices described in this policy.
+              {t('privacyPolicy', 'section1Text')}
             </p>
         </section>
 
         <section >
-        <h3 >2. Information Collection</h3>
-        <h4 >2.1 Personal Information</h4>
+        <h3 >{t('privacyPolicy', 'section2Title')}</h3>
+        <h4 >{t('privacyPolicy', 'section2_1Title')}</h4>
         <p >
-        <strong>This site does NOT collect Personally Identifiable Information (PII).</strong> The application 
-              operates entirely client-side in your browser. No data is stored, transmitted, or processed including:
-            </p>
+        <strong>{t('privacyPolicy', 'section2_1Text')}</strong>
+        </p>
         <ul >
-        <li>Names, addresses, or contact information</li>
-        <li>Social Security Numbers or military service records</li>
-        <li>Medical information or disability details</li>
-        <li>Search queries or browsing history</li>
+        <li>{t('privacyPolicy', 'piiItem1')}</li>
+        <li>{t('privacyPolicy', 'piiItem2')}</li>
+        <li>{t('privacyPolicy', 'piiItem3')}</li>
+        <li>{t('privacyPolicy', 'piiItem4')}</li>
         </ul>
-        <h4 >2.2 Minimal Analytics (GoatCounter)</h4>
+        <h4 >{t('privacyPolicy', 'section2_2Title')}</h4>
         <div class="alert alert-blue">
         <p >
-        <strong>Transparency:</strong> We use 
-                <a href="https://www.goatcounter.com" target="_blank" rel="noopener noreferrer" >GoatCounter</a>,
-                a privacy-respecting, open-source analytics tool to understand basic site usage.
+        <strong>{t('privacyPolicy', 'analyticsTransparency')}</strong> 
+                {t('privacyPolicy', 'analyticsIntro').split('GoatCounter')[0]}
+                <a href="https://www.goatcounter.com" target="_blank" rel="noopener noreferrer" >GoatCounter</a>
+                {t('privacyPolicy', 'analyticsIntro').split('GoatCounter')[1]}
               </p>
         <p >
-        <strong>What GoatCounter collects:</strong>
+        <strong>{t('privacyPolicy', 'analyticsCollects')}</strong>
         </p>
         <ul >
-        <li>Page views (which pages are visited)</li>
-        <li>Referrer (how you found the site)</li>
-        <li>Browser type and screen size (aggregated)</li>
-        <li>Country-level location (no city or precise location)</li>
+        <li>{t('privacyPolicy', 'analyticsItem1')}</li>
+        <li>{t('privacyPolicy', 'analyticsItem2')}</li>
+        <li>{t('privacyPolicy', 'analyticsItem3')}</li>
+        <li>{t('privacyPolicy', 'analyticsItem4')}</li>
         </ul>
         <p >
-        <strong>What GoatCounter does NOT collect:</strong>
+        <strong>{t('privacyPolicy', 'analyticsNotCollect')}</strong>
         </p>
         <ul >
-        <li>No cookies are used</li>
-        <li>No personal identifiers or fingerprinting</li>
-        <li>No tracking across sites</li>
-        <li>No IP address storage</li>
-        <li>No advertising profiles</li>
+        <li>{t('privacyPolicy', 'analyticsNotItem1')}</li>
+        <li>{t('privacyPolicy', 'analyticsNotItem2')}</li>
+        <li>{t('privacyPolicy', 'analyticsNotItem3')}</li>
+        <li>{t('privacyPolicy', 'analyticsNotItem4')}</li>
+        <li>{t('privacyPolicy', 'analyticsNotItem5')}</li>
         </ul>
         <p >
-                GoatCounter is GDPR-compliant by design. You can 
-                <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener noreferrer" >read their privacy policy</a>.
+                {t('privacyPolicy', 'analyticsGDPR').split('.')[0]}. 
+                <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener noreferrer" >{t('privacyPolicy', 'analyticsGDPR').split('.')[1]?.trim() || 'Read their privacy policy'}</a>.
               </p>
         </div>
-        <h4 >2.3 Hosting Metrics (Render.com)</h4>
+        <h4 >{t('privacyPolicy', 'section2_3Title')}</h4>
         <p >
-              Our hosting provider (Render.com) collects standard server logs including IP addresses, timestamps, and 
-              request URLs. This is standard for all web hosting and is required for security and abuse prevention. 
-              These logs are not used for tracking or advertising.
+              {t('privacyPolicy', 'section2_3Text')}
             </p>
-        <h4 >2.4 No Advertising Networks</h4>
+        <h4 >{t('privacyPolicy', 'section2_4Title')}</h4>
         <p >
-        <strong>This site does not use advertising networks or third-party trackers.</strong> To protect veteran 
-              privacy, I have intentionally avoided implementing any tracking technologies that could collect 
-              your personal data or create advertising profiles.
-            </p>
+        <strong>{t('privacyPolicy', 'section2_4Text')}</strong>
+        </p>
         </section>
 
         <section >
-        <h3 >3. Cookies and Tracking</h3>
+        <h3 >{t('privacyPolicy', 'section3Title')}</h3>
         <p >
-        <strong>This site does not use cookies for tracking or advertising purposes.</strong> Any cookies used 
-              are strictly for essential functionality (such as saving your preferences locally 
-              in your browser). No information is shared with third-party advertisers.
-            </p>
+        <strong>{t('privacyPolicy', 'section3Text')}</strong>
+        </p>
         </section>
 
         <section >
-        <h3 >4. How Information Is Used</h3>
+        <h3 >{t('privacyPolicy', 'section4Title')}</h3>
         <p >
-              Since this site does not collect PII or use tracking technologies:
+              {t('privacyPolicy', 'section4Intro')}
             </p>
         <ul >
-        <li>Your search queries remain private in your browser</li>
-        <li>Your disability research is never transmitted to any server</li>
-        <li>Your "My Packet" saved items are stored only in your browser's local storage</li>
-        <li>No advertising profiles are created about you</li>
+        <li>{t('privacyPolicy', 'section4Item1')}</li>
+        <li>{t('privacyPolicy', 'section4Item2')}</li>
+        <li>{t('privacyPolicy', 'section4Item3')}</li>
+        <li>{t('privacyPolicy', 'section4Item4')}</li>
         </ul>
         </section>
 
         <section >
-        <h3 >5. Data Sharing and Disclosure</h3>
+        <h3 >{t('privacyPolicy', 'section5Title')}</h3>
         <p >
-        <strong>Your personal information is never sold, traded, rented, or shared with anyone.</strong> 
-              Since no data is collected, there is nothing to share. Your privacy is protected by design.
-            </p>
+        <strong>{t('privacyPolicy', 'section5Text')}</strong>
+        </p>
         </section>
 
         <section >
-        <h3 >6. Your Privacy Rights</h3>
+        <h3 >{t('privacyPolicy', 'section6Title')}</h3>
         <p >
-              Since this site does not collect personal data, your privacy is inherently protected. However, you always have the right to:
+              {t('privacyPolicy', 'section6Intro')}
             </p>
         <ul >
-        <li><strong>Clear Local Storage:</strong> Delete any locally saved preferences from your browser</li>
-        <li><strong>Browse Privately:</strong> Use your browser's private/incognito mode</li>
-        <li><strong>Contact Me:</strong> Ask questions about the privacy practices on this site</li>
+        <li><strong>{t('privacyPolicy', 'section6Item1Title')}</strong> {t('privacyPolicy', 'section6Item1Text')}</li>
+        <li><strong>{t('privacyPolicy', 'section6Item2Title')}</strong> {t('privacyPolicy', 'section6Item2Text')}</li>
+        <li><strong>{t('privacyPolicy', 'section6Item3Title')}</strong> {t('privacyPolicy', 'section6Item3Text')}</li>
         </ul>
         </section>
 
         <section >
-        <h3 >7. AI Processing & Data Retention</h3>
+        <h3 >{t('privacyPolicy', 'section7Title')}</h3>
         <div class="alert alert-blue">
         <p >
-        <strong>Optional AI Features:</strong> When you choose to use AI-powered features (such as statement enhancement), your text is processed by third-party AI providers (Google Gemini or Anthropic Claude).
+        <strong>{t('privacyPolicy', 'section7OptionalAI')}</strong> {t('privacyPolicy', 'section7OptionalAIText')}
               </p>
         <p >
-        <strong>What This Means:</strong>
+        <strong>{t('privacyPolicy', 'section7WhatThisMeans')}</strong>
         </p>
         <ul >
-        <li>Data is processed solely for text generation purposes</li>
-        <li>Vet-Rate.org does not store this data on our servers</li>
-        <li>AI providers may process data according to their own policies</li>
-        <li>You control what information you send to AI features</li>
+        <li>{t('privacyPolicy', 'section7AIItem1')}</li>
+        <li>{t('privacyPolicy', 'section7AIItem2')}</li>
+        <li>{t('privacyPolicy', 'section7AIItem3')}</li>
+        <li>{t('privacyPolicy', 'section7AIItem4')}</li>
         </ul>
         <p >
-        <strong>Transparency:</strong> Before using AI features, please review 
+        <strong>{t('privacyPolicy', 'analyticsTransparency')}</strong> 
+                {t('privacyPolicy', 'section7TransparencyNote').split('Google')[0]}
                 <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" >
                   Google's Gemini API Terms
                 </a> 
@@ -469,43 +460,36 @@
                 <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" >
                   Anthropic's Privacy Policy
                 </a>.
-                We strive to use zero-retention settings where available.
+                 {t('privacyPolicy', 'section7TransparencyNote').split('Privacy Policy.')[1]?.trim() || 'We strive to use zero-retention settings where available.'}
               </p>
         </div>
         </section>
 
         <section >
-        <h3 >8. Children's Privacy</h3>
+        <h3 >{t('privacyPolicy', 'section8Title')}</h3>
         <p >
-              This website is not intended for children under the age of 13. No information is knowingly collected 
-              from children under 13. If you believe any such information has been inadvertently collected, 
-              please contact me immediately.
+              {t('privacyPolicy', 'section8Text')}
             </p>
         </section>
 
         <section >
-        <h3 >9. Security</h3>
+        <h3 >{t('privacyPolicy', 'section9Title')}</h3>
         <p >
-              This application operates entirely client-side and does not transmit or store PII. Your 
-              searches and interactions remain private on your device. We use only GoatCounter for 
-              minimal, privacy-respecting analytics. No advertising networks or invasive tracking 
-              services are used.
+              {t('privacyPolicy', 'section9Text')}
             </p>
         </section>
 
         <section >
-        <h3 >10. Changes to This Privacy Policy</h3>
+        <h3 >{t('privacyPolicy', 'section10Title')}</h3>
         <p >
-              This Privacy Policy may be updated from time to time. Changes will be posted on this page with 
-              an updated "Last Updated" date. Your continued use of the website after changes constitutes 
-              acceptance of the updated policy.
+              {t('privacyPolicy', 'section10Text')}
             </p>
         </section>
 
         <section >
-        <h3 >11. Contact</h3>
+        <h3 >{t('privacyPolicy', 'section11Title')}</h3>
         <p >
-              If you have questions about this Privacy Policy, please reach out via the Contact page.
+              {t('privacyPolicy', 'section11Text')}
             </p>
         </section>
 

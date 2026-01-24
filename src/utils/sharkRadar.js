@@ -92,7 +92,8 @@ Identify all red flags and provide your analysis.`;
     const content = await generateAI(userPrompt, {
       temperature: 0.2,
       maxTokens: 4096,
-      expectJSON: true
+      expectJSON: true,
+      skipHallucinationCheck: true, // Contract analysis returns risk flags, not diagnostic codes
     });
     
     if (!content) {

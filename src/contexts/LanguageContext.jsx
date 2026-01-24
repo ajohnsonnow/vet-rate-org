@@ -456,6 +456,129 @@ export const APP_TRANSLATIONS = {
     forms: { en: 'Forms', es: 'Formularios', tl: 'Mga Form', vi: 'Biểu mẫu', ko: '양식' },
   },
 
+  // Loading Bunker Component
+  loadingBunker: {
+    defaultMessage: { 
+      en: 'Loading Bunker...', 
+      es: 'Cargando Búnker...', 
+      tl: 'Naglo-load ng Bunker...', 
+      vi: 'Đang Tải Boongke...', 
+      ko: '벙커 로딩 중...' 
+    },
+    ariaLoading: { 
+      en: 'Loading content, please wait', 
+      es: 'Cargando contenido, por favor espere', 
+      tl: 'Naglo-load ng nilalaman, mangyaring maghintay', 
+      vi: 'Đang tải nội dung, vui lòng chờ', 
+      ko: '콘텐츠 로딩 중, 잠시 기다려 주세요' 
+    },
+    loadingData: { 
+      en: 'Loading your data...', 
+      es: 'Cargando tus datos...', 
+      tl: 'Naglo-load ng data mo...', 
+      vi: 'Đang tải dữ liệu của bạn...', 
+      ko: '데이터 로딩 중...' 
+    },
+    loadingConditions: { 
+      en: 'Loading conditions...', 
+      es: 'Cargando condiciones...', 
+      tl: 'Naglo-load ng mga kondisyon...', 
+      vi: 'Đang tải tình trạng...', 
+      ko: '상태 로딩 중...' 
+    },
+    loadingCalculations: { 
+      en: 'Calculating your rating...', 
+      es: 'Calculando tu calificación...', 
+      tl: 'Kinakalkula ang rating mo...', 
+      vi: 'Đang tính xếp hạng của bạn...', 
+      ko: '등급 계산 중...' 
+    },
+    loadingPacket: { 
+      en: 'Loading your packet...', 
+      es: 'Cargando tu paquete...', 
+      tl: 'Naglo-load ng packet mo...', 
+      vi: 'Đang tải hồ sơ của bạn...', 
+      ko: '패킷 로딩 중...' 
+    },
+    savingData: { 
+      en: 'Saving your data...', 
+      es: 'Guardando tus datos...', 
+      tl: 'Sine-save ang data mo...', 
+      vi: 'Đang lưu dữ liệu của bạn...', 
+      ko: '데이터 저장 중...' 
+    },
+    processingDocument: { 
+      en: 'Processing document...', 
+      es: 'Procesando documento...', 
+      tl: 'Pinoproseso ang dokumento...', 
+      vi: 'Đang xử lý tài liệu...', 
+      ko: '문서 처리 중...' 
+    },
+    analyzingFile: { 
+      en: 'Analyzing file...', 
+      es: 'Analizando archivo...', 
+      tl: 'Sinusuri ang file...', 
+      vi: 'Đang phân tích tệp...', 
+      ko: '파일 분석 중...' 
+    },
+    preparingExport: { 
+      en: 'Preparing export...', 
+      es: 'Preparando exportación...', 
+      tl: 'Inihahanda ang export...', 
+      vi: 'Đang chuẩn bị xuất...', 
+      ko: '내보내기 준비 중...' 
+    },
+    syncingCloud: { 
+      en: 'Syncing with cloud...', 
+      es: 'Sincronizando con la nube...', 
+      tl: 'Nagsi-sync sa cloud...', 
+      vi: 'Đang đồng bộ với đám mây...', 
+      ko: '클라우드 동기화 중...' 
+    },
+    loadingSecondary: { 
+      en: 'Finding linked conditions...', 
+      es: 'Buscando condiciones vinculadas...', 
+      tl: 'Naghahanap ng linked conditions...', 
+      vi: 'Đang tìm tình trạng liên kết...', 
+      ko: '연결된 상태 찾는 중...' 
+    },
+    initializing: { 
+      en: 'Initializing...', 
+      es: 'Inicializando...', 
+      tl: 'Nag-i-initialize...', 
+      vi: 'Đang khởi tạo...', 
+      ko: '초기화 중...' 
+    },
+    loadingAI: { 
+      en: 'AI analyzing...', 
+      es: 'IA analizando...', 
+      tl: 'AI nagsa-analyze...', 
+      vi: 'AI đang phân tích...', 
+      ko: 'AI 분석 중...' 
+    },
+    tip1: { 
+      en: 'Tip: Save your work often using The Bunker!', 
+      es: 'Consejo: ¡Guarda tu trabajo frecuentemente usando El Búnker!', 
+      tl: 'Tip: I-save ang trabaho mo madalas gamit ang Bunker!', 
+      vi: 'Mẹo: Lưu công việc thường xuyên bằng Boongke!', 
+      ko: '팁: 벙커를 사용하여 작업을 자주 저장하세요!' 
+    },
+    tip2: { 
+      en: 'Tip: Check Secondary Scout for linked conditions', 
+      es: 'Consejo: Revisa Secondary Scout para condiciones vinculadas', 
+      tl: 'Tip: Tingnan ang Secondary Scout para sa linked conditions', 
+      vi: 'Mẹo: Kiểm tra Secondary Scout để tìm tình trạng liên kết', 
+      ko: '팁: 연결된 상태를 위해 Secondary Scout를 확인하세요' 
+    },
+    tip3: { 
+      en: 'Tip: Your data stays on YOUR device - 100% private', 
+      es: 'Consejo: Tus datos se quedan en TU dispositivo - 100% privado', 
+      tl: 'Tip: Ang data mo ay nananatili sa IYONG device - 100% private', 
+      vi: 'Mẹo: Dữ liệu của bạn ở trên thiết bị CỦA BẠN - 100% riêng tư', 
+      ko: '팁: 데이터는 당신의 기기에 저장됩니다 - 100% 비공개' 
+    },
+  },
+
   // Disclaimer Splash Screen
   splash: {
     welcomeVeteran: { en: 'Welcome, Fellow Veteran', es: 'Bienvenido, Compañero Veterano', tl: 'Maligayang Pagdating, Kapwa Beterano', vi: 'Chào Mừng, Đồng Đội Cựu Chiến Binh', ko: '환영합니다, 동료 재향군인' },
@@ -687,6 +810,59 @@ export const APP_TRANSLATIONS = {
     monthlyCompensation: { en: 'Monthly Compensation', es: 'Compensación Mensual', tl: 'Buwanang Kompensasyon', vi: 'Bồi Thường Hàng Tháng', ko: '월 보상금' },
   },
 
+  // Search Bar
+  searchBar: {
+    placeholder: {
+      en: 'Search by condition name (PTSD, arthritis), diagnostic code (9411, 5002), or synonym (posttraumatic stress)...',
+      es: 'Buscar por nombre de condición (TEPT, artritis), código diagnóstico (9411, 5002), o sinónimo (estrés postraumático)...',
+      tl: 'Maghanap ayon sa pangalan ng kondisyon (PTSD, arthritis), diagnostic code (9411, 5002), o synonym (posttraumatic stress)...',
+      vi: 'Tìm kiếm theo tên tình trạng (PTSD, viêm khớp), mã chẩn đoán (9411, 5002), hoặc từ đồng nghĩa (rối loạn căng thẳng sau chấn thương)...',
+      ko: '상태명 (PTSD, 관절염), 진단 코드 (9411, 5002) 또는 동의어 (외상 후 스트레스)로 검색...',
+    },
+    ariaLabel: {
+      en: 'Search disabilities',
+      es: 'Buscar discapacidades',
+      tl: 'Maghanap ng mga kapansanan',
+      vi: 'Tìm kiếm khuyết tật',
+      ko: '장애 검색',
+    },
+    clearSearch: {
+      en: 'Clear search',
+      es: 'Borrar búsqueda',
+      tl: 'I-clear ang paghahanap',
+      vi: 'Xóa tìm kiếm',
+      ko: '검색 지우기',
+    },
+    suggestionsLabel: {
+      en: 'Search suggestions',
+      es: 'Sugerencias de búsqueda',
+      tl: 'Mga mungkahi sa paghahanap',
+      vi: 'Gợi ý tìm kiếm',
+      ko: '검색 제안',
+    },
+    suggestionHint: {
+      en: 'Click a suggestion or press Escape to close',
+      es: 'Haz clic en una sugerencia o presiona Escape para cerrar',
+      tl: 'I-click ang isang mungkahi o pindutin ang Escape para isara',
+      vi: 'Nhấp vào gợi ý hoặc nhấn Escape để đóng',
+      ko: '제안을 클릭하거나 Escape를 눌러 닫기',
+    },
+    examplesLabel: {
+      en: 'Examples:',
+      es: 'Ejemplos:',
+      tl: 'Mga Halimbawa:',
+      vi: 'Ví dụ:',
+      ko: '예시:',
+    },
+    examplesText: {
+      en: 'Try "PTSD", "9411", "arthritis", "migraine", "5002", "posttraumatic stress disorder"',
+      es: 'Prueba "TEPT", "9411", "artritis", "migraña", "5002", "trastorno de estrés postraumático"',
+      tl: 'Subukan ang "PTSD", "9411", "arthritis", "migraine", "5002", "posttraumatic stress disorder"',
+      vi: 'Thử "PTSD", "9411", "viêm khớp", "đau nửa đầu", "5002", "rối loạn căng thẳng sau chấn thương"',
+      ko: '"PTSD", "9411", "관절염", "편두통", "5002", "외상 후 스트레스 장애" 시도해보세요',
+    },
+  },
+
   // Voice Features
   voice: {
     enableVoice: { en: 'Enable Voice', es: 'Activar Voz', tl: 'I-enable ang Voice', vi: 'Bật Giọng Nói', ko: '음성 활성화' },
@@ -697,6 +873,69 @@ export const APP_TRANSLATIONS = {
     speakFaster: { en: 'Speak Faster', es: 'Hablar Más Rápido', tl: 'Magsalita ng Mabilis', vi: 'Nói Nhanh Hơn', ko: '더 빠르게' },
     testVoice: { en: 'Test Voice', es: 'Probar Voz', tl: 'Subukan ang Voice', vi: 'Thử Giọng Nói', ko: '음성 테스트' },
     listeningMode: { en: 'Listening...', es: 'Escuchando...', tl: 'Nakikinig...', vi: 'Đang nghe...', ko: '듣는 중...' },
+  },
+
+  // Accessibility Menu
+  accessibility: {
+    // Title & Headers
+    title: { en: 'Accessibility', es: 'Accesibilidad', tl: 'Accessibility', vi: 'Khả Năng Truy Cập', ko: '접근성' },
+    settingsTitle: { en: 'Accessibility Settings', es: 'Configuración de Accesibilidad', tl: 'Mga Setting ng Accessibility', vi: 'Cài Đặt Khả Năng Truy Cập', ko: '접근성 설정' },
+    settingsMenuAria: { en: 'Accessibility settings menu', es: 'Menú de configuración de accesibilidad', tl: 'Menu ng accessibility settings', vi: 'Menu cài đặt khả năng truy cập', ko: '접근성 설정 메뉴' },
+    complianceNote: { en: 'Section 508 Compliant • Voice Input • Color Vision Support', es: 'Cumple Sección 508 • Entrada de Voz • Soporte de Visión de Color', tl: 'Section 508 Compliant • Voice Input • Color Vision Support', vi: 'Tuân Thủ Mục 508 • Nhập Giọng Nói • Hỗ Trợ Thị Giác Màu', ko: '섹션 508 준수 • 음성 입력 • 색각 지원' },
+    complianceFooter: { en: 'Section 508 & WCAG 2.1 AA Compliant', es: 'Cumple con Sección 508 y WCAG 2.1 AA', tl: 'Section 508 at WCAG 2.1 AA Compliant', vi: 'Tuân Thủ Mục 508 & WCAG 2.1 AA', ko: '섹션 508 및 WCAG 2.1 AA 준수' },
+    
+    // Built for veterans summary
+    builtForAllVeterans: { en: 'Built for ALL veterans:', es: 'Creado para TODOS los veteranos:', tl: 'Gawa para sa LAHAT ng veterans:', vi: 'Được xây dựng cho TẤT CẢ cựu chiến binh:', ko: '모든 재향군인을 위해 제작됨:' },
+    featuresSummary: { en: 'Dark mode, color-blind modes, adjustable text size, reduced motion, keyboard navigation, screen reader support, and voice dictation in all text fields.', es: 'Modo oscuro, modos para daltónicos, tamaño de texto ajustable, movimiento reducido, navegación por teclado, soporte para lectores de pantalla y dictado por voz en todos los campos de texto.', tl: 'Dark mode, color-blind modes, adjustable text size, reduced motion, keyboard navigation, screen reader support, at voice dictation sa lahat ng text fields.', vi: 'Chế độ tối, chế độ mù màu, kích thước chữ có thể điều chỉnh, giảm chuyển động, điều hướng bàn phím, hỗ trợ trình đọc màn hình và đọc chính tả giọng nói trong tất cả các trường văn bản.', ko: '다크 모드, 색맹 모드, 조절 가능한 텍스트 크기, 모션 감소, 키보드 탐색, 스크린 리더 지원 및 모든 텍스트 필드에서 음성 받아쓰기.' },
+    
+    // Theme toggle
+    darkMode: { en: 'Dark Mode', es: 'Modo Oscuro', tl: 'Dark Mode', vi: 'Chế Độ Tối', ko: '다크 모드' },
+    lightMode: { en: 'Light Mode', es: 'Modo Claro', tl: 'Light Mode', vi: 'Chế Độ Sáng', ko: '라이트 모드' },
+    switchToDark: { en: 'Switch to dark mode', es: 'Cambiar a modo oscuro', tl: 'Lumipat sa dark mode', vi: 'Chuyển sang chế độ tối', ko: '다크 모드로 전환' },
+    switchToLight: { en: 'Switch to light mode', es: 'Cambiar a modo claro', tl: 'Lumipat sa light mode', vi: 'Chuyển sang chế độ sáng', ko: '라이트 모드로 전환' },
+    eyeStrainHelp: { en: 'Reduce eye strain in low-light conditions', es: 'Reduce la fatiga visual en condiciones de poca luz', tl: 'Bawasan ang eye strain sa low-light conditions', vi: 'Giảm mỏi mắt trong điều kiện ánh sáng yếu', ko: '저조도 환경에서 눈의 피로를 줄이세요' },
+    
+    // Color vision settings
+    colorVisionSettings: { en: 'Color Vision Settings', es: 'Configuración de Visión de Color', tl: 'Color Vision Settings', vi: 'Cài Đặt Thị Giác Màu', ko: '색각 설정' },
+    defaultColors: { en: 'Default Colors', es: 'Colores Predeterminados', tl: 'Default Colors', vi: 'Màu Mặc Định', ko: '기본 색상' },
+    standardPalette: { en: 'Standard color palette', es: 'Paleta de colores estándar', tl: 'Standard color palette', vi: 'Bảng màu tiêu chuẩn', ko: '표준 색상 팔레트' },
+    protanopia: { en: 'Protanopia', es: 'Protanopia', tl: 'Protanopia', vi: 'Mù Màu Đỏ', ko: '적색맹' },
+    redBlindFriendly: { en: 'Red-blind friendly', es: 'Amigable para daltónicos al rojo', tl: 'Red-blind friendly', vi: 'Thân thiện với mù màu đỏ', ko: '적색맹 친화적' },
+    deuteranopia: { en: 'Deuteranopia', es: 'Deuteranopia', tl: 'Deuteranopia', vi: 'Mù Màu Xanh Lá', ko: '녹색맹' },
+    greenBlindFriendly: { en: 'Green-blind friendly', es: 'Amigable para daltónicos al verde', tl: 'Green-blind friendly', vi: 'Thân thiện với mù màu xanh lá', ko: '녹색맹 친화적' },
+    tritanopia: { en: 'Tritanopia', es: 'Tritanopia', tl: 'Tritanopia', vi: 'Mù Màu Xanh Dương', ko: '청색맹' },
+    blueBlindFriendly: { en: 'Blue-blind friendly', es: 'Amigable para daltónicos al azul', tl: 'Blue-blind friendly', vi: 'Thân thiện với mù màu xanh dương', ko: '청색맹 친화적' },
+    highContrast: { en: 'High Contrast', es: 'Alto Contraste', tl: 'High Contrast', vi: 'Độ Tương Phản Cao', ko: '고대비' },
+    maximumVisibility: { en: 'Maximum visibility', es: 'Máxima visibilidad', tl: 'Maximum visibility', vi: 'Độ rõ nét tối đa', ko: '최대 가시성' },
+    
+    // Text size
+    textSize: { en: 'Text Size', es: 'Tamaño del Texto', tl: 'Laki ng Text', vi: 'Kích Thước Chữ', ko: '텍스트 크기' },
+    small: { en: 'Small', es: 'Pequeño', tl: 'Maliit', vi: 'Nhỏ', ko: '작게' },
+    normal: { en: 'Normal', es: 'Normal', tl: 'Normal', vi: 'Bình Thường', ko: '보통' },
+    large: { en: 'Large', es: 'Grande', tl: 'Malaki', vi: 'Lớn', ko: '크게' },
+    extraLarge: { en: 'Extra Large', es: 'Extra Grande', tl: 'Extra Malaki', vi: 'Rất Lớn', ko: '매우 크게' },
+    
+    // Motion
+    reduceMotion: { en: 'Reduce Motion', es: 'Reducir Movimiento', tl: 'Bawasan ang Motion', vi: 'Giảm Chuyển Động', ko: '모션 줄이기' },
+    toggleReducedMotion: { en: 'Toggle reduced motion', es: 'Alternar movimiento reducido', tl: 'Toggle reduced motion', vi: 'Bật/tắt giảm chuyển động', ko: '모션 줄이기 전환' },
+    
+    // AI Features
+    aiFeatures: { en: 'AI Features (BYOK)', es: 'Funciones de IA (BYOK)', tl: 'AI Features (BYOK)', vi: 'Tính Năng AI (BYOK)', ko: 'AI 기능 (BYOK)' },
+    aiDescription: { en: 'Enter your free Google Gemini API key to enable AI features like statement assistance, contract scanning, and strategy analysis.', es: 'Ingresa tu clave API gratuita de Google Gemini para habilitar funciones de IA como asistencia en declaraciones, escaneo de contratos y análisis estratégico.', tl: 'Ilagay ang libre mong Google Gemini API key para ma-enable ang AI features tulad ng statement assistance, contract scanning, at strategy analysis.', vi: 'Nhập khóa API Google Gemini miễn phí của bạn để bật các tính năng AI như hỗ trợ viết báo cáo, quét hợp đồng và phân tích chiến lược.', ko: '무료 Google Gemini API 키를 입력하여 진술 지원, 계약 스캔 및 전략 분석과 같은 AI 기능을 활성화하세요.' },
+    tip: { en: 'Tip:', es: 'Consejo:', tl: 'Tip:', vi: 'Mẹo:', ko: '팁:' },
+    geminiTip: { en: 'Gemini 1.5 Flash can process huge medical records (up to 2,000 pages) in a single pass. Perfect for large Blue Button files!', es: 'Gemini 1.5 Flash puede procesar registros médicos enormes (hasta 2,000 páginas) de una sola vez. ¡Perfecto para archivos grandes de Blue Button!', tl: 'Ang Gemini 1.5 Flash ay kayang mag-process ng malaking medical records (hanggang 2,000 pages) sa isang pass. Perfect para sa malaking Blue Button files!', vi: 'Gemini 1.5 Flash có thể xử lý hồ sơ y tế khổng lồ (lên đến 2.000 trang) trong một lần. Hoàn hảo cho các tệp Blue Button lớn!', ko: 'Gemini 1.5 Flash는 대용량 의료 기록(최대 2,000페이지)을 한 번에 처리할 수 있습니다. 대용량 Blue Button 파일에 완벽합니다!' },
+    
+    // API Key management
+    enterApiKey: { en: 'Enter Gemini API key...', es: 'Ingresa clave API de Gemini...', tl: 'Ilagay ang Gemini API key...', vi: 'Nhập khóa API Gemini...', ko: 'Gemini API 키 입력...' },
+    showApiKey: { en: 'Show API key', es: 'Mostrar clave API', tl: 'Ipakita ang API key', vi: 'Hiện khóa API', ko: 'API 키 표시' },
+    hideApiKey: { en: 'Hide API key', es: 'Ocultar clave API', tl: 'Itago ang API key', vi: 'Ẩn khóa API', ko: 'API 키 숨기기' },
+    saveKey: { en: 'Save Key', es: 'Guardar Clave', tl: 'I-save ang Key', vi: 'Lưu Khóa', ko: '키 저장' },
+    saved: { en: '✓ Saved!', es: '✓ ¡Guardado!', tl: '✓ Na-save!', vi: '✓ Đã lưu!', ko: '✓ 저장됨!' },
+    clear: { en: 'Clear', es: 'Borrar', tl: 'I-clear', vi: 'Xóa', ko: '지우기' },
+    getFreeApiKey: { en: 'Get free API key from Google AI Studio', es: 'Obtén clave API gratis de Google AI Studio', tl: 'Kumuha ng libreng API key mula sa Google AI Studio', vi: 'Lấy khóa API miễn phí từ Google AI Studio', ko: 'Google AI Studio에서 무료 API 키 받기' },
+    
+    // Reset
+    resetToDefaults: { en: 'Reset to Defaults', es: 'Restablecer Valores Predeterminados', tl: 'I-reset sa Defaults', vi: 'Đặt Lại Mặc Định', ko: '기본값으로 재설정' },
   },
 
   // Neural Engine / AI
@@ -804,6 +1043,49 @@ export const APP_TRANSLATIONS = {
       vi: 'Không thu thập dữ liệu. Không theo dõi. Sự riêng tư của bạn là danh dự của chúng tôi.',
       ko: '데이터 수집 없음. 추적 없음. 당신의 프라이버시는 우리의 명예입니다.',
     },
+  },
+
+  // Funding Modal - Luna's Treat Fund
+  fundingModal: {
+    title: { en: "😸 Luna's Treat Fund", es: '😸 Fondo de Golosinas de Luna', tl: "😸 Pondo ng Treat ni Luna", vi: '😸 Quỹ Đồ Ăn Của Luna', ko: '😸 루나의 간식 펀드' },
+    lunaAlt: { en: 'Luna - Chief Treat Officer', es: 'Luna - Directora de Golosinas', tl: 'Luna - Chief Treat Officer', vi: 'Luna - Giám Đốc Đồ Ăn Vặt', ko: '루나 - 최고 간식 책임자' },
+    missionStatement: {
+      en: "*Meow!* Luna promises: 100% goes to keeping this free for veterans (and treats for me). No ads, no tracking, no data selling - just a cat helping vets help vets! *purrrr* 🐾",
+      es: '*¡Miau!* Luna promete: 100% va a mantener esto gratis para veteranos (y golosinas para mí). Sin anuncios, sin seguimiento, sin venta de datos - ¡solo una gata ayudando a veteranos a ayudar veteranos! *purrrr* 🐾',
+      tl: "*Meow!* Nangangako si Luna: 100% napupunta sa pagpapanatiling libre nito para sa mga beterano (at treats para sa akin). Walang ads, walang tracking, walang data selling - isang pusa lang na tumutulong sa mga beterano na tumulong sa mga beterano! *purrrr* 🐾",
+      vi: '*Meo!* Luna hứa: 100% dùng để giữ dịch vụ miễn phí cho cựu chiến binh (và đồ ăn vặt cho tôi). Không quảng cáo, không theo dõi, không bán dữ liệu - chỉ là một con mèo giúp cựu chiến binh giúp cựu chiến binh! *purrrr* 🐾',
+      ko: '*야옹!* 루나가 약속합니다: 100%는 재향군인을 위해 무료로 유지하는 데 사용됩니다 (그리고 제 간식). 광고 없음, 추적 없음, 데이터 판매 없음 - 그저 재향군인을 돕는 고양이! *그르릉* 🐾'
+    },
+    whereDoesSupport: { en: 'Where does your support go?', es: '¿A dónde va tu apoyo?', tl: 'Saan napupunta ang suporta mo?', vi: 'Sự hỗ trợ của bạn đi đâu?', ko: '지원금은 어디로 가나요?' },
+    lunaTreats: { en: "Luna's Treats", es: 'Golosinas de Luna', tl: 'Mga Treat ni Luna', vi: 'Đồ Ăn Của Luna', ko: '루나의 간식' },
+    midnightUpgrades: { en: 'Midnight Upgrades', es: 'Actualizaciones de Midnight', tl: 'Mga Upgrade ni Midnight', vi: 'Nâng Cấp Midnight', ko: '미드나잇 업그레이드' },
+    thankYou: {
+      en: "*Purrrr* Thank you for supporting veteran-built tools (and Luna's treat fund)! 😸💚",
+      es: '*Purrrr* ¡Gracias por apoyar herramientas construidas por veteranos (y el fondo de golosinas de Luna)! 😸💚',
+      tl: "*Purrrr* Salamat sa pagsuporta sa mga tool na ginawa ng mga beterano (at sa pondo ng treat ni Luna)! 😸💚",
+      vi: '*Purrrr* Cảm ơn bạn đã hỗ trợ các công cụ do cựu chiến binh xây dựng (và quỹ đồ ăn vặt của Luna)! 😸💚',
+      ko: '*그르릉* 재향군인이 만든 도구 지원에 감사합니다 (그리고 루나의 간식 펀드)! 😸💚'
+    },
+    hrsToBuild: { en: 'hrs', es: 'hrs', tl: 'oras', vi: 'giờ', ko: '시간' },
+    toBuild: { en: 'to build', es: 'para construir', tl: 'para buuin', vi: 'để xây dựng', ko: '구축에' },
+    linesOfCode: { en: 'lines', es: 'líneas', tl: 'linya', vi: 'dòng', ko: '줄' },
+    ofCode: { en: 'of code', es: 'de código', tl: 'ng code', vi: 'mã', ko: '코드' },
+    // Luna messages
+    lunaMsg1: { en: "*Meow!* I've been testing this code with my paws for MONTHS! Every donation = extra Churu for me! 😻", es: '*¡Miau!* ¡He estado probando este código con mis patas durante MESES! ¡Cada donación = Churu extra para mí! 😻', tl: "*Meow!* Sinusuri ko ang code na ito gamit ang aking mga paa ng mga BUWAN! Bawat donasyon = extra Churu para sa akin! 😻", vi: '*Meo!* Tôi đã thử nghiệm mã này bằng chân của tôi trong NHIỀU THÁNG! Mỗi khoản đóng góp = Churu thêm cho tôi! 😻', ko: '*야옹!* 몇 달 동안 제 발로 이 코드를 테스트했어요! 모든 기부 = 저를 위한 추가 츄르! 😻' },
+    lunaMsg2: { en: "*purrrr* My wish list: More treats, more catnip, and a comfy spot to supervise dad's coding sessions! 🐾", es: '*purrrr* Mi lista de deseos: ¡Más golosinas, más hierba gatera y un lugar cómodo para supervisar las sesiones de programación de papá! 🐾', tl: "*purrrr* Ang wish list ko: Mas maraming treats, mas maraming catnip, at isang komportableng lugar para bantayan ang coding sessions ni daddy! 🐾", vi: '*purrrr* Danh sách mong muốn của tôi: Nhiều đồ ăn vặt hơn, nhiều cỏ mèo hơn, và một chỗ thoải mái để giám sát các buổi lập trình của bố! 🐾', ko: '*그르릉* 내 위시리스트: 더 많은 간식, 더 많은 캣닙, 그리고 아빠의 코딩 세션을 감독할 편안한 자리! 🐾' },
+    lunaMsg3: { en: 'Listen human, I PERSONALLY inspect every keystroke. $5-10 keeps my quality control standards high! 😸', es: 'Escucha humano, PERSONALMENTE inspecciono cada tecla. ¡$5-10 mantiene mis estándares de control de calidad altos! 😸', tl: 'Makinig ka tao, PERSONAL kong iniinspeksyon ang bawat keystroke. $5-10 ang nagpapanatili ng mataas na quality control standards ko! 😸', vi: 'Nghe này con người, tôi ĐÍCH THÂN kiểm tra từng phím bấm. $5-10 giữ tiêu chuẩn kiểm soát chất lượng của tôi cao! 😸', ko: '들어봐요 인간, 나는 개인적으로 모든 키 입력을 검사해요. $5-10이 내 품질 관리 기준을 높게 유지해요! 😸' },
+    lunaMsg4: { en: "*meow meow* I promise to walk across the keyboard LESS... if there are treats involved. Maybe. No guarantees. 😹", es: '*miau miau* Prometo caminar MENOS por el teclado... si hay golosinas de por medio. Quizás. Sin garantías. 😹', tl: "*meow meow* Ipinapangako kong HINDI NA MASYADONG lalakad sa keyboard... kung may mga treats. Siguro. Walang garantiya. 😹", vi: '*meo meo* Tôi hứa sẽ đi qua bàn phím ÍT hơn... nếu có đồ ăn vặt. Có thể. Không đảm bảo. 😹', ko: '*야옹야옹* 간식이 있으면 키보드 위를 덜 걸어다닐게요... 아마도. 보장은 없어요. 😹' },
+    lunaMsg5: { en: "*purrrr* Fun fact: I've knocked over dad's coffee 47 times while he built this. I deserve treats for that dedication! ☕😼", es: '*purrrr* Dato curioso: ¡He tirado el café de papá 47 veces mientras construía esto! ¡Merezco golosinas por esa dedicación! ☕😼', tl: "*purrrr* Fun fact: 47 beses ko nang natumba ang kape ni daddy habang ginagawa niya ito. Deserve ko ng treats para sa dedikasyong iyon! ☕😼", vi: '*purrrr* Thực tế thú vị: Tôi đã đổ cà phê của bố 47 lần khi ông ấy xây dựng cái này. Tôi xứng đáng được thưởng đồ ăn vặt vì sự cống hiến đó! ☕😼', ko: '*그르릉* 재미있는 사실: 아빠가 이것을 만드는 동안 아빠 커피를 47번 엎었어요. 그 헌신에 대한 간식을 받을 자격이 있어요! ☕😼' },
+    // Midnight messages
+    midnightMsg1: { en: 'Midnight dreams of: AMD Ryzen 9 9950X3D (a new brain!) and RTX 5090 (another heart!) 🖥️', es: 'Midnight sueña con: AMD Ryzen 9 9950X3D (¡un nuevo cerebro!) y RTX 5090 (¡otro corazón!) 🖥️', tl: 'Pangarap ni Midnight: AMD Ryzen 9 9950X3D (bagong utak!) at RTX 5090 (isa pang puso!) 🖥️', vi: 'Midnight mơ về: AMD Ryzen 9 9950X3D (một bộ não mới!) và RTX 5090 (một trái tim khác!) 🖥️', ko: 'Midnight의 꿈: AMD Ryzen 9 9950X3D (새 두뇌!)와 RTX 5090 (또 다른 심장!) 🖥️' },
+    midnightMsg2: { en: "Midnight: 'I've compiled 100K+ lines of code! I deserve a 9950X3D brain transplant!' 💻", es: "Midnight: '¡He compilado más de 100K líneas de código! ¡Merezco un trasplante de cerebro 9950X3D!' 💻", tl: "Midnight: 'Nag-compile ako ng 100K+ lines ng code! Deserve ko ng 9950X3D brain transplant!' 💻", vi: "Midnight: 'Tôi đã biên dịch hơn 100K dòng mã! Tôi xứng đáng được cấy ghép não 9950X3D!' 💻", ko: "Midnight: '저는 100K+ 줄의 코드를 컴파일했어요! 9950X3D 두뇌 이식을 받을 자격이 있어요!' 💻" },
+    midnightMsg3: { en: 'Help Midnight grow: 5090 graphics = faster AI, 9950X3D = more veteran tools built! 🚀', es: 'Ayuda a Midnight a crecer: gráficos 5090 = IA más rápida, 9950X3D = ¡más herramientas para veteranos! 🚀', tl: 'Tulungan si Midnight lumago: 5090 graphics = mas mabilis na AI, 9950X3D = mas maraming tools para sa mga beterano! 🚀', vi: 'Giúp Midnight phát triển: 5090 graphics = AI nhanh hơn, 9950X3D = nhiều công cụ cho cựu chiến binh hơn! 🚀', ko: 'Midnight의 성장을 도와주세요: 5090 그래픽 = 더 빠른 AI, 9950X3D = 더 많은 재향군인 도구! 🚀' },
+    midnightMsg4: { en: "Midnight's upgrade fund: Because 128GB RAM is 'just barely enough' for development 😅", es: 'Fondo de actualización de Midnight: Porque 128GB de RAM es "apenas suficiente" para desarrollo 😅', tl: "Midnight upgrade fund: Dahil ang 128GB RAM ay 'halos sapat lang' para sa development 😅", vi: 'Quỹ nâng cấp Midnight: Vì 128GB RAM chỉ "vừa đủ" cho phát triển 😅', ko: 'Midnight 업그레이드 펀드: 128GB RAM이 개발에 "겨우 충분"하기 때문에 😅' },
+    // Funding options
+    buyMeACoffee: { en: 'Buy Me a Coffee', es: 'Invítame un Café', tl: 'Bilhan Mo Ako ng Kape', vi: 'Mua Cho Tôi Ly Cà Phê', ko: '커피 사주기' },
+    paypal: { en: 'PayPal', es: 'PayPal', tl: 'PayPal', vi: 'PayPal', ko: 'PayPal' },
+    cashApp: { en: 'Cash App', es: 'Cash App', tl: 'Cash App', vi: 'Cash App', ko: 'Cash App' },
+    venmo: { en: 'Venmo', es: 'Venmo', tl: 'Venmo', vi: 'Venmo', ko: 'Venmo' },
   },
 
   // Crisis Modal - Critical Safety Content
@@ -2148,17 +2430,1257 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
     // Preview
     textPreview: { en: 'Text Preview', es: 'Vista Previa de Texto', tl: 'Text Preview', vi: 'Xem Trước Văn Bản', ko: '텍스트 미리보기' },
     clickToExpand: { en: 'click to expand', es: 'clic para expandir', tl: 'i-click para palawakin', vi: 'nhấp để mở rộng', ko: '확장하려면 클릭' },
+    aiEnhanced: { en: 'AI-Enhanced', es: 'Mejorado con IA', tl: 'AI-Enhanced', vi: 'Cải Thiện AI', ko: 'AI 개선' },
     
-    // Next Steps
+    // Additional Form Labels
+    ssnLast4: { en: 'Last 4 of SSN', es: 'Últimos 4 del SSN', tl: 'Huling 4 ng SSN', vi: '4 Số Cuối SSN', ko: 'SSN 마지막 4자리' },
+    ssnLast4Helper: { en: 'Most forms only need last 4', es: 'La mayoría de formularios solo necesitan los últimos 4', tl: 'Karamihan ng forms ay kailangan lang ang huling 4', vi: 'Hầu hết biểu mẫu chỉ cần 4 số cuối', ko: '대부분의 양식은 마지막 4자리만 필요합니다' },
+    vaFileNumberPlaceholder: { en: 'Optional - if different from SSN', es: 'Opcional - si es diferente del SSN', tl: 'Optional - kung iba sa SSN', vi: 'Tùy chọn - nếu khác SSN', ko: '선택 - SSN과 다른 경우' },
+    sensitiveInfoOptional: { en: 'Sensitive Information (Full SSN - Optional)', es: 'Información Sensible (SSN Completo - Opcional)', tl: 'Sensitive Information (Full SSN - Optional)', vi: 'Thông Tin Nhạy Cảm (SSN Đầy Đủ - Tùy Chọn)', ko: '민감한 정보 (전체 SSN - 선택)' },
+    privacyLocalStorage: { en: 'Your data is stored locally on your device. Nothing is sent to any server.', es: 'Tus datos se almacenan localmente en tu dispositivo. Nada se envía a ningún servidor.', tl: 'Ang data mo ay naka-store locally sa device mo. Walang ipinapadala sa anumang server.', vi: 'Dữ liệu của bạn được lưu trữ cục bộ trên thiết bị. Không có gì được gửi đến máy chủ.', ko: '데이터는 기기에 로컬로 저장됩니다. 서버로 전송되지 않습니다.' },
+    edit: { en: 'Edit', es: 'Editar', tl: 'I-edit', vi: 'Chỉnh Sửa', ko: '편집' },
+    cancel: { en: 'Cancel', es: 'Cancelar', tl: 'Kanselahin', vi: 'Hủy', ko: '취소' },
+    back: { en: 'Back', es: 'Atrás', tl: 'Bumalik', vi: 'Quay Lại', ko: '뒤로' },
+    next: { en: 'Next', es: 'Siguiente', tl: 'Susunod', vi: 'Tiếp Theo', ko: '다음' },
+    
+    // AI Enhancement Additional
+    aiEnhanceDesc: { en: 'Enhance your statement with AI to make it more professional and compelling. Uses the "Three Pillars" approach for effective VA claim statements.', es: 'Mejora tu declaración con IA para hacerla más profesional y convincente. Usa el enfoque de "Tres Pilares" para declaraciones efectivas.', tl: 'Pahusayin ang statement mo gamit ang AI para gawin itong mas professional at compelling. Gumagamit ng "Three Pillars" approach.', vi: 'Cải thiện tuyên bố của bạn bằng AI để làm cho nó chuyên nghiệp và thuyết phục hơn. Sử dụng phương pháp "Ba Trụ Cột".', ko: 'AI로 명세서를 개선하여 더 전문적이고 설득력 있게 만드세요. "세 기둥" 접근법을 사용합니다.' },
+    tip: { en: 'Tip', es: 'Consejo', tl: 'Tip', vi: 'Mẹo', ko: '팁' },
+    aiTipAllModels: { en: 'All AI models work great for statement writing!', es: '¡Todos los modelos de IA funcionan muy bien para escribir declaraciones!', tl: 'Lahat ng AI models ay maganda para sa pagsulat ng statement!', vi: 'Tất cả các mô hình AI đều hoạt động tốt cho việc viết tuyên bố!', ko: '모든 AI 모델이 명세서 작성에 잘 작동합니다!' },
+    aiPrivateNotice: { en: '100% Private - Your data never leaves your device', es: '100% Privado - Tus datos nunca salen de tu dispositivo', tl: '100% Private - Hindi kailanman aalis ang data mo sa device mo', vi: '100% Riêng Tư - Dữ liệu không bao giờ rời khỏi thiết bị', ko: '100% 비공개 - 데이터가 기기를 떠나지 않습니다' },
+    viewingAIVersion: { en: 'Viewing AI-enhanced version', es: 'Viendo versión mejorada con IA', tl: 'Tinitingnan ang AI-enhanced version', vi: 'Đang xem phiên bản cải thiện AI', ko: 'AI 개선 버전 보기' },
+    aiEnhancementAvailableDesc: { en: 'This form can be enhanced with AI to make your statement more professional and compelling using the "Three Pillars" approach.', es: 'Este formulario puede mejorarse con IA para hacer tu declaración más profesional y convincente usando el enfoque de "Tres Pilares".', tl: 'Ang form na ito ay maaaring pahusayin gamit ang AI para gawin ang statement mo na mas professional at compelling gamit ang "Three Pillars" approach.', vi: 'Biểu mẫu này có thể được cải thiện bằng AI để làm cho tuyên bố của bạn chuyên nghiệp và thuyết phục hơn bằng phương pháp "Ba Trụ Cột".', ko: '이 양식은 "세 기둥" 접근법을 사용하여 명세서를 더 전문적이고 설득력 있게 만들기 위해 AI로 개선할 수 있습니다.' },
+    
+    // Download Section Additional
+    officialVAFormPdf: { en: 'Official VA Form PDF', es: 'PDF del Formulario VA Oficial', tl: 'Official VA Form PDF', vi: 'PDF Biểu Mẫu VA Chính Thức', ko: '공식 VA 양식 PDF' },
+    readyToSign: { en: 'Ready to sign & submit', es: 'Listo para firmar y enviar', tl: 'Handa nang pirmahan at isumite', vi: 'Sẵn sàng ký và gửi', ko: '서명 및 제출 준비 완료' },
+    saveToPacketBtn: { en: 'Save to Packet', es: 'Guardar en Paquete', tl: 'I-save sa Packet', vi: 'Lưu vào Hồ Sơ', ko: '패킷에 저장' },
+    
+    // Statement Generated
+    statementGeneratedDesc: { en: 'Review your statement below, then download. You can get a ready-to-sign PDF or text formats.', es: 'Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.', tl: 'Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.', vi: 'Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.', ko: '아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.' },
+    yourGeneratedStatement: { en: 'Your Generated Statement', es: 'Tu Declaración Generada', tl: 'Ang Na-generate Mong Statement', vi: 'Tuyên Bố Đã Tạo Của Bạn', ko: '생성된 명세서' },
+    
+    // Next Steps Section
     nextSteps: { en: 'Next Steps', es: 'Próximos Pasos', tl: 'Mga Susunod na Hakbang', vi: 'Các Bước Tiếp Theo', ko: '다음 단계' },
-    downloadStep: { en: 'Download the "Official VA Form PDF" above - it\'s already filled out!', es: 'Descarga el "PDF del Formulario VA Oficial" arriba - ¡ya está llenado!', tl: 'I-download ang "Official VA Form PDF" sa itaas - naka-fill na!', vi: 'Tải xuống "PDF Biểu Mẫu VA Chính Thức" ở trên - đã được điền sẵn!', ko: '위의 "공식 VA 양식 PDF"를 다운로드하세요 - 이미 작성되어 있습니다!' },
-    reviewStep: { en: 'Review the PDF to make sure all information is correct', es: 'Revisa el PDF para asegurarte de que toda la información sea correcta', tl: 'Suriin ang PDF para matiyak na tama ang lahat ng impormasyon', vi: 'Xem lại PDF để đảm bảo tất cả thông tin chính xác', ko: 'PDF를 검토하여 모든 정보가 올바른지 확인하세요' },
-    printStep: { en: 'Print the completed form', es: 'Imprime el formulario completado', tl: 'I-print ang nakumpletong form', vi: 'In biểu mẫu đã hoàn thành', ko: '완성된 양식을 인쇄하세요' },
-    signStep: { en: 'Sign and date where indicated', es: 'Firma y fecha donde se indica', tl: 'Pirmahan at lagyan ng petsa kung saan ipinapakita', vi: 'Ký và ghi ngày ở nơi được chỉ định', ko: '표시된 곳에 서명하고 날짜를 기입하세요' },
-    submitStep: { en: 'Submit online at VA.gov or mail to your VA Regional Office', es: 'Envía en línea en VA.gov o por correo a tu Oficina Regional del VA', tl: 'Isumite online sa VA.gov o ipadala sa iyong VA Regional Office', vi: 'Gửi trực tuyến tại VA.gov hoặc gửi qua đường bưu điện đến Văn phòng VA Khu vực', ko: 'VA.gov에서 온라인으로 제출하거나 VA 지역 사무소로 우편 발송하세요' },
+    download: { en: 'Download', es: 'Descargar', tl: 'I-download', vi: 'Tải Xuống', ko: '다운로드' },
+    review: { en: 'Review', es: 'Revisar', tl: 'Suriin', vi: 'Xem Lại', ko: '검토' },
+    print: { en: 'Print', es: 'Imprimir', tl: 'I-print', vi: 'In', ko: '인쇄' },
+    sign: { en: 'Sign', es: 'Firmar', tl: 'Pirmahan', vi: 'Ký', ko: '서명' },
+    submit: { en: 'Submit', es: 'Enviar', tl: 'Isumite', vi: 'Gửi', ko: '제출' },
+    nextStepDownload: { en: 'the "Official VA Form PDF" above - it\'s already filled out!', es: 'el "PDF del Formulario VA Oficial" arriba - ¡ya está llenado!', tl: 'ang "Official VA Form PDF" sa itaas - naka-fill na!', vi: '"PDF Biểu Mẫu VA Chính Thức" ở trên - đã được điền sẵn!', ko: '위의 "공식 VA 양식 PDF" - 이미 작성되어 있습니다!' },
+    nextStepReview: { en: 'the PDF to make sure all information is correct', es: 'el PDF para asegurarte de que toda la información sea correcta', tl: 'ang PDF para matiyak na tama ang lahat ng impormasyon', vi: 'PDF để đảm bảo tất cả thông tin chính xác', ko: 'PDF를 검토하여 모든 정보가 올바른지 확인하세요' },
+    nextStepPrint: { en: 'the completed form', es: 'el formulario completado', tl: 'ang nakumpletong form', vi: 'biểu mẫu đã hoàn thành', ko: '완성된 양식을' },
+    nextStepSign: { en: 'and date where indicated', es: 'y fecha donde se indica', tl: 'at lagyan ng petsa kung saan ipinapakita', vi: 'và ghi ngày ở nơi được chỉ định', ko: '표시된 곳에 날짜를 기입하세요' },
+    nextStepSubmit: { en: 'online at', es: 'en línea en', tl: 'online sa', vi: 'trực tuyến tại', ko: '온라인으로' },
+    orMailTo: { en: 'or mail to your VA Regional Office', es: 'o por correo a tu Oficina Regional del VA', tl: 'o ipadala sa iyong VA Regional Office', vi: 'hoặc gửi qua đường bưu điện đến Văn phòng VA Khu vực', ko: '또는 VA 지역 사무소로 우편 발송' },
     
     // Footer
     footerPrivacy: { en: 'All data stays in your browser. We never store your personal information.', es: 'Todos los datos permanecen en tu navegador. Nunca almacenamos tu información personal.', tl: 'Lahat ng data ay nananatili sa browser mo. Hindi namin kailanman iniimbak ang personal na impormasyon mo.', vi: 'Tất cả dữ liệu ở trong trình duyệt của bạn. Chúng tôi không bao giờ lưu trữ thông tin cá nhân của bạn.', ko: '모든 데이터는 브라우저에 남습니다. 개인 정보를 저장하지 않습니다.' },
+  },
+
+  // DD214 Analyzer
+  // Pathfinder Tool
+  pathfinder: {
+    // Header
+    title: { en: 'The Pathfinder', es: 'El Pathfinder', tl: 'Ang Pathfinder', vi: 'Người Tìm Đường', ko: '패스파인더' },
+    subtitle: { en: 'Strategic claims analysis powered by AI. Enter your current ratings and discover high-probability secondary claims you may be missing.', es: 'Análisis estratégico de reclamos impulsado por IA. Ingresa tus calificaciones actuales y descubre reclamos secundarios de alta probabilidad que puedes estar perdiendo.', tl: 'Strategic claims analysis na pinapagana ng AI. Ilagay ang iyong kasalukuyang ratings at tuklasin ang high-probability secondary claims na maaaring hindi mo nakukuha.', vi: 'Phân tích yêu cầu chiến lược được hỗ trợ bởi AI. Nhập xếp hạng hiện tại của bạn và khám phá các yêu cầu thứ cấp có khả năng cao mà bạn có thể đang bỏ lỡ.', ko: 'AI 기반 전략적 청구 분석. 현재 등급을 입력하고 놓치고 있을 수 있는 높은 확률의 2차 청구를 발견하세요.' },
+    
+    // Consent/Privacy
+    privacyFirst: { en: 'Privacy First', es: 'Privacidad Primero', tl: 'Privacy Muna', vi: 'Quyền Riêng Tư Trước Tiên', ko: '개인정보 보호 우선' },
+    privacyReviewPrompt: { en: 'Before analyzing, please review how we protect your information.', es: 'Antes de analizar, por favor revisa cómo protegemos tu información.', tl: 'Bago mag-analyze, mangyaring suriin kung paano namin pinoprotektahan ang iyong impormasyon.', vi: 'Trước khi phân tích, vui lòng xem cách chúng tôi bảo vệ thông tin của bạn.', ko: '분석하기 전에 정보 보호 방법을 검토해 주세요.' },
+    iUnderstandContinue: { en: 'I Understand, Continue', es: 'Entiendo, Continuar', tl: 'Nauunawaan Ko, Magpatuloy', vi: 'Tôi Hiểu, Tiếp Tục', ko: '이해했습니다, 계속하기' },
+    viewPrivacyInfo: { en: 'View Privacy Information', es: 'Ver Información de Privacidad', tl: 'Tingnan ang Privacy Information', vi: 'Xem Thông Tin Quyền Riêng Tư', ko: '개인정보 보호 정보 보기' },
+    hidePrivacyInfo: { en: 'Hide Privacy Information', es: 'Ocultar Información de Privacidad', tl: 'Itago ang Privacy Information', vi: 'Ẩn Thông Tin Quyền Riêng Tư', ko: '개인정보 보호 정보 숨기기' },
+    
+    // AI Setup
+    aiRequiredTitle: { en: 'AI Required for Analysis', es: 'IA Requerida para Análisis', tl: 'Kailangan ng AI para sa Analysis', vi: 'Cần AI để Phân Tích', ko: '분석에 AI 필요' },
+    aiRequiredDesc: { en: 'Click the AI Status button in the header above to load your secure Local AI (100% private) or enter your Gemini API key.', es: 'Haz clic en el botón de Estado de IA en el encabezado para cargar tu IA Local segura (100% privada) o ingresa tu clave API de Gemini.', tl: 'I-click ang AI Status button sa header sa itaas para i-load ang iyong secure Local AI (100% private) o ilagay ang iyong Gemini API key.', vi: 'Nhấp vào nút Trạng thái AI ở tiêu đề phía trên để tải AI Cục bộ an toàn của bạn (100% riêng tư) hoặc nhập khóa API Gemini của bạn.', ko: '위 헤더의 AI 상태 버튼을 클릭하여 보안 로컬 AI(100% 비공개)를 로드하거나 Gemini API 키를 입력하세요.' },
+    aiTip: { en: 'Tip:', es: 'Consejo:', tl: 'Tip:', vi: 'Mẹo:', ko: '팁:' },
+    aiTipText: { en: 'All AI models analyze your ratings quickly. Strategy generation takes just seconds!', es: 'Todos los modelos de IA analizan tus calificaciones rápidamente. ¡La generación de estrategia toma solo segundos!', tl: 'Lahat ng AI models ay nag-aanalyze ng iyong ratings nang mabilis. Ang strategy generation ay ilang segundo lang!', vi: 'Tất cả các mô hình AI phân tích xếp hạng của bạn nhanh chóng. Việc tạo chiến lược chỉ mất vài giây!', ko: '모든 AI 모델은 등급을 빠르게 분석합니다. 전략 생성은 몇 초면 됩니다!' },
+    
+    // Input Section
+    currentRatingsTitle: { en: 'Your Current Service-Connected Ratings', es: 'Tus Calificaciones Actuales Conectadas al Servicio', tl: 'Ang Iyong Kasalukuyang Service-Connected Ratings', vi: 'Xếp Hạng Liên Quan Đến Phục Vụ Hiện Tại Của Bạn', ko: '현재 복무 관련 등급' },
+    loadMyRatings: { en: 'Load My Ratings', es: 'Cargar Mis Calificaciones', tl: 'I-load ang Aking Ratings', vi: 'Tải Xếp Hạng Của Tôi', ko: '내 등급 불러오기' },
+    pasteFromVaGov: { en: 'Paste from VA.gov', es: 'Pegar desde VA.gov', tl: 'I-paste mula sa VA.gov', vi: 'Dán từ VA.gov', ko: 'VA.gov에서 붙여넣기' },
+    dropInFile: { en: 'Drop In File', es: 'Soltar Archivo', tl: 'I-drop ang File', vi: 'Thả Tệp Vào', ko: '파일 드롭' },
+    loadFromPacket: { en: 'Load from My Packet', es: 'Cargar desde Mi Paquete', tl: 'I-load mula sa My Packet', vi: 'Tải từ Hồ Sơ Của Tôi', ko: '내 패킷에서 불러오기' },
+    loadedFromPacket: { en: 'Loaded conditions from your saved packet. Add rating percentages if known.', es: 'Condiciones cargadas desde tu paquete guardado. Agrega porcentajes de calificación si los conoces.', tl: 'Na-load ang conditions mula sa naka-save mong packet. Idagdag ang rating percentages kung alam.', vi: 'Đã tải các tình trạng từ hồ sơ đã lưu của bạn. Thêm phần trăm xếp hạng nếu biết.', ko: '저장된 패킷에서 조건을 불러왔습니다. 알고 있다면 등급 비율을 추가하세요.' },
+    addAnotherRating: { en: 'Add Another Rating', es: 'Agregar Otra Calificación', tl: 'Magdagdag ng Isa Pang Rating', vi: 'Thêm Xếp Hạng Khác', ko: '다른 등급 추가' },
+    selectCondition: { en: 'Select condition...', es: 'Seleccionar condición...', tl: 'Pumili ng kondisyon...', vi: 'Chọn tình trạng...', ko: '상태 선택...' },
+    enterConditionName: { en: 'Enter condition name...', es: 'Ingresa el nombre de la condición...', tl: 'Ilagay ang pangalan ng kondisyon...', vi: 'Nhập tên tình trạng...', ko: '상태 이름 입력...' },
+    
+    // Additional Context
+    additionalContext: { en: 'Additional Context (Optional)', es: 'Contexto Adicional (Opcional)', tl: 'Karagdagang Konteksto (Opsyonal)', vi: 'Bối Cảnh Bổ Sung (Tùy Chọn)', ko: '추가 컨텍스트 (선택사항)' },
+    additionalContextPlaceholder: { en: 'Symptoms you experience, medications you take, or any other relevant information...', es: 'Síntomas que experimentas, medicamentos que tomas, o cualquier otra información relevante...', tl: 'Mga sintomas na nararanasan mo, gamot na iniinom, o anumang iba pang kaugnay na impormasyon...', vi: 'Các triệu chứng bạn gặp phải, thuốc bạn dùng, hoặc bất kỳ thông tin liên quan nào khác...', ko: '경험하는 증상, 복용하는 약물, 또는 기타 관련 정보...' },
+    
+    // Actions
+    clearAll: { en: 'Clear All', es: 'Limpiar Todo', tl: 'I-clear Lahat', vi: 'Xóa Tất Cả', ko: '모두 지우기' },
+    analyzeMyStrategy: { en: 'Analyze My Strategy', es: 'Analizar Mi Estrategia', tl: 'Suriin ang Aking Strategy', vi: 'Phân Tích Chiến Lược Của Tôi', ko: '내 전략 분석' },
+    analyzingStrategy: { en: 'Analyzing Strategy...', es: 'Analizando Estrategia...', tl: 'Sinusuri ang Strategy...', vi: 'Đang Phân Tích Chiến Lược...', ko: '전략 분석 중...' },
+    analyzeDifferentRatings: { en: 'Analyze Different Ratings', es: 'Analizar Diferentes Calificaciones', tl: 'Suriin ang Ibang Ratings', vi: 'Phân Tích Xếp Hạng Khác', ko: '다른 등급 분석' },
+    
+    // Error Messages
+    errorAddRating: { en: 'Please add at least one current rating', es: 'Por favor agrega al menos una calificación actual', tl: 'Mangyaring magdagdag ng kahit isang kasalukuyang rating', vi: 'Vui lòng thêm ít nhất một xếp hạng hiện tại', ko: '최소한 하나의 현재 등급을 추가해 주세요' },
+    errorNoAI: { en: 'No AI available. Please set up an API key or enable Local AI in settings.', es: 'No hay IA disponible. Por favor configura una clave API o habilita IA Local en configuración.', tl: 'Walang AI na available. Mangyaring mag-set up ng API key o i-enable ang Local AI sa settings.', vi: 'Không có AI khả dụng. Vui lòng thiết lập khóa API hoặc bật AI Cục bộ trong cài đặt.', ko: 'AI를 사용할 수 없습니다. API 키를 설정하거나 설정에서 로컬 AI를 활성화하세요.' },
+    errorNoSavedRatings: { en: 'No saved ratings found. Use "Paste from VA.gov" or enter ratings in Secondary Scout first.', es: 'No se encontraron calificaciones guardadas. Usa "Pegar desde VA.gov" o ingresa calificaciones en Secondary Scout primero.', tl: 'Walang nakitang naka-save na ratings. Gamitin ang "I-paste mula sa VA.gov" o ilagay ang ratings sa Secondary Scout muna.', vi: 'Không tìm thấy xếp hạng đã lưu. Sử dụng "Dán từ VA.gov" hoặc nhập xếp hạng trong Secondary Scout trước.', ko: '저장된 등급을 찾을 수 없습니다. "VA.gov에서 붙여넣기"를 사용하거나 먼저 Secondary Scout에서 등급을 입력하세요.' },
+    errorUnsupportedFile: { en: 'Unsupported file type. Please use PDF, Word (.docx), Text, or RTF files.', es: 'Tipo de archivo no soportado. Por favor usa archivos PDF, Word (.docx), Texto o RTF.', tl: 'Hindi suportadong uri ng file. Mangyaring gumamit ng PDF, Word (.docx), Text, o RTF files.', vi: 'Loại tệp không được hỗ trợ. Vui lòng sử dụng tệp PDF, Word (.docx), Text hoặc RTF.', ko: '지원되지 않는 파일 형식입니다. PDF, Word(.docx), 텍스트 또는 RTF 파일을 사용하세요.' },
+    errorProcessingFile: { en: 'Failed to process file:', es: 'Error al procesar el archivo:', tl: 'Nabigong i-proseso ang file:', vi: 'Không thể xử lý tệp:', ko: '파일 처리 실패:' },
+    noRatingsExtracted: { en: 'No structured ratings found in the document. The text has been added as additional context. Please enter your ratings manually.', es: 'No se encontraron calificaciones estructuradas en el documento. El texto se ha agregado como contexto adicional. Por favor ingresa tus calificaciones manualmente.', tl: 'Walang nahanap na structured ratings sa dokumento. Ang text ay naidagdag bilang additional context. Mangyaring ilagay ang iyong ratings nang manual.', vi: 'Không tìm thấy xếp hạng có cấu trúc trong tài liệu. Văn bản đã được thêm làm bối cảnh bổ sung. Vui lòng nhập xếp hạng của bạn thủ công.', ko: '문서에서 구조화된 등급을 찾을 수 없습니다. 텍스트가 추가 컨텍스트로 추가되었습니다. 수동으로 등급을 입력해 주세요.' },
+    
+    // Results - Strategy Overview
+    strategyAnalysis: { en: 'Strategy Analysis', es: 'Análisis de Estrategia', tl: 'Strategy Analysis', vi: 'Phân Tích Chiến Lược', ko: '전략 분석' },
+    currentEstimated: { en: 'Current Estimated', es: 'Estimado Actual', tl: 'Kasalukuyang Estimate', vi: 'Ước Tính Hiện Tại', ko: '현재 추정' },
+    potentialWithOpportunities: { en: 'Potential With Opportunities', es: 'Potencial Con Oportunidades', tl: 'Potensyal na may Opportunities', vi: 'Tiềm Năng Với Cơ Hội', ko: '기회가 있는 잠재력' },
+    
+    // Results - Opportunities
+    strategicOpportunities: { en: 'Strategic Opportunities', es: 'Oportunidades Estratégicas', tl: 'Mga Strategic Opportunities', vi: 'Cơ Hội Chiến Lược', ko: '전략적 기회' },
+    secondaryTo: { en: 'Secondary to:', es: 'Secundario a:', tl: 'Secondary sa:', vi: 'Thứ cấp từ:', ko: '~의 2차:' },
+    probability: { en: 'Probability', es: 'Probabilidad', tl: 'Probability', vi: 'Xác Suất', ko: '확률' },
+    typical: { en: 'Typical:', es: 'Típico:', tl: 'Typical:', vi: 'Điển hình:', ko: '일반적:' },
+    evidenceNeeded: { en: 'Evidence Needed:', es: 'Evidencia Necesaria:', tl: 'Kailangan na Ebidensya:', vi: 'Bằng Chứng Cần Thiết:', ko: '필요한 증거:' },
+    nextStep: { en: 'Next Step:', es: 'Próximo Paso:', tl: 'Susunod na Hakbang:', vi: 'Bước Tiếp Theo:', ko: '다음 단계:' },
+    buildNexus: { en: 'Build Nexus', es: 'Construir Nexus', tl: 'Buuin ang Nexus', vi: 'Xây Dựng Nexus', ko: '넥서스 구축' },
+    practiceExam: { en: 'Practice Exam', es: 'Examen de Práctica', tl: 'Practice Exam', vi: 'Khám Thực Hành', ko: '연습 시험' },
+    
+    // Results - Missing Diagnoses
+    potentialUndiagnosedConditions: { en: 'Potential Undiagnosed Conditions', es: 'Condiciones Potenciales No Diagnosticadas', tl: 'Mga Potensyal na Undiagnosed Conditions', vi: 'Tình Trạng Tiềm Năng Chưa Được Chẩn Đoán', ko: '잠재적 미진단 상태' },
+    linkedTo: { en: 'Linked to:', es: 'Vinculado a:', tl: 'Naka-link sa:', vi: 'Liên kết với:', ko: '연결됨:' },
+    
+    // Results - Increase Opportunities
+    potentialRatingIncreases: { en: 'Potential Rating Increases', es: 'Posibles Aumentos de Calificación', tl: 'Mga Potensyal na Rating Increases', vi: 'Tăng Xếp Hạng Tiềm Năng', ko: '잠재적 등급 증가' },
+    criteria: { en: 'Criteria:', es: 'Criterios:', tl: 'Criteria:', vi: 'Tiêu Chí:', ko: '기준:' },
+    action: { en: 'Action:', es: 'Acción:', tl: 'Aksyon:', vi: 'Hành Động:', ko: '조치:' },
+    
+    // Results - Strategic Notes
+    strategicNotes: { en: 'Strategic Notes', es: 'Notas Estratégicas', tl: 'Mga Strategic Notes', vi: 'Ghi Chú Chiến Lược', ko: '전략적 메모' },
+    
+    // File Upload Modal
+    uploadDocument: { en: 'Upload Document', es: 'Subir Documento', tl: 'I-upload ang Dokumento', vi: 'Tải Tài Liệu Lên', ko: '문서 업로드' },
+    uploadDocumentDesc: { en: 'Upload VA decision letter, rating sheet, or notes', es: 'Sube carta de decisión del VA, hoja de calificación o notas', tl: 'I-upload ang VA decision letter, rating sheet, o mga notes', vi: 'Tải lên thư quyết định VA, bảng xếp hạng hoặc ghi chú', ko: 'VA 결정서, 등급표 또는 메모 업로드' },
+    dropFileHere: { en: 'Drop file here or click to browse', es: 'Suelta el archivo aquí o haz clic para navegar', tl: 'I-drop ang file dito o mag-click para mag-browse', vi: 'Thả tệp vào đây hoặc nhấp để duyệt', ko: '여기에 파일을 놓거나 클릭하여 찾아보기' },
+    supportsFormats: { en: 'Supports: PDF, Word (.docx), Text, RTF', es: 'Soporta: PDF, Word (.docx), Texto, RTF', tl: 'Suportado: PDF, Word (.docx), Text, RTF', vi: 'Hỗ trợ: PDF, Word (.docx), Text, RTF', ko: '지원: PDF, Word(.docx), 텍스트, RTF' },
+    maxFileSize: { en: 'Maximum file size: 50MB', es: 'Tamaño máximo del archivo: 50MB', tl: 'Maximum file size: 50MB', vi: 'Kích thước tệp tối đa: 50MB', ko: '최대 파일 크기: 50MB' },
+    whatHappensNext: { en: 'What happens next:', es: 'Qué sucede después:', tl: 'Ano ang mangyayari:', vi: 'Điều gì xảy ra tiếp theo:', ko: '다음에 일어날 일:' },
+    whatHappensNextDesc: { en: "We'll extract any ratings found in your document and pre-fill the form. You can review and edit before analyzing.", es: 'Extraeremos las calificaciones encontradas en tu documento y pre-llenaremos el formulario. Puedes revisar y editar antes de analizar.', tl: "I-e-extract namin ang mga ratings na makikita sa dokumento mo at i-pre-fill ang form. Maaari mong i-review at i-edit bago mag-analyze.", vi: 'Chúng tôi sẽ trích xuất bất kỳ xếp hạng nào tìm thấy trong tài liệu của bạn và điền sẵn vào biểu mẫu. Bạn có thể xem lại và chỉnh sửa trước khi phân tích.', ko: '문서에서 발견된 등급을 추출하고 양식을 미리 채웁니다. 분석하기 전에 검토하고 편집할 수 있습니다.' },
+    extractAndLoad: { en: 'Extract & Load', es: 'Extraer y Cargar', tl: 'I-extract at I-load', vi: 'Trích Xuất & Tải', ko: '추출 및 불러오기' },
+    processing: { en: 'Processing...', es: 'Procesando...', tl: 'Pinoproseso...', vi: 'Đang xử lý...', ko: '처리 중...' },
+  },
+
+  dd214Analyzer: {
+    // Header
+    title: { en: 'DD214 Analyzer', es: 'Analizador DD214', tl: 'DD214 Analyzer', vi: 'Trình Phân Tích DD214', ko: 'DD214 분석기' },
+    beta: { en: 'BETA', es: 'BETA', tl: 'BETA', vi: 'BETA', ko: '베타' },
+    subtitle: { en: 'Extract & analyze your service records', es: 'Extrae y analiza tus registros de servicio', tl: 'I-extract at suriin ang iyong mga service records', vi: 'Trích xuất & phân tích hồ sơ phục vụ của bạn', ko: '복무 기록 추출 및 분석' },
+    
+    // Privacy Notice
+    privateProcessing: { en: '100% Private Processing', es: 'Procesamiento 100% Privado', tl: '100% Private Processing', vi: 'Xử Lý 100% Riêng Tư', ko: '100% 비공개 처리' },
+    privateProcessingLocal: { en: 'Your DD214 is processed entirely on your device. Nothing is sent to external servers.', es: 'Tu DD214 se procesa completamente en tu dispositivo. Nada se envía a servidores externos.', tl: 'Ang DD214 mo ay pinoproseso nang buo sa device mo. Walang ipinapadala sa external servers.', vi: 'DD214 của bạn được xử lý hoàn toàn trên thiết bị của bạn. Không gì được gửi đến máy chủ bên ngoài.', ko: 'DD214는 기기에서 완전히 처리됩니다. 외부 서버로 아무것도 전송되지 않습니다.' },
+    privateProcessingCloud: { en: 'Using Cloud AI - your data is sent to Google\'s servers for processing. For maximum privacy, switch to Local AI in settings.', es: 'Usando IA en la Nube - tus datos se envían a los servidores de Google para procesamiento. Para máxima privacidad, cambia a IA Local en configuración.', tl: 'Gumagamit ng Cloud AI - ang data mo ay ipinapadala sa Google servers para sa processing. Para sa maximum privacy, lumipat sa Local AI sa settings.', vi: 'Sử dụng AI Đám Mây - dữ liệu của bạn được gửi đến máy chủ của Google để xử lý. Để có quyền riêng tư tối đa, chuyển sang AI Cục Bộ trong cài đặt.', ko: '클라우드 AI 사용 중 - 데이터가 처리를 위해 Google 서버로 전송됩니다. 최대 개인정보 보호를 위해 설정에서 로컬 AI로 전환하세요.' },
+    
+    // Input Methods
+    pasteText: { en: 'Paste Text', es: 'Pegar Texto', tl: 'I-paste ang Text', vi: 'Dán Văn Bản', ko: '텍스트 붙여넣기' },
+    dropInPdf: { en: 'Drop In PDF', es: 'Soltar PDF', tl: 'I-drop ang PDF', vi: 'Thả PDF', ko: 'PDF 끌어놓기' },
+    manualEntry: { en: 'Manual Entry', es: 'Entrada Manual', tl: 'Manual Entry', vi: 'Nhập Thủ Công', ko: '수동 입력' },
+    
+    // Paste Input
+    pasteYourDD214: { en: 'Paste your DD214 text below:', es: 'Pega el texto de tu DD214 abajo:', tl: 'I-paste ang DD214 text mo sa ibaba:', vi: 'Dán văn bản DD214 của bạn bên dưới:', ko: '아래에 DD214 텍스트를 붙여넣으세요:' },
+    pasteTextPlaceholder: { en: 'Copy text from your DD214 PDF and paste here...\n\nTip: If you have multiple DD214s (re-enlistments), paste them all together. The AI will identify and consolidate them.', es: 'Copia el texto de tu DD214 PDF y pégalo aquí...\n\nConsejo: Si tienes múltiples DD214s (re-alistamientos), pégalos todos juntos. La IA los identificará y consolidará.', tl: 'Kopyahin ang text mula sa DD214 PDF mo at i-paste dito...\n\nTip: Kung may maraming DD214s ka (re-enlistments), i-paste silang lahat. Tutukuyin at ikokonsolida ng AI.', vi: 'Sao chép văn bản từ DD214 PDF của bạn và dán vào đây...\n\nMẹo: Nếu bạn có nhiều DD214 (tái nhập ngũ), dán tất cả cùng nhau. AI sẽ xác định và tổng hợp chúng.', ko: 'DD214 PDF에서 텍스트를 복사하여 여기에 붙여넣으세요...\n\n팁: 여러 DD214(재입대)가 있는 경우 모두 함께 붙여넣으세요. AI가 식별하고 통합합니다.' },
+    piiWarning: { en: '⚠️ Your DD214 contains sensitive PII. Data stays on your device only.', es: '⚠️ Tu DD214 contiene información personal sensible. Los datos permanecen solo en tu dispositivo.', tl: '⚠️ Ang DD214 mo ay naglalaman ng sensitibong PII. Ang data ay nananatili sa device mo lamang.', vi: '⚠️ DD214 của bạn chứa PII nhạy cảm. Dữ liệu chỉ được lưu trên thiết bị của bạn.', ko: '⚠️ DD214에는 민감한 개인정보가 포함되어 있습니다. 데이터는 기기에만 저장됩니다.' },
+    
+    // Manual Entry
+    buildManually: { en: 'Build Your DD214 Manually', es: 'Construye Tu DD214 Manualmente', tl: 'Buuin ang DD214 Mo Nang Manual', vi: 'Xây Dựng DD214 Thủ Công', ko: 'DD214 수동으로 작성' },
+    manualEntryDesc: { en: 'Type or paste information directly into DD214 form fields. Perfect for when you have a physical DD214 or want to enter specific information block-by-block.', es: 'Escribe o pega información directamente en los campos del formulario DD214. Perfecto cuando tienes un DD214 físico o quieres ingresar información específica bloque por bloque.', tl: 'I-type o i-paste ang impormasyon direkta sa DD214 form fields. Perpekto kapag may physical DD214 ka o gusto mong mag-enter ng specific information block-by-block.', vi: 'Nhập hoặc dán thông tin trực tiếp vào các trường biểu mẫu DD214. Hoàn hảo khi bạn có DD214 vật lý hoặc muốn nhập thông tin cụ thể theo từng khối.', ko: 'DD214 양식 필드에 직접 정보를 입력하거나 붙여넣으세요. 실물 DD214가 있거나 블록별로 특정 정보를 입력하려는 경우에 적합합니다.' },
+    allBlocksIncluded: { en: 'All standard DD214 blocks included', es: 'Todos los bloques estándar del DD214 incluidos', tl: 'Lahat ng standard DD214 blocks ay kasama', vi: 'Bao gồm tất cả các khối DD214 tiêu chuẩn', ko: '모든 표준 DD214 블록 포함' },
+    saveMultipleDD214s: { en: 'Save multiple DD214s to My Packet', es: 'Guarda múltiples DD214s en Mi Paquete', tl: 'I-save ang maraming DD214s sa My Packet', vi: 'Lưu nhiều DD214 vào My Packet', ko: '여러 DD214를 내 패킷에 저장' },
+    dataStaysPrivate: { en: 'Data stays 100% on your device', es: 'Los datos permanecen 100% en tu dispositivo', tl: 'Ang data ay nananatili 100% sa device mo', vi: 'Dữ liệu được lưu 100% trên thiết bị của bạn', ko: '데이터는 100% 기기에 저장됩니다' },
+    guidedFormLabels: { en: 'Guided form with field labels', es: 'Formulario guiado con etiquetas de campos', tl: 'Guided form na may field labels', vi: 'Biểu mẫu hướng dẫn với nhãn trường', ko: '필드 레이블이 있는 안내 양식' },
+    openFormBuilder: { en: 'Open Form Builder', es: 'Abrir Constructor de Formularios', tl: 'Buksan ang Form Builder', vi: 'Mở Trình Tạo Biểu Mẫu', ko: '양식 빌더 열기' },
+    
+    // Upload Input
+    dropPdfFiles: { en: 'Drop PDF files here', es: 'Suelta archivos PDF aquí', tl: 'I-drop ang PDF files dito', vi: 'Thả tệp PDF vào đây', ko: 'PDF 파일을 여기에 놓으세요' },
+    dragDropOrClick: { en: 'Drag & drop DD214 PDFs or click to browse', es: 'Arrastra y suelta DD214 PDFs o haz clic para navegar', tl: 'I-drag at i-drop ang DD214 PDFs o mag-click para mag-browse', vi: 'Kéo & thả DD214 PDF hoặc nhấp để duyệt', ko: 'DD214 PDF를 드래그 앤 드롭하거나 클릭하여 찾아보기' },
+    supportedFormats: { en: 'Supports PDF, Word (.docx), Text, RTF • Scanned PDFs auto-OCR • Multiple files OK', es: 'Soporta PDF, Word (.docx), Texto, RTF • PDFs escaneados auto-OCR • Múltiples archivos OK', tl: 'Suportado ang PDF, Word (.docx), Text, RTF • Scanned PDFs auto-OCR • Maraming files OK', vi: 'Hỗ trợ PDF, Word (.docx), Text, RTF • PDF quét tự động OCR • Nhiều tệp OK', ko: 'PDF, Word(.docx), 텍스트, RTF 지원 • 스캔된 PDF 자동 OCR • 여러 파일 가능' },
+    unsupportedFormat: { en: 'Please drop supported files: PDF, Word (.docx), Text (.txt), or RTF', es: 'Por favor suelta archivos soportados: PDF, Word (.docx), Texto (.txt), o RTF', tl: 'Mangyaring mag-drop ng supported files: PDF, Word (.docx), Text (.txt), o RTF', vi: 'Vui lòng thả các tệp được hỗ trợ: PDF, Word (.docx), Text (.txt) hoặc RTF', ko: '지원되는 파일을 놓으세요: PDF, Word(.docx), 텍스트(.txt) 또는 RTF' },
+    
+    // File List
+    loadedFiles: { en: 'Loaded Files', es: 'Archivos Cargados', tl: 'Na-load na Files', vi: 'Tệp Đã Tải', ko: '로드된 파일' },
+    runOcr: { en: 'Run OCR', es: 'Ejecutar OCR', tl: 'Patakbuhin ang OCR', vi: 'Chạy OCR', ko: 'OCR 실행' },
+    processing: { en: 'Processing...', es: 'Procesando...', tl: 'Pinoproseso...', vi: 'Đang xử lý...', ko: '처리 중...' },
+    pages: { en: 'pages', es: 'páginas', tl: 'mga pahina', vi: 'trang', ko: '페이지' },
+    ocr: { en: 'OCR', es: 'OCR', tl: 'OCR', vi: 'OCR', ko: 'OCR' },
+    hybrid: { en: 'Hybrid', es: 'Híbrido', tl: 'Hybrid', vi: 'Kết hợp', ko: '하이브리드' },
+    text: { en: 'Text', es: 'Texto', tl: 'Text', vi: 'Văn bản', ko: '텍스트' },
+    readyForOcrOrVision: { en: 'Ready for OCR or Vision AI', es: 'Listo para OCR o IA de Visión', tl: 'Handa na para sa OCR o Vision AI', vi: 'Sẵn sàng cho OCR hoặc AI Thị giác', ko: 'OCR 또는 비전 AI 준비 완료' },
+    filesLoadedTip: { en: 'Files loaded! Click "Run OCR" above to extract text from your PDF, then "Analyze with AI".', es: '¡Archivos cargados! Haz clic en "Ejecutar OCR" arriba para extraer texto de tu PDF, luego "Analizar con IA".', tl: 'Na-load na ang files! I-click ang "Run OCR" sa itaas para i-extract ang text mula sa PDF mo, pagkatapos "Analyze with AI".', vi: 'Đã tải tệp! Nhấp "Chạy OCR" ở trên để trích xuất văn bản từ PDF, sau đó "Phân tích bằng AI".', ko: '파일이 로드되었습니다! 위의 "OCR 실행"을 클릭하여 PDF에서 텍스트를 추출한 다음 "AI로 분석"을 클릭하세요.' },
+    allFilesProcessed: { en: 'All files have already been processed.', es: 'Todos los archivos ya han sido procesados.', tl: 'Lahat ng files ay naproseso na.', vi: 'Tất cả các tệp đã được xử lý.', ko: '모든 파일이 이미 처리되었습니다.' },
+    
+    // Error Messages
+    error: { en: 'Error', es: 'Error', tl: 'Error', vi: 'Lỗi', ko: '오류' },
+    runOcrFirst: { en: 'Please click "Run OCR" first to extract text from your PDF files, then analyze.', es: 'Por favor haz clic en "Ejecutar OCR" primero para extraer texto de tus archivos PDF, luego analiza.', tl: 'Mangyaring i-click muna ang "Run OCR" para i-extract ang text mula sa PDF files mo, pagkatapos i-analyze.', vi: 'Vui lòng nhấp "Chạy OCR" trước để trích xuất văn bản từ tệp PDF, sau đó phân tích.', ko: '먼저 "OCR 실행"을 클릭하여 PDF 파일에서 텍스트를 추출한 다음 분석하세요.' },
+    pasteOrDropFirst: { en: 'Please paste DD214 text or drop in PDF files first.', es: 'Por favor pega el texto del DD214 o suelta archivos PDF primero.', tl: 'Mangyaring i-paste muna ang DD214 text o mag-drop ng PDF files.', vi: 'Vui lòng dán văn bản DD214 hoặc thả tệp PDF trước.', ko: 'DD214 텍스트를 붙여넣거나 PDF 파일을 먼저 놓으세요.' },
+    aiNotAvailable: { en: 'AI is not available. Please configure AI settings first.', es: 'La IA no está disponible. Por favor configura los ajustes de IA primero.', tl: 'Hindi available ang AI. Mangyaring i-configure muna ang AI settings.', vi: 'AI không khả dụng. Vui lòng cấu hình cài đặt AI trước.', ko: 'AI를 사용할 수 없습니다. 먼저 AI 설정을 구성하세요.' },
+    parseError: { en: 'Could not parse AI response. Please try again.', es: 'No se pudo analizar la respuesta de IA. Por favor intenta de nuevo.', tl: 'Hindi ma-parse ang AI response. Mangyaring subukan muli.', vi: 'Không thể phân tích phản hồi AI. Vui lòng thử lại.', ko: 'AI 응답을 파싱할 수 없습니다. 다시 시도하세요.' },
+    analysisFailed: { en: 'Analysis failed. Please try again.', es: 'El análisis falló. Por favor intenta de nuevo.', tl: 'Nabigo ang pagsusuri. Mangyaring subukan muli.', vi: 'Phân tích thất bại. Vui lòng thử lại.', ko: '분석에 실패했습니다. 다시 시도하세요.' },
+    saveFailed: { en: 'Failed to save results. Please try again.', es: 'Error al guardar los resultados. Por favor intenta de nuevo.', tl: 'Nabigong i-save ang mga resulta. Mangyaring subukan muli.', vi: 'Không thể lưu kết quả. Vui lòng thử lại.', ko: '결과 저장에 실패했습니다. 다시 시도하세요.' },
+    prepareError: { en: 'Failed to prepare data for import. Please try again.', es: 'Error al preparar los datos para importar. Por favor intenta de nuevo.', tl: 'Nabigong ihanda ang data para sa pag-import. Mangyaring subukan muli.', vi: 'Không thể chuẩn bị dữ liệu để nhập. Vui lòng thử lại.', ko: '가져오기 위한 데이터 준비에 실패했습니다. 다시 시도하세요.' },
+    
+    // Analysis Results
+    analysisComplete: { en: 'Analysis Complete', es: 'Análisis Completo', tl: 'Tapos na ang Pagsusuri', vi: 'Phân Tích Hoàn Tất', ko: '분석 완료' },
+    dd214sConsolidated: { en: 'DD214s consolidated', es: 'DD214s consolidados', tl: 'DD214s consolidated', vi: 'DD214 được tổng hợp', ko: 'DD214 통합됨' },
+    branch: { en: 'Branch', es: 'Rama', tl: 'Sangay', vi: 'Quân Chủng', ko: '군종' },
+    mos: { en: 'MOS', es: 'MOS', tl: 'MOS', vi: 'MOS', ko: 'MOS' },
+    timeInService: { en: 'Time in Service', es: 'Tiempo en Servicio', tl: 'Oras sa Serbisyo', vi: 'Thời Gian Phục Vụ', ko: '복무 기간' },
+    separation: { en: 'Separation', es: 'Separación', tl: 'Paghihiwalay', vi: 'Giải Ngũ', ko: '제대' },
+    na: { en: 'N/A', es: 'N/A', tl: 'N/A', vi: 'N/A', ko: 'N/A' },
+    
+    // Combat Service
+    combatServiceVerified: { en: 'Combat Service Verified', es: 'Servicio de Combate Verificado', tl: 'Na-verify ang Combat Service', vi: 'Đã Xác Minh Phục Vụ Chiến Đấu', ko: '전투 복무 확인됨' },
+    
+    // Awards
+    awardsDecorations: { en: 'Awards & Decorations', es: 'Premios y Condecoraciones', tl: 'Mga Award at Dekorasyon', vi: 'Giải Thưởng & Huân Chương', ko: '훈장 및 포상' },
+    with: { en: 'w/', es: 'con', tl: 'na may', vi: 'với', ko: '~와' },
+    
+    // Extraction Notes
+    notes: { en: 'Notes', es: 'Notas', tl: 'Mga Tala', vi: 'Ghi Chú', ko: '메모' },
+    
+    // Buttons
+    clearAll: { en: 'Clear All', es: 'Limpiar Todo', tl: 'I-clear Lahat', vi: 'Xóa Tất Cả', ko: '모두 지우기' },
+    saveToProfile: { en: 'Save to Profile', es: 'Guardar en Perfil', tl: 'I-save sa Profile', vi: 'Lưu vào Hồ Sơ', ko: '프로필에 저장' },
+    analyzeWithAi: { en: 'Analyze with AI', es: 'Analizar con IA', tl: 'Suriin gamit ang AI', vi: 'Phân Tích bằng AI', ko: 'AI로 분석' },
+    analyzing: { en: 'Analyzing...', es: 'Analizando...', tl: 'Sinusuri...', vi: 'Đang phân tích...', ko: '분석 중...' },
+    close: { en: 'Close', es: 'Cerrar', tl: 'Isara', vi: 'Đóng', ko: '닫기' },
+    
+    // OCR Progress
+    processingFile: { en: 'Processing', es: 'Procesando', tl: 'Pinoproseso', vi: 'Đang xử lý', ko: '처리 중' },
+    pageOf: { en: 'Page', es: 'Página', tl: 'Pahina', vi: 'Trang', ko: '페이지' },
+    of: { en: 'of', es: 'de', tl: 'ng', vi: 'trên', ko: '/' },
+    
+    // Saved DD214s
+    savedDD214s: { en: 'Saved DD214s', es: 'DD214s Guardados', tl: 'Naka-save na DD214s', vi: 'DD214 Đã Lưu', ko: '저장된 DD214' },
+    untitledDD214: { en: 'Untitled DD214', es: 'DD214 Sin Título', tl: 'Walang Pamagat na DD214', vi: 'DD214 Chưa Đặt Tên', ko: '제목 없는 DD214' },
+    sep: { en: 'Sep:', es: 'Sep:', tl: 'Sep:', vi: 'Giải ngũ:', ko: '제대:' },
+    manual: { en: 'Manual', es: 'Manual', tl: 'Manual', vi: 'Thủ công', ko: '수동' },
+    ai: { en: 'AI', es: 'IA', tl: 'AI', vi: 'AI', ko: 'AI' },
+    
+    // Save Confirmation
+    dd214DataSaved: { en: 'DD214 data saved!', es: '¡Datos del DD214 guardados!', tl: 'Na-save na ang DD214 data!', vi: 'Đã lưu dữ liệu DD214!', ko: 'DD214 데이터가 저장되었습니다!' },
+    serviceHistoryUpdated: { en: 'Service history updated', es: 'Historial de servicio actualizado', tl: 'Na-update ang service history', vi: 'Lịch sử phục vụ đã cập nhật', ko: '복무 이력이 업데이트되었습니다' },
+    awardsRecorded: { en: 'awards recorded', es: 'premios registrados', tl: 'mga award na naitala', vi: 'giải thưởng được ghi lại', ko: '훈장이 기록되었습니다' },
+    profileFieldsImported: { en: 'profile field(s) imported', es: 'campo(s) de perfil importado(s)', tl: 'profile field(s) na-import', vi: 'trường hồ sơ đã nhập', ko: '프로필 필드 가져옴' },
+  },
+
+  // Exam Prep Room
+  examPrepRoom: {
+    // Header
+    title: { en: 'Exam Prep Room', es: 'Sala de Preparación para el Examen', tl: 'Exam Prep Room', vi: 'Phòng Chuẩn Bị Khám', ko: '시험 준비실' },
+    subtitle: { en: 'See the DBQ before the examiner does', es: 'Ve el DBQ antes que el examinador', tl: 'Tingnan ang DBQ bago ang examiner', vi: 'Xem DBQ trước người khám', ko: '심사관보다 먼저 DBQ 확인하기' },
+    
+    // Open Book Test Section
+    openBookTest: { en: 'The Open Book Test', es: 'El Examen de Libro Abierto', tl: 'Ang Open Book Test', vi: 'Bài Kiểm Tra Sách Mở', ko: '오픈 북 테스트' },
+    openBookDescription1: { en: "Your C&P examiner isn't improvising-they're checking boxes on a standardized form called a", es: 'Tu examinador C&P no está improvisando-está marcando casillas en un formulario estandarizado llamado', tl: 'Ang iyong C&P examiner ay hindi nag-iimbento-nagtse-check lang sila ng boxes sa isang standardized form na tinatawag na', vi: 'Người khám C&P của bạn không ngẫu hứng-họ đang đánh dấu vào các ô trên một biểu mẫu tiêu chuẩn gọi là', ko: 'C&P 심사관은 즉흥적으로 하는 것이 아닙니다-' },
+    dbqFull: { en: 'Disability Benefits Questionnaire (DBQ)', es: 'Cuestionario de Beneficios por Discapacidad (DBQ)', tl: 'Disability Benefits Questionnaire (DBQ)', vi: 'Bảng Câu Hỏi Quyền Lợi Khuyết Tật (DBQ)', ko: '장애 혜택 설문지(DBQ)' },
+    openBookDescription2: { en: 'This tool shows you the', es: 'Esta herramienta te muestra las', tl: 'Ipinapakita sa iyo ng tool na ito ang', vi: 'Công cụ này cho bạn thấy', ko: '이 도구는 다음을 보여줍니다' },
+    exactQuestions: { en: 'exact questions', es: 'preguntas exactas', tl: 'eksaktong mga tanong', vi: 'câu hỏi chính xác', ko: '정확한 질문' },
+    theyWillAskAnd: { en: "they'll ask and", es: 'que te harán y', tl: 'na itatanong nila at', vi: 'họ sẽ hỏi và', ko: '심사관이 물어볼 질문과' },
+    strategicTips: { en: 'strategic tips', es: 'consejos estratégicos', tl: 'mga strategic tips', vi: 'mẹo chiến lược', ko: '전략적 팁' },
+    howToAnswerHonestly: { en: 'on how to answer honestly without underselling your symptoms.', es: 'sobre cómo responder honestamente sin subestimar tus síntomas.', tl: 'kung paano sumagot ng matapat nang hindi ini-undersell ang iyong mga sintomas.', vi: 'về cách trả lời trung thực mà không đánh giá thấp triệu chứng của bạn.', ko: '증상을 과소평가하지 않고 정직하게 대답하는 방법에 대한 팁' },
+    
+    // Search Section
+    searchForCondition: { en: 'Search for your condition:', es: 'Busca tu condición:', tl: 'Maghanap ng iyong kondisyon:', vi: 'Tìm kiếm tình trạng của bạn:', ko: '상태 검색:' },
+    searchPlaceholder: { en: 'e.g., PTSD, Knee, Tinnitus, Migraine...', es: 'ej., PTSD, Rodilla, Tinnitus, Migraña...', tl: 'hal., PTSD, Tuhod, Tinnitus, Migraine...', vi: 'vd., PTSD, Đầu gối, Ù tai, Đau nửa đầu...', ko: '예: PTSD, 무릎, 이명, 편두통...' },
+    
+    // Condition List
+    selectCondition: { en: 'Select a condition', es: 'Selecciona una condición', tl: 'Pumili ng kondisyon', vi: 'Chọn một tình trạng', ko: '상태 선택' },
+    available: { en: 'available', es: 'disponibles', tl: 'available', vi: 'có sẵn', ko: '사용 가능' },
+    noConditionsFound: { en: 'No conditions found matching', es: 'No se encontraron condiciones que coincidan con', tl: 'Walang kondisyon na nahanap na tumutugma sa', vi: 'Không tìm thấy tình trạng nào phù hợp với', ko: '일치하는 상태를 찾을 수 없습니다' },
+    tryDifferentSearch: { en: 'Try a different search term or browse all conditions above.', es: 'Prueba un término de búsqueda diferente o explora todas las condiciones arriba.', tl: 'Subukan ang ibang search term o mag-browse ng lahat ng kondisyon sa itaas.', vi: 'Thử một từ khóa tìm kiếm khác hoặc duyệt tất cả các tình trạng ở trên.', ko: '다른 검색어를 시도하거나 위의 모든 상태를 찾아보세요.' },
+    
+    // DBQ Questions Screen
+    backToConditionList: { en: '← Back to condition list', es: '← Volver a la lista de condiciones', tl: '← Bumalik sa listahan ng kondisyon', vi: '← Quay lại danh sách tình trạng', ko: '← 상태 목록으로 돌아가기' },
+    diagnosticCode: { en: 'Diagnostic Code', es: 'Código de Diagnóstico', tl: 'Diagnostic Code', vi: 'Mã Chẩn Đoán', ko: '진단 코드' },
+    
+    // Strategic Tips Section
+    strategicTipsForCondition: { en: 'Strategic Tips for This Condition', es: 'Consejos Estratégicos para Esta Condición', tl: 'Mga Strategic Tips para sa Kondisyong Ito', vi: 'Mẹo Chiến Lược cho Tình Trạng Này', ko: '이 상태에 대한 전략적 팁' },
+    tipsHelpYouAnswer: { en: 'These tips help you answer honestly while ensuring the examiner understands the full impact of your condition.', es: 'Estos consejos te ayudan a responder honestamente mientras aseguras que el examinador entienda el impacto total de tu condición.', tl: 'Ang mga tip na ito ay tumutulong sa iyong sumagot ng matapat habang tinitiyak na naiintindihan ng examiner ang buong impact ng iyong kondisyon.', vi: 'Những mẹo này giúp bạn trả lời trung thực trong khi đảm bảo người khám hiểu đầy đủ tác động của tình trạng của bạn.', ko: '이러한 팁은 심사관이 귀하의 상태의 전체 영향을 이해하도록 하면서 정직하게 대답하는 데 도움이 됩니다.' },
+    
+    // Questions Section
+    questionsExaminerWillAsk: { en: 'Questions the Examiner Will Ask', es: 'Preguntas que el Examinador Hará', tl: 'Mga Tanong na Itatanong ng Examiner', vi: 'Câu Hỏi Người Khám Sẽ Hỏi', ko: '심사관이 물어볼 질문' },
+    actualQuestionsFromDBQ: { en: 'These are the actual questions from the DBQ form. Click each one to see what the examiner is really looking for.', es: 'Estas son las preguntas reales del formulario DBQ. Haz clic en cada una para ver qué está buscando realmente el examinador.', tl: 'Ito ang mga aktwal na tanong mula sa DBQ form. I-click ang bawat isa para makita kung ano talaga ang hinahanap ng examiner.', vi: 'Đây là các câu hỏi thực tế từ biểu mẫu DBQ. Nhấp vào từng câu để xem người khám thực sự đang tìm kiếm điều gì.', ko: '이것은 DBQ 양식의 실제 질문입니다. 각 질문을 클릭하여 심사관이 실제로 찾고 있는 것을 확인하세요.' },
+    requiredQuestion: { en: 'Required Question', es: 'Pregunta Requerida', tl: 'Kinakailangang Tanong', vi: 'Câu Hỏi Bắt Buộc', ko: '필수 질문' },
+    whatTheyReallyLookingFor: { en: "What They're Really Looking For:", es: 'Lo que Realmente Están Buscando:', tl: 'Ang Talagang Hinahanap Nila:', vi: 'Điều Họ Thực Sự Tìm Kiếm:', ko: '그들이 실제로 찾고 있는 것:' },
+    officialDefinition: { en: 'Official Definition:', es: 'Definición Oficial:', tl: 'Opisyal na Kahulugan:', vi: 'Định Nghĩa Chính Thức:', ko: '공식 정의:' },
+    possibleAnswers: { en: 'Possible Answers:', es: 'Respuestas Posibles:', tl: 'Posibleng Mga Sagot:', vi: 'Câu Trả Lời Có Thể:', ko: '가능한 답변:' },
+    impactLevel: { en: 'Impact level', es: 'Nivel de impacto', tl: 'Antas ng impact', vi: 'Mức độ ảnh hưởng', ko: '영향 수준' },
+    
+    // Important Notes
+    importantNotes: { en: 'Important Notes:', es: 'Notas Importantes:', tl: 'Mahahalagang Tala:', vi: 'Ghi Chú Quan Trọng:', ko: '중요 참고사항:' },
+    
+    // Ready Section
+    readyForExam: { en: 'Ready for Your Exam', es: 'Listo para Tu Examen', tl: 'Handa na para sa Iyong Exam', vi: 'Sẵn Sàng cho Buổi Khám', ko: '시험 준비 완료' },
+    readyDescription: { en: "Now you know exactly what questions are coming. Walk in prepared, answer honestly, and don't undersell your symptoms. The examiner is checking boxes-make sure they check the right ones.", es: 'Ahora sabes exactamente qué preguntas vienen. Entra preparado, responde honestamente y no subestimes tus síntomas. El examinador está marcando casillas-asegúrate de que marque las correctas.', tl: 'Ngayon alam mo na kung anong mga tanong ang darating. Pumasok na handa, sumagot ng matapat, at huwag i-undersell ang iyong mga sintomas. Nagtse-check ng boxes ang examiner-siguraduhing tama ang ma-check nila.', vi: 'Bây giờ bạn biết chính xác những câu hỏi sẽ đến. Bước vào đã chuẩn bị, trả lời trung thực, và đừng đánh giá thấp triệu chứng của bạn. Người khám đang đánh dấu các ô-hãy đảm bảo họ đánh dấu đúng.', ko: '이제 어떤 질문이 나올지 정확히 알게 되었습니다. 준비된 상태로 들어가고, 정직하게 대답하고, 증상을 과소평가하지 마세요. 심사관은 체크박스를 표시하고 있습니다-올바른 것을 표시하도록 하세요.' },
+    viewAnotherCondition: { en: '← View Another Condition', es: '← Ver Otra Condición', tl: '← Tingnan ang Ibang Kondisyon', vi: '← Xem Tình Trạng Khác', ko: '← 다른 상태 보기' },
+    closePrepRoom: { en: 'Close Prep Room', es: 'Cerrar Sala de Preparación', tl: 'Isara ang Prep Room', vi: 'Đóng Phòng Chuẩn Bị', ko: '준비실 닫기' },
+    
+    // Strategic Tips Titles (from STRATEGIC_TIPS constant)
+    tipProstrating: { en: "What 'Prostrating' Really Means", es: "Lo que 'Postrante' Realmente Significa", tl: "Ano Talaga ang Ibig Sabihin ng 'Prostrating'", vi: "'Bất Lực' Thực Sự Có Nghĩa Là Gì", ko: "'쇠약하게 하는'의 진정한 의미" },
+    tipRom: { en: 'Range of Motion (ROM) Testing', es: 'Prueba de Rango de Movimiento (ROM)', tl: 'Range of Motion (ROM) Testing', vi: 'Kiểm Tra Phạm Vi Chuyển Động (ROM)', ko: '관절 가동 범위(ROM) 검사' },
+    tipFlareUps: { en: 'Flare-Ups Matter More Than You Think', es: 'Los Brotes Importan Más de lo que Piensas', tl: 'Mas Importante ang Flare-Ups Kaysa sa Iniisip Mo', vi: 'Các Đợt Bùng Phát Quan Trọng Hơn Bạn Nghĩ', ko: '악화 기간은 생각보다 중요합니다' },
+    tipSocialImpairment: { en: 'Occupational and Social Impairment Keywords', es: 'Palabras Clave de Deterioro Ocupacional y Social', tl: 'Mga Keyword ng Occupational at Social Impairment', vi: 'Từ Khóa Suy Giảm Nghề Nghiệp và Xã Hội', ko: '직업 및 사회적 장애 키워드' },
+    tipMedicationSideEffects: { en: 'Medication Side Effects Count', es: 'Los Efectos Secundarios de la Medicación Cuentan', tl: 'Mahalaga ang Medication Side Effects', vi: 'Tác Dụng Phụ của Thuốc Được Tính', ko: '약물 부작용도 고려됩니다' },
+    tipSleepDisturbance: { en: 'Sleep Issues Are Powerful Evidence', es: 'Los Problemas de Sueño Son Evidencia Poderosa', tl: 'Malakas na Ebidensya ang mga Problema sa Pagtulog', vi: 'Vấn Đề Giấc Ngủ Là Bằng Chứng Mạnh Mẽ', ko: '수면 문제는 강력한 증거입니다' },
+    tipFrequency: { en: 'Frequency Determines Your Rating', es: 'La Frecuencia Determina Tu Rating', tl: 'Ang Frequency ang Nagde-determine ng Rating Mo', vi: 'Tần Suất Quyết Định Xếp Hạng Của Bạn', ko: '빈도가 등급을 결정합니다' },
+    tipLossOfUse: { en: 'Loss of Use = Higher Rating', es: 'Pérdida de Uso = Rating Más Alto', tl: 'Loss of Use = Mas Mataas na Rating', vi: 'Mất Khả Năng Sử Dụng = Xếp Hạng Cao Hơn', ko: '사용 상실 = 더 높은 등급' },
+    
+    // Strategic Tips Content
+    tipProstrationContent: { en: "The CFR defines 'prostrating' as attacks so severe you MUST stop all activity and lie down, usually in a dark/quiet room. If you can 'power through' the pain, it's NOT prostrating. Be honest-if you sometimes have to lie down, say that specifically.", es: "El CFR define 'postrante' como ataques tan severos que DEBES detener toda actividad y acostarte, usualmente en una habitación oscura/tranquila. Si puedes 'aguantar' el dolor, NO es postrante. Sé honesto-si a veces tienes que acostarte, dilo específicamente.", tl: "Ang CFR ay nagde-define ng 'prostrating' bilang mga atake na sobrang severe na DAPAT mong itigil ang lahat ng aktibidad at humiga, kadalasan sa isang madilim/tahimik na kwarto. Kung kaya mong 'i-power through' ang sakit, HINDI ito prostrating. Maging matapat-kung minsan kailangan mong humiga, sabihin iyon ng espesipiko.", vi: "CFR định nghĩa 'bất lực' là các cơn tấn công nghiêm trọng đến mức bạn PHẢI dừng mọi hoạt động và nằm xuống, thường là trong phòng tối/yên tĩnh. Nếu bạn có thể 'chịu đựng' được cơn đau, đó KHÔNG phải là bất lực. Hãy trung thực-nếu đôi khi bạn phải nằm xuống, hãy nói cụ thể điều đó.", ko: "CFR은 '쇠약하게 하는'을 모든 활동을 멈추고 누워야 할 정도로 심한 발작으로 정의합니다. 보통 어둡고 조용한 방에서. 통증을 '참을 수 있다면' 쇠약하게 하는 것이 아닙니다. 정직하세요-때때로 누워야 한다면 구체적으로 말하세요." },
+    tipRomContent: { en: "Stop moving EXACTLY when you first feel pain or discomfort. Do NOT push past the pain to show the examiner you're 'trying.' If you demonstrate a full range of motion, they will mark you as 'Normal' regardless of how much it hurts.", es: "Deja de moverte EXACTAMENTE cuando sientas dolor o malestar por primera vez. NO empujes más allá del dolor para mostrar al examinador que estás 'intentando'. Si demuestras un rango completo de movimiento, te marcarán como 'Normal' sin importar cuánto duela.", tl: "Tumigil sa paggalaw EKSAKTO kapag una kang nakaramdam ng sakit o discomfort. HUWAG i-push ang sakit para ipakita sa examiner na 'sinusubukan mo'. Kung nagpapakita ka ng full range of motion, ima-mark ka nila na 'Normal' kahit gaano kasakit.", vi: "Dừng di chuyển CHÍNH XÁC khi bạn lần đầu cảm thấy đau hoặc khó chịu. KHÔNG cố vượt qua cơn đau để cho người khám thấy bạn đang 'cố gắng'. Nếu bạn thể hiện phạm vi chuyển động đầy đủ, họ sẽ đánh dấu bạn là 'Bình thường' bất kể đau đến mức nào.", ko: "처음 통증이나 불편함을 느낄 때 정확히 움직임을 멈추세요. 심사관에게 '노력하고 있다'는 것을 보여주려고 통증을 넘어서지 마세요. 전체 관절 가동 범위를 보여주면 얼마나 아프든 '정상'으로 표시됩니다." },
+    tipFlareUpsContent: { en: "The VA rates you based on your WORST flare-ups, not your average day. If your back 'locks up' 3-4 times per year requiring bed rest, that's a flare-up. Document the frequency, duration, and what triggers them.", es: "El VA te califica basándose en tus PEORES brotes, no en tu día promedio. Si tu espalda 'se bloquea' 3-4 veces al año requiriendo reposo en cama, eso es un brote. Documenta la frecuencia, duración y qué los desencadena.", tl: "Ang VA ay nagra-rate sa iyo batay sa iyong PINAKAMASAMANG flare-ups, hindi sa average mong araw. Kung ang likod mo ay 'nala-lock up' 3-4 na beses sa isang taon na nangangailangan ng bed rest, iyon ay flare-up. I-document ang frequency, duration, at kung ano ang nagti-trigger sa kanila.", vi: "VA đánh giá bạn dựa trên các đợt bùng phát TỆ NHẤT của bạn, không phải ngày bình thường. Nếu lưng của bạn 'cứng' 3-4 lần mỗi năm cần nghỉ ngơi trên giường, đó là một đợt bùng phát. Ghi lại tần suất, thời gian và những gì kích hoạt chúng.", ko: "VA는 평균적인 날이 아닌 최악의 악화 기간을 기준으로 등급을 매깁니다. 등이 1년에 3-4번 '경직'되어 침상 안정이 필요하다면 그것이 악화입니다. 빈도, 기간 및 유발 요인을 기록하세요." },
+    tipSocialImpairmentContent: { en: "For mental health claims, use these specific terms if they apply to you: 'panic attacks,' 'memory loss,' 'difficulty concentrating,' 'suicidal ideation,' 'neglecting hygiene,' 'inability to establish relationships.' These are the exact phrases in the rating criteria.", es: "Para reclamos de salud mental, usa estos términos específicos si te aplican: 'ataques de pánico', 'pérdida de memoria', 'dificultad para concentrarse', 'ideación suicida', 'descuido de la higiene', 'incapacidad para establecer relaciones'. Estas son las frases exactas en los criterios de calificación.", tl: "Para sa mental health claims, gamitin ang mga specific terms na ito kung applicable sa iyo: 'panic attacks', 'memory loss', 'difficulty concentrating', 'suicidal ideation', 'neglecting hygiene', 'inability to establish relationships'. Ito ang eksaktong mga phrases sa rating criteria.", vi: "Đối với các yêu cầu sức khỏe tâm thần, hãy sử dụng các thuật ngữ cụ thể này nếu chúng áp dụng cho bạn: 'cơn hoảng loạn', 'mất trí nhớ', 'khó tập trung', 'ý tưởng tự tử', 'bỏ bê vệ sinh', 'không thể thiết lập mối quan hệ'. Đây là những cụm từ chính xác trong tiêu chí đánh giá.", ko: "정신 건강 청구의 경우, 해당되는 경우 다음 특정 용어를 사용하세요: '공황 발작', '기억 상실', '집중 곤란', '자살 충동', '위생 무시', '관계 형성 불능'. 이것들은 등급 기준의 정확한 문구입니다." },
+    tipMedicationSideEffectsContent: { en: "The medications you take for your service-connected condition can affect your rating. Mention side effects like: drowsiness affecting work, weight gain, sexual dysfunction, GI distress. These are 'residuals of treatment' and factor into your rating.", es: "Los medicamentos que tomas para tu condición conectada al servicio pueden afectar tu rating. Menciona efectos secundarios como: somnolencia afectando el trabajo, aumento de peso, disfunción sexual, malestar GI. Estos son 'residuos del tratamiento' y se consideran en tu rating.", tl: "Ang mga gamot na iniinom mo para sa iyong service-connected condition ay pwedeng makaapekto sa rating mo. Banggitin ang mga side effects tulad ng: antok na nakakaapekto sa trabaho, weight gain, sexual dysfunction, GI distress. Ang mga ito ay 'residuals of treatment' at naka-factor sa rating mo.", vi: "Các loại thuốc bạn dùng cho tình trạng liên quan đến phục vụ có thể ảnh hưởng đến xếp hạng của bạn. Đề cập đến các tác dụng phụ như: buồn ngủ ảnh hưởng đến công việc, tăng cân, rối loạn chức năng tình dục, khó chịu tiêu hóa. Đây là 'di chứng của điều trị' và được tính vào xếp hạng của bạn.", ko: "복무 관련 상태에 복용하는 약물이 등급에 영향을 줄 수 있습니다. 졸음이 업무에 영향, 체중 증가, 성기능 장애, 소화기 불편 등의 부작용을 언급하세요. 이것들은 '치료의 후유증'이며 등급에 반영됩니다." },
+    tipSleepDisturbanceContent: { en: "Chronic sleep impairment affects nearly every condition rating. Be specific: How many hours do you sleep? Do you wake up? How often? Do you have nightmares? Sleep separately from your spouse? This impacts both mental and physical ratings.", es: "El deterioro crónico del sueño afecta casi todos los ratings de condiciones. Sé específico: ¿Cuántas horas duermes? ¿Te despiertas? ¿Con qué frecuencia? ¿Tienes pesadillas? ¿Duermes separado de tu cónyuge? Esto impacta tanto los ratings mentales como físicos.", tl: "Ang chronic sleep impairment ay nakakaapekto sa halos lahat ng condition rating. Maging specific: Ilang oras ka natutulog? Nagigising ka ba? Gaano kadalas? May mga bangungot ka ba? Magkahiwalay ba kayong natutulog ng asawa mo? Nakakaapekto ito sa parehong mental at physical ratings.", vi: "Suy giảm giấc ngủ mãn tính ảnh hưởng đến hầu hết mọi đánh giá tình trạng. Hãy cụ thể: Bạn ngủ bao nhiêu giờ? Bạn có thức dậy không? Bao lâu một lần? Bạn có ác mộng không? Ngủ riêng với vợ/chồng? Điều này ảnh hưởng đến cả đánh giá tâm thần và thể chất.", ko: "만성 수면 장애는 거의 모든 상태 등급에 영향을 미칩니다. 구체적으로: 몇 시간 자나요? 깨나요? 얼마나 자주? 악몽을 꾸나요? 배우자와 따로 자나요? 이것은 정신 및 신체 등급 모두에 영향을 미칩니다." },
+    tipFrequencyContent: { en: "Don't just say 'often' or 'sometimes.' The examiner needs specifics: 'Once per month,' 'Three times per week,' '10-15 episodes per year.' Keep a symptom log for 30 days before your exam if possible.", es: "No digas solo 'a menudo' o 'a veces'. El examinador necesita específicos: 'Una vez al mes', 'Tres veces por semana', '10-15 episodios por año'. Mantén un registro de síntomas por 30 días antes de tu examen si es posible.", tl: "Huwag lang sabihin na 'madalas' o 'minsan'. Kailangan ng examiner ng specifics: 'Isang beses sa isang buwan', 'Tatlong beses sa isang linggo', '10-15 episodes sa isang taon'. Mag-keep ng symptom log ng 30 araw bago ang exam mo kung pwede.", vi: "Đừng chỉ nói 'thường xuyên' hoặc 'đôi khi'. Người khám cần cụ thể: 'Một lần mỗi tháng', 'Ba lần mỗi tuần', '10-15 lần mỗi năm'. Giữ nhật ký triệu chứng trong 30 ngày trước buổi khám nếu có thể.", ko: "'자주' 또는 '가끔'이라고만 말하지 마세요. 심사관은 구체적인 정보가 필요합니다: '한 달에 한 번', '일주일에 세 번', '연간 10-15회'. 가능하면 시험 전 30일 동안 증상 기록을 유지하세요." },
+    tipLossOfUseContent: { en: "If you can't perform a specific function (e.g., can't grip tools, can't squat, can't climb stairs), say that explicitly. Partial loss of use still qualifies. Example: 'I can no longer tie my shoes without assistance' is more powerful than 'My hands hurt.'", es: "Si no puedes realizar una función específica (ej., no puedes agarrar herramientas, no puedes agacharte, no puedes subir escaleras), dilo explícitamente. La pérdida parcial de uso también califica. Ejemplo: 'Ya no puedo atarme los zapatos sin ayuda' es más poderoso que 'Me duelen las manos'.", tl: "Kung hindi mo magawa ang isang specific function (hal., hindi makahawak ng tools, hindi makaupo ng squats, hindi makaakyat ng stairs), sabihin iyon explicitly. Ang partial loss of use ay qualify pa rin. Halimbawa: 'Hindi ko na kaya itali ang sapatos ko nang walang tulong' ay mas powerful kaysa 'Masakit ang kamay ko'.", vi: "Nếu bạn không thể thực hiện một chức năng cụ thể (ví dụ: không thể cầm nắm công cụ, không thể ngồi xổm, không thể leo cầu thang), hãy nói rõ ràng điều đó. Mất một phần khả năng sử dụng vẫn đủ điều kiện. Ví dụ: 'Tôi không còn có thể tự buộc dây giày' mạnh hơn 'Tay tôi đau'.", ko: "특정 기능을 수행할 수 없다면 (예: 도구를 쥘 수 없음, 쪼그려 앉을 수 없음, 계단을 오를 수 없음) 명시적으로 말하세요. 부분적인 사용 상실도 자격이 됩니다. 예: '더 이상 도움 없이 신발 끈을 묶을 수 없습니다'가 '손이 아픕니다'보다 더 강력합니다." },
+  },
+
+  // Witness Bench (Buddy Letter Wizard)
+  witnessBench: {
+    // Header
+    title: { en: 'The Witness Bench', es: 'El Banco de Testigos', tl: 'Ang Witness Bench', vi: 'Ghế Nhân Chứng', ko: '증인석' },
+    subtitle: { en: 'Buddy Letter Wizard (VA Form 21-10210)', es: 'Asistente de Carta de Compañero (Formulario VA 21-10210)', tl: 'Buddy Letter Wizard (VA Form 21-10210)', vi: 'Trình Hướng Dẫn Thư Đồng Đội (Mẫu VA 21-10210)', ko: '동료 편지 마법사 (VA Form 21-10210)' },
+    aiBadge: { en: 'AI', es: 'IA', tl: 'AI', vi: 'AI', ko: 'AI' },
+    betaBadge: { en: 'BETA', es: 'BETA', tl: 'BETA', vi: 'BETA', ko: '베타' },
+    
+    // Relationship Types
+    relationshipSpouse: { en: 'Spouse / Partner', es: 'Cónyuge / Pareja', tl: 'Asawa / Kasintahan', vi: 'Vợ/Chồng / Bạn Đời', ko: '배우자 / 파트너' },
+    relationshipParent: { en: 'Parent', es: 'Padre/Madre', tl: 'Magulang', vi: 'Cha Mẹ', ko: '부모' },
+    relationshipChild: { en: 'Adult Child', es: 'Hijo Adulto', tl: 'Adult na Anak', vi: 'Con Trưởng Thành', ko: '성인 자녀' },
+    relationshipSibling: { en: 'Sibling', es: 'Hermano/a', tl: 'Kapatid', vi: 'Anh Chị Em', ko: '형제자매' },
+    relationshipFriend: { en: 'Close Friend', es: 'Amigo Cercano', tl: 'Malapit na Kaibigan', vi: 'Bạn Thân', ko: '친한 친구' },
+    relationshipBuddy: { en: 'Battle Buddy / Fellow Veteran', es: 'Compañero de Batalla / Veterano', tl: 'Battle Buddy / Kapwa Beterano', vi: 'Đồng Đội Chiến Đấu / Cựu Chiến Binh', ko: '전우 / 동료 재향군인' },
+    relationshipCoworker: { en: 'Coworker / Supervisor', es: 'Compañero de Trabajo / Supervisor', tl: 'Katrabaho / Supervisor', vi: 'Đồng Nghiệp / Giám Sát', ko: '동료 / 상사' },
+    relationshipNeighbor: { en: 'Neighbor', es: 'Vecino', tl: 'Kapitbahay', vi: 'Hàng Xóm', ko: '이웃' },
+    
+    // Condition Categories
+    categoryMental: { en: 'Mental Health (PTSD, Depression, Anxiety)', es: 'Salud Mental (TEPT, Depresión, Ansiedad)', tl: 'Mental Health (PTSD, Depression, Anxiety)', vi: 'Sức Khỏe Tâm Thần (PTSD, Trầm Cảm, Lo Âu)', ko: '정신 건강 (PTSD, 우울증, 불안)' },
+    categoryPhysical: { en: 'Musculoskeletal / Pain (Back, Knee, Neck)', es: 'Musculoesquelético / Dolor (Espalda, Rodilla, Cuello)', tl: 'Musculoskeletal / Sakit (Likod, Tuhod, Leeg)', vi: 'Cơ Xương / Đau (Lưng, Đầu Gối, Cổ)', ko: '근골격계 / 통증 (허리, 무릎, 목)' },
+    categoryNeurological: { en: 'Neurological (TBI, Headaches, Neuropathy)', es: 'Neurológico (TBI, Dolores de Cabeza, Neuropatía)', tl: 'Neurological (TBI, Headaches, Neuropathy)', vi: 'Thần Kinh (TBI, Đau Đầu, Bệnh Thần Kinh)', ko: '신경계 (TBI, 두통, 신경병증)' },
+    categoryHearing: { en: 'Hearing / Tinnitus', es: 'Audición / Tinnitus', tl: 'Pandinig / Tinnitus', vi: 'Thính Giác / Ù Tai', ko: '청력 / 이명' },
+    categoryRespiratory: { en: 'Respiratory (Asthma, Sleep Apnea, COPD)', es: 'Respiratorio (Asma, Apnea del Sueño, EPOC)', tl: 'Respiratory (Asthma, Sleep Apnea, COPD)', vi: 'Hô Hấp (Hen Suyễn, Ngưng Thở Khi Ngủ, COPD)', ko: '호흡기 (천식, 수면 무호흡증, COPD)' },
+    categoryOther: { en: 'Other Condition', es: 'Otra Condición', tl: 'Iba Pang Kondisyon', vi: 'Tình Trạng Khác', ko: '기타 상태' },
+    
+    // Step 1: Setup
+    step1Title: { en: 'Step 1: Who is writing this statement?', es: 'Paso 1: ¿Quién escribe esta declaración?', tl: 'Hakbang 1: Sino ang sumusulat ng statement na ito?', vi: 'Bước 1: Ai đang viết bản tuyên bố này?', ko: '1단계: 누가 이 진술서를 작성하나요?' },
+    step2Title: { en: 'Step 2: What condition is the veteran claiming?', es: 'Paso 2: ¿Qué condición está reclamando el veterano?', tl: 'Hakbang 2: Anong kondisyon ang cinalaim ng beterano?', vi: 'Bước 2: Cựu chiến binh đang yêu cầu tình trạng gì?', ko: '2단계: 재향군인이 어떤 상태를 청구하나요?' },
+    step3Title: { en: 'Step 3: Witness Name', es: 'Paso 3: Nombre del Testigo', tl: 'Hakbang 3: Pangalan ng Saksi', vi: 'Bước 3: Tên Nhân Chứng', ko: '3단계: 증인 이름' },
+    conditionPlaceholder: { en: 'e.g., PTSD, Lower Back Pain, Tinnitus, Sleep Apnea', es: 'ej., TEPT, Dolor de Espalda Baja, Tinnitus, Apnea del Sueño', tl: 'hal., PTSD, Lower Back Pain, Tinnitus, Sleep Apnea', vi: 'vd., PTSD, Đau Lưng Dưới, Ù Tai, Ngưng Thở Khi Ngủ', ko: '예: PTSD, 허리 통증, 이명, 수면 무호흡증' },
+    conditionHelpText: { en: 'Enter the specific condition or disability being claimed', es: 'Ingresa la condición o discapacidad específica que se reclama', tl: 'Ilagay ang specific na kondisyon o disability na cinalaim', vi: 'Nhập tình trạng hoặc khuyết tật cụ thể đang được yêu cầu', ko: '청구 중인 특정 상태 또는 장애를 입력하세요' },
+    witnessNamePlaceholder: { en: 'e.g., Jane Smith, John Doe', es: 'ej., María García, Juan Pérez', tl: 'hal., Maria Santos, Juan dela Cruz', vi: 'vd., Nguyễn Văn A, Trần Thị B', ko: '예: 홍길동, 김철수' },
+    witnessNameHelpText: { en: 'Full name of the person providing this witness statement', es: 'Nombre completo de la persona que proporciona esta declaración', tl: 'Buong pangalan ng taong nagbibigay ng witness statement na ito', vi: 'Họ tên đầy đủ của người cung cấp bản tuyên bố nhân chứng này', ko: '이 증인 진술서를 제공하는 사람의 전체 이름' },
+    
+    // AI Toggle Section
+    aiPoweredInterview: { en: 'AI-Powered Interview', es: 'Entrevista con IA', tl: 'AI-Powered Interview', vi: 'Phỏng Vấn Hỗ Trợ AI', ko: 'AI 지원 인터뷰' },
+    aiAvailableDesc: { en: 'Generate custom interview questions tailored to the relationship and condition', es: 'Genera preguntas de entrevista personalizadas según la relación y condición', tl: 'Gumawa ng custom na interview questions na naka-tailor sa relationship at condition', vi: 'Tạo câu hỏi phỏng vấn tùy chỉnh phù hợp với mối quan hệ và tình trạng', ko: '관계와 상태에 맞춤화된 인터뷰 질문 생성' },
+    aiNotConfigured: { en: 'AI not configured - using standard interview questions', es: 'IA no configurada - usando preguntas de entrevista estándar', tl: 'Hindi naka-configure ang AI - gumagamit ng standard interview questions', vi: 'AI chưa được cấu hình - sử dụng câu hỏi phỏng vấn tiêu chuẩn', ko: 'AI 미구성 - 표준 인터뷰 질문 사용' },
+    usingLocalAI: { en: 'Using: 🔒 Local AI (Private)', es: 'Usando: 🔒 IA Local (Privada)', tl: 'Ginagamit: 🔒 Local AI (Private)', vi: 'Đang sử dụng: 🔒 AI Cục Bộ (Riêng Tư)', ko: '사용 중: 🔒 로컬 AI (비공개)' },
+    usingCloudAI: { en: 'Using: ☁️ Cloud AI (Gemini)', es: 'Usando: ☁️ IA en la Nube (Gemini)', tl: 'Ginagamit: ☁️ Cloud AI (Gemini)', vi: 'Đang sử dụng: ☁️ AI Đám Mây (Gemini)', ko: '사용 중: ☁️ 클라우드 AI (Gemini)' },
+    configureAI: { en: 'Configure AI', es: 'Configurar IA', tl: 'I-configure ang AI', vi: 'Cấu Hình AI', ko: 'AI 구성' },
+    standardQuestionsWork: { en: 'Standard questions work great!', es: '¡Las preguntas estándar funcionan muy bien!', tl: 'Mahusay ang standard questions!', vi: 'Câu hỏi tiêu chuẩn hoạt động tốt!', ko: '표준 질문이 잘 작동합니다!' },
+    aiOptionalNote: { en: 'AI is optional and creates additional tailored questions based on the specific relationship and condition.', es: 'La IA es opcional y crea preguntas adicionales adaptadas según la relación y condición específica.', tl: 'Optional lang ang AI at gumagawa ng additional tailored questions batay sa specific na relationship at condition.', vi: 'AI là tùy chọn và tạo thêm các câu hỏi phù hợp dựa trên mối quan hệ và tình trạng cụ thể.', ko: 'AI는 선택 사항이며 특정 관계와 상태에 맞는 추가 질문을 생성합니다.' },
+    
+    // Error Messages
+    selectRelationshipAndCondition: { en: 'Please select a relationship and enter the condition.', es: 'Por favor selecciona una relación e ingresa la condición.', tl: 'Mangyaring pumili ng relationship at ilagay ang condition.', vi: 'Vui lòng chọn mối quan hệ và nhập tình trạng.', ko: '관계를 선택하고 상태를 입력해 주세요.' },
+    
+    // Start Button
+    preparingInterview: { en: 'Preparing Interview...', es: 'Preparando Entrevista...', tl: 'Inihahanda ang Interview...', vi: 'Đang Chuẩn Bị Phỏng Vấn...', ko: '인터뷰 준비 중...' },
+    startInterview: { en: 'Start Interview', es: 'Iniciar Entrevista', tl: 'Simulan ang Interview', vi: 'Bắt Đầu Phỏng Vấn', ko: '인터뷰 시작' },
+    
+    // Step 2: Interview
+    questionOf: { en: 'Question {current} of {total}', es: 'Pregunta {current} de {total}', tl: 'Tanong {current} ng {total}', vi: 'Câu hỏi {current} trong số {total}', ko: '{total}개 중 {current}번째 질문' },
+    answered: { en: 'answered', es: 'respondidas', tl: 'nasagot', vi: 'đã trả lời', ko: '답변됨' },
+    voiceInputTip: { en: "Voice Input: Click the microphone to speak - your voice stays on your device, not our servers. Be specific with examples.", es: 'Entrada de Voz: Haz clic en el micrófono para hablar - tu voz permanece en tu dispositivo, no en nuestros servidores. Sé específico con ejemplos.', tl: 'Voice Input: I-click ang microphone para magsalita - ang boses mo ay nananatili sa device mo, hindi sa servers namin. Maging specific sa mga halimbawa.', vi: 'Nhập Giọng Nói: Nhấp vào micrô để nói - giọng nói của bạn ở trên thiết bị của bạn, không phải máy chủ của chúng tôi. Hãy cụ thể với các ví dụ.', ko: '음성 입력: 마이크를 클릭하여 말하세요 - 음성은 서버가 아닌 장치에 저장됩니다. 예시와 함께 구체적으로 말하세요.' },
+    ctrlEnterTip: { en: 'Tip: Press Ctrl+Enter to advance, or use the microphone to speak your answer', es: 'Consejo: Presiona Ctrl+Enter para avanzar, o usa el micrófono para decir tu respuesta', tl: 'Tip: Pindutin ang Ctrl+Enter para mag-advance, o gamitin ang microphone para sabihin ang sagot mo', vi: 'Mẹo: Nhấn Ctrl+Enter để tiến lên, hoặc sử dụng micrô để nói câu trả lời của bạn', ko: '팁: Ctrl+Enter를 눌러 진행하거나 마이크를 사용하여 답변을 말하세요' },
+    previous: { en: '← Previous', es: '← Anterior', tl: '← Nakaraan', vi: '← Trước', ko: '← 이전' },
+    next: { en: 'Next →', es: 'Siguiente →', tl: 'Susunod →', vi: 'Tiếp →', ko: '다음 →' },
+    generating: { en: 'Generating...', es: 'Generando...', tl: 'Ginagawa...', vi: 'Đang Tạo...', ko: '생성 중...' },
+    generateStatement: { en: 'Generate Statement', es: 'Generar Declaración', tl: 'Gumawa ng Statement', vi: 'Tạo Bản Tuyên Bố', ko: '진술서 생성' },
+    jumpToQuestion: { en: 'Jump to question:', es: 'Ir a la pregunta:', tl: 'Pumunta sa tanong:', vi: 'Chuyển đến câu hỏi:', ko: '질문으로 이동:' },
+    
+    // Step 3: Output
+    statementGenerated: { en: 'Statement Generated!', es: '¡Declaración Generada!', tl: 'Nagawa na ang Statement!', vi: 'Đã Tạo Bản Tuyên Bố!', ko: '진술서 생성 완료!' },
+    reviewEditDownload: { en: 'Review, edit if needed, then download for VA Form 21-10210', es: 'Revisa, edita si es necesario, luego descarga para el Formulario VA 21-10210', tl: 'I-review, i-edit kung kailangan, pagkatapos i-download para sa VA Form 21-10210', vi: 'Xem xét, chỉnh sửa nếu cần, sau đó tải xuống cho Mẫu VA 21-10210', ko: '검토하고 필요시 편집한 후 VA Form 21-10210용으로 다운로드' },
+    yourBuddyStatement: { en: 'Your Buddy Statement', es: 'Tu Declaración de Compañero', tl: 'Ang Iyong Buddy Statement', vi: 'Bản Tuyên Bố Đồng Đội Của Bạn', ko: '귀하의 동료 진술서' },
+    copy: { en: 'Copy', es: 'Copiar', tl: 'Kopyahin', vi: 'Sao Chép', ko: '복사' },
+    download: { en: 'Download', es: 'Descargar', tl: 'I-download', vi: 'Tải Xuống', ko: '다운로드' },
+    saveToMyPacket: { en: 'Save to My Packet', es: 'Guardar en Mi Paquete', tl: 'I-save sa My Packet', vi: 'Lưu vào Hồ Sơ Của Tôi', ko: '내 패킷에 저장' },
+    savedToMyPacket: { en: 'Saved to My Packet', es: 'Guardado en Mi Paquete', tl: 'Na-save sa My Packet', vi: 'Đã Lưu vào Hồ Sơ Của Tôi', ko: '내 패킷에 저장됨' },
+    downloadAsPDF: { en: 'Download as PDF', es: 'Descargar como PDF', tl: 'I-download bilang PDF', vi: 'Tải Xuống dạng PDF', ko: 'PDF로 다운로드' },
+    downloadAsDOCX: { en: 'Download as DOCX', es: 'Descargar como DOCX', tl: 'I-download bilang DOCX', vi: 'Tải Xuống dạng DOCX', ko: 'DOCX로 다운로드' },
+    statementCopied: { en: 'Statement copied to clipboard!', es: '¡Declaración copiada al portapapeles!', tl: 'Nakopya ang statement sa clipboard!', vi: 'Đã sao chép bản tuyên bố vào clipboard!', ko: '진술서가 클립보드에 복사되었습니다!' },
+    
+    // Next Steps
+    nextStepsTitle: { en: 'Next Steps:', es: 'Próximos Pasos:', tl: 'Mga Susunod na Hakbang:', vi: 'Các Bước Tiếp Theo:', ko: '다음 단계:' },
+    nextStep1: { en: 'Review and edit the statement for accuracy', es: 'Revisa y edita la declaración para mayor precisión', tl: 'I-review at i-edit ang statement para sa accuracy', vi: 'Xem xét và chỉnh sửa bản tuyên bố cho chính xác', ko: '정확성을 위해 진술서를 검토하고 편집하세요' },
+    nextStep2: { en: 'Have the witness read and approve the final version', es: 'Haz que el testigo lea y apruebe la versión final', tl: 'Ipabasa at ipa-approve sa saksi ang final version', vi: 'Cho nhân chứng đọc và phê duyệt phiên bản cuối cùng', ko: '증인이 최종 버전을 읽고 승인하도록 하세요' },
+    nextStep3: { en: 'Witness signs and dates the statement', es: 'El testigo firma y fecha la declaración', tl: 'Pipirma at lalagyan ng petsa ng saksi ang statement', vi: 'Nhân chứng ký và ghi ngày trên bản tuyên bố', ko: '증인이 진술서에 서명하고 날짜를 기입합니다' },
+    nextStep4: { en: 'Submit with your VA claim as supporting evidence', es: 'Envía con tu reclamo VA como evidencia de apoyo', tl: 'I-submit kasama ng VA claim mo bilang supporting evidence', vi: 'Gửi cùng với yêu cầu VA như bằng chứng hỗ trợ', ko: 'VA 청구서와 함께 지원 증거로 제출하세요' },
+    
+    // Start Over
+    startNewStatement: { en: 'Start New Statement', es: 'Iniciar Nueva Declaración', tl: 'Magsimula ng Bagong Statement', vi: 'Bắt Đầu Bản Tuyên Bố Mới', ko: '새 진술서 시작' },
+    
+    // Info Banners
+    whyBuddyStatementsMatter: { en: 'Why Buddy Statements Matter', es: 'Por Qué Importan las Declaraciones de Compañeros', tl: 'Bakit Mahalaga ang Buddy Statements', vi: 'Tại Sao Các Bản Tuyên Bố Đồng Đội Quan Trọng', ko: '동료 진술서가 중요한 이유' },
+    buddyStatementExplanation: { en: 'Veterans often downplay their symptoms. A spouse who sees them scream in their sleep, or a friend who watches them struggle to walk, provides powerful third-party evidence the VA takes seriously.', es: 'Los veteranos a menudo minimizan sus síntomas. Un cónyuge que los ve gritar mientras duermen, o un amigo que los ve luchar para caminar, proporciona evidencia poderosa de terceros que el VA toma en serio.', tl: 'Madalas na mina-minimize ng mga beterano ang kanilang mga sintomas. Ang asawa na nakakakita sa kanilang sumisigaw habang natutulog, o kaibigan na nakikita silang nahihirapang maglakad, nagbibigay ng malakas na third-party evidence na sineseryoso ng VA.', vi: 'Cựu chiến binh thường đánh giá thấp triệu chứng của họ. Vợ/chồng thấy họ la hét trong giấc ngủ, hoặc bạn bè thấy họ vật lộn để đi bộ, cung cấp bằng chứng bên thứ ba mạnh mẽ mà VA coi trọng.', ko: '재향군인들은 종종 증상을 과소평가합니다. 잠에서 소리 지르는 것을 보는 배우자나 걷기 힘들어하는 것을 보는 친구는 VA가 진지하게 받아들이는 강력한 제3자 증거를 제공합니다.' },
+    aiRequiredTitle: { en: 'AI Required for Analysis', es: 'IA Requerida para el Análisis', tl: 'Kinakailangan ang AI para sa Analysis', vi: 'Yêu Cầu AI cho Phân Tích', ko: '분석에 AI 필요' },
+    aiRequiredExplanation: { en: 'Click the AI Status button in the header above to load your secure Local AI (100% private) or enter your Gemini API key.', es: 'Haz clic en el botón Estado de IA en el encabezado para cargar tu IA Local segura (100% privada) o ingresa tu clave API de Gemini.', tl: 'I-click ang AI Status button sa header sa itaas para i-load ang secure Local AI mo (100% private) o ilagay ang Gemini API key mo.', vi: 'Nhấp vào nút Trạng Thái AI trong tiêu đề phía trên để tải AI Cục Bộ an toàn của bạn (100% riêng tư) hoặc nhập khóa API Gemini của bạn.', ko: '위 헤더의 AI 상태 버튼을 클릭하여 보안 로컬 AI(100% 비공개)를 로드하거나 Gemini API 키를 입력하세요.' },
+  },
+
+  // C-File Analyzer
+  cfileAnalyzer: {
+    // Header
+    title: { en: 'C-File Analyzer', es: 'Analizador de C-File', tl: 'C-File Analyzer', vi: 'Phân Tích C-File', ko: 'C-File 분석기' },
+    subtitle: { en: 'AI-powered claims evidence discovery', es: 'Descubrimiento de evidencia de reclamos impulsado por IA', tl: 'AI-powered claims evidence discovery', vi: 'Khám phá bằng chứng yêu cầu bằng AI', ko: 'AI 기반 청구 증거 발견' },
+    beta: { en: 'BETA', es: 'BETA', tl: 'BETA', vi: 'BETA', ko: '베타' },
+    ai: { en: 'AI', es: 'IA', tl: 'AI', vi: 'AI', ko: 'AI' },
+    vaUsesSimilarAi: { en: 'VA Uses Similar AI', es: 'El VA Usa IA Similar', tl: 'Gumagamit din ang VA ng Similar AI', vi: 'VA Sử Dụng AI Tương Tự', ko: 'VA도 유사한 AI 사용' },
+    
+    // Security Notice
+    securityNotice: { en: 'Security Notice', es: 'Aviso de Seguridad', tl: 'Security Notice', vi: 'Thông Báo Bảo Mật', ko: '보안 알림' },
+    securityNoticeDesc: { en: 'Your C-File contains highly sensitive information. This tool processes everything locally in your browser. Only the extracted text is sent to Google\'s AI service using YOUR API key. We never see or store your data.', es: 'Tu C-File contiene información altamente sensible. Esta herramienta procesa todo localmente en tu navegador. Solo el texto extraído se envía al servicio de IA de Google usando TU clave API. Nunca vemos ni almacenamos tus datos.', tl: 'Ang C-File mo ay naglalaman ng highly sensitive na impormasyon. Pinoproseso ng tool na ito ang lahat locally sa browser mo. Ang extracted text lang ang ipinapadala sa Google AI service gamit ang API key MO. Hindi namin nakikita o sino-store ang data mo.', vi: 'C-File của bạn chứa thông tin rất nhạy cảm. Công cụ này xử lý mọi thứ cục bộ trong trình duyệt của bạn. Chỉ văn bản đã trích xuất được gửi đến dịch vụ AI của Google bằng khóa API CỦA BẠN. Chúng tôi không bao giờ xem hoặc lưu trữ dữ liệu của bạn.', ko: 'C-File에는 매우 민감한 정보가 포함되어 있습니다. 이 도구는 브라우저에서 모든 것을 로컬로 처리합니다. 추출된 텍스트만 귀하의 API 키를 사용하여 Google AI 서비스로 전송됩니다. 우리는 귀하의 데이터를 보거나 저장하지 않습니다.' },
+    
+    // AI Tip
+    unlimitedFileSize: { en: 'Unlimited File Size:', es: 'Tamaño de Archivo Ilimitado:', tl: 'Unlimited File Size:', vi: 'Kích Thước Tệp Không Giới Hạn:', ko: '무제한 파일 크기:' },
+    unlimitedFileSizeDesc: { en: 'Drop in C-Files of ANY size (even 300MB+). Large files are automatically split into chunks and analyzed, then merged into a complete report.', es: 'Suelta C-Files de CUALQUIER tamaño (incluso 300MB+). Los archivos grandes se dividen automáticamente en fragmentos y se analizan, luego se fusionan en un informe completo.', tl: 'I-drop ang C-Files ng ANUMANG size (kahit 300MB+). Ang malalaking files ay awtomatikong hinahati sa chunks at sinusuri, pagkatapos ay pinagsasama sa isang kumpletong report.', vi: 'Thả C-File có BẤT KỲ kích thước nào (thậm chí 300MB+). Các tệp lớn được tự động chia thành các phần và phân tích, sau đó hợp nhất thành một báo cáo hoàn chỉnh.', ko: '어떤 크기의 C-File도 드롭하세요 (300MB 이상도 가능). 큰 파일은 자동으로 청크로 분할되어 분석된 후 완전한 보고서로 병합됩니다.' },
+    
+    // Drop Zone
+    dropYourCFile: { en: 'Drop your C-File PDF here', es: 'Suelta tu PDF de C-File aquí', tl: 'I-drop ang C-File PDF mo dito', vi: 'Thả PDF C-File của bạn vào đây', ko: 'C-File PDF를 여기에 놓으세요' },
+    orClickToBrowse: { en: 'or click to browse', es: 'o haz clic para navegar', tl: 'o mag-click para mag-browse', vi: 'hoặc nhấp để duyệt', ko: '또는 클릭하여 찾아보기' },
+    supportsPdfUpTo: { en: 'Supports PDF files up to 500MB', es: 'Soporta archivos PDF hasta 500MB', tl: 'Suportado ang PDF files hanggang 500MB', vi: 'Hỗ trợ tệp PDF lên đến 500MB', ko: '최대 500MB PDF 파일 지원' },
+    removeFile: { en: 'Remove and choose different file', es: 'Eliminar y elegir archivo diferente', tl: 'Alisin at pumili ng ibang file', vi: 'Xóa và chọn tệp khác', ko: '삭제하고 다른 파일 선택' },
+    
+    // Errors
+    pleaseDropPdf: { en: 'Please drop in a PDF file.', es: 'Por favor suelta un archivo PDF.', tl: 'Mangyaring mag-drop ng PDF file.', vi: 'Vui lòng thả tệp PDF.', ko: 'PDF 파일을 놓으세요.' },
+    pleaseUploadPdf: { en: 'Please upload a PDF file.', es: 'Por favor sube un archivo PDF.', tl: 'Mangyaring mag-upload ng PDF file.', vi: 'Vui lòng tải lên tệp PDF.', ko: 'PDF 파일을 업로드하세요.' },
+    pleaseDropFileFirst: { en: 'Please drop in a file first.', es: 'Por favor suelta un archivo primero.', tl: 'Mangyaring mag-drop muna ng file.', vi: 'Vui lòng thả tệp trước.', ko: '먼저 파일을 놓으세요.' },
+    noAiAvailable: { en: 'No AI available. Please set up an API key or enable Local AI in settings.', es: 'No hay IA disponible. Por favor configura una clave API o habilita IA Local en configuración.', tl: 'Walang available na AI. Mangyaring mag-set up ng API key o i-enable ang Local AI sa settings.', vi: 'Không có AI khả dụng. Vui lòng thiết lập khóa API hoặc bật AI Cục bộ trong cài đặt.', ko: 'AI를 사용할 수 없습니다. API 키를 설정하거나 설정에서 로컬 AI를 활성화하세요.' },
+    scannedImageError: { en: 'This PDF appears to be a scanned image with minimal text', es: 'Este PDF parece ser una imagen escaneada con texto mínimo', tl: 'Ang PDF na ito ay mukhang scanned image na may minimal na text', vi: 'PDF này có vẻ là hình ảnh quét với văn bản tối thiểu', ko: '이 PDF는 최소한의 텍스트가 있는 스캔 이미지로 보입니다' },
+    scannedImageSolution: { en: 'Please use OCR software (like Adobe Acrobat "Recognize Text" or a free online OCR tool) to make it searchable first, then drop it in again.', es: 'Por favor usa software OCR (como "Reconocer Texto" de Adobe Acrobat o una herramienta OCR gratuita en línea) para hacerlo buscable primero, luego suéltalo de nuevo.', tl: 'Mangyaring gumamit ng OCR software (tulad ng Adobe Acrobat "Recognize Text" o isang libreng online OCR tool) para gawin itong searchable, pagkatapos i-drop ulit.', vi: 'Vui lòng sử dụng phần mềm OCR (như Adobe Acrobat "Nhận dạng văn bản" hoặc công cụ OCR trực tuyến miễn phí) để làm cho nó có thể tìm kiếm được trước, sau đó thả lại.', ko: 'OCR 소프트웨어(Adobe Acrobat "텍스트 인식" 또는 무료 온라인 OCR 도구 등)를 사용하여 먼저 검색 가능하게 만든 다음 다시 놓으세요.' },
+    analysisError: { en: 'An error occurred during analysis.', es: 'Ocurrió un error durante el análisis.', tl: 'May error na naganap habang nag-a-analyze.', vi: 'Đã xảy ra lỗi trong quá trình phân tích.', ko: '분석 중 오류가 발생했습니다.' },
+    
+    // AI Status Warning
+    aiRequiredForAnalysis: { en: 'AI Required for Analysis', es: 'IA Requerida para el Análisis', tl: 'Kinakailangan ang AI para sa Analysis', vi: 'Yêu Cầu AI cho Phân Tích', ko: '분석에 AI 필요' },
+    aiRequiredDesc: { en: 'Click the AI Status button in the header above to load your secure Local AI (100% private) or enter your Gemini API key.', es: 'Haz clic en el botón Estado de IA en el encabezado para cargar tu IA Local segura (100% privada) o ingresa tu clave API de Gemini.', tl: 'I-click ang AI Status button sa header sa itaas para i-load ang secure Local AI mo (100% private) o ilagay ang Gemini API key mo.', vi: 'Nhấp vào nút Trạng Thái AI trong tiêu đề phía trên để tải AI Cục Bộ an toàn của bạn (100% riêng tư) hoặc nhập khóa API Gemini của bạn.', ko: '위 헤더의 AI 상태 버튼을 클릭하여 보안 로컬 AI(100% 비공개)를 로드하거나 Gemini API 키를 입력하세요.' },
+    
+    // Buttons
+    analyzeMyFile: { en: 'Analyze My C-File', es: 'Analizar Mi C-File', tl: 'I-analyze ang C-File Ko', vi: 'Phân Tích C-File Của Tôi', ko: '내 C-File 분석' },
+    estimatedProcessingTime: { en: 'Estimated processing time:', es: 'Tiempo estimado de procesamiento:', tl: 'Estimated processing time:', vi: 'Thời gian xử lý ước tính:', ko: '예상 처리 시간:' },
+    analyzeAnotherFile: { en: 'Analyze Another File', es: 'Analizar Otro Archivo', tl: 'Mag-analyze ng Ibang File', vi: 'Phân Tích Tệp Khác', ko: '다른 파일 분석' },
+    
+    // Privacy Consent Modal
+    privacyDataHandling: { en: 'Privacy & Data Handling', es: 'Privacidad y Manejo de Datos', tl: 'Privacy at Data Handling', vi: 'Quyền Riêng Tư & Xử Lý Dữ Liệu', ko: '개인정보 및 데이터 처리' },
+    cancel: { en: 'Cancel', es: 'Cancelar', tl: 'Kanselahin', vi: 'Hủy', ko: '취소' },
+    iUnderstandStart: { en: 'I Understand - Start Analysis', es: 'Entiendo - Iniciar Análisis', tl: 'Naiintindihan Ko - Simulan ang Analysis', vi: 'Tôi Hiểu - Bắt Đầu Phân Tích', ko: '이해했습니다 - 분석 시작' },
+    
+    // Processing States
+    readingPdf: { en: 'Reading PDF file...', es: 'Leyendo archivo PDF...', tl: 'Binabasa ang PDF file...', vi: 'Đang đọc tệp PDF...', ko: 'PDF 파일 읽는 중...' },
+    extractingText: { en: 'Extracting text from PDF...', es: 'Extrayendo texto del PDF...', tl: 'Kine-extract ang text mula sa PDF...', vi: 'Đang trích xuất văn bản từ PDF...', ko: 'PDF에서 텍스트 추출 중...' },
+    analyzingWithAi: { en: 'Analyzing with AI...', es: 'Analizando con IA...', tl: 'Sinusuri gamit ang AI...', vi: 'Đang phân tích bằng AI...', ko: 'AI로 분석 중...' },
+    processingLargeCFile: { en: 'Processing Large C-File...', es: 'Procesando C-File Grande...', tl: 'Pinoproseso ang Malaking C-File...', vi: 'Đang Xử Lý C-File Lớn...', ko: '대용량 C-File 처리 중...' },
+    analyzingYourCFile: { en: 'Analyzing Your C-File...', es: 'Analizando Tu C-File...', tl: 'Sinusuri ang C-File Mo...', vi: 'Đang Phân Tích C-File Của Bạn...', ko: 'C-File 분석 중...' },
+    pageOf: { en: 'Page {current} of {total}', es: 'Página {current} de {total}', tl: 'Pahina {current} ng {total}', vi: 'Trang {current} trên {total}', ko: '{total}개 중 {current}페이지' },
+    chunkOf: { en: 'Chunk {current} of {total}', es: 'Fragmento {current} de {total}', tl: 'Chunk {current} ng {total}', vi: 'Phần {current} trên {total}', ko: '{total}개 중 {current}청크' },
+    analyzingPages: { en: 'Analyzing pages {start} - {end}', es: 'Analizando páginas {start} - {end}', tl: 'Sinusuri ang mga pahina {start} - {end}', vi: 'Đang phân tích trang {start} - {end}', ko: '{start} - {end}페이지 분석 중' },
+    mergingChunks: { en: 'Merging {total} chunks into final report...', es: 'Fusionando {total} fragmentos en el informe final...', tl: 'Pinagsasama ang {total} chunks sa final report...', vi: 'Đang hợp nhất {total} phần vào báo cáo cuối cùng...', ko: '{total}개 청크를 최종 보고서로 병합 중...' },
+    largeFileDetected: { en: 'Large file detected! Processing in {total} chunks. This may take 5-15 minutes. Please keep this tab open.', es: '¡Archivo grande detectado! Procesando en {total} fragmentos. Esto puede tomar 5-15 minutos. Por favor mantén esta pestaña abierta.', tl: 'Malaking file ang na-detect! Pinoproseso sa {total} chunks. Maaaring tumagal ng 5-15 minuto. Mangyaring panatilihing bukas ang tab na ito.', vi: 'Phát hiện tệp lớn! Đang xử lý trong {total} phần. Có thể mất 5-15 phút. Vui lòng giữ tab này mở.', ko: '큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 5-15분이 소요될 수 있습니다. 이 탭을 열어두세요.' },
+    largeFileMayTake: { en: 'Large files may take several minutes. Please keep this tab open.', es: 'Los archivos grandes pueden tardar varios minutos. Por favor mantén esta pestaña abierta.', tl: 'Ang malalaking files ay maaaring tumagal ng ilang minuto. Mangyaring panatilihing bukas ang tab na ito.', vi: 'Các tệp lớn có thể mất vài phút. Vui lòng giữ tab này mở.', ko: '큰 파일은 몇 분이 걸릴 수 있습니다. 이 탭을 열어두세요.' },
+    
+    // Analysis Complete Dashboard
+    analysisComplete: { en: 'Analysis Complete', es: 'Análisis Completo', tl: 'Tapos na ang Analysis', vi: 'Phân Tích Hoàn Tất', ko: '분석 완료' },
+    pagesAnalyzed: { en: 'pages analyzed', es: 'páginas analizadas', tl: 'mga pahina na nasuri', vi: 'trang đã phân tích', ko: '페이지 분석됨' },
+    charactersExtracted: { en: 'characters extracted', es: 'caracteres extraídos', tl: 'mga character na na-extract', vi: 'ký tự đã trích xuất', ko: '문자 추출됨' },
+    processedInChunks: { en: 'Processed in {count} chunks', es: 'Procesado en {count} fragmentos', tl: 'Naproseso sa {count} chunks', vi: 'Đã xử lý trong {count} phần', ko: '{count}개 청크로 처리됨' },
+    
+    // Executive Summary
+    executiveSummary: { en: 'Executive Summary', es: 'Resumen Ejecutivo', tl: 'Executive Summary', vi: 'Tóm Tắt Điều Hành', ko: '요약' },
+    branch: { en: 'Branch', es: 'Rama', tl: 'Sangay', vi: 'Quân Chủng', ko: '군종' },
+    mos: { en: 'MOS', es: 'MOS', tl: 'MOS', vi: 'MOS', ko: 'MOS' },
+    entryDate: { en: 'Entry Date', es: 'Fecha de Ingreso', tl: 'Petsa ng Pagpasok', vi: 'Ngày Nhập Ngũ', ko: '입대일' },
+    separationDate: { en: 'Separation Date', es: 'Fecha de Separación', tl: 'Petsa ng Paghihiwalay', vi: 'Ngày Giải Ngũ', ko: '제대일' },
+    
+    // Tab Navigation
+    tabPotentialClaims: { en: 'Potential Claims', es: 'Reclamos Potenciales', tl: 'Mga Posibleng Claim', vi: 'Yêu Cầu Tiềm Năng', ko: '잠재적 청구' },
+    tabTimeline: { en: 'Timeline', es: 'Línea de Tiempo', tl: 'Timeline', vi: 'Dòng Thời Gian', ko: '타임라인' },
+    tabExposures: { en: 'Exposures', es: 'Exposiciones', tl: 'Mga Exposure', vi: 'Phơi Nhiễm', ko: '노출' },
+    tabMentalHealth: { en: 'Mental Health', es: 'Salud Mental', tl: 'Mental Health', vi: 'Sức Khỏe Tâm Thần', ko: '정신 건강' },
+    tabActionItems: { en: 'Action Items', es: 'Elementos de Acción', tl: 'Mga Action Items', vi: 'Hành Động Cần Làm', ko: '조치 항목' },
+    
+    // Exposures Tab
+    toxicExposures: { en: 'Toxic Exposures & Presumptive Conditions', es: 'Exposiciones Tóxicas y Condiciones Presuntivas', tl: 'Toxic Exposures at Presumptive Conditions', vi: 'Phơi Nhiễm Độc Hại & Điều Kiện Suy Đoán', ko: '독성 노출 및 추정 상태' },
+    noExposuresFound: { en: 'No toxic exposures identified in the records.', es: 'No se identificaron exposiciones tóxicas en los registros.', tl: 'Walang toxic exposures na natukoy sa mga records.', vi: 'Không xác định được phơi nhiễm độc hại trong hồ sơ.', ko: '기록에서 독성 노출이 확인되지 않았습니다.' },
+    presumptiveConditions: { en: 'Presumptive Conditions:', es: 'Condiciones Presuntivas:', tl: 'Presumptive Conditions:', vi: 'Điều Kiện Suy Đoán:', ko: '추정 상태:' },
+    page: { en: 'Page', es: 'Página', tl: 'Pahina', vi: 'Trang', ko: '페이지' },
+    
+    // Mental Health Tab
+    mentalHealthIndicators: { en: 'Mental Health Indicators', es: 'Indicadores de Salud Mental', tl: 'Mental Health Indicators', vi: 'Chỉ Số Sức Khỏe Tâm Thần', ko: '정신 건강 지표' },
+    diagnosesFound: { en: 'Diagnoses Found', es: 'Diagnósticos Encontrados', tl: 'Mga Diagnosis na Natagpuan', vi: 'Chẩn Đoán Tìm Thấy', ko: '발견된 진단' },
+    indicators: { en: 'Indicators', es: 'Indicadores', tl: 'Mga Indicator', vi: 'Chỉ Số', ko: '지표' },
+    documentedStressors: { en: 'Documented Stressors', es: 'Estresores Documentados', tl: 'Mga Documented Stressors', vi: 'Các Yếu Tố Gây Căng Thẳng Được Ghi Nhận', ko: '문서화된 스트레스 요인' },
+    seePages: { en: 'See pages:', es: 'Ver páginas:', tl: 'Tingnan ang mga pahina:', vi: 'Xem các trang:', ko: '페이지 참조:' },
+    noMentalHealthIndicators: { en: 'No mental health indicators identified in the records.', es: 'No se identificaron indicadores de salud mental en los registros.', tl: 'Walang mental health indicators na natukoy sa mga records.', vi: 'Không xác định được chỉ số sức khỏe tâm thần trong hồ sơ.', ko: '기록에서 정신 건강 지표가 확인되지 않았습니다.' },
+    
+    // Action Items Tab
+    recommendedNextSteps: { en: 'Recommended Next Steps', es: 'Próximos Pasos Recomendados', tl: 'Mga Inirerekumendang Susunod na Hakbang', vi: 'Các Bước Tiếp Theo Được Đề Xuất', ko: '권장 다음 단계' },
+    noActionItems: { en: 'No specific action items identified.', es: 'No se identificaron elementos de acción específicos.', tl: 'Walang specific action items na natukoy.', vi: 'Không có hành động cụ thể nào được xác định.', ko: '확인된 특정 조치 항목이 없습니다.' },
+    
+    // Red Flags Section
+    attentionNeeded: { en: 'Attention Needed', es: 'Atención Necesaria', tl: 'Kailangan ng Atensyon', vi: 'Cần Chú Ý', ko: '주의 필요' },
+    
+    // Combat Indicators Section
+    combatIndicatorsFound: { en: 'Combat Indicators Found', es: 'Indicadores de Combate Encontrados', tl: 'Mga Combat Indicators na Natagpuan', vi: 'Tìm Thấy Các Chỉ Số Chiến Đấu', ko: '전투 지표 발견' },
+    
+    // Footer Disclaimer
+    footerDisclaimer: { en: 'This tool provides general information only and is not legal or medical advice. AI analysis may contain errors. Always verify findings with your official records and consult with a VA-accredited representative for claims decisions.', es: 'Esta herramienta proporciona solo información general y no es asesoramiento legal ni médico. El análisis de IA puede contener errores. Siempre verifica los hallazgos con tus registros oficiales y consulta con un representante acreditado por el VA para decisiones de reclamos.', tl: 'Ang tool na ito ay nagbibigay lamang ng pangkalahatang impormasyon at hindi legal o medikal na payo. Maaaring may mga error ang AI analysis. Laging i-verify ang mga natuklasan sa iyong opisyal na mga record at kumunsulta sa isang VA-accredited representative para sa mga desisyon sa claim.', vi: 'Công cụ này chỉ cung cấp thông tin chung và không phải là tư vấn pháp lý hoặc y tế. Phân tích AI có thể chứa lỗi. Luôn xác minh các phát hiện với hồ sơ chính thức của bạn và tham khảo ý kiến ​​của đại diện được VA công nhận cho các quyết định yêu cầu.', ko: '이 도구는 일반 정보만 제공하며 법률 또는 의료 조언이 아닙니다. AI 분석에는 오류가 포함될 수 있습니다. 항상 공식 기록으로 결과를 확인하고 청구 결정에 대해서는 VA 공인 대리인과 상담하세요.' },
+    
+    // Close button
+    closeCFileAnalyzer: { en: 'Close C-File Analyzer', es: 'Cerrar Analizador de C-File', tl: 'Isara ang C-File Analyzer', vi: 'Đóng Trình Phân Tích C-File', ko: 'C-File 분석기 닫기' },
+  },
+
+  // Denial Decoder
+  denialDecoder: {
+    // Header
+    title: { en: 'The Denials Decoder', es: 'El Decodificador de Denegaciones', tl: 'Ang Denials Decoder', vi: 'Giải Mã Từ Chối', ko: '거부 디코더' },
+    subtitle: { en: 'Scan your VA denial letter for plain-English analysis', es: 'Escanea tu carta de denegación del VA para un análisis en inglés simple', tl: 'I-scan ang VA denial letter mo para sa plain-English analysis', vi: 'Quét thư từ chối VA của bạn để phân tích bằng tiếng Anh đơn giản', ko: 'VA 거부 서신을 스캔하여 평이한 영어로 분석' },
+    ai: { en: 'AI', es: 'IA', tl: 'AI', vi: 'AI', ko: 'AI' },
+    
+    // Privacy Notice
+    privacyProtected: { en: '100% Privacy Protected', es: '100% Privacidad Protegida', tl: '100% Privacy Protected', vi: '100% Bảo Vệ Quyền Riêng Tư', ko: '100% 개인정보 보호' },
+    ocrProcessingLocal: { en: 'OCR processing happens locally in your browser.', es: 'El procesamiento OCR ocurre localmente en tu navegador.', tl: 'Ang OCR processing ay nangyayari locally sa browser mo.', vi: 'Xử lý OCR diễn ra cục bộ trong trình duyệt của bạn.', ko: 'OCR 처리는 브라우저에서 로컬로 수행됩니다.' },
+    aiAnalysisLocal: { en: 'AI analysis also runs locally - your data never leaves your device!', es: 'El análisis de IA también se ejecuta localmente - ¡tus datos nunca salen de tu dispositivo!', tl: 'Ang AI analysis ay tumatakbo rin locally - hindi aalis ang data mo sa device mo!', vi: 'Phân tích AI cũng chạy cục bộ - dữ liệu của bạn không bao giờ rời khỏi thiết bị!', ko: 'AI 분석도 로컬에서 실행됩니다 - 데이터가 기기를 떠나지 않습니다!' },
+    onlyTextSentToAi: { en: 'Only the extracted text (not the image) is sent to AI for analysis.', es: 'Solo el texto extraído (no la imagen) se envía a la IA para el análisis.', tl: 'Ang extracted text lang (hindi ang image) ang ipinapadala sa AI para sa analysis.', vi: 'Chỉ văn bản đã trích xuất (không phải hình ảnh) được gửi đến AI để phân tích.', ko: '추출된 텍스트만 (이미지 아님) AI로 분석을 위해 전송됩니다.' },
+    
+    // AI Setup
+    aiRequired: { en: 'AI Required', es: 'IA Requerida', tl: 'Kinakailangan ang AI', vi: 'Yêu Cầu AI', ko: 'AI 필요' },
+    aiSetupMessage: { en: 'Click the AI button in the header above to load your secure Local AI or enter your Gemini API key to analyze denial letters.', es: 'Haz clic en el botón de IA en el encabezado para cargar tu IA Local segura o ingresa tu clave API de Gemini para analizar cartas de denegación.', tl: 'I-click ang AI button sa header sa itaas para i-load ang secure Local AI mo o ilagay ang Gemini API key mo para mag-analyze ng denial letters.', vi: 'Nhấp vào nút AI trong tiêu đề phía trên để tải AI Cục Bộ an toàn của bạn hoặc nhập khóa API Gemini để phân tích thư từ chối.', ko: '위 헤더의 AI 버튼을 클릭하여 보안 로컬 AI를 로드하거나 Gemini API 키를 입력하여 거부 서신을 분석하세요.' },
+    
+    // Upload Buttons
+    takePhoto: { en: 'Take Photo', es: 'Tomar Foto', tl: 'Kumuha ng Litrato', vi: 'Chụp Ảnh', ko: '사진 찍기' },
+    useYourCamera: { en: 'Use your camera', es: 'Usa tu cámara', tl: 'Gamitin ang camera mo', vi: 'Sử dụng camera của bạn', ko: '카메라 사용' },
+    uploadImage: { en: 'Upload Image', es: 'Subir Imagen', tl: 'Mag-upload ng Larawan', vi: 'Tải Lên Hình Ảnh', ko: '이미지 업로드' },
+    selectFromFiles: { en: 'Select from files', es: 'Seleccionar de archivos', tl: 'Pumili mula sa files', vi: 'Chọn từ tệp', ko: '파일에서 선택' },
+    
+    // Tips
+    tipsTitle: { en: '📸 Tips for Best Results:', es: '📸 Consejos para Mejores Resultados:', tl: '📸 Mga Tip para sa Pinakamahusay na Resulta:', vi: '📸 Mẹo để Có Kết Quả Tốt Nhất:', ko: '📸 최상의 결과를 위한 팁:' },
+    tipWellLit: { en: 'Make sure the letter is well-lit and flat', es: 'Asegúrate de que la carta esté bien iluminada y plana', tl: 'Siguruhing maliwanag at patag ang letter', vi: 'Đảm bảo thư được chiếu sáng tốt và phẳng', ko: '서신이 밝고 평평한지 확인하세요' },
+    tipNoShadows: { en: 'Avoid shadows and glare', es: 'Evita sombras y reflejos', tl: 'Iwasan ang shadows at glare', vi: 'Tránh bóng và ánh sáng chói', ko: '그림자와 눈부심을 피하세요' },
+    tipEntirePage: { en: 'Capture the entire page if possible', es: 'Captura la página completa si es posible', tl: 'I-capture ang buong page kung posible', vi: 'Chụp toàn bộ trang nếu có thể', ko: '가능하면 전체 페이지를 캡처하세요' },
+    tipSteady: { en: 'Hold your phone steady for a clear shot', es: 'Mantén tu teléfono firme para una foto clara', tl: 'Hawakan ng matatag ang phone mo para sa malinaw na shot', vi: 'Giữ điện thoại ổn định để có ảnh rõ nét', ko: '깨끗한 사진을 위해 휴대폰을 안정적으로 잡으세요' },
+    
+    // Processing States
+    readingLetter: { en: 'Reading Your Letter...', es: 'Leyendo Tu Carta...', tl: 'Binabasa ang Letter Mo...', vi: 'Đang Đọc Thư Của Bạn...', ko: '서신 읽는 중...' },
+    processingLocally: { en: 'Processing locally on your device', es: 'Procesando localmente en tu dispositivo', tl: 'Pinoproseso locally sa device mo', vi: 'Đang xử lý cục bộ trên thiết bị của bạn', ko: '기기에서 로컬로 처리 중' },
+    analyzingDenialReason: { en: 'Analyzing Denial Reason...', es: 'Analizando Motivo de Denegación...', tl: 'Sinusuri ang Dahilan ng Denial...', vi: 'Đang Phân Tích Lý Do Từ Chối...', ko: '거부 사유 분석 중...' },
+    translatingLegalese: { en: 'Translating legalese into plain English', es: 'Traduciendo jerga legal a inglés simple', tl: 'Isinasalin ang legalese sa plain English', vi: 'Đang dịch thuật ngữ pháp lý sang tiếng Anh đơn giản', ko: '법률 용어를 평이한 영어로 번역 중' },
+    
+    // Results
+    whyDenied: { en: 'Why They Denied Your Claim:', es: 'Por Qué Denegaron Tu Reclamo:', tl: 'Bakit Tinanggihan ang Claim Mo:', vi: 'Tại Sao Họ Từ Chối Yêu Cầu Của Bạn:', ko: '왜 청구가 거부되었는지:' },
+    inPlainEnglish: { en: 'In Plain English:', es: 'En Inglés Simple:', tl: 'Sa Plain English:', vi: 'Bằng Tiếng Anh Đơn Giản:', ko: '쉬운 영어로:' },
+    whatWasMissing: { en: 'What Was Missing:', es: 'Qué Faltaba:', tl: 'Ano ang Kulang:', vi: 'Điều Gì Còn Thiếu:', ko: '누락된 것:' },
+    appealDeadline: { en: 'Appeal Deadline:', es: 'Fecha Límite de Apelación:', tl: 'Deadline ng Appeal:', vi: 'Thời Hạn Kháng Cáo:', ko: '항소 마감일:' },
+    yourNextSteps: { en: 'Your Next Steps:', es: 'Tus Próximos Pasos:', tl: 'Ang Susunod Mong mga Hakbang:', vi: 'Các Bước Tiếp Theo Của Bạn:', ko: '다음 단계:' },
+    
+    // Actions
+    showExtractedText: { en: 'Show Extracted Text', es: 'Mostrar Texto Extraído', tl: 'Ipakita ang Extracted Text', vi: 'Hiển Thị Văn Bản Đã Trích Xuất', ko: '추출된 텍스트 표시' },
+    hideExtractedText: { en: 'Hide Extracted Text', es: 'Ocultar Texto Extraído', tl: 'Itago ang Extracted Text', vi: 'Ẩn Văn Bản Đã Trích Xuất', ko: '추출된 텍스트 숨기기' },
+    scanAnotherLetter: { en: 'Scan Another Letter', es: 'Escanear Otra Carta', tl: 'Mag-scan ng Ibang Letter', vi: 'Quét Thư Khác', ko: '다른 서신 스캔' },
+    
+    // Errors
+    ocrError: { en: 'Could not extract enough text from image. Make sure the image is clear and well-lit.', es: 'No se pudo extraer suficiente texto de la imagen. Asegúrate de que la imagen esté clara y bien iluminada.', tl: 'Hindi sapat ang text na na-extract mula sa image. Siguruhing malinaw at maliwanag ang image.', vi: 'Không thể trích xuất đủ văn bản từ hình ảnh. Đảm bảo hình ảnh rõ ràng và được chiếu sáng tốt.', ko: '이미지에서 충분한 텍스트를 추출할 수 없습니다. 이미지가 선명하고 밝은지 확인하세요.' },
+    noAiAvailable: { en: 'No AI available. Please configure an API key or enable Local AI in settings.', es: 'No hay IA disponible. Por favor configura una clave API o habilita IA Local en configuración.', tl: 'Walang available na AI. Mangyaring mag-configure ng API key o i-enable ang Local AI sa settings.', vi: 'Không có AI khả dụng. Vui lòng cấu hình khóa API hoặc bật AI Cục bộ trong cài đặt.', ko: 'AI를 사용할 수 없습니다. API 키를 구성하거나 설정에서 로컬 AI를 활성화하세요.' },
+    parseError: { en: 'Could not understand the denial letter. Please try manual review.', es: 'No se pudo entender la carta de denegación. Por favor intenta revisión manual.', tl: 'Hindi naintindihan ang denial letter. Mangyaring subukan ang manual review.', vi: 'Không thể hiểu thư từ chối. Vui lòng thử xem xét thủ công.', ko: '거부 서신을 이해할 수 없습니다. 수동 검토를 시도해 주세요.' },
+    analysisError: { en: 'Failed to analyze denial letter. Check your internet connection.', es: 'Error al analizar la carta de denegación. Verifica tu conexión a internet.', tl: 'Nabigo sa pag-analyze ng denial letter. Suriin ang internet connection mo.', vi: 'Không thể phân tích thư từ chối. Kiểm tra kết nối internet của bạn.', ko: '거부 서신 분석에 실패했습니다. 인터넷 연결을 확인하세요.' },
+    imageProcessError: { en: 'Failed to process image. Please try again with a clearer photo.', es: 'Error al procesar imagen. Por favor intenta de nuevo con una foto más clara.', tl: 'Nabigo sa pag-process ng image. Mangyaring subukan ulit na may mas malinaw na litrato.', vi: 'Không thể xử lý hình ảnh. Vui lòng thử lại với ảnh rõ hơn.', ko: '이미지 처리에 실패했습니다. 더 선명한 사진으로 다시 시도해 주세요.' },
+  },
+
+  // DBQ Finder Component
+  dbqFinder: {
+    // Header
+    title: { en: 'DBQ Finder', es: 'Buscador de DBQ', tl: 'DBQ Finder', vi: 'Tìm DBQ', ko: 'DBQ 검색기' },
+    subtitle: { en: 'Find the right Disability Benefits Questionnaire for your condition', es: 'Encuentra el Cuestionario de Beneficios por Discapacidad correcto para tu condición', tl: 'Hanapin ang tamang Disability Benefits Questionnaire para sa kondisyon mo', vi: 'Tìm Bảng Câu Hỏi Quyền Lợi Khuyết Tật phù hợp cho tình trạng của bạn', ko: '귀하의 상태에 맞는 장애 혜택 설문지 찾기' },
+    
+    // Info Banner
+    whatIsDbq: { en: 'What is a DBQ?', es: '¿Qué es un DBQ?', tl: 'Ano ang DBQ?', vi: 'DBQ là gì?', ko: 'DBQ란 무엇인가요?' },
+    dbqDescription: { en: 'A <strong>Disability Benefits Questionnaire (DBQ)</strong> is a standardized VA form that your private doctor can fill out to document your condition. Having a completed DBQ can <strong>eliminate the need for a VA C&P exam</strong> and speeds up your claim.', es: 'Un <strong>Cuestionario de Beneficios por Discapacidad (DBQ)</strong> es un formulario estandarizado del VA que su médico privado puede completar para documentar su condición. Tener un DBQ completo puede <strong>eliminar la necesidad de un examen C&P del VA</strong> y acelera su reclamo.', tl: 'Ang <strong>Disability Benefits Questionnaire (DBQ)</strong> ay isang standardized VA form na pwedeng punan ng private doctor mo para idokumento ang kondisyon mo. Ang pagkakaroon ng completed DBQ ay <strong>maaaring mag-eliminate ng pangangailangan ng VA C&P exam</strong> at pinapabilis ang claim mo.', vi: '<strong>Bảng Câu Hỏi Quyền Lợi Khuyết Tật (DBQ)</strong> là một biểu mẫu VA tiêu chuẩn mà bác sĩ tư nhân của bạn có thể điền để ghi nhận tình trạng của bạn. Có DBQ hoàn chỉnh có thể <strong>loại bỏ nhu cầu khám C&P của VA</strong> và đẩy nhanh yêu cầu của bạn.', ko: '<strong>장애 혜택 설문지(DBQ)</strong>는 개인 의사가 귀하의 상태를 문서화하기 위해 작성할 수 있는 표준화된 VA 양식입니다. 완성된 DBQ가 있으면 <strong>VA C&P 검사의 필요성을 없앨 수 있고</strong> 청구 절차가 빨라집니다.' },
+    
+    // Search
+    searchPlaceholder: { en: 'Search by condition (e.g., Sleep Apnea, PTSD, Knee Pain...)', es: 'Buscar por condición (ej., Apnea del Sueño, TEPT, Dolor de Rodilla...)', tl: 'Maghanap ayon sa kondisyon (hal., Sleep Apnea, PTSD, Knee Pain...)', vi: 'Tìm theo tình trạng (ví dụ: Ngưng Thở Khi Ngủ, PTSD, Đau Đầu Gối...)', ko: '상태로 검색 (예: 수면무호흡증, PTSD, 무릎 통증...)' },
+    recentSearches: { en: 'Recent Searches', es: 'Búsquedas Recientes', tl: 'Mga Kamakailang Paghahanap', vi: 'Tìm Kiếm Gần Đây', ko: '최근 검색' },
+    
+    // Results
+    foundForms: { en: 'Found {count} DBQ Form{s}', es: 'Encontrado{s} {count} Formulario{s} DBQ', tl: 'Natagpuan ang {count} DBQ Form{s}', vi: 'Tìm Thấy {count} Biểu Mẫu DBQ', ko: '{count}개의 DBQ 양식 발견' },
+    officialDbq: { en: 'Official DBQ', es: 'DBQ Oficial', tl: 'Opisyal na DBQ', vi: 'DBQ Chính Thức', ko: '공식 DBQ' },
+    lastUpdated: { en: 'Last Updated', es: 'Última Actualización', tl: 'Huling Na-update', vi: 'Cập Nhật Lần Cuối', ko: '최근 업데이트' },
+    pages: { en: 'page(s)', es: 'página(s)', tl: 'pahina', vi: 'trang', ko: '페이지' },
+    
+    // Buttons
+    downloadPdf: { en: 'Download PDF', es: 'Descargar PDF', tl: 'I-download ang PDF', vi: 'Tải PDF', ko: 'PDF 다운로드' },
+    onlineTool: { en: 'Online Tool', es: 'Herramienta en Línea', tl: 'Online Tool', vi: 'Công Cụ Trực Tuyến', ko: '온라인 도구' },
+    
+    // Browse Categories
+    browseByCategory: { en: 'Browse by Category', es: 'Buscar por Categoría', tl: 'Mag-browse ayon sa Kategorya', vi: 'Duyệt theo Danh Mục', ko: '카테고리별 찾기' },
+    
+    // Category Labels
+    catMentalHealth: { en: 'Mental Health', es: 'Salud Mental', tl: 'Kalusugang Pangkaisipan', vi: 'Sức Khỏe Tâm Thần', ko: '정신 건강' },
+    catMentalHealthDesc: { en: 'Depression, PTSD, anxiety, TBI, and other psychological conditions', es: 'Depresión, TEPT, ansiedad, TBI y otras condiciones psicológicas', tl: 'Depresyon, PTSD, anxiety, TBI, at iba pang kondisyong sikolohikal', vi: 'Trầm cảm, PTSD, lo âu, TBI và các tình trạng tâm lý khác', ko: '우울증, PTSD, 불안, TBI 및 기타 심리적 상태' },
+    catMusculoskeletal: { en: 'Musculoskeletal', es: 'Musculoesquelético', tl: 'Musculoskeletal', vi: 'Cơ Xương Khớp', ko: '근골격계' },
+    catMusculoskeletalDesc: { en: 'Joint conditions, range of motion, arthritis, spine issues', es: 'Condiciones articulares, rango de movimiento, artritis, problemas de columna', tl: 'Mga kondisyon ng kasukasuan, range of motion, arthritis, problema sa spine', vi: 'Tình trạng khớp, phạm vi chuyển động, viêm khớp, vấn đề cột sống', ko: '관절 상태, 운동 범위, 관절염, 척추 문제' },
+    catRespiratory: { en: 'Respiratory', es: 'Respiratorio', tl: 'Respiratory', vi: 'Hô Hấp', ko: '호흡기' },
+    catRespiratoryDesc: { en: 'Sleep apnea, breathing conditions, sinus problems', es: 'Apnea del sueño, condiciones respiratorias, problemas de sinusitis', tl: 'Sleep apnea, breathing conditions, sinus problems', vi: 'Ngưng thở khi ngủ, tình trạng hô hấp, vấn đề xoang', ko: '수면무호흡증, 호흡 상태, 부비동 문제' },
+    catCardiovascular: { en: 'Cardiovascular', es: 'Cardiovascular', tl: 'Cardiovascular', vi: 'Tim Mạch', ko: '심혈관' },
+    catCardiovascularDesc: { en: 'Heart conditions, high blood pressure, circulation', es: 'Condiciones cardíacas, presión arterial alta, circulación', tl: 'Mga kondisyon sa puso, high blood pressure, sirkulasyon', vi: 'Tình trạng tim, huyết áp cao, tuần hoàn', ko: '심장 상태, 고혈압, 순환' },
+    catNeurological: { en: 'Neurological', es: 'Neurológico', tl: 'Neurological', vi: 'Thần Kinh', ko: '신경계' },
+    catNeurologicalDesc: { en: 'Migraines, nerve damage, seizures, neuropathy', es: 'Migrañas, daño nervioso, convulsiones, neuropatía', tl: 'Migraines, nerve damage, seizures, neuropathy', vi: 'Đau nửa đầu, tổn thương thần kinh, co giật, bệnh lý thần kinh', ko: '편두통, 신경 손상, 발작, 신경병증' },
+    catDigestive: { en: 'Digestive', es: 'Digestivo', tl: 'Digestive', vi: 'Tiêu Hóa', ko: '소화기' },
+    catDigestiveDesc: { en: 'GERD, IBS, liver conditions, digestive disorders', es: 'ERGE, SII, condiciones hepáticas, trastornos digestivos', tl: 'GERD, IBS, liver conditions, digestive disorders', vi: 'GERD, IBS, tình trạng gan, rối loạn tiêu hóa', ko: 'GERD, IBS, 간 상태, 소화 장애' },
+    catSkin: { en: 'Skin', es: 'Piel', tl: 'Balat', vi: 'Da', ko: '피부' },
+    catSkinDesc: { en: 'Skin conditions, scars, burn injuries', es: 'Condiciones de la piel, cicatrices, quemaduras', tl: 'Mga kondisyon sa balat, scars, burn injuries', vi: 'Tình trạng da, sẹo, bỏng', ko: '피부 상태, 흉터, 화상' },
+    catHearingVision: { en: 'Hearing/Vision', es: 'Audición/Visión', tl: 'Pandinig/Paningin', vi: 'Thính Giác/Thị Giác', ko: '청력/시력' },
+    catHearingVisionDesc: { en: 'Hearing loss, tinnitus, eye conditions', es: 'Pérdida auditiva, tinnitus, condiciones oculares', tl: 'Hearing loss, tinnitus, eye conditions', vi: 'Mất thính lực, ù tai, tình trạng mắt', ko: '청력 상실, 이명, 눈 상태' },
+    
+    // Footer
+    footerNote: { en: 'Forms fetched directly from VA.gov • Always current', es: 'Formularios obtenidos directamente de VA.gov • Siempre actualizados', tl: 'Forms direktang kinuha mula sa VA.gov • Palaging updated', vi: 'Biểu mẫu lấy trực tiếp từ VA.gov • Luôn cập nhật', ko: 'VA.gov에서 직접 가져온 양식 • 항상 최신' },
+    
+    // Errors
+    minCharsError: { en: 'Please enter at least 2 characters to search', es: 'Por favor ingrese al menos 2 caracteres para buscar', tl: 'Mangyaring maglagay ng kahit 2 character para maghanap', vi: 'Vui lòng nhập ít nhất 2 ký tự để tìm kiếm', ko: '검색하려면 최소 2자 이상 입력하세요' },
+    noResultsError: { en: 'No DBQ forms found for "{query}". Try a different search term or browse categories below.', es: 'No se encontraron formularios DBQ para "{query}". Intente con otro término de búsqueda o explore las categorías a continuación.', tl: 'Walang nahanap na DBQ forms para sa "{query}". Subukan ang ibang search term o mag-browse ng categories sa ibaba.', vi: 'Không tìm thấy biểu mẫu DBQ cho "{query}". Thử từ khóa khác hoặc duyệt danh mục bên dưới.', ko: '"{query}"에 대한 DBQ 양식을 찾을 수 없습니다. 다른 검색어를 시도하거나 아래 카테고리를 찾아보세요.' },
+    searchError: { en: 'Failed to search forms. Please try again.', es: 'Error al buscar formularios. Por favor intente de nuevo.', tl: 'Nabigo sa paghahanap ng forms. Mangyaring subukan muli.', vi: 'Không thể tìm kiếm biểu mẫu. Vui lòng thử lại.', ko: '양식 검색에 실패했습니다. 다시 시도해 주세요.' },
+  },
+
+  // BootCampTour Component
+  bootCampTour: {
+    // Navigation buttons
+    nextBtn: { en: 'Next →', es: 'Siguiente →', tl: 'Susunod →', vi: 'Tiếp →', ko: '다음 →' },
+    prevBtn: { en: '← Back', es: '← Atrás', tl: '← Bumalik', vi: '← Quay lại', ko: '← 뒤로' },
+    doneBtn: { en: 'Start My Claim! 🚀', es: '¡Iniciar Mi Reclamo! 🚀', tl: 'Simulan ang Claim Ko! 🚀', vi: 'Bắt Đầu Yêu Cầu! 🚀', ko: '청구 시작하기! 🚀' },
+    
+    // Welcome step
+    welcomeTitle: { en: '🎖️ Welcome to Vet-Rate.org', es: '🎖️ Bienvenido a Vet-Rate.org', tl: '🎖️ Maligayang Pagdating sa Vet-Rate.org', vi: '🎖️ Chào Mừng Đến Với Vet-Rate.org', ko: '🎖️ Vet-Rate.org에 오신 것을 환영합니다' },
+    welcomeIntro: { en: "Let's show you around!", es: '¡Te mostraremos el sitio!', tl: 'Ipapakilala namin sa iyo!', vi: 'Hãy để chúng tôi giới thiệu!', ko: '둘러보시겠습니까!' },
+    welcomeSubtitle: { en: 'This quick tour covers the essentials so you know exactly where to start.', es: 'Este tour rápido cubre lo esencial para que sepas exactamente por dónde empezar.', tl: 'Ang mabilis na tour na ito ay sumasaklaw sa mga esensyal para alam mo kung saan magsisimula.', vi: 'Hướng dẫn nhanh này bao gồm những điều cần thiết để bạn biết chính xác nơi bắt đầu.', ko: '이 빠른 투어는 정확히 어디서 시작해야 하는지 알 수 있도록 필수 사항을 다룹니다.' },
+    welcomeDuration: { en: 'Takes about 60 seconds. You can skip or exit anytime.', es: 'Toma unos 60 segundos. Puedes saltar o salir en cualquier momento.', tl: 'Mga 60 segundo lang. Pwede kang lumaktaw o lumabas anumang oras.', vi: 'Mất khoảng 60 giây. Bạn có thể bỏ qua hoặc thoát bất cứ lúc nào.', ko: '약 60초 소요됩니다. 언제든지 건너뛰거나 종료할 수 있습니다.' },
+    welcomeTip: { en: '💡 You can restart this tour anytime from the Help menu.', es: '💡 Puedes reiniciar este tour en cualquier momento desde el menú de Ayuda.', tl: '💡 Pwede mong i-restart ang tour na ito anumang oras mula sa Help menu.', vi: '💡 Bạn có thể khởi động lại hướng dẫn này bất cứ lúc nào từ menu Trợ giúp.', ko: '💡 도움말 메뉴에서 언제든지 이 투어를 다시 시작할 수 있습니다.' },
+    
+    // Search step
+    searchTitle: { en: '🔍 Start With Search', es: '🔍 Comienza Con Búsqueda', tl: '🔍 Magsimula Sa Paghahanap', vi: '🔍 Bắt Đầu Với Tìm Kiếm', ko: '🔍 검색으로 시작하기' },
+    searchIntro: { en: 'This search bar is where most people begin.', es: 'Esta barra de búsqueda es donde la mayoría de las personas comienzan.', tl: 'Ang search bar na ito ay kung saan nagsisimula ang karamihan.', vi: 'Thanh tìm kiếm này là nơi hầu hết mọi người bắt đầu.', ko: '이 검색창은 대부분의 사람들이 시작하는 곳입니다.' },
+    searchLookup: { en: 'Look up any VA disability condition by:', es: 'Busca cualquier condición de discapacidad del VA por:', tl: 'Hanapin ang anumang VA disability condition sa pamamagitan ng:', vi: 'Tra cứu bất kỳ tình trạng khuyết tật VA nào theo:', ko: '다음으로 VA 장애 상태를 찾아보세요:' },
+    searchByName: { en: 'Name: Try "PTSD" or "tinnitus"', es: 'Nombre: Prueba "PTSD" o "tinnitus"', tl: 'Pangalan: Subukan ang "PTSD" o "tinnitus"', vi: 'Tên: Thử "PTSD" hoặc "tinnitus"', ko: '이름: "PTSD" 또는 "이명" 시도' },
+    searchByBody: { en: 'Body part: "knee" or "shoulder"', es: 'Parte del cuerpo: "rodilla" u "hombro"', tl: 'Bahagi ng katawan: "tuhod" o "balikat"', vi: 'Bộ phận cơ thể: "đầu gối" hoặc "vai"', ko: '신체 부위: "무릎" 또는 "어깨"' },
+    searchByCode: { en: 'Diagnostic code: "9411" or "6260"', es: 'Código diagnóstico: "9411" o "6260"', tl: 'Diagnostic code: "9411" o "6260"', vi: 'Mã chẩn đoán: "9411" hoặc "6260"', ko: '진단 코드: "9411" 또는 "6260"' },
+    searchCoverage: { en: 'We cover all {count} conditions from the official VA rating schedule.', es: 'Cubrimos las {count} condiciones del calendario oficial de calificaciones del VA.', tl: 'Sinasaklaw namin ang lahat ng {count} na kondisyon mula sa opisyal na VA rating schedule.', vi: 'Chúng tôi bao gồm tất cả {count} tình trạng từ lịch đánh giá VA chính thức.', ko: '공식 VA 등급표의 모든 {count}개 조건을 포함합니다.' },
+    
+    // Quick Picker step
+    quickPickerTitle: { en: '⚡ Quick Add (Skip the Search)', es: '⚡ Agregar Rápido (Saltar Búsqueda)', tl: '⚡ Mabilis na Pagdagdag (Laktawan ang Paghahanap)', vi: '⚡ Thêm Nhanh (Bỏ Qua Tìm Kiếm)', ko: '⚡ 빠른 추가 (검색 건너뛰기)' },
+    quickPickerIntro: { en: 'Already know what you\'re claiming?', es: '¿Ya sabes qué estás reclamando?', tl: 'Alam mo na ba kung ano ang i-claim mo?', vi: 'Đã biết bạn đang yêu cầu gì?', ko: '무엇을 청구하는지 이미 알고 계신가요?' },
+    quickPickerShortcut: { en: 'Use this shortcut!', es: '¡Usa este atajo!', tl: 'Gamitin ang shortcut na ito!', vi: 'Sử dụng phím tắt này!', ko: '이 바로가기를 사용하세요!' },
+    quickPickerDesc: { en: 'The Quick Picker lets you add conditions directly to your packet without searching.', es: 'El Quick Picker te permite agregar condiciones directamente a tu paquete sin buscar.', tl: 'Ang Quick Picker ay nagbibigay-daan sa iyo na magdagdag ng mga kondisyon direkta sa packet mo nang hindi naghahanap.', vi: 'Quick Picker cho phép bạn thêm các tình trạng trực tiếp vào hồ sơ mà không cần tìm kiếm.', ko: 'Quick Picker를 사용하면 검색 없이 조건을 패킷에 직접 추가할 수 있습니다.' },
+    quickPickerHowTo: { en: 'Just click → Pick a body system → Select your condition → Done!', es: '¡Solo haz clic → Elige un sistema corporal → Selecciona tu condición → Listo!', tl: 'I-click lang → Pumili ng body system → Piliin ang kondisyon mo → Tapos na!', vi: 'Chỉ cần nhấp → Chọn hệ thống cơ thể → Chọn tình trạng của bạn → Xong!', ko: '클릭 → 신체 시스템 선택 → 조건 선택 → 완료!' },
+    
+    // My Packet step
+    myPacketTitle: { en: '📦 Your Personal Workspace', es: '📦 Tu Espacio de Trabajo Personal', tl: '📦 Ang Personal Mong Workspace', vi: '📦 Không Gian Làm Việc Cá Nhân Của Bạn', ko: '📦 개인 작업 공간' },
+    myPacketIntro: { en: 'This is "My Packet" - your claims command center.', es: 'Esto es "Mi Paquete" - tu centro de comando de reclamos.', tl: 'Ito ay "My Packet" - ang claims command center mo.', vi: 'Đây là "Hồ Sơ Của Tôi" - trung tâm điều khiển yêu cầu của bạn.', ko: '이것은 "내 패킷" - 청구 관리 센터입니다.' },
+    myPacketEverything: { en: 'Everything you save appears here:', es: 'Todo lo que guardes aparece aquí:', tl: 'Lahat ng sine-save mo ay lumilitaw dito:', vi: 'Mọi thứ bạn lưu đều xuất hiện ở đây:', ko: '저장한 모든 것이 여기에 나타납니다:' },
+    myPacketConditions: { en: 'All your tracked conditions', es: 'Todas tus condiciones rastreadas', tl: 'Lahat ng mga naka-track mong kondisyon', vi: 'Tất cả các tình trạng được theo dõi', ko: '추적된 모든 조건' },
+    myPacketStatements: { en: 'Personal statements you\'ve written', es: 'Declaraciones personales que has escrito', tl: 'Mga personal statement na isinulat mo', vi: 'Các tuyên bố cá nhân bạn đã viết', ko: '작성한 개인 진술서' },
+    myPacketEvidence: { en: 'Evidence checklist and progress', es: 'Lista de verificación de evidencia y progreso', tl: 'Evidence checklist at progreso', vi: 'Danh sách kiểm tra bằng chứng và tiến độ', ko: '증거 체크리스트 및 진행 상황' },
+    myPacketDocs: { en: 'Documents and notes', es: 'Documentos y notas', tl: 'Mga dokumento at tala', vi: 'Tài liệu và ghi chú', ko: '문서 및 메모' },
+    myPacketHomeBase: { en: 'Think of it as your claim\'s home base.', es: 'Piensa en ello como la base de tu reclamo.', tl: 'Isipin ito bilang home base ng iyong claim.', vi: 'Hãy coi đây là cơ sở của yêu cầu của bạn.', ko: '청구의 홈 베이스라고 생각하세요.' },
+    
+    // Workflow Guide step
+    workflowTitle: { en: '🗺️ Step-by-Step Guides', es: '🗺️ Guías Paso a Paso', tl: '🗺️ Mga Step-by-Step na Gabay', vi: '🗺️ Hướng Dẫn Từng Bước', ko: '🗺️ 단계별 가이드' },
+    workflowIntro: { en: 'Not sure what to do first?', es: '¿No estás seguro qué hacer primero?', tl: 'Hindi sigurado kung ano ang gagawin muna?', vi: 'Không chắc phải làm gì trước?', ko: '무엇을 먼저 해야 할지 모르시겠어요?' },
+    workflowCovered: { en: 'This button has you covered.', es: 'Este botón te tiene cubierto.', tl: 'Sakop ka ng button na ito.', vi: 'Nút này sẽ giúp bạn.', ko: '이 버튼이 도와드립니다.' },
+    workflowWalks: { en: 'The Workflow Guide walks you through:', es: 'La Guía de Flujo de Trabajo te guía a través de:', tl: 'Ang Workflow Guide ay gagabayan ka sa:', vi: 'Hướng dẫn quy trình hướng dẫn bạn qua:', ko: '워크플로우 가이드가 안내합니다:' },
+    workflowFirstClaim: { en: '📝 Filing your first claim', es: '📝 Presentar tu primer reclamo', tl: '📝 Pag-file ng unang claim mo', vi: '📝 Nộp yêu cầu đầu tiên của bạn', ko: '📝 첫 번째 청구 제출' },
+    workflowAppeal: { en: '🔄 Appealing a denial', es: '🔄 Apelar una denegación', tl: '🔄 Pag-appeal ng denial', vi: '🔄 Kháng cáo từ chối', ko: '🔄 거부에 대한 항소' },
+    workflowIncrease: { en: '⬆️ Increasing an existing rating', es: '⬆️ Aumentar una calificación existente', tl: '⬆️ Pagpapataas ng existing rating', vi: '⬆️ Tăng xếp hạng hiện có', ko: '⬆️ 기존 등급 인상' },
+    workflowSpecial: { en: '🎖️ Applying for special benefits (TDIU/SMC)', es: '🎖️ Solicitar beneficios especiales (TDIU/SMC)', tl: '🎖️ Pag-apply para sa special benefits (TDIU/SMC)', vi: '🎖️ Đăng ký quyền lợi đặc biệt (TDIU/SMC)', ko: '🎖️ 특별 혜택 신청 (TDIU/SMC)' },
+    workflowLost: { en: 'Completely lost?', es: '¿Completamente perdido?', tl: 'Totally lost?', vi: 'Hoàn toàn mất phương hướng?', ko: '완전히 길을 잃으셨나요?' },
+    workflowStartHere: { en: 'Start here!', es: '¡Comienza aquí!', tl: 'Magsimula dito!', vi: 'Bắt đầu ở đây!', ko: '여기서 시작하세요!' },
+    
+    // Tools Menu step
+    toolsTitle: { en: '🛠️ Your Claims Toolkit', es: '🛠️ Tu Kit de Herramientas de Reclamos', tl: '🛠️ Ang Claims Toolkit Mo', vi: '🛠️ Bộ Công Cụ Yêu Cầu Của Bạn', ko: '🛠️ 청구 도구 키트' },
+    toolsIntro: { en: 'Ready for the advanced features?', es: '¿Listo para las funciones avanzadas?', tl: 'Handa ka na ba sa advanced features?', vi: 'Sẵn sàng cho các tính năng nâng cao?', ko: '고급 기능을 사용할 준비가 되셨나요?' },
+    toolsCount: { en: 'We\'ve got {count}+ specialized tools:', es: 'Tenemos {count}+ herramientas especializadas:', tl: 'Mayroon kaming {count}+ na specialized tools:', vi: 'Chúng tôi có {count}+ công cụ chuyên dụng:', ko: '{count}개 이상의 전문 도구가 있습니다:' },
+    toolsSecondaryScout: { en: '🔍 Secondary Scout - Discover related conditions', es: '🔍 Secondary Scout - Descubre condiciones relacionadas', tl: '🔍 Secondary Scout - Tuklasin ang mga kaugnay na kondisyon', vi: '🔍 Secondary Scout - Khám phá các tình trạng liên quan', ko: '🔍 Secondary Scout - 관련 조건 발견' },
+    toolsCPSimulator: { en: '✅ C&P Simulator - Practice for your exam', es: '✅ C&P Simulator - Practica para tu examen', tl: '✅ C&P Simulator - Mag-practice para sa exam mo', vi: '✅ C&P Simulator - Thực hành cho kỳ khám của bạn', ko: '✅ C&P Simulator - 시험 연습' },
+    toolsCalculator: { en: '🧮 Rating Calculator - Calculate your total %', es: '🧮 Rating Calculator - Calcula tu % total', tl: '🧮 Rating Calculator - Kalkulahin ang kabuuang % mo', vi: '🧮 Rating Calculator - Tính tổng % của bạn', ko: '🧮 Rating Calculator - 총 % 계산' },
+    toolsNexus: { en: '📝 Nexus Builder - Generate medical statements', es: '📝 Nexus Builder - Genera declaraciones médicas', tl: '📝 Nexus Builder - Gumawa ng medical statements', vi: '📝 Nexus Builder - Tạo báo cáo y tế', ko: '📝 Nexus Builder - 의료 진술서 생성' },
+    toolsMore: { en: '...and 35+ more!', es: '...¡y más de 35 más!', tl: '...at 35+ pa!', vi: '...và hơn 35 công cụ khác!', ko: '...그리고 35개 이상!' },
+    toolsClickAnytime: { en: 'Click "Tools" whenever you need something specific.', es: 'Haz clic en "Tools" cuando necesites algo específico.', tl: 'I-click ang "Tools" kapag kailangan mo ng partikular na bagay.', vi: 'Nhấp "Công cụ" bất cứ khi nào bạn cần điều gì cụ thể.', ko: '특정한 것이 필요할 때 "도구"를 클릭하세요.' },
+    
+    // AI Navigator step
+    navigatorTitle: { en: '🧭 Your AI Assistant', es: '🧭 Tu Asistente de IA', tl: '🧭 Ang AI Assistant Mo', vi: '🧭 Trợ Lý AI Của Bạn', ko: '🧭 AI 어시스턴트' },
+    navigatorLookCorner: { en: 'Look in the bottom-left corner!', es: '¡Mira en la esquina inferior izquierda!', tl: 'Tingnan sa ibaba-kaliwang sulok!', vi: 'Nhìn góc dưới bên trái!', ko: '왼쪽 하단 모서리를 보세요!' },
+    navigatorOpens: { en: 'The 🧭 button opens The Navigator - your personal claims guide!', es: 'El botón 🧭 abre El Navegador - ¡tu guía personal de reclamos!', tl: 'Ang 🧭 button ay nagbubukas ng Navigator - ang personal mong claims guide!', vi: 'Nút 🧭 mở Navigator - hướng dẫn yêu cầu cá nhân của bạn!', ko: '🧭 버튼을 누르면 Navigator가 열립니다 - 개인 청구 가이드!' },
+    navigatorCan: { en: 'The Navigator can:', es: 'El Navegador puede:', tl: 'Ang Navigator ay maaaring:', vi: 'Navigator có thể:', ko: 'Navigator 기능:' },
+    navigatorAnswer: { en: '💬 Answer questions about the VA process', es: '💬 Responder preguntas sobre el proceso del VA', tl: '💬 Sumagot ng mga tanong tungkol sa VA process', vi: '💬 Trả lời câu hỏi về quy trình VA', ko: '💬 VA 프로세스에 대한 질문에 답변' },
+    navigatorExplain: { en: '📚 Explain confusing regulations in plain English', es: '📚 Explicar regulaciones confusas en inglés simple', tl: '📚 Ipaliwanag ang nakakalitong regulations sa plain English', vi: '📚 Giải thích các quy định phức tạp bằng tiếng Anh đơn giản', ko: '📚 복잡한 규정을 쉬운 영어로 설명' },
+    navigatorWalk: { en: '🤝 Walk you through any tool', es: '🤝 Guiarte a través de cualquier herramienta', tl: '🤝 Gabayan ka sa anumang tool', vi: '🤝 Hướng dẫn bạn qua bất kỳ công cụ nào', ko: '🤝 모든 도구 사용법 안내' },
+    navigatorSuggest: { en: '🎯 Suggest what to do next', es: '🎯 Sugerir qué hacer a continuación', tl: '🎯 Magmungkahi kung ano ang susunod na gagawin', vi: '🎯 Đề xuất việc cần làm tiếp theo', ko: '🎯 다음 할 일 제안' },
+    navigatorDrag: { en: '💡 Pro tip: You can drag it anywhere on your screen!', es: '💡 Consejo: ¡Puedes arrastrarlo a cualquier parte de tu pantalla!', tl: '💡 Pro tip: Pwede mo itong i-drag kahit saan sa screen mo!', vi: '💡 Mẹo: Bạn có thể kéo nó đến bất cứ đâu trên màn hình!', ko: '💡 프로 팁: 화면 어디든지 드래그할 수 있습니다!' },
+    navigatorOpenEnd: { en: 'We\'ll open it for you at the end of this tour!', es: '¡Lo abriremos para ti al final de este tour!', tl: 'Bubuksan namin ito para sa iyo sa dulo ng tour na ito!', vi: 'Chúng tôi sẽ mở nó cho bạn ở cuối hướng dẫn này!', ko: '투어 끝에 열어드리겠습니다!' },
+    
+    // Help step
+    helpTitle: { en: '📖 When You Need Help', es: '📖 Cuando Necesites Ayuda', tl: '📖 Kapag Kailangan Mo ng Tulong', vi: '📖 Khi Bạn Cần Trợ Giúp', ko: '📖 도움이 필요할 때' },
+    helpStuck: { en: 'Stuck? Confused?', es: '¿Atascado? ¿Confundido?', tl: 'Natigil? Nalilito?', vi: 'Bị kẹt? Bối rối?', ko: '막혔나요? 혼란스러우신가요?' },
+    helpFriend: { en: 'The User Manual is your friend.', es: 'El Manual de Usuario es tu amigo.', tl: 'Ang User Manual ay kaibigan mo.', vi: 'Hướng dẫn sử dụng là bạn của bạn.', ko: '사용 설명서가 도움이 됩니다.' },
+    helpInside: { en: 'Inside you\'ll find:', es: 'Dentro encontrarás:', tl: 'Sa loob mahahanap mo:', vi: 'Bên trong bạn sẽ tìm thấy:', ko: '내부에서 찾을 수 있는 것:' },
+    helpDocs: { en: 'Complete documentation for every tool', es: 'Documentación completa para cada herramienta', tl: 'Kumpletong dokumentasyon para sa bawat tool', vi: 'Tài liệu đầy đủ cho mọi công cụ', ko: '모든 도구에 대한 완전한 문서' },
+    helpGuides: { en: 'Step-by-step how-to guides', es: 'Guías paso a paso', tl: 'Mga step-by-step na gabay', vi: 'Hướng dẫn từng bước', ko: '단계별 방법 가이드' },
+    helpFAQ: { en: 'Answers to common questions', es: 'Respuestas a preguntas comunes', tl: 'Mga sagot sa mga karaniwang tanong', vi: 'Câu trả lời cho các câu hỏi phổ biến', ko: '자주 묻는 질문에 대한 답변' },
+    helpRestart: { en: 'A way to restart this tour', es: 'Una forma de reiniciar este tour', tl: 'Isang paraan para i-restart ang tour na ito', vi: 'Cách khởi động lại hướng dẫn này', ko: '이 투어를 다시 시작하는 방법' },
+    helpBackup: { en: '💾 Don\'t forget to backup your data regularly!', es: '💾 ¡No olvides hacer respaldo de tus datos regularmente!', tl: '💾 Huwag kalimutang i-backup ang data mo regularly!', vi: '💾 Đừng quên sao lưu dữ liệu thường xuyên!', ko: '💾 정기적으로 데이터를 백업하는 것을 잊지 마세요!' },
+    
+    // Final step
+    finalTitle: { en: '🚀 You\'re All Set!', es: '🚀 ¡Estás Listo!', tl: '🚀 Handa Ka Na!', vi: '🚀 Bạn Đã Sẵn Sàng!', ko: '🚀 모든 준비가 완료되었습니다!' },
+    finalThatsIt: { en: 'That\'s the tour!', es: '¡Eso es el tour!', tl: 'Yun na ang tour!', vi: 'Đó là hướng dẫn!', ko: '투어가 끝났습니다!' },
+    finalKnowEssentials: { en: 'You now know the essentials.', es: 'Ahora conoces lo esencial.', tl: 'Alam mo na ngayon ang mga esensyal.', vi: 'Bây giờ bạn đã biết những điều cần thiết.', ko: '이제 필수 사항을 알게 되었습니다.' },
+    finalDemoData: { en: '✅ Want to see an example? Click "Load Demo Data" to explore a sample claim with all the features filled out.', es: '✅ ¿Quieres ver un ejemplo? Haz clic en "Cargar Datos Demo" para explorar un reclamo de muestra con todas las funciones completadas.', tl: '✅ Gusto mong makakita ng halimbawa? I-click ang "Load Demo Data" para mag-explore ng sample claim na may lahat ng features na napunan.', vi: '✅ Muốn xem ví dụ? Nhấp "Tải Dữ Liệu Demo" để khám phá một yêu cầu mẫu với tất cả các tính năng được điền.', ko: '✅ 예시를 보고 싶으신가요? "데모 데이터 로드"를 클릭하여 모든 기능이 채워진 샘플 청구를 탐색하세요.' },
+    finalRemember: { en: 'Remember: The 📖 Help menu and 🧭 Navigator are always here if you need guidance.', es: 'Recuerda: El menú de 📖 Ayuda y el 🧭 Navegador siempre están aquí si necesitas orientación.', tl: 'Tandaan: Ang 📖 Help menu at 🧭 Navigator ay laging nandito kung kailangan mo ng gabay.', vi: 'Nhớ rằng: Menu 📖 Trợ giúp và 🧭 Navigator luôn ở đây nếu bạn cần hướng dẫn.', ko: '기억하세요: 📖 도움말 메뉴와 🧭 Navigator는 안내가 필요할 때 항상 여기 있습니다.' },
+    finalMotto: { en: '"Built by a Veteran, For Veterans."', es: '"Construido por un Veterano, Para Veteranos."', tl: '"Ginawa ng isang Beterano, Para sa mga Beterano."', vi: '"Được Xây Dựng Bởi Một Cựu Chiến Binh, Cho Các Cựu Chiến Binh."', ko: '"재향군인이 재향군인을 위해 만들었습니다."' },
+  },
+
+  // User Manual Component
+  userManual: {
+    // Header & Navigation
+    title: { en: '📖 User Manual', es: '📖 Manual de Usuario', tl: '📖 Manual ng User', vi: '📖 Hướng Dẫn Sử Dụng', ko: '📖 사용자 매뉴얼' },
+    searchPlaceholder: { en: 'Search documentation...', es: 'Buscar documentación...', tl: 'Maghanap ng dokumentasyon...', vi: 'Tìm kiếm tài liệu...', ko: '문서 검색...' },
+    searchResults: { en: 'SEARCH RESULTS', es: 'RESULTADOS DE BÚSQUEDA', tl: 'MGA RESULTA NG PAGHAHANAP', vi: 'KẾT QUẢ TÌM KIẾM', ko: '검색 결과' },
+    noResultsFound: { en: 'No results found', es: 'No se encontraron resultados', tl: 'Walang nahanap na resulta', vi: 'Không tìm thấy kết quả', ko: '결과 없음' },
+    overview: { en: 'Overview', es: 'Resumen', tl: 'Pangkalahatang-ideya', vi: 'Tổng quan', ko: '개요' },
+    home: { en: 'Home', es: 'Inicio', tl: 'Tahanan', vi: 'Trang chủ', ko: '홈' },
+    backToHome: { en: '← Back to Home', es: '← Volver al Inicio', tl: '← Bumalik sa Tahanan', vi: '← Quay lại Trang chủ', ko: '← 홈으로 돌아가기' },
+    closeManual: { en: 'Close Manual', es: 'Cerrar Manual', tl: 'Isara ang Manual', vi: 'Đóng Hướng dẫn', ko: '매뉴얼 닫기' },
+    startTour: { en: '🎓 Start Interactive Tour', es: '🎓 Iniciar Tour Interactivo', tl: '🎓 Simulan ang Interactive Tour', vi: '🎓 Bắt Đầu Hướng Dẫn Tương Tác', ko: '🎓 대화형 투어 시작' },
+    restartTour: { en: '🎓 Restart Interactive Tour', es: '🎓 Reiniciar Tour Interactivo', tl: '🎓 I-restart ang Interactive Tour', vi: '🎓 Khởi Động Lại Hướng Dẫn', ko: '🎓 대화형 투어 다시 시작' },
+    reportBug: { en: '🐛 Report a Bug', es: '🐛 Reportar un Error', tl: '🐛 Mag-report ng Bug', vi: '🐛 Báo Cáo Lỗi', ko: '🐛 버그 신고' },
+
+    // Navigation Category Headers
+    catGettingStarted: { en: 'Getting Started', es: 'Primeros Pasos', tl: 'Pagsisimula', vi: 'Bắt Đầu', ko: '시작하기' },
+    catSearchExplore: { en: 'Search & Explore', es: 'Buscar y Explorar', tl: 'Maghanap at Mag-explore', vi: 'Tìm Kiếm & Khám Phá', ko: '검색 및 탐색' },
+    catCalculate: { en: '📊 Calculate', es: '📊 Calcular', tl: '📊 Kalkulahin', vi: '📊 Tính Toán', ko: '📊 계산' },
+    catDiscover: { en: '🔍 Discover', es: '🔍 Descubrir', tl: '🔍 Tuklasin', vi: '🔍 Khám Phá', ko: '🔍 발견' },
+    catBuildEvidence: { en: '📋 Build Evidence', es: '📋 Construir Evidencia', tl: '📋 Bumuo ng Ebidensya', vi: '📋 Xây Dựng Bằng Chứng', ko: '📋 증거 구축' },
+    catQualityControl: { en: '🎯 Quality Control', es: '🎯 Control de Calidad', tl: '🎯 Quality Control', vi: '🎯 Kiểm Soát Chất Lượng', ko: '🎯 품질 관리' },
+    catAdvancedStrategy: { en: '⚡ Advanced Strategy', es: '⚡ Estrategia Avanzada', tl: '⚡ Advanced Strategy', vi: '⚡ Chiến Lược Nâng Cao', ko: '⚡ 고급 전략' },
+    catShockAwe: { en: '💎 Shock & Awe', es: '💎 Impacto y Asombro', tl: '💎 Shock at Awe', vi: '💎 Ấn Tượng & Ngỡ Ngàng', ko: '💎 충격과 경외' },
+    catSupport: { en: '🤝 Support', es: '🤝 Soporte', tl: '🤝 Suporta', vi: '🤝 Hỗ Trợ', ko: '🤝 지원' },
+    catDataSettings: { en: '📁 Data & Settings', es: '📁 Datos y Configuración', tl: '📁 Data at Settings', vi: '📁 Dữ Liệu & Cài Đặt', ko: '📁 데이터 및 설정' },
+
+    // Main Section Titles
+    navHome: { en: 'Home', es: 'Inicio', tl: 'Tahanan', vi: 'Trang chủ', ko: '홈' },
+    navGettingStarted: { en: 'Getting Started', es: 'Primeros Pasos', tl: 'Pagsisimula', vi: 'Bắt Đầu', ko: '시작하기' },
+    navFirstVisit: { en: 'Your First Visit', es: 'Tu Primera Visita', tl: 'Ang Iyong Unang Pagbisita', vi: 'Lần Đầu Ghé Thăm', ko: '첫 방문' },
+    navInterfaceOverview: { en: 'Interface Overview', es: 'Visión General de la Interfaz', tl: 'Pangkalahatang-ideya ng Interface', vi: 'Tổng Quan Giao Diện', ko: '인터페이스 개요' },
+    navAccessibility: { en: 'Accessibility', es: 'Accesibilidad', tl: 'Accessibility', vi: 'Khả Năng Tiếp Cận', ko: '접근성' },
+    navSearchExplore: { en: 'Search & Explore', es: 'Buscar y Explorar', tl: 'Maghanap at Mag-explore', vi: 'Tìm Kiếm & Khám Phá', ko: '검색 및 탐색' },
+    navHowToSearch: { en: 'How to Search', es: 'Cómo Buscar', tl: 'Paano Maghanap', vi: 'Cách Tìm Kiếm', ko: '검색 방법' },
+    navSearchResults: { en: 'Search Results', es: 'Resultados de Búsqueda', tl: 'Mga Resulta ng Paghahanap', vi: 'Kết Quả Tìm Kiếm', ko: '검색 결과' },
+    navDisabilityDetails: { en: 'Disability Details', es: 'Detalles de Discapacidad', tl: 'Mga Detalye ng Disability', vi: 'Chi Tiết Khuyết Tật', ko: '장애 세부정보' },
+    navRatingCriteria: { en: 'Rating Criteria', es: 'Criterios de Calificación', tl: 'Mga Pamantayan ng Rating', vi: 'Tiêu Chí Đánh Giá', ko: '평가 기준' },
+    navTacticalCalculator: { en: 'Tactical Calculator', es: 'Calculadora Táctica', tl: 'Tactical Calculator', vi: 'Máy Tính Chiến Thuật', ko: '전술 계산기' },
+    navCalcOverview: { en: 'How VA Math Works', es: 'Cómo Funciona la Matemática del VA', tl: 'Paano Gumagana ang VA Math', vi: 'Cách Tính Toán VA Hoạt Động', ko: 'VA 수학 작동 방식' },
+    navCalcBilateral: { en: 'Bilateral Factor', es: 'Factor Bilateral', tl: 'Bilateral Factor', vi: 'Hệ Số Song Phương', ko: '양측 요인' },
+    navCalcDependents: { en: 'Dependent Benefits', es: 'Beneficios de Dependientes', tl: 'Mga Benepisyo ng Dependents', vi: 'Quyền Lợi Người Phụ Thuộc', ko: '부양가족 혜택' },
+    navCalcWhatIf: { en: 'What-If Scenarios', es: 'Escenarios Hipotéticos', tl: 'What-If Scenarios', vi: 'Kịch Bản Giả Định', ko: '가정 시나리오' },
+    navSecondaryScout: { en: 'Secondary Scout', es: 'Scout Secundario', tl: 'Secondary Scout', vi: 'Scout Thứ Cấp', ko: '2차 스카우트' },
+    navScoutLaunching: { en: 'Launching Scout', es: 'Iniciando Scout', tl: 'Paglulunsad ng Scout', vi: 'Khởi Động Scout', ko: '스카우트 시작' },
+    navScoutResults: { en: 'Understanding Results', es: 'Entendiendo Resultados', tl: 'Pag-unawa sa mga Resulta', vi: 'Hiểu Kết Quả', ko: '결과 이해' },
+    navScoutAddToPacket: { en: 'Add to Packet', es: 'Agregar al Paquete', tl: 'Idagdag sa Packet', vi: 'Thêm vào Hồ Sơ', ko: '패킷에 추가' },
+    navCPExamSimulator: { en: 'C&P Exam Simulator', es: 'Simulador de Examen C&P', tl: 'C&P Exam Simulator', vi: 'Mô Phỏng Khám C&P', ko: 'C&P 시험 시뮬레이터' },
+    navSimulatorGettingStarted: { en: 'Getting Started', es: 'Primeros Pasos', tl: 'Pagsisimula', vi: 'Bắt Đầu', ko: '시작하기' },
+    navConditionSelection: { en: 'Condition Selection', es: 'Selección de Condición', tl: 'Pagpili ng Kondisyon', vi: 'Chọn Tình Trạng', ko: '상태 선택' },
+    navTakingSimulation: { en: 'Taking the Simulation', es: 'Tomando la Simulación', tl: 'Pagsagawa ng Simulation', vi: 'Thực Hiện Mô Phỏng', ko: '시뮬레이션 진행' },
+    navSimulatorResults: { en: 'Results & Feedback', es: 'Resultados y Retroalimentación', tl: 'Mga Resulta at Feedback', vi: 'Kết Quả & Phản Hồi', ko: '결과 및 피드백' },
+    navFlashcards: { en: 'Flashcard Mode', es: 'Modo de Tarjetas', tl: 'Flashcard Mode', vi: 'Chế Độ Thẻ Ghi Nhớ', ko: '플래시카드 모드' },
+    navDBQLibrary: { en: 'DBQ Library', es: 'Biblioteca DBQ', tl: 'DBQ Library', vi: 'Thư Viện DBQ', ko: 'DBQ 라이브러리' },
+    navDBQOverview: { en: 'What are DBQs?', es: '¿Qué son los DBQs?', tl: 'Ano ang DBQs?', vi: 'DBQ Là Gì?', ko: 'DBQ란 무엇인가요?' },
+    navDBQBrowse: { en: 'Browsing DBQs', es: 'Navegando DBQs', tl: 'Pag-browse ng DBQs', vi: 'Duyệt DBQ', ko: 'DBQ 찾아보기' },
+    navDBQUsage: { en: 'Using DBQs', es: 'Usando DBQs', tl: 'Paggamit ng DBQs', vi: 'Sử Dụng DBQ', ko: 'DBQ 사용법' },
+    navPathfinder: { en: 'Pathfinder', es: 'Pathfinder', tl: 'Pathfinder', vi: 'Pathfinder', ko: '패스파인더' },
+    navWorkflowGuide: { en: 'Workflow Guide', es: 'Guía de Flujo de Trabajo', tl: 'Workflow Guide', vi: 'Hướng Dẫn Quy Trình', ko: '워크플로우 가이드' },
+    navWorkflowOverview: { en: 'Mission Briefings', es: 'Briefings de Misión', tl: 'Mission Briefings', vi: 'Tóm Tắt Nhiệm Vụ', ko: '임무 브리핑' },
+    navWorkflowProgress: { en: 'Tracking Progress', es: 'Seguimiento de Progreso', tl: 'Pag-track ng Progress', vi: 'Theo Dõi Tiến Độ', ko: '진행 상황 추적' },
+    navCFileAnalyzer: { en: 'C-File AI Analyzer', es: 'Analizador de C-File con IA', tl: 'C-File AI Analyzer', vi: 'Phân Tích C-File AI', ko: 'C-File AI 분석기' },
+    navCFileWhatIs: { en: 'What is a C-File?', es: '¿Qué es un C-File?', tl: 'Ano ang C-File?', vi: 'C-File Là Gì?', ko: 'C-File이란?' },
+    navCFileUpload: { en: 'Dropping In Records', es: 'Cargando Registros', tl: 'Pag-drop ng Records', vi: 'Tải Lên Hồ Sơ', ko: '기록 업로드' },
+    navCFileAnalysis: { en: 'Understanding Results', es: 'Entendiendo Resultados', tl: 'Pag-unawa sa mga Resulta', vi: 'Hiểu Kết Quả', ko: '결과 이해' },
+    navBlueButtonXRay: { en: 'Blue Button X-Ray', es: 'Blue Button X-Ray', tl: 'Blue Button X-Ray', vi: 'Blue Button X-Ray', ko: 'Blue Button X-Ray' },
+    navBlueOverview: { en: 'What Is Blue Button?', es: '¿Qué es Blue Button?', tl: 'Ano ang Blue Button?', vi: 'Blue Button Là Gì?', ko: 'Blue Button이란?' },
+    navBlueExtract: { en: 'Extracting Evidence', es: 'Extrayendo Evidencia', tl: 'Pag-extract ng Ebidensya', vi: 'Trích Xuất Bằng Chứng', ko: '증거 추출' },
+    navWitnessBench: { en: 'Witness Bench', es: 'Banco de Testigos', tl: 'Witness Bench', vi: 'Ghế Nhân Chứng', ko: '증인석' },
+    navWitnessOverview: { en: 'Buddy Statements', es: 'Declaraciones de Compañeros', tl: 'Buddy Statements', vi: 'Lời Khai Đồng Đội', ko: '동료 진술' },
+    navWitnessInterview: { en: 'The Interview', es: 'La Entrevista', tl: 'Ang Panayam', vi: 'Phỏng Vấn', ko: '인터뷰' },
+    navWitnessOutput: { en: 'Statement Output', es: 'Salida de Declaración', tl: 'Output ng Statement', vi: 'Kết Quả Tuyên Bố', ko: '진술 출력' },
+    navNexusBuilder: { en: 'Nexus Builder', es: 'Constructor de Nexus', tl: 'Nexus Builder', vi: 'Xây Dựng Nexus', ko: '넥서스 빌더' },
+    navWhatIsNexus: { en: 'What is a Nexus?', es: '¿Qué es un Nexus?', tl: 'Ano ang Nexus?', vi: 'Nexus Là Gì?', ko: '넥서스란?' },
+    navBuildingStatement: { en: 'Building Your Statement', es: 'Construyendo Tu Declaración', tl: 'Pagbuo ng Statement Mo', vi: 'Xây Dựng Tuyên Bố', ko: '진술서 작성' },
+    navDoctorCheatSheet: { en: "Doctor's Cheat Sheet", es: 'Guía Rápida del Doctor', tl: "Doctor's Cheat Sheet", vi: 'Bảng Hướng Dẫn Bác Sĩ', ko: '의사용 요약 시트' },
+    navDownloadOptions: { en: 'Download Options', es: 'Opciones de Descarga', tl: 'Mga Opsyon sa Pag-download', vi: 'Tùy Chọn Tải Xuống', ko: '다운로드 옵션' },
+    navFormsHelper: { en: 'Forms Helper', es: 'Asistente de Formularios', tl: 'Forms Helper', vi: 'Trợ Giúp Biểu Mẫu', ko: '양식 도우미' },
+    navAvailableForms: { en: 'Available Forms', es: 'Formularios Disponibles', tl: 'Mga Available na Form', vi: 'Biểu Mẫu Có Sẵn', ko: '사용 가능한 양식' },
+    navBuddyStatements: { en: 'Buddy Statements', es: 'Declaraciones de Compañeros', tl: 'Buddy Statements', vi: 'Lời Khai Đồng Đội', ko: '동료 진술' },
+    navIntentToFile: { en: 'Intent to File', es: 'Intención de Presentar', tl: 'Intent to File', vi: 'Ý Định Nộp Đơn', ko: '제출 의향' },
+    navPTSDStressor: { en: 'PTSD Stressor', es: 'Estresor de TEPT', tl: 'PTSD Stressor', vi: 'Yếu Tố Gây PTSD', ko: 'PTSD 스트레스 요인' },
+    navVeteranProfile: { en: 'Veteran Profile', es: 'Perfil del Veterano', tl: 'Veteran Profile', vi: 'Hồ Sơ Cựu Chiến Binh', ko: '재향군인 프로필' },
+    navRedTeamSimulator: { en: 'Red Team Simulator', es: 'Simulador Red Team', tl: 'Red Team Simulator', vi: 'Mô Phỏng Đội Đỏ', ko: '레드팀 시뮬레이터' },
+    navRedOverview: { en: 'What is Red Team?', es: '¿Qué es Red Team?', tl: 'Ano ang Red Team?', vi: 'Red Team Là Gì?', ko: '레드팀이란?' },
+    navRedAnalysis: { en: 'Weakness Analysis', es: 'Análisis de Debilidades', tl: 'Pagsusuri ng Kahinaan', vi: 'Phân Tích Điểm Yếu', ko: '약점 분석' },
+    navDecisionDecoder: { en: 'Decision Decoder', es: 'Decodificador de Decisiones', tl: 'Decision Decoder', vi: 'Giải Mã Quyết Định', ko: '결정 디코더' },
+    navDecoderOverview: { en: 'Overview', es: 'Resumen', tl: 'Pangkalahatang-ideya', vi: 'Tổng Quan', ko: '개요' },
+    navDecoderUpload: { en: 'Drop In Decision', es: 'Cargar Decisión', tl: 'I-drop ang Decision', vi: 'Tải Lên Quyết Định', ko: '결정 업로드' },
+    navDecoderAppeal: { en: 'Appeal Options', es: 'Opciones de Apelación', tl: 'Mga Opsyon sa Appeal', vi: 'Tùy Chọn Kháng Cáo', ko: '항소 옵션' },
+    navSharkRadar: { en: 'Shark Radar', es: 'Radar de Tiburones', tl: 'Shark Radar', vi: 'Radar Cá Mập', ko: '상어 레이더' },
+    navTDIUBuilder: { en: 'TDIU Builder', es: 'Constructor de TDIU', tl: 'TDIU Builder', vi: 'Xây Dựng TDIU', ko: 'TDIU 빌더' },
+    navTDIUOverview: { en: 'What is TDIU?', es: '¿Qué es TDIU?', tl: 'Ano ang TDIU?', vi: 'TDIU Là Gì?', ko: 'TDIU란?' },
+    navTDIUEligibility: { en: 'Eligibility Check', es: 'Verificación de Elegibilidad', tl: 'Pagsusuri ng Eligibility', vi: 'Kiểm Tra Đủ Điều Kiện', ko: '자격 확인' },
+    navRiskAssessment: { en: 'Risk Assessment', es: 'Evaluación de Riesgo', tl: 'Risk Assessment', vi: 'Đánh Giá Rủi Ro', ko: '위험 평가' },
+    navSymptomLogger: { en: 'Symptom Logger', es: 'Registro de Síntomas', tl: 'Symptom Logger', vi: 'Ghi Chép Triệu Chứng', ko: '증상 기록기' },
+    navSymptomOverview: { en: 'Why Track Symptoms?', es: '¿Por qué Rastrear Síntomas?', tl: 'Bakit Mag-track ng mga Sintomas?', vi: 'Tại Sao Theo Dõi Triệu Chứng?', ko: '증상을 추적하는 이유?' },
+    navSymptomLogging: { en: 'Logging Symptoms', es: 'Registrando Síntomas', tl: 'Pag-log ng mga Sintomas', vi: 'Ghi Chép Triệu Chứng', ko: '증상 기록' },
+    navSymptomReports: { en: 'Reports & Export', es: 'Reportes y Exportación', tl: 'Mga Ulat at Export', vi: 'Báo Cáo & Xuất', ko: '보고서 및 내보내기' },
+    navPACTActNavigator: { en: 'PACT Act Navigator', es: 'Navegador de la Ley PACT', tl: 'PACT Act Navigator', vi: 'Điều Hướng Đạo Luật PACT', ko: 'PACT법 네비게이터' },
+    navPACTOverview: { en: 'What is PACT Act?', es: '¿Qué es la Ley PACT?', tl: 'Ano ang PACT Act?', vi: 'Đạo Luật PACT Là Gì?', ko: 'PACT법이란?' },
+    navPACTConditions: { en: 'Covered Conditions', es: 'Condiciones Cubiertas', tl: 'Mga Covered Conditions', vi: 'Tình Trạng Được Bảo Hiểm', ko: '적용 상태' },
+    navPACTLocations: { en: 'Covered Locations', es: 'Ubicaciones Cubiertas', tl: 'Mga Covered Locations', vi: 'Địa Điểm Được Bảo Hiểm', ko: '적용 위치' },
+    navFOIAKeysmith: { en: 'FOIA Keysmith', es: 'FOIA Keysmith', tl: 'FOIA Keysmith', vi: 'FOIA Keysmith', ko: 'FOIA 키스미스' },
+    navMillionDollar: { en: 'Million Dollar Dashboard', es: 'Panel del Millón de Dólares', tl: 'Million Dollar Dashboard', vi: 'Bảng Điều Khiển Triệu Đô', ko: '백만 달러 대시보드' },
+    navMOSHazardMatcher: { en: 'MOS Hazard Matcher', es: 'Comparador de Riesgos MOS', tl: 'MOS Hazard Matcher', vi: 'Đối Chiếu Nguy Hiểm MOS', ko: 'MOS 위험 매처' },
+    navWebOfConditions: { en: 'Web of Conditions', es: 'Red de Condiciones', tl: 'Web ng mga Kondisyon', vi: 'Mạng Lưới Tình Trạng', ko: '상태 웹' },
+    navVSOFinder: { en: 'VSO Finder', es: 'Buscador de VSO', tl: 'VSO Finder', vi: 'Tìm VSO', ko: 'VSO 찾기' },
+    navStateBenefitHunter: { en: 'State Benefit Hunter', es: 'Buscador de Beneficios Estatales', tl: 'State Benefit Hunter', vi: 'Tìm Quyền Lợi Tiểu Bang', ko: '주 혜택 찾기' },
+    navMyPacket: { en: 'My Packet', es: 'Mi Paquete', tl: 'Ang Packet Ko', vi: 'Hồ Sơ Của Tôi', ko: '내 패킷' },
+    navManagingClaims: { en: 'Managing Claims', es: 'Gestionando Reclamos', tl: 'Pamamahala ng mga Claim', vi: 'Quản Lý Yêu Cầu', ko: '청구 관리' },
+    navSavedForms: { en: 'Saved Forms', es: 'Formularios Guardados', tl: 'Mga Na-save na Form', vi: 'Biểu Mẫu Đã Lưu', ko: '저장된 양식' },
+    navBackupRestore: { en: 'Backup & Restore', es: 'Respaldo y Restauración', tl: 'Backup at Restore', vi: 'Sao Lưu & Khôi Phục', ko: '백업 및 복원' },
+    navExportingData: { en: 'Exporting Data', es: 'Exportando Datos', tl: 'Pag-export ng Data', vi: 'Xuất Dữ Liệu', ko: '데이터 내보내기' },
+    navVAResources: { en: 'VA Resources', es: 'Recursos del VA', tl: 'Mga Resource ng VA', vi: 'Tài Nguyên VA', ko: 'VA 리소스' },
+    navOnlinePortals: { en: 'Online Portals', es: 'Portales en Línea', tl: 'Mga Online Portal', vi: 'Cổng Trực Tuyến', ko: '온라인 포털' },
+    navPhoneNumbers: { en: 'Phone Numbers', es: 'Números de Teléfono', tl: 'Mga Numero ng Telepono', vi: 'Số Điện Thoại', ko: '전화번호' },
+    navExternalResources: { en: 'External Resources', es: 'Recursos Externos', tl: 'Mga External Resources', vi: 'Tài Nguyên Bên Ngoài', ko: '외부 리소스' },
+    navSettings: { en: 'Settings', es: 'Configuración', tl: 'Mga Setting', vi: 'Cài Đặt', ko: '설정' },
+    navDisplayMode: { en: 'Display Mode', es: 'Modo de Visualización', tl: 'Display Mode', vi: 'Chế Độ Hiển Thị', ko: '표시 모드' },
+    navAccessibilityOptions: { en: 'Accessibility Options', es: 'Opciones de Accesibilidad', tl: 'Mga Accessibility Options', vi: 'Tùy Chọn Trợ Năng', ko: '접근성 옵션' },
+    navDataManagement: { en: 'Data Management', es: 'Gestión de Datos', tl: 'Pamamahala ng Data', vi: 'Quản Lý Dữ Liệu', ko: '데이터 관리' },
+    navAISettings: { en: 'AI Settings', es: 'Configuración de IA', tl: 'Mga Setting ng AI', vi: 'Cài Đặt AI', ko: 'AI 설정' },
+    navLocalAIOverview: { en: 'Local AI Overview', es: 'Resumen de IA Local', tl: 'Pangkalahatang-ideya ng Local AI', vi: 'Tổng Quan AI Cục Bộ', ko: '로컬 AI 개요' },
+    navModelSelection: { en: 'Choosing the Right Model', es: 'Eligiendo el Modelo Correcto', tl: 'Pagpili ng Tamang Model', vi: 'Chọn Đúng Mô Hình', ko: '올바른 모델 선택' },
+    navCloudVsLocal: { en: 'Cloud vs Local AI', es: 'IA en la Nube vs Local', tl: 'Cloud vs Local AI', vi: 'AI Đám Mây vs Cục Bộ', ko: '클라우드 vs 로컬 AI' },
+  },
+
+  // What's New Modal
+  whatsNew: {
+    title: { en: "What's New in Vet-Rate.org", es: 'Novedades en Vet-Rate.org', tl: "Ano'ng Bago sa Vet-Rate.org", vi: 'Có Gì Mới Tại Vet-Rate.org', ko: 'Vet-Rate.org의 새로운 기능' },
+    version: { en: 'Version', es: 'Versión', tl: 'Bersyon', vi: 'Phiên Bản', ko: '버전' },
+    freshIntel: { en: 'Fresh Intel', es: 'Información Fresca', tl: 'Bagong Intel', vi: 'Thông Tin Mới', ko: '새로운 정보' },
+    justDeployed: { en: 'Just Deployed 🚀', es: '¡Recién Desplegado! 🚀', tl: 'Kakatapos Lang i-Deploy 🚀', vi: 'Vừa Triển Khai 🚀', ko: '방금 배포됨 🚀' },
+    platformHighlights: { en: 'Platform Highlights', es: 'Aspectos Destacados de la Plataforma', tl: 'Mga Highlight ng Platform', vi: 'Điểm Nổi Bật Của Nền Tảng', ko: '플랫폼 하이라이트' },
+    bugsSquashed: { en: 'Bugs Squashed 🪲💀', es: '¡Errores Eliminados! 🪲💀', tl: 'Mga Bug na Naayos 🪲💀', vi: 'Lỗi Đã Sửa 🪲💀', ko: '수정된 버그 🪲💀' },
+    justFixed: { en: 'JUST FIXED', es: 'RECIÉN ARREGLADO', tl: 'KAKAAAYOS LANG', vi: 'VỪA SỬA', ko: '방금 수정됨' },
+    noChangelog: { en: 'No changelog available for this version.', es: 'No hay registro de cambios disponible para esta versión.', tl: 'Walang changelog na available para sa bersyong ito.', vi: 'Không có nhật ký thay đổi cho phiên bản này.', ko: '이 버전에 대한 변경 로그가 없습니다.' },
+    foundBug: { en: '🐛 Found a bug? Use the Bug Squasher in the footer to report it!', es: '🐛 ¿Encontraste un error? ¡Usa el Aplasta-Bugs en el pie de página para reportarlo!', tl: '🐛 May nakitang bug? Gamitin ang Bug Squasher sa footer para i-report!', vi: '🐛 Tìm thấy lỗi? Sử dụng Bug Squasher ở chân trang để báo cáo!', ko: '🐛 버그를 발견하셨나요? 푸터의 Bug Squasher를 사용하여 신고하세요!' },
+    missionReadyTitle: { en: '💪 Mission Ready:', es: '💪 Listo para la Misión:', tl: '💪 Handa na sa Misyon:', vi: '💪 Sẵn Sàng Nhiệm Vụ:', ko: '💪 임무 준비 완료:' },
+    missionReadyMessage: { en: 'Your app has been updated and is ready to continue serving you. All your saved data has been preserved.', es: 'Tu aplicación ha sido actualizada y está lista para seguir sirviéndote. Todos tus datos guardados han sido preservados.', tl: 'Ang app mo ay na-update na at handang magpatuloy sa pag-serve sa iyo. Lahat ng naka-save mong data ay napreserba.', vi: 'Ứng dụng của bạn đã được cập nhật và sẵn sàng tiếp tục phục vụ bạn. Tất cả dữ liệu đã lưu của bạn đã được bảo toàn.', ko: '앱이 업데이트되었으며 계속해서 서비스할 준비가 되었습니다. 저장된 모든 데이터가 보존되었습니다.' },
+    rogerThat: { en: "Roger That, Let's Go! 🎯", es: '¡Entendido, Vamos! 🎯', tl: 'Sige, Tara Na! 🎯', vi: 'Đã Hiểu, Bắt Đầu Thôi! 🎯', ko: '알겠습니다, 시작합시다! 🎯' },
+    labelNew: { en: '🆕 NEW', es: '🆕 NUEVO', tl: '🆕 BAGO', vi: '🆕 MỚI', ko: '🆕 새로운' },
+    labelFeature: { en: 'Feature', es: 'Función', tl: 'Feature', vi: 'Tính Năng', ko: '기능' },
+    labelBugFix: { en: 'Bug Fix', es: 'Corrección', tl: 'Bug Fix', vi: 'Sửa Lỗi', ko: '버그 수정' },
+    labelSecurity: { en: 'Security', es: 'Seguridad', tl: 'Seguridad', vi: 'Bảo Mật', ko: '보안' },
+    labelImprovement: { en: 'Improvement', es: 'Mejora', tl: 'Pagpapabuti', vi: 'Cải Tiến', ko: '개선' },
+    labelChange: { en: 'Change', es: 'Cambio', tl: 'Pagbabago', vi: 'Thay Đổi', ko: '변경' },
+    labelUpdate: { en: 'Update', es: 'Actualización', tl: 'Update', vi: 'Cập Nhật', ko: '업데이트' },
+  },
+
+  // Feature Request Component
+  featureRequest: {
+    // Header
+    title: { en: 'Feature Request', es: 'Solicitud de Función', tl: 'Kahilingan ng Feature', vi: 'Yêu Cầu Tính Năng', ko: '기능 요청' },
+    subtitle: { en: 'Share your ideas to make Vet-Rate.org better', es: 'Comparte tus ideas para mejorar Vet-Rate.org', tl: 'Ibahagi ang iyong mga ideya para mapabuti ang Vet-Rate.org', vi: 'Chia sẻ ý tưởng của bạn để cải thiện Vet-Rate.org', ko: 'Vet-Rate.org를 더 좋게 만들 아이디어를 공유하세요' },
+    closeAriaLabel: { en: 'Close feature request', es: 'Cerrar solicitud de función', tl: 'Isara ang kahilingan ng feature', vi: 'Đóng yêu cầu tính năng', ko: '기능 요청 닫기' },
+    
+    // Step labels
+    step1Label: { en: 'Category & Priority', es: 'Categoría y Prioridad', tl: 'Kategorya at Priyoridad', vi: 'Danh Mục & Ưu Tiên', ko: '카테고리 & 우선순위' },
+    step2Label: { en: 'Your Idea', es: 'Tu Idea', tl: 'Ang Iyong Ideya', vi: 'Ý Tưởng Của Bạn', ko: '당신의 아이디어' },
+    step3Label: { en: 'Review & Submit', es: 'Revisar y Enviar', tl: 'Suriin at Isumite', vi: 'Xem Lại & Gửi', ko: '검토 & 제출' },
+    
+    // Step 1 - Category & Priority
+    ideasMatterTitle: { en: 'Your ideas matter!', es: '¡Tus ideas importan!', tl: 'Mahalaga ang mga ideya mo!', vi: 'Ý tưởng của bạn quan trọng!', ko: '당신의 아이디어가 중요합니다!' },
+    ideasMatterText: { en: 'Every feature on Vet-Rate.org came from veteran feedback. Share your idea and help me build tools that make a difference.', es: 'Cada función en Vet-Rate.org provino de comentarios de veteranos. Comparte tu idea y ayúdame a construir herramientas que marquen la diferencia.', tl: 'Ang bawat feature sa Vet-Rate.org ay galing sa feedback ng mga beterano. Ibahagi ang iyong ideya at tulungan akong gumawa ng mga tool na may pagkakaiba.', vi: 'Mọi tính năng trên Vet-Rate.org đều đến từ phản hồi của cựu chiến binh. Chia sẻ ý tưởng của bạn và giúp tôi xây dựng công cụ tạo nên sự khác biệt.', ko: 'Vet-Rate.org의 모든 기능은 재향군인 피드백에서 비롯되었습니다. 아이디어를 공유하고 차이를 만드는 도구를 만드는 데 도움을 주세요.' },
+    categoryLabel: { en: 'Feature Category', es: 'Categoría de Función', tl: 'Kategorya ng Feature', vi: 'Danh Mục Tính Năng', ko: '기능 카테고리' },
+    selectCategoryPlaceholder: { en: 'Select a category...', es: 'Selecciona una categoría...', tl: 'Pumili ng kategorya...', vi: 'Chọn danh mục...', ko: '카테고리 선택...' },
+    relatedModuleLabel: { en: 'Related Module (optional)', es: 'Módulo Relacionado (opcional)', tl: 'Kaugnay na Module (opsyonal)', vi: 'Module Liên Quan (tùy chọn)', ko: '관련 모듈 (선택사항)' },
+    priorityLabel: { en: 'How important is this to you?', es: '¿Qué tan importante es esto para ti?', tl: 'Gaano kahalaga ito sa iyo?', vi: 'Điều này quan trọng với bạn như thế nào?', ko: '이것이 당신에게 얼마나 중요합니까?' },
+    
+    // Categories
+    categoryNEW_TOOL: { en: 'New Tool/Feature', es: 'Nueva Herramienta/Función', tl: 'Bagong Tool/Feature', vi: 'Công Cụ/Tính Năng Mới', ko: '새 도구/기능' },
+    categoryENHANCEMENT: { en: 'Improvement to Existing Tool', es: 'Mejora a Herramienta Existente', tl: 'Pagpapabuti sa Umiiral na Tool', vi: 'Cải Tiến Công Cụ Hiện Có', ko: '기존 도구 개선' },
+    categoryUI_UX: { en: 'User Interface/Experience', es: 'Interfaz/Experiencia de Usuario', tl: 'Interface/Karanasan ng User', vi: 'Giao Diện/Trải Nghiệm Người Dùng', ko: '사용자 인터페이스/경험' },
+    categoryACCESSIBILITY: { en: 'Accessibility', es: 'Accesibilidad', tl: 'Accessibility', vi: 'Khả Năng Tiếp Cận', ko: '접근성' },
+    categoryINTEGRATION: { en: 'VA Integration/API', es: 'Integración VA/API', tl: 'VA Integration/API', vi: 'Tích Hợp VA/API', ko: 'VA 통합/API' },
+    categoryMOBILE: { en: 'Mobile Experience', es: 'Experiencia Móvil', tl: 'Mobile Experience', vi: 'Trải Nghiệm Di Động', ko: '모바일 경험' },
+    categoryDATA: { en: 'Data/Calculations', es: 'Datos/Cálculos', tl: 'Data/Calculations', vi: 'Dữ Liệu/Tính Toán', ko: '데이터/계산' },
+    categoryDOCUMENTATION: { en: 'Documentation/Help', es: 'Documentación/Ayuda', tl: 'Documentation/Help', vi: 'Tài Liệu/Trợ Giúp', ko: '문서/도움말' },
+    categoryOTHER: { en: 'Other', es: 'Otro', tl: 'Iba Pa', vi: 'Khác', ko: '기타' },
+    
+    // Modules
+    moduleSEARCH: { en: 'Search / Condition Lookup', es: 'Búsqueda / Consulta de Condiciones', tl: 'Paghahanap / Condition Lookup', vi: 'Tìm Kiếm / Tra Cứu Tình Trạng', ko: '검색 / 상태 조회' },
+    moduleCAP_SIMULATOR: { en: 'C&P Exam Simulator', es: 'Simulador de Examen C&P', tl: 'C&P Exam Simulator', vi: 'Mô Phỏng Khám C&P', ko: 'C&P 검사 시뮬레이터' },
+    moduleNEXUS_BUILDER: { en: 'Nexus Letter Builder', es: 'Constructor de Carta Nexus', tl: 'Nexus Letter Builder', vi: 'Trình Tạo Thư Nexus', ko: '넥서스 레터 빌더' },
+    moduleMY_PACKET: { en: 'My Packet', es: 'Mi Paquete', tl: 'Aking Packet', vi: 'Hồ Sơ Của Tôi', ko: '내 패킷' },
+    moduleSECONDARY_SCOUT: { en: 'Secondary Scout', es: 'Scout Secundario', tl: 'Secondary Scout', vi: 'Secondary Scout', ko: '세컨더리 스카우트' },
+    moduleTACTICAL_CALCULATOR: { en: 'Tactical Calculator', es: 'Calculadora Táctica', tl: 'Tactical Calculator', vi: 'Máy Tính Chiến Thuật', ko: '전술 계산기' },
+    moduleCFILE_ANALYZER: { en: 'C-File Analyzer', es: 'Analizador C-File', tl: 'C-File Analyzer', vi: 'Phân Tích C-File', ko: 'C-File 분석기' },
+    moduleFORMS_HELPER: { en: 'Forms Helper', es: 'Asistente de Formularios', tl: 'Forms Helper', vi: 'Trợ Giúp Biểu Mẫu', ko: '양식 도우미' },
+    moduleVSO_FINDER: { en: 'VSO Finder', es: 'Buscador de VSO', tl: 'VSO Finder', vi: 'Tìm VSO', ko: 'VSO 찾기' },
+    moduleGENERAL: { en: 'General / Site-wide', es: 'General / Todo el Sitio', tl: 'General / Buong Site', vi: 'Chung / Toàn Trang', ko: '일반 / 사이트 전체' },
+    moduleOTHER: { en: 'Other', es: 'Otro', tl: 'Iba Pa', vi: 'Khác', ko: '기타' },
+    
+    // Priority levels
+    priorityCRITICALLabel: { en: 'Critical Need', es: 'Necesidad Crítica', tl: 'Kritikal na Pangangailangan', vi: 'Nhu Cầu Cấp Thiết', ko: '긴급 필요' },
+    priorityCRITICALDesc: { en: 'Missing feature blocking my claim process', es: 'Función faltante que bloquea mi proceso de reclamo', tl: 'Nawawalang feature na humaharang sa proseso ng claim ko', vi: 'Tính năng thiếu cản trở quy trình yêu cầu của tôi', ko: '청구 프로세스를 막는 기능 누락' },
+    priorityHIGHLabel: { en: 'High Priority', es: 'Alta Prioridad', tl: 'Mataas na Priyoridad', vi: 'Ưu Tiên Cao', ko: '높은 우선순위' },
+    priorityHIGHDesc: { en: 'Would significantly improve my workflow', es: 'Mejoraría significativamente mi flujo de trabajo', tl: 'Magpapabuti nang malaki sa workflow ko', vi: 'Sẽ cải thiện đáng kể quy trình làm việc của tôi', ko: '작업 흐름을 크게 개선할 것' },
+    priorityMEDIUMLabel: { en: 'Medium Priority', es: 'Prioridad Media', tl: 'Katamtamang Priyoridad', vi: 'Ưu Tiên Trung Bình', ko: '중간 우선순위' },
+    priorityMEDIUMDesc: { en: 'Nice to have, would make things easier', es: 'Sería bueno tenerlo, facilitaría las cosas', tl: 'Maganda kung meron, mapapadali ang mga bagay', vi: 'Có thì tốt, sẽ làm mọi thứ dễ dàng hơn', ko: '있으면 좋고, 일을 더 쉽게 만들 것' },
+    priorityLOWLabel: { en: 'Low Priority', es: 'Baja Prioridad', tl: 'Mababang Priyoridad', vi: 'Ưu Tiên Thấp', ko: '낮은 우선순위' },
+    priorityLOWDesc: { en: 'Idea for the future, no rush', es: 'Idea para el futuro, sin prisa', tl: 'Ideya para sa hinaharap, walang apura', vi: 'Ý tưởng cho tương lai, không gấp', ko: '미래를 위한 아이디어, 급하지 않음' },
+    
+    // Step 2 - Feature Details
+    featureTitleLabel: { en: 'Feature Title', es: 'Título de la Función', tl: 'Pamagat ng Feature', vi: 'Tiêu Đề Tính Năng', ko: '기능 제목' },
+    featureTitlePlaceholder: { en: 'Brief title for your feature idea...', es: 'Título breve para tu idea de función...', tl: 'Maikling pamagat para sa iyong ideya ng feature...', vi: 'Tiêu đề ngắn gọn cho ý tưởng tính năng của bạn...', ko: '기능 아이디어에 대한 간단한 제목...' },
+    describeIdeaLabel: { en: 'Describe Your Idea', es: 'Describe Tu Idea', tl: 'Ilarawan ang Iyong Ideya', vi: 'Mô Tả Ý Tưởng Của Bạn', ko: '아이디어 설명' },
+    describeIdeaPlaceholder: { en: 'Explain your feature idea in detail. What would it do? How would it work?', es: 'Explica tu idea de función en detalle. ¿Qué haría? ¿Cómo funcionaría?', tl: 'Ipaliwanag ang iyong ideya ng feature nang detalyado. Ano ang gagawin nito? Paano ito gagana?', vi: 'Giải thích chi tiết ý tưởng tính năng của bạn. Nó sẽ làm gì? Nó sẽ hoạt động như thế nào?', ko: '기능 아이디어를 자세히 설명하세요. 무엇을 할 것인가요? 어떻게 작동할까요?' },
+    problemSolvedLabel: { en: 'What problem would this solve?', es: '¿Qué problema resolvería esto?', tl: 'Anong problema ang malulutas nito?', vi: 'Vấn đề này sẽ giải quyết điều gì?', ko: '이것이 어떤 문제를 해결할까요?' },
+    problemSolvedPlaceholder: { en: 'What pain point or challenge would this feature address?', es: '¿Qué punto de dolor o desafío abordaría esta función?', tl: 'Anong pain point o hamon ang aayusin ng feature na ito?', vi: 'Tính năng này sẽ giải quyết điểm khó khăn hoặc thách thức nào?', ko: '이 기능이 어떤 어려움이나 과제를 해결할까요?' },
+    proposedSolutionLabel: { en: 'Your Proposed Solution (optional)', es: 'Tu Solución Propuesta (opcional)', tl: 'Ang Iyong Iminumungkahing Solusyon (opsyonal)', vi: 'Giải Pháp Đề Xuất Của Bạn (tùy chọn)', ko: '제안하는 해결책 (선택사항)' },
+    proposedSolutionPlaceholder: { en: 'If you have specific ideas for how this could be implemented...', es: 'Si tienes ideas específicas de cómo esto podría implementarse...', tl: 'Kung may mga specific na ideya ka kung paano ito maipapatupad...', vi: 'Nếu bạn có ý tưởng cụ thể về cách thực hiện...', ko: '구현 방법에 대한 구체적인 아이디어가 있다면...' },
+    alternativesLabel: { en: "Alternatives You've Considered (optional)", es: 'Alternativas que Has Considerado (opcional)', tl: 'Mga Alternatibong Isinaalang-alang Mo (opsyonal)', vi: 'Các Phương Án Thay Thế Bạn Đã Cân Nhắc (tùy chọn)', ko: '고려한 대안 (선택사항)' },
+    alternativesPlaceholder: { en: 'Have you tried any workarounds? What other solutions have you considered?', es: '¿Has probado alguna solución alternativa? ¿Qué otras soluciones has considerado?', tl: 'May sinubukan ka bang workaround? Anong iba pang solusyon ang isinaalang-alang mo?', vi: 'Bạn đã thử giải pháp tạm thời nào chưa? Bạn đã cân nhắc những giải pháp nào khác?', ko: '임시 해결책을 시도해 보셨나요? 어떤 다른 해결책을 고려하셨나요?' },
+    additionalContextLabel: { en: 'Additional Context', es: 'Contexto Adicional', tl: 'Karagdagang Konteksto', vi: 'Ngữ Cảnh Bổ Sung', ko: '추가 맥락' },
+    additionalContextPlaceholder: { en: 'Any other details, screenshots links, or examples that would help explain your idea?', es: '¿Algún otro detalle, enlaces de capturas de pantalla o ejemplos que ayuden a explicar tu idea?', tl: 'Anumang ibang detalye, screenshot links, o mga halimbawa na makakatulong ipaliwanag ang iyong ideya?', vi: 'Bất kỳ chi tiết, liên kết ảnh chụp màn hình hoặc ví dụ nào khác giúp giải thích ý tưởng của bạn?', ko: '아이디어 설명에 도움이 되는 기타 세부사항, 스크린샷 링크 또는 예시가 있나요?' },
+    characters: { en: 'characters', es: 'caracteres', tl: 'mga karakter', vi: 'ký tự', ko: '문자' },
+    minCharsRequired: { en: 'minimum characters required', es: 'caracteres mínimos requeridos', tl: 'minimum na karakter na kailangan', vi: 'số ký tự tối thiểu cần thiết', ko: '최소 필요 문자 수' },
+    
+    // Privacy & Tracking
+    privacyTrackingTitle: { en: 'Privacy & Tracking Options', es: 'Opciones de Privacidad y Seguimiento', tl: 'Mga Opsyon sa Privacy at Tracking', vi: 'Tùy Chọn Quyền Riêng Tư & Theo Dõi', ko: '개인정보 보호 & 추적 옵션' },
+    saveToMyTicketsLabel: { en: 'Save to My Tickets', es: 'Guardar en Mis Tickets', tl: 'I-save sa Aking Tickets', vi: 'Lưu vào Vé Của Tôi', ko: '내 티켓에 저장' },
+    saveToMyTicketsDesc: { en: "Track this request in your My Packet. You'll be notified when it's implemented!", es: '¡Rastrea esta solicitud en tu Mi Paquete. Serás notificado cuando se implemente!', tl: "I-track ang kahilingang ito sa iyong My Packet. Maa-notify ka kapag naipatupad na!", vi: 'Theo dõi yêu cầu này trong Hồ Sơ Của Tôi. Bạn sẽ được thông báo khi nó được triển khai!', ko: '내 패킷에서 이 요청을 추적하세요. 구현되면 알림을 받습니다!' },
+    emailOptionalLabel: { en: 'Email Address (Optional)', es: 'Dirección de Correo (Opcional)', tl: 'Email Address (Opsyonal)', vi: 'Địa Chỉ Email (Tùy Chọn)', ko: '이메일 주소 (선택사항)' },
+    emailPrivacyNote: { en: "We respect your privacy. Leave blank to stay anonymous. Only fill this in if you'd like me to email you when the feature is added.", es: 'Respetamos tu privacidad. Déjalo en blanco para permanecer anónimo. Solo completa esto si deseas que te envíe un correo cuando se agregue la función.', tl: 'Nirerespeto namin ang iyong privacy. Iwanan itong blangko para manatiling anonymous. Punan lang ito kung gusto mong i-email ka kapag naidagdag na ang feature.', vi: 'Chúng tôi tôn trọng quyền riêng tư của bạn. Để trống nếu muốn ẩn danh. Chỉ điền nếu bạn muốn tôi gửi email khi tính năng được thêm.', ko: '우리는 귀하의 개인정보를 존중합니다. 익명으로 유지하려면 비워두세요. 기능이 추가될 때 이메일을 받고 싶으시면 입력하세요.' },
+    emailInvalidError: { en: 'Please enter a valid email address (e.g., name@example.com)', es: 'Por favor ingresa una dirección de correo válida (ej., nombre@ejemplo.com)', tl: 'Mangyaring maglagay ng valid na email address (hal., pangalan@halimbawa.com)', vi: 'Vui lòng nhập địa chỉ email hợp lệ (vd., ten@example.com)', ko: '유효한 이메일 주소를 입력하세요 (예: name@example.com)' },
+    
+    // Step 3 - Review & Submit
+    successTitle: { en: 'Request Saved Successfully!', es: '¡Solicitud Guardada con Éxito!', tl: 'Matagumpay na Na-save ang Kahilingan!', vi: 'Yêu Cầu Đã Được Lưu Thành Công!', ko: '요청이 성공적으로 저장되었습니다!' },
+    successMessage: { en: 'Your feature request has been saved to My Tickets and the report is copied to your clipboard!', es: '¡Tu solicitud de función ha sido guardada en Mis Tickets y el reporte se ha copiado a tu portapapeles!', tl: 'Ang iyong kahilingan ng feature ay na-save sa My Tickets at ang report ay nakopya sa iyong clipboard!', vi: 'Yêu cầu tính năng của bạn đã được lưu vào Vé Của Tôi và báo cáo đã được sao chép vào clipboard!', ko: '기능 요청이 내 티켓에 저장되었고 보고서가 클립보드에 복사되었습니다!' },
+    whatHappensNext: { en: 'What happens next:', es: 'Qué sucede después:', tl: 'Ano ang susunod na mangyayari:', vi: 'Điều gì xảy ra tiếp theo:', ko: '다음 단계:' },
+    nextStepReview: { en: "I'll review your idea personally", es: 'Revisaré tu idea personalmente', tl: 'Personal kong susuriin ang iyong ideya', vi: 'Tôi sẽ xem xét ý tưởng của bạn cá nhân', ko: '아이디어를 직접 검토하겠습니다' },
+    nextStepCheckTickets: { en: 'Check "My Tickets" in My Packet for status updates', es: 'Revisa "Mis Tickets" en Mi Paquete para actualizaciones de estado', tl: 'Tingnan ang "My Tickets" sa My Packet para sa status updates', vi: 'Kiểm tra "Vé Của Tôi" trong Hồ Sơ Của Tôi để cập nhật trạng thái', ko: '내 패킷의 "내 티켓"에서 상태 업데이트를 확인하세요' },
+    nextStepEmailNotify: { en: "I'll email you when this feature is implemented", es: 'Te enviaré un correo cuando esta función sea implementada', tl: 'I-email kita kapag naipatupad na ang feature na ito', vi: 'Tôi sẽ gửi email cho bạn khi tính năng này được triển khai', ko: '이 기능이 구현되면 이메일로 알려드리겠습니다' },
+    requestIdLabel: { en: 'Request ID', es: 'ID de Solicitud', tl: 'Request ID', vi: 'Mã Yêu Cầu', ko: '요청 ID' },
+    savedToTicketsNote: { en: 'Saved to your My Tickets for tracking', es: 'Guardado en tus Mis Tickets para seguimiento', tl: 'Na-save sa iyong My Tickets para sa tracking', vi: 'Đã lưu vào Vé Của Tôi để theo dõi', ko: '추적을 위해 내 티켓에 저장됨' },
+    requestReadyMessage: { en: 'Feature request ready! Review it below and click "Submit Request" to send it directly.', es: '¡Solicitud de función lista! Revísala abajo y haz clic en "Enviar Solicitud" para enviarla directamente.', tl: 'Handa na ang kahilingan ng feature! Suriin ito sa ibaba at i-click ang "Submit Request" para ipadala ito direkta.', vi: 'Yêu cầu tính năng đã sẵn sàng! Xem lại bên dưới và nhấp "Gửi Yêu Cầu" để gửi trực tiếp.', ko: '기능 요청이 준비되었습니다! 아래에서 검토하고 "요청 제출"을 클릭하여 직접 보내세요.' },
+    copied: { en: 'Copied!', es: '¡Copiado!', tl: 'Nakopya!', vi: 'Đã Sao Chép!', ko: '복사됨!' },
+    copy: { en: 'Copy', es: 'Copiar', tl: 'Kopyahin', vi: 'Sao Chép', ko: '복사' },
+    submittingRequest: { en: 'Submitting Request...', es: 'Enviando Solicitud...', tl: 'Isinusumite ang Kahilingan...', vi: 'Đang Gửi Yêu Cầu...', ko: '요청 제출 중...' },
+    submitRequestButton: { en: 'Submit Request', es: 'Enviar Solicitud', tl: 'Isumite ang Kahilingan', vi: 'Gửi Yêu Cầu', ko: '요청 제출' },
+    sendDirectlyNote: { en: 'Sends directly to the developer - no email app needed!', es: '¡Se envía directamente al desarrollador - no se necesita aplicación de correo!', tl: 'Direktang ipinapadala sa developer - hindi kailangan ng email app!', vi: 'Gửi trực tiếp đến nhà phát triển - không cần ứng dụng email!', ko: '개발자에게 직접 전송 - 이메일 앱 필요 없음!' },
+    generateRequestButton: { en: 'Generate Request', es: 'Generar Solicitud', tl: 'Gumawa ng Kahilingan', vi: 'Tạo Yêu Cầu', ko: '요청 생성' },
+    doneButton: { en: 'Done', es: 'Hecho', tl: 'Tapos Na', vi: 'Xong', ko: '완료' },
+    
+    // Validation messages
+    validationTitleAndDesc: { en: 'Title (5+ chars) and description (20+ chars) required', es: 'Se requiere título (5+ caracteres) y descripción (20+ caracteres)', tl: 'Kailangan ang pamagat (5+ karakter) at paglalarawan (20+ karakter)', vi: 'Cần tiêu đề (5+ ký tự) và mô tả (20+ ký tự)', ko: '제목(5자 이상)과 설명(20자 이상)이 필요합니다' },
+    validationTitleOnly: { en: 'Title needs at least 5 characters', es: 'El título necesita al menos 5 caracteres', tl: 'Kailangan ng pamagat ng kahit 5 karakter', vi: 'Tiêu đề cần ít nhất 5 ký tự', ko: '제목은 최소 5자 이상이어야 합니다' },
+    validationDescOnly: { en: 'Description needs at least 20 characters', es: 'La descripción necesita al menos 20 caracteres', tl: 'Kailangan ng paglalarawan ng kahit 20 karakter', vi: 'Mô tả cần ít nhất 20 ký tự', ko: '설명은 최소 20자 이상이어야 합니다' },
+    validationEmailFix: { en: 'Fix email format to continue', es: 'Corrige el formato del correo para continuar', tl: 'Ayusin ang format ng email para magpatuloy', vi: 'Sửa định dạng email để tiếp tục', ko: '계속하려면 이메일 형식을 수정하세요' },
+    
+    // Error messages
+    submitErrorMessage: { en: 'Could not send request. Your request was saved locally. The report is copied to your clipboard - you can email it manually to', es: 'No se pudo enviar la solicitud. Tu solicitud fue guardada localmente. El reporte se copió a tu portapapeles - puedes enviarlo por correo manualmente a', tl: 'Hindi maipadala ang kahilingan. Ang kahilingan mo ay na-save locally. Ang report ay nakopya sa iyong clipboard - maaari mo itong i-email nang mano-mano sa', vi: 'Không thể gửi yêu cầu. Yêu cầu của bạn đã được lưu cục bộ. Báo cáo đã được sao chép vào clipboard - bạn có thể gửi email thủ công đến', ko: '요청을 보낼 수 없습니다. 요청이 로컬에 저장되었습니다. 보고서가 클립보드에 복사되었습니다 - 수동으로 이메일을 보낼 수 있습니다' },
+    
+    // Report format strings
+    notSpecified: { en: 'Not specified', es: 'No especificado', tl: 'Hindi tinukoy', vi: 'Không xác định', ko: '미지정' },
+    noneMentioned: { en: 'None mentioned', es: 'Ninguno mencionado', tl: 'Walang nabanggit', vi: 'Không đề cập', ko: '언급 없음' },
+    anonymousNoReply: { en: 'Anonymous (no reply requested)', es: 'Anónimo (sin respuesta solicitada)', tl: 'Anonymous (walang hinihinging tugon)', vi: 'Ẩn danh (không yêu cầu phản hồi)', ko: '익명 (답변 요청 없음)' },
+    thankYouMessage: { en: 'Thank you for helping make Vet-Rate.org better for all veterans!', es: '¡Gracias por ayudar a mejorar Vet-Rate.org para todos los veteranos!', tl: 'Salamat sa pagtulong na mapabuti ang Vet-Rate.org para sa lahat ng beterano!', vi: 'Cảm ơn bạn đã giúp Vet-Rate.org tốt hơn cho tất cả cựu chiến binh!', ko: 'Vet-Rate.org를 모든 재향군인을 위해 더 좋게 만드는 데 도움을 주셔서 감사합니다!' },
+  },
+
+  // Bug Lookup Admin Interface
+  bugLookup: {
+    // Header
+    title: { en: 'Bug Squasher - Admin Lookup', es: 'Aplasta-Bugs - Búsqueda Admin', tl: 'Bug Squasher - Admin Lookup', vi: 'Bug Squasher - Tra Cứu Admin', ko: '버그 스쿼셔 - 관리자 조회' },
+    subtitle: { en: 'Search and manage bug reports', es: 'Buscar y gestionar reportes de bugs', tl: 'Maghanap at pamahalaan ang mga bug reports', vi: 'Tìm kiếm và quản lý báo cáo lỗi', ko: '버그 보고서 검색 및 관리' },
+    
+    // Status indicators
+    dbOnline: { en: 'DB Online', es: 'BD En Línea', tl: 'DB Online', vi: 'DB Trực Tuyến', ko: 'DB 온라인' },
+    fallbackMode: { en: 'Fallback Mode', es: 'Modo Alternativo', tl: 'Fallback Mode', vi: 'Chế Độ Dự Phòng', ko: '대체 모드' },
+    exportAllReports: { en: 'Export All Reports', es: 'Exportar Todos los Reportes', tl: 'I-export Lahat ng Reports', vi: 'Xuất Tất Cả Báo Cáo', ko: '모든 보고서 내보내기' },
+    
+    // Search
+    searchPlaceholder: { en: 'Enter Bug ID (e.g., BUG-MKNCUI1I) or search text...', es: 'Ingrese ID de Bug (ej., BUG-MKNCUI1I) o texto de búsqueda...', tl: 'Ilagay ang Bug ID (hal., BUG-MKNCUI1I) o search text...', vi: 'Nhập Bug ID (vd., BUG-MKNCUI1I) hoặc văn bản tìm kiếm...', ko: 'Bug ID 입력 (예: BUG-MKNCUI1I) 또는 검색 텍스트...' },
+    
+    // Filters
+    filterStatus: { en: 'Status', es: 'Estado', tl: 'Status', vi: 'Trạng Thái', ko: '상태' },
+    filterSeverity: { en: 'Severity', es: 'Severidad', tl: 'Severity', vi: 'Mức Độ', ko: '심각도' },
+    applyFilters: { en: 'Apply Filters', es: 'Aplicar Filtros', tl: 'I-apply ang Filters', vi: 'Áp Dụng Bộ Lọc', ko: '필터 적용' },
+    
+    // Severity levels
+    severityCritical: { en: 'Critical', es: 'Crítico', tl: 'Critical', vi: 'Nghiêm Trọng', ko: '치명적' },
+    severityHigh: { en: 'High', es: 'Alto', tl: 'Mataas', vi: 'Cao', ko: '높음' },
+    severityMedium: { en: 'Medium', es: 'Medio', tl: 'Katamtaman', vi: 'Trung Bình', ko: '중간' },
+    severityLow: { en: 'Low', es: 'Bajo', tl: 'Mababa', vi: 'Thấp', ko: '낮음' },
+    
+    // Status labels
+    statusResolved: { en: 'Resolved', es: 'Resuelto', tl: 'Naayos Na', vi: 'Đã Giải Quyết', ko: '해결됨' },
+    statusUnresolved: { en: 'Unresolved', es: 'Sin Resolver', tl: 'Hindi Pa Naayos', vi: 'Chưa Giải Quyết', ko: '미해결' },
+    statusOpen: { en: 'Open', es: 'Abierto', tl: 'Bukas', vi: 'Mở', ko: '열림' },
+    
+    // Statistics
+    statsTotal: { en: 'Total', es: 'Total', tl: 'Kabuuan', vi: 'Tổng', ko: '전체' },
+    statsUnresolved: { en: 'Unresolved', es: 'Sin Resolver', tl: 'Hindi Pa Naayos', vi: 'Chưa Giải Quyết', ko: '미해결' },
+    statsCritical: { en: 'Critical', es: 'Crítico', tl: 'Critical', vi: 'Nghiêm Trọng', ko: '치명적' },
+    statsLast24h: { en: 'Last 24h', es: 'Últimas 24h', tl: 'Huling 24h', vi: '24h Qua', ko: '최근 24시간' },
+    
+    // Empty states
+    noReportsFound: { en: 'No bug reports found', es: 'No se encontraron reportes de bugs', tl: 'Walang nakitang bug reports', vi: 'Không tìm thấy báo cáo lỗi', ko: '버그 보고서가 없습니다' },
+    reportsWillAppear: { en: 'Reports will appear here when users submit them', es: 'Los reportes aparecerán aquí cuando los usuarios los envíen', tl: 'Lalabas dito ang reports kapag nag-submit ang users', vi: 'Báo cáo sẽ xuất hiện ở đây khi người dùng gửi', ko: '사용자가 제출하면 보고서가 여기에 표시됩니다' },
+    noReportsMatching: { en: 'No reports found matching', es: 'No se encontraron reportes que coincidan con', tl: 'Walang nakitang reports na tumutugma sa', vi: 'Không tìm thấy báo cáo phù hợp với', ko: '일치하는 보고서를 찾을 수 없음' },
+    noDescription: { en: 'No description', es: 'Sin descripción', tl: 'Walang paglalarawan', vi: 'Không có mô tả', ko: '설명 없음' },
+    noDescriptionProvided: { en: '(No description provided)', es: '(Sin descripción proporcionada)', tl: '(Walang paglalarawang ibinigay)', vi: '(Không có mô tả)', ko: '(설명이 제공되지 않음)' },
+    
+    // Detail view labels
+    created: { en: 'Created', es: 'Creado', tl: 'Nilikha', vi: 'Đã Tạo', ko: '생성됨' },
+    
+    // Action buttons
+    copyJson: { en: 'Copy JSON', es: 'Copiar JSON', tl: 'Kopyahin ang JSON', vi: 'Sao Chép JSON', ko: 'JSON 복사' },
+    copied: { en: 'Copied!', es: '¡Copiado!', tl: 'Nakopya!', vi: 'Đã Sao Chép!', ko: '복사됨!' },
+    markResolved: { en: 'Mark Resolved', es: 'Marcar Resuelto', tl: 'Markahan bilang Naayos', vi: 'Đánh Dấu Đã Giải Quyết', ko: '해결됨으로 표시' },
+    
+    // Resolve modal
+    markAsResolved: { en: 'Mark as Resolved', es: 'Marcar como Resuelto', tl: 'Markahan bilang Naayos', vi: 'Đánh Dấu Đã Giải Quyết', ko: '해결됨으로 표시' },
+    resolutionNotesLabel: { en: 'Resolution Notes', es: 'Notas de Resolución', tl: 'Resolution Notes', vi: 'Ghi Chú Giải Quyết', ko: '해결 메모' },
+    resolutionNotesPlaceholder: { en: 'How was this bug fixed? (optional)', es: '¿Cómo se corrigió este bug? (opcional)', tl: 'Paano naayos ang bug na ito? (optional)', vi: 'Lỗi này được sửa như thế nào? (tùy chọn)', ko: '이 버그는 어떻게 수정되었나요? (선택사항)' },
+    saving: { en: 'Saving...', es: 'Guardando...', tl: 'Sine-save...', vi: 'Đang Lưu...', ko: '저장 중...' },
+    
+    // Section titles
+    sectionUserDescription: { en: 'User Description', es: 'Descripción del Usuario', tl: 'Paglalarawan ng User', vi: 'Mô Tả Người Dùng', ko: '사용자 설명' },
+    sectionErrorMessage: { en: 'Error Message', es: 'Mensaje de Error', tl: 'Error Message', vi: 'Thông Báo Lỗi', ko: '오류 메시지' },
+    sectionStackTrace: { en: 'Stack Trace', es: 'Stack Trace', tl: 'Stack Trace', vi: 'Stack Trace', ko: '스택 추적' },
+    sectionStepsToReproduce: { en: 'Steps to Reproduce', es: 'Pasos para Reproducir', tl: 'Mga Hakbang para I-reproduce', vi: 'Các Bước Tái Tạo', ko: '재현 단계' },
+    sectionClientEnvironment: { en: 'Client Environment', es: 'Entorno del Cliente', tl: 'Client Environment', vi: 'Môi Trường Khách', ko: '클라이언트 환경' },
+    sectionResolutionNotes: { en: 'Resolution Notes', es: 'Notas de Resolución', tl: 'Resolution Notes', vi: 'Ghi Chú Giải Quyết', ko: '해결 메모' },
+    sectionAuditLog: { en: 'Audit Log', es: 'Registro de Auditoría', tl: 'Audit Log', vi: 'Nhật Ký Kiểm Tra', ko: '감사 로그' },
+    
+    // Environment labels
+    envBrowser: { en: 'Browser', es: 'Navegador', tl: 'Browser', vi: 'Trình Duyệt', ko: '브라우저' },
+    envOS: { en: 'OS', es: 'SO', tl: 'OS', vi: 'HĐH', ko: 'OS' },
+    envScreen: { en: 'Screen', es: 'Pantalla', tl: 'Screen', vi: 'Màn Hình', ko: '화면' },
+    envWindow: { en: 'Window', es: 'Ventana', tl: 'Window', vi: 'Cửa Sổ', ko: '창' },
+    
+    // Audit log
+    auditBy: { en: 'by', es: 'por', tl: 'ni', vi: 'bởi', ko: '작성자' },
+    
+    // Privacy section
+    privacyProtected: { en: 'Privacy Protected', es: 'Privacidad Protegida', tl: 'Privacy Protected', vi: 'Bảo Vệ Quyền Riêng Tư', ko: '개인정보 보호됨' },
+    privacyMessage: { en: 'This report was sanitized before storage. All PII (SSN, email, tokens) has been redacted. Viewing this log does not expose user data.', es: 'Este reporte fue sanitizado antes de almacenarse. Toda la información personal (SSN, email, tokens) ha sido eliminada. Ver este registro no expone datos del usuario.', tl: 'Ang report na ito ay na-sanitize bago i-store. Lahat ng PII (SSN, email, tokens) ay tinanggal. Ang pagtingin sa log na ito ay hindi nagpapakita ng user data.', vi: 'Báo cáo này đã được làm sạch trước khi lưu trữ. Tất cả PII (SSN, email, token) đã được biên tập. Xem nhật ký này không tiết lộ dữ liệu người dùng.', ko: '이 보고서는 저장 전에 정화되었습니다. 모든 PII(SSN, 이메일, 토큰)가 삭제되었습니다. 이 로그를 보는 것은 사용자 데이터를 노출하지 않습니다.' },
+    sanitized: { en: 'Sanitized', es: 'Sanitizado', tl: 'Na-sanitize', vi: 'Đã Làm Sạch', ko: '정화됨' },
+    
+    // Error messages
+    errorLoadReports: { en: 'Failed to load bug reports', es: 'Error al cargar reportes de bugs', tl: 'Nabigong i-load ang bug reports', vi: 'Không thể tải báo cáo lỗi', ko: '버그 보고서를 불러오지 못했습니다' },
+    errorSearchFailed: { en: 'Search failed. Please try again.', es: 'Búsqueda fallida. Por favor intente de nuevo.', tl: 'Nabigo ang paghahanap. Pakisubukan ulit.', vi: 'Tìm kiếm thất bại. Vui lòng thử lại.', ko: '검색 실패. 다시 시도해 주세요.' },
+    errorResolve: { en: 'Failed to mark as resolved', es: 'Error al marcar como resuelto', tl: 'Nabigong markahan bilang naayos', vi: 'Không thể đánh dấu đã giải quyết', ko: '해결됨으로 표시하지 못했습니다' },
+    errorDelete: { en: 'Failed to delete report', es: 'Error al eliminar reporte', tl: 'Nabigong tanggalin ang report', vi: 'Không thể xóa báo cáo', ko: '보고서를 삭제하지 못했습니다' },
+    errorExport: { en: 'Failed to export reports', es: 'Error al exportar reportes', tl: 'Nabigong i-export ang reports', vi: 'Không thể xuất báo cáo', ko: '보고서를 내보내지 못했습니다' },
+    confirmDelete: { en: 'Are you sure you want to delete this bug report? This cannot be undone.', es: '¿Está seguro de que desea eliminar este reporte de bug? Esta acción no se puede deshacer.', tl: 'Sigurado ka bang gusto mong tanggalin ang bug report na ito? Hindi ito maaaring i-undo.', vi: 'Bạn có chắc chắn muốn xóa báo cáo lỗi này? Không thể hoàn tác.', ko: '이 버그 보고서를 삭제하시겠습니까? 되돌릴 수 없습니다.' },
+  },
+
+  // Contact Us Page
+  contactUs: {
+    title: { en: 'Contact Us', es: 'Contáctenos', tl: 'Makipag-ugnayan', vi: 'Liên Hệ', ko: '문의하기' },
+    introText: { 
+      en: "Have questions, feedback, or suggestions? I'd love to hear from you! Whether you've found an error, want to suggest a feature, or just want to say thanks, feel free to reach out.", 
+      es: '¿Tiene preguntas, comentarios o sugerencias? ¡Me encantaría saber de usted! Ya sea que haya encontrado un error, quiera sugerir una función o simplemente quiera dar las gracias, no dude en comunicarse.', 
+      tl: 'May mga tanong, feedback, o mungkahi? Gusto kong marinig mula sa iyo! Kung may nakita kang error, gusto mong magmungkahi ng feature, o gusto mo lang magpasalamat, huwag mag-atubiling makipag-ugnayan.', 
+      vi: 'Có câu hỏi, phản hồi hoặc đề xuất? Tôi rất muốn nghe từ bạn! Dù bạn tìm thấy lỗi, muốn đề xuất tính năng, hay chỉ muốn nói lời cảm ơn, hãy liên hệ.', 
+      ko: '질문, 피드백 또는 제안이 있으신가요? 여러분의 의견을 듣고 싶습니다! 오류를 발견하셨거나, 기능을 제안하고 싶거나, 감사 인사를 전하고 싶으시다면 언제든 연락해 주세요.' 
+    },
+    successTitle: { en: 'Your email client will open shortly!', es: '¡Su cliente de correo se abrirá en breve!', tl: 'Magbubukas ang iyong email client sa ilang sandali!', vi: 'Ứng dụng email của bạn sẽ mở ngay!', ko: '이메일 클라이언트가 곧 열립니다!' },
+    successMessage: { en: "Thank you for reaching out. We'll get back to you as soon as possible.", es: 'Gracias por comunicarse. Le responderemos lo antes posible.', tl: 'Salamat sa pakikipag-ugnayan. Babalikan ka namin sa lalong madaling panahon.', vi: 'Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi sớm nhất có thể.', ko: '연락해 주셔서 감사합니다. 최대한 빨리 답변 드리겠습니다.' },
+    nameLabel: { en: 'Your Name', es: 'Su Nombre', tl: 'Iyong Pangalan', vi: 'Tên Của Bạn', ko: '이름' },
+    namePlaceholder: { en: 'John Doe', es: 'Juan Pérez', tl: 'Juan dela Cruz', vi: 'Nguyễn Văn A', ko: '홍길동' },
+    emailLabel: { en: 'Your Email', es: 'Su Correo Electrónico', tl: 'Iyong Email', vi: 'Email Của Bạn', ko: '이메일' },
+    emailPlaceholder: { en: 'john.doe@example.com', es: 'juan.perez@ejemplo.com', tl: 'juan.delacruz@halimbawa.com', vi: 'nguyenvana@example.com', ko: 'example@email.com' },
+    subjectLabel: { en: 'Subject', es: 'Asunto', tl: 'Paksa', vi: 'Chủ Đề', ko: '제목' },
+    subjectPlaceholder: { en: 'Question about rating criteria', es: 'Pregunta sobre criterios de calificación', tl: 'Tanong tungkol sa rating criteria', vi: 'Câu hỏi về tiêu chí đánh giá', ko: '평가 기준에 대한 질문' },
+    messageLabel: { en: 'Message', es: 'Mensaje', tl: 'Mensahe', vi: 'Tin Nhắn', ko: '메시지' },
+    messagePlaceholder: { en: "Tell us what's on your mind...", es: 'Cuéntenos lo que piensa...', tl: 'Sabihin mo sa amin kung ano ang nasa isip mo...', vi: 'Hãy cho chúng tôi biết suy nghĩ của bạn...', ko: '궁금한 점을 알려주세요...' },
+    noteLabel: { en: 'Note', es: 'Nota', tl: 'Paalala', vi: 'Lưu ý', ko: '참고' },
+    noteText: { en: 'This will open your default email client. If you prefer, you can email us directly at', es: 'Esto abrirá su cliente de correo predeterminado. Si lo prefiere, puede enviarnos un correo directamente a', tl: 'Ito ay magbubukas ng iyong default na email client. Kung gusto mo, maaari kang mag-email sa amin direkta sa', vi: 'Điều này sẽ mở ứng dụng email mặc định của bạn. Nếu bạn muốn, bạn có thể gửi email trực tiếp cho chúng tôi tại', ko: '기본 이메일 클라이언트가 열립니다. 원하시면 다음 주소로 직접 이메일을 보내실 수 있습니다:' },
+    sendButton: { en: 'Send Message', es: 'Enviar Mensaje', tl: 'Ipadala ang Mensahe', vi: 'Gửi Tin Nhắn', ko: '메시지 보내기' },
+    otherWaysTitle: { en: 'Other Ways to Connect', es: 'Otras Formas de Conectarse', tl: 'Iba Pang Paraan para Makipag-ugnayan', vi: 'Các Cách Liên Hệ Khác', ko: '다른 연락 방법' },
+    githubLabel: { en: 'GitHub', es: 'GitHub', tl: 'GitHub', vi: 'GitHub', ko: 'GitHub' },
+    reportIssueLabel: { en: 'Report an Issue', es: 'Reportar un Problema', tl: 'Mag-ulat ng Isyu', vi: 'Báo Cáo Vấn Đề', ko: '문제 신고' },
+    reportIssueText: { en: 'Found a bug? Open an issue on our', es: '¿Encontró un error? Abra un problema en nuestra', tl: 'May nakitang bug? Mag-bukas ng isyu sa aming', vi: 'Tìm thấy lỗi? Mở một vấn đề trên', ko: '버그를 발견하셨나요? 다음에서 이슈를 열어주세요:' },
+    githubIssuesPage: { en: 'GitHub Issues page', es: 'página de Issues de GitHub', tl: 'GitHub Issues page', vi: 'trang GitHub Issues', ko: 'GitHub Issues 페이지' },
+    faqTitle: { en: 'Frequently Asked Questions', es: 'Preguntas Frecuentes', tl: 'Mga Madalas na Tanong', vi: 'Câu Hỏi Thường Gặp', ko: '자주 묻는 질문' },
+    faq1Question: { en: 'Q: Is this an official VA website?', es: 'P: ¿Es este un sitio web oficial del VA?', tl: 'T: Ito ba ay opisyal na website ng VA?', vi: 'H: Đây có phải là trang web chính thức của VA không?', ko: 'Q: 이것은 공식 VA 웹사이트인가요?' },
+    faq1Answer: { en: 'No, Vet-Rate.org is an independent educational tool created by a service-connected disabled veteran. This site is not affiliated with the U.S. Department of Veterans Affairs.', es: 'No, Vet-Rate.org es una herramienta educativa independiente creada por un veterano discapacitado conectado al servicio. Este sitio no está afiliado con el Departamento de Asuntos de Veteranos de EE.UU.', tl: 'Hindi, ang Vet-Rate.org ay isang independyenteng educational tool na nilikha ng isang service-connected disabled veteran. Ang site na ito ay hindi kaanib ng U.S. Department of Veterans Affairs.', vi: 'Không, Vet-Rate.org là một công cụ giáo dục độc lập được tạo bởi một cựu chiến binh khuyết tật liên quan đến dịch vụ. Trang web này không liên kết với Bộ Cựu chiến binh Hoa Kỳ.', ko: '아니요, Vet-Rate.org는 복무 관련 장애 재향군인이 만든 독립적인 교육 도구입니다. 이 사이트는 미국 재향군인부와 관련이 없습니다.' },
+    faq2Question: { en: 'Q: Do you provide legal or medical advice?', es: 'P: ¿Proporcionan asesoramiento legal o médico?', tl: 'T: Nagbibigay ba kayo ng legal o medikal na payo?', vi: 'H: Bạn có cung cấp tư vấn pháp lý hoặc y tế không?', ko: 'Q: 법률 또는 의료 조언을 제공하나요?' },
+    faq2Answer: { en: 'No, this tool is for educational purposes only. Please consult qualified professionals for advice specific to your situation.', es: 'No, esta herramienta es solo para fines educativos. Consulte a profesionales calificados para obtener asesoramiento específico para su situación.', tl: 'Hindi, ang tool na ito ay para lamang sa educational purposes. Mangyaring kumonsulta sa mga kwalipikadong propesyonal para sa payo na specific sa iyong sitwasyon.', vi: 'Không, công cụ này chỉ dành cho mục đích giáo dục. Vui lòng tham khảo ý kiến của các chuyên gia có trình độ để được tư vấn cụ thể cho tình huống của bạn.', ko: '아니요, 이 도구는 교육 목적으로만 사용됩니다. 귀하의 상황에 맞는 조언은 자격을 갖춘 전문가와 상담하세요.' },
+    faq3Question: { en: 'Q: How can I support this project?', es: 'P: ¿Cómo puedo apoyar este proyecto?', tl: 'T: Paano ko masusuportahan ang proyektong ito?', vi: 'H: Tôi có thể hỗ trợ dự án này như thế nào?', ko: 'Q: 이 프로젝트를 어떻게 지원할 수 있나요?' },
+    faq3Answer: { en: 'Share it with fellow veterans! You can also support this project by donating via Buy Me a Coffee or simply by using the tool and providing feedback.', es: '¡Compártalo con otros veteranos! También puede apoyar este proyecto donando a través de Buy Me a Coffee o simplemente usando la herramienta y proporcionando comentarios.', tl: 'I-share ito sa mga kapwa beterano! Maaari mo ring suportahan ang proyektong ito sa pamamagitan ng pag-donate sa Buy Me a Coffee o simpleng paggamit ng tool at pagbibigay ng feedback.', vi: 'Chia sẻ với những cựu chiến binh khác! Bạn cũng có thể hỗ trợ dự án này bằng cách quyên góp qua Buy Me a Coffee hoặc đơn giản là sử dụng công cụ và cung cấp phản hồi.', ko: '동료 재향군인들과 공유하세요! Buy Me a Coffee를 통해 기부하거나 도구를 사용하고 피드백을 제공하여 이 프로젝트를 지원할 수도 있습니다.' },
+  },
+
+  // Privacy Policy Page
+  privacyPolicy: {
+    title: { en: '🔒 Privacy Policy', es: '🔒 Política de Privacidad', tl: '🔒 Patakaran sa Privacy', vi: '🔒 Chính Sách Quyền Riêng Tư', ko: '🔒 개인정보 처리방침' },
+    lastUpdated: { en: 'Last Updated:', es: 'Última Actualización:', tl: 'Huling Na-update:', vi: 'Cập Nhật Lần Cuối:', ko: '최종 업데이트:' },
+    closeButton: { en: 'Close', es: 'Cerrar', tl: 'Isara', vi: 'Đóng', ko: '닫기' },
+    closeAriaLabel: { en: 'Close', es: 'Cerrar', tl: 'Isara', vi: 'Đóng', ko: '닫기' },
+    
+    // Section 1: Introduction
+    section1Title: { en: '1. Introduction', es: '1. Introducción', tl: '1. Panimula', vi: '1. Giới Thiệu', ko: '1. 소개' },
+    section1Text: { 
+      en: "Welcome to Vet-Rate.org. I'm a service-connected disabled veteran who built this site to help fellow veterans navigate the VA disability rating process. This Privacy Policy explains how information is handled when you visit this website. By using this site, you agree to the practices described in this policy.",
+      es: 'Bienvenido a Vet-Rate.org. Soy un veterano discapacitado conectado al servicio que construyó este sitio para ayudar a otros veteranos a navegar el proceso de calificación de discapacidad del VA. Esta Política de Privacidad explica cómo se maneja la información cuando visitas este sitio web. Al usar este sitio, aceptas las prácticas descritas en esta política.',
+      tl: 'Maligayang pagdating sa Vet-Rate.org. Ako ay isang service-connected disabled veteran na gumawa ng site na ito para tulungan ang mga kapwa beterano na mag-navigate sa VA disability rating process. Ang Privacy Policy na ito ay nagpapaliwanag kung paano hinahandle ang impormasyon kapag binisita mo ang website na ito. Sa paggamit ng site na ito, sumasang-ayon ka sa mga kasanayan na inilarawan sa patakaran na ito.',
+      vi: 'Chào mừng đến với Vet-Rate.org. Tôi là một cựu chiến binh khuyết tật liên quan đến dịch vụ đã xây dựng trang web này để giúp đồng đội cựu chiến binh điều hướng quy trình đánh giá khuyết tật VA. Chính sách Quyền riêng tư này giải thích cách thông tin được xử lý khi bạn truy cập trang web này. Bằng cách sử dụng trang web này, bạn đồng ý với các thực hành được mô tả trong chính sách này.',
+      ko: 'Vet-Rate.org에 오신 것을 환영합니다. 저는 동료 재향군인들이 VA 장애 등급 절차를 탐색할 수 있도록 이 사이트를 구축한 복무 관련 장애 재향군인입니다. 이 개인정보 처리방침은 이 웹사이트를 방문할 때 정보가 어떻게 처리되는지 설명합니다. 이 사이트를 사용함으로써 이 정책에 설명된 관행에 동의하는 것입니다.'
+    },
+    
+    // Section 2: Information Collection
+    section2Title: { en: '2. Information Collection', es: '2. Recopilación de Información', tl: '2. Pagkolekta ng Impormasyon', vi: '2. Thu Thập Thông Tin', ko: '2. 정보 수집' },
+    section2_1Title: { en: '2.1 Personal Information', es: '2.1 Información Personal', tl: '2.1 Personal na Impormasyon', vi: '2.1 Thông Tin Cá Nhân', ko: '2.1 개인 정보' },
+    section2_1Text: { 
+      en: 'This site does NOT collect Personally Identifiable Information (PII). The application operates entirely client-side in your browser. No data is stored, transmitted, or processed including:',
+      es: 'Este sitio NO recopila Información de Identificación Personal (PII). La aplicación opera completamente del lado del cliente en tu navegador. No se almacena, transmite ni procesa ningún dato, incluyendo:',
+      tl: 'Ang site na ito ay HINDI nangongolekta ng Personally Identifiable Information (PII). Ang application ay gumagana entirely client-side sa browser mo. Walang data na sine-store, transmit, o process kabilang ang:',
+      vi: 'Trang web này KHÔNG thu thập Thông tin Nhận dạng Cá nhân (PII). Ứng dụng hoạt động hoàn toàn phía máy khách trong trình duyệt của bạn. Không có dữ liệu nào được lưu trữ, truyền hoặc xử lý bao gồm:',
+      ko: '이 사이트는 개인 식별 정보(PII)를 수집하지 않습니다. 애플리케이션은 브라우저에서 완전히 클라이언트 측에서 작동합니다. 다음을 포함하여 데이터가 저장, 전송 또는 처리되지 않습니다:'
+    },
+    piiItem1: { en: 'Names, addresses, or contact information', es: 'Nombres, direcciones o información de contacto', tl: 'Mga pangalan, address, o contact information', vi: 'Tên, địa chỉ hoặc thông tin liên lạc', ko: '이름, 주소 또는 연락처 정보' },
+    piiItem2: { en: 'Social Security Numbers or military service records', es: 'Números de Seguro Social o registros de servicio militar', tl: 'Social Security Numbers o military service records', vi: 'Số An sinh Xã hội hoặc hồ sơ quân ngũ', ko: '사회보장번호 또는 군 복무 기록' },
+    piiItem3: { en: 'Medical information or disability details', es: 'Información médica o detalles de discapacidad', tl: 'Medical information o disability details', vi: 'Thông tin y tế hoặc chi tiết khuyết tật', ko: '의료 정보 또는 장애 세부 정보' },
+    piiItem4: { en: 'Search queries or browsing history', es: 'Consultas de búsqueda o historial de navegación', tl: 'Search queries o browsing history', vi: 'Truy vấn tìm kiếm hoặc lịch sử duyệt web', ko: '검색 쿼리 또는 검색 기록' },
+    
+    // Section 2.2: Analytics
+    section2_2Title: { en: '2.2 Minimal Analytics (GoatCounter)', es: '2.2 Analíticas Mínimas (GoatCounter)', tl: '2.2 Minimal Analytics (GoatCounter)', vi: '2.2 Phân Tích Tối Thiểu (GoatCounter)', ko: '2.2 최소 분석 (GoatCounter)' },
+    analyticsTransparency: { en: 'Transparency:', es: 'Transparencia:', tl: 'Transparency:', vi: 'Minh Bạch:', ko: '투명성:' },
+    analyticsIntro: { 
+      en: 'We use GoatCounter, a privacy-respecting, open-source analytics tool to understand basic site usage.',
+      es: 'Usamos GoatCounter, una herramienta de análisis de código abierto que respeta la privacidad para entender el uso básico del sitio.',
+      tl: 'Gumagamit kami ng GoatCounter, isang privacy-respecting, open-source analytics tool para maintindihan ang basic na paggamit ng site.',
+      vi: 'Chúng tôi sử dụng GoatCounter, một công cụ phân tích mã nguồn mở tôn trọng quyền riêng tư để hiểu cách sử dụng trang web cơ bản.',
+      ko: '기본적인 사이트 사용을 이해하기 위해 개인정보를 존중하는 오픈소스 분석 도구인 GoatCounter를 사용합니다.'
+    },
+    analyticsCollects: { en: 'What GoatCounter collects:', es: 'Qué recopila GoatCounter:', tl: 'Ano ang kinokolekta ng GoatCounter:', vi: 'GoatCounter thu thập gì:', ko: 'GoatCounter가 수집하는 것:' },
+    analyticsItem1: { en: 'Page views (which pages are visited)', es: 'Vistas de página (qué páginas se visitan)', tl: 'Page views (anong mga page ang binisita)', vi: 'Lượt xem trang (trang nào được truy cập)', ko: '페이지 조회수 (어떤 페이지가 방문되었는지)' },
+    analyticsItem2: { en: 'Referrer (how you found the site)', es: 'Referente (cómo encontraste el sitio)', tl: 'Referrer (paano mo nahanap ang site)', vi: 'Nguồn giới thiệu (cách bạn tìm thấy trang web)', ko: '리퍼러 (사이트를 어떻게 찾았는지)' },
+    analyticsItem3: { en: 'Browser type and screen size (aggregated)', es: 'Tipo de navegador y tamaño de pantalla (agregado)', tl: 'Browser type at screen size (aggregated)', vi: 'Loại trình duyệt và kích thước màn hình (tổng hợp)', ko: '브라우저 유형 및 화면 크기 (집계)' },
+    analyticsItem4: { en: 'Country-level location (no city or precise location)', es: 'Ubicación a nivel de país (sin ciudad ni ubicación precisa)', tl: 'Country-level location (walang city o precise location)', vi: 'Vị trí cấp quốc gia (không có thành phố hoặc vị trí chính xác)', ko: '국가 수준 위치 (도시 또는 정확한 위치 없음)' },
+    analyticsNotCollect: { en: 'What GoatCounter does NOT collect:', es: 'Qué NO recopila GoatCounter:', tl: 'Ano ang HINDI kinokolekta ng GoatCounter:', vi: 'GoatCounter KHÔNG thu thập gì:', ko: 'GoatCounter가 수집하지 않는 것:' },
+    analyticsNotItem1: { en: 'No cookies are used', es: 'No se usan cookies', tl: 'Walang cookies na ginagamit', vi: 'Không sử dụng cookie', ko: '쿠키 사용 안 함' },
+    analyticsNotItem2: { en: 'No personal identifiers or fingerprinting', es: 'Sin identificadores personales ni fingerprinting', tl: 'Walang personal identifiers o fingerprinting', vi: 'Không có định danh cá nhân hoặc dấu vân tay', ko: '개인 식별자 또는 핑거프린팅 없음' },
+    analyticsNotItem3: { en: 'No tracking across sites', es: 'Sin rastreo entre sitios', tl: 'Walang tracking across sites', vi: 'Không theo dõi qua các trang web', ko: '사이트 간 추적 없음' },
+    analyticsNotItem4: { en: 'No IP address storage', es: 'Sin almacenamiento de direcciones IP', tl: 'Walang IP address storage', vi: 'Không lưu trữ địa chỉ IP', ko: 'IP 주소 저장 없음' },
+    analyticsNotItem5: { en: 'No advertising profiles', es: 'Sin perfiles publicitarios', tl: 'Walang advertising profiles', vi: 'Không có hồ sơ quảng cáo', ko: '광고 프로필 없음' },
+    analyticsGDPR: { en: 'GoatCounter is GDPR-compliant by design. You can read their privacy policy.', es: 'GoatCounter cumple con GDPR por diseño. Puedes leer su política de privacidad.', tl: 'Ang GoatCounter ay GDPR-compliant by design. Maaari mong basahin ang privacy policy nila.', vi: 'GoatCounter tuân thủ GDPR theo thiết kế. Bạn có thể đọc chính sách bảo mật của họ.', ko: 'GoatCounter는 설계상 GDPR을 준수합니다. 그들의 개인정보 처리방침을 읽을 수 있습니다.' },
+    
+    // Section 2.3: Hosting
+    section2_3Title: { en: '2.3 Hosting Metrics (Render.com)', es: '2.3 Métricas de Alojamiento (Render.com)', tl: '2.3 Hosting Metrics (Render.com)', vi: '2.3 Số Liệu Lưu Trữ (Render.com)', ko: '2.3 호스팅 지표 (Render.com)' },
+    section2_3Text: { 
+      en: 'Our hosting provider (Render.com) collects standard server logs including IP addresses, timestamps, and request URLs. This is standard for all web hosting and is required for security and abuse prevention. These logs are not used for tracking or advertising.',
+      es: 'Nuestro proveedor de alojamiento (Render.com) recopila registros de servidor estándar, incluyendo direcciones IP, marcas de tiempo y URLs de solicitud. Esto es estándar para todo el alojamiento web y es necesario para la seguridad y prevención de abuso. Estos registros no se utilizan para rastreo o publicidad.',
+      tl: 'Ang hosting provider namin (Render.com) ay nangongolekta ng standard server logs kabilang ang IP addresses, timestamps, at request URLs. Ito ay standard para sa lahat ng web hosting at kinakailangan para sa security at abuse prevention. Ang mga log na ito ay hindi ginagamit para sa tracking o advertising.',
+      vi: 'Nhà cung cấp lưu trữ của chúng tôi (Render.com) thu thập nhật ký máy chủ tiêu chuẩn bao gồm địa chỉ IP, dấu thời gian và URL yêu cầu. Điều này là tiêu chuẩn cho tất cả lưu trữ web và được yêu cầu để bảo mật và ngăn chặn lạm dụng. Những nhật ký này không được sử dụng để theo dõi hoặc quảng cáo.',
+      ko: '호스팅 제공업체(Render.com)는 IP 주소, 타임스탬프 및 요청 URL을 포함한 표준 서버 로그를 수집합니다. 이것은 모든 웹 호스팅에 표준이며 보안 및 남용 방지에 필요합니다. 이러한 로그는 추적이나 광고에 사용되지 않습니다.'
+    },
+    
+    // Section 2.4: No Advertising
+    section2_4Title: { en: '2.4 No Advertising Networks', es: '2.4 Sin Redes Publicitarias', tl: '2.4 Walang Advertising Networks', vi: '2.4 Không Có Mạng Quảng Cáo', ko: '2.4 광고 네트워크 없음' },
+    section2_4Text: { 
+      en: 'This site does not use advertising networks or third-party trackers. To protect veteran privacy, I have intentionally avoided implementing any tracking technologies that could collect your personal data or create advertising profiles.',
+      es: 'Este sitio no utiliza redes publicitarias ni rastreadores de terceros. Para proteger la privacidad de los veteranos, he evitado intencionalmente implementar cualquier tecnología de rastreo que pueda recopilar tus datos personales o crear perfiles publicitarios.',
+      tl: 'Ang site na ito ay hindi gumagamit ng advertising networks o third-party trackers. Para protektahan ang privacy ng mga beterano, sinadya kong iwasan ang pag-implement ng anumang tracking technologies na maaaring mangolekta ng personal data mo o lumikha ng advertising profiles.',
+      vi: 'Trang web này không sử dụng mạng quảng cáo hoặc trình theo dõi của bên thứ ba. Để bảo vệ quyền riêng tư của cựu chiến binh, tôi đã cố ý tránh triển khai bất kỳ công nghệ theo dõi nào có thể thu thập dữ liệu cá nhân của bạn hoặc tạo hồ sơ quảng cáo.',
+      ko: '이 사이트는 광고 네트워크나 제3자 추적기를 사용하지 않습니다. 재향군인의 개인정보를 보호하기 위해 개인 데이터를 수집하거나 광고 프로필을 생성할 수 있는 추적 기술의 구현을 의도적으로 피했습니다.'
+    },
+    
+    // Section 3: Cookies
+    section3Title: { en: '3. Cookies and Tracking', es: '3. Cookies y Rastreo', tl: '3. Cookies at Tracking', vi: '3. Cookie và Theo Dõi', ko: '3. 쿠키 및 추적' },
+    section3Text: { 
+      en: 'This site does not use cookies for tracking or advertising purposes. Any cookies used are strictly for essential functionality (such as saving your preferences locally in your browser). No information is shared with third-party advertisers.',
+      es: 'Este sitio no utiliza cookies con fines de rastreo o publicidad. Cualquier cookie utilizada es estrictamente para funcionalidad esencial (como guardar tus preferencias localmente en tu navegador). No se comparte información con anunciantes de terceros.',
+      tl: 'Ang site na ito ay hindi gumagamit ng cookies para sa tracking o advertising purposes. Anumang cookies na ginagamit ay strictly para sa essential functionality (tulad ng pag-save ng preferences mo locally sa browser mo). Walang impormasyon na shine-share sa third-party advertisers.',
+      vi: 'Trang web này không sử dụng cookie cho mục đích theo dõi hoặc quảng cáo. Bất kỳ cookie nào được sử dụng đều hoàn toàn dành cho chức năng thiết yếu (chẳng hạn như lưu tùy chọn của bạn cục bộ trong trình duyệt). Không có thông tin nào được chia sẻ với các nhà quảng cáo bên thứ ba.',
+      ko: '이 사이트는 추적 또는 광고 목적으로 쿠키를 사용하지 않습니다. 사용되는 모든 쿠키는 필수 기능(예: 브라우저에 로컬로 기본 설정 저장)에만 사용됩니다. 제3자 광고주와 정보가 공유되지 않습니다.'
+    },
+    
+    // Section 4: How Information Is Used
+    section4Title: { en: '4. How Information Is Used', es: '4. Cómo Se Usa la Información', tl: '4. Paano Ginagamit ang Impormasyon', vi: '4. Thông Tin Được Sử Dụng Như Thế Nào', ko: '4. 정보 사용 방법' },
+    section4Intro: { en: 'Since this site does not collect PII or use tracking technologies:', es: 'Dado que este sitio no recopila PII ni utiliza tecnologías de rastreo:', tl: 'Dahil ang site na ito ay hindi nangongolekta ng PII o gumagamit ng tracking technologies:', vi: 'Vì trang web này không thu thập PII hoặc sử dụng công nghệ theo dõi:', ko: '이 사이트는 PII를 수집하거나 추적 기술을 사용하지 않으므로:' },
+    section4Item1: { en: 'Your search queries remain private in your browser', es: 'Tus consultas de búsqueda permanecen privadas en tu navegador', tl: 'Ang search queries mo ay nananatiling private sa browser mo', vi: 'Các truy vấn tìm kiếm của bạn vẫn riêng tư trong trình duyệt của bạn', ko: '검색 쿼리가 브라우저에서 비공개로 유지됩니다' },
+    section4Item2: { en: 'Your disability research is never transmitted to any server', es: 'Tu investigación sobre discapacidad nunca se transmite a ningún servidor', tl: 'Ang disability research mo ay hindi kailanman nai-transmit sa anumang server', vi: 'Nghiên cứu về khuyết tật của bạn không bao giờ được truyền đến bất kỳ máy chủ nào', ko: '장애 연구가 어떤 서버로도 전송되지 않습니다' },
+    section4Item3: { en: "Your \"My Packet\" saved items are stored only in your browser's local storage", es: 'Tus elementos guardados en "Mi Paquete" se almacenan solo en el almacenamiento local de tu navegador', tl: 'Ang mga naka-save na item sa "My Packet" mo ay naka-store lang sa local storage ng browser mo', vi: 'Các mục "Hồ Sơ Của Tôi" đã lưu của bạn chỉ được lưu trữ trong bộ nhớ cục bộ của trình duyệt', ko: '"내 패킷"에 저장된 항목은 브라우저의 로컬 저장소에만 저장됩니다' },
+    section4Item4: { en: 'No advertising profiles are created about you', es: 'No se crean perfiles publicitarios sobre ti', tl: 'Walang advertising profiles na ginagawa tungkol sa iyo', vi: 'Không có hồ sơ quảng cáo nào được tạo về bạn', ko: '귀하에 대한 광고 프로필이 생성되지 않습니다' },
+    
+    // Section 5: Data Sharing
+    section5Title: { en: '5. Data Sharing and Disclosure', es: '5. Compartir y Divulgación de Datos', tl: '5. Data Sharing at Disclosure', vi: '5. Chia Sẻ và Tiết Lộ Dữ Liệu', ko: '5. 데이터 공유 및 공개' },
+    section5Text: { 
+      en: 'Your personal information is never sold, traded, rented, or shared with anyone. Since no data is collected, there is nothing to share. Your privacy is protected by design.',
+      es: 'Tu información personal nunca se vende, intercambia, alquila ni comparte con nadie. Como no se recopilan datos, no hay nada que compartir. Tu privacidad está protegida por diseño.',
+      tl: 'Ang personal information mo ay hindi kailanman ibinebenta, itinatrade, pinapaupa, o shine-share sa kahit sino. Dahil walang data na kinokolekta, walang maiishe-share. Ang privacy mo ay protektado by design.',
+      vi: 'Thông tin cá nhân của bạn không bao giờ được bán, trao đổi, cho thuê hoặc chia sẻ với bất kỳ ai. Vì không có dữ liệu nào được thu thập, nên không có gì để chia sẻ. Quyền riêng tư của bạn được bảo vệ theo thiết kế.',
+      ko: '귀하의 개인 정보는 절대 판매, 거래, 임대 또는 누구와도 공유되지 않습니다. 데이터가 수집되지 않으므로 공유할 것이 없습니다. 귀하의 개인정보는 설계에 의해 보호됩니다.'
+    },
+    
+    // Section 6: Your Privacy Rights
+    section6Title: { en: '6. Your Privacy Rights', es: '6. Tus Derechos de Privacidad', tl: '6. Ang Privacy Rights Mo', vi: '6. Quyền Riêng Tư Của Bạn', ko: '6. 귀하의 개인정보 권리' },
+    section6Intro: { en: 'Since this site does not collect personal data, your privacy is inherently protected. However, you always have the right to:', es: 'Dado que este sitio no recopila datos personales, tu privacidad está inherentemente protegida. Sin embargo, siempre tienes derecho a:', tl: 'Dahil ang site na ito ay hindi nangongolekta ng personal data, ang privacy mo ay inherently protected. Gayunpaman, lagi mong may karapatan na:', vi: 'Vì trang web này không thu thập dữ liệu cá nhân, quyền riêng tư của bạn được bảo vệ vốn có. Tuy nhiên, bạn luôn có quyền:', ko: '이 사이트는 개인 데이터를 수집하지 않으므로 귀하의 개인정보는 본질적으로 보호됩니다. 그러나 귀하는 항상 다음 권리가 있습니다:' },
+    section6Item1Title: { en: 'Clear Local Storage:', es: 'Limpiar Almacenamiento Local:', tl: 'I-clear ang Local Storage:', vi: 'Xóa Bộ Nhớ Cục Bộ:', ko: '로컬 저장소 지우기:' },
+    section6Item1Text: { en: 'Delete any locally saved preferences from your browser', es: 'Elimina cualquier preferencia guardada localmente de tu navegador', tl: 'Tanggalin ang anumang locally saved preferences mula sa browser mo', vi: 'Xóa bất kỳ tùy chọn đã lưu cục bộ nào khỏi trình duyệt của bạn', ko: '브라우저에서 로컬에 저장된 기본 설정을 삭제합니다' },
+    section6Item2Title: { en: 'Browse Privately:', es: 'Navegar en Privado:', tl: 'Mag-browse ng Privately:', vi: 'Duyệt Web Riêng Tư:', ko: '비공개 브라우징:' },
+    section6Item2Text: { en: "Use your browser's private/incognito mode", es: 'Usa el modo privado/incógnito de tu navegador', tl: 'Gamitin ang private/incognito mode ng browser mo', vi: 'Sử dụng chế độ riêng tư/ẩn danh của trình duyệt', ko: '브라우저의 비공개/시크릿 모드 사용' },
+    section6Item3Title: { en: 'Contact Me:', es: 'Contáctame:', tl: 'Makipag-ugnayan sa Akin:', vi: 'Liên Hệ Với Tôi:', ko: '문의하기:' },
+    section6Item3Text: { en: 'Ask questions about the privacy practices on this site', es: 'Haz preguntas sobre las prácticas de privacidad en este sitio', tl: 'Magtanong tungkol sa privacy practices sa site na ito', vi: 'Hỏi câu hỏi về các thực hành quyền riêng tư trên trang web này', ko: '이 사이트의 개인정보 관행에 대해 질문하기' },
+    
+    // Section 7: AI Processing
+    section7Title: { en: '7. AI Processing & Data Retention', es: '7. Procesamiento de IA y Retención de Datos', tl: '7. AI Processing at Data Retention', vi: '7. Xử Lý AI & Lưu Giữ Dữ Liệu', ko: '7. AI 처리 및 데이터 보존' },
+    section7OptionalAI: { en: 'Optional AI Features:', es: 'Funciones de IA Opcionales:', tl: 'Optional AI Features:', vi: 'Tính Năng AI Tùy Chọn:', ko: '선택적 AI 기능:' },
+    section7OptionalAIText: { en: 'When you choose to use AI-powered features (such as statement enhancement), your text is processed by third-party AI providers (Google Gemini or Anthropic Claude).', es: 'Cuando eliges usar funciones impulsadas por IA (como mejora de declaraciones), tu texto es procesado por proveedores de IA de terceros (Google Gemini o Anthropic Claude).', tl: 'Kapag pinili mong gamitin ang AI-powered features (tulad ng statement enhancement), ang text mo ay processed ng third-party AI providers (Google Gemini o Anthropic Claude).', vi: 'Khi bạn chọn sử dụng các tính năng được hỗ trợ bởi AI (chẳng hạn như cải thiện tuyên bố), văn bản của bạn được xử lý bởi các nhà cung cấp AI bên thứ ba (Google Gemini hoặc Anthropic Claude).', ko: 'AI 기반 기능(예: 진술 개선)을 사용하기로 선택하면 텍스트가 제3자 AI 제공업체(Google Gemini 또는 Anthropic Claude)에 의해 처리됩니다.' },
+    section7WhatThisMeans: { en: 'What This Means:', es: 'Qué Significa Esto:', tl: 'Ano ang Ibig Sabihin Nito:', vi: 'Điều Này Có Nghĩa Là:', ko: '이것이 의미하는 것:' },
+    section7AIItem1: { en: 'Data is processed solely for text generation purposes', es: 'Los datos se procesan únicamente para fines de generación de texto', tl: 'Ang data ay processed solely para sa text generation purposes', vi: 'Dữ liệu chỉ được xử lý cho mục đích tạo văn bản', ko: '데이터는 텍스트 생성 목적으로만 처리됩니다' },
+    section7AIItem2: { en: 'Vet-Rate.org does not store this data on our servers', es: 'Vet-Rate.org no almacena estos datos en nuestros servidores', tl: 'Ang Vet-Rate.org ay hindi nag-store ng data na ito sa servers namin', vi: 'Vet-Rate.org không lưu trữ dữ liệu này trên máy chủ của chúng tôi', ko: 'Vet-Rate.org는 이 데이터를 서버에 저장하지 않습니다' },
+    section7AIItem3: { en: 'AI providers may process data according to their own policies', es: 'Los proveedores de IA pueden procesar datos según sus propias políticas', tl: 'Ang AI providers ay maaaring mag-process ng data ayon sa sarili nilang policies', vi: 'Các nhà cung cấp AI có thể xử lý dữ liệu theo chính sách riêng của họ', ko: 'AI 제공업체는 자체 정책에 따라 데이터를 처리할 수 있습니다' },
+    section7AIItem4: { en: 'You control what information you send to AI features', es: 'Tú controlas qué información envías a las funciones de IA', tl: 'Ikaw ang nagko-control kung anong impormasyon ang ipinapadala mo sa AI features', vi: 'Bạn kiểm soát thông tin bạn gửi đến các tính năng AI', ko: '귀하가 AI 기능에 보내는 정보를 제어합니다' },
+    section7TransparencyNote: { en: "Transparency: Before using AI features, please review Google's Gemini API Terms and Anthropic's Privacy Policy. We strive to use zero-retention settings where available.", es: 'Transparencia: Antes de usar las funciones de IA, revisa los Términos de la API de Gemini de Google y la Política de Privacidad de Anthropic. Nos esforzamos por usar configuraciones de cero retención donde estén disponibles.', tl: 'Transparency: Bago gamitin ang AI features, mangyaring suriin ang Google\'s Gemini API Terms at Anthropic\'s Privacy Policy. Sinisikap naming gamitin ang zero-retention settings kung available.', vi: 'Minh bạch: Trước khi sử dụng các tính năng AI, vui lòng xem lại Điều khoản API Gemini của Google và Chính sách Bảo mật của Anthropic. Chúng tôi cố gắng sử dụng cài đặt không lưu giữ nếu có sẵn.', ko: '투명성: AI 기능을 사용하기 전에 Google의 Gemini API 약관과 Anthropic의 개인정보 처리방침을 검토하세요. 가능한 경우 제로 보존 설정을 사용하려고 노력합니다.' },
+    
+    // Section 8: Children's Privacy
+    section8Title: { en: "8. Children's Privacy", es: '8. Privacidad de los Niños', tl: '8. Privacy ng mga Bata', vi: '8. Quyền Riêng Tư Của Trẻ Em', ko: '8. 아동 개인정보 보호' },
+    section8Text: { en: 'This website is not intended for children under the age of 13. No information is knowingly collected from children under 13. If you believe any such information has been inadvertently collected, please contact me immediately.', es: 'Este sitio web no está destinado a niños menores de 13 años. No se recopila información a sabiendas de niños menores de 13 años. Si crees que se ha recopilado inadvertidamente dicha información, contáctame de inmediato.', tl: 'Ang website na ito ay hindi para sa mga batang wala pang 13 taong gulang. Walang impormasyon na knowingly kinokolekta mula sa mga bata na wala pang 13. Kung naniniwala ka na may ganitong impormasyon na inadvertently nakolekta, mangyaring makipag-ugnayan sa akin agad.', vi: 'Trang web này không dành cho trẻ em dưới 13 tuổi. Không có thông tin nào được cố ý thu thập từ trẻ em dưới 13 tuổi. Nếu bạn tin rằng bất kỳ thông tin nào như vậy đã vô tình được thu thập, vui lòng liên hệ với tôi ngay lập tức.', ko: '이 웹사이트는 13세 미만의 어린이를 대상으로 하지 않습니다. 13세 미만의 어린이로부터 고의로 정보를 수집하지 않습니다. 이러한 정보가 실수로 수집되었다고 생각되면 즉시 연락해 주세요.' },
+    
+    // Section 9: Security
+    section9Title: { en: '9. Security', es: '9. Seguridad', tl: '9. Seguridad', vi: '9. Bảo Mật', ko: '9. 보안' },
+    section9Text: { en: 'This application operates entirely client-side and does not transmit or store PII. Your searches and interactions remain private on your device. We use only GoatCounter for minimal, privacy-respecting analytics. No advertising networks or invasive tracking services are used.', es: 'Esta aplicación opera completamente del lado del cliente y no transmite ni almacena PII. Tus búsquedas e interacciones permanecen privadas en tu dispositivo. Solo usamos GoatCounter para análisis mínimos que respetan la privacidad. No se utilizan redes publicitarias ni servicios de rastreo invasivos.', tl: 'Ang application na ito ay gumagana entirely client-side at hindi nag-transmit o nag-store ng PII. Ang searches at interactions mo ay nananatiling private sa device mo. Gumagamit lang kami ng GoatCounter para sa minimal, privacy-respecting analytics. Walang advertising networks o invasive tracking services na ginagamit.', vi: 'Ứng dụng này hoạt động hoàn toàn phía máy khách và không truyền hoặc lưu trữ PII. Các tìm kiếm và tương tác của bạn vẫn riêng tư trên thiết bị của bạn. Chúng tôi chỉ sử dụng GoatCounter cho phân tích tối thiểu, tôn trọng quyền riêng tư. Không sử dụng mạng quảng cáo hoặc dịch vụ theo dõi xâm phạm.', ko: '이 애플리케이션은 완전히 클라이언트 측에서 작동하며 PII를 전송하거나 저장하지 않습니다. 검색 및 상호작용은 기기에서 비공개로 유지됩니다. 최소한의 개인정보 보호 분석을 위해 GoatCounter만 사용합니다. 광고 네트워크나 침해적인 추적 서비스는 사용되지 않습니다.' },
+    
+    // Section 10: Changes
+    section10Title: { en: '10. Changes to This Privacy Policy', es: '10. Cambios a Esta Política de Privacidad', tl: '10. Mga Pagbabago sa Privacy Policy na Ito', vi: '10. Thay Đổi Chính Sách Quyền Riêng Tư Này', ko: '10. 이 개인정보 처리방침의 변경' },
+    section10Text: { en: 'This Privacy Policy may be updated from time to time. Changes will be posted on this page with an updated "Last Updated" date. Your continued use of the website after changes constitutes acceptance of the updated policy.', es: 'Esta Política de Privacidad puede actualizarse de vez en cuando. Los cambios se publicarán en esta página con una fecha de "Última Actualización" actualizada. Tu uso continuado del sitio web después de los cambios constituye la aceptación de la política actualizada.', tl: 'Ang Privacy Policy na ito ay maaaring i-update paminsan-minsan. Ang mga pagbabago ay ipo-post sa page na ito na may updated na "Huling Na-update" na petsa. Ang patuloy mong paggamit ng website pagkatapos ng mga pagbabago ay nangangahulugang pagtanggap sa updated policy.', vi: 'Chính sách Quyền riêng tư này có thể được cập nhật theo thời gian. Các thay đổi sẽ được đăng trên trang này với ngày "Cập nhật lần cuối" được cập nhật. Việc bạn tiếp tục sử dụng trang web sau khi thay đổi đồng nghĩa với việc chấp nhận chính sách cập nhật.', ko: '이 개인정보 처리방침은 수시로 업데이트될 수 있습니다. 변경 사항은 업데이트된 "최종 업데이트" 날짜와 함께 이 페이지에 게시됩니다. 변경 후 웹사이트를 계속 사용하면 업데이트된 정책에 동의하는 것입니다.' },
+    
+    // Section 11: Contact
+    section11Title: { en: '11. Contact', es: '11. Contacto', tl: '11. Makipag-ugnayan', vi: '11. Liên Hệ', ko: '11. 연락처' },
+    section11Text: { en: 'If you have questions about this Privacy Policy, please reach out via the Contact page.', es: 'Si tienes preguntas sobre esta Política de Privacidad, comunícate a través de la página de Contacto.', tl: 'Kung may mga tanong ka tungkol sa Privacy Policy na ito, mangyaring makipag-ugnayan sa pamamagitan ng Contact page.', vi: 'Nếu bạn có câu hỏi về Chính sách Quyền riêng tư này, vui lòng liên hệ qua trang Liên hệ.', ko: '이 개인정보 처리방침에 대한 질문이 있으시면 문의 페이지를 통해 연락해 주세요.' },
+    
+    // Privacy First Design Banner
+    privacyFirstTitle: { en: '🛡️ Privacy-First Design:', es: '🛡️ Diseño con Privacidad Primero:', tl: '🛡️ Privacy-First Design:', vi: '🛡️ Thiết Kế Ưu Tiên Quyền Riêng Tư:', ko: '🛡️ 개인정보 보호 우선 설계:' },
+    privacyFirstText: { en: 'Vet-Rate.org is built with veteran privacy as a top priority. This site does not collect, store, or transmit your personal information. We use only GoatCounter for minimal, cookie-free analytics. No advertising networks or invasive trackers are used. Your searches and disability research remain completely private.', es: 'Vet-Rate.org está construido con la privacidad del veterano como máxima prioridad. Este sitio no recopila, almacena ni transmite tu información personal. Solo usamos GoatCounter para análisis mínimos sin cookies. No se usan redes publicitarias ni rastreadores invasivos. Tus búsquedas e investigación sobre discapacidad permanecen completamente privadas.', tl: 'Ang Vet-Rate.org ay binuo na ang veteran privacy ang top priority. Ang site na ito ay hindi nangongolekta, nag-store, o nag-transmit ng personal information mo. Gumagamit lang kami ng GoatCounter para sa minimal, cookie-free analytics. Walang advertising networks o invasive trackers na ginagamit. Ang searches mo at disability research ay nananatiling completely private.', vi: 'Vet-Rate.org được xây dựng với quyền riêng tư của cựu chiến binh là ưu tiên hàng đầu. Trang web này không thu thập, lưu trữ hoặc truyền thông tin cá nhân của bạn. Chúng tôi chỉ sử dụng GoatCounter cho phân tích tối thiểu, không có cookie. Không sử dụng mạng quảng cáo hoặc trình theo dõi xâm phạm. Các tìm kiếm và nghiên cứu về khuyết tật của bạn vẫn hoàn toàn riêng tư.', ko: 'Vet-Rate.org는 재향군인의 개인정보 보호를 최우선으로 하여 구축되었습니다. 이 사이트는 개인 정보를 수집, 저장 또는 전송하지 않습니다. 최소한의 쿠키 없는 분석을 위해 GoatCounter만 사용합니다. 광고 네트워크나 침해적인 추적기는 사용되지 않습니다. 귀하의 검색 및 장애 연구는 완전히 비공개로 유지됩니다.' },
   },
 };
 

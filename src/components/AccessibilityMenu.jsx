@@ -81,18 +81,18 @@ export default function AccessibilityMenu() {
   };
 
   const colorBlindOptions = [
-    { value: COLOR_BLIND_MODES.NONE, label: 'Default Colors', description: 'Standard color palette' },
-    { value: COLOR_BLIND_MODES.PROTANOPIA, label: 'Protanopia', description: 'Red-blind friendly' },
-    { value: COLOR_BLIND_MODES.DEUTERANOPIA, label: 'Deuteranopia', description: 'Green-blind friendly' },
-    { value: COLOR_BLIND_MODES.TRITANOPIA, label: 'Tritanopia', description: 'Blue-blind friendly' },
-    { value: COLOR_BLIND_MODES.HIGH_CONTRAST, label: 'High Contrast', description: 'Maximum visibility' },
+    { value: COLOR_BLIND_MODES.NONE, label: t('accessibility', 'defaultColors'), description: t('accessibility', 'standardPalette') },
+    { value: COLOR_BLIND_MODES.PROTANOPIA, label: t('accessibility', 'protanopia'), description: t('accessibility', 'redBlindFriendly') },
+    { value: COLOR_BLIND_MODES.DEUTERANOPIA, label: t('accessibility', 'deuteranopia'), description: t('accessibility', 'greenBlindFriendly') },
+    { value: COLOR_BLIND_MODES.TRITANOPIA, label: t('accessibility', 'tritanopia'), description: t('accessibility', 'blueBlindFriendly') },
+    { value: COLOR_BLIND_MODES.HIGH_CONTRAST, label: t('accessibility', 'highContrast'), description: t('accessibility', 'maximumVisibility') },
   ];
 
   const fontSizeOptions = [
-    { value: 'small', label: 'Small', size: '14px' },
-    { value: 'normal', label: 'Normal', size: '16px' },
-    { value: 'large', label: 'Large', size: '18px' },
-    { value: 'xlarge', label: 'Extra Large', size: '20px' },
+    { value: 'small', label: t('accessibility', 'small'), size: '14px' },
+    { value: 'normal', label: t('accessibility', 'normal'), size: '16px' },
+    { value: 'large', label: t('accessibility', 'large'), size: '18px' },
+    { value: 'xlarge', label: t('accessibility', 'extraLarge'), size: '20px' },
   ];
 
   return (
@@ -104,8 +104,8 @@ export default function AccessibilityMenu() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-va-blue"
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label="Accessibility settings menu"
-        title="Accessibility Settings"
+        aria-label={t('accessibility', 'settingsMenuAria')}
+        title={t('accessibility', 'settingsTitle')}
       >
         {/* Accessibility Icon */}
         <svg 
@@ -122,7 +122,7 @@ export default function AccessibilityMenu() {
             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" 
           />
         </svg>
-        <span className="hidden md:inline text-sm font-medium">Accessibility</span>
+        <span className="hidden md:inline text-sm font-medium">{t('accessibility', 'title')}</span>
         <svg 
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
@@ -150,10 +150,10 @@ export default function AccessibilityMenu() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              ♿ Accessibility Settings
+              ♿ {t('accessibility', 'settingsTitle')}
             </h3>
             <p className="text-sm text-green-100 dark:text-gray-300">
-              Section 508 Compliant • Voice Input • Color Vision Support
+              {t('accessibility', 'complianceNote')}
             </p>
           </div>
 
@@ -162,7 +162,7 @@ export default function AccessibilityMenu() {
             <div className="flex items-start gap-2">
               <span className="text-lg">✨</span>
               <div className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Built for ALL veterans:</strong> Dark mode, color-blind modes, adjustable text size, reduced motion, keyboard navigation, screen reader support, and voice dictation in all text fields.
+                <strong>{t('accessibility', 'builtForAllVeterans')}</strong> {t('accessibility', 'featuresSummary')}
               </div>
             </div>
           </div>
@@ -181,7 +181,7 @@ export default function AccessibilityMenu() {
                       <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                     </svg>
                   )}
-                  {isDark ? 'Light Mode' : 'Dark Mode'}
+                  {isDark ? t('accessibility', 'lightMode') : t('accessibility', 'darkMode')}
                 </span>
                 <button
                   onClick={toggleTheme}
@@ -190,7 +190,7 @@ export default function AccessibilityMenu() {
                   }`}
                   role="switch"
                   aria-checked={isDark}
-                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                  aria-label={isDark ? t('accessibility', 'switchToLight') : t('accessibility', 'switchToDark')}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
@@ -200,7 +200,7 @@ export default function AccessibilityMenu() {
                 </button>
               </label>
               <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
-                Reduce eye strain in low-light conditions
+                {t('accessibility', 'eyeStrainHelp')}
               </p>
             </div>
 
@@ -213,7 +213,7 @@ export default function AccessibilityMenu() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                Color Vision Settings
+                {t('accessibility', 'colorVisionSettings')}
               </h4>
               <div className="space-y-2">
                 {colorBlindOptions.map((option) => (
@@ -261,7 +261,7 @@ export default function AccessibilityMenu() {
                 <svg className="w-5 h-5 text-va-blue dark:text-va-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                 </svg>
-                Text Size
+                {t('accessibility', 'textSize')}
               </h4>
               <div className="flex gap-2">
                 {fontSizeOptions.map((option) => (
@@ -290,7 +290,7 @@ export default function AccessibilityMenu() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Reduce Motion
+                {t('accessibility', 'reduceMotion')}
               </span>
               <button
                 onClick={() => setReducedMotion(!reducedMotion)}
@@ -299,7 +299,7 @@ export default function AccessibilityMenu() {
                 }`}
                 role="switch"
                 aria-checked={reducedMotion}
-                aria-label="Toggle reduced motion"
+                aria-label={t('accessibility', 'toggleReducedMotion')}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
@@ -317,14 +317,13 @@ export default function AccessibilityMenu() {
                 <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                AI Features (BYOK)
+                {t('accessibility', 'aiFeatures')}
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Enter your free Google Gemini API key to enable AI features like statement assistance, contract scanning, and strategy analysis.
+                {t('accessibility', 'aiDescription')}
               </p>              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-2">
                 <p className="text-xs text-blue-700 dark:text-blue-300">
-                  <strong>💡 Tip:</strong> Gemini 1.5 Flash can process huge medical records (up to 2,000 pages) in a single pass. 
-                  Perfect for large Blue Button files!
+                  <strong>💡 {t('accessibility', 'tip')}</strong> {t('accessibility', 'geminiTip')}
                 </p>
               </div>              <div className="space-y-2">
                 <div className="relative">
@@ -332,14 +331,14 @@ export default function AccessibilityMenu() {
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter Gemini API key..."
+                    placeholder={t('accessibility', 'enterApiKey')}
                     className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                    aria-label={showApiKey ? t('accessibility', 'hideApiKey') : t('accessibility', 'showApiKey')}
                   >
                     {showApiKey ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -359,14 +358,14 @@ export default function AccessibilityMenu() {
                     disabled={!apiKey.trim()}
                     className="flex-1 py-2 px-3 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    {apiKeySaved ? '✓ Saved!' : 'Save Key'}
+                    {apiKeySaved ? t('accessibility', 'saved') : t('accessibility', 'saveKey')}
                   </button>
                   {apiKey && (
                     <button
                       onClick={handleClearApiKey}
                       className="py-2 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
-                      Clear
+                      {t('accessibility', 'clear')}
                     </button>
                   )}
                 </div>
@@ -379,7 +378,7 @@ export default function AccessibilityMenu() {
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
-                  Get free API key from Google AI Studio
+                  {t('accessibility', 'getFreeApiKey')}
                 </a>
               </div>
             </div>
@@ -393,14 +392,14 @@ export default function AccessibilityMenu() {
               }}
               className="w-full py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-va-blue"
             >
-              Reset to Defaults
+              {t('accessibility', 'resetToDefaults')}
             </button>
           </div>
 
           {/* Footer */}
           <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-              🏛️ Section 508 & WCAG 2.1 AA Compliant
+              🏛️ {t('accessibility', 'complianceFooter')}
             </p>
           </div>
         </div>
