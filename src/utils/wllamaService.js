@@ -7,8 +7,26 @@
  * Models: VetRate Auditor, Writer, Rater (GGUF Q4_K_M)
  */
 
-// Import from the ESM build path
-import { Wllama } from '@wllama/wllama/esm/index.js';
+// Dynamic import to avoid bundling Node.js code from wllama's embedded worker strings
+// The wllama library contains WASM worker code with Node.js require() calls that
+// cause "require is not defined" errors when statically imported
+let Wllama = null;
+let wllamaLoadError = null;
+
+const loadWllama = async () => {
+  if (Wllama) return Wllama;
+  if (wllamaLoadError) throw wllamaLoadError;
+  
+  try {
+    const module = await import('@wllama/wllama/esm/index.js');
+    Wllama = module.Wllama;
+    return Wllama;
+  } catch (error) {
+    console.error('[Wllama] Failed to load library:', error);
+    wllamaLoadError = error;
+    throw error;
+  }
+};
 
 // Storage keys
 const WLLAMA_CACHE_KEY = 'vetrate_wllama_cache';
@@ -102,6 +120,9 @@ export const initializeWllama = async (modelId = 'auditor', options = {}) => {
   isInitializing = true;
   
   try {
+    // Load Wllama library dynamically
+    const WllamaClass = await loadWllama();
+    
     const modelConfig = WLLAMA_MODELS[modelId];
     if (!modelConfig) {
       throw new Error(`Unknown model: ${modelId}`);
@@ -110,7 +131,7 @@ export const initializeWllama = async (modelId = 'auditor', options = {}) => {
     console.log(`[Wllama] Initializing ${modelConfig.name}...`);
     
     // Create Wllama instance
-    wllamaInstance = new Wllama({
+    wllamaInstance = new WllamaClass({
       // Use multi-threaded WASM for better performance
       'multi-thread/wllama.js': '/wasm/multi-thread/wllama.js',
       'multi-thread/wllama.wasm': '/wasm/multi-thread/wllama.wasm',
