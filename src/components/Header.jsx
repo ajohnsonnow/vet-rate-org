@@ -198,8 +198,8 @@ function Header({
       </div>
       
       <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl">
-        <div className="flex flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
             <div className="rounded-full h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden shadow-md">
               <img 
                 src="/images/Vet-Rate-org-logo-official.png" 
@@ -207,12 +207,12 @@ function Header({
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">Vet-Rate.org</h1>
-              <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base truncate">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Vet-Rate.org</h1>
+              <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base">
                 {t('header', 'subtitle')}
               </p>
-              <div className="mt-1 md:mt-2 flex items-center gap-1 md:gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-1 md:gap-2">
                 <KnowledgeBaseStatus compact />
                 <AIStatusBadge showLabel={false} onClick={onAISettingsClick} />
                 <VersionDropdown />
@@ -221,27 +221,27 @@ function Header({
           </div>
 
           {/* Desktop Navigation - Hidden on mobile */}
-          <nav className="hidden md:flex flex-wrap justify-center gap-4 md:gap-6 items-center" role="navigation" aria-label="Main navigation">
+          <nav className="hidden md:flex flex-wrap justify-end gap-2 lg:gap-4 items-center w-full md:w-auto" role="navigation" aria-label="Main navigation">
             {/* Help - First thing users need */}
             <button
               id="tour-help-btn"
               onClick={onUserManualClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
               title={t('common', 'help')}
               aria-label={t('common', 'help')}
             >
-              ❓ {t('common', 'help')}
+              ❓ <span className="hidden lg:inline">{t('common', 'help')}</span>
             </button>
             
             {/* Workflow Guide - Step-by-step mission briefings */}
             <button
               id="tour-workflow-guide-btn"
               onClick={onWorkflowGuideClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
               title={t('tools', 'missions')}
               aria-label={t('tools', 'missions')}
             >
-              🗺️ {t('tools', 'missions')}
+              🗺️ <span className="hidden lg:inline">{t('tools', 'missions')}</span>
               <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
             </button>
             
@@ -249,21 +249,21 @@ function Header({
             <button
               id="tour-my-packet-btn"
               onClick={onMyPacketClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
               title={t('tools', 'myPacket')}
               aria-label={t('tools', 'myPacket')}
             >
-              📁 {t('tools', 'myPacket')}
+              📁 <span className="hidden lg:inline">{t('tools', 'myPacket')}</span>
             </button>
 
             {/* Knowledge Base - AI-powered knowledge graph */}
             <button
               onClick={onKnowledgeBaseClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
               title="Knowledge Base"
               aria-label="Knowledge Base"
             >
-              📚 Knowledge Base
+              📚 <span className="hidden lg:inline">Knowledge Base</span>
               <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
             </button>
             
@@ -272,13 +272,13 @@ function Header({
               <button
                 onClick={() => setShowToolsMenu(!showToolsMenu)}
                 onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
-                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
                 title={t('common', 'tools')}
                 aria-expanded={showToolsMenu}
                 aria-haspopup="true"
               >
-                🛠️ {t('common', 'tools')}
-                <svg className={`w-4 h-4 transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                🛠️ <span className="hidden lg:inline">{t('common', 'tools')}</span>
+                <svg className={`w-3 h-3 lg:w-4 lg:h-4 transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -811,13 +811,13 @@ function Header({
               <button
                 onClick={() => setShowResourcesMenu(!showResourcesMenu)}
                 onBlur={() => setTimeout(() => setShowResourcesMenu(false), 200)}
-                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1 flex items-center gap-1"
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
                 title={t('header', 'veteranResources')}
                 aria-expanded={showResourcesMenu}
                 aria-haspopup="true"
               >
-                🎖️ <span className="hidden lg:inline">{t('header', 'resources')}</span><span className="lg:hidden">{t('header', 'vaLinks')}</span>
-                <svg className={`w-4 h-4 transition-transform ${showResourcesMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                🎖️ <span className="hidden lg:inline">{t('header', 'resources')}</span>
+                <svg className={`w-3 h-3 lg:w-4 lg:h-4 transition-transform ${showResourcesMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -978,11 +978,11 @@ function Header({
             {/* Feature Request Button */}
             <button
               onClick={onFeatureRequestClick}
-              className="inline-flex items-center gap-1.5 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="inline-flex items-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm lg:text-base whitespace-nowrap"
               title={t('header', 'featureRequestTooltip')}
               aria-label={t('buttons', 'featureRequest')}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               <span className="hidden lg:inline">{t('header', 'ideas')}</span>
@@ -990,11 +990,11 @@ function Header({
             
             <button
               onClick={() => setShowFundingModal(true)}
-              className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 hover:scale-105 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white animate-pulse-subtle"
+              className="inline-flex items-center gap-1 bg-va-gold hover:bg-yellow-400 hover:scale-105 text-va-blue px-2 lg:px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white animate-pulse-subtle text-sm lg:text-base whitespace-nowrap"
               title={t('header', 'supportTooltip')}
               aria-label={t('header', 'backTheMission')}
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
               </svg>
               <span className="hidden lg:inline">{t('header', 'backTheMission')}</span>
@@ -1004,7 +1004,7 @@ function Header({
           {/* Mobile Menu Button - Shows below md (768px) */}
           <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden p-3 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
+            className="md:hidden p-2.5 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
             aria-label="Toggle menu"
             aria-expanded={showMobileMenu}
           >
