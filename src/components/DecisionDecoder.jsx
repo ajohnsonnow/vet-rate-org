@@ -38,13 +38,12 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState('paste'); // 'paste' or 'file'
   
-  // File Drop-In state (PDF or Image)
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [fileType, setFileType] = useState(null); // 'pdf' or 'image'
+  // File Drop-In state (PDF or Image) - supports MULTIPLE files
+  const [uploadedFiles, setUploadedFiles] = useState([]); // Array of { file, fileType, preview, extractedText, error }
   const [ocrProgress, setOcrProgress] = useState(null);
+  const [currentProcessingFile, setCurrentProcessingFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [fileError, setFileError] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   
   // Benefits Reference hook for claim phase explanations
@@ -78,89 +77,160 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
-      const file = files[0];
-      await processFile(file);
+      await processMultipleFiles(Array.from(files));
     }
   };
 
   const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processMultipleFiles(Array.from(files));
+    }
+  };
+
+  // Process multiple files sequentially
+  const processMultipleFiles = async (files) => {
+    setFileError(null);
+    
+    for (const file of files) {
+      // Check for duplicates
+      const isDuplicate = uploadedFiles.some(f => f.file.name === file.name && f.file.size === file.size);
+      if (isDuplicate) {
+        continue; // Skip duplicates
+      }
+      
       await processFile(file);
     }
   };
 
   const processFile = async (file) => {
-    // Reset state
-    setUploadedFile(file);
-    setFileError(null);
-    setDenialText('');
-    setImagePreview(null);
-    
     // Determine file type
+    let fileType = null;
     if (isPDFFile(file)) {
-      setFileType('pdf');
-      await processPdfFile(file);
+      fileType = 'pdf';
     } else if (isImageFile(file)) {
-      setFileType('image');
-      await processImageFile(file);
+      fileType = 'image';
     } else {
-      setFileError('Unsupported file type. Please upload a PDF or image (PNG, JPG, JPEG, GIF, BMP, WEBP).');
-      setUploadedFile(null);
+      setFileError(`Unsupported file: ${file.name}. Use PDF or image (PNG, JPG, JPEG, GIF, BMP, WEBP).`);
+      return;
     }
-  };
-
-  const processPdfFile = async (file) => {
+    
+    // Create file entry with pending status
+    const fileId = `${file.name}-${Date.now()}`;
+    const newFileEntry = {
+      id: fileId,
+      file,
+      fileType,
+      preview: null,
+      extractedText: '',
+      error: null,
+      processing: true
+    };
+    
+    // Add to list immediately (shows processing state)
+    setUploadedFiles(prev => [...prev, newFileEntry]);
+    setCurrentProcessingFile(file.name);
+    
     try {
-      const result = await analyzePDF(file, (progress) => {
-        setOcrProgress(progress);
-      });
+      let extractedText = '';
+      let preview = null;
       
-      if (result.text) {
-        setDenialText(result.text);
+      if (fileType === 'pdf') {
+        const result = await analyzePDF(file, (progress) => {
+          setOcrProgress(progress);
+        });
+        extractedText = result.text || '';
       } else {
-        setFileError('Failed to extract text from PDF');
+        // Create preview for images
+        preview = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+        
+        const result = await analyzeImage(file, (progress) => {
+          setOcrProgress(progress);
+        });
+        extractedText = result.success ? result.text || '' : '';
+        if (!result.success) {
+          newFileEntry.error = result.error || 'Failed to extract text';
+        }
       }
+      
+      // Update file entry with results
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === fileId
+          ? { ...f, extractedText, preview, processing: false, error: extractedText ? null : 'No text extracted' }
+          : f
+      ));
+      
+      // Update combined denial text
+      updateCombinedText();
+      
     } catch (err) {
-      console.error('PDF processing error:', err);
-      setFileError('Failed to process PDF. Please try again or paste the text manually.');
+      console.error('File processing error:', err);
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === fileId
+          ? { ...f, processing: false, error: 'Failed to process file' }
+          : f
+      ));
     }
     
     setOcrProgress(null);
+    setCurrentProcessingFile(null);
   };
 
-  const processImageFile = async (file) => {
-    try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
-      reader.readAsDataURL(file);
+  // Combine text from all successfully processed files
+  const updateCombinedText = () => {
+    setUploadedFiles(prev => {
+      const combinedText = prev
+        .filter(f => f.extractedText)
+        .map((f, idx) => `--- Document ${idx + 1}: ${f.file.name} ---\n${f.extractedText}`)
+        .join('\n\n');
       
-      // Run OCR
-      const result = await analyzeImage(file, (progress) => {
-        setOcrProgress(progress);
-      });
+      // Use setTimeout to avoid state update during render
+      setTimeout(() => {
+        if (combinedText) {
+          setDenialText(combinedText);
+        }
+      }, 0);
       
-      if (result.success && result.text) {
-        setDenialText(result.text);
-      } else {
-        setFileError(result.error || 'Failed to extract text from image. Try a clearer screenshot.');
-      }
-    } catch (err) {
-      console.error('Image processing error:', err);
-      setFileError('Failed to process image. Please try again or paste the text manually.');
-    }
+      return prev;
+    });
+  };
+
+  // Effect to update combined text when files change
+  useEffect(() => {
+    const combinedText = uploadedFiles
+      .filter(f => f.extractedText && !f.processing)
+      .map((f, idx) => `--- Document ${idx + 1}: ${f.file.name} ---\n${f.extractedText}`)
+      .join('\n\n');
     
-    setOcrProgress(null);
+    if (combinedText && uploadedFiles.some(f => !f.processing)) {
+      setDenialText(combinedText);
+    }
+  }, [uploadedFiles]);
+
+  const handleRemoveFile = (fileId) => {
+    setUploadedFiles(prev => {
+      const updated = prev.filter(f => f.id !== fileId);
+      // Update combined text after removal
+      const combinedText = updated
+        .filter(f => f.extractedText)
+        .map((f, idx) => `--- Document ${idx + 1}: ${f.file.name} ---\n${f.extractedText}`)
+        .join('\n\n');
+      
+      setTimeout(() => setDenialText(combinedText), 0);
+      return updated;
+    });
   };
 
-  const handleRemoveFile = () => {
-    setUploadedFile(null);
-    setFileType(null);
+  const handleClearAllFiles = () => {
+    setUploadedFiles([]);
     setOcrProgress(null);
     setDenialText('');
     setFileError(null);
-    setImagePreview(null);
+    setCurrentProcessingFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -353,148 +423,183 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                   </>
                 )}
 
-                {/* File Drop-In (PDF or Image) */}
+                {/* File Drop-In (PDF or Image) - MULTI-FILE SUPPORT */}
                 {inputMethod === 'file' && (
                   <div>
-                    {/* Drop Zone - only show if no file */}
-                    {!uploadedFile && !ocrProgress && (
-                      <div
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                          isDragging
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                            : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10'
-                        }`}
-                      >
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp,image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
-                            <svg className="w-8 h-8 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                              Drop your file or screenshot here
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                              or{' '}
-                              <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
-                              >
-                                browse to select
-                              </button>
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap gap-2 justify-center text-xs text-gray-400 dark:text-gray-500 mt-2">
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📄 PDF</span>
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📷 PNG</span>
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">🖼️ JPG</span>
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">📸 Screenshot</span>
-                          </div>
-                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                            💡 Tip: Take a screenshot of your VA letter and drop it here!
+                    {/* Drop Zone - always visible for adding more files */}
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+                        isDragging
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10'
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp,image/*"
+                        onChange={handleFileChange}
+                        multiple
+                        className="hidden"
+                      />
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+                          <svg className="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                            Drop files here or{' '}
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-purple-600 dark:text-purple-400 hover:underline"
+                            >
+                              browse
+                            </button>
                           </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            📄 PDFs • 📷 Images • 📸 Screenshots — <strong>Multiple files supported!</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Global Error */}
+                    {fileError && (
+                      <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-sm text-red-700 dark:text-red-300">{fileError}</p>
                         </div>
                       </div>
                     )}
 
-                    {/* OCR Progress */}
-                    {ocrProgress && (
-                      <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-6 bg-purple-50 dark:bg-purple-900/20">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-600 border-t-transparent"></div>
-                          <span className="font-medium text-purple-800 dark:text-purple-200">
-                            {ocrProgress.state === OCR_STATES.LOADING ? `Loading ${fileType === 'pdf' ? 'PDF' : 'image'}...` :
-                             ocrProgress.state === OCR_STATES.EXTRACTING_TEXT ? 'Extracting text...' :
-                             ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS ? 'Running OCR analysis...' :
-                             ocrProgress.message || 'Processing...'}
+                    {/* OCR Progress (while processing) */}
+                    {ocrProgress && currentProcessingFile && (
+                      <div className="mt-3 border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-purple-50 dark:bg-purple-900/20">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-600 border-t-transparent"></div>
+                          <span className="font-medium text-purple-800 dark:text-purple-200 text-sm">
+                            Processing: {currentProcessingFile}
                           </span>
                         </div>
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mb-2">
+                          {ocrProgress.state === OCR_STATES.LOADING ? 'Loading file...' :
+                           ocrProgress.state === OCR_STATES.EXTRACTING_TEXT ? 'Extracting text...' :
+                           ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS ? 'Running OCR...' :
+                           ocrProgress.message || 'Processing...'}
+                        </p>
                         {ocrProgress.progress > 0 && (
-                          <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-2">
+                          <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-1.5">
                             <div
-                              className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                              className="bg-purple-600 h-1.5 rounded-full transition-all duration-300"
                               style={{ width: `${ocrProgress.progress}%` }}
                             />
                           </div>
                         )}
-                        {ocrProgress.message && (
-                          <p className="text-sm text-purple-600 dark:text-purple-400 mt-2">{ocrProgress.message}</p>
-                        )}
                       </div>
                     )}
 
-                    {/* File Selected */}
-                    {uploadedFile && !ocrProgress && (
-                      <div className="border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-white dark:bg-gray-800">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
-                              {fileType === 'pdf' ? (
-                                <svg className="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                              ) : (
-                                <span className="text-xl">📷</span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-xs">{uploadedFile.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {formatFileSize(uploadedFile.size)} • {fileType === 'pdf' ? 'PDF Document' : 'Image'}
-                              </p>
-                            </div>
-                          </div>
+                    {/* Uploaded Files List */}
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            📁 Uploaded Files ({uploadedFiles.length})
+                          </span>
                           <button
-                            onClick={handleRemoveFile}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                            title="Remove file"
+                            onClick={handleClearAllFiles}
+                            className="text-xs text-red-600 dark:text-red-400 hover:underline"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            Clear all
                           </button>
                         </div>
-
-                        {/* Image Preview */}
-                        {fileType === 'image' && imagePreview && (
-                          <div className="mb-3 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                            <img
-                              src={imagePreview}
-                              alt="Screenshot preview"
-                              className="max-h-48 w-full object-contain bg-gray-50 dark:bg-gray-900"
-                            />
-                          </div>
-                        )}
-
-                        {/* Error Display */}
-                        {fileError && (
-                          <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
-                            <div className="flex items-start gap-2">
-                              <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <p className="text-sm text-red-700 dark:text-red-300">{fileError}</p>
+                        
+                        {uploadedFiles.map((fileEntry) => (
+                          <div
+                            key={fileEntry.id}
+                            className={`border rounded-lg p-3 bg-white dark:bg-gray-800 ${
+                              fileEntry.error
+                                ? 'border-red-200 dark:border-red-700'
+                                : fileEntry.extractedText
+                                  ? 'border-green-200 dark:border-green-700'
+                                  : 'border-purple-200 dark:border-purple-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                  fileEntry.processing
+                                    ? 'bg-purple-100 dark:bg-purple-800'
+                                    : fileEntry.error
+                                      ? 'bg-red-100 dark:bg-red-800'
+                                      : 'bg-green-100 dark:bg-green-800'
+                                }`}>
+                                  {fileEntry.processing ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                                  ) : fileEntry.fileType === 'pdf' ? (
+                                    <span className="text-sm">📄</span>
+                                  ) : (
+                                    <span className="text-sm">📷</span>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                                    {fileEntry.file.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatFileSize(fileEntry.file.size)}
+                                    {fileEntry.extractedText && !fileEntry.error && (
+                                      <span className="text-green-600 dark:text-green-400 ml-2">
+                                        ✓ {fileEntry.extractedText.length} chars
+                                      </span>
+                                    )}
+                                    {fileEntry.error && (
+                                      <span className="text-red-600 dark:text-red-400 ml-2">
+                                        ✗ {fileEntry.error}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveFile(fileEntry.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
+                                title="Remove file"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                             </div>
+                            
+                            {/* Image Preview (collapsed) */}
+                            {fileEntry.fileType === 'image' && fileEntry.preview && (
+                              <div className="mt-2 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <img
+                                  src={fileEntry.preview}
+                                  alt="Preview"
+                                  className="max-h-24 w-full object-contain bg-gray-50 dark:bg-gray-900"
+                                />
+                              </div>
+                            )}
                           </div>
-                        )}
-
-                        {/* Success - text extracted */}
-                        {denialText && !fileError && (
+                        ))}
+                        
+                        {/* Combined Text Summary */}
+                        {denialText && uploadedFiles.some(f => f.extractedText) && (
                           <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
                             <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                               <span className="text-green-500">✓</span>
-                              <span className="text-sm font-medium">Text extracted - {denialText.length} characters</span>
+                              <span className="text-sm font-medium">
+                                Combined text ready — {denialText.length} total characters from {uploadedFiles.filter(f => f.extractedText).length} file(s)
+                              </span>
                             </div>
                           </div>
                         )}
@@ -503,7 +608,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 
                     {/* Privacy Note */}
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                      🔒 Your file is processed locally in your browser - nothing is sent to any server.
+                      🔒 All files processed locally in your browser - nothing is sent to any server.
                     </p>
                   </div>
                 )}
