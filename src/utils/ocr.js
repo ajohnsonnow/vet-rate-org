@@ -368,8 +368,140 @@ export function getProgressStyling(progress) {
 }
 
 /**
+ * Analyze an image file using OCR
+ * Supports PNG, JPG, JPEG, GIF, BMP, WEBP formats
+ *
+ * @param {File} file - Image file to analyze
+ * @param {Function} onProgress - Progress callback: (progress: OCRProgress) => void
+ * @returns {Promise<{text: string, success: boolean, error?: string}>}
+ */
+export async function analyzeImage(file, onProgress = () => {}) {
+  // Validate input
+  if (!file) {
+    return { success: false, error: 'No file provided', text: '' };
+  }
+  
+  const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/webp'];
+  const validExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
+  const fileName = file.name.toLowerCase();
+  const isValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+  const isValidType = validTypes.includes(file.type);
+  
+  if (!isValidExtension && !isValidType) {
+    return {
+      success: false,
+      error: 'Invalid file type. Supported: PNG, JPG, JPEG, GIF, BMP, WEBP',
+      text: ''
+    };
+  }
+
+  // Report initial state
+  onProgress({
+    state: OCR_STATES.LOADING,
+    progress: 0,
+    message: 'Loading image...',
+  });
+
+  try {
+    // Read file as data URL for Tesseract
+    const imageDataUrl = await readFileAsDataURL(file);
+    
+    onProgress({
+      state: OCR_STATES.OCR_IN_PROGRESS,
+      progress: 10,
+      message: 'Starting OCR analysis...',
+    });
+
+    // Create Tesseract worker
+    const worker = await Tesseract.createWorker(OCR_CONFIG.LANGUAGES, 1, {
+      logger: (m) => {
+        if (m.status === 'recognizing text' && m.progress !== undefined) {
+          const progress = 10 + (m.progress * 85); // 10-95%
+          onProgress({
+            state: OCR_STATES.OCR_IN_PROGRESS,
+            progress: Math.round(progress),
+            message: `Scanning image... ${Math.round(m.progress * 100)}%`,
+          });
+        }
+      },
+    });
+
+    try {
+      // Run OCR
+      const result = await worker.recognize(imageDataUrl);
+      const extractedText = result.data.text.trim();
+      
+      onProgress({
+        state: OCR_STATES.COMPLETE,
+        progress: 100,
+        message: extractedText.length > 0
+          ? `Extracted ${extractedText.length} characters`
+          : 'No text found in image',
+      });
+
+      return {
+        success: true,
+        text: extractedText,
+        confidence: result.data.confidence,
+      };
+    } finally {
+      await worker.terminate();
+    }
+
+  } catch (error) {
+    console.error('Image OCR error:', error);
+    onProgress({
+      state: OCR_STATES.ERROR,
+      progress: 0,
+      message: `Error: ${error.message}`,
+    });
+    
+    return {
+      success: false,
+      error: error.message || 'Failed to process image',
+      text: '',
+    };
+  }
+}
+
+/**
+ * Read File as Data URL (for images)
+ * @param {File} file
+ * @returns {Promise<string>}
+ */
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Check if a file is an image
+ * @param {File} file
+ * @returns {boolean}
+ */
+export function isImageFile(file) {
+  const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/webp'];
+  const validExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
+  const fileName = file.name.toLowerCase();
+  return validTypes.includes(file.type) || validExtensions.some(ext => fileName.endsWith(ext));
+}
+
+/**
+ * Check if a file is a PDF
+ * @param {File} file
+ * @returns {boolean}
+ */
+export function isPDFFile(file) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+}
+
+/**
  * Format file size for display
- * @param {number} bytes 
+ * @param {number} bytes
  * @returns {string}
  */
 export function formatFileSize(bytes) {
