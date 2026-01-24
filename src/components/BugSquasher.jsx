@@ -552,7 +552,7 @@ function BugSquasher({ onClose, appState = {} }) {
                       { key: 'includeSystemInfo', label: 'System Information', desc: 'Browser, screen size, timezone' },
                       { key: 'includeAppState', label: 'Application State', desc: 'Current view, search terms, active features' },
                       { key: 'includeStorageInfo', label: 'Storage Information', desc: 'Saved claims count, settings (no personal data)' },
-                      { key: 'includeConsoleErrors', label: 'Console Errors', desc: 'Technical error messages if any' }
+                      { key: 'includeConsoleErrors', label: 'Console Logs & Errors', desc: 'Captures errors, warnings, and relevant logs from the console - helps identify the root cause' }
                     ].map(item => (
                       <label key={item.key} className="flex items-start gap-3 cursor-pointer">
                         <input

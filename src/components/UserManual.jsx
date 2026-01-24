@@ -39,6 +39,21 @@ const navigationStructure = [
     isCategory: true,
   },
   {
+    id: 'what-if-sandbox',
+    title: 'What-If Sandbox',
+    icon: '🧮',
+  },
+  {
+    id: 'retro-pay-hunter',
+    title: 'Retro Pay Hunter',
+    icon: '🧮',
+  },
+  {
+    id: 'time-machine',
+    title: 'Time Machine',
+    icon: '🧮',
+  },
+  {
     id: 'tactical-calculator',
     title: 'Tactical Calculator',
     icon: '🧮',
@@ -54,6 +69,21 @@ const navigationStructure = [
     id: 'category-discover',
     title: '🔍 Discover',
     isCategory: true,
+  },
+  {
+    id: 'cap-exam-simulator',
+    title: 'C&P Exam Simulator',
+    icon: '🔍',
+  },
+  {
+    id: 'mos-hazard-matcher',
+    title: 'MOS Hazard Matcher',
+    icon: '🔍',
+  },
+  {
+    id: 'web-of-conditions',
+    title: 'Web of Conditions',
+    icon: '🔍',
   },
   {
     id: 'secondary-scout',
@@ -106,6 +136,31 @@ const navigationStructure = [
     id: 'category-evidence',
     title: '📋 Build Evidence',
     isCategory: true,
+  },
+  {
+    id: 'c-file-ai-analyzer',
+    title: 'C-File AI Analyzer',
+    icon: '📋',
+  },
+  {
+    id: 'pdf-evidence-finder',
+    title: 'PDF Evidence Finder',
+    icon: '📋',
+  },
+  {
+    id: 'somatic-target',
+    title: 'Somatic Target',
+    icon: '📋',
+  },
+  {
+    id: 'evidence-timeline',
+    title: 'Evidence Timeline',
+    icon: '📋',
+  },
+  {
+    id: 'foia-keysmith',
+    title: 'FOIA Keysmith',
+    icon: '📋',
   },
   {
     id: 'cfile-analyzer',
@@ -166,6 +221,26 @@ const navigationStructure = [
     isCategory: true,
   },
   {
+    id: 'the-war-game',
+    title: 'The War Game',
+    icon: '✅',
+  },
+  {
+    id: 'denials-decoder',
+    title: 'Denials Decoder',
+    icon: '✅',
+  },
+  {
+    id: 'consistency-engine',
+    title: 'Consistency Engine',
+    icon: '✅',
+  },
+  {
+    id: 'evidence-gap-finder',
+    title: 'Evidence Gap Finder',
+    icon: '✅',
+  },
+  {
     id: 'red-team',
     title: 'Red Team Simulator',
     icon: '🎭',
@@ -194,6 +269,21 @@ const navigationStructure = [
     id: 'category-advanced',
     title: '⚡ Advanced Strategy',
     isCategory: true,
+  },
+  {
+    id: 'state-benefit-hunter',
+    title: 'State Benefit Hunter',
+    icon: '💰',
+  },
+  {
+    id: 'the-tribunal',
+    title: 'The Tribunal',
+    icon: '💰',
+  },
+  {
+    id: 'legislative-watchdog',
+    title: 'Legislative Watchdog',
+    icon: '💰',
   },
   {
     id: 'tdiu-builder',
@@ -260,6 +350,31 @@ const navigationStructure = [
     id: 'category-support',
     title: '🤝 Support',
     isCategory: true,
+  },
+  {
+    id: 'the-bunker',
+    title: 'The Bunker',
+    icon: '🤝',
+  },
+  {
+    id: 'cloud-sync',
+    title: 'Cloud Sync',
+    icon: '🤝',
+  },
+  {
+    id: 'va-gov-integration',
+    title: 'VA.gov Integration',
+    icon: '🤝',
+  },
+  {
+    id: 'knowledge-base',
+    title: 'Knowledge Base',
+    icon: '🤝',
+  },
+  {
+    id: 'user-manual',
+    title: 'User Manual',
+    icon: '🤝',
   },
   {
     id: 'vso-finder',
@@ -3052,7 +3167,7 @@ Configure AI to power your claims analysis.
 
 ### 🔒 Local AI (100% Private)
 Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
-- 17 models from 0.3 GB to 4.8 GB
+- 3 specialized fine-tuned models plus fallback options
 - Works offline after initial download
 - Zero internet required during analysis
 
@@ -3097,7 +3212,7 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 
 1. Click the 🤖 AI Settings button in the header
 2. Select "Local AI" mode
-3. Choose a model (start with Llama 3.2 3B)
+3. Choose a model (start with VetRate models)
 4. Click "Initialize" - model downloads (~2 min)
 5. You're ready! Model stays cached for instant loading
 
@@ -3112,34 +3227,51 @@ If you have a gaming laptop with both integrated and discrete GPUs:
   'model-selection': {
     title: 'Choosing the Right Model',
     content: `
-Each AI model has strengths. Here's what to use for each task:
+The Diamond Swarm automatically selects the best model for each task:
+
+## 💎 Diamond Swarm Models
+
+| Model | Specialized For | Size |
+|-------|----------------|------|
+| **VetRate Auditor** | Claims review, evidence analysis, regulatory compliance | 7B params |
+| **VetRate Writer** | Personal statements, nexus letters, buddy statements | 7B params |
+| **VetRate Rater** | VA math, bilateral calculations, rating predictions | 7B params |
+
+The system automatically routes your request to the appropriate specialist model.
+
+## 🔄 Fallback Options
+
+If Diamond Swarm is unavailable:
+- **Wllama**: Browser-based WASM inference (any device)
+- **Local Server**: Connect to llama.cpp server (advanced users)
+- **Cloud AI**: Google Gemini (requires API key)
 
 ## 📄 Document Parsing (C-Files, DD214s, Medical Records)
 
 | Model | Why |
 |-------|-----|
-| **DeepSeek R1 7B ⭐** | Chain-of-thought reasoning finds evidence in complex files |
-| **Qwen 2.5 7B** | Excellent medical terminology understanding |
+| **VetRate Auditor ⭐** | Chain-of-thought reasoning finds evidence in complex files |
+| **VetRate Writer** | Excellent medical terminology understanding |
 
 ## ✍️ Creative Writing (Nexus Letters, Statements)
 
 | Model | Why |
 |-------|-----|
-| **Qwen 3 8B** | Most natural, persuasive writing |
-| **Mistral 7B** | Great fluency and varied prose |
+| **VetRate Writer** | Most natural, persuasive writing |
+| **VetRate Writer** | Great fluency and varied prose |
 
 ## ⚖️ Legal Analysis (Decisions, TDIU, Regulations)
 
 | Model | Why |
 |-------|-----|
 | **DeepSeek R1 Llama 8B** | Professional-grade reasoning |
-| **Phi 3.5 Mini** | Specialized for regulatory interpretation |
+| **VetRate models** | Specialized for regulatory interpretation |
 
 ## 🔴 Adversarial (Red Team, War Room)
 
 | Model | Why |
 |-------|-----|
-| **DeepSeek R1 7B** | Thinks like a skeptical examiner |
+| **VetRate Auditor** | Thinks like a skeptical examiner |
 
 ## 👁️ Vision (Scanned Documents, Photos)
 
@@ -3151,8 +3283,8 @@ Each AI model has strengths. Here's what to use for each task:
 
 | Model | Why |
 |-------|-----|
-| **Llama 3.2 3B** | Fast responses, good quality |
-| **SmolLM2 360M** | Works on any device |
+| **VetRate models** | Fast responses, good quality |
+| **VetRate models** | Works on any device |
 
 ## Smart Recommendations
 
@@ -3218,26 +3350,26 @@ Choose a model that fits your GPU memory.
 ## Model Recommendations by VRAM
 
 ### 2 GB VRAM (Integrated Graphics)
-- SmolLM2 360M ⚡ (0.3 GB)
-- Llama 3.2 1B ⚡ (0.7 GB)
+- VetRate models ⚡ (0.3 GB)
+- VetRate models ⚡ (0.7 GB)
 
 ### 4 GB VRAM (Entry Gaming GPU)
-- Llama 3.2 3B ✓ (1.8 GB) - RECOMMENDED
+- VetRate models ✓ (1.8 GB) - RECOMMENDED
 - Qwen 2.5 3B (2.0 GB)
-- Phi 3.5 Mini (2.3 GB)
+- VetRate models (2.3 GB)
 
 ### 6 GB VRAM (GTX 1060, RTX 3060)
-- DeepSeek R1 7B ⭐ (3.5 GB) - BEST VALUE
-- Phi 3.5 Vision 👁️ (3.5 GB)
+- VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
+- VetRate Vision Phi 👁️ (3.5 GB)
 
 ### 8+ GB VRAM (RTX 3070+, RTX 4070+)
-- Qwen 3 8B (4.8 GB) - TOP TIER
-- Mistral 7B (4.1 GB)
-- Qwen 2.5 7B (4.5 GB)
+- VetRate Writer (4.8 GB) - TOP TIER
+- VetRate Writer (4.1 GB)
+- VetRate Writer (4.5 GB)
 
 ## Tips
 
-- **Start small**: Try Llama 3.2 3B first
+- **Start small**: Try VetRate models first
 - **Model stays cached**: Only downloads once
 - **Switch anytime**: Install multiple models
 - **Watch memory**: Close other apps if loading fails

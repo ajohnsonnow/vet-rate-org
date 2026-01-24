@@ -90,6 +90,7 @@ import EvidenceTimeline from './components/EvidenceTimeline';
 import QuickExitButton from './components/QuickExitButton';
 import MusterCall from './components/MusterCall';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
+import VKBViewer from './components/VKBViewer';
 // ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
@@ -221,6 +222,9 @@ function App() {
   const [showMusterCall, setShowMusterCall] = useState(false);
   const [showIntelligenceBriefing, setShowIntelligenceBriefing] = useState(false);
   const [briefingData, setBriefingData] = useState(null);
+  
+  // VKB: Veteran Knowledge Base Viewer
+  const [showVKBViewer, setShowVKBViewer] = useState(false);
   
   // MOBILE: Small screen warning
   const [dismissedSmallScreenWarning, setDismissedSmallScreenWarning] = useState(
@@ -663,6 +667,7 @@ function App() {
       'tactical-calculator': () => setShowTacticalCalculator(true),
       'secondary-scout': () => setShowSecondaryScoutLauncher(true),
       'my-packet': () => setShowMyPacket(true),
+      'knowledge-base': () => setShowVKBViewer(true),
       'nexus-builder': () => setShowNexusBuilder(true),
       'statement-analyzer': () => setShowStatementAnalyzer(true),
       'mos-hazard': () => setShowMOSHazardMatcher(true),
@@ -961,6 +966,7 @@ function App() {
       <Header 
         // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
+        onKnowledgeBaseClick={() => setShowVKBViewer(true)}
         onUserManualClick={() => setShowUserManual(true)}
         onVAResourcesClick={() => setShowVAResources(true)}
         // Calculate
@@ -2392,6 +2398,14 @@ function App() {
           onEdit={(section, field, value) => {
             console.log(`User edited ${field} in ${section}:`, value);
           }}
+        />
+      )}
+      
+      {/* VKB Viewer - Veteran Knowledge Base */}
+      {showVKBViewer && (
+        <VKBViewer
+          isOpen={showVKBViewer}
+          onClose={() => setShowVKBViewer(false)}
         />
       )}
       

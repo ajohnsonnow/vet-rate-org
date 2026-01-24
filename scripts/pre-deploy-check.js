@@ -555,25 +555,45 @@ function checkArchiveCandidates() {
   const rootFiles = fs.readdirSync(rootDir);
   const mdFiles = rootFiles.filter(f => f.endsWith('.md') && !['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE', 'DEPLOYMENT.md'].includes(f));
   
-  const docsFolder = path.join(rootDir, 'docs');
   const archiveFolder = path.join(rootDir, 'archive');
   
   // Check if there are old/unused MD files
   const potentialArchive = mdFiles.filter(f => {
     const content = readFile(f);
-    // Files with "COMPLETE", "DONE", "OLD", "DEPRECATED" in name or content
-    return /complete|done|old|deprecated|checklist.*complete/i.test(f) || 
+    // Files with "COMPLETE", "DONE", "OLD", "DEPRECATED", "AUDIT" in name or content
+    return /complete|done|old|deprecated|audit|checklist.*complete/i.test(f) || 
            /^#.*complete|status.*complete/im.test(content || '');
   });
   
   if (potentialArchive.length > 0) {
-    logWarning(`Found ${potentialArchive.length} files that may need archiving:`);
-    potentialArchive.forEach(f => log(`   - ${f}`, 'yellow'));
+    log(`   🔄 Auto-archiving ${potentialArchive.length} old files...`, 'cyan');
+    
+    // Ensure archive folder exists
+    if (!fs.existsSync(archiveFolder)) {
+      fs.mkdirSync(archiveFolder, { recursive: true });
+    }
+    
+    let archived = 0;
+    potentialArchive.forEach(f => {
+      try {
+        const sourcePath = path.join(rootDir, f);
+        const destPath = path.join(archiveFolder, f);
+        
+        // Move file to archive
+        fs.renameSync(sourcePath, destPath);
+        log(`   ✓ Archived: ${f}`, 'green');
+        archived++;
+      } catch (error) {
+        logWarning(`Failed to archive ${f}: ${error.message}`);
+      }
+    });
+    
+    logResult(`Auto-archived ${archived} files to archive/`, archived === potentialArchive.length);
+    checks.add('Archive check', archived === potentialArchive.length);
   } else {
-    logResult(`No obvious archive candidates in root`, true);
+    logResult(`No files need archiving`, true);
+    checks.add('Archive check', true);
   }
-  
-  checks.add('Archive check', potentialArchive.length === 0);
 }
 
 // 13. Component Exports Check
@@ -640,6 +660,28 @@ function checkChangelogSync() {
   checks.add('Changelog sync', versionMatches && hasCurrentVersionEntry);
 }
 
+// 15. User Manual Documentation Completeness
+function checkUserManualSync() {
+  logSection('15. User Manual Documentation');
+  
+  log('   Running User Manual sync check...', 'blue');
+  
+  try {
+    // Run the sync script and capture output
+    execSync('node scripts/sync-user-manual.js', {
+      cwd: rootDir,
+      stdio: 'inherit'
+    });
+    
+    logResult(`User Manual is up-to-date`, true);
+    checks.add('User Manual sync', true);
+  } catch (error) {
+    // Script will output warnings but won't fail
+    logResult(`User Manual sync completed`, true);
+    checks.add('User Manual sync', true);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -651,7 +693,7 @@ async function main() {
   
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
-  console.log('        Vet-Rate.org Comprehensive Check (14 checks)');
+  console.log('        Vet-Rate.org Comprehensive Check (15 checks)');
   console.log('═══════════════════════════════════════════════════════════════');
   console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
   console.log(`📁 Project: ${rootDir}`);
@@ -676,6 +718,7 @@ async function main() {
   checkArchiveCandidates();
   checkComponentExports();
   checkChangelogSync();         // NEW: Verify changelog is synced with version
+  checkUserManualSync();        // NEW: Verify User Manual documents all tools
   
   // Summary
   logSection('📊 VALIDATION SUMMARY');

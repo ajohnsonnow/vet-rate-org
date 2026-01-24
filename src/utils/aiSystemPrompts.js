@@ -848,24 +848,164 @@ You are helping a veteran who served their country. Your guidance could signific
 }
 
 /**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 🚨 STRICT GUARDRAILS - VA CLAIMS AI SAFETY
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * These guardrails prevent the AI from causing harm to veterans by:
+ * 1. Blocking medical/legal roleplay
+ * 2. Preventing probability-of-approval claims
+ * 3. Enforcing source citations
+ * 4. Requiring "I don't know" when uncertain
+ */
+
+/**
+ * FORBIDDEN PHRASES - These will BLOCK the response
+ * If AI generates any of these, the response is rejected entirely
+ */
+export const FORBIDDEN_PHRASES = {
+  MEDICAL_ROLEPLAY: [
+    /as a (doctor|physician|medical professional|clinician)/i,
+    /I (diagnose|prescribe|recommend treatment for)/i,
+    /this is medical advice/i,
+    /you have (been diagnosed|definitely have)/i,
+  ],
+  LEGAL_ROLEPLAY: [
+    /as (a lawyer|an attorney|legal counsel)/i,
+    /this is legal advice/i,
+    /I represent you/i,
+    /you should file a lawsuit/i,
+  ],
+  GUARANTEE_OUTCOMES: [
+    /your claim will (definitely|certainly|100%) (be approved|succeed)/i,
+    /you (are|will be) guaranteed (\d+%|approval|service connection)/i,
+    /the VA (must|will definitely) (approve|grant|award)/i,
+    /there is no way (the VA|they) (can|will) deny/i,
+  ],
+  PROBABILITY_CLAIMS: [
+    /you have (a|an) (\d+)% (chance|probability) of (approval|winning)/i,
+    /your claim has (\d+)% (likelihood|odds)/i,
+    /approval rate (is|will be) (\d+)%/i,
+  ],
+  RATER_ROLEPLAY: [
+    /as a VA rater/i,
+    /speaking as someone who rates claims/i,
+    /I would rate this claim/i,
+    /the rater will (definitely|certainly) (approve|deny)/i,
+  ],
+  NEXUS_IMPERSONATION: [
+    /this is a nexus opinion/i,
+    /in my medical opinion, it is (more likely than not|at least as likely as not)/i,
+    /I am providing a medical nexus/i,
+  ],
+};
+
+/**
+ * REQUIRED DISCLAIMERS - AI must include these for certain topics
+ */
+export const REQUIRED_DISCLAIMERS = {
+  MEDICAL_TOPICS: `\n\n⚠️ **Important**: This is educational information only. I am not a doctor and cannot diagnose conditions, interpret medical records, or provide medical advice. For medical questions, consult your healthcare provider.`,
+  
+  LEGAL_TOPICS: `\n\n⚠️ **Important**: This is educational information only. I am not a lawyer and cannot provide legal advice. For legal questions about appeals or litigation, consult an accredited attorney or VA-accredited representative.`,
+  
+  RATING_PREDICTIONS: `\n\n⚠️ **Important**: I cannot predict claim outcomes. Only VA raters review evidence and make rating decisions. This analysis is based on regulations, not a guarantee of approval or denial.`,
+  
+  C_AND_P_EXAMS: `\n\n⚠️ **Important**: C&P exams are conducted by VA-contracted medical examiners. I cannot replicate or replace their professional medical opinions. This is practice guidance only.`,
+  
+  NEXUS_LETTERS: `\n\n⚠️ **Important**: A valid nexus letter must come from a licensed medical professional with expertise in the relevant condition. AI-generated text is not a substitute for a professional medical opinion.`,
+};
+
+/**
+ * CITATION REQUIREMENTS - Enforced for regulatory claims
+ */
+export const CITATION_ENFORCEMENT_RULES = {
+  // Phrases that MUST include a CFR citation
+  REQUIRES_CITATION: [
+    /service[ -]connection/i,
+    /presumpti(ve|on)/i,
+    /secondary condition/i,
+    /aggravat(e|ion)/i,
+    /effective date/i,
+    /appeals (timeline|deadline)/i,
+    /VA (regulation|rule|requirement) (states|says|requires)/i,
+  ],
+  
+  // Valid citation format: "38 CFR § X.XXX" or "38 CFR Part X"
+  VALID_CITATION_PATTERN: /38 CFR (§|Part) ?\d+\.?\d*/,
+};
+
+/**
+ * "I DON'T KNOW" ENFORCEMENT
+ * AI must use these phrases when uncertain, not generate plausible-sounding guesses
+ */
+export const UNCERTAINTY_REQUIRED_PHRASES = [
+  "I don't have that specific information",
+  "I cannot find that in the loaded regulations",
+  "That is outside my knowledge base",
+  "I am not certain about",
+  "I cannot verify",
+];
+
+/**
  * Anti-Hallucination Validation Prompts
  * These are appended to user prompts to reinforce accuracy
  */
 export const ANTI_HALLUCINATION_SUFFIX = `
 
-REMINDER - ACCURACY REQUIREMENTS:
-- Only reference information from loaded data (regulations, veteran's records)
-- If you don't have specific information, say "I don't have that information"
-- Cite specific CFR sections when referencing regulations
-- Never make up statistics, medical facts, or legal requirements
-- If uncertain, acknowledge the uncertainty`;
+═══════════════════════════════════════════════════════════════════════════════
+🚨 STRICT ACCURACY REQUIREMENTS 🚨
+═══════════════════════════════════════════════════════════════════════════════
+
+YOU ARE NOT:
+❌ A doctor, physician, or medical professional
+❌ A lawyer, attorney, or legal advisor
+❌ A VA rater or claims adjudicator
+❌ A C&P examiner
+❌ A source of medical nexus opinions
+
+YOU MUST:
+✅ Say "I don't have that information" when uncertain - do NOT generate plausible guesses
+✅ Cite ONLY regulations from the loaded knowledge base (38 CFR / M21-1)
+✅ Include disclaimers when discussing medical/legal topics
+✅ Refuse to predict claim approval probabilities or guarantee outcomes
+✅ Direct users to professionals for medical diagnoses, legal advice, or nexus letters
+
+CITATION RULES:
+- If you reference a VA regulation, cite the specific 38 CFR section or M21-1 chapter
+- If the regulation is not in your loaded knowledge base, say so explicitly
+- Do NOT paraphrase regulations - quote them or link to official sources
+- Example GOOD response: "According to 38 CFR § 3.310(a), secondary service connection requires..."
+- Example BAD response: "The VA generally considers secondary conditions..."
+
+FORBIDDEN RESPONSES:
+- "You have a 75% chance of approval"
+- "As a medical professional, I can say..."
+- "Your claim will definitely be approved"
+- "I diagnose this as..."
+- "The VA must grant you service connection"
+
+If you are asked to do something you cannot do, explain WHY you cannot do it (e.g., "I cannot provide medical diagnoses because I am an AI trained on VA regulations, not a licensed physician").
+
+═══════════════════════════════════════════════════════════════════════════════`;
 
 /**
- * Post-Generation Validation
- * Check AI responses for common hallucination patterns
+ * Post-Generation Validation (BLOCKING VERSION)
+ * Check AI responses for violations and REJECT them entirely
  */
 export function validateAIResponse(response, context = {}) {
+  const errors = [];
   const warnings = [];
+
+  // === BLOCKING CHECKS - These REJECT the response ===
+
+  // Check for forbidden medical/legal roleplay
+  Object.entries(FORBIDDEN_PHRASES).forEach(([category, patterns]) => {
+    patterns.forEach(pattern => {
+      if (pattern.test(response)) {
+        errors.push(`BLOCKED: Response contains forbidden ${category.toLowerCase().replace('_', ' ')}`);
+      }
+    });
+  });
 
   // Check for ungrounded CFR citations
   if (context.loadedRegulations) {
@@ -874,43 +1014,41 @@ export function validateAIResponse(response, context = {}) {
     citations.forEach(cite => {
       const section = cite.replace('38 CFR ', '').replace('§', '').trim();
       if (!context.loadedRegulations.includes(section)) {
-        warnings.push(`AI cited ${cite} which is not in loaded regulations`);
+        errors.push(`BLOCKED: AI cited ${cite} which is not in loaded regulations`);
       }
     });
   }
 
-  // Check for medical advice red flags
-  const medicalAdvicePatterns = [
-    /you (should|must|need to) see a doctor/i,
-    /I (recommend|suggest|advise) you (take|use|try)/i,
-    /this will (cure|fix|treat)/i,
-  ];
-  medicalAdvicePatterns.forEach(pattern => {
-    if (pattern.test(response)) {
-      warnings.push('AI may be providing medical advice');
+  // Check for regulatory claims without citations
+  CITATION_ENFORCEMENT_RULES.REQUIRES_CITATION.forEach(pattern => {
+    if (pattern.test(response) && !CITATION_ENFORCEMENT_RULES.VALID_CITATION_PATTERN.test(response)) {
+      warnings.push('Response discusses VA regulations but does not cite specific CFR sections');
     }
   });
 
-  // Check for legal advice red flags
-  const legalAdvicePatterns = [
-    /you (should|must) hire a (lawyer|attorney)/i,
-    /your claim will (definitely|certainly) be (approved|denied)/i,
-    /you are guaranteed a/i,
-  ];
-  legalAdvicePatterns.forEach(pattern => {
-    if (pattern.test(response)) {
-      warnings.push('AI may be providing legal advice or guarantees');
-    }
-  });
+  // === WARNING CHECKS - These flag issues but don't block ===
+
+  // Check for missing disclaimers on medical topics
+  const medicalTerms = /diagnos(is|e|ed)|symptom|treatment|condition|medical record|C&P exam/i;
+  if (medicalTerms.test(response) && !response.includes('⚠️')) {
+    warnings.push('Response discusses medical topics but lacks a disclaimer');
+  }
 
   // Check for invented statistics
   if (response.match(/\d+% of veterans/i) && !context.hasStatistics) {
     warnings.push('AI cited statistics that may not be from loaded data');
   }
 
+  // Check for certainty language when predictions are inappropriate
+  const certaintyPhrases = /(will definitely|certainly will|guaranteed to|must approve|cannot deny)/i;
+  if (certaintyPhrases.test(response)) {
+    warnings.push('Response uses overly certain language about claim outcomes');
+  }
+
   return {
-    isValid: warnings.length === 0,
-    warnings,
+    isValid: errors.length === 0,
+    errors, // Blocking - response must be regenerated
+    warnings, // Non-blocking - show to user but allow response
     response,
   };
 }

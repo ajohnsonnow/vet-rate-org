@@ -15,6 +15,11 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import {
+  loadVKB,
+  saveVKB,
+  mergeMusterCallIntoVKB,
+} from '../utils/veteranKnowledgeBase';
 
 /**
  * Intelligence Briefing - Field Review Modal
@@ -133,6 +138,17 @@ export default function IntelligenceBriefing({
         `⚠️ You have ${discrepancies.length} unresolved discrepancy(ies). Proceed anyway?`
       );
       if (!proceed) return;
+    }
+
+    // Build Veteran Knowledge Base from extracted data
+    try {
+      let vkb = loadVKB();
+      vkb = mergeMusterCallIntoVKB(vkb, editableData);
+      saveVKB(vkb);
+      console.log('✅ VKB updated with Muster Call data');
+    } catch (err) {
+      console.error('Error updating VKB:', err);
+      // Don't block confirmation if VKB fails
     }
 
     if (onConfirm) {

@@ -310,35 +310,56 @@ export const getStorageInfo = () => {
 };
 
 /**
- * Capture console errors (if any were logged)
+ * Capture console messages (errors, warnings, logs) for bug reports
+ * DIAMOND LEVEL: Captures ALL console activity with context
  */
 export const getConsoleErrors = () => {
-  // This would need to be set up with a global error handler
-  // For now, return any errors stored in sessionStorage
   try {
-    const errors = sessionStorage.getItem('vet_rate_console_errors');
-    return errors ? JSON.parse(errors) : [];
+    const logs = sessionStorage.getItem('vet_rate_console_logs');
+    return logs ? JSON.parse(logs) : [];
   } catch {
     return [];
   }
 };
 
 /**
- * Log console error for bug reports
+ * Log console message for bug reports
+ * ENHANCED: Now captures errors, warnings, logs, and info
  */
-export const logConsoleError = (error) => {
+export const logConsoleError = (entry) => {
   try {
-    const errors = getConsoleErrors();
-    errors.push({
-      message: error.message || String(error),
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    // Keep only last 10 errors
-    const recentErrors = errors.slice(-10);
-    sessionStorage.setItem('vet_rate_console_errors', JSON.stringify(recentErrors));
+    const logs = getConsoleErrors();
+    
+    // Create structured entry
+    const logEntry = {
+      type: entry.type || 'error', // 'error', 'warn', 'log', 'info'
+      message: entry.message || String(entry),
+      stack: entry.stack || null,
+      timestamp: new Date().toISOString(),
+      url: entry.url || window.location.href,
+      lineNumber: entry.lineno || null,
+      columnNumber: entry.colno || null,
+      userAgent: navigator.userAgent
+    };
+    
+    logs.push(logEntry);
+    
+    // Keep only last 50 messages (increased from 10)
+    const recentLogs = logs.slice(-50);
+    sessionStorage.setItem('vet_rate_console_logs', JSON.stringify(recentLogs));
   } catch {
     // Silently fail if sessionStorage is unavailable
+  }
+};
+
+/**
+ * Clear console logs (useful for testing or after bug report submission)
+ */
+export const clearConsoleLogs = () => {
+  try {
+    sessionStorage.removeItem('vet_rate_console_logs');
+  } catch {
+    // Silently fail
   }
 };
 
@@ -466,15 +487,66 @@ ${storageInfo.savedClaimConditions.map((c, i) => `  ${i + 1}. ${c.condition} (${
   }
 
   if (consoleErrors && consoleErrors.length > 0) {
+    // Group by type for better readability
+    const errorTypes = {
+      error: consoleErrors.filter(e => e.type === 'error'),
+      warn: consoleErrors.filter(e => e.type === 'warn'),
+      log: consoleErrors.filter(e => e.type === 'log'),
+      info: consoleErrors.filter(e => e.type === 'info')
+    };
+    
     report += `
 ${divider}
-⚠️ CONSOLE ERRORS (Last ${consoleErrors.length})
+🔍 CONSOLE LOGS (Last ${consoleErrors.length} entries)
 ${divider}
-${consoleErrors.map((err, i) => `
+`;
+    
+    if (errorTypes.error.length > 0) {
+      report += `
+❌ ERRORS (${errorTypes.error.length}):
+${errorTypes.error.map((err, i) => `
 [${i + 1}] ${err.timestamp}
-Message: ${err.message}
-${err.stack ? `Stack: ${err.stack.split('\n').slice(0, 3).join('\n')}` : ''}
-`).join('\n')}
+    Message: ${err.message}
+    URL: ${err.url}${err.lineNumber ? `\n    Line: ${err.lineNumber}:${err.columnNumber}` : ''}
+    ${err.stack ? `Stack: ${err.stack.split('\n').slice(0, 3).join('\n    ')}` : ''}
+`).join('')}
+`;
+    }
+    
+    if (errorTypes.warn.length > 0) {
+      report += `
+⚠️ WARNINGS (${errorTypes.warn.length}):
+${errorTypes.warn.map((warn, i) => `
+[${i + 1}] ${warn.timestamp}
+    Message: ${warn.message}
+    URL: ${warn.url}
+`).join('')}
+`;
+    }
+    
+    if (errorTypes.log.length > 0) {
+      report += `
+📝 LOGS (${errorTypes.log.length}):
+${errorTypes.log.map((log, i) => `
+[${i + 1}] ${log.timestamp} - ${log.message}
+`).join('')}
+`;
+    }
+    
+    if (errorTypes.info.length > 0) {
+      report += `
+ℹ️ INFO (${errorTypes.info.length}):
+${errorTypes.info.map((info, i) => `
+[${i + 1}] ${info.timestamp} - ${info.message}
+`).join('')}
+`;
+    }
+  } else {
+    report += `
+${divider}
+🔍 CONSOLE LOGS
+${divider}
+No console messages captured. (Console monitoring may not be active)
 `;
   }
 
@@ -516,14 +588,16 @@ export const copyToClipboard = async (text) => {
 
 /**
  * Initialize global error handler for capturing runtime errors
+ * DIAMOND LEVEL: Captures ALL console activity (errors, warnings, logs, info)
  */
 export const initializeErrorCapture = () => {
   // Capture unhandled errors
   window.addEventListener('error', (event) => {
     logConsoleError({
+      type: 'error',
       message: event.message,
       stack: event.error?.stack,
-      filename: event.filename,
+      url: event.filename,
       lineno: event.lineno,
       colno: event.colno
     });
@@ -532,8 +606,77 @@ export const initializeErrorCapture = () => {
   // Capture unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
     logConsoleError({
+      type: 'error',
       message: `Unhandled Promise Rejection: ${event.reason}`,
       stack: event.reason?.stack
     });
   });
+  
+  // Intercept console methods to capture logs
+  const originalConsole = {
+    error: console.error,
+    warn: console.warn,
+    log: console.log,
+    info: console.info
+  };
+  
+  // Intercept console.error
+  console.error = function(...args) {
+    logConsoleError({
+      type: 'error',
+      message: args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' '),
+      stack: new Error().stack
+    });
+    originalConsole.error.apply(console, args);
+  };
+  
+  // Intercept console.warn
+  console.warn = function(...args) {
+    logConsoleError({
+      type: 'warn',
+      message: args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ')
+    });
+    originalConsole.warn.apply(console, args);
+  };
+  
+  // Intercept console.log (capture only important logs to avoid spam)
+  console.log = function(...args) {
+    // Only capture logs that might be relevant to bugs
+    const message = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+    ).join(' ');
+    
+    // Filter: only capture logs with keywords that indicate issues
+    const keywords = ['error', 'fail', 'invalid', 'undefined', 'null', 'not found', 'missing', 'warning'];
+    if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+      logConsoleError({
+        type: 'log',
+        message: message
+      });
+    }
+    
+    originalConsole.log.apply(console, args);
+  };
+  
+  // Intercept console.info
+  console.info = function(...args) {
+    const message = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+    ).join(' ');
+    
+    // Only capture info messages with relevant keywords
+    const keywords = ['loaded', 'initialized', 'ready', 'completed', 'started'];
+    if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+      logConsoleError({
+        type: 'info',
+        message: message
+      });
+    }
+    
+    originalConsole.info.apply(console, args);
+  };
 };
