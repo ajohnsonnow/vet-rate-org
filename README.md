@@ -12,7 +12,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 - **Zero Data Collection**: No accounts, no tracking, no analytics, no PII storage
 - **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/vet-rate-org) or use DevTools to watch network traffic
 - **No "If It's Free, You're the Product"**: Static hosting costs ~$0/month. Built by a veteran for veterans.
-- **Optional AI Features**: When used, only condition names (never personal info) sent to Google Gemini using YOUR API key
+- **AI Options**: Custom local LLMs (100% private) or optional Google Gemini (BYOK) - your choice
 
 **Don't trust - verify:** See [Security Proof Documentation](./docs/privacy/security-proof.md) for step-by-step verification guide.
 
@@ -112,7 +112,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 - **100% Client-Side**: All core processing happens in your browser
 - **Zero Data Collection**: No accounts, no tracking, no PII storage
 - **No External Transmission**: Your searches never leave your device
-- **AI is Optional**: When using AI features, only non-PII condition descriptions are shared (with explicit consent)
+- **AI Options**: Local Diamond Swarm models (recommended) or optional Gemini cloud with YOUR API key
 
 ### Accessibility
 - **WCAG 2.1 AA Compliant**: Full keyboard navigation and screen reader support
@@ -138,12 +138,10 @@ cd vet-rate-org
 # Install dependencies
 npm install
 
-# (Optional) Set up AI features - copy and configure environment
-cp .env.example .env.local
-# Edit .env.local and add your Gemini API key (get free key at https://aistudio.google.com/app/apikey)
-
 # Start development server (opens at http://localhost:3000)
 npm run dev
+
+# AI features use 100% local models - no API keys or cloud setup required!
 ```
 
 ### Build for Production
@@ -346,7 +344,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 ### The Reality of Modern Development
 **Traditional Development Cost**: A professional team would require **$2.09M-$2.59M** and 12-24 months. A solo senior developer would need **15,420 hours** (7.4 years full-time).
 
-**AI-Assisted Reality**: **55 hours** using Gemini 3 (prompt engineering & planning) and Claude 4.5 Opus/Sonnet/Haiku in VS Code, combined with modern frameworks (React 18, Vite, Tailwind CSS) = **$7,425 total cost**.
+**AI-Assisted Reality**: **55 hours** using Claude 4.5 Opus/Sonnet/Haiku in VS Code, combined with modern frameworks (React 18, Vite, Tailwind CSS) = **$7,425 total cost**.
 
 **This 280x productivity multiplier** is why we can offer professional-grade tools worth $2.5M that others charge $500+ per use or 30% of backpay ($15K-50K average) - completely free to veterans forever.
 
@@ -414,55 +412,57 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 ## ✨ AI Statement Assistant
 
-Vet-Rate.org includes powerful AI-powered tools with **two options**: Cloud AI (Google Gemini) for convenience, or **100% Private Local AI** that runs entirely in your browser.
+Vet-Rate.org offers **two AI options**: Custom local LLMs (recommended) for maximum privacy, or Google Gemini cloud AI for convenience.
 
-### 🤖 Local AI - 17 Models, 100% Private
+### 🤖 Diamond Swarm - Custom Local AI Models (Recommended)
 
-**Your data NEVER leaves your computer. Zero internet required after model download.**
+**100% Private • Zero Cloud Dependencies • Trained on VA-Specific Data**
 
-We've integrated WebLLM technology to run AI models directly in your browser using WebGPU:
+We've developed custom fine-tuned Qwen2.5-7B models specifically for veteran disability claims:
 
-#### Models Organized by Best Use
+| Model | Purpose | Size | HuggingFace |
+|-------|---------|------|-------------|
+| **Diamond-Swarm-Auditor-7B** ⭐ | Legal analysis, compliance review, document parsing | ~4.5 GB | [Link](https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Auditor-7B) |
+| **Diamond-Swarm-Writer-7B** | Personal statements, nexus letters, buddy statements | ~4.5 GB | [Link](https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Writer-7B) |
+| **Diamond-Swarm-Rater-7B** | VA rating calculations, bilateral factor, TDIU assessment | ~4.5 GB | [Link](https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Rater-7B) |
 
-| Category | Model | Size | Best For |
-|----------|-------|------|----------|
-| **📄 Document Parsing** | DeepSeek R1 7B ⭐ | 3.5 GB | C-Files, DD214s, complex medical records |
-| **📄 Document Parsing** | Qwen 2.5 7B | 4.5 GB | Medical terminology, lab values |
-| **👁️ Vision (Images)** | Phi 3.5 Vision | 3.5 GB | Scanned documents, DD214 photos |
-| **✍️ Creative Writing** | Qwen 3 8B | 4.8 GB | Nexus letters, personal statements |
-| **✍️ Creative Writing** | Mistral 7B | 4.1 GB | Witness interviews, natural prose |
-| **⚖️ Legal Analysis** | DeepSeek R1 Llama 8B | 4.5 GB | TDIU arguments, decision decoder |
-| **🔴 Adversarial** | DeepSeek R1 7B | 3.5 GB | Red Team, War Room, claim stress-testing |
-| **⚡ Quick Tasks** | Llama 3.2 3B | 1.8 GB | Secondary Scout, search, calculator help |
-| **⚡ Ultra-Fast** | SmolLM2 360M | 0.3 GB | Basic questions on any device |
+#### Training Data
+- 38 CFR Part 4 (VA Rating Schedule)
+- BVA case decisions
+- VA claims procedures and terminology
+- Nexus letter templates & personal statement examples
 
-#### Smart LLM Recommendations
+#### Why Custom Models?
 
-Each AI-powered tool now shows a **recommended model badge** in the header:
-- 👁️ Vision - Use Phi 3.5 Vision for scanned documents
-- ⭐ Recommended - Best model for that specific tool
-- ⚡ Fast - Speed-optimized for quick tasks
-- 🧠 Reasoning - DeepSeek R1 for complex analysis
+- ✅ **Trained on 38 CFR** - Understands VA rating criteria, not generic medical info
+- ✅ **Veteran-Specific Vocabulary** - Knows DBQs, C&P exams, ITF dates, bilateral factors
+- ✅ **No Hallucination of Regulations** - Fine-tuned to cite actual CFR sections
+- ✅ **100% Offline After Download** - Works without internet connection
+- ✅ **Zero Data Transmission** - Your claims info stays on YOUR computer
 
 #### VRAM Requirements
 
-| VRAM | Recommended Models |
-|------|-------------------|
-| 2 GB | SmolLM2 360M, Llama 3.2 1B |
-| 4 GB | Llama 3.2 3B, Qwen 2.5 3B, Phi 3.5 Mini |
-| 6 GB | DeepSeek R1 7B, Phi 3.5 Vision |
-| 8 GB+ | Qwen 3 8B, Mistral 7B, Qwen 2.5 7B |
+| VRAM | Recommended Configuration |
+|------|---------------------------|
+| 4 GB | Any model with Q4_K_M quantization |
+| 6 GB | Any model with Q5_K_M quantization |
+| 8 GB+ | Full precision or multiple models |
 
-### ☁️ Cloud AI Features (Google Gemini)
-- **Powered by Google Gemini** (free tier)
+#### Available Formats
+- **HuggingFace** - Full weights for training/inference
+- **GGUF** - Quantized for llama.cpp and Ollama
+- **WebGPU** - In-browser via WebLLM (coming soon)
+
+### ☁️ Cloud AI Option: Google Gemini (BYOK)
+
+For users who prefer cloud AI or don't have sufficient VRAM for local models:
+
+- **Powered by Google Gemini** (free tier available)
+- **Bring Your Own Key (BYOK)** - Your API key, your control
 - **Explicit consent required** before any data is sent
 - **No PII shared** - only condition names and symptom descriptions
-- **Completely optional** - standard templates always available
-- **🚨 Crisis Interceptor** - Automatically detects self-harm language and provides immediate crisis resources before any AI interaction
 
-### Setup Options
-
-#### Option 1: Bring Your Own Key (BYOK) - Recommended
+#### Setup: Bring Your Own Key
 1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. In the app, go to **Settings** (gear icon in header)
 3. Paste your key in the "AI Features (BYOK)" section
@@ -474,25 +474,18 @@ Each AI-powered tool now shows a **recommended model badge** in the header:
 - ✅ **Maximum privacy** - Key never leaves your browser
 - ✅ **No backend server needed** - True client-side architecture
 
-#### Option 2: Environment Variable (Legacy/Dev)
-1. Copy `.env.example` to `.env.local`
-2. Add your key: `VITE_GEMINI_API_KEY=your_key_here`
-3. Restart the dev server
-
-**⚠️ Security Warning:** Never commit `.env.local` to version control. Never embed API keys in client-side code for production. For production deployments, use BYOK model or implement a secure backend proxy.
-
 ### Safety & Privacy
 
 #### Crisis Intervention
-- **Pre-flight screening**: All text is checked for self-harm language BEFORE being sent to AI
-- **Automatic intervention**: If crisis language is detected, the app immediately displays Veterans Crisis Line resources (988-1) and blocks the AI call
+- **Pre-flight screening**: All text is checked for self-harm language BEFORE any AI processing
+- **Automatic intervention**: If crisis language is detected, the app immediately displays Veterans Crisis Line resources (988, press 1) and blocks the AI call
 - **No AI therapy**: The AI never attempts to respond to crisis situations - only trained human counselors do
 
 #### PII Protection  
 - **Input scrubbing**: Users are warned not to enter SSN, full names, or addresses
-- **Output protection**: AI is instructed to redact any PII that slips through, replacing with placeholders
-- **No retention**: Google's free tier doesn't use prompts for model training
-- **Full disclosure**: Users must explicitly consent before each AI use
+- **Output protection**: AI is instructed to redact any PII that slips through
+- **Zero network transmission**: All processing happens locally in your browser
+- **Full transparency**: Open source models, open source code
 
 See [AI Privacy Documentation](docs/privacy/ai-assistant.md) for complete details.
 

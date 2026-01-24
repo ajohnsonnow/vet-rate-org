@@ -323,6 +323,10 @@ const AVAILABLE_MODELS = [
     recommended: true,
     category: 'diamond',
     isDiamond: true,
+    // Base model transparency - let veterans know what powers their AI
+    baseModel: 'Qwen2.5-7B-Instruct',
+    baseModelInfo: 'Fine-tuned from Alibaba\'s Qwen 2.5 (7B parameters) - Open source, privacy-respecting',
+    trainingFocus: 'VA regulations, 38 CFR, claim evidence analysis',
   },
   {
     id: 'diamond-writer',
@@ -335,6 +339,10 @@ const AVAILABLE_MODELS = [
     recommended: true,
     category: 'diamond',
     isDiamond: true,
+    // Base model transparency
+    baseModel: 'Qwen2.5-7B-Instruct',
+    baseModelInfo: 'Fine-tuned from Alibaba\'s Qwen 2.5 (7B parameters) - Open source, privacy-respecting',
+    trainingFocus: 'Veteran-voice writing, empathetic statements, legal phrasing',
   },
   {
     id: 'diamond-rater',
@@ -347,6 +355,10 @@ const AVAILABLE_MODELS = [
     recommended: true,
     category: 'diamond',
     isDiamond: true,
+    // Base model transparency
+    baseModel: 'Qwen2.5-7B-Instruct',
+    baseModelInfo: 'Fine-tuned from Alibaba\'s Qwen 2.5 (7B parameters) - Open source, privacy-respecting',
+    trainingFocus: 'VA math, bilateral factor, combined ratings table',
   },
 ];
 
@@ -1867,6 +1879,26 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                               <p className="text-gray-500 text-xs mt-1">
                                 Size: {model.size} • VRAM: {model.vramRequired}
                               </p>
+                              {/* Base Model Transparency - show veterans what powers their AI */}
+                              {model.baseModel && !model.disabled && (
+                                <div className="mt-2 pt-2 border-t border-gray-700/50">
+                                  <p className="text-xs text-amber-400/80 flex items-center gap-1">
+                                    <span>🔬</span>
+                                    <span className="font-medium">Based on:</span>
+                                    <span className="text-amber-300">{model.baseModel}</span>
+                                  </p>
+                                  {model.baseModelInfo && (
+                                    <p className="text-xs text-gray-500 mt-0.5 ml-4">
+                                      {model.baseModelInfo}
+                                    </p>
+                                  )}
+                                  {model.trainingFocus && (
+                                    <p className="text-xs text-emerald-400/70 mt-0.5 ml-4">
+                                      🎯 Specialized for: {model.trainingFocus}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
                               model.disabled

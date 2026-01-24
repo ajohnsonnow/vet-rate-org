@@ -6,14 +6,70 @@
  *
  * The Consistency Engine - UI Component
  * Displays contradictions and helps users fix them
+ * 
+ * Now includes:
+ * - Rules Mode: Automated rule-based checks across stored data
+ * - AI Mode: "Cross-Examination" - Compare evidence vs statements with AI
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import useConsistencyCheck, { getHealthStatus } from '../utils/useConsistencyCheck';
+import AIConsistencyAnalyzer from './AIConsistencyAnalyzer';
 
 export default function ConsistencyEngine({ onClose }) {
+  const [activeTab, setActiveTab] = useState('rules'); // 'rules' or 'ai'
   const { contradictions, isChecking, lastCheck, refresh, criticalCount, highCount, mediumCount, totalCount } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);
+
+  // If AI tab is selected, render the AI analyzer
+  if (activeTab === 'ai') {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-800 rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+          {/* Header with tabs */}
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-bold">
+                  🔍 The Consistency Engine
+                </h2>
+                {/* Tabs */}
+                <div className="flex bg-black/20 rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveTab('rules')}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                      activeTab === 'rules' ? 'bg-white text-purple-700' : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    📋 Rules Check
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('ai')}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                      activeTab === 'ai' ? 'bg-white text-purple-700' : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    🤖 AI Analysis
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-gray-200 text-2xl font-bold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          {/* AI Content */}
+          <div className="overflow-y-auto max-h-[calc(90vh-80px)] bg-gray-900">
+            <AIConsistencyAnalyzer onBack={() => setActiveTab('rules')} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getSeverityBadge = (severity) => {
     const badges = {
@@ -39,9 +95,30 @@ export default function ConsistencyEngine({ onClose }) {
         } text-white p-6`}>
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-3xl font-bold mb-2">
-                {healthStatus.icon} The Consistency Engine <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
-              </h2>
+              <div className="flex items-center gap-4 mb-2">
+                <h2 className="text-3xl font-bold">
+                  {healthStatus.icon} The Consistency Engine <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                </h2>
+                {/* Tabs */}
+                <div className="flex bg-black/20 rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveTab('rules')}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                      activeTab === 'rules' ? 'bg-white text-gray-800' : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    📋 Rules
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('ai')}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                      activeTab === 'ai' ? 'bg-white text-gray-800' : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    🤖 AI Cross-Exam
+                  </button>
+                </div>
+              </div>
               <p className="text-white/90">
                 Automated contradiction detection across all your data
               </p>

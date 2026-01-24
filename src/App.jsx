@@ -87,6 +87,7 @@ import LoadingBunker from './components/LoadingBunker';
 import BodyMapSelector from './components/BodyMapSelector';
 import ClaimStressTest from './components/ClaimStressTest';
 import EvidenceTimeline from './components/EvidenceTimeline';
+import QuickExitButton from './components/QuickExitButton';
 // ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
@@ -111,6 +112,8 @@ import { VaApiStatusBanner } from './components/VaApiStatus';
 import { MobileSaveReminder } from './components/PacketPersistence';
 import { HelperModeProvider } from './contexts/HelperModeContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { initializeCompassionateVoice } from './utils/voiceIndex';
 import { searchDisabilityData, validateSearchTerm } from './utils/searchUtils';
 import { saveStatement, getSavedClaims, getStatement } from './utils/claimsStorage';
 import { initializeErrorCapture } from './utils/bugReportUtils';
@@ -300,6 +303,12 @@ function App() {
   // Initialize error capture for bug reports
   useEffect(() => {
     initializeErrorCapture();
+  }, []);
+
+  // Initialize Compassionate Voice System (panic key, crisis listener)
+  useEffect(() => {
+    initializeCompassionateVoice();
+    console.log('🎙️ Compassionate Voice System initialized');
   }, []);
   
   // Helper function to get current tool name for AI Assistant context
@@ -2934,6 +2943,9 @@ function App() {
       
       {/* FORCE MULTIPLIER: Focus Mode Toggle for TBI/ADHD users - Now integrated into modal headers */}
       
+      {/* COMPASSIONATE VOICE: Quick Exit Button - Trauma-informed safety */}
+      <QuickExitButton position="bottom-left" variant="subtle" />
+      
       {/* Security Badge - Always visible proof of privacy */}
       <SecurityBadge />
     </div>
@@ -2944,13 +2956,15 @@ function App() {
 function AppWrapper() {
   return (
     <AdminAuthProvider>
-      <LocalAIProvider>
-        <FocusModeProvider>
-          <HelperModeProvider>
-            <App />
-          </HelperModeProvider>
-        </FocusModeProvider>
-      </LocalAIProvider>
+      <LanguageProvider>
+        <LocalAIProvider>
+          <FocusModeProvider>
+            <HelperModeProvider>
+              <App />
+            </HelperModeProvider>
+          </FocusModeProvider>
+        </LocalAIProvider>
+      </LanguageProvider>
     </AdminAuthProvider>
   );
 }
