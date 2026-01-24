@@ -195,7 +195,7 @@ CURRENT CONTEXT:
 - Helper Mode (for caregivers): ${isHelperMode ? 'ENABLED - Use simplified language' : 'Disabled'}
 
 AVAILABLE TOOLS ON VET-RATE.ORG:
-1. **Disability Search** - Search 751 VA conditions with ratings (eCFR validated)
+1. **Disability Search** - Search 748 VA conditions with ratings (eCFR validated)
 2. **Rating Calculator** - Calculate combined disability rating using 38 CFR § 4.25
 3. **Secondary Scout** - Find conditions caused by existing disabilities (38 CFR § 3.310)
 4. **C-File Analyzer** - AI analysis of VA claims files

@@ -72,7 +72,7 @@ function Header({
   const { isDark, toggleTheme } = useTheme();
   const { isHelperMode } = useHelperMode();
   const { getDropdownClasses, getColorClass, colors } = useColorSchemas();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage(); // Include language to force re-render on change
   const dropdownClasses = getDropdownClasses();
   
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);

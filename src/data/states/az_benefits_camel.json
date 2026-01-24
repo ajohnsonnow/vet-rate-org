@@ -1,0 +1,87 @@
+{
+  "state": "Arizona",
+  "stateCode": "AZ",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://dvs.az.gov",
+  "dataStatus": "needs_validation",
+  "benefits": [
+    {
+      "state": "Arizona",
+      "stateCode": "AZ",
+      "name": "Disabled Veteran License Plates",
+      "category": "Vehicle",
+      "description": "Veterans with service-connected disabilities can obtain special DV license plates with reduced or waived registration fees.",
+      "estimatedValue": "$35-$75/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": true,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Any service-connected disability qualifies"
+        ]
+      },
+      "howToApply": "Visit your local DMV office. Submit VA rating letter and DD-214.",
+      "legalCitations": [
+        {
+          "statute": "Arizona Vehicle Code",
+          "description": "Disabled veteran license plates",
+          "url": "https://dmv.az.gov"
+        }
+      ],
+      "sourceUrl": "https://dmv.az.gov/dv-plates",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Arizona",
+      "stateCode": "AZ",
+      "name": "In-State Tuition for Veterans",
+      "category": "Education",
+      "description": "Veterans using GI Bill benefits qualify for in-state tuition at Arizona public colleges and universities.",
+      "estimatedValue": "$12,000-$20,000/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": false,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Must be using GI Bill benefits"
+        ]
+      },
+      "howToApply": "Contact the veterans services office at your Arizona institution. Submit DD-214 and proof of GI Bill eligibility.",
+      "legalCitations": [
+        {
+          "statute": "Arizona Education Code",
+          "description": "In-state tuition for veterans",
+          "url": "https://education.az.gov"
+        }
+      ],
+      "sourceUrl": "https://education.az.gov/veterans",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Arizona",
+      "stateCode": "AZ",
+      "name": "Hunting and Fishing License Discount",
+      "category": "Recreation",
+      "description": "Disabled veterans receive discounted or free hunting and fishing licenses in Arizona.",
+      "estimatedValue": "$50-$100/year",
+      "requirements": {
+        "minRating": 10,
+        "residencyRequired": true,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Discount varies by disability rating"
+        ]
+      },
+      "howToApply": "Purchase licenses from any vendor or online. Show VA rating letter for discount.",
+      "legalCitations": [
+        {
+          "statute": "Arizona Wildlife Code",
+          "description": "License discounts for disabled veterans",
+          "url": "https://wildlife.az.gov"
+        }
+      ],
+      "sourceUrl": "https://wildlife.az.gov/veterans",
+      "lastVerified": "2026-01-24"
+    }
+  ]
+}

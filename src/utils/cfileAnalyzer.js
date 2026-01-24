@@ -629,6 +629,14 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}, abor
   const aiStatus = getAIStatus();
   const aiMode = aiStatus.effectiveMode;
   
+  // Special check for Diamond Swarm mode - ensure model is fully loaded
+  if (aiMode === 'swarm') {
+    const { hasWebLLMEngine } = await import('./diamondSwarm');
+    if (!hasWebLLMEngine()) {
+      throw new Error('Diamond Swarm mode selected but model is still loading. Please wait for the model download to complete (check Local AI panel), or switch to Cloud AI in settings.');
+    }
+  }
+  
   onProgress('Analyzing document size...', { phase: 'prepare' });
   
   // Split into chunks based on AI context limits
@@ -786,7 +794,19 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   }
   cleanContent = cleanContent.trim();
   
-  const analysisResult = JSON.parse(cleanContent);
+  // Check for placeholder/loading responses
+  if (cleanContent.includes('[Diamond Swarm') || cleanContent.includes('model is still loading')) {
+    throw new Error('Local AI model is still loading. Please wait for the model to fully download before analyzing documents.');
+  }
+  
+  let analysisResult;
+  try {
+    analysisResult = JSON.parse(cleanContent);
+  } catch (parseError) {
+    console.error('JSON Parse Error:', parseError);
+    console.error('Content to parse:', cleanContent.substring(0, 500));
+    throw new Error(`Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`);
+  }
   
   // Sanitize result
   return {

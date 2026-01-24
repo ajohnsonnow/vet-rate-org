@@ -2051,7 +2051,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                               {lunaTestMessage}
                             </p>
                             <p className="text-purple-400/60 text-xs mt-2">
-                              — Luna, Chief Treat Officer 🐾
+                              - Luna, Chief Treat Officer 🐾
                             </p>
                           </div>
                           <button 

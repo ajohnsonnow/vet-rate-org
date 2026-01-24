@@ -7,6 +7,7 @@ import { decodeDecision, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import AIModelQuickLoad from './AIModelQuickLoad';
 import { useVaBenefitsRef, CLAIM_PHASES } from '../hooks/useVaBenefitsRef';
 import { analyzePDF, analyzeImage, OCR_STATES, formatFileSize, isImageFile, isPDFFile } from '../utils/ocr';
 
@@ -383,19 +384,15 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
               </div>
             </div>
 
-            {/* AI Required Warning */}
+            {/* AI Model Quick Load */}
             {!isAnyAIAvailable() && (
-              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                      (100% private) or enter your Gemini API key.
-                    </p>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <AIModelQuickLoad 
+                  toolId="decision-decoder"
+                  onLoadComplete={(agent) => console.log('AI loaded for Decision Decoder:', agent.name)}
+                  compact={false}
+                  showFullDropdown={true}
+                />
               </div>
             )}
 

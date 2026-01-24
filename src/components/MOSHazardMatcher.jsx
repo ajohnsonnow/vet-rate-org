@@ -687,6 +687,7 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
       case 'Navy': return 'from-blue-800 to-indigo-900';
       case 'Marines': return 'from-red-700 to-red-900';
       case 'Coast Guard': return 'from-orange-600 to-orange-800';
+      case 'Space Force': return 'from-slate-700 to-slate-900';
       default: return 'from-gray-600 to-gray-800';
     }
   };
@@ -698,10 +699,9 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
       aria-modal="true"
       aria-labelledby="mos-hazard-matcher-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
             
@@ -731,8 +731,8 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
             </div>
           </div>
           
-          {/* Content */}
-          <div className="p-6 space-y-6 bg-gray-900">
+          {/* Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-900">
             {/* Intro */}
             <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-2xl p-6 border border-slate-600/50">
               <p className="text-slate-200 text-center">
@@ -814,6 +814,20 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
             {/* Selected MOS Details */}
             {selectedMOS && (
               <div className="space-y-6">
+                {/* Back Button */}
+                <button
+                  onClick={() => {
+                    setSelectedMOS(null);
+                    setSearchQuery('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Search
+                </button>
+
                 {/* MOS Header Card */}
                 <div className={`bg-gradient-to-r ${getBranchColor(selectedMOS.branch)} rounded-2xl p-6 shadow-xl`}>
                   <div className="flex items-start justify-between">
@@ -948,8 +962,8 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
             {!selectedMOS && !searchQuery && (
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-white text-center">Or browse by branch:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {['Army', 'Air Force', 'Navy', 'Marines', 'Coast Guard'].map(branch => (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {['Army', 'Air Force', 'Navy', 'Marines', 'Coast Guard', 'Space Force'].map(branch => (
                     <button
                       key={branch}
                       onClick={() => {
@@ -1031,7 +1045,6 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
               </div>
             )}
           </div>
-        </div>
       </div>
       
       {/* BuyMeCoffee - shows after selecting MOS */}

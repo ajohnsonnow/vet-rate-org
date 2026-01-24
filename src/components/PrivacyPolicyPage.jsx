@@ -21,8 +21,8 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
       aria-modal="true"
       aria-labelledby="privacy-policy-title"
     >
-      <div className={`${modalClasses.content} max-w-4xl my-8`}>
-        <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
+      <div className={`${modalClasses.content} max-w-4xl my-8 max-h-[90vh] flex flex-col overflow-hidden`}>
+        <div className={`flex-shrink-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
           <h2 id="privacy-policy-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>{t('privacyPolicy', 'title')}</h2>
           <div className="flex items-center gap-3">
             {onReportBug && <ReportBugLink onClick={onReportBug} variant="auto" moduleName="Privacy Policy" />}
@@ -36,7 +36,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </div>
         </div>
         
-        <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
           <p className={`text-sm mb-6 ${getColorClass(colors.text.secondary)}`}>
             <strong>{t('privacyPolicy', 'lastUpdated')}</strong> January 23, 2026
           </p>
@@ -210,7 +210,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
           </div>
         </div>
 
-        <div className="border-t px-6 py-4 bg-gray-50 rounded-b-lg">
+        <div className="flex-shrink-0 border-t px-6 py-4 bg-gray-50 rounded-b-lg">
           <button
             onClick={onClose}
             className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

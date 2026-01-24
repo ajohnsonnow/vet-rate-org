@@ -26,6 +26,7 @@ import { isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import AIModelQuickLoad from './AIModelQuickLoad';
 import ShareButton from './ShareButton';
 import VoiceInputButton from './VoiceInput';
 
@@ -985,19 +986,17 @@ export default function TDIUBuilder({ onClose, onReportBug, onOpenAISettings }) 
               <span className={step === 3 ? 'font-bold text-green-600' : ''}>Results</span>
             </div>
 
-            {/* AI Required Warning */}
+            {/* AI Model Quick Load */}
             {!isAnyAIAvailable() && (
-              <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                      (100% private) or enter your Gemini API key.
-                    </p>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <AIModelQuickLoad 
+                  toolId="tdiu-builder"
+                  onLoadComplete={(agent) => {
+                    console.log('AI loaded for TDIU Builder:', agent.name);
+                  }}
+                  compact={false}
+                  showFullDropdown={true}
+                />
               </div>
             )}
           </div>

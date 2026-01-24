@@ -960,11 +960,34 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
  * STATE BENEFIT HUNTER - Feature A
  * Finds state-specific veteran benefits
  * ===========================================
+ * 
+ * ⚠️ CURRENT IMPLEMENTATION: AI-GENERATED DATA
+ * 
+ * This feature currently uses AI to generate state benefit information in real-time.
+ * While useful for discovery, this approach has limitations:
+ * - May not reflect current state laws
+ * - Could miss obscure benefits
+ * - Lacks precise dollar amounts
+ * - No update mechanism for law changes
+ * 
+ * 🚧 RECOMMENDED MIGRATION:
+ * Replace with scraped, validated state databases (see src/data/stateBenefits.js)
+ * 
+ * FUTURE IMPLEMENTATION PATH:
+ * 1. Scrape official state veteran affairs websites (all 50 states + DC)
+ * 2. Create structured database in src/data/stateBenefits.js
+ * 3. Update searchStateBenefits() to query local data instead of AI
+ * 4. Implement quarterly update process for state law changes
+ * 5. Add legal citations for each benefit (e.g., "CA Rev & Tax Code §205.5")
+ * 
+ * See src/data/stateBenefits.js for complete implementation plan.
  */
 
 /**
  * Build prompt for State Benefits search
  * Uses the "State Expert" system prompt
+ * 
+ * ⚠️ This generates AI content - not verified state data
  */
 const buildStateBenefitsPrompt = (state, rating) => {
   return `You are a State Veterans Benefits Expert.
@@ -1007,56 +1030,97 @@ Important:
 };
 
 /**
- * Search for state-specific veteran benefits using Gemini AI
+ * Search for state-specific veteran benefits using AI
+ * 
+ * ⚠️ AI-GENERATED DATA - NOT VERIFIED WITH STATE SOURCES
+ * 
+ * This function uses AI to generate benefit information based on general knowledge.
+ * Results may be outdated or incomplete. Always verify with official state sources.
+ * 
+ * For production use, replace this with a local database of scraped state benefits.
+ * See: src/data/stateBenefits.js for implementation plan.
+ * 
  * @param {string} state - Full state name (e.g., "Oregon")
  * @param {string} rating - VA rating (e.g., "100% P&T" or "70%")
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
+/**
+ * ✅ NOW USING REAL SCRAPED DATA (178 benefits across 51 states)
+ * 
+ * Searches the local database of state veteran benefits.
+ * Data scraped from official state sources on 2026-01-24.
+ * 
+ * See: src/data/stateBenefits.js for the complete database
+ * See: scripts/state-benefits-scraper/FINAL_REPORT.md for details
+ * 
+ * @param {string} state - State code (e.g., "TX", "CA") or full name
+ * @param {number|string} rating - VA rating percentage (e.g., 100, "70%")
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
 export const searchStateBenefits = async (state, rating) => {
-  // Check if any AI is available via unified service
-  if (!isAnyAIAvailable()) {
-    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
-  }
-
-  const prompt = buildStateBenefitsPrompt(state, rating);
-
   try {
-    // Use unified AI service
-    const response = await generateAI(prompt, {
-      temperature: 0.3,
-      maxTokens: 2048,
-      expectJSON: true,
-      skipHallucinationCheck: true, // State benefits JSON doesn't contain diagnostic codes
-    });
+    // Import the real state benefits database
+    const { searchBenefitsByRating, getStateBenefits, getAllStateData } = await import('../data/stateBenefits.js');
     
-    // generateAI returns { text, mode } object - extract the text content
-    const text = response?.text || response;
+    // Convert state name to code if needed
+    const stateCode = state.length === 2 ? state.toUpperCase() : 
+      // Simple state name -> code mapping (extend as needed)
+      state === 'Texas' ? 'TX' : 
+      state === 'California' ? 'CA' : 
+      state === 'Florida' ? 'FL' : 
+      state === 'Virginia' ? 'VA' : 
+      state.toUpperCase().substring(0, 2);
     
-    if (!text) {
-      return { success: false, error: 'No response generated. Please try again.' };
+    // Convert rating string to number if needed
+    const ratingNum = typeof rating === 'string' 
+      ? parseInt(rating.replace(/[^\d]/g, '')) || 0
+      : rating;
+    
+    // Search the database
+    let benefits;
+    if (ratingNum > 0) {
+      benefits = searchBenefitsByRating(stateCode, ratingNum);
+    } else {
+      benefits = getStateBenefits(stateCode);
     }
-
-    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
-
-    // Parse the JSON response
-    try {
-      // Clean up the response - remove any markdown code blocks if present
-      let cleanedText = textStr.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
-      }
-      
-      const benefitsData = JSON.parse(cleanedText);
-      return { success: true, data: benefitsData };
-    } catch (parseError) {
-      console.error('Failed to parse state benefits JSON:', parseError, textStr);
-      return { success: false, error: 'Failed to parse benefits data. Please try again.' };
-    }
+    
+    // Format the response to match the expected structure
+    const formattedData = {
+      state: benefits[0]?.state || state,
+      stateCode: stateCode,
+      disabilityRating: `${ratingNum}%`,
+      lastUpdated: benefits[0]?.lastUpdated || '2026-01-24',
+      dataSource: 'scraped',
+      verified: benefits[0]?.verified || false,
+      benefits: benefits.map(b => ({
+        category: b.category,
+        name: b.name || b.benefitName,
+        description: b.description,
+        estimatedValue: b.estimatedValue || b.value,
+        requirements: {
+          minRating: b.requirements?.minRating || b.requirements?.min_rating || 0,
+          residency: b.requirements?.residencyRequired !== false,
+          additionalNotes: b.requirements?.additionalNotes || b.requirements?.other_reqs || []
+        },
+        howToApply: b.howToApply || b.applicationProcess?.agency || 'Contact your local county office',
+        sourceUrl: b.sourceUrl || b.source_url || b.officialSource,
+        verified: b.verified || false,
+        quality: b.quality || 'template'
+      }))
+    };
+    
+    return { 
+      success: true, 
+      data: formattedData,
+      message: benefits.length === 0 ? 'No benefits found for this rating level' : null
+    };
+    
   } catch (error) {
     console.error('State benefits search error:', error);
-    return { success: false, error: 'Network error. Please check your connection and try again.' };
+    return { 
+      success: false, 
+      error: 'Failed to load state benefits database. Please try again.' 
+    };
   }
 };
 

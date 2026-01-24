@@ -1,0 +1,176 @@
+{
+  "state": "Texas",
+  "stateCode": "TX",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://www.tvc.texas.gov/",
+  "dataStatus": "needs_validation",
+  "validator": null,
+  "benefits": [
+    {
+      "category": "Property Tax",
+      "benefitName": "100% Disabled Veteran Property Tax Exemption",
+      "description": "Full exemption on residence homestead for veterans with 100% disability rating",
+      "value": "Full exemption on residence homestead",
+      "estimatedAnnualValue": 4000,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Texas resident",
+          "Primary residence",
+          "Home must be owned by veteran or spouse"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Appraisal District",
+        "form": "Form 50-135",
+        "deadline": "April 30 annually",
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214 (discharge papers)",
+          "VA disability rating letter",
+          "Proof of Texas residency",
+          "Property deed"
+        ],
+        "onlineApplicationAvailable": true,
+        "applicationUrl": "https://comptroller.texas.gov/taxes/property-tax/exemptions/"
+      },
+      "legalCitation": {
+        "statute": "Texas Tax Code §11.131",
+        "effectiveDate": "1997-01-01",
+        "lastAmended": "2021-09-01"
+      },
+      "sources": [
+        {
+          "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Property Tax",
+      "benefitName": "Partial Property Tax Exemption (10-90% Disabled)",
+      "description": "Partial exemption based on disability rating percentage",
+      "value": "$5,000 to $12,000 exemption based on rating",
+      "estimatedAnnualValue": 250,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": 90,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Texas resident",
+          "Primary residence"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Appraisal District",
+        "form": "Form 50-114",
+        "deadline": "April 30 annually",
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA rating letter"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": null
+      },
+      "legalCitation": {
+        "statute": "Texas Tax Code §11.22",
+        "effectiveDate": null,
+        "lastAmended": "2009-01-01"
+      },
+      "sources": [
+        {
+          "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Vehicle",
+      "benefitName": "Disabled Veteran License Plates",
+      "description": "Free specialty license plates for disabled veterans",
+      "value": "Waived registration fees",
+      "estimatedAnnualValue": 60,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Texas resident",
+          "Valid driver's license"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Texas Department of Motor Vehicles",
+        "form": "Form VTR-615",
+        "deadline": "None",
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA rating letter",
+          "Vehicle title"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": null
+      },
+      "legalCitation": {
+        "statute": "Texas Transportation Code §502.453",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.txdmv.gov/motorists/license-plates",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Education",
+      "benefitName": "Hazlewood Act Tuition Waiver",
+      "description": "Free tuition at Texas public universities for veterans and dependents",
+      "value": "Up to 150 credit hours of tuition exemption",
+      "estimatedAnnualValue": 12000,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Texas resident for at least 1 year",
+          "Honorable discharge",
+          "Designated Texas as home of record OR entered service in Texas"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Texas Veterans Commission",
+        "form": "Hazlewood Letter",
+        "deadline": "Before each semester",
+        "renewalRequired": true,
+        "documentation": [
+          "DD-214",
+          "Proof of Texas residency (1 year)",
+          "College admission letter"
+        ],
+        "onlineApplicationAvailable": true,
+        "applicationUrl": "https://www.tvc.texas.gov/education/hazlewood-act/"
+      },
+      "legalCitation": {
+        "statute": "Texas Education Code §54.341",
+        "effectiveDate": "1923-01-01",
+        "lastAmended": "2023-06-01"
+      },
+      "sources": [
+        {
+          "url": "https://www.tvc.texas.gov/education/hazlewood-act/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    }
+  ]
+}

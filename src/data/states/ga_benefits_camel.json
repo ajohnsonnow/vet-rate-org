@@ -1,0 +1,115 @@
+{
+  "state": "Georgia",
+  "stateCode": "GA",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://dvs.ga.gov",
+  "dataStatus": "needs_validation",
+  "benefits": [
+    {
+      "state": "Georgia",
+      "stateCode": "GA",
+      "name": "100% Disabled Veteran Property Tax Exemption",
+      "category": "Property Tax",
+      "description": "Veterans rated 100% service-connected disabled by the VA receive property tax exemption on their primary residence.",
+      "estimatedValue": "$2,000-$5,000/year",
+      "requirements": {
+        "minRating": 100,
+        "residencyRequired": true,
+        "disabilitySpecific": [
+          "100% service-connected disability"
+        ],
+        "additionalNotes": [
+          "Must be primary residence"
+        ]
+      },
+      "howToApply": "Apply with your county tax assessor. Submit VA rating letter showing 100% disability, DD-214, and proof of residency.",
+      "legalCitations": [
+        {
+          "statute": "Georgia Property Tax Code",
+          "description": "Property tax exemption for 100% disabled veterans",
+          "url": "https://dvs.ga.gov"
+        }
+      ],
+      "sourceUrl": "https://dvs.ga.gov/benefits/property-tax",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Georgia",
+      "stateCode": "GA",
+      "name": "Disabled Veteran License Plates",
+      "category": "Vehicle",
+      "description": "Veterans with service-connected disabilities can obtain special DV license plates with reduced or waived registration fees.",
+      "estimatedValue": "$35-$75/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": true,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Any service-connected disability qualifies"
+        ]
+      },
+      "howToApply": "Visit your local DMV office. Submit VA rating letter and DD-214.",
+      "legalCitations": [
+        {
+          "statute": "Georgia Vehicle Code",
+          "description": "Disabled veteran license plates",
+          "url": "https://dmv.ga.gov"
+        }
+      ],
+      "sourceUrl": "https://dmv.ga.gov/dv-plates",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Georgia",
+      "stateCode": "GA",
+      "name": "In-State Tuition for Veterans",
+      "category": "Education",
+      "description": "Veterans using GI Bill benefits qualify for in-state tuition at Georgia public colleges and universities.",
+      "estimatedValue": "$12,000-$20,000/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": false,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Must be using GI Bill benefits"
+        ]
+      },
+      "howToApply": "Contact the veterans services office at your Georgia institution. Submit DD-214 and proof of GI Bill eligibility.",
+      "legalCitations": [
+        {
+          "statute": "Georgia Education Code",
+          "description": "In-state tuition for veterans",
+          "url": "https://education.ga.gov"
+        }
+      ],
+      "sourceUrl": "https://education.ga.gov/veterans",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Georgia",
+      "stateCode": "GA",
+      "name": "Hunting and Fishing License Discount",
+      "category": "Recreation",
+      "description": "Disabled veterans receive discounted or free hunting and fishing licenses in Georgia.",
+      "estimatedValue": "$50-$100/year",
+      "requirements": {
+        "minRating": 10,
+        "residencyRequired": true,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Discount varies by disability rating"
+        ]
+      },
+      "howToApply": "Purchase licenses from any vendor or online. Show VA rating letter for discount.",
+      "legalCitations": [
+        {
+          "statute": "Georgia Wildlife Code",
+          "description": "License discounts for disabled veterans",
+          "url": "https://wildlife.ga.gov"
+        }
+      ],
+      "sourceUrl": "https://wildlife.ga.gov/veterans",
+      "lastVerified": "2026-01-24"
+    }
+  ]
+}

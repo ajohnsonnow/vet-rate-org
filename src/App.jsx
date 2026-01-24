@@ -88,6 +88,8 @@ import BodyMapSelector from './components/BodyMapSelector';
 import ClaimStressTest from './components/ClaimStressTest';
 import EvidenceTimeline from './components/EvidenceTimeline';
 import QuickExitButton from './components/QuickExitButton';
+import MusterCall from './components/MusterCall';
+import IntelligenceBriefing from './components/IntelligenceBriefing';
 // ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
@@ -214,6 +216,16 @@ function App() {
   const [showEvidenceGapVisualizer, setShowEvidenceGapVisualizer] = useState(false);
   const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
   const [showPainPainter, setShowPainPainter] = useState(false);
+  
+  // MUSTER CALL: Mass Document Processing
+  const [showMusterCall, setShowMusterCall] = useState(false);
+  const [showIntelligenceBriefing, setShowIntelligenceBriefing] = useState(false);
+  const [briefingData, setBriefingData] = useState(null);
+  
+  // MOBILE: Small screen warning
+  const [dismissedSmallScreenWarning, setDismissedSmallScreenWarning] = useState(
+    sessionStorage.getItem('vetrate-small-screen-dismissed') === 'true'
+  );
   
   // CLEAR COAT: Onboarding & Trust Features
   const [showMissionProtocol, setShowMissionProtocol] = useState(false);
@@ -1293,6 +1305,33 @@ function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Muster Call CTA */}
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-blue-900/40 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
+              <div className="flex items-center justify-center gap-4 mb-4 flex-col">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-3 flex-shrink-0 shadow-lg">
+                  <span className="text-3xl">📋</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1 flex items-center justify-center gap-2">
+                    Muster Call
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">AI</span>
+                    <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">FREE</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <strong>Drop your entire VA file</strong> - 32+ claim letters, 320MB C-File, poor-quality DD214s. AI analyzes everything, 
+                    auto-populates your profile, and generates a comprehensive action plan. What would take weeks, done in minutes.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMusterCall(true)}
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
+              >
+                🎯 Answer the Call
+              </button>
+            </div>
+
             {/* Blue Button X-Ray CTA */}
             <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-violet-50 dark:from-violet-900/40 dark:via-purple-900/40 dark:to-violet-900/40 border-2 border-violet-300 dark:border-violet-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               <div className="flex items-center justify-center gap-4 mb-4 flex-col">
@@ -2320,6 +2359,42 @@ function App() {
         />
       )} */}
       
+      {/* Muster Call - Mass Document Processor */}
+      {showMusterCall && (
+        <MusterCall
+          isOpen={showMusterCall}
+          onClose={() => setShowMusterCall(false)}
+          onProcessComplete={(extractedData) => {
+            setBriefingData(extractedData);
+            setShowIntelligenceBriefing(true);
+            setShowMusterCall(false);
+          }}
+        />
+      )}
+      
+      {/* Intelligence Briefing - Post-Muster Call Data Review */}
+      {showIntelligenceBriefing && (
+        <IntelligenceBriefing
+          isOpen={showIntelligenceBriefing}
+          onClose={() => {
+            setShowIntelligenceBriefing(false);
+            setBriefingData(null);
+          }}
+          extractedData={briefingData}
+          onConfirm={(confirmedData) => {
+            // Save to My Packet
+            localStorage.setItem('vetrate_my_packet_data', JSON.stringify(confirmedData));
+            setShowIntelligenceBriefing(false);
+            setBriefingData(null);
+            // Show success message
+            console.log('Data committed to My Packet:', confirmedData);
+          }}
+          onEdit={(section, field, value) => {
+            console.log(`User edited ${field} in ${section}:`, value);
+          }}
+        />
+      )}
+      
       {/* Shark Radar */}
       {showSharkRadar && (
         <div 
@@ -2942,6 +3017,45 @@ function App() {
           severity={crisisSeverity} 
           source="app"
         />
+      )}
+      
+      {/* MOBILE OPTIMIZATION: Small Screen Warning */}
+      {window.innerWidth < 640 && !dismissedSmallScreenWarning && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-slate-900 border-2 border-amber-500 rounded-lg p-6 max-w-md shadow-2xl">
+            <div className="flex items-start gap-3 mb-4">
+              <svg className="w-8 h-8 text-amber-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="text-xl font-bold text-amber-400 mb-2">Screen Size Warning</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  VetRate is optimized for tablet and desktop screens. Some features may not work properly on smaller devices.
+                </p>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  For the best experience, please use a device with a screen width of at least 640px, or switch to landscape mode.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setDismissedSmallScreenWarning(true);
+                  sessionStorage.setItem('vetrate-small-screen-dismissed', 'true');
+                }}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded transition-colors"
+              >
+                I Understand, Continue Anyway
+              </button>
+              <a
+                href="mailto:support@vetrate.org?subject=Mobile%20Support%20Request"
+                className="w-full text-center bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white font-semibold py-2 px-4 rounded transition-colors"
+              >
+                Email Us About Mobile Support
+              </a>
+            </div>
+          </div>
+        </div>
       )}
       
       {/* FORCE MULTIPLIER: Focus Mode Toggle for TBI/ADHD users - Now integrated into modal headers */}

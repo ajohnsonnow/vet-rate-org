@@ -1,0 +1,382 @@
+{
+  "state": "Florida",
+  "stateCode": "FL",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://www.floridavets.org/",
+  "dataStatus": "needs_validation",
+  "validator": null,
+  "benefits": [
+    {
+      "category": "Property Tax",
+      "benefitName": "Total Property Tax Exemption for 100% P&T Veterans",
+      "description": "Total and permanent exemption from all property taxes for 100% P&T disabled veterans",
+      "value": "Total exemption on homestead property",
+      "estimatedAnnualValue": 5000,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "otherReqs": [
+          "Florida resident",
+          "Homestead property",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Property Appraiser's Office",
+        "form": "DR-501",
+        "deadline": "March 1 annually",
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA letter showing 100% P&T",
+          "Florida driver's license or ID",
+          "Homestead exemption application"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://floridarevenue.com/property/Pages/Exemptions.aspx"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §196.081",
+        "effectiveDate": null,
+        "lastAmended": "2007-01-01"
+      },
+      "sources": [
+        {
+          "url": "https://floridarevenue.com/property/Pages/Exemptions.aspx",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Property Tax",
+      "benefitName": "Partial Property Tax Exemption (10%+ Disability)",
+      "description": "$5,000 additional homestead exemption for veterans with 10% or higher service-connected disability",
+      "value": "$5,000 property value exemption",
+      "estimatedAnnualValue": 100,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": 99,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident",
+          "Homestead property",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Property Appraiser's Office",
+        "form": "DR-501DV",
+        "deadline": "March 1 annually",
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter",
+          "Proof of Florida residency"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://floridarevenue.com/property/Pages/Exemptions.aspx"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §196.24",
+        "effectiveDate": null,
+        "lastAmended": "2018-01-01"
+      },
+      "sources": [
+        {
+          "url": "https://floridarevenue.com/property/Pages/Exemptions.aspx",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Property Tax",
+      "benefitName": "Wheelchair-Confined Veteran Exemption",
+      "description": "Additional homestead exemption for wheelchair-confined veterans",
+      "value": "Additional $500 exemption",
+      "estimatedAnnualValue": 10,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Veteran confined to wheelchair",
+          "Service-connected disability",
+          "Florida homestead"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "County Property Appraiser's Office",
+        "form": "DR-501",
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "Medical certification",
+          "VA letter"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": null
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §196.091",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://floridarevenue.com/property/Pages/Exemptions.aspx",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Vehicle",
+      "benefitName": "Disabled Veteran License Plates",
+      "description": "Free specialty license plates for disabled veterans with parking privileges",
+      "value": "Waived registration fees + disabled parking placard",
+      "estimatedAnnualValue": 50,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident",
+          "Service-connected disability",
+          "Medical certification of disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Florida Department of Highway Safety and Motor Vehicles",
+        "form": "HSMV 83039",
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA disability letter",
+          "Medical certification",
+          "Florida driver's license"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.flhsmv.gov/motor-vehicles-tags-titles/"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §320.084",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.flhsmv.gov/motor-vehicles-tags-titles/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Vehicle",
+      "benefitName": "Florida Turnpike Toll Exemption",
+      "description": "Free tolls on Florida's Turnpike system for 100% disabled veterans",
+      "value": "Free tolls on all Florida Turnpike roads",
+      "estimatedAnnualValue": 200,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident",
+          "Disabled Veteran license plate"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Florida's Turnpike Enterprise",
+        "form": "Application through FDVA",
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "100% VA rating letter",
+          "DV license plate"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.floridasturnpike.com/"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §338.155",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.floridasturnpike.com/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Education",
+      "benefitName": "Florida GI Bill - Tuition Waiver",
+      "description": "In-state tuition waiver at Florida public colleges and universities",
+      "value": "100% in-state tuition waived",
+      "estimatedAnnualValue": 6500,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident for 1+ year before enrollment",
+          "Honorable discharge",
+          "Served on or after September 11, 2001"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Florida Department of Veterans' Affairs / College Financial Aid Office",
+        "form": "FDVA Form 50-DV-EW",
+        "deadline": "Before each semester",
+        "renewalRequired": true,
+        "documentation": [
+          "DD-214",
+          "Proof of Florida residency (1 year)",
+          "College admission"
+        ],
+        "onlineApplicationAvailable": true,
+        "applicationUrl": "https://www.floridavets.org/benefits-services/education/"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §295.01",
+        "effectiveDate": null,
+        "lastAmended": "2014-07-01"
+      },
+      "sources": [
+        {
+          "url": "https://www.floridavets.org/benefits-services/education/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Education",
+      "benefitName": "Chapter 35 Dependents Education Waiver",
+      "description": "Tuition waiver for dependents of disabled or deceased veterans",
+      "value": "In-state tuition waived at Florida public institutions",
+      "estimatedAnnualValue": 6500,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "otherReqs": [
+          "Dependent of 100% P&T veteran OR service-connected deceased veteran",
+          "Florida resident"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "College Financial Aid Office",
+        "form": "FDVA Form 50-DV-EW",
+        "deadline": "Before each semester",
+        "renewalRequired": true,
+        "documentation": [
+          "Parent's DD-214",
+          "VA letter showing 100% P&T",
+          "Birth certificate or marriage license",
+          "Proof of Florida residency"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": null
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §295.01(2)",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://www.floridavets.org/benefits-services/education/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Recreation",
+      "benefitName": "Disabled Veteran Hunting and Fishing License",
+      "description": "Free hunting and fishing licenses for 100% disabled veterans",
+      "value": "Free lifetime licenses",
+      "estimatedAnnualValue": 80,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Florida Fish and Wildlife Conservation Commission",
+        "form": null,
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA disability letter showing 100%",
+          "Florida ID"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://myfwc.com/license/"
+      },
+      "legalCitation": {
+        "statute": "Florida Statute §372.57",
+        "effectiveDate": null,
+        "lastAmended": null
+      },
+      "sources": [
+        {
+          "url": "https://myfwc.com/license/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    },
+    {
+      "category": "Recreation",
+      "benefitName": "Florida State Parks Free Entry",
+      "description": "Free entry to Florida state parks for disabled veterans",
+      "value": "Free annual entrance pass",
+      "estimatedAnnualValue": 40,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "otherReqs": [
+          "Florida resident",
+          "Service-connected disability"
+        ]
+      },
+      "applicationProcess": {
+        "agency": "Florida State Parks",
+        "form": null,
+        "deadline": null,
+        "renewalRequired": false,
+        "documentation": [
+          "DD-214",
+          "VA disability letter"
+        ],
+        "onlineApplicationAvailable": false,
+        "applicationUrl": "https://www.floridastateparks.org/"
+      },
+      "legalCitation": null,
+      "sources": [
+        {
+          "url": "https://www.floridastateparks.org/",
+          "scrapedDate": "2026-01-24",
+          "isOfficial": true
+        }
+      ]
+    }
+  ]
+}

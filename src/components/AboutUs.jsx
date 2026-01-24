@@ -248,7 +248,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 {t('about.myMission')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> {t('about.missionDescription')} ({getTotalToolCount()}+ {t('about.professionalTools').toLowerCase()})
+              <strong>Vet-Rate.org</strong> {t('about.missionDescription')} ({getTotalToolCount()}+ {t('about.professionalTools')?.toLowerCase() || 'professional tools'})
             </p>
           </section>
 

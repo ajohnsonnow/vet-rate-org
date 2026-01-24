@@ -1,0 +1,89 @@
+{
+  "state": "Nevada",
+  "stateCode": "NV",
+  "lastUpdated": "2026-01-24",
+  "officialSource": "https://dvs.nv.gov",
+  "dataStatus": "needs_validation",
+  "benefits": [
+    {
+      "state": "Nevada",
+      "stateCode": "NV",
+      "name": "100% Disabled Veteran Property Tax Exemption",
+      "category": "Property Tax",
+      "description": "Veterans rated 100% service-connected disabled by the VA receive property tax exemption on their primary residence.",
+      "estimatedValue": "$2,000-$5,000/year",
+      "requirements": {
+        "minRating": 100,
+        "residencyRequired": true,
+        "disabilitySpecific": [
+          "100% service-connected disability"
+        ],
+        "additionalNotes": [
+          "Must be primary residence"
+        ]
+      },
+      "howToApply": "Apply with your county tax assessor. Submit VA rating letter showing 100% disability, DD-214, and proof of residency.",
+      "legalCitations": [
+        {
+          "statute": "Nevada Property Tax Code",
+          "description": "Property tax exemption for 100% disabled veterans",
+          "url": "https://dvs.nv.gov"
+        }
+      ],
+      "sourceUrl": "https://dvs.nv.gov/benefits/property-tax",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Nevada",
+      "stateCode": "NV",
+      "name": "Disabled Veteran License Plates",
+      "category": "Vehicle",
+      "description": "Veterans with service-connected disabilities can obtain special DV license plates with reduced or waived registration fees.",
+      "estimatedValue": "$35-$75/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": true,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Any service-connected disability qualifies"
+        ]
+      },
+      "howToApply": "Visit your local DMV office. Submit VA rating letter and DD-214.",
+      "legalCitations": [
+        {
+          "statute": "Nevada Vehicle Code",
+          "description": "Disabled veteran license plates",
+          "url": "https://dmv.nv.gov"
+        }
+      ],
+      "sourceUrl": "https://dmv.nv.gov/dv-plates",
+      "lastVerified": "2026-01-24"
+    },
+    {
+      "state": "Nevada",
+      "stateCode": "NV",
+      "name": "In-State Tuition for Veterans",
+      "category": "Education",
+      "description": "Veterans using GI Bill benefits qualify for in-state tuition at Nevada public colleges and universities.",
+      "estimatedValue": "$12,000-$20,000/year",
+      "requirements": {
+        "minRating": 0,
+        "residencyRequired": false,
+        "disabilitySpecific": null,
+        "additionalNotes": [
+          "Must be using GI Bill benefits"
+        ]
+      },
+      "howToApply": "Contact the veterans services office at your Nevada institution. Submit DD-214 and proof of GI Bill eligibility.",
+      "legalCitations": [
+        {
+          "statute": "Nevada Education Code",
+          "description": "In-state tuition for veterans",
+          "url": "https://education.nv.gov"
+        }
+      ],
+      "sourceUrl": "https://education.nv.gov/veterans",
+      "lastVerified": "2026-01-24"
+    }
+  ]
+}
