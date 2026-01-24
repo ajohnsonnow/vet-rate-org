@@ -133,6 +133,7 @@ import changelogData from './data/changelog.json';
 import { PROJECT_STATS } from './data/projectStats';
 import { getTotalToolCount } from './data/toolkitData';
 import { getSquashedBugCount } from './data/squashedBugs';
+import { getFormsCount } from './utils/formsCount';
 import AnimatedBug from './components/AnimatedBug';
 import AIAssistant from './components/AIAssistant';
 import { useAIAssistant } from './hooks/useAIAssistant';
@@ -1405,7 +1406,7 @@ function App() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     📋 Forms Helper
-                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">16 FORMS</span>
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">{getFormsCount()} FORMS</span>
                     <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs rounded-full">AUTO-FILL</span>
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">

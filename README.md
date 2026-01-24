@@ -38,8 +38,8 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 ## 🎯 Features - Your Complete Claims Arsenal
 
 ### �-️ Core Intelligence Tools
-- **Smart Search**: Find disabilities by condition name, diagnostic code, or synonyms across 751 validated conditions
-- **751 VA Disabilities**: Complete coverage of all body systems from 38 CFR Part 4 (eCFR validated Jan 2026)
+- **Smart Search**: Find disabilities by condition name, diagnostic code, or synonyms across 748 validated conditions
+- **748 VA Disabilities**: Complete coverage of all body systems from 38 CFR Part 4 (eCFR validated Jan 2026)
 - **Rating Criteria**: Detailed percentage breakdowns for every condition (0%-100%)
 - **PACT Act Navigator**: ☢️ Identify toxic exposure presumptive conditions and eligibility
 - **Web of Conditions**: 🕸️ Interactive force-directed graph visualization of connected disabilities
@@ -95,9 +95,9 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 ---
 
-## 🏆 The Complete Arsenal: 39 Professional Tools
+## 🏆 The Complete Arsenal: 41 Professional Tools
 
-Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **39 specialized tools** across 6 categories:
+Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **41 specialized tools** across 6 categories:
 
 - **📊 Calculate Your Rating** (5 tools): Tactical Calculator, Million Dollar Dashboard, What-If Sandbox, Retro Pay Hunter, Time Machine
 - **🔍 Discover Your Claims** (6 tools): Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
@@ -198,7 +198,7 @@ vet-rate-org/
 │   │   ├── bugReportUtils.js         # Error capture
 │   │   └── ... (10 more utilities)
 │   ├── data/                 # Data files
-│   │   ├── disabilityData.json       # 751 disabilities
+│   │   ├── disabilityData.json       # 748 disabilities
 │   │   ├── secondary_conditions_db.json
 │   │   ├── cfr3Regulations.json
 │   │   ├── title38Regulations.json
@@ -247,7 +247,7 @@ Our comprehensive knowledge base has been **fully validated against the official
 
 - **38 CFR Part 3 - Verified**: Adjudication rules, eligibility requirements, and claims procedures
 - **38 CFR Part 4 - Verified**: Every diagnostic code, rating percentage, and evaluation criteria
-- **751 VA Disabilities**: Complete coverage of all body systems with validated rating criteria
+- **748 VA Disabilities**: Complete coverage of all body systems with validated rating criteria
 - **100% Rating Criteria Validated**: All conditions include detailed percentage breakdowns
 - **Secondary Conditions Database**: Medically-recognized secondary conditions linked to primary disabilities
 
@@ -272,7 +272,7 @@ This comprehensive platform represents significant development effort to create 
 - **App Size**: 104.05 MB
 - **Components**: 121 React components (39 major tools + 82 supporting)
 - **Utilities**: 49 helper modules
-- **Data Validation**: 751 disabilities verified against 38 CFR (250 hours validation work)
+- **Data Validation**: 748 disabilities verified against 38 CFR (250 hours validation work)
 - **VA Glossary**: 150+ VA terms and definitions
 
 ### Cost Analysis by Team Composition
@@ -321,7 +321,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 ### Development Breakdown (Traditional Equivalent)
 ### Development Breakdown (Traditional Equivalent)
 - **13,147 hrs** - Coding (128,477 lines @ 9.77 LOC/hr blended team rate)
-- **250 hrs** - Data validation (751 disabilities against 38 CFR)
+- **250 hrs** - Data validation (748 disabilities against 38 CFR)
 - **1,200 hrs** - Testing & QA (15% of dev time)
 - **400 hrs** - UI/UX design & iterations
 - **200 hrs** - Documentation & user manual
@@ -367,7 +367,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | Blue Button X-Ray | 510 hrs | 5,100 | 1 Senior, 1 Mid | Extracts claim evidence from medical records |
 | Secondary Scout | 620 hrs | 6,200 | 1 Senior, 1 Mid | Discovers 500+ secondary conditions |
 | Decision Decoder | 490 hrs | 4,900 | 1 Senior | AI translation of VA decision letters |
-| Smart Search | 520 hrs | 5,200 | 1 Senior, 1 Mid | 751 conditions with synonym matching |
+| Smart Search | 520 hrs | 5,200 | 1 Senior, 1 Mid | 748 conditions with synonym matching |
 | Nexus Builder | 540 hrs | 5,400 | 1 Senior, 1 Mid | Medical nexus statement generator |
 | Million Dollar Dashboard | 450 hrs | 4,500 | 1 Senior | Lifetime benefit value calculator |
 | My Packet | 420 hrs | 4,200 | 1 Mid, 1 Junior | Claims evidence organizer |

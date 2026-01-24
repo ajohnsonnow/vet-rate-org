@@ -7,6 +7,7 @@
  */
 
 import { getTotalToolCount } from '../data/toolkitData';
+import { getDisabilityCount } from './disabilityCount';
 
 export const COMPONENT_STATS = {
   'tactical-calculator': {
@@ -157,7 +158,7 @@ export const COMPONENT_STATS = {
     name: 'Smart Search Engine',
     hours: 340,
     lines: 5200,
-    description: '748 conditions with synonym matching and advanced filters'
+    description: `${getDisabilityCount()} conditions with synonym matching and advanced filters`
   },
   'user-manual': {
     name: 'User Manual',
@@ -170,7 +171,7 @@ export const COMPONENT_STATS = {
     name: 'Data Validation & Entry',
     hours: 200,
     lines: 15000,
-    description: '751 disabilities with full rating criteria validated against 38 CFR'
+    description: `${getDisabilityCount()} disabilities with full rating criteria validated against 38 CFR`
   },
   'accessibility': {
     name: 'Accessibility Features',

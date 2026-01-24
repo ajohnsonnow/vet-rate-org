@@ -4,6 +4,8 @@
  * NO HALLUCINATIONS - Only facts from regulations and veteran's records
  */
 import { getTotalToolCount } from '../data/toolkitData';
+import { getDisabilityCount } from './disabilityCount';
+import { getFormsCount } from './formsCount';
 
 /**
  * Vet-Rate.org Application Context Prompt
@@ -21,7 +23,7 @@ ABOUT VET-RATE.ORG:
 
 eCFR INTEGRATION (IMPORTANT):
 Vet-Rate.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations). This means:
-- All 751 VA disabilities are validated against official eCFR diagnostic codes
+- All ${getDisabilityCount()} VA disabilities are validated against official eCFR diagnostic codes
 - Direct links to eCFR sections are provided throughout the application
 - Rating criteria comes directly from 38 CFR Part 4 (validated January 2026)
 - Eligibility rules come from 38 CFR Part 3
@@ -56,7 +58,7 @@ TOOLS AVAILABLE IN VET-RATE.ORG (${getTotalToolCount()} tools organized by categ
 - PDF Evidence Finder ("The Needle"): Keyword search in Service Treatment Records
 - Nexus Builder: Generate nexus statement templates with medical research
 - Witness Bench: Buddy statement generator with interview flow
-- Forms Helper: All 16+ VA forms with Auto-Scribe PDF filling
+- Forms Helper: All ${getFormsCount()}+ VA forms with Auto-Scribe PDF filling
 - Symptom Logger: Daily symptom tracking with body map
 - Pain Painter (Somatic Target): Body map clicks translate to medical terminology
 - Evidence Timeline: Visual tracker showing evidence gaps
@@ -102,7 +104,7 @@ export const VET_RATE_APP_CONTEXT = getVetRateAppContext();
 export const KEY_REGULATIONS_SUMMARY = `=== KEY 38 CFR REGULATIONS ===
 
 DATA SOURCE: All regulations are sourced from the official eCFR (Electronic Code of Federal Regulations).
-Vet-Rate.org validates all 751 disabilities against eCFR Title 38, Parts 3 & 4.
+Vet-Rate.org validates all ${getDisabilityCount()} disabilities against eCFR Title 38, Parts 3 & 4.
 Last validated: January 2026.
 
 SERVICE CONNECTION (38 CFR Part 3):

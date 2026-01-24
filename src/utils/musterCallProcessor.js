@@ -50,11 +50,12 @@ export const PROCESSING_STATES = {
 
 /**
  * File size limits (can be adjusted based on browser memory)
+ * NO SINGLE FILE LIMIT - C-Files and medical records can be massive
  */
 const SIZE_LIMITS = {
-  MAX_SINGLE_FILE: 100 * 1024 * 1024, // 100 MB per file
-  MAX_TOTAL_SIZE: 500 * 1024 * 1024,  // 500 MB total
-  WARN_THRESHOLD: 50 * 1024 * 1024    // Warn at 50 MB
+  MAX_SINGLE_FILE: Infinity,          // NO LIMIT - handle any file size
+  MAX_TOTAL_SIZE: 2 * 1024 * 1024 * 1024,  // 2 GB total batch
+  WARN_THRESHOLD: 100 * 1024 * 1024   // Warn at 100 MB (informational only)
 };
 
 /**

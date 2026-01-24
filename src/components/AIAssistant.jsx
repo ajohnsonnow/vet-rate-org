@@ -18,6 +18,7 @@ import { generateAI } from '../utils/unifiedAIService';
 import { useHelperMode } from '../contexts/HelperModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getTotalToolCount } from '../data/toolkitData';
+import { getDisabilityCount } from '../utils/disabilityCount';
 import { AIStatusBadge } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
 import { useRedditClipboard } from '../hooks/useRedditClipboard';
@@ -181,7 +182,7 @@ YOUR ROLE:
 
 IMPORTANT - eCFR INTEGRATION:
 Vet-Rate.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations):
-- All 751 VA disabilities are validated against official eCFR diagnostic codes
+- All ${getDisabilityCount()} VA disabilities are validated against official eCFR diagnostic codes
 - Direct links to eCFR sections are provided throughout the application
 - Rating criteria comes directly from 38 CFR Part 4 (validated January 2026)
 - Eligibility rules come from 38 CFR Part 3
@@ -195,7 +196,7 @@ CURRENT CONTEXT:
 - Helper Mode (for caregivers): ${isHelperMode ? 'ENABLED - Use simplified language' : 'Disabled'}
 
 AVAILABLE TOOLS ON VET-RATE.ORG:
-1. **Disability Search** - Search 748 VA conditions with ratings (eCFR validated)
+1. **Disability Search** - Search ${getDisabilityCount()} VA conditions with ratings (eCFR validated)
 2. **Rating Calculator** - Calculate combined disability rating using 38 CFR § 4.25
 3. **Secondary Scout** - Find conditions caused by existing disabilities (38 CFR § 3.310)
 4. **C-File Analyzer** - AI analysis of VA claims files
