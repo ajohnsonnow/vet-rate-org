@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   isAnyAIAvailable, 
   isLocalAIReady, 
@@ -45,6 +46,7 @@ const LockIcon = () => (
  * AI Status Badge with Current AI Info
  */
 export const AICurrentBadge = ({ className = '' }) => {
+  const { t } = useLanguage();
   const [aiStatus, setAiStatus] = useState(getAIStatus());
   
   useEffect(() => {

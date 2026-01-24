@@ -14,6 +14,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, Circle, FileText, Stethoscope, Link as LinkIcon, Map } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Integration bridge for ClaimNavigator sync
 import { 
@@ -22,6 +23,7 @@ import {
 } from '../utils/claimIntegration';
 
 const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
+  const { t } = useLanguage();
   const [completeness, setCompleteness] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
   const [checklist, setChecklist] = useState({

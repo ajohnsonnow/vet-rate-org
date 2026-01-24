@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useHelperMode, TERMINOLOGY } from '../contexts/HelperModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * HelperModeToggle Component - "I Am Helping a Veteran"
@@ -12,6 +13,7 @@ import { useHelperMode, TERMINOLOGY } from '../contexts/HelperModeContext';
  */
 
 const HelperModeToggle = ({ compact = false }) => {
+  const { t } = useLanguage();
   const { isHelperMode, toggleHelperMode, showHelperTooltips, setShowHelperTooltips } = useHelperMode();
   const [showInfo, setShowInfo] = useState(false);
 

@@ -6,12 +6,14 @@
  */
 
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import pactActData from '../data/pactActData.json';
 
 /**
  * PACTActBadge - A small badge to indicate PACT Act presumptive status
  */
 export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
+  const { t } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   
   const pactInfo = pactActData.diagnosticCodePactMapping[diagnosticCode];

@@ -24,6 +24,7 @@ import {
 } from '../api/va';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import VaSandboxTest from './VaSandboxTest';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Icons from lucide-react
 import { 
@@ -51,6 +52,7 @@ import {
 } from 'lucide-react';
 
 const VaIntegrationTest = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // State for sandbox test modal

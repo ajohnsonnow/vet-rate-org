@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PinEntryModal = ({ 
   isOpen, 
@@ -19,6 +20,7 @@ const PinEntryModal = ({
   subtitle,
   error: externalError
 }) => {
+  const { t } = useLanguage();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [oldPin, setOldPin] = useState('');

@@ -6,6 +6,7 @@ import { TOOLKIT_CATEGORIES, getTotalToolCount } from '../data/toolkitData';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 import { ChevronUp, Sparkles, Wrench, Shield, Zap, CheckCircle, Rocket } from 'lucide-react';
 import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Version DropUp Component - Opens upward for footer placement
 const VersionDropUp = () => {
@@ -157,6 +158,9 @@ const AboutUs = ({ onClose, onReportBug }) => {
   const { getModalClasses, getColorClass, colors } = useColorSchemas();
   const modalClasses = getModalClasses();
   
+  // Get translation function
+  const { t } = useLanguage();
+  
   // Easter egg state
   const [showZonkMessage, setShowZonkMessage] = useState(false);
   
@@ -181,7 +185,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
     >
       <div className={`${modalClasses.content} max-w-4xl my-8`}>
         <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
-          <h2 id="about-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>ℹ️ About Vet-Rate.org</h2>
+          <h2 id="about-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>ℹ️ {t('about.aboutVetRate')}</h2>
           <div className="flex items-center gap-3">
             {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="About Us" />}
             <button
@@ -199,65 +203,59 @@ const AboutUs = ({ onClose, onReportBug }) => {
           {/* THE VET-RATE PROMISE - Trust Beacon */}
           <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">
             <div className="text-center mb-4">
-              <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ The Vet-Rate Promise</h3>
+              <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ {t('about.theVetRatePromise')}</h3>
               <div className="w-20 h-1 bg-va-gold mx-auto rounded"></div>
             </div>
             
             <div className="font-mono text-gray-300 space-y-4 text-sm leading-relaxed">
               <p className="text-center text-lg text-white font-semibold">
-                "Built by a Veteran, For Veterans."
+                "{t('about.builtByVeteranForVeterans')}"
               </p>
               
               <p>
-                I am <strong className="text-white">Anthony Johnson</strong>, an instructor and developer 
-                based in Portland, OR. I built Vet-Rate because I believe you shouldn't need a law degree - or 
-                pay thousands to a "claim shark" - to get the benefits you earned.
+                {t('about.promiseIntro')}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-green-500/30">
                   <span className="text-3xl block mb-2">💵</span>
-                  <span className="text-green-400 font-bold">ZERO COST</span>
-                  <p className="text-xs text-gray-400 mt-1">No subscriptions. No hidden fees. Ever.</p>
+                  <span className="text-green-400 font-bold">{t('about.zeroCost')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about.zeroCostDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-blue-500/30">
                   <span className="text-3xl block mb-2">🛡️</span>
-                  <span className="text-blue-400 font-bold">100% PRIVATE</span>
-                  <p className="text-xs text-gray-400 mt-1">Your data stays on YOUR device.</p>
+                  <span className="text-blue-400 font-bold">{t('about.hundredPercentPrivate')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about.privateDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-red-500/30">
                   <span className="text-3xl block mb-2">🚫</span>
-                  <span className="text-red-400 font-bold">NO TRACKING</span>
-                  <p className="text-xs text-gray-400 mt-1">No analytics. No selling data.</p>
+                  <span className="text-red-400 font-bold">{t('about.noTracking')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about.noTrackingDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-purple-500/30">
                   <span className="text-3xl block mb-2">🤖</span>
-                  <span className="text-purple-400 font-bold">17 LOCAL AI MODELS</span>
-                  <p className="text-xs text-gray-400 mt-1">AI runs in YOUR browser. Offline capable.</p>
+                  <span className="text-purple-400 font-bold">17 {t('about.localAiModels')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about.localAiDesc')}</p>
                 </div>
               </div>
               
               <p className="text-center italic text-gray-400 mt-4 text-xs">
-                This is a tool to empower you to tell your own story.
+                {t('about.toolToEmpower')}
               </p>
             </div>
           </section>
           
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 My Mission</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 {t('about.myMission')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> is the most comprehensive free VA claims toolkit available - {getTotalToolCount()}+ professional-grade 
-              tools built to empower veterans with everything needed from initial research through appeals. 
-              The VA system is complex, but your path through it doesn't have to be. From smart search and rating calculators 
-              to C&P exam prep, AI document analysis, and evidence building, this complete arsenal puts you in command of your claim - giving 
-              you what predatory "claim sharks" charge thousands for, <strong>absolutely free</strong>.
+              <strong>Vet-Rate.org</strong> {t('about.missionDescription')} ({getTotalToolCount()}+ {t('about.professionalTools').toLowerCase()})
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ Complete Claims Arsenal - {getTotalToolCount()}+ Professional Tools</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ {t('about.completeClaimsArsenal')} - {getTotalToolCount()}+ {t('about.professionalTools')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              This comprehensive toolkit provides everything you need from initial research through appeals:
+              {t('about.arsenalDescription')}
             </p>
             
             <div className="space-y-4">
@@ -280,65 +278,53 @@ const AboutUs = ({ onClose, onReportBug }) => {
             
             <div className="mt-4 bg-gradient-to-r from-va-gold/20 to-green-600/20 border-l-4 border-va-gold rounded p-3">
               <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                🎖️ That's {getTotalToolCount()}+ professional-grade tools - completely free. What claim sharks charge thousands for.
+                🎖️ {getTotalToolCount()}+ {t('about.arsenalHighlight')}
               </p>
             </div>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Data Sources</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.dataSources')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Our comprehensive knowledge base has been <strong>fully validated against the official eCFR</strong> (Electronic Code of Federal Regulations):
+              {t('about.dataSourcesIntro')}
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
               <li>
-                <strong>38 CFR Part 3 - Verified:</strong> Adjudication rules, eligibility requirements, and 
-                claims procedures cross-referenced with official VA regulations
+                <strong>{t('about.cfrPart3Verified')}</strong> {t('about.cfrPart3Desc')}
               </li>
               <li>
-                <strong>38 CFR Part 4 - Verified:</strong> Every diagnostic code, rating percentage, and evaluation 
-                criteria has been cross-referenced with the official VA Schedule for Rating Disabilities
+                <strong>{t('about.cfrPart4Verified')}</strong> {t('about.cfrPart4Desc')}
               </li>
               <li>
-                <strong>{PROJECT_STATS.disabilitiesValidated} VA Disabilities - Complete Coverage:</strong> All body systems thoroughly documented 
-                (Musculoskeletal System, Organs of Special Sense, Systemic Diseases, Respiratory System, Cardiovascular System, Digestive System, Genitourinary System, Gynecological Conditions, Hemic and Lymphatic Systems, Skin, Endocrine System, Neurological Conditions, Mental Disorders, Dental and Oral Conditions, and Infectious Diseases)
+                <strong>{PROJECT_STATS.disabilitiesValidated} {t('about.vaDisabilitiesCompleteCoverage')}</strong> {t('about.allBodySystems')}
               </li>
               <li>
-                <strong>100% Rating Criteria Validated:</strong> All {PROJECT_STATS.disabilitiesValidated} conditions include detailed percentage 
-                breakdowns verified against current 38 CFR regulations
+                <strong>{t('about.ratingCriteriaValidated')}</strong> {t('about.ratingCriteriaDesc')}
               </li>
               <li>
-                <strong>Secondary Conditions Database:</strong> Medically-recognized secondary conditions linked 
-                to primary disabilities with supporting documentation
+                <strong>{t('about.secondaryConditionsDatabase')}</strong> {t('about.secondaryConditionsDesc')}
               </li>
             </ul>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 italic">
-              Last validated: January 2026 against eCFR Title 38, Parts 3 & 4
+              {t('about.lastValidated')} January 2026 {t('about.againstEcfr')}
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Why I Built This</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.whyIBuiltThis')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Too many veterans struggle because the VA system is scattered, technical, and predatory services 
-              charge thousands for basic help. I've been there myself. That's why I built Vet-Rate.org - {getTotalToolCount()}+ 
-              professional-grade tools in one place where you can research your conditions, calculate your ratings, 
-              understand what the VA is looking for, practice your C&P exam, analyze documents with AI, find secondary 
-              conditions, evaluate strategic options, and build your complete evidence packet. 
+              {t('about.whyIBuiltThisDesc1')} ({getTotalToolCount()}+ {t('about.tools')})
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              No expensive consultants. No endless Google searches. No predatory "claim sharks" taking 30% of your 
-              backpay. Just the complete arsenal you need to take charge of your claim - from initial research through 
-              appeals - all in one place.
+              {t('about.whyIBuiltThisDesc2')}
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>This comprehensive platform is 100% free</strong> and runs entirely in your browser - no accounts, 
-              no data collection, and no PII storage. Your searches, calculations, and documents remain private.
+              <strong>{t('about.whyIBuiltThisDesc3')}</strong>
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Who I Am</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.whoIAm')}</h3>
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
                 <img 
@@ -350,15 +336,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
               </div>
               <div className="flex-1">
                 <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  Vet-Rate.org is an independent educational resource created by a fellow service-disabled veteran passionate about helping 
-                  other veterans navigate the VA disability system. This is not an official VA website, law firm, or medical 
-                  service. I am simply providing a tool that makes publicly available information easier to access 
-                  and understand.
+                  {t('about.whoIAmDesc1')}
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  As a veteran who has navigated the VA system myself, I understand the frustration of trying to decode 
-                  complex regulations and figure out what benefits you're entitled to. That's why I built this tool - to 
-                  make the process clearer for all of us who served.
+                  {t('about.whoIAmDesc2')}
                 </p>
                 <p className="text-gray-600 dark:text-gray-400 italic text-left mt-4">~ Anth</p>
               </div>
@@ -366,10 +347,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🐱 The Development Team</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🐱 {t('about.developmentTeam')}</h3>
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Behind every late-night coding session is a dedicated team:
+                {t('about.developmentTeamIntro')}
               </p>
               {/* Luna and Midnight - 2 column grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -380,12 +361,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                     <span className="text-xs bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300 px-2 py-0.5 rounded-full">aka Sweet Baby Kitty Cat</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Chief Morale Officer & Keyboard Supervisor. Specializes in walking across the keyboard at 
-                    critical moments and demanding attention during important debugging sessions.
+                    {t('about.chiefMoraleOfficer')}. {t('about.lunaDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-pink-600 hover:text-pink-800 font-medium">
-                      📸 View Luna's Gallery
+                      📸 {t('about.viewGallery')}
                     </summary>
                     <div className="mt-3 grid grid-cols-1 gap-3">
                       <div>
@@ -419,15 +399,14 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">🖥️</span>
                     <h4 className="font-bold text-gray-800 dark:text-gray-200">Midnight</h4>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">The Workstation</span>
+                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{t('about.theWorkstation')}</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    The tireless machine that brought Vet-Rate.org to life. Running countless builds, tests, 
-                    and deployments without complaint (mostly).
+                    {t('about.midnightDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
-                      🔧 View Midnight's Specs
+                      🔧 {t('about.viewSpecs')}
                     </summary>
                     <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 space-y-1 text-gray-600 dark:text-gray-400">
                       <p><strong>CPU:</strong> AMD Ryzen 9 7950X3D 4.2 GHz 16-Core</p>
@@ -450,16 +429,15 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">⚡</span>
-                    <h4 className="font-bold text-gray-800 dark:text-gray-200">The Codebase</h4>
-                    <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">Built with 💚</span>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200">{t('about.theCodebase')}</h4>
+                    <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{t('about.builtWithLove')} 💚</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    A labor of love, countless hours, and a whole lot of caffeine. Here's what powers 
-                    Vet-Rate.org under the hood.
+                    {t('about.codebaseDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium">
-                      📊 View Codebase Stats
+                      📊 {t('about.viewCodebaseStats')}
                     </summary>
                     <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 text-gray-600 dark:text-gray-400">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -606,32 +584,31 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💻 How This Was Built</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💻 {t('about.howThisWasBuilt')}</h3>
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <p className="text-gray-700 dark:text-gray-300 mb-3">
-                Vet-Rate.org was developed using modern tools and AI-assisted development:
+                {t('about.howBuiltIntro')}
               </p>
               <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">📖</span>
-                  <span><strong>Data Source:</strong> All disability information was meticulously extracted and structured from the official <a href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">eCFR (Electronic Code of Federal Regulations)</a></span>
+                  <span><strong>{t('about.dataSource')}</strong> {t('about.dataSourceDesc')} (<a href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">eCFR</a>)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">🛠️</span>
-                  <span><strong>Development Environment:</strong> Visual Studio Code with GitHub Copilot integration</span>
+                  <span><strong>{t('about.developmentEnvironment')}</strong> Visual Studio Code with GitHub Copilot integration</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600 mt-1">🤖</span>
-                  <span><strong>AI-Assisted Development:</strong> GitHub Copilot (code generation), Anthropic's Claude 3.5 Sonnet (architecture & complex logic), ChatGPT-4 (problem solving), and Google Gemini 1.5 (data processing)</span>
+                  <span><strong>{t('about.aiAssistedDevelopment')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-violet-600 mt-1">⚡</span>
-                  <span><strong>Modern Stack:</strong> React 18, Vite, Tailwind CSS for 280x development speed vs. traditional methods</span>
+                  <span><strong>{t('about.modernStack')}</strong> React 18, Vite, Tailwind CSS</span>
                 </li>
               </ul>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">
-                AI-assisted development allowed a single veteran to build a comprehensive tool that would have 
-                otherwise required a full development team. The future is now! 🚀
+                {t('about.aiDevelopmentNote')}
               </p>
               
               {/* Custom Vision Model Build Details */}
@@ -690,28 +667,23 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Important Disclaimers</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.importantDisclaimers')}</h3>
             <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 mb-4">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>⚠️ Not Legal or Medical Advice:</strong> This tool provides educational information only. 
-                It does not constitute legal or medical advice. Always consult with qualified professionals for 
-                guidance specific to your situation.
+                <strong>⚠️ {t('about.notLegalOrMedicalAdvice')}</strong> {t('about.notLegalOrMedicalAdviceDesc')}
               </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>💼 Not Affiliated with the VA:</strong> Vet-Rate.org is an independent resource and is 
-                not endorsed by, affiliated with, or approved by the U.S. Department of Veterans Affairs.
+                <strong>💼 {t('about.notAffiliatedWithVA')}</strong> {t('about.notAffiliatedWithVADesc')}
               </p>
             </div>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 How This Project Is Funded</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 {t('about.howProjectFunded')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Building and maintaining {getTotalToolCount()} professional-grade tools with hosting costs, AI capabilities, and continuous development 
-              requires resources. To keep this comprehensive platform free for all veterans, this project relies entirely on voluntary 
-              support from the veteran community:
+              {t('about.fundingIntro')}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <a
@@ -721,7 +693,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 className="flex flex-col items-center p-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-all hover:scale-105 shadow-sm"
               >
                 <span className="text-2xl mb-1">☕</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">Buy Me a Coffee</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">{t('about.buyMeACoffee')}</span>
                 <span className="text-xs font-medium text-yellow-900 dark:text-yellow-900">vet-rate.org</span>
               </a>
               <a
@@ -756,43 +728,38 @@ const AboutUs = ({ onClose, onReportBug }) => {
               </a>
             </div>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Your support helps keep this tool free and accessible for all veterans. We intentionally avoid 
-              using advertising networks to protect veteran privacy - no third-party trackers, no data collection.
+              {t('about.supportHelpsKeepFree')}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-              100% of contributions go toward hosting, development, and keeping Vet-Rate.org running for the veteran community.
+              {t('about.allContributionsGo')}
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">My Commitment to Veterans</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.myCommitmentToVeterans')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              I am committed to:
+              {t('about.commitmentIntro')}
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
-              <li>✅ Keeping all <strong>{getTotalToolCount()}+ professional tools 100% free</strong> forever - no paywalls, ever</li>
-              <li>✅ Protecting your <strong>privacy</strong> - no ads, no tracking, no data collection, no claim sharks</li>
-              <li>✅ Providing <strong>accurate, up-to-date</strong> information from official 38 CFR sources</li>
-              <li>✅ Continuously <strong>adding new tools</strong> and improving features based on veteran feedback</li>
-              <li>✅ Maintaining <strong>transparency</strong> - open about AI use, data handling, and limitations</li>
+              <li>✅ {t('about.commitment1')} ({getTotalToolCount()}+)</li>
+              <li>✅ {t('about.commitment2')}</li>
+              <li>✅ {t('about.commitment3')}</li>
+              <li>✅ {t('about.commitment4')}</li>
+              <li>✅ {t('about.commitment5')}</li>
             </ul>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">Contact & Feedback</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about.contactFeedback')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              Have suggestions, found an error, or want to say thanks? I'd love to hear from you! Visit the{' '}
-              <span className="text-blue-600 font-semibold cursor-pointer hover:underline">Contact</span> page 
-              to get in touch.
+              {t('about.contactPageLink')}
             </p>
           </section>
 
           <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mt-6">
             <p className="text-sm text-green-800 dark:text-green-200">
-              <strong>Thank You for Your Service</strong><br />
-              Every veteran who navigates their claim successfully with these {getTotalToolCount()}+ tools - instead of paying thousands 
-              to predatory services - is a victory. I'm honored to serve my fellow veterans by making this comprehensive 
-              professional arsenal freely available to all who served.
+              <strong>{t('about.thankYouForService')}</strong><br />
+              {t('about.thankYouMessage')} ({getTotalToolCount()}+ {t('about.tools')})
             </p>
           </div>
         </div>
@@ -801,7 +768,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="flex items-center gap-4">
               <VersionDropUp />
-              <span className="text-xs text-gray-500 dark:text-gray-400">• Built with ❤️ for Veterans</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">• {t('about.builtWithLoveForVeterans')}</span>
               
               {/* The Zonk Button - Easter Egg */}
               <button
@@ -809,7 +776,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-sm"
                 title="Zonk! (Click me)"
               >
-                Dismissed
+                {t('about.dismissed')}
               </button>
             </div>
             
@@ -829,9 +796,9 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-8 py-6 rounded-xl shadow-2xl transform animate-bounce">
             <div className="text-6xl mb-2 text-center">🎖️</div>
             <div className="text-3xl font-bold text-center mb-2">ZONK!</div>
-            <div className="text-lg text-center">You're dismissed! Get outta here! 😄</div>
+            <div className="text-lg text-center">{t('about.zonkMessage')}</div>
             <div className="text-sm text-center mt-2 text-white/80">
-              (Just kidding, thanks for using Vet-Rate!)
+              ({t('about.zonkThanks')})
             </div>
           </div>
         </div>

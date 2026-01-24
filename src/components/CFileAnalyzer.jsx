@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
 import { analyzeCFile, getCFilePrivacyDisclosure } from '../utils/cfileAnalyzer';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
@@ -20,6 +21,7 @@ import CFileTimeline from './CFileTimeline';
 import CFileClaimsCards from './CFileClaimsCards';
 
 export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }) {
+  const { t } = useLanguage();
   // File drop state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);

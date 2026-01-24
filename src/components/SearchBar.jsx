@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getSearchSuggestions } from '../utils/searchUtils';
 import disabilityData from '../data/disabilityData.json';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
+  const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const containerRef = useRef(null);

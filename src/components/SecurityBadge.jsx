@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Lock, Eye, Code, Network, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * SecurityBadge - Prominent, always-visible proof of client-side security
@@ -11,6 +12,7 @@ import { Shield, Lock, Eye, Code, Network, AlertCircle, CheckCircle, X } from 'l
  * - What skeptics should check
  */
 const SecurityBadge = () => {
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 

@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
@@ -363,6 +364,7 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
 };
 
 export default function WitnessBench({ onClose, onReportBug, onOpenAISettings }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   

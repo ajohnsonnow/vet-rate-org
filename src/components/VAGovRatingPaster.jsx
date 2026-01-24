@@ -6,8 +6,10 @@
 
 import React, { useState } from 'react';
 import { parseVAGovRatings, validateParsedRatings, formatParsedRatings, EXAMPLE_VA_GOV_TEXT } from '../utils/vaGovRatingParser';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExample = true }) {
+  const { t } = useLanguage();
   const [pasteText, setPasteText] = useState('');
   const [parsedResult, setParsedResult] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);

@@ -12,6 +12,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, Check, Lightbulb, Brain } from 'lucide-react';
 import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // The Diplomat's AI System Prompt
 const TONE_ANALYSIS_PROMPT = `You are a clinical writing coach helping veterans write effective VA disability statements.
@@ -64,6 +65,7 @@ Severity: "low"
 Now analyze this statement:`;
 
 const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
+  const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);

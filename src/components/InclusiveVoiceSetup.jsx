@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { triggerPanicRedirect } from '../utils/safetyRedirect';
 import { getAvailableVoices, setVoice, previewVoice, getVoiceSettings, updateVoiceSettings } from '../utils/voiceEngine';
 import { getVoiceOrchestrator } from '../services/VoiceOrchestrator';
@@ -23,6 +24,7 @@ const InclusiveVoiceSetup = ({
   defaultLanguage = 'en',
   className = ''
 }) => {
+  const { t } = useLanguage();
   // Steps: SAFETY -> LANGUAGE -> SELECT -> SETTINGS
   const [step, setStep] = useState(showSafetyCheck ? 'SAFETY' : 'LANGUAGE');
   const [voices, setVoices] = useState({ all: [], categorized: {} });

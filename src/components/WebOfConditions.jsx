@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
@@ -332,6 +333,7 @@ const useForceSimulation = (nodes, links, width, height) => {
 };
 
 export default function WebOfConditions({ onClose, onSelectCondition, onReportBug }) {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const containerRef = useRef(null);

@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { saveClaim, saveStatement, clearAllClaims, getSavedClaims } from '../utils/claimsStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * Demo data representing a complete, well-documented claim
@@ -287,6 +288,7 @@ export const clearDemoData = () => {
  * Shows a link/button to load example data with confirmation
  */
 const DemoDataLoader = ({ onDataLoaded, variant = 'link' }) => {
+  const { t } = useLanguage();
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   

@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useVaAuth } from '../../auth/useVaAuth';
 import {
   getServiceHistory,
@@ -231,6 +232,7 @@ const ApiTestCard = ({
 // ============================================================================
 
 const VaSandboxTest = () => {
+  const { t } = useLanguage();
   const {
     isAuthenticated,
     isLoading: authLoading,

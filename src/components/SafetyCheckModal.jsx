@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * SafetyCheckModal Component
@@ -13,6 +14,7 @@ const SafetyCheckModal = ({
   language = 'en',
   className = ''
 }) => {
+  const { t } = useLanguage();
   // Localized content
   const content = {
     en: {

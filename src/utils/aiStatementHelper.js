@@ -1349,8 +1349,11 @@ export const decodeDecision = async (decisionText) => {
       expectJSON: true
     });
     
-    // generateAI returns { text, mode } object - extract the text content
+    // generateAI returns { text, mode, fallback?, fallbackReason?, note? } object
     const text = response?.text || response;
+    const usedFallback = response?.fallback || false;
+    const fallbackReason = response?.fallbackReason || null;
+    const fallbackNote = response?.note || null;
     
     if (!text) {
       return { success: false, error: 'No response generated. Please try again.' };
@@ -1367,14 +1370,36 @@ export const decodeDecision = async (decisionText) => {
       }
       
       const decodedData = JSON.parse(cleanedText);
-      return { success: true, data: decodedData };
+      
+      // Include fallback info in response for UI to show helpful message
+      return {
+        success: true,
+        data: decodedData,
+        // Pass through fallback info so UI can show helpful message
+        ...(usedFallback && {
+          usedFallback: true,
+          fallbackReason,
+          fallbackNote
+        })
+      };
     } catch (parseError) {
       console.error('Failed to parse decision decoder JSON:', parseError, textStr);
       return { success: false, error: 'Failed to parse decision. Please try again.' };
     }
   } catch (error) {
     console.error('Decision decoder error:', error);
-    return { success: false, error: 'Network error. Please check your connection and try again.' };
+    
+    // Check for context overflow error and provide helpful message
+    const errorMsg = error.message || '';
+    if (errorMsg.includes('too large') || errorMsg.includes('context') || errorMsg.includes('4096')) {
+      return {
+        success: false,
+        error: errorMsg,
+        isContextOverflow: true
+      };
+    }
+    
+    return { success: false, error: errorMsg || 'Network error. Please check your connection and try again.' };
   }
 };
 

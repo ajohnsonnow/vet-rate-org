@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -35,6 +36,7 @@ import {
 const STORAGE_KEY = 'vet_rate_retro_pay_history';
 
 const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // Rating history state

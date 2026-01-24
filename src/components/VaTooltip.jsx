@@ -12,11 +12,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getDefinition } from '../utils/vaGlossary';
 import { highlightVATermsReact } from '../utils/glossaryHighlighter';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * Individual VA term with tooltip
  */
 export const VaTerm = ({ term, definition, children, className = '' }) => {
+  const { t } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState('');
   const termRef = useRef(null);

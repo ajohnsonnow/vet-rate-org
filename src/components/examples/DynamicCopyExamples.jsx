@@ -5,8 +5,10 @@
 
 import React from 'react';
 import { useAboutUsContent, useDynamicCopy } from '../hooks/useDynamicCopy';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export const AboutUsExample = () => {
+  const { t } = useLanguage();
   const aboutUs = useAboutUsContent();
   const { stats } = useDynamicCopy();
 

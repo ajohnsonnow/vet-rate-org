@@ -16,6 +16,7 @@
  */
 
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { FocusToggle } from '../contexts/FocusModeContext';
@@ -209,6 +210,7 @@ const checkPresumptiveStatus = (exposureType, location, condition) => {
 };
 
 export default function PACTActNavigator({ onClose, onReportBug }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   

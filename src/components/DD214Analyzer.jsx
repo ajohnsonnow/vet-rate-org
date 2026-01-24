@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { generateAI, generateAIWithImage, getAIStatus, isAnyAIAvailable, isLocalAIReady, isLocalAIVisionModel } from '../utils/unifiedAIService';
@@ -211,6 +212,7 @@ const OCRProgressBar = ({ progress }) => {
  * Main DD214 Analyzer Component
  */
 const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   // State

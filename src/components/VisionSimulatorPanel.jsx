@@ -10,8 +10,10 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { VisionSimulator } from '../utils/visionSimulator';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
+  const { t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);

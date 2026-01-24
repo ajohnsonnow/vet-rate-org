@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { useColorSchemas } from '../hooks/useColorSchemas';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const TermsOfServiceModal = () => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [canAccept, setCanAccept] = useState(false);
   const [countdown, setCountdown] = useState(3);

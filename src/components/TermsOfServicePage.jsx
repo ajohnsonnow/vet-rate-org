@@ -1,6 +1,9 @@
 ﻿import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const TermsOfServicePage = ({ onClose }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900">
       <div className="max-w-5xl mx-auto bg-white shadow-2xl min-h-screen">

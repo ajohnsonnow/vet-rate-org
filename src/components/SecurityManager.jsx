@@ -23,11 +23,13 @@ import {
   getVaultStatus,
   isCryptoAvailable
 } from '../utils/secureStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const STORAGE_KEY_VAULT_ENABLED = 'vet-rate-vault-enabled';
 const STORAGE_KEY_SESSION_LOCK_ENABLED = 'vet-rate-session-lock-enabled';
 
 const SecurityManager = ({ children }) => {
+  const { t } = useLanguage();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPinEntry, setShowPinEntry] = useState(false);
   const [pinMode, setPinMode] = useState('verify'); // 'verify', 'setup', 'change'

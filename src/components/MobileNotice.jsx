@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * Detect if device is a tablet
@@ -37,6 +38,7 @@ const isTablet = () => {
  * Remembers dismissal for the session.
  */
 const MobileNotice = () => {
+  const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
   const [deviceType, setDeviceType] = useState(null); // 'phone', 'tablet', or null
 

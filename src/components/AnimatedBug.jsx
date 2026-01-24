@@ -8,8 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AnimatedBug = ({ size = 'sm', className = '' }) => {
+  const { t } = useLanguage();
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationStyle, setAnimationStyle] = useState({});
   

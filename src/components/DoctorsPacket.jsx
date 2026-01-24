@@ -13,6 +13,7 @@ import {
   formatDoctorLetter,
   getNexusLogicPrivacyDisclosure 
 } from '../utils/nexusLogicGenerator';
+import { useLanguage } from '../contexts/LanguageContext';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
@@ -97,6 +98,7 @@ export default function DoctorsPacket({
   existingCitations = null,
   onOpenAISettings
 }) {
+  const { t } = useLanguage();
   // State
   const [step, setStep] = useState('consent'); // consent, input, loading, result, error
   const [primaryCondition, setPrimaryCondition] = useState(initialPrimary);
@@ -161,7 +163,7 @@ export default function DoctorsPacket({
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
       setError('No AI available. Please set up an API key or enable Local AI in settings.');
-      setShowAISettings(true);
+      if (onOpenAISettings) onOpenAISettings();
       return;
     }
     

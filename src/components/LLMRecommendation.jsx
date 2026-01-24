@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getToolRecommendation, analyzeCurrentModel } from '../utils/llmRecommendations';
 import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 
@@ -14,6 +15,7 @@ import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
  * Compact badge showing current model and recommendation
  */
 export const LLMRecommendationBadge = ({ toolId, className = '' }) => {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [aiStatus, setAiStatus] = useState(getAIStatus());
   

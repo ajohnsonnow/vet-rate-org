@@ -28,6 +28,7 @@ import {
 } from '../api/va';
 import { VA_FACILITIES_API_KEY, VA_FORMS_API_KEY, VA_BENEFITS_REF_API_KEY, VA_AUTH_CONFIG } from '../config/vaAuth';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Icons
 import { 
@@ -68,6 +69,7 @@ import {
 // =============================================================================
 
 const DemoDashboard = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const { 

@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { AlertCircle, TrendingUp, CheckCircle, Info, FileText, AlertTriangle, Download, ClipboardList, X, Calculator } from 'lucide-react';
 import jsPDF from 'jspdf';
 import ShareButton from './ShareButton';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * SimulatorFeedback Component
@@ -12,6 +13,7 @@ import ShareButton from './ShareButton';
  * CRITICAL: This is an educational tool, not a guarantee. All feedback based on 38 CFR Part 4.
  */
 const SimulatorFeedback = ({ result, conditionName, diagnosticCode, answers, questions, onRestart, onClose, onSendToCalculator }) => {
+  const { t } = useLanguage();
   const feedbackContentRef = useRef(null);
   
   if (!result) return null;

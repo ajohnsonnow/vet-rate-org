@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { 
   searchPdfForKeyword, 
@@ -18,6 +19,7 @@ import {
 } from '../utils/pdfSearchEngine';
 
 const RecordSearch = ({ onClose }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   // File state

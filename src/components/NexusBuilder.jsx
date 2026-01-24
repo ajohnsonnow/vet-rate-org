@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
@@ -25,6 +26,7 @@ import { getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
  * Now with optional AI enhancement powered by Google Gemini
  */
 const NexusBuilder = ({ condition, primaryCondition, onClose, onSave, existingStatement = null, onReportBug, onOpenAISettings }) => {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 

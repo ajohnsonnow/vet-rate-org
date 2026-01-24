@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Configuration
 const RAPID_ESC_THRESHOLD = 800; // ms between ESC presses to count as "rapid"
@@ -21,6 +22,8 @@ const PanicButton = ({
   coverType = 'google', // 'google', 'excel', 'blank', 'news'
   alternateKeys = ['Escape', 'Escape', 'Escape'] // Default: ESC x3
 }) => {
+  const { t } = useLanguage();
+  
   const [isHidden, setIsHidden] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const escPressTimesRef = useRef([]);

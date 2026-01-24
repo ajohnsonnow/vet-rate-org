@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
@@ -256,6 +257,7 @@ const generateRequestText = (formData, selectedRecords) => {
 };
 
 export default function FOIAGenerator({ onClose, onReportBug }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   

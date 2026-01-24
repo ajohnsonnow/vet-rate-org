@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Search, Bug, AlertTriangle, AlertCircle, Clock, CheckCircle,
   X, Database, FileText, Monitor, Smartphone, RefreshCw,
@@ -43,6 +44,7 @@ const SEVERITY_CONFIG = {
 };
 
 export default function BugLookup({ onClose }) {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   // State

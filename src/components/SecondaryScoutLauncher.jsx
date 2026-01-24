@@ -5,6 +5,7 @@ import disabilityData from '../data/disabilityData.json';
 import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
 import VAGovRatingPaster from './VAGovRatingPaster';
 import { analyzePDF, OCR_STATES, getProgressStyling, formatFileSize } from '../utils/ocr';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * SecondaryScoutLauncher Component
@@ -14,6 +15,7 @@ import { analyzePDF, OCR_STATES, getProgressStyling, formatFileSize } from '../u
 const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
+  const { t } = useLanguage();
 
   const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', 'myratings', 'paste', or 'pdf'
   const [manualInput, setManualInput] = useState('');

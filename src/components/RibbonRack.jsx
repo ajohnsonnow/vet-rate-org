@@ -48,6 +48,7 @@ import {
   DEVICES,
 } from '../utils/ribbonRackData';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useVaAuthContext } from '../contexts/VaAuthContext';
 import { getServiceHistory as getLocalServiceHistory } from '../utils/veteranProfile';
 import { getServiceHistory as getVaServiceHistory } from '../api/va';
@@ -192,6 +193,7 @@ const formatDate = (dateStr) => {
 
 const RibbonRack = ({ onClose, onReportBug }) => {
   useBodyScrollLock(true);
+  const { t } = useLanguage();
   
   const { isAuthenticated, accessToken } = useVaAuthContext();
   const [localHistory, setLocalHistory] = useState(null);

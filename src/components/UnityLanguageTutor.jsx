@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { speak, previewVoice, getBestVoice, getAvailableVoices } from '../utils/voiceEngine';
 import { getSupportPhrase, getBranchGreeting } from '../utils/toneMapper';
 import multilingualTone from '../config/multilingualTone.json';
+import { useLanguage } from '../contexts/LanguageContext';
 
 /**
  * UnityLanguageTutor Component
@@ -21,6 +22,7 @@ const UnityLanguageTutor = ({
   onClose,
   className = ''
 }) => {
+  const { t } = useLanguage();
   const [targetLang, setTargetLang] = useState('es');
   const [phraseCategory, setPhraseCategory] = useState('support');
   const [currentPhrase, setCurrentPhrase] = useState(null);

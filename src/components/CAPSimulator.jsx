@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { X, ClipboardList, BookOpen, AlertCircle, ChevronRight, ChevronLeft, ChevronDown, HelpCircle, Search, FileText } from 'lucide-react';
 import SimulatorFeedback from './SimulatorFeedback';
 import BuyMeCoffee from './BuyMeCoffee';
@@ -86,6 +87,7 @@ const getTipsForCondition = (conditionType) => {
  * CRITICAL: All criteria based on verbatim 38 CFR Part 4 requirements.
  */
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
+  const { t } = useLanguage();
   const [mode, setMode] = useState('intro'); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);

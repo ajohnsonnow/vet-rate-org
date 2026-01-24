@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   analyzeContract, 
   getRiskLevelColors, 
@@ -113,6 +114,7 @@ const RiskMeter = ({ score, riskLevel }) => {
  * Main Shark Radar Component
  */
 export default function SharkRadar() {
+  const { t } = useLanguage();
   const [textInput, setTextInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);

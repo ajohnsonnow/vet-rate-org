@@ -9,8 +9,10 @@
 
 import React from 'react';
 import { getStaleDataStatus, generateReportOutdatedLink } from '../utils/staleDataDetection';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const StaleDataIndicator = ({ disability, variant = 'full', className = '' }) => {
+  const { t } = useLanguage();
   const status = getStaleDataStatus(disability);
   
   // Don't show anything if data is current

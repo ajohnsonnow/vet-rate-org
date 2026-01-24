@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 /**
  * Issue types and their corresponding colors
@@ -57,6 +58,8 @@ const ISSUE_COLORS = {
  * @param {string} props.className - Additional CSS classes
  */
 const DiffHighlighter = ({ text, issues = [], className = '' }) => {
+  const { t } = useLanguage();
+  
   // If no text, return nothing
   if (!text) return null;
   
@@ -176,6 +179,7 @@ const DiffHighlighter = ({ text, issues = [], className = '' }) => {
  * Standalone issue card for detailed view
  */
 export const IssueCard = ({ issue, index }) => {
+  const { t } = useLanguage();
   const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
   
   return (

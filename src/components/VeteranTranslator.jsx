@@ -326,7 +326,7 @@ const translateText = async (text, fromLang, toLang) => {
 const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
   useBodyScrollLock(isOpen);
   
-  const { SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const { t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
   
   // State
   const [myLanguage, setMyLanguage] = useState(appLanguage || 'en');

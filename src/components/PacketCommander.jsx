@@ -8,10 +8,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { generateCoverSheet, generateCoverSheetHTML, autoDetectDocuments, downloadCoverSheet } from '../utils/packetCommander';
 import { getSavedForms, getVeteranProfile } from '../utils/veteranProfile';
 
 const PacketCommander = ({ onClose }) => {
+  const { t } = useLanguage();
   const [veteranProfile, setVeteranProfile] = useState({});
   const [documents, setDocuments] = useState([]);
   const [claimType, setClaimType] = useState('Initial Disability Claim');

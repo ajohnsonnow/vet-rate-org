@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 
 const ContactUs = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
+  
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
   

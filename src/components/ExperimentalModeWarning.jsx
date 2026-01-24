@@ -4,8 +4,10 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ExperimentalModeWarning = ({ experimentalMode }) => {
+  const { t } = useLanguage();
   if (!experimentalMode) {
     return null;
   }

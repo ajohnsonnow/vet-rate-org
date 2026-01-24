@@ -16,11 +16,13 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { Shield, Eye, EyeOff, Lock, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function AdminLogin() {
+  const { t } = useLanguage();
   const { 
     showAdminLogin, 
     closeAdminLogin, 

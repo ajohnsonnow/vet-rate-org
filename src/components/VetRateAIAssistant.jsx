@@ -21,8 +21,10 @@ import {
   Gem,
   Clock
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const VetRateAIAssistant = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const { isReady, isLoading, ask, knowledgeCount, metadata, sourceColors, isDiamond, bvaApiPending } = useVetRateAI();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');

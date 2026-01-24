@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Info,
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Facility type icons and colors
 const FACILITY_TYPES = {
@@ -60,6 +61,7 @@ const FACILITY_TYPES = {
 };
 
 const VaFacilitiesDemo = ({ embedded = false }) => {
+  const { t } = useLanguage();
   const { 
     facilities, 
     rawData, 

@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Search, Lightbulb, AlertCircle, Clock, CheckCircle,
   X, Database, FileText, Monitor, RefreshCw,
@@ -50,6 +51,7 @@ const STATUS_CONFIG = {
 };
 
 export default function FeatureLookup({ onClose }) {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   // State

@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { saveDD214Data, getServiceHistory, getVeteranProfile } from '../utils/veteranProfile';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // DD214 Block field definitions with tooltips
 const DD214_FIELDS = {
@@ -72,6 +73,7 @@ const DD214_FIELDS = {
  * DD214 Form Builder Component
  */
 const DD214FormBuilder = ({ onClose, onSave }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
 
   const [formData, setFormData] = useState({});

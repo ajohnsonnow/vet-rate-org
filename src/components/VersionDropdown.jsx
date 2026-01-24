@@ -7,8 +7,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Sparkles, Wrench, Shield, Zap, CheckCircle, Rocket } from 'lucide-react';
 import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const VersionDropdown = () => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [changelogData, setChangelogData] = useState(null);
   const dropdownRef = useRef(null);

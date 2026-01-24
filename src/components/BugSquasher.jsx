@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   APP_MODULES,
   BUG_SEVERITY,
@@ -21,6 +22,7 @@ const DEVELOPER_EMAIL = 'Anth@StructuredForGrowth.com';
 const FORMSUBMIT_URL = 'https://formsubmit.co/ajax/Anth@StructuredForGrowth.com';
 
 function BugSquasher({ onClose, appState = {} }) {
+  const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 

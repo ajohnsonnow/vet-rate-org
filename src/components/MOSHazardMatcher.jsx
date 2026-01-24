@@ -18,6 +18,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import { MOS_DATABASE, searchMOS as searchMOSFromDB, getDatabaseStats, CODE_ALIASES } from '../data/mosDatabase';
@@ -659,6 +660,7 @@ const getPrevalenceColor = (prevalence) => {
 };
 
 export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportBug }) {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   const [searchQuery, setSearchQuery] = useState('');

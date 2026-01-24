@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   initPersistentStorage,
   createPacketFile,
@@ -88,6 +89,7 @@ export default function PacketPersistence({
   showFloatingIndicator = true,
   compact = false 
 }) {
+  const { t } = useLanguage();
   const [initialized, setInitialized] = useState(false);
   const [saveStatus, setSaveStatus] = useState('ready');
   const [lastSaved, setLastSaved] = useState(null);

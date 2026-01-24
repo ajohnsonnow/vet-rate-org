@@ -15,6 +15,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Upload, 
   FileText, 
@@ -87,6 +88,7 @@ const ClaimEvidenceUpload = ({
   onClose,
   claimDetails = null,
 }) => {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [documentType, setDocumentType] = useState('L049'); // Default to DBQ
   const [isUploading, setIsUploading] = useState(false);

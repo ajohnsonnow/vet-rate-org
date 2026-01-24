@@ -8,8 +8,10 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const DraftWatermark = ({ className = '', variant = 'banner' }) => {
+  const { t } = useLanguage();
   if (variant === 'banner') {
     return (
       <div className={`bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 rounded-t-lg px-4 py-2 ${className}`}>

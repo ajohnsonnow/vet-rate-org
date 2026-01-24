@@ -9,8 +9,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Download, X, Smartphone, Check } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PWAInstallButton = ({ className = '' }) => {
+  const { t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);

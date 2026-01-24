@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   exportData,
   downloadBackup,
@@ -26,6 +27,7 @@ import DbqBrowser from './DbqBrowser';
 import { getCacheStats } from '../utils/dbqOfflineStorage';
 
 export default function BackupManager({ onClose }) {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success'|'error'|'info', message: '', details: {} }
   const [showStats, setShowStats] = useState(false);

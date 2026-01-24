@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getAIStatus } from '../utils/unifiedAIService';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Storage keys
 const TOKEN_LIMIT_KEY = 'vetrate_token_limit_config';
@@ -167,6 +168,7 @@ export const saveTokenLimit = (value) => {
  * TokenLimitConfig Component
  */
 const TokenLimitConfig = () => {
+  const { t } = useLanguage();
   const [tokenLimit, setTokenLimit] = useState(getTokenLimit());
   const [customValue, setCustomValue] = useState('');
   const [isCustom, setIsCustom] = useState(false);

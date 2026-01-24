@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { 
   EVIDENCE_REQUIREMENTS, 
@@ -18,6 +19,7 @@ import { saveClaim } from '../utils/claimsStorage';
 import ReportBugLink from './ReportBugLink';
 
 const EvidenceGapVisualizer = ({ onClose, initialCondition = null, initialRating = null, onReportBug }) => {
+  const { t } = useLanguage();
   useBodyScrollLock(true);
   
   // State

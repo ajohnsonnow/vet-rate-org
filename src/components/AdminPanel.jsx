@@ -14,6 +14,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useAdminAuth, getAuthAuditLog } from '../contexts/AdminAuthContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import {
@@ -31,6 +32,7 @@ import { getBugStatistics } from '../utils/bugReportStorage';
 import { getFeatureStatistics } from '../utils/featureRequestStorage';
 
 export default function AdminPanel() {
+  const { t } = useLanguage();
   const {
     showAdminPanel,
     closeAdminPanel,

@@ -11,8 +11,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useVaAuth } from '../hooks/useVaAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function VaAuthCallback() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { handleCallback } = useVaAuth();

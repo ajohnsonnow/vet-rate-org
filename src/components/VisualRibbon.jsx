@@ -10,6 +10,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Standard ribbon dimensions (scaled by size)
 const SIZES = {
@@ -48,6 +49,7 @@ const VisualRibbon = ({
   className = '',
   showName = false,
 }) => {
+  const { t } = useLanguage();
   const dimensions = SIZES[size] || SIZES.md;
   const { width, height, deviceSize } = dimensions;
 

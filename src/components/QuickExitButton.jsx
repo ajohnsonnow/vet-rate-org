@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { triggerPanicRedirect, triggerSoftExit } from '../utils/safetyRedirect';
 
 /**
@@ -13,6 +14,8 @@ const QuickExitButton = ({
   showTooltip = true,
   className = ''
 }) => {
+  const { t } = useLanguage();
+  
   const [isHovered, setIsHovered] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   
