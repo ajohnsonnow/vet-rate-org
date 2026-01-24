@@ -3949,6 +3949,11 @@ export const LanguageProvider = ({ children }) => {
 
   // Get translation for a key
   const t = useCallback((section, key) => {
+    // Handle empty or invalid keys silently
+    if (!section || !key || key.trim() === '') {
+      return key || '';
+    }
+    
     const sectionData = APP_TRANSLATIONS[section];
     if (!sectionData) {
       console.warn(`Translation section not found: ${section}`);

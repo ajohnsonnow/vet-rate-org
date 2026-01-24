@@ -80,6 +80,7 @@ function Header({
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showFundingModal, setShowFundingModal] = useState(false);
   const [shouldPulseBackup, setShouldPulseBackup] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Check for unsaved changes periodically
   useEffect(() => {
@@ -196,22 +197,22 @@ function Header({
         </a>
       </div>
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="rounded-full h-16 w-16 md:h-20 md:w-20 flex-shrink-0 overflow-hidden shadow-md">
+      <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl">
+        <div className="flex flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+            <div className="rounded-full h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden shadow-md">
               <img 
                 src="/images/Vet-Rate-org-logo-official.png" 
                 alt="Vet-Rate.org Logo" 
                 className="h-full w-full object-cover"
               />
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap">Vet-Rate.org</h1>
-              <p className="text-green-100 dark:text-gray-300 text-sm md:text-base whitespace-nowrap">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">Vet-Rate.org</h1>
+              <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base truncate">
                 {t('header', 'subtitle')}
               </p>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-1 md:mt-2 flex items-center gap-1 md:gap-2">
                 <KnowledgeBaseStatus compact />
                 <AIStatusBadge showLabel={false} onClick={onAISettingsClick} />
                 <VersionDropdown />
@@ -219,7 +220,8 @@ function Header({
             </div>
           </div>
 
-          <nav className="flex flex-wrap justify-center gap-4 md:gap-6 items-center" role="navigation" aria-label="Main navigation">
+          {/* Desktop Navigation - Hidden on mobile */}
+          <nav className="hidden md:flex flex-wrap justify-center gap-4 md:gap-6 items-center" role="navigation" aria-label="Main navigation">
             {/* Help - First thing users need */}
             <button
               id="tour-help-btn"
@@ -995,10 +997,213 @@ function Header({
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
               </svg>
-              <span className="hidden md:inline">{t('header', 'backTheMission')}</span>
+              <span className="hidden lg:inline">{t('header', 'backTheMission')}</span>
             </button>
           </nav>
+
+          {/* Mobile Menu Button - Shows below md (768px) */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-3 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
+            aria-label="Toggle menu"
+            aria-expanded={showMobileMenu}
+          >
+            {showMobileMenu ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile Menu Drawer - Full screen overlay */}
+        {showMobileMenu && (
+          <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setShowMobileMenu(false)}>
+            <div 
+              className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Mobile Menu Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10">
+                <div>
+                  <h2 className="text-lg font-bold">Menu</h2>
+                  <p className="text-xs text-white/80">39 Pro Tools</p>
+                </div>
+                <button
+                  onClick={() => setShowMobileMenu(false)}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Close menu"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Mobile Menu Content */}
+              <div className="p-4 space-y-2">
+                {/* Core Navigation */}
+                <button
+                  onClick={() => { setShowMobileMenu(false); onUserManualClick?.(); }}
+                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                >
+                  <span className="text-xl">❓</span>
+                  <span className="font-medium">{t('common', 'help')}</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowMobileMenu(false); onWorkflowGuideClick?.(); }}
+                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                >
+                  <span className="text-xl">🗺️</span>
+                  <span className="font-medium">{t('tools', 'missions')}</span>
+                  <span className="ml-auto px-2 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowMobileMenu(false); onMyPacketClick?.(); }}
+                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                >
+                  <span className="text-xl">📁</span>
+                  <span className="font-medium">{t('tools', 'myPacket')}</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowMobileMenu(false); onKnowledgeBaseClick?.(); }}
+                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                >
+                  <span className="text-xl">📚</span>
+                  <span className="font-medium">Knowledge Base</span>
+                  <span className="ml-auto px-2 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
+                </button>
+
+                {/* Tools Section */}
+                <div className="pt-4">
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mb-2">🛠️ {t('common', 'tools')}</p>
+                  
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onTacticalCalculatorClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🧮</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-white">{t('tools', 'tacticalCalculator')}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('tools', 'tacticalCalculatorDesc')}</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onMillionDollarDashboardClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">💰</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-white">{t('tools', 'millionDollarDashboard')}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('tools', 'millionDollarDashboardDesc')}</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onSecondaryScoutClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-800/30 transition-colors min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🔍</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-white">{t('tools', 'secondaryScout')}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('tools', 'secondaryScoutDesc')}</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onCAPSimulatorClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-800/30 transition-colors min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">✅</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-white">{t('tools', 'capSimulator')}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('tools', 'capSimulatorDesc')}</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Resources Section */}
+                <div className="pt-4">
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-4 mb-2">📚 {t('common', 'resources')}</p>
+                  
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onVAResourcesClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                  >
+                    <span className="text-xl">🎖️</span>
+                    <span className="font-medium">{t('resources', 'vaResources')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onBackupManagerClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                  >
+                    <span className="text-xl">💾</span>
+                    <span className="font-medium">{t('tools', 'backupManager')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onCloudSyncClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                  >
+                    <span className="text-xl">☁️</span>
+                    <span className="font-medium">{t('tools', 'cloudSync')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onAISettingsClick?.(); }}
+                    className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                  >
+                    <span className="text-xl">⚙️</span>
+                    <span className="font-medium">{t('tools', 'aiSettings')}</span>
+                  </button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onFeatureRequestClick?.(); }}
+                    className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-semibold shadow-md flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    {t('header', 'ideas')}
+                  </button>
+
+                  <button
+                    onClick={() => { setShowMobileMenu(false); setShowFundingModal(true); }}
+                    className="w-full px-4 py-3 rounded-lg bg-va-gold hover:bg-yellow-400 text-va-blue font-bold shadow-md flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                    </svg>
+                    {t('header', 'backTheMission')}
+                  </button>
+                </div>
+
+                {/* Bottom padding for safe area */}
+                <div className="h-4"></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Funding Modal */}

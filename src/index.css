@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   MOBILE OPTIMIZATION
+   iOS auto-zoom prevention, touch targets, safe areas
+   ============================================ */
+
+/* Prevent iOS auto-zoom on focus - must be 16px minimum */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Mobile-friendly touch targets - minimum 44x44px per Apple HIG */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe area insets for notched devices (iPhone X+) */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Improve mobile scrolling momentum */
+@media (max-width: 767px) {
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Better mobile tap highlighting */
+* {
+  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Remove default mobile input styling */
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
 * {
   @apply scroll-smooth;
 }

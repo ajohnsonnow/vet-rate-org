@@ -308,32 +308,32 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="calculator-title"
     >
-      <div className="min-h-screen px-4 py-8 flex items-start justify-center">
-        <div ref={calculatorContentRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+      <div className="w-full h-full sm:min-h-0 sm:max-h-[90vh] flex items-start justify-center">
+        <div ref={calculatorContentRef} className="bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-xl w-full sm:max-w-6xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col">
           {/* Header - Sticky */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden flex-shrink-0">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-none sm:rounded-t-lg relative overflow-hidden flex-shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-3xl">🧮</span>
+            <div className="relative flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl sm:text-3xl">🧮</span>
                 </div>
-                <div>
-                  <h2 id="calculator-title" className="text-2xl sm:text-3xl font-bold">
+                <div className="min-w-0 flex-1">
+                  <h2 id="calculator-title" className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
                     {t('tacticalCalc', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span>
                   </h2>
-                  <p className="text-blue-100 text-sm sm:text-base mt-1">
+                  <p className="text-blue-100 text-xs sm:text-sm md:text-base mt-1 truncate">
                     {t('tacticalCalc', 'subtitle')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <ShareButton 
                   targetRef={calculatorContentRef}
                   filename="vet-rate-calculator"
@@ -342,10 +342,10 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Tactical Calculator" />}
                 <button
                   onClick={onClose}
-                  className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -354,8 +354,8 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           </div>
 
           {/* Tab Navigation - Sticky */}
-          <div className="px-3 sm:px-6 pt-3 sm:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
-            <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
+            <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
               {[
                 { id: 'myratings', label: t('tacticalCalc', 'myRatingsTab'), shortLabel: '⭐ ' + t('tacticalCalc', 'myRatings'), icon: '⭐' },
                 ...(capResults.length > 0 ? [{ id: 'capresults', label: t('tacticalCalc', 'capResultsTab'), shortLabel: '🏥 C&P', icon: '🏥', badge: capResults.length }] : []),
@@ -367,7 +367,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`min-w-[80px] px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 ${
+                  className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${
                     activeTab === tab.id
                       ? tab.id === 'capresults' ? 'bg-teal-600 text-white' : 'bg-blue-600 text-white'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -388,7 +388,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
           </div>
 
           {/* Content - Scrollable */}
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-3 sm:p-4 md:p-6 overflow-y-auto flex-1">
             {/* My Ratings Tab - Save and manage your actual VA ratings */}
             {activeTab === 'myratings' && (
               <div className="space-y-6">

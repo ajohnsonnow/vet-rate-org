@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { resetTourState, triggerTourRestart } from './BootCampTour';
 import { getTotalToolCount } from '../data/toolkitData';
 import { PROJECT_STATS } from '../data/projectStats';
+import { getDisabilityCount } from '../utils/disabilityCount';
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -462,7 +463,7 @@ Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA
 
 This manual covers every feature and function of the Vet-Rate.org platform, designed to help you:
 
-- **Search & understand** 751 VA disability conditions
+- **Search & understand** {getDisabilityCount()} VA disability conditions
 - **Discover secondary conditions** linked to your service-connected disabilities
 - **Calculate combined ratings** with the Tactical Calculator
 - **Prepare for C&P exams** with our simulator and Exam Prep Room
