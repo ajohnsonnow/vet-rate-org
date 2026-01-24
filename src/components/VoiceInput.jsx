@@ -129,14 +129,22 @@ export const useSpeechRecognition = () => {
  * VoiceInputButton Component
  * A microphone button that can be placed inside/beside text areas
  * Pulses red when recording
+ * 
+ * PRIVACY: Uses browser's built-in Web Speech API
+ * - Chrome/Edge: Uses device-side recognition when offline capable
+ * - Safari: 100% on-device processing
+ * - No audio is sent to VetRate servers
+ * - Your voice data stays on YOUR device
  */
 const VoiceInputButton = ({ 
   onTranscript, 
   disabled = false,
   className = '',
   size = 'md',
-  showLabel = false 
+  showLabel = false,
+  showPrivacyHint = true
 }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
   const {
     isListening,
     transcript,
@@ -181,10 +189,14 @@ const VoiceInputButton = ({
   };
 
   return (
-    <div className="relative inline-flex items-center">
+    <div className="relative inline-flex items-center group">
       <button
         type="button"
         onClick={handleClick}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
         disabled={disabled}
         className={`
           ${sizeClasses[size]}
@@ -201,8 +213,8 @@ const VoiceInputButton = ({
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           ${className}
         `}
-        title={isListening ? 'Click to stop recording' : 'Click to start voice input'}
-        aria-label={isListening ? 'Stop voice recording' : 'Start voice recording'}
+        title={isListening ? 'Click to stop recording' : 'Click to speak instead of typing'}
+        aria-label={isListening ? 'Stop voice recording' : 'Start voice recording - your voice stays on your device'}
       >
         {isListening ? (
           // Recording icon (pulsing microphone with waves)
@@ -235,6 +247,33 @@ const VoiceInputButton = ({
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-200 text-xs rounded-lg shadow-lg whitespace-nowrap z-10">
           {error}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-red-100 dark:border-t-red-900/80"></div>
+        </div>
+      )}
+
+      {/* Privacy & Help tooltip - shows on hover when not listening and no error */}
+      {showPrivacyHint && showTooltip && !isListening && !error && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg z-10 w-56">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <div>
+              <p className="font-medium text-green-400 mb-1">Speak instead of typing</p>
+              <p className="text-gray-300 leading-relaxed">Click to talk. Your voice is processed by your browser—nothing is sent to our servers. 100% private.</p>
+            </div>
+          </div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+        </div>
+      )}
+
+      {/* Recording indicator tooltip */}
+      {isListening && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-10">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            Listening... Click again when done
+          </span>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-red-600"></div>
         </div>
       )}
     </div>

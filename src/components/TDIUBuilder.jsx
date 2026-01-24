@@ -720,6 +720,9 @@ export default function TDIUBuilder({ onClose, onReportBug }) {
                 />
               </div>
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              🔒 Voice input is 100% on-device. Nothing leaves your browser.
+            </p>
           </div>
         </div>
       </div>

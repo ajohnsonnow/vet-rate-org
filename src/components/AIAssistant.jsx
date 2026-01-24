@@ -536,7 +536,7 @@ TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver u
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Press Enter to send • 🎤 Tap mic to speak {isHelperMode && '• 💝 Helper Mode Active'}
+          Press Enter to send • 🎤 Tap mic to speak (stays on your device) {isHelperMode && '• 💝 Helper Mode Active'}
         </p>
       </div>
     </div>

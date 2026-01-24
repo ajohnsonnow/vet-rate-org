@@ -806,7 +806,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
           </div>
           
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            🎤 <strong>Voice Input:</strong> Click the microphone to speak your answer. Be specific with examples and details.
+            🎤 <strong>Voice Input:</strong> Click the microphone to speak—your voice stays on your device, not our servers. Be specific with examples.
           </p>
         </div>
         
