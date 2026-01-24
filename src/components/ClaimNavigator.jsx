@@ -77,6 +77,8 @@ import {
   dispatchNavigatorUpdate
 } from '../utils/claimIntegration';
 
+import ReportBugLink from './ReportBugLink';
+
 // ============================================
 // ICON MAPPING
 // ============================================
@@ -100,7 +102,7 @@ const UrgencyIcons = {
 // ============================================
 // MAIN COMPONENT
 // ============================================
-const ClaimNavigator = ({ onClose }) => {
+const ClaimNavigator = ({ onClose, onReportBug }) => {
   // State
   const [claims, setClaims] = useState([]);
   const [selectedClaim, setSelectedClaim] = useState(null);
@@ -314,6 +316,8 @@ const ClaimNavigator = ({ onClose }) => {
           </div>
 
           {/* Actions */}
+          {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Claim Navigator" />}
+          
           <button
             onClick={() => setShowHelp(true)}
             className="p-2 text-slate-400 hover:text-white transition-colors"

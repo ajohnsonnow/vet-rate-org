@@ -11,6 +11,10 @@
  * - Quick phrases for common VA medical center situations
  * - Branch-specific greetings
  * - Conversation history within session
+ * 
+ * IMPORTANT: This component now properly separates:
+ * 1. TEXT TRANSLATION - Converting text from one language to another
+ * 2. VOICE SYNTHESIS - Speaking the translated text in the target language's voice
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -21,45 +25,301 @@ import multilingualTone from '../config/multilingualTone.json';
 import ReportBugLink from './ReportBugLink';
 import FlagIcon from './FlagIcon';
 
-// Quick phrases for VA medical center situations
+// Quick phrases for VA medical center situations - WITH TRANSLATIONS
+// Structure: { key, emoji, translations: { en, es, tl, vi, ko, zh, ... } }
 const QUICK_PHRASES = {
   greetings: [
-    { key: 'hello', en: "Hello, fellow veteran!", emoji: '👋' },
-    { key: 'nice_meet', en: "Nice to meet you!", emoji: '🤝' },
-    { key: 'thank_service', en: "Thank you for your service.", emoji: '🎖️' },
-    { key: 'what_branch', en: "What branch did you serve in?", emoji: '🪖' },
+    { 
+      key: 'hello', 
+      emoji: '👋',
+      translations: {
+        en: "Hello, fellow veteran!",
+        es: "¡Hola, compañero veterano!",
+        tl: "Kumusta, kapwa beterano!",
+        vi: "Xin chào, đồng đội cựu chiến binh!",
+        ko: "안녕하세요, 동료 재향군인님!",
+        zh: "你好，战友！",
+        ja: "こんにちは、同志の退役軍人さん！",
+        ar: "مرحبا، زميلي المحارب القديم!",
+        de: "Hallo, Veteranenkamerad!",
+        fr: "Bonjour, camarade vétéran!",
+        pt: "Olá, companheiro veterano!",
+        ru: "Привет, товарищ ветеран!",
+      }
+    },
+    { 
+      key: 'nice_meet', 
+      emoji: '🤝',
+      translations: {
+        en: "Nice to meet you!",
+        es: "¡Mucho gusto!",
+        tl: "Ikinagagalak kitang makilala!",
+        vi: "Rất vui được gặp bạn!",
+        ko: "만나서 반갑습니다!",
+        zh: "很高兴认识你！",
+        ja: "お会いできて嬉しいです！",
+        ar: "سعدت بلقائك!",
+        de: "Freut mich, Sie kennenzulernen!",
+        fr: "Enchanté de vous rencontrer!",
+        pt: "Prazer em conhecê-lo!",
+        ru: "Приятно познакомиться!",
+      }
+    },
+    { 
+      key: 'thank_service', 
+      emoji: '🎖️',
+      translations: {
+        en: "Thank you for your service.",
+        es: "Gracias por su servicio.",
+        tl: "Salamat sa iyong serbisyo.",
+        vi: "Cảm ơn vì sự phục vụ của bạn.",
+        ko: "복무에 감사드립니다.",
+        zh: "感谢您的服役。",
+        ja: "ご奉仕ありがとうございます。",
+        ar: "شكرا على خدمتك.",
+        de: "Danke für Ihren Dienst.",
+        fr: "Merci pour votre service.",
+        pt: "Obrigado pelo seu serviço.",
+        ru: "Спасибо за вашу службу.",
+      }
+    },
+    { 
+      key: 'what_branch', 
+      emoji: '🪖',
+      translations: {
+        en: "What branch did you serve in?",
+        es: "¿En qué rama sirvió?",
+        tl: "Sa anong sangay ka nagsilbi?",
+        vi: "Bạn phục vụ trong quân chủng nào?",
+        ko: "어느 군에서 복무하셨나요?",
+        zh: "您在哪个军种服役？",
+        ja: "どの軍種でお勤めでしたか？",
+        ar: "في أي فرع خدمت؟",
+        de: "In welcher Teilstreitkraft haben Sie gedient?",
+        fr: "Dans quelle branche avez-vous servi?",
+        pt: "Em qual ramo você serviu?",
+        ru: "В какой ветви вы служили?",
+      }
+    },
   ],
   medical: [
-    { key: 'wait_long', en: "How long have you been waiting?", emoji: '⏰' },
-    { key: 'same_doctor', en: "Do you have the same doctor?", emoji: '👨‍⚕️' },
-    { key: 'appointment', en: "What time is your appointment?", emoji: '📅' },
-    { key: 'clinic_where', en: "Do you know where this clinic is?", emoji: '🏥' },
+    { 
+      key: 'wait_long', 
+      emoji: '⏰',
+      translations: {
+        en: "How long have you been waiting?",
+        es: "¿Cuánto tiempo ha estado esperando?",
+        tl: "Gaano ka na katagal naghihintay?",
+        vi: "Bạn đã đợi bao lâu rồi?",
+        ko: "얼마나 기다리셨나요?",
+        zh: "您等了多久了？",
+        ja: "どのくらい待っていますか？",
+        ar: "كم من الوقت كنت تنتظر؟",
+      }
+    },
+    { 
+      key: 'same_doctor', 
+      emoji: '👨‍⚕️',
+      translations: {
+        en: "Do you have the same doctor?",
+        es: "¿Tiene el mismo doctor?",
+        tl: "Pareho ba tayo ng doktor?",
+        vi: "Bạn có cùng bác sĩ không?",
+        ko: "같은 의사분이신가요?",
+        zh: "您的医生和我一样吗？",
+        ja: "同じ医者ですか？",
+        ar: "هل لديك نفس الطبيب؟",
+      }
+    },
+    { 
+      key: 'appointment', 
+      emoji: '📅',
+      translations: {
+        en: "What time is your appointment?",
+        es: "¿A qué hora es su cita?",
+        tl: "Anong oras ang appointment mo?",
+        vi: "Cuộc hẹn của bạn lúc mấy giờ?",
+        ko: "예약 시간이 언제인가요?",
+        zh: "您的预约是几点？",
+        ja: "予約は何時ですか？",
+        ar: "متى موعدك؟",
+      }
+    },
+    { 
+      key: 'clinic_where', 
+      emoji: '🏥',
+      translations: {
+        en: "Do you know where this clinic is?",
+        es: "¿Sabe dónde está esta clínica?",
+        tl: "Alam mo ba kung saan ang clinic na ito?",
+        vi: "Bạn có biết phòng khám này ở đâu không?",
+        ko: "이 진료실이 어디인지 아시나요?",
+        zh: "您知道这个诊所在哪里吗？",
+        ja: "このクリニックがどこか知っていますか？",
+        ar: "هل تعرف أين تقع هذه العيادة؟",
+      }
+    },
   ],
   helpful: [
-    { key: 'need_help', en: "Do you need any help?", emoji: '🙋' },
-    { key: 'water', en: "Would you like some water?", emoji: '💧' },
-    { key: 'sit_here', en: "You can sit here.", emoji: '💺' },
-    { key: 'follow_me', en: "Follow me, I'll show you.", emoji: '🚶' },
+    { 
+      key: 'need_help', 
+      emoji: '🙋',
+      translations: {
+        en: "Do you need any help?",
+        es: "¿Necesita ayuda?",
+        tl: "Kailangan mo ba ng tulong?",
+        vi: "Bạn có cần giúp đỡ gì không?",
+        ko: "도움이 필요하신가요?",
+        zh: "您需要帮助吗？",
+        ja: "お手伝いしましょうか？",
+        ar: "هل تحتاج أي مساعدة؟",
+      }
+    },
+    { 
+      key: 'water', 
+      emoji: '💧',
+      translations: {
+        en: "Would you like some water?",
+        es: "¿Le gustaría un poco de agua?",
+        tl: "Gusto mo ba ng tubig?",
+        vi: "Bạn có muốn uống nước không?",
+        ko: "물 드시겠어요?",
+        zh: "您要喝点水吗？",
+        ja: "お水はいかがですか？",
+        ar: "هل تريد بعض الماء؟",
+      }
+    },
+    { 
+      key: 'sit_here', 
+      emoji: '💺',
+      translations: {
+        en: "You can sit here.",
+        es: "Puede sentarse aquí.",
+        tl: "Pwede kang umupo dito.",
+        vi: "Bạn có thể ngồi đây.",
+        ko: "여기 앉으세요.",
+        zh: "您可以坐这里。",
+        ja: "ここに座ってください。",
+        ar: "يمكنك الجلوس هنا.",
+      }
+    },
+    { 
+      key: 'follow_me', 
+      emoji: '🚶',
+      translations: {
+        en: "Follow me, I'll show you.",
+        es: "Sígame, le mostraré.",
+        tl: "Sundan mo ako, ipapakita ko sa'yo.",
+        vi: "Đi theo tôi, tôi sẽ chỉ cho bạn.",
+        ko: "따라오세요, 보여드릴게요.",
+        zh: "跟我来，我带您去。",
+        ja: "ついてきてください、ご案内します。",
+        ar: "اتبعني، سأريك.",
+      }
+    },
   ],
   camaraderie: [
-    { key: 'when_serve', en: "When did you serve?", emoji: '📆' },
-    { key: 'deployed_where', en: "Where were you deployed?", emoji: '🌍' },
-    { key: 'good_luck', en: "Good luck with your claim!", emoji: '🍀' },
-    { key: 'stay_strong', en: "Stay strong, battle buddy.", emoji: '💪' },
+    { 
+      key: 'when_serve', 
+      emoji: '📆',
+      translations: {
+        en: "When did you serve?",
+        es: "¿Cuándo sirvió?",
+        tl: "Kailan ka nagsilbi?",
+        vi: "Bạn phục vụ khi nào?",
+        ko: "언제 복무하셨나요?",
+        zh: "您什么时候服役的？",
+        ja: "いつ勤務されましたか？",
+        ar: "متى خدمت؟",
+      }
+    },
+    { 
+      key: 'deployed_where', 
+      emoji: '🌍',
+      translations: {
+        en: "Where were you deployed?",
+        es: "¿Dónde fue desplegado?",
+        tl: "Saan ka na-deploy?",
+        vi: "Bạn đã được triển khai ở đâu?",
+        ko: "어디에 배치되셨나요?",
+        zh: "您被部署在哪里？",
+        ja: "どこに配属されましたか？",
+        ar: "أين تم نشرك؟",
+      }
+    },
+    { 
+      key: 'good_luck', 
+      emoji: '🍀',
+      translations: {
+        en: "Good luck with your claim!",
+        es: "¡Buena suerte con su reclamo!",
+        tl: "Good luck sa claim mo!",
+        vi: "Chúc may mắn với đơn yêu cầu của bạn!",
+        ko: "청구서 처리 잘 되시길 바랍니다!",
+        zh: "祝您的申请顺利！",
+        ja: "申請がうまくいきますように！",
+        ar: "حظا سعيدا في مطالبتك!",
+      }
+    },
+    { 
+      key: 'stay_strong', 
+      emoji: '💪',
+      translations: {
+        en: "Stay strong, battle buddy.",
+        es: "Mantente fuerte, compañero de batalla.",
+        tl: "Maging matatag, kasamang mandirigma.",
+        vi: "Mạnh mẽ lên, đồng đội.",
+        ko: "힘내세요, 전우님.",
+        zh: "坚强点，战友。",
+        ja: "頑張って、戦友。",
+        ar: "كن قويا، رفيق المعركة.",
+      }
+    },
   ],
 };
 
-// Simple translation mapping (uses Google Translate API format for future expansion)
-// For now, we'll use local translations from multilingualTone.json where available
-const getTranslation = (text, fromLang, toLang) => {
-  // This is a placeholder - in production, you'd use a translation API
-  // For now, we return the original text with a note
+/**
+ * Translate text using browser's built-in translation (if available)
+ * or fallback to our phrase database
+ * 
+ * NOTE: For free, we use pre-translated phrases. For real-time translation,
+ * would need to integrate a translation API (Google, DeepL, etc.)
+ */
+const translateText = async (text, fromLang, toLang) => {
+  // If same language, no translation needed
+  if (fromLang === toLang) {
+    return { original: text, translated: text, fromLang, toLang };
+  }
+  
+  // Check if text matches a known quick phrase (get translated version)
+  for (const category of Object.values(QUICK_PHRASES)) {
+    for (const phrase of category) {
+      // Check if input matches any language version of this phrase
+      for (const [lang, phraseText] of Object.entries(phrase.translations)) {
+        if (phraseText.toLowerCase() === text.toLowerCase()) {
+          // Found it! Return the target language version
+          const translated = phrase.translations[toLang] || phrase.translations.en || text;
+          return {
+            original: text,
+            translated,
+            fromLang,
+            toLang,
+            source: 'phrase-database'
+          };
+        }
+      }
+    }
+  }
+  
+  // For unknown text, we can't translate without an API
+  // Return original with a note - user should speak slowly and clearly
   return {
     original: text,
-    translated: text, // Would be replaced with actual translation
+    translated: text, // Can't translate unknown text without API
     fromLang,
     toLang,
-    note: 'Translation powered by AI'
+    source: 'no-translation',
+    note: '⚠️ Custom text requires internet translation. Try using Quick Phrases!'
   };
 };
 
@@ -116,15 +376,17 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     synthRef.current.speak(utterance);
   };
 
-  // Add message to conversation
-  const addToConversation = (text, fromLang, isMe) => {
+  // Add message to conversation (with both original and translated text)
+  const addToConversation = (originalText, translatedText, fromLang, toLang, isMe) => {
     const myLangObj = SUPPORTED_LANGUAGES[myLanguage];
     const theirLangObj = SUPPORTED_LANGUAGES[theirLanguage];
     
     setConversation(prev => [...prev, {
       id: Date.now(),
-      text,
+      originalText,
+      translatedText,
       fromLang,
+      toLang,
       isMe,
       timestamp: new Date(),
       // Store language codes for FlagIcon rendering
@@ -135,29 +397,55 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
     }]);
   };
 
-  // Send my message
-  const sendMyMessage = () => {
+  // Send my message - translate then speak in target language
+  const sendMyMessage = async () => {
     if (!myText.trim()) return;
-    addToConversation(myText.trim(), myLanguage, true);
-    speak(myText.trim(), theirLanguage); // Speak in their language
-    setMyText('');
+    
+    const text = myText.trim();
+    setMyText(''); // Clear input immediately for better UX
+    
+    // Translate the text
+    const result = await translateText(text, myLanguage, theirLanguage);
+    
+    // Add to conversation with both original and translated
+    addToConversation(text, result.translated, myLanguage, theirLanguage, true);
+    
+    // Speak the TRANSLATED text in the target language's voice
+    speak(result.translated, theirLanguage);
   };
 
-  // Send their message
-  const sendTheirMessage = () => {
+  // Send their message - translate then speak in my language
+  const sendTheirMessage = async () => {
     if (!theirText.trim()) return;
-    addToConversation(theirText.trim(), theirLanguage, false);
-    speak(theirText.trim(), myLanguage); // Speak in my language
-    setTheirText('');
+    
+    const text = theirText.trim();
+    setTheirText(''); // Clear input immediately
+    
+    // Translate the text
+    const result = await translateText(text, theirLanguage, myLanguage);
+    
+    // Add to conversation
+    addToConversation(text, result.translated, theirLanguage, myLanguage, false);
+    
+    // Speak the TRANSLATED text in my language's voice
+    speak(result.translated, myLanguage);
   };
 
-  // Use quick phrase
+  // Use quick phrase - get the translated version and speak it
   const useQuickPhrase = (phrase) => {
-    setMyText(phrase.en);
+    // Get the phrase in my language (what I'm saying)
+    const myPhrase = phrase.translations[myLanguage] || phrase.translations.en;
+    // Get the phrase translated to their language
+    const theirPhrase = phrase.translations[theirLanguage] || phrase.translations.en;
+    
+    // Show what I'm saying in my language
+    setMyText(myPhrase);
+    
     // Auto-send after a brief moment
     setTimeout(() => {
-      addToConversation(phrase.en, myLanguage, true);
-      speak(phrase.en, theirLanguage);
+      addToConversation(myPhrase, theirPhrase, myLanguage, theirLanguage, true);
+      // Speak the TRANSLATED phrase in their language
+      speak(theirPhrase, theirLanguage);
       setMyText('');
     }, 100);
   };
@@ -278,7 +566,10 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                     className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
                   >
                     <span className="mr-2">{phrase.emoji}</span>
-                    <span className="text-gray-700 dark:text-gray-300">{phrase.en}</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {/* Show phrase in user's selected language */}
+                      {phrase.translations[myLanguage] || phrase.translations.en}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -337,25 +628,32 @@ const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
                     key={msg.id}
                     className={`flex ${msg.isMe ? 'justify-start' : 'justify-end'}`}
                   >
-                    <div className={`max-w-[80%] rounded-xl p-3 ${
+                    <div className={`max-w-[85%] rounded-xl p-3 ${
                       msg.isMe 
                         ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100' 
                         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
                     }`}>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <FlagIcon langCode={msg.fromLangCode} size="xs" fallbackEmoji={msg.fromFlag} />
                         <span className="text-xs opacity-70">→</span>
                         <FlagIcon langCode={msg.toLangCode} size="xs" fallbackEmoji={msg.toFlag} />
                       </div>
-                      <p className="text-sm">{msg.text}</p>
+                      {/* Show original text */}
+                      <p className="text-sm opacity-75 italic">{msg.originalText}</p>
+                      {/* Show translated text (larger, emphasized) */}
+                      {msg.translatedText !== msg.originalText && (
+                        <p className="text-sm font-medium mt-1 pt-1 border-t border-current/20">
+                          ➜ {msg.translatedText}
+                        </p>
+                      )}
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-xs opacity-60">
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <button
-                          onClick={() => speak(msg.text, msg.isMe ? theirLanguage : myLanguage)}
+                          onClick={() => speak(msg.translatedText, msg.toLangCode)}
                           className="p-1 hover:bg-white/50 rounded transition-colors"
-                          title="Play again"
+                          title="Play translated text"
                         >
                           🔊
                         </button>
