@@ -256,8 +256,22 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     setError(null);
     setResults(null);
 
+    // Create a timeout promise to prevent infinite loading
+    const TIMEOUT_MS = 90000; // 90 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS);
+    });
+
     try {
-      const response = await decodeDecision(denialText);
+      console.log('[DecisionDecoder] Starting AI decode with', denialText.length, 'characters');
+      
+      // Race between the actual call and timeout
+      const response = await Promise.race([
+        decodeDecision(denialText),
+        timeoutPromise
+      ]);
+      
+      console.log('[DecisionDecoder] AI response:', response);
       
       if (response.success) {
         setResults(response.data);
@@ -265,8 +279,12 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
         setError(response.error || 'Failed to decode decision. Please try again.');
       }
     } catch (err) {
-      console.error('Decode error:', err);
-      setError('An error occurred during decoding. Please try again.');
+      console.error('[DecisionDecoder] Decode error:', err);
+      if (err.message === 'TIMEOUT') {
+        setError('The AI request timed out after 90 seconds. This can happen if the AI is overloaded. Please try again, or try with a shorter excerpt of your decision letter.');
+      } else {
+        setError('An error occurred during decoding: ' + (err.message || 'Please try again.'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -763,6 +781,40 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Loading State - Shows progress while AI is working */}
+                {isLoading && (
+                  <div className="h-full flex items-center justify-center py-12 text-center">
+                    <div className="max-w-sm">
+                      <div className="relative mb-6">
+                        <div className="text-6xl animate-pulse">🔓</div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-20 h-20 border-4 border-amber-200 dark:border-amber-800 border-t-amber-500 rounded-full animate-spin"></div>
+                        </div>
+                      </div>
+                      <p className="text-lg font-medium text-amber-700 dark:text-amber-300">
+                        AI is analyzing your decision...
+                      </p>
+                      <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                        Translating VA legalese into plain English
+                      </p>
+                      <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500">
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">📝</span> Identifying decision type...
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">🔍</span> Finding missing elements...
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <span className="animate-pulse">📋</span> Building your action plan...
+                        </p>
+                      </div>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-4">
+                        This usually takes 10-30 seconds
+                      </p>
+                    </div>
                   </div>
                 )}
 
