@@ -291,8 +291,11 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                       Initializing Diamond Swarm AI...
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       {initMessage || 'Preparing AI agent for analysis'}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 italic">
+                      💎 Three specialized First Sergeants (E-8) trained to analyze your claim, write statements, and calculate ratings
                     </p>
                   </div>
                 </div>
@@ -315,9 +318,14 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
             <div className="mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500">
               <div className="flex items-center">
                 <span className="text-2xl mr-3">✅</span>
-                <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Diamond Auditor AI ready - Intelligence Briefing will be generated automatically
-                </span>
+                <div>
+                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                    Diamond Auditor ready - Your claim accuracy First Sergeant is standing by
+                  </span>
+                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                    Intelligence Briefing will be generated automatically after document processing
+                  </p>
+                </div>
               </div>
             </div>
           )}
