@@ -153,15 +153,48 @@ export const loadVKB = () => {
 };
 
 /**
- * Save VKB to localStorage
+ * Save VKB to localStorage with quota management
  */
 export const saveVKB = (vkb) => {
   try {
     vkb.metadata.lastUpdated = new Date().toISOString();
     vkb.metadata.completeness = calculateCompleteness(vkb);
-    localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify(vkb));
-    return { success: true };
+    
+    const vkbString = JSON.stringify(vkb);
+    const sizeInBytes = new Blob([vkbString]).size;
+    const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+    
+    // Warn if approaching 5MB localStorage limit
+    if (sizeInBytes > 4 * 1024 * 1024) {
+      console.warn(`⚠️ VKB size: ${sizeInMB}MB - approaching localStorage limit`);
+    }
+    
+    localStorage.setItem(VKB_STORAGE_KEY, vkbString);
+    return { success: true, size: sizeInMB };
   } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      console.error(`❌ LocalStorage quota exceeded (VKB size: ${(new Blob([JSON.stringify(vkb)]).size / (1024 * 1024)).toFixed(2)}MB)`);
+      console.warn('💡 VKB will be stored in IndexedDB backup only');
+      
+      // Try to store a minimal version in localStorage
+      try {
+        const minimalVKB = {
+          metadata: vkb.metadata,
+          overflow: true,
+          message: 'Full VKB data in IndexedDB backup'
+        };
+        localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify(minimalVKB));
+      } catch (minimalErr) {
+        console.error('Even minimal VKB failed:', minimalErr);
+      }
+      
+      return { 
+        success: false, 
+        error: 'localStorage quota exceeded - data saved to IndexedDB backup',
+        quotaExceeded: true 
+      };
+    }
+    
     console.error('Error saving VKB:', err);
     return { success: false, error: err.message };
   }
@@ -223,8 +256,16 @@ export const addDocumentToVKB = (documentInfo) => {
     vkb.documentation.privateRecords.length +
     vkb.documentation.otherEvidence.length;
 
-  saveVKB(vkb);
-  return { success: true, documentId: docEntry.id, vkb };
+  const saveResult = saveVKB(vkb);
+  
+  // Even if localStorage save failed due to quota, document is still in VKB object
+  // and will be saved to IndexedDB backup
+  return { 
+    success: true, 
+    documentId: docEntry.id, 
+    vkb,
+    storageWarning: saveResult.quotaExceeded ? 'localStorage quota exceeded - using IndexedDB backup' : null
+  };
 };
 
 /**
