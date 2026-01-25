@@ -245,16 +245,19 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                 Drop your entire VA file - claim letters, C-Files, DD214s. We'll analyze everything and build your complete profile automatically.
               </p>
             </div>
-            <button
-              onClick={onClose}
-              disabled={processing}
-              className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors disabled:opacity-50"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-3">
+              <ReportBugLink feature="muster-call" />
+              <button
+                onClick={onClose}
+                disabled={processing}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors disabled:opacity-50"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -564,7 +567,6 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                 </button>
               )}
             </div>
-            <ReportBugLink feature="muster-call" />
           </div>
         </div>
       </div>
