@@ -499,7 +499,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 ### Discovery & Research Tools
 | Tool | What It Does |
 |------|--------------|
-| **Secondary Scout** | 500+ medically-recognized secondary conditions |
+| **Secondary Scout** | 65+ medically-recognized secondary conditions |
 | **MOS Hazard Matcher** | Link military jobs to exposures and conditions |
 | **Pathfinder** | Strategic roadmap from claim to appeal |
 | **Risk Assessment** | Identify claim weaknesses before filing |

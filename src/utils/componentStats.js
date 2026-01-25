@@ -20,7 +20,7 @@ export const COMPONENT_STATS = {
     name: 'Secondary Scout',
     hours: 380,
     lines: 6200,
-    description: 'Discovery engine for 500+ medically-recognized secondary conditions'
+    description: 'Discovery engine for 65+ medically-recognized secondary conditions'
   },
   'cap-simulator': {
     name: 'C&P Exam Simulator',

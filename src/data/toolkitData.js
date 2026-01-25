@@ -35,7 +35,7 @@ export const TOOLKIT_CATEGORIES = [
     title: 'Discover Your Claims',
     color: 'teal',
     tools: [
-      { name: 'Secondary Scout', description: 'Discover 500+ medically-recognized secondary conditions with probability ratings' },
+      { name: 'Secondary Scout', description: 'Discover 65+ medically-recognized secondary conditions with probability ratings' },
       { name: 'C&P Exam Simulator', description: 'Practice DBQ-aligned questions, view actual exam questions, and get percentage predictions' },
       { name: 'Pathfinder', description: 'AI-powered strategic roadmap from initial claim to appeal' },
       { name: 'MOS Hazard Matcher', description: 'Link military occupational specialties to exposures and conditions' },
