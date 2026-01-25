@@ -10,6 +10,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import useAutoInitAI from '../hooks/useAutoInitAI';
 import { 
   analyzeStrategy, 
   getProbabilityColors, 
@@ -253,6 +254,9 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
   
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Auto-initialize AI when component mounts
+  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('pathfinder', 'auditor');
   
   const [ratings, setRatings] = useState([{ condition: '', rating: '' }]);
   const [additionalContext, setAdditionalContext] = useState('');
