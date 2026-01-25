@@ -721,7 +721,11 @@ export const autoPopulateProfile = async (processedResults) => {
  * Generate comprehensive analysis report using LLM
  */
 export const generateMusterCallReport = async (processedResults, classified) => {
+  console.log('🎖️ Starting Muster Call Report generation...');
+  console.log('📊 Total processed results:', processedResults?.length);
+  
   if (!isAnyAIAvailable()) {
+    console.warn('⚠️ AI not available for report generation');
     return {
       success: false,
       error: 'AI service not available. Report generation requires AI.'
@@ -739,6 +743,17 @@ export const generateMusterCallReport = async (processedResults, classified) => 
   const medicalDocs = processedResults.filter(r => 
     r.classification?.category === 'medical' && r.status === 'complete'
   );
+
+  console.log(`📝 Document counts: ${serviceRecords.length} service, ${ratingDocs.length} rating, ${medicalDocs.length} medical`);
+
+  // Check if we have any documents to analyze
+  if (serviceRecords.length === 0 && ratingDocs.length === 0 && medicalDocs.length === 0) {
+    console.warn('⚠️ No completed documents to analyze');
+    return {
+      success: false,
+      error: 'No completed documents available for analysis.'
+    };
+  }
 
   // Summarize extracted data to avoid token overflow
   const summarizeData = (data) => {
@@ -779,11 +794,15 @@ Provide:
 
 Format as markdown with clear sections.`;
 
+  console.log(`📤 Sending prompt to AI (${prompt.length} chars)`);
+
   try {
     const response = await generateAI(prompt, {
       systemPrompt: 'You are a VA disability claims expert. Provide actionable, regulation-based guidance.',
       temperature: 0.3
     });
+
+    console.log(`✅ Report generated successfully (${response?.length || 0} chars)`);
 
     return {
       success: true,
@@ -791,7 +810,7 @@ Format as markdown with clear sections.`;
       generatedAt: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Report generation error:', error);
+    console.error('❌ Report generation error:', error);
     return {
       success: false,
       error: error.message

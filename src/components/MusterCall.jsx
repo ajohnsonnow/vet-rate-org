@@ -169,16 +169,29 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
           }
 
           // Generate LLM report
+          console.log('🤖 Checking AI availability for report generation...');
+          const aiStatus = getAIStatus();
+          console.log('🤖 AI Status:', aiStatus);
+          
           if (isAnyAIAvailable()) {
+            console.log('✅ AI available, generating report...');
             setProcessingState(PROCESSING_STATES.ANALYZING);
             const reportResult = await generateMusterCallReport(
               completeData.results,
               completeData.classified
             );
             
+            console.log('📊 Report result:', reportResult);
+            
             if (reportResult.success) {
+              console.log('✅ Setting report in state');
               setReport(reportResult.report);
+            } else {
+              console.warn('⚠️ Report generation failed:', reportResult.error);
+              setError(`Report generation failed: ${reportResult.error}`);
             }
+          } else {
+            console.warn('⚠️ No AI service available for report generation');
           }
 
           setProcessingState(PROCESSING_STATES.COMPLETE);
