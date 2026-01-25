@@ -46,7 +46,6 @@ import FeatureRequest from './components/FeatureRequest';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
-import FundingModal from './components/FundingModal';
 import QuickConditionPicker from './components/QuickConditionPicker';
 import UserManual from './components/UserManual';
 import StateBenefitHunter from './components/StateBenefitHunter';
@@ -175,7 +174,6 @@ function App() {
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFeatureRequest, setShowFeatureRequest] = useState(false);
-  const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
@@ -2275,16 +2273,6 @@ function App() {
                   {getSquashedBugCount()}<AnimatedBug size="xs" />✓
                 </span>
               </button>
-              <span className="text-gray-600">|</span>
-              <button
-                onClick={() => setShowFundingModal(true)}
-                className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all hover:scale-105 group"
-              >
-                <svg className="w-4 h-4 group-hover:animate-heart-beat" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-                Back the Mission
-              </button>
             </div>
             <p className="text-center text-gray-400 text-sm">
               <span 
@@ -3075,12 +3063,6 @@ function App() {
       
       {/* DIAMOND-TIER: PWA Install Prompt */}
       <PWAInstallButton />
-      
-      {/* Funding Modal */}
-      <FundingModal 
-        show={showFundingModal} 
-        onClose={() => setShowFundingModal(false)} 
-      />
       
       {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
       <TermsOfServiceModal />

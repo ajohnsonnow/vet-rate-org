@@ -4,13 +4,11 @@ import { saveClaim, isClaimSaved } from '../utils/claimsStorage';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PACTActInfoCard, PACTActBadge } from './PACTActIndicator';
 import StaleDataIndicator from './StaleDataIndicator';
-import FundingModal from './FundingModal';
 
 function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSecondaryConditionClick }) {
   const { t } = useLanguage();
   const [expandedSection, setExpandedSection] = useState('documentation');
   const [isSaved, setIsSaved] = useState(isClaimSaved(result.conditionName, null));
-  const [showFundingModal, setShowFundingModal] = useState(false);
 
   const VAResources = {
     emergency: [
@@ -157,23 +155,9 @@ function DisabilityDetails({ result, searchTerm, onClose, onBuildStatement, onSe
               View on eCFR
             </a>
           )}
-          <button
-            onClick={() => setShowFundingModal(true)}
-            className="inline-flex items-center gap-2 bg-va-gold text-va-blue px-4 py-2 rounded-lg font-bold hover:bg-yellow-400 hover:scale-105 shadow-md hover:shadow-lg transition-all"
-            title="Help keep Vet-Rate free for all veterans"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-            </svg>
-            <span className="hidden sm:inline">Back the Mission</span>
-            <span className="sm:hidden">💚 Support</span>
-          </button>
         </div>
       </div>
       
-      {/* Funding Modal */}
-      <FundingModal show={showFundingModal} onClose={() => setShowFundingModal(false)} />
-
       {/* Content */}
       <div id="diagnostic-content" className="p-8">
         {/* PACT Act Info Card - Show if applicable */}
