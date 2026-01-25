@@ -11,10 +11,57 @@
  * 
  * Purpose: Give LLMs complete context about a veteran's claim without
  * repeatedly parsing documents. One source of truth for all AI agents.
+ * 
+ * Storage: Uses IndexedDB as primary storage (unlimited capacity)
+ * with localStorage as metadata cache only.
  */
 
 const VKB_STORAGE_KEY = 'vetrate_knowledge_base';
 const VKB_VERSION = '1.0.0';
+
+// IndexedDB Configuration
+const VKB_DB_NAME = 'VetRateVKB';
+const VKB_DB_VERSION = 1;
+const VKB_STORE_NAME = 'knowledge_base';
+
+let vkbDB = null;
+
+/**
+ * Open/Initialize the VKB IndexedDB database
+ * @returns {Promise<IDBDatabase>}
+ */
+const openVKBDatabase = () => {
+  return new Promise((resolve, reject) => {
+    if (vkbDB) {
+      resolve(vkbDB);
+      return;
+    }
+
+    const request = indexedDB.open(VKB_DB_NAME, VKB_DB_VERSION);
+
+    request.onerror = () => {
+      console.error('❌ Failed to open VKB database:', request.error);
+      reject(request.error);
+    };
+
+    request.onsuccess = () => {
+      vkbDB = request.result;
+      console.log('✅ VKB IndexedDB opened successfully');
+      resolve(vkbDB);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const database = event.target.result;
+
+      // Create VKB store
+      if (!database.objectStoreNames.contains(VKB_STORE_NAME)) {
+        const vkbStore = database.createObjectStore(VKB_STORE_NAME, { keyPath: 'id' });
+        vkbStore.createIndex('lastUpdated', 'metadata.lastUpdated', { unique: false });
+        console.log('✅ VKB object store created');
+      }
+    };
+  });
+};
 
 /**
  * Veteran Knowledge Base Schema
@@ -130,72 +177,129 @@ export const initializeVKB = () => {
 };
 
 /**
- * Load VKB from localStorage
+ * Load VKB from IndexedDB (primary) or localStorage (legacy fallback)
  */
-export const loadVKB = () => {
+export const loadVKB = async () => {
   try {
-    const stored = localStorage.getItem(VKB_STORAGE_KEY);
-    if (!stored) return initializeVKB();
-    
-    const vkb = JSON.parse(stored);
-    
-    // Version migration (future-proofing)
-    if (vkb.metadata.version !== VKB_VERSION) {
-      console.log(`Migrating VKB from ${vkb.metadata.version} to ${VKB_VERSION}`);
-      // Future migration logic here
-    }
-    
-    return vkb;
+    // Try IndexedDB first
+    const db = await openVKBDatabase();
+    const transaction = db.transaction([VKB_STORE_NAME], 'readonly');
+    const store = transaction.objectStore(VKB_STORE_NAME);
+    const request = store.get('main');
+
+    return new Promise((resolve) => {
+      request.onsuccess = () => {
+        if (request.result) {
+          console.log('📂 Loaded VKB from IndexedDB');
+          // Cache metadata in localStorage for quick access
+          try {
+            localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify({ 
+              metadata: request.result.metadata,
+              source: 'indexeddb'
+            }));
+          } catch (e) {
+            // Ignore localStorage errors
+          }
+          resolve(request.result);
+        } else {
+          // Try localStorage for legacy data
+          console.log('📂 No IndexedDB VKB, checking localStorage...');
+          try {
+            const stored = localStorage.getItem(VKB_STORAGE_KEY);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (parsed.overflow || parsed.source === 'indexeddb') {
+                // This is just metadata, initialize new VKB
+                console.log('📂 Found metadata only, initializing fresh VKB');
+                resolve(initializeVKB());
+              } else {
+                // Legacy full VKB, migrate to IndexedDB
+                console.log('📂 Migrating legacy localStorage VKB to IndexedDB');
+                saveVKB(parsed).then(() => resolve(parsed));
+              }
+            } else {
+              resolve(initializeVKB());
+            }
+          } catch (err) {
+            console.error('Error loading from localStorage:', err);
+            resolve(initializeVKB());
+          }
+        }
+      };
+
+      request.onerror = () => {
+        console.error('Error loading from IndexedDB:', request.error);
+        // Fallback to localStorage
+        try {
+          const stored = localStorage.getItem(VKB_STORAGE_KEY);
+          resolve(stored ? JSON.parse(stored) : initializeVKB());
+        } catch (err) {
+          resolve(initializeVKB());
+        }
+      };
+    });
   } catch (err) {
-    console.error('Error loading VKB:', err);
-    return initializeVKB();
+    console.error('Error opening VKB database:', err);
+    // Fallback to localStorage
+    try {
+      const stored = localStorage.getItem(VKB_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : initializeVKB();
+    } catch (lsErr) {
+      return initializeVKB();
+    }
   }
 };
 
 /**
- * Save VKB to localStorage with quota management
+ * Save VKB to IndexedDB (primary) with localStorage metadata cache
  */
-export const saveVKB = (vkb) => {
+export const saveVKB = async (vkb) => {
   try {
     vkb.metadata.lastUpdated = new Date().toISOString();
     vkb.metadata.completeness = calculateCompleteness(vkb);
     
+    // Add ID for IndexedDB
+    vkb.id = 'main';
+    
+    // Calculate size
     const vkbString = JSON.stringify(vkb);
     const sizeInBytes = new Blob([vkbString]).size;
     const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
     
-    // Warn if approaching 5MB localStorage limit
-    if (sizeInBytes > 4 * 1024 * 1024) {
-      console.warn(`⚠️ VKB size: ${sizeInMB}MB - approaching localStorage limit`);
-    }
+    console.log(`💾 Saving VKB to IndexedDB (${sizeInMB}MB, ${vkb.metadata.documentCount} documents)`);
     
-    localStorage.setItem(VKB_STORAGE_KEY, vkbString);
-    return { success: true, size: sizeInMB };
-  } catch (err) {
-    if (err.name === 'QuotaExceededError') {
-      console.error(`❌ LocalStorage quota exceeded (VKB size: ${(new Blob([JSON.stringify(vkb)]).size / (1024 * 1024)).toFixed(2)}MB)`);
-      console.warn('💡 VKB will be stored in IndexedDB backup only');
-      
-      // Try to store a minimal version in localStorage
-      try {
-        const minimalVKB = {
-          metadata: vkb.metadata,
-          overflow: true,
-          message: 'Full VKB data in IndexedDB backup'
-        };
-        localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify(minimalVKB));
-      } catch (minimalErr) {
-        console.error('Even minimal VKB failed:', minimalErr);
-      }
-      
-      return { 
-        success: false, 
-        error: 'localStorage quota exceeded - data saved to IndexedDB backup',
-        quotaExceeded: true 
+    // Save to IndexedDB (unlimited storage)
+    const db = await openVKBDatabase();
+    const transaction = db.transaction([VKB_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(VKB_STORE_NAME);
+    const request = store.put(vkb);
+
+    return new Promise((resolve) => {
+      request.onsuccess = () => {
+        console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
+        
+        // Cache metadata in localStorage for quick access
+        try {
+          localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify({
+            metadata: vkb.metadata,
+            source: 'indexeddb',
+            size: sizeInMB
+          }));
+        } catch (lsErr) {
+          // LocalStorage full, but that's OK - data is in IndexedDB
+          console.log('💡 localStorage full, metadata not cached (data safe in IndexedDB)');
+        }
+        
+        resolve({ success: true, size: sizeInMB });
       };
-    }
-    
-    console.error('Error saving VKB:', err);
+
+      request.onerror = () => {
+        console.error('❌ Failed to save VKB to IndexedDB:', request.error);
+        resolve({ success: false, error: request.error.message });
+      };
+    });
+  } catch (err) {
+    console.error('❌ Error saving VKB:', err);
     return { success: false, error: err.message };
   }
 };
@@ -204,8 +308,8 @@ export const saveVKB = (vkb) => {
  * Add a document to VKB with full metadata
  * Keeps each document's data separate and organized
  */
-export const addDocumentToVKB = (documentInfo) => {
-  const vkb = loadVKB();
+export const addDocumentToVKB = async (documentInfo) => {
+  const vkb = await loadVKB();
   
   const docEntry = {
     id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -256,23 +360,22 @@ export const addDocumentToVKB = (documentInfo) => {
     vkb.documentation.privateRecords.length +
     vkb.documentation.otherEvidence.length;
 
-  const saveResult = saveVKB(vkb);
+  const saveResult = await saveVKB(vkb);
   
-  // Even if localStorage save failed due to quota, document is still in VKB object
-  // and will be saved to IndexedDB backup
+  // IndexedDB has no storage limits - all documents saved successfully
   return { 
-    success: true, 
+    success: saveResult.success, 
     documentId: docEntry.id, 
     vkb,
-    storageWarning: saveResult.quotaExceeded ? 'localStorage quota exceeded - using IndexedDB backup' : null
+    size: saveResult.size
   };
 };
 
 /**
  * Get all documents from VKB
  */
-export const getAllDocumentsFromVKB = () => {
-  const vkb = loadVKB();
+export const getAllDocumentsFromVKB = async () => {
+  const vkb = await loadVKB();
   return [
     ...vkb.documentation.dd214s,
     ...vkb.documentation.blueButtonReports,
@@ -285,8 +388,8 @@ export const getAllDocumentsFromVKB = () => {
 /**
  * Get specific document by ID
  */
-export const getDocumentFromVKB = (documentId) => {
-  const allDocs = getAllDocumentsFromVKB();
+export const getDocumentFromVKB = async (documentId) => {
+  const allDocs = await getAllDocumentsFromVKB();
   return allDocs.find(doc => doc.id === documentId);
 };
 

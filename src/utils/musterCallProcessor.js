@@ -181,7 +181,7 @@ const processSingleDocument = async (file, onProgress) => {
     );
 
     // Step 4: Store document in VKB (keeps data separate per document)
-    const vkbResult = addDocumentToVKB({
+    const vkbResult = await addDocumentToVKB({
       fileName: file.name,
       fileSize: file.size,
       pageCount: result.pageCount || 1,
