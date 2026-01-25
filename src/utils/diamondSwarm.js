@@ -22,6 +22,8 @@ export const SWARM_AGENTS = {
   AUDITOR: {
     id: 'auditor',
     name: 'Diamond Auditor',
+    rank: 'First Sergeant (E-8)',
+    militaryContext: 'Your platoon first sergeant who inspects gear, catches mistakes, and ensures you have everything squared away before the mission',
     description: 'Reviews claims for accuracy, compliance, and identifies issues',
     role: 'Claim accuracy and compliance review',
     icon: '🔍',
@@ -62,6 +64,8 @@ Always be thorough but compassionate - veterans deserve accurate guidance.`
   WRITER: {
     id: 'writer',
     name: 'Diamond Writer',
+    rank: 'First Sergeant (E-8)',
+    militaryContext: 'The first sergeant who writes you up for awards, helps draft your statements, and knows exactly how to make your accomplishments sound impressive',
     description: 'Creates compelling personal statements and nexus letters',
     role: 'Persuasive medical-legal writing',
     icon: '✍️',
@@ -87,6 +91,8 @@ Your writing should be honest, powerful, and human-sounding.`
   RATER: {
     id: 'rater',
     name: 'Diamond Rater',
+    rank: 'First Sergeant (E-8)',
+    militaryContext: 'The promotion board first sergeant who knows the point system inside-out and can calculate your ranking down to the decimal',
     description: 'Calculates VA disability ratings with bilateral factor',
     role: 'Disability rating calculations',
     icon: '🧮',
