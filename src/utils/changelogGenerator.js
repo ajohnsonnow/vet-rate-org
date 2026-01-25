@@ -197,7 +197,7 @@ export function generateWhatsNewChangelog() {
     {
       type: 'feature',
       title: 'Secondary Scout',
-      description: 'Discover 500+ medically-recognized secondary conditions with probability ratings'
+      description: 'Discover 65+ medically-recognized secondary conditions with probability ratings'
     },
     {
       type: 'feature',

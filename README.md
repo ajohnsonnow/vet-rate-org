@@ -20,7 +20,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ## 💎 What Makes Vet-Rate.org Different
 
-While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **39 professional-grade tools completely free**:
+While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **41 professional-grade tools completely free**:
 
 | What Others Charge | Vet-Rate.org |
 |-------------------|--------------|
@@ -52,7 +52,7 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 - **What-If Sandbox**: 🔄 Drag-and-drop rating scenario planner
 
 ### 🔍 Discovery & Research Tools
-- **Secondary Scout**: 🔍 Discover 500+ medically-recognized secondary conditions with probability ratings
+- **Secondary Scout**: 🔍 Discover 65+ medically-recognized secondary conditions with probability ratings
 - **C&P Exam Simulator**: ✅ Practice with DBQ-aligned questions and get percentage predictions
 - **Exam Prep Room**: 📋 🆕 See the actual DBQ questions BEFORE your C&P exam
 - **MOS Hazard Matcher**: �-️ Link military occupational specialties to exposures and conditions
@@ -104,7 +104,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 - **📋 Build Your Evidence** (10 tools): C-File Analyzer, Blue Button X-Ray, PDF Evidence Finder, Witness Bench, Nexus Builder, Forms Helper, Symptom Logger, Somatic Target, Evidence Timeline, FOIA Keysmith
 - **✅ Quality Control** (8 tools): Red Team, War Game, Decision Decoder, Denials Decoder, Shark Radar, Consistency Engine, Evidence Gap Finder, Risk Assessment
 - **💰 Maximize Your Rating** (4 tools): TDIU Builder, State Benefit Hunter, The Tribunal, Legislative Watchdog
-- **🤝 Support & Resources** (6 tools): VSO Finder, The Bunker, Cloud Sync, My Packet, VA Resources Hub, User Manual
+- **🤝 Support & Resources** (8 tools): VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, Knowledge Base, VA Resources Hub, User Manual
 
 **What others charge $10K+ for in services, we provide free forever.**
 
@@ -268,7 +268,7 @@ This comprehensive platform represents significant development effort to create 
 - **Actual AI-Assisted Development**: 55 hours over 4.5 days (Jan 15-19, 2026) = $7,425
 - **Productivity Multiplier**: 280x (AI-assisted development vs. traditional)
 - **Lines of Code**: 167,298 lines (src directory)
-- **Total Files**: 1,140 project files
+- **Total Files**: 1,141 project files
 - **App Size**: 104.05 MB
 - **Components**: 173 React components (41 major tools + 132 supporting)
 - **Utilities**: 90 helper modules
@@ -365,7 +365,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | Tactical Calculator | 850 hrs | 8,500 | 2 Senior | Combined rating calculator with 2026 pay rates |
 | Forms Helper | 680 hrs | 6,800 | 1 Senior, 1 Mid, 1 Junior | Guided assistance for 16+ VA forms |
 | Blue Button X-Ray | 510 hrs | 5,100 | 1 Senior, 1 Mid | Extracts claim evidence from medical records |
-| Secondary Scout | 620 hrs | 6,200 | 1 Senior, 1 Mid | Discovers 500+ secondary conditions |
+| Secondary Scout | 620 hrs | 6,200 | 1 Senior, 1 Mid | Discovers 65+ secondary conditions |
 | Decision Decoder | 490 hrs | 4,900 | 1 Senior | AI translation of VA decision letters |
 | Smart Search | 520 hrs | 5,200 | 1 Senior, 1 Mid | 748 conditions with synonym matching |
 | Nexus Builder | 540 hrs | 5,400 | 1 Senior, 1 Mid | Medical nexus statement generator |
