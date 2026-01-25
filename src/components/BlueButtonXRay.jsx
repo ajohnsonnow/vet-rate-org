@@ -332,6 +332,12 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
    * Parse the text to find Problem List section and extract diagnoses
    */
   const parseBlueButtonText = (text) => {
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      console.error('parseBlueButtonText received invalid input:', typeof text);
+      return [];
+    }
+    
     const conditions = [];
     const seenConditions = new Set();
     
@@ -450,6 +456,12 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
    * This prioritizes the most relevant section for diagnosis extraction
    */
   const extractProblemListSection = (text) => {
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      console.error('extractProblemListSection received invalid input:', typeof text);
+      return '';
+    }
+    
     // Try to find problem list section
     const problemListStart = text.search(/(?:VA\s*)?Problem\s*List[:\s]*|Active\s*Problems?[:\s]*|(?:My\s*)?VA\s*Diagnos[ie]s[:\s]*/gi);
     
@@ -475,6 +487,12 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
    * Tries to split at natural boundaries (sections, paragraphs)
    */
   const chunkText = (text, maxTokensPerChunk = 2500) => {
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      console.error('chunkText received invalid input:', typeof text);
+      return [];
+    }
+    
     const chunks = [];
     const maxCharsPerChunk = maxTokensPerChunk * 4; // Rough conversion
     
@@ -525,6 +543,15 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
    * Handles large documents by chunking them for models with smaller context windows
    */
   const analyzeWithAI = async (text) => {
+    // Validate input
+    if (!text || typeof text !== 'string') {
+      throw new Error('Invalid text input - expected a string but got: ' + typeof text);
+    }
+    
+    if (text.trim().length === 0) {
+      throw new Error('Text is empty - nothing to analyze');
+    }
+    
     // Check if AI is available
     if (!isAnyAIAvailable()) {
       throw new Error('No AI available. Please configure AI in settings first.');
