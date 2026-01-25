@@ -101,9 +101,6 @@ export default function DoctorsPacket({
 }) {
   const { t } = useLanguage();
   
-  // Lock background scroll when modal is open
-  useBodyScrollLock(isOpen);
-  
   // State
   const [step, setStep] = useState('consent'); // consent, input, loading, result, error
   const [primaryCondition, setPrimaryCondition] = useState(initialPrimary);
@@ -114,6 +111,9 @@ export default function DoctorsPacket({
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [aiStatus, setAIStatus] = useState(getAIStatus());
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(isOpen);
   
   // Load API key and set initial values
   useEffect(() => {
