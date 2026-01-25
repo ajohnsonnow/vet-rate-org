@@ -29,6 +29,7 @@ import { classifyDocument, classifyDocumentBatch, DOCUMENT_TYPES, getDocumentTyp
 import { parseDD214Text } from './ribbonRackData';
 import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
+import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -178,6 +179,23 @@ const processSingleDocument = async (file, onProgress) => {
       result.classification.type,
       file.name
     );
+
+    // Step 4: Store document in VKB (keeps data separate per document)
+    const vkbResult = addDocumentToVKB({
+      fileName: file.name,
+      fileSize: file.size,
+      pageCount: result.pageCount || 1,
+      classification: result.classification.type,
+      extractedText: result.text,
+      extractedData: result.extractedData,
+      ocrUsed: result.ocrUsed || false,
+      method: result.method || 'text',
+    });
+
+    if (vkbResult.success) {
+      result.vkbDocumentId = vkbResult.documentId;
+      console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
+    }
 
     result.status = 'complete';
     onProgress?.({

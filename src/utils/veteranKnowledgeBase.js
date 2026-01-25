@@ -168,6 +168,88 @@ export const saveVKB = (vkb) => {
 };
 
 /**
+ * Add a document to VKB with full metadata
+ * Keeps each document's data separate and organized
+ */
+export const addDocumentToVKB = (documentInfo) => {
+  const vkb = loadVKB();
+  
+  const docEntry = {
+    id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    fileName: documentInfo.fileName,
+    uploadDate: new Date().toISOString(),
+    fileSize: documentInfo.fileSize,
+    pageCount: documentInfo.pageCount || 1,
+    classification: documentInfo.classification || 'unknown',
+    extractedText: documentInfo.extractedText || '',
+    extractedData: documentInfo.extractedData || {},
+    ocrUsed: documentInfo.ocrUsed || false,
+    method: documentInfo.method || 'text',
+  };
+
+  // Route to appropriate documentation category
+  switch (documentInfo.classification) {
+    case 'DD214':
+    case 'service_record':
+      vkb.documentation.dd214s.push(docEntry);
+      break;
+    
+    case 'blue_button':
+    case 'medical_record':
+      vkb.documentation.blueButtonReports.push(docEntry);
+      break;
+    
+    case 'c_file':
+    case 'rating_decision':
+    case 'claim_letter':
+    case 'va_decision':
+      vkb.documentation.cFiles.push(docEntry);
+      break;
+    
+    case 'private_medical':
+    case 'provider_letter':
+    case 'nexus_letter':
+      vkb.documentation.privateRecords.push(docEntry);
+      break;
+    
+    default:
+      vkb.documentation.otherEvidence.push(docEntry);
+  }
+
+  vkb.metadata.documentCount = 
+    vkb.documentation.dd214s.length +
+    vkb.documentation.blueButtonReports.length +
+    vkb.documentation.cFiles.length +
+    vkb.documentation.privateRecords.length +
+    vkb.documentation.otherEvidence.length;
+
+  saveVKB(vkb);
+  return { success: true, documentId: docEntry.id, vkb };
+};
+
+/**
+ * Get all documents from VKB
+ */
+export const getAllDocumentsFromVKB = () => {
+  const vkb = loadVKB();
+  return [
+    ...vkb.documentation.dd214s,
+    ...vkb.documentation.blueButtonReports,
+    ...vkb.documentation.cFiles,
+    ...vkb.documentation.privateRecords,
+    ...vkb.documentation.otherEvidence,
+  ];
+};
+
+/**
+ * Get specific document by ID
+ */
+export const getDocumentFromVKB = (documentId) => {
+  const allDocs = getAllDocumentsFromVKB();
+  return allDocs.find(doc => doc.id === documentId);
+};
+
+/**
  * Calculate VKB completeness score (0-100)
  */
 export const calculateCompleteness = (vkb) => {
