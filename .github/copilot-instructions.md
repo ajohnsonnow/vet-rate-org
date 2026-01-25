@@ -1,8 +1,8 @@
-# VetRate Project - Copilot Instructions
+# SupplyLocker Project - Copilot Instructions
 
 ## Project Overview
 
-VetRate is a veteran disability claims assistance application built with:
+SupplyLocker is a veteran disability claims assistance application built with:
 - **Frontend**: React + Vite + TailwindCSS
 - **Target**: Veterans seeking VA disability compensation
 - **Philosophy**: Diamond Standard - accuracy, compliance, and veteran-first design
@@ -77,7 +77,7 @@ try {
 
 ### Local Storage Pattern
 ```javascript
-const STORAGE_KEY = 'vetrate_feature_data';
+const STORAGE_KEY = 'supplylocker_feature_data';
 const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 ```

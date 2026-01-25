@@ -251,7 +251,7 @@ export const VA_SCOPES = [
 In production, update `.env`:
 
 ```env
-VITE_VA_REDIRECT_URL=https://vet-rate.org/callback
+VITE_VA_REDIRECT_URL=https://supply-locker.org/callback
 ```
 
 ## 📊 Available VA.gov Scopes
@@ -415,7 +415,7 @@ Edit [VaAuthContext.jsx](src/contexts/VaAuthContext.jsx) to use localStorage ins
 
 ## 🎖️ Built for Veterans, by a Veteran
 
-This integration was built specifically for Vet-Rate.org to help veterans access their VA data securely and easily.
+This integration was built specifically for SupplyLocker.org to help veterans access their VA data securely and easily.
 
 ---
 

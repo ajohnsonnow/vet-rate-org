@@ -107,7 +107,7 @@ const DbqFinder = ({ onClose }) => {
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('vet-rate-dbq-recent-searches');
+    const saved = localStorage.getItem('SupplyLocker-dbq-recent-searches');
     if (saved) {
       try {
         setRecentSearches(JSON.parse(saved));
@@ -121,7 +121,7 @@ const DbqFinder = ({ onClose }) => {
   const saveRecentSearch = (query) => {
     const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem('vet-rate-dbq-recent-searches', JSON.stringify(updated));
+    localStorage.setItem('SupplyLocker-dbq-recent-searches', JSON.stringify(updated));
   };
 
   // Filter results to prioritize DBQ forms

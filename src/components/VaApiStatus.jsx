@@ -1,11 +1,11 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  *
  * VA API Status Indicator Component - "The Lighthouse Signal"
  * 
  * Shows real-time VA API status to users so they know when
- * issues are on the VA's end, not Vet-Rate.org.
+ * issues are on the VA's end, not SupplyLocker.org.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -73,7 +73,7 @@ export function VaApiStatusBanner({ onDismiss }) {
             </p>
             <p className="text-xs sm:text-sm opacity-90">
               {summary?.description || 'Some VA services may be unavailable'} 
-              <span className="hidden sm:inline"> - This is a VA system issue, not Vet-Rate.org.</span>
+              <span className="hidden sm:inline"> - This is a VA system issue, not SupplyLocker.org.</span>
             </p>
           </div>
         </div>
@@ -444,8 +444,8 @@ export function VaApiStatusPanel() {
                     Why does this matter?
                   </p>
                   <p className="text-blue-700 dark:text-blue-300 mt-1">
-                    Vet-Rate.org uses official VA APIs for some features. When the VA's systems are down or under maintenance, 
-                    those features may not work - but <strong>it's not a problem with Vet-Rate.org</strong>. 
+                    SupplyLocker.org uses official VA APIs for some features. When the VA's systems are down or under maintenance, 
+                    those features may not work - but <strong>it's not a problem with SupplyLocker.org</strong>. 
                     This status page helps you know when VA APIs are experiencing issues.
                   </p>
                 </div>
@@ -490,7 +490,7 @@ export function VaApiErrorMessage({ feature, error, onRetry }) {
             isVaIssue ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300'
           }`}>
             {isVaIssue 
-              ? "The VA's systems are currently experiencing issues. This is not a problem with Vet-Rate.org."
+              ? "The VA's systems are currently experiencing issues. This is not a problem with SupplyLocker.org."
               : error || 'An error occurred while fetching data from the VA.'}
           </p>
 

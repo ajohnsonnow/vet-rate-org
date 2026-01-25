@@ -1,5 +1,5 @@
 /**
- * WebGPU Manager for Vet-Rate.org
+ * WebGPU Manager for SupplyLocker.org
  * Capable of multi-GPU discovery and selection with Windows limitations handling
  * 
  * KNOWN LIMITATIONS:
@@ -259,13 +259,13 @@ class GPUDiscoveryEngine {
     // If we already have a device for this exact adapter, return it immediately
     // (but only if we didn't just reinit)
     if (this.device && this.selectedAdapter === target.adapter && !options.forceReinit) {
-      console.log(`🎮 [Vet-Rate GPU] Already locked to: ${target.info.displayName}`);
+      console.log(`🎮 [SupplyLocker GPU] Already locked to: ${target.info.displayName}`);
       return this.device;
     }
     
     // If currently initializing the same adapter, wait for it
     if (this.isInitializing && this.initPromise && this.selectedAdapter === target.adapter && !options.forceReinit) {
-      console.log(`🎮 [Vet-Rate GPU] Waiting for initialization to complete...`);
+      console.log(`🎮 [SupplyLocker GPU] Waiting for initialization to complete...`);
       return await this.initPromise;
     }
     
@@ -391,9 +391,9 @@ class GPUDiscoveryEngine {
           }
         }
         
-        console.log(`🎮 [Vet-Rate GPU] Locked to: ${target.info.displayName}`);
+        console.log(`🎮 [SupplyLocker GPU] Locked to: ${target.info.displayName}`);
         if (requiredFeatures.length > 0) {
-          console.log(`🎮 [Vet-Rate GPU] Enabled features: ${requiredFeatures.join(', ')}`);
+          console.log(`🎮 [SupplyLocker GPU] Enabled features: ${requiredFeatures.join(', ')}`);
         }
         
         // Store selection in localStorage

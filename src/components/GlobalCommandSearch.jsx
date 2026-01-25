@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Global Command Search (CMD+K)
+ * SupplyLocker.org - Global Command Search (CMD+K)
  * Copyright (c) 2024-2026 Anthony Johnson
  * 
  * AAAAA Design System - Quick Search Interface

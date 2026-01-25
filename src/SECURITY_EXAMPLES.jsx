@@ -123,8 +123,8 @@ function HeaderWithSecurity({ securityContext }) {
           
           {/* Your existing logo/brand */}
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Vet-Rate.org" className="h-10" />
-            <h1 className="text-xl font-bold">Vet-Rate.org</h1>
+            <img src="/logo.png" alt="SupplyLocker.org" className="h-10" />
+            <h1 className="text-xl font-bold">SupplyLocker.org</h1>
           </div>
 
           {/* Security Controls */}

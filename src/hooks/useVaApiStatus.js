@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  *
  * useVaApiStatus Hook - React hook for VA API status monitoring

@@ -1,12 +1,12 @@
 /**
- * Vet-Rate.org - DiffHighlighter Component
+ * SupplyLocker.org - DiffHighlighter Component
  * Visual forensics for the Consistency Engine
  * 
  * Takes text and an array of issues, then renders the text with
  * color-coded highlights showing exactly where problems were found.
  * Hover over highlighted sections to see explanations.
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - C-File PDF Text Extraction Utility
+ * SupplyLocker.org - C-File PDF Text Extraction Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

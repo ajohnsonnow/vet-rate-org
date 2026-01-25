@@ -1,5 +1,5 @@
 /**
- * Vet-Rate Combined Assistant
+ * SupplyLocker Combined Assistant
  * RAG + WebLLM for best accuracy
  */
 

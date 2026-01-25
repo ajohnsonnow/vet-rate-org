@@ -1,11 +1,11 @@
 /**
- * Vet-Rate.org - Reddit Summary Prompts
+ * SupplyLocker.org - Reddit Summary Prompts
  * "The Squared Away Standard" - Diamond-tier Reddit formatting
  * 
  * These prompts transform verbose AI legal analysis into scannable,
  * shareable Reddit comments with proper citations and markdown.
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

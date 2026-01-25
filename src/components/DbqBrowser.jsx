@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -253,7 +253,7 @@ export default function DbqBrowser({ onClose }) {
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `vet-rate-dbq-backup-${new Date().toISOString().split('T')[0]}.zip`;
+      a.download = `SupplyLocker-dbq-backup-${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

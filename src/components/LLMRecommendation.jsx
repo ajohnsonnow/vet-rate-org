@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - LLM Recommendation Badge Component
+ * SupplyLocker.org - LLM Recommendation Badge Component
  * Shows contextual AI model recommendations for each tool
  * 
  * This component provides guidance to users about which local AI model

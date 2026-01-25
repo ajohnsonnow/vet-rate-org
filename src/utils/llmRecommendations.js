@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Diamond Swarm Agent Recommendations
+ * SupplyLocker.org - Diamond Swarm Agent Recommendations
  * 💎 "The Diamond Standard" - Specialized Agents for Each Task
  * 
  * This utility maps each tool to the appropriate Diamond Swarm agent:
@@ -508,15 +508,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: 'Document Scanner',
     category: TOOL_CATEGORIES.VISION,
     primary: {
-      modelId: 'Vet-Rate-Vision-Phi-Float32',
-      modelName: 'Vet-Rate Vision Phi',
+      modelId: 'SupplyLocker-Vision-Phi-Float32',
+      modelName: 'SupplyLocker Vision Phi',
       reason: '✅ Custom Float32 build - works in standard Chrome/Edge! No experimental flags needed.',
       badge: '👁️ Vision',
     },
     alternatives: [
       {
-        modelId: 'Vet-Rate-Vision-Phi-q4f32_1',
-        modelName: 'Vet-Rate Vision Phi (Legacy)',
+        modelId: 'SupplyLocker-Vision-Phi-q4f32_1',
+        modelName: 'SupplyLocker Vision Phi (Legacy)',
         reason: '⚠️ Legacy version - requires Chrome Canary with experimental flags',
       },
     ],
@@ -742,7 +742,7 @@ export const getModelForVRAM = (toolId, availableVRAM) => {
     'Qwen3-4B-q4f32_1-MLC': 4,
     'DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC': 6,
     'DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC': 6,
-    'Vet-Rate-Vision-Phi-q4f32_1': 6,
+    'SupplyLocker-Vision-Phi-q4f32_1': 6,
     'Phi-3.5-vision-instruct-q4f32_1-MLC': 6,
     'Qwen3-8B-q4f32_1-MLC': 7,
     'Mistral-7B-Instruct-v0.3-q4f32_1-MLC': 8,

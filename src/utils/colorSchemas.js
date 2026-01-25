@@ -1,5 +1,5 @@
 /**
- * Centralized Color Schemas for Vet-Rate.org
+ * Centralized Color Schemas for SupplyLocker.org
  * WCAG 2.1 Level AA Compliant Color System
  * 
  * All color combinations tested for:

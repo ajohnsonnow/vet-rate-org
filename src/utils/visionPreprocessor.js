@@ -1,5 +1,5 @@
 /**
- * Vet-Rate Vision Image Preprocessor
+ * SupplyLocker Vision Image Preprocessor
  * 
  * This utility handles image preprocessing for vision models compiled with
  * the Float32 Bypass. Since we've patched the compiler to expect float32
@@ -7,7 +7,7 @@
  * before sending it to the GPU.
  * 
  * @module VisionPreprocessor
- * @author Vet-Rate.org Firearm Safety Team
+ * @author SupplyLocker.org Firearm Safety Team
  * @date January 2026
  */
 

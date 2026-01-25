@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * 
  * BootCampTour Component
@@ -17,7 +17,7 @@ import { PROJECT_STATS } from '../data/projectStats';
 const TOUR_SEEN_KEY = 'vetrate-tour-completed';
 
 /**
- * Custom CSS overrides for driver.js to match Vet-Rate dark theme
+ * Custom CSS overrides for driver.js to match SupplyLocker dark theme
  */
 const tourStyles = `
   .driver-popover {
@@ -192,7 +192,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
   useEffect(() => {
     // Check if tour should run
     const hasSeenTour = localStorage.getItem(TOUR_SEEN_KEY);
-    const tosAccepted = localStorage.getItem('vet-rate-tos-accepted');
+    const tosAccepted = localStorage.getItem('SupplyLocker-tos-accepted');
     
     // Don't start tour if already seen, or if TOS hasn't been accepted yet
     if (!forceShow && hasSeenTour) {
@@ -220,7 +220,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
     if (!tosAccepted) {
       // TOS modal is still showing, wait and check again
       const checkInterval = setInterval(() => {
-        if (localStorage.getItem('vet-rate-tos-accepted')) {
+        if (localStorage.getItem('SupplyLocker-tos-accepted')) {
           clearInterval(checkInterval);
           // TOS accepted, now wait for What's New
           setTimeout(() => waitForWhatsNewAndStart(), 500);

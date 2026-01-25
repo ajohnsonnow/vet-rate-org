@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Bug Lookup (Admin Interface)
+ * SupplyLocker.org - Bug Lookup (Admin Interface)
  * "Safe-Squash" Architecture - Secure Bug Report Retrieval
  * 
  * Admin tool to search and view bug reports by ID.

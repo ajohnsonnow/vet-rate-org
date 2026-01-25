@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Veteran Translator (Human-to-Human)
+ * SupplyLocker.org - Veteran Translator (Human-to-Human)
  * 
  * Helps veterans communicate with each other at VA medical centers and elsewhere.
  * Builds camaraderie across language barriers. Uses Web Speech API for text-to-speech

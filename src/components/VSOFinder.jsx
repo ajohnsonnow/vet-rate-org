@@ -13,7 +13,7 @@ import VoiceInputButton from './VoiceInput';
  * VSOFinder Component
  * "The Honest Broker" - Helps veterans find free, accredited representation
  * 
- * This tool proves Vet-Rate.org isn't a "Claim Shark" by connecting
+ * This tool proves SupplyLocker.org isn't a "Claim Shark" by connecting
  * veterans with free, legitimate help from:
  * - County Veterans Service Officers (CVSOs)
  * - State VA Offices

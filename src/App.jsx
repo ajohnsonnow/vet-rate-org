@@ -1,5 +1,5 @@
 /*
- * Vet-Rate.org - VA Disability Claims Command Center
+ * SupplyLocker.org - VA Disability Claims Command Center
  * Copyright (C) 2024-2026 Anthony Johnson
  *
  * This program is free software: you can redistribute it and/or modify
@@ -46,7 +46,6 @@ import FeatureRequest from './components/FeatureRequest';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
-import FundingModal from './components/FundingModal';
 import QuickConditionPicker from './components/QuickConditionPicker';
 import UserManual from './components/UserManual';
 import StateBenefitHunter from './components/StateBenefitHunter';
@@ -113,6 +112,7 @@ import VaSandboxTest from './components/VaSandboxTest';
 import DemoDashboard from './components/DemoDashboard';
 import { VaApiStatusBanner } from './components/VaApiStatus';
 import { MobileSaveReminder } from './components/PacketPersistence';
+import IntentToFileGuard from './components/IntentToFileGuard';
 // AAAAA Diamond Standard Components
 import GlobalCommandSearch from './components/GlobalCommandSearch';
 import MobileBottomNav, { MobileNavSpacer } from './components/MobileBottomNav';
@@ -175,7 +175,6 @@ function App() {
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFeatureRequest, setShowFeatureRequest] = useState(false);
-  const [showFundingModal, setShowFundingModal] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
@@ -490,7 +489,7 @@ function App() {
     
     // Step 2: Check if user should see "What's New" modal
     // IMPORTANT: Only show if TOS has been accepted (don't show on first visit before TOS)
-    const tosAccepted = localStorage.getItem('vet-rate-tos-accepted');
+    const tosAccepted = localStorage.getItem('supplylocker-tos-accepted');
     const lastSeenVersion = localStorage.getItem(LAST_SEEN_VERSION_KEY);
     const currentVersion = APP_VERSION;
     
@@ -951,7 +950,7 @@ function App() {
           <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-4 text-sm text-gray-300">
             <p className="font-semibold text-yellow-400 mb-2">What does this mean?</p>
             <p>
-              Vet-Rate.org has been temporarily taken offline to protect your data and ensure system integrity. 
+              SupplyLocker.org has been temporarily taken offline to protect your data and ensure system integrity. 
               This is a precautionary measure and your saved claims are safe.
             </p>
           </div>
@@ -2171,7 +2170,7 @@ function App() {
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
+              <h4 className="font-bold mb-3">ℹ️ About SupplyLocker.org</h4>
               <p className="text-gray-400 text-sm mb-3">
                 The most comprehensive free VA claims arsenal - {getTotalToolCount()} professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
@@ -2275,16 +2274,6 @@ function App() {
                   {getSquashedBugCount()}<AnimatedBug size="xs" />✓
                 </span>
               </button>
-              <span className="text-gray-600">|</span>
-              <button
-                onClick={() => setShowFundingModal(true)}
-                className="inline-flex items-center gap-1.5 bg-va-gold hover:bg-yellow-400 text-va-blue px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all hover:scale-105 group"
-              >
-                <svg className="w-4 h-4 group-hover:animate-heart-beat" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-                Back the Mission
-              </button>
             </div>
             <p className="text-center text-gray-400 text-sm">
               <span 
@@ -2292,7 +2281,7 @@ function App() {
                 className="cursor-default select-none"
                 title="Copyright Notice"
               >
-                &copy; 2024-2026 Vet-Rate.org
+                &copy; 2024-2026 SupplyLocker.org
               </span>
               {' '}- Your Complete VA Claims Toolkit. Data sourced from{' '}
               <a
@@ -2305,7 +2294,7 @@ function App() {
               </a>
             </p>
             <p className="text-center text-gray-500 text-xs mt-3 border-t border-gray-800 pt-3">
-              <strong>Important:</strong> Vet-Rate.org is a private, veteran-built project and is <strong>not affiliated with, endorsed by, or a part of the Department of Veterans Affairs or the United States Government.</strong>
+              <strong>Important:</strong> SupplyLocker.org is a private, veteran-built project and is <strong>not affiliated with, endorsed by, or a part of the Department of Veterans Affairs or the United States Government.</strong>
             </p>
           </div>
         </div>
@@ -2485,7 +2474,7 @@ function App() {
           extractedData={briefingData}
           onConfirm={(confirmedData) => {
             // Save to My Packet
-            localStorage.setItem('vetrate_my_packet_data', JSON.stringify(confirmedData));
+            localStorage.setItem('supplylocker_my_packet_data', JSON.stringify(confirmedData));
             setShowIntelligenceBriefing(false);
             setBriefingData(null);
             // Show success message
@@ -3075,12 +3064,6 @@ function App() {
       
       {/* DIAMOND-TIER: PWA Install Prompt */}
       <PWAInstallButton />
-      
-      {/* Funding Modal */}
-      <FundingModal 
-        show={showFundingModal} 
-        onClose={() => setShowFundingModal(false)} 
-      />
       
       {/* Terms of Service Modal - Critical First-Visit Legal Protection */}
       <TermsOfServiceModal />

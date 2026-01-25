@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+/**
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * 
  * MissionProtocol Component
@@ -28,13 +28,13 @@ const MissionProtocol = ({ onClose }) => {
         {/* Header with flag banner effect */}
         <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-8 py-6">
           <div className="text-center">
-            <div className="text-4xl mb-3">🎖️</div>
+            <div className="text-4xl mb-3">???</div>
             <h2 
               id="mission-protocol-title" 
               className="text-2xl md:text-3xl font-bold text-va-gold tracking-wide"
               style={{ fontFamily: 'Georgia, serif' }}
             >
-              THE VET-RATE PROMISE
+              THE SupplyLocker PROMISE
             </h2>
             <div className="w-24 h-1 bg-va-gold mx-auto mt-3 rounded"></div>
           </div>
@@ -82,7 +82,7 @@ const MissionProtocol = ({ onClose }) => {
             
             <div className="grid gap-4">
               <div className="flex items-start gap-4 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <span className="text-2xl flex-shrink-0">💵</span>
+                <span className="text-2xl flex-shrink-0">??</span>
                 <div>
                   <h4 className="font-bold text-green-400 mb-1">ZERO COST</h4>
                   <p className="text-gray-300 text-sm" style={{ fontFamily: 'Courier New, monospace' }}>
@@ -93,7 +93,7 @@ const MissionProtocol = ({ onClose }) => {
               </div>
               
               <div className="flex items-start gap-4 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <span className="text-2xl flex-shrink-0">🔒</span>
+                <span className="text-2xl flex-shrink-0">??</span>
                 <div>
                   <h4 className="font-bold text-blue-400 mb-1">ZERO TRACKING</h4>
                   <p className="text-gray-300 text-sm" style={{ fontFamily: 'Courier New, monospace' }}>
@@ -104,7 +104,7 @@ const MissionProtocol = ({ onClose }) => {
               </div>
               
               <div className="flex items-start gap-4 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <span className="text-2xl flex-shrink-0">🛡️</span>
+                <span className="text-2xl flex-shrink-0">???</span>
                 <div>
                   <h4 className="font-bold text-purple-400 mb-1">100% PRIVACY</h4>
                   <p className="text-gray-300 text-sm" style={{ fontFamily: 'Courier New, monospace' }}>
@@ -158,7 +158,7 @@ const MissionProtocol = ({ onClose }) => {
                 <p className="text-gray-500 text-xs" style={{ fontFamily: 'Courier New, monospace' }}>
                   FOR VETERANS
                 </p>
-                <div className="mt-2 text-3xl">🇺🇸</div>
+                <div className="mt-2 text-3xl">????</div>
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ const MissionProtocol = ({ onClose }) => {
           {/* Support Note */}
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-xs" style={{ fontFamily: 'Courier New, monospace' }}>
-              Want to support this mission? Share Vet-Rate.org with a fellow veteran.
+              Want to support this mission? Share SupplyLocker.org with a fellow veteran.
             </p>
           </div>
         </div>

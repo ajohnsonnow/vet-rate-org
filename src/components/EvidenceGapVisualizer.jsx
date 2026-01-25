@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Evidence Gap Visualizer
+ * SupplyLocker.org - Evidence Gap Visualizer
  * "The Missing Link" - Shows veterans exactly what evidence they're missing
  * 
  * This isn't just showing what you HAVE - it's showing what you NEED.

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Model Quick Load Component
+ * SupplyLocker.org - AI Model Quick Load Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

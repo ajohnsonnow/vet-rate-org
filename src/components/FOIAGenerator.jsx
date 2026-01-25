@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - FOIA Request Generator (The Keysmith)
+ * SupplyLocker.org - FOIA Request Generator (The Keysmith)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -1073,7 +1073,7 @@ export default function FOIAGenerator({ onClose, onReportBug }) {
                 <div className="flex items-center gap-4">
                   <img 
                     src="/images/Anth.jpg" 
-                    alt="Anthony - Vet-Rate Developer"
+                    alt="Anthony - SupplyLocker Developer"
                     className="w-14 h-14 rounded-full object-cover border-2 border-amber-500 shadow-lg flex-shrink-0"
                   />
                   <div className="flex-1">

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Retroactive Pay Hunter
+ * SupplyLocker.org - Retroactive Pay Hunter
  * "The Time Machine: Found Money Edition"
  * 
  * This tool analyzes a veteran's rating history to find potential underpayments.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Vet-Rate.org
+ * Copyright (c) 2025 SupplyLocker.org
  * All rights reserved.
  * 
  * This source code is proprietary and confidential.

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -26,12 +26,12 @@ export const useRedaction = () => {
 // Provider component
 export const RedactionProvider = ({ children }) => {
   const [isRedacting, setIsRedacting] = useState(() => {
-    const saved = localStorage.getItem('vet-rate-redaction-mode');
+    const saved = localStorage.getItem('SupplyLocker-redaction-mode');
     return saved === 'true';
   });
 
   useEffect(() => {
-    localStorage.setItem('vet-rate-redaction-mode', isRedacting.toString());
+    localStorage.setItem('SupplyLocker-redaction-mode', isRedacting.toString());
     
     // Add/remove class to body for global CSS targeting
     if (isRedacting) {

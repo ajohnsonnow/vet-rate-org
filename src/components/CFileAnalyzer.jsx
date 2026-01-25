@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - C-File Analyzer Component
+ * SupplyLocker.org - C-File Analyzer Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -17,6 +17,8 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import AIModelQuickLoad from './AIModelQuickLoad';
 import ReportBugLink from './ReportBugLink';
+import DocumentPicker from './DocumentPicker';
+import { getAllDocuments, getDocumentById } from '../utils/veteranKnowledgeBase';
 
 // Sub-components for the dashboard
 import CFileTimeline from './CFileTimeline';
@@ -27,6 +29,10 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
   
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
+  
+  // Input method state
+  const [inputMethod, setInputMethod] = useState('upload'); // 'upload' or 'vkb'
+  const [showDocumentPicker, setShowDocumentPicker] = useState(false);
   
   // File drop state
   const [file, setFile] = useState(null);
@@ -251,8 +257,35 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         </div>
       )}
       
-      {/* Drop Zone */}
-      <div
+      {/* Input Method Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setInputMethod('upload')}
+          className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
+            inputMethod === 'upload'
+              ? 'bg-violet-600 text-white'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          📤 Upload File
+        </button>
+        <button
+          onClick={() => setInputMethod('vkb')}
+          className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
+            inputMethod === 'vkb'
+              ? 'bg-violet-600 text-white'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          🗂️ From VKB
+        </button>
+      </div>
+
+      {/* Upload Input */}
+      {inputMethod === 'upload' && (
+        <>
+          {/* Drop Zone */}
+          <div
         className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
           isDragging
             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
@@ -347,6 +380,31 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       {file && (
         <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
           {t('cfileAnalyzer', 'estimatedProcessingTime')} {estimateProcessingTime(Math.ceil(file.size / 5000))}
+        </div>
+      )}
+        </>
+      )}
+
+      {/* VKB Input */}
+      {inputMethod === 'vkb' && (
+        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <span className="text-4xl">🗂️</span>
+            <div className="flex-1">
+              <h3 className="font-bold text-purple-900 dark:text-purple-100 text-lg mb-2">
+                Select from Veteran Knowledge Base
+              </h3>
+              <p className="text-purple-800 dark:text-purple-200 mb-4">
+                Choose C-Files you've already uploaded via Muster Call. No need to re-upload documents!
+              </p>
+              <button
+                onClick={() => setShowDocumentPicker(true)}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg flex items-center gap-2"
+              >
+                🗂️ Browse VKB Documents
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -830,6 +888,90 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           </p>
         </div>
       </div>
+      
+      {/* Document Picker Modal - Select from VKB */}
+      <DocumentPicker
+        isOpen={showDocumentPicker}
+        onClose={() => setShowDocumentPicker(false)}
+        filterType="cfile"
+        multiSelect={true}
+        title="Select C-Files from VKB"
+        emptyMessage="No C-Files found in VKB. Use Muster Call to upload documents first."
+        onSelect={async (selectedDocuments) => {
+          try {
+            console.log('Selected C-File documents from VKB:', selectedDocuments);
+            
+            if (!selectedDocuments || selectedDocuments.length === 0) {
+              setError('No documents selected');
+              setShowDocumentPicker(false);
+              return;
+            }
+            
+            // For C-Files, we'll process the first selected document
+            // (C-Files are typically large, so multi-select combines rawText)
+            const selectedDoc = selectedDocuments[0];
+            
+            if (!selectedDoc.rawText) {
+              setError('Selected document has no extracted text. Try re-uploading via Muster Call.');
+              setShowDocumentPicker(false);
+              return;
+            }
+            
+            // Set the extracted text directly (bypass file upload)
+            setExtractedText(selectedDoc.rawText);
+            setShowDocumentPicker(false);
+            
+            // Create a mock file object for metadata display
+            const mockFile = {
+              name: selectedDoc.fileName,
+              size: selectedDoc.fileSize || selectedDoc.rawText.length,
+              type: 'application/pdf'
+            };
+            setFile(mockFile);
+            
+            // Auto-trigger analysis if AI is available
+            if (isAnyAIAvailable()) {
+              console.log('Auto-triggering C-File analysis for VKB document...');
+              setIsProcessing(true);
+              setError(null);
+              
+              try {
+                // Start analysis with the extracted text
+                const result = await analyzeCFile(
+                  selectedDoc.rawText,
+                  (stage) => setProcessingStage(stage),
+                  (progress) => setChunkProgress(progress),
+                  abortControllerRef
+                );
+                
+                if (result.error) {
+                  throw new Error(result.error);
+                }
+                
+                setAnalysisResult(result);
+                setAnalysisMetadata({
+                  chunksProcessed: result.metadata?.chunksProcessed || 0,
+                  totalPages: result.metadata?.totalPages || 0,
+                  processingTime: result.metadata?.processingTime || 0
+                });
+                setIsProcessing(false);
+                setProcessingStage('');
+              } catch (err) {
+                console.error('Error analyzing VKB C-File:', err);
+                setError(err.message || 'Failed to analyze C-File from VKB');
+                setIsProcessing(false);
+                setProcessingStage('');
+              }
+            } else {
+              setError('Please configure AI to analyze C-Files');
+            }
+          } catch (err) {
+            console.error('Error loading VKB C-File document:', err);
+            setError(err.message);
+            setShowDocumentPicker(false);
+          }
+        }}
+      />
     </div>
   );
 }

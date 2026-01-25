@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Million Dollar Dashboard
+ * SupplyLocker.org - The Million Dollar Dashboard
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -742,7 +742,7 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
               <div className="flex items-center gap-4">
                 <img 
                   src="/images/Anth.jpg" 
-                  alt="Anthony - Vet-Rate Developer"
+                  alt="Anthony - SupplyLocker Developer"
                   className="w-14 h-14 rounded-full object-cover border-2 border-emerald-500 shadow-lg flex-shrink-0"
                 />
                 <div className="flex-1">
@@ -760,36 +760,6 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
           </div>
         </div>
       </div>
-      
-      {/* Luna's Treat Fund - shows after viewing total */}
-      {animatedTotal > 0 && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-sm">
-          <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-2xl p-4 border-2 border-purple-400">
-            <div className="flex items-start gap-3">
-              <img 
-                src="/images/ReadyForHerCloseup.jpg" 
-                alt="Luna, Chief Treat Officer" 
-                className="w-16 h-16 rounded-full border-2 border-purple-300 object-cover flex-shrink-0"
-              />
-              <div className="flex-1">
-                <p className="text-purple-100 text-sm font-semibold mb-1">Luna's Treat Fund 🐾</p>
-                <p className="text-purple-200 text-xs leading-relaxed mb-2">
-                  Saved ${Math.round(calculation.grandTotal).toLocaleString()}? That's a LOT of treats! 
-                  Help keep this tool free (and Luna fed).
-                </p>
-                <a
-                  href="https://buymeacoffee.com/anthonyjohnson"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-amber-900 text-xs font-bold rounded-lg transition-colors"
-                >
-                  🍪 Buy Luna a Treat
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

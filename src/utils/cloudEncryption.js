@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Cloud Encryption Utility
+ * SupplyLocker.org - Cloud Encryption Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  *
@@ -211,7 +211,7 @@ export const decryptFromCloud = async (encryptedPackage, passphraseOrKey, isPass
 /**
  * Generate a secure backup filename with timestamp
  */
-export const generateSecureBackupName = (prefix = 'vetrate_backup') => {
+export const generateSecureBackupName = (prefix = 'supplylocker_backup') => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const randomId = window.crypto.getRandomValues(new Uint8Array(4))
     .reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');

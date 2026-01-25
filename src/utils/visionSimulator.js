@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Vet-Rate Vision Simulator
+ * SupplyLocker Vision Simulator
  * ============================================================================
  * 
  * A clever workaround for the WebGPU u8 shader limitation in vision models.

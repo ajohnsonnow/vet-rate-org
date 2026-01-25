@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - C-File Claims Cards Component
+ * SupplyLocker.org - C-File Claims Cards Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

@@ -27,7 +27,7 @@ import {
 /**
  * TacticalCalculator - "The Rate You Deserve"
  * 
- * The irony: Vet-Rate.org didn't have a rating calculator!
+ * The irony: SupplyLocker.org didn't have a rating calculator!
  * 
  * This isn't just another "dumb" calculator. This is a TACTICAL PLANNER:
  * - Shows the GAP to next tier
@@ -336,7 +336,7 @@ const TacticalCalculator = ({ onClose, onReportBug, initialConditions = [], capS
               <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <ShareButton 
                   targetRef={calculatorContentRef}
-                  filename="vet-rate-calculator"
+                  filename="SupplyLocker-calculator"
                   variant="icon"
                 />
                 {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Tactical Calculator" />}

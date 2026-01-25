@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Compassionate Voice System
+ * SupplyLocker.org - Compassionate Voice System
  * Diamond Standard Voice Index
  * 
  * Central export point for all voice-related modules.

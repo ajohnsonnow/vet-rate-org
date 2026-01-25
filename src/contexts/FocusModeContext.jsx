@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Focus Mode Context
+ * SupplyLocker.org - Focus Mode Context
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

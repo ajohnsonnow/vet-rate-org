@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Local AI Provider
+ * SupplyLocker.org - Local AI Provider
  * "The Faraday Cage Protocol" - Run AI completely locally, zero data leaves your device
  * 
  * This is the ULTIMATE trust signal for privacy-conscious veterans.
@@ -572,7 +572,7 @@ export const LocalAIProvider = ({ children }) => {
           '1. Install Chrome Canary: google.com/chrome/canary\n' +
           '2. Create a shortcut with flag:\n' +
           '   chrome.exe --enable-dawn-features=allow_unsafe_apis\n' +
-          '3. Open Vet-Rate.org in Chrome Canary\n\n' +
+          '3. Open SupplyLocker.org in Chrome Canary\n\n' +
           '🔮 WHAT WE\'RE DOING:\n' +
           'The MLC-AI team is actively working on a fix (GitHub issue #727). We\'re monitoring progress and will enable this model as soon as standard browser support is available.\n\n' +
           '💡 ALTERNATIVES:\n' +
@@ -585,7 +585,7 @@ export const LocalAIProvider = ({ children }) => {
         disabledMsg = 
           '🚫 This Model is Currently Disabled\n\n' +
           `${selectedModel.name} has been temporarily disabled.\n\n` +
-          '🔨 COMING SOON: Vet-Rate Vision Phi\n\n' +
+          '🔨 COMING SOON: SupplyLocker Vision Phi\n\n' +
           'We\'re compiling our own custom vision language model specifically optimized for:\n' +
           '• DD214 document recognition\n' +
           '• Medical record parsing\n' +
@@ -602,7 +602,7 @@ export const LocalAIProvider = ({ children }) => {
     }
     
     // Check if this is a vision model that requires experimental features
-    // NOTE: Our custom Vet-Rate Vision Phi model is compiled with q4f32_1 quantization
+    // NOTE: Our custom SupplyLocker Vision Phi model is compiled with q4f32_1 quantization
     // which uses f32 instead of u8 types, so it works in standard Chrome!
     const isVisionModel = modelId.includes('vision') || modelId.includes('Vision');
     const isCustomVisionModel = selectedModel.isCustomModel && selectedModel.hasVision;
@@ -619,7 +619,7 @@ export const LocalAIProvider = ({ children }) => {
         '      • enable-unsafe-webgpu\n' +
         '      • enable-webgpu-developer-features\n' +
         '   3. Relaunch and try again\n\n' +
-        '💡 BETTER OPTION: Try "Vet-Rate Vision Phi" - our custom model that works in standard Chrome!\n\n' +
+        '💡 BETTER OPTION: Try "SupplyLocker Vision Phi" - our custom model that works in standard Chrome!\n\n' +
         'Technical: Requires chromium-experimental-subgroup-matrix for u8 shader types.';
       
       setError(warningMsg);
@@ -2029,12 +2029,12 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                         <div>
                           <h4 className="font-bold text-cyan-300 text-sm">AI Knowledge Test</h4>
                           <p className="text-cyan-400/80 text-xs mt-1">
-                            Test if the AI knows about Vet-Rate.org's tools and 38 CFR regulations
+                            Test if the AI knows about SupplyLocker.org's tools and 38 CFR regulations
                           </p>
                         </div>
                       </div>
                       <button
-                        onClick={() => setTestPrompt('What do you know about eCFR and Vet-Rate.org functions? Please list the tools available and explain key VA disability regulations.')}
+                        onClick={() => setTestPrompt('What do you know about eCFR and SupplyLocker.org functions? Please list the tools available and explain key VA disability regulations.')}
                         className="w-full py-2 px-4 bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-300 text-sm font-medium rounded-lg transition-colors"
                       >
                         Run Knowledge Test ⚡

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Witness Bench Component
+ * SupplyLocker.org - The Witness Bench Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

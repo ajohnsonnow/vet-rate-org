@@ -33,7 +33,7 @@ const ContactUs = ({ onClose, onReportBug }) => {
     e.preventDefault();
     
     // Create mailto link with form data
-    const mailtoLink = `mailto:Anth@StructuredForGrowth.com?subject=${encodeURIComponent(formData.subject || 'Contact from Vet-Rate.org')}&body=${encodeURIComponent(
+    const mailtoLink = `mailto:Anth@StructuredForGrowth.com?subject=${encodeURIComponent(formData.subject || 'Contact from SupplyLocker.org')}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     )}`;
     
@@ -173,18 +173,18 @@ const ContactUs = ({ onClose, onReportBug }) => {
               <li>
                 <strong>{t('contactUs', 'githubLabel')}:</strong>{' '}
                 <a 
-                  href="https://github.com/ajohnsonnow/vet-rate-org" 
+                  href="https://github.com/ajohnsonnow/SupplyLocker-org" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  github.com/ajohnsonnow/vet-rate-org
+                  github.com/ajohnsonnow/SupplyLocker-org
                 </a>
               </li>
               <li>
                 <strong>{t('contactUs', 'reportIssueLabel')}:</strong> {t('contactUs', 'reportIssueText')}{' '}
                 <a 
-                  href="https://github.com/ajohnsonnow/vet-rate-org/issues" 
+                  href="https://github.com/ajohnsonnow/SupplyLocker-org/issues" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"

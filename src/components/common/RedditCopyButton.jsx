@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - RedditCopyButton Component
+ * SupplyLocker.org - RedditCopyButton Component
  * "The Squared Away Standard" - One-click Reddit formatting
  * 
  * A reusable button that copies AI responses with:
@@ -7,7 +7,7 @@
  * - PERSEC auto-redaction of dates/PII
  * - Proper Reddit markdown formatting
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

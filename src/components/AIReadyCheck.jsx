@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Ready Check Component
+ * SupplyLocker.org - AI Ready Check Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

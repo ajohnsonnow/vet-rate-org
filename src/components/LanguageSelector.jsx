@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Language Selector Component
+ * SupplyLocker.org - Language Selector Component
  * Allows veterans to switch the entire app to their native language
  * 
  * Supports 40+ languages including:

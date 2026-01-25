@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Admin Login Component
+ * SupplyLocker.org - Admin Login Component
  * Secure PIN-based authentication modal
  * 
  * Security Features:

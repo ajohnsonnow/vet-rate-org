@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See COPYRIGHT.js for full license terms.
@@ -180,10 +180,10 @@ export const resetToCleanSlate = () => {
   }
 
   try {
-    // Clear all vet-rate data
+    // Clear all SupplyLocker data
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
-      if (key.startsWith('vet_rate_') || key.startsWith('vet-rate-') || key.startsWith('vetrate')) {
+      if (key.startsWith('vet_rate_') || key.startsWith('SupplyLocker-') || key.startsWith('vetrate')) {
         localStorage.removeItem(key);
       }
     });

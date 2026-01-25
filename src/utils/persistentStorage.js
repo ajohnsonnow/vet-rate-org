@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  *
@@ -28,7 +28,7 @@ import { storage } from './storage';
 // ============================================================================
 
 const CONFIG = {
-  PACKET_FILENAME: 'My-Vet-Rate-Packet.json',
+  PACKET_FILENAME: 'My-SupplyLocker-Packet.json',
   AUTO_SAVE_DEBOUNCE_MS: 1500,      // Wait 1.5s after last input before auto-save
   MILESTONE_SAVE_MS: 30000,          // Force save every 30 seconds if changes exist
   STORAGE_KEY_PREFIX: 'vetrate_',
@@ -220,7 +220,7 @@ async function writeToFileHandle(data) {
       _meta: {
         version: CONFIG.PACKET_VERSION,
         savedAt: new Date().toISOString(),
-        savedBy: 'Vet-Rate.org',
+        savedBy: 'SupplyLocker.org',
         checksum: generateChecksum(data)
       }
     };
@@ -300,7 +300,7 @@ export async function openExistingPacket() {
     const contents = await file.text();
     const data = JSON.parse(contents);
 
-    // Validate it's a Vet-Rate packet
+    // Validate it's a SupplyLocker packet
     if (!validatePacketData(data)) {
       throw new Error('Invalid packet file format');
     }
@@ -387,7 +387,7 @@ export function downloadPacketFile(data, filename = null) {
     _meta: {
       version: CONFIG.PACKET_VERSION,
       exportedAt: new Date().toISOString(),
-      exportedBy: 'Vet-Rate.org'
+      exportedBy: 'SupplyLocker.org'
     }
   };
 
@@ -396,7 +396,7 @@ export function downloadPacketFile(data, filename = null) {
   const url = URL.createObjectURL(blob);
 
   const date = new Date().toISOString().split('T')[0];
-  const downloadName = filename || `My-Vet-Rate-Packet-${date}.json`;
+  const downloadName = filename || `My-SupplyLocker-Packet-${date}.json`;
 
   const a = document.createElement('a');
   a.href = url;

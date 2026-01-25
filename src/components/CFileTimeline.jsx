@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - C-File Timeline Component
+ * SupplyLocker.org - C-File Timeline Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

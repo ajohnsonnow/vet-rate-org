@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Poke the Bear Calculator (Risk Assessment)
+ * SupplyLocker.org - Poke the Bear Calculator (Risk Assessment)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

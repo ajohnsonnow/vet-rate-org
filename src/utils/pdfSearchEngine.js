@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - The Needle in the Haystack (PDF Keyword Search)
+/**
+ * SupplyLocker.org - The Needle in the Haystack (PDF Keyword Search)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Nexus Logic Generator
+ * SupplyLocker.org - Nexus Logic Generator
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

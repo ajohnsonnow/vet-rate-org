@@ -1,11 +1,11 @@
 /**
- * Vet-Rate.org - Consistency Check Prompts
+ * SupplyLocker.org - Consistency Check Prompts
  * "The Cross-Examination" - AI-powered contradiction detection
  * 
  * Used by the Consistency Engine's AI mode to find discrepancies
  * between reference evidence and veteran statements.
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

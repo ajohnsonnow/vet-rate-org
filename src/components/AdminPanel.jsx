@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Admin Panel Component
+ * SupplyLocker.org - Admin Panel Component
  * Unified admin dashboard for managing bug reports and feature requests
  * 
  * Security Features:

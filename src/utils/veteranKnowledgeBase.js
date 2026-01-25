@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Veteran Knowledge Base (VKB)
+ * SupplyLocker.org - Veteran Knowledge Base (VKB)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -105,11 +105,15 @@ export const VKB_SCHEMA = {
   nexusStatements: [], // [{condition, statedBy, date, relationship, documentSource}]
   
   documentation: {
-    dd214s: [], // [{id, fileName, uploadDate, pageCount, extracted}]
-    blueButtonReports: [], // [{id, fileName, uploadDate, dateRange, recordCount}]
-    cFiles: [], // [{id, fileName, uploadDate, pageCount, claimNumber}]
-    privateRecords: [], // [{id, fileName, uploadDate, provider, dateRange}]
-    otherEvidence: [], // [{id, fileName, uploadDate, category, description}]
+    dd214s: [], // [{id, fileName, uploadDate, pageCount, extracted, rawText, extractedData}]
+    blueButtonReports: [], // [{id, fileName, uploadDate, dateRange, recordCount, rawText, extractedData}]
+    cFiles: [], // [{id, fileName, uploadDate, pageCount, claimNumber, rawText, extractedData}]
+    privateRecords: [], // [{id, fileName, uploadDate, provider, dateRange, rawText, extractedData}]
+    otherEvidence: [], // [{id, fileName, uploadDate, category, description, rawText, extractedData}]
+    
+    // NEW: Raw document storage with full extracted text per document
+    // This keeps each document's data separate - "one document, one record"
+    allDocuments: [], // [{id, fileName, type, uploadDate, fileSize, mimeType, rawText, extractedData, processingStatus}]
   },
   
   aiInsights: {
@@ -444,7 +448,7 @@ export const exportVKB = () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `vetrate-knowledge-base-${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `supplylocker-knowledge-base-${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
 };
@@ -473,3 +477,143 @@ export const clearVKB = () => {
   localStorage.removeItem(VKB_STORAGE_KEY);
   return initializeVKB();
 };
+
+/**
+ * Add a document to VKB with full text and metadata
+ * This is the "one document, one record" approach
+ * 
+ * @param {Object} document - Document metadata and content
+ * @param {string} document.fileName - Original file name
+ * @param {string} document.type - Document type (dd214, bluebutton, cfile, private, other)
+ * @param {number} document.fileSize - File size in bytes
+ * @param {string} document.mimeType - MIME type (application/pdf, text/plain, etc.)
+ * @param {string} document.rawText - Full extracted text from document
+ * @param {Object} document.extractedData - Structured data extracted by AI
+ * @param {string} document.processingStatus - 'pending', 'complete', 'error'
+ */
+export const addDocumentToVKB = (document) => {
+  const vkb = loadVKB();
+  
+  const docRecord = {
+    id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    fileName: document.fileName,
+    type: document.type || 'other',
+    uploadDate: new Date().toISOString(),
+    fileSize: document.fileSize || 0,
+    mimeType: document.mimeType || 'application/octet-stream',
+    rawText: document.rawText || '',
+    extractedData: document.extractedData || {},
+    processingStatus: document.processingStatus || 'complete',
+    pageCount: document.pageCount || null,
+    tags: document.tags || [],
+    summary: document.summary || ''
+  };
+  
+  // Add to allDocuments array (universal storage)
+  vkb.documentation.allDocuments.push(docRecord);
+  
+  // Also add to type-specific arrays for backwards compatibility
+  if (document.type === 'dd214') {
+    vkb.documentation.dd214s.push({
+      id: docRecord.id,
+      fileName: docRecord.fileName,
+      uploadDate: docRecord.uploadDate,
+      pageCount: docRecord.pageCount || 1,
+      extracted: docRecord.processingStatus === 'complete',
+      rawText: docRecord.rawText,
+      extractedData: docRecord.extractedData
+    });
+  } else if (document.type === 'bluebutton') {
+    vkb.documentation.blueButtonReports.push({
+      id: docRecord.id,
+      fileName: docRecord.fileName,
+      uploadDate: docRecord.uploadDate,
+      dateRange: docRecord.extractedData?.dateRange || null,
+      recordCount: docRecord.extractedData?.conditions?.length || 0,
+      rawText: docRecord.rawText,
+      extractedData: docRecord.extractedData
+    });
+  } else if (document.type === 'cfile') {
+    vkb.documentation.cFiles.push({
+      id: docRecord.id,
+      fileName: docRecord.fileName,
+      uploadDate: docRecord.uploadDate,
+      pageCount: docRecord.pageCount || 1,
+      claimNumber: docRecord.extractedData?.claimNumber || null,
+      rawText: docRecord.rawText,
+      extractedData: docRecord.extractedData
+    });
+  } else if (document.type === 'private') {
+    vkb.documentation.privateRecords.push({
+      id: docRecord.id,
+      fileName: docRecord.fileName,
+      uploadDate: docRecord.uploadDate,
+      provider: docRecord.extractedData?.provider || null,
+      dateRange: docRecord.extractedData?.dateRange || null,
+      rawText: docRecord.rawText,
+      extractedData: docRecord.extractedData
+    });
+  } else {
+    vkb.documentation.otherEvidence.push({
+      id: docRecord.id,
+      fileName: docRecord.fileName,
+      uploadDate: docRecord.uploadDate,
+      category: docRecord.type,
+      description: docRecord.summary || '',
+      rawText: docRecord.rawText,
+      extractedData: docRecord.extractedData
+    });
+  }
+  
+  vkb.metadata.documentCount++;
+  saveVKB(vkb);
+  
+  return { success: true, documentId: docRecord.id };
+};
+
+/**
+ * Get all documents from VKB
+ */
+export const getAllDocuments = () => {
+  const vkb = loadVKB();
+  return vkb.documentation.allDocuments || [];
+};
+
+/**
+ * Get documents by type
+ */
+export const getDocumentsByType = (type) => {
+  const vkb = loadVKB();
+  return (vkb.documentation.allDocuments || []).filter(doc => doc.type === type);
+};
+
+/**
+ * Get a single document by ID
+ */
+export const getDocumentById = (id) => {
+  const vkb = loadVKB();
+  return (vkb.documentation.allDocuments || []).find(doc => doc.id === id);
+};
+
+/**
+ * Delete a document from VKB
+ */
+export const deleteDocumentFromVKB = (documentId) => {
+  const vkb = loadVKB();
+  
+  // Remove from allDocuments
+  vkb.documentation.allDocuments = (vkb.documentation.allDocuments || []).filter(doc => doc.id !== documentId);
+  
+  // Remove from type-specific arrays
+  vkb.documentation.dd214s = vkb.documentation.dd214s.filter(doc => doc.id !== documentId);
+  vkb.documentation.blueButtonReports = vkb.documentation.blueButtonReports.filter(doc => doc.id !== documentId);
+  vkb.documentation.cFiles = vkb.documentation.cFiles.filter(doc => doc.id !== documentId);
+  vkb.documentation.privateRecords = vkb.documentation.privateRecords.filter(doc => doc.id !== documentId);
+  vkb.documentation.otherEvidence = vkb.documentation.otherEvidence.filter(doc => doc.id !== documentId);
+  
+  vkb.metadata.documentCount = vkb.documentation.allDocuments.length;
+  saveVKB(vkb);
+  
+  return { success: true };
+};
+

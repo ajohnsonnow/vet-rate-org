@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Mass Document Processor (Muster Call System)
+ * SupplyLocker.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -29,6 +29,7 @@ import { classifyDocument, classifyDocumentBatch, DOCUMENT_TYPES, getDocumentTyp
 import { parseDD214Text } from './ribbonRackData';
 import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
+import { addDocumentToVKB } from './veteranKnowledgeBase';
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -79,11 +80,16 @@ export const validateFilesBatch = (files) => {
     const fileSize = file.size || 0;
     results.totalSize += fileSize;
 
+    // Debug: log file details
+    console.log(`Validating file: ${file.name}, size: ${fileSize}, type: ${file.type}`);
+
     // Check file type support
     if (!isFileSupported(file)) {
+      const ext = file.name.match(/\.[^.]+$/)?.[0]?.toLowerCase() || 'none';
+      console.warn(`File rejected: ${file.name}, extension: ${ext}`);
       results.invalid.push({
         file,
-        reason: 'Unsupported file type. Please use PDF, DOCX, or TXT files.'
+        reason: `Unsupported file type "${ext}". Supported: .pdf, .docx, .txt, .rtf`
       });
       continue;
     }
@@ -114,6 +120,29 @@ export const validateFilesBatch = (files) => {
   }
 
   return results;
+};
+
+/**
+ * Map document classifier types to VKB document types
+ */
+const mapToVKBType = (classificationType) => {
+  const typeMap = {
+    [DOCUMENT_TYPES.DD214]: 'dd214',
+    [DOCUMENT_TYPES.NGB22]: 'dd214',
+    [DOCUMENT_TYPES.DD256]: 'dd214',
+    [DOCUMENT_TYPES.DD257]: 'dd214',
+    [DOCUMENT_TYPES.RATING_DECISION]: 'other',
+    [DOCUMENT_TYPES.CLAIM_LETTER]: 'other',
+    [DOCUMENT_TYPES.DBQ]: 'other',
+    [DOCUMENT_TYPES.C_FILE_MEDICAL]: 'cfile',
+    [DOCUMENT_TYPES.MEDICAL_RECORD]: 'cfile',
+    [DOCUMENT_TYPES.NEXUS_LETTER]: 'other',
+    [DOCUMENT_TYPES.VA_FORM]: 'other',
+    [DOCUMENT_TYPES.SUPPORTING_DOC]: 'other',
+    [DOCUMENT_TYPES.BLUE_BUTTON]: 'bluebutton'
+  };
+  
+  return typeMap[classificationType] || 'other';
 };
 
 /**
@@ -151,10 +180,29 @@ const processSingleDocument = async (file, onProgress) => {
     });
 
     if (!extractionResult.success) {
-      throw new Error(extractionResult.error || 'Text extraction failed');
+      const errorDetail = extractionResult.error || 'Text extraction failed';
+      console.warn(`⚠️ ${file.name}: ${errorDetail}`);
+      
+      // Provide specific guidance based on error type
+      let helpText = 'Try re-scanning at higher quality (300+ DPI) or use a different PDF viewer to re-save the file.';
+      if (errorDetail.includes('image') || errorDetail.includes('scanned')) {
+        helpText = 'This appears to be a scanned/image-based PDF. OCR was attempted but failed. Try scanning at higher resolution.';
+      } else if (errorDetail.includes('corrupted')) {
+        helpText = 'The PDF file may be corrupted. Try re-downloading or re-creating the file.';
+      } else if (errorDetail.includes('password')) {
+        helpText = 'The PDF is password-protected. Please remove the password and try again.';
+      }
+      
+      throw new Error(`${errorDetail}. ${helpText}`);
     }
 
     result.text = extractionResult.text;
+    
+    // Check if text is too short (likely failed extraction)
+    if (!result.text || result.text.trim().length < 50) {
+      console.warn(`⚠️ ${file.name}: Extracted text too short (${result.text?.length || 0} chars)`);
+      throw new Error('Extracted text too short. Document may be image-based and require OCR, or file may be corrupted.');
+    }
 
     // Step 2: Classify document
     onProgress?.({
@@ -179,6 +227,33 @@ const processSingleDocument = async (file, onProgress) => {
     );
 
     result.status = 'complete';
+    
+    // Step 4: Store in Veteran Knowledge Base
+    try {
+      const vkbDocument = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        fileName: file.name,
+        type: mapToVKBType(result.classification.type),
+        uploadDate: new Date().toISOString(),
+        fileSize: file.size,
+        mimeType: file.type || 'application/octet-stream',
+        rawText: result.text,
+        extractedData: result.extractedData,
+        processingStatus: 'complete',
+        tags: [
+          result.classification.category,
+          getDocumentTypeLabel(result.classification.type)
+        ],
+        summary: `${getDocumentTypeLabel(result.classification.type)} - ${file.name}`
+      };
+      
+      addDocumentToVKB(vkbDocument);
+      result.vkbStored = true;
+    } catch (vkbError) {
+      console.error(`Failed to store ${file.name} in VKB:`, vkbError);
+      result.vkbStored = false;
+    }
+    
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.COMPLETE,
@@ -489,6 +564,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
   const {
     onProgress,
     onComplete,
+    abortSignal,
     maxConcurrent = 3  // Process 3 files at a time to avoid memory issues
   } = options;
 
@@ -517,6 +593,11 @@ export const processMusterCallBatch = async (files, options = {}) => {
 
   // Process files with concurrency limit
   const processNext = async () => {
+    // Check if aborted
+    if (abortSignal?.aborted) {
+      throw new DOMException('Processing aborted', 'AbortError');
+    }
+    
     if (queue.length === 0) return null;
 
     const file = queue.shift();
@@ -549,8 +630,19 @@ export const processMusterCallBatch = async (files, options = {}) => {
   const workers = [];
   for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
     workers.push((async () => {
-      while (queue.length > 0 || processing > 0) {
-        await processNext();
+      try {
+        while (queue.length > 0 || processing > 0) {
+          if (abortSignal?.aborted) {
+            throw new DOMException('Processing aborted', 'AbortError');
+          }
+          await processNext();
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          // Stop gracefully
+          return;
+        }
+        throw err;
       }
     })());
   }

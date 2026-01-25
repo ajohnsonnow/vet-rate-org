@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Mode Selector
+ * SupplyLocker.org - AI Mode Selector
  * "The Faraday Cage Protocol" - Easy switching between Cloud and Local AI
  * 
  * This component provides a simple, intuitive way for users to:

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate WebLLM Integration
+ * SupplyLocker WebLLM Integration
  * Client-side LLM inference using WebGPU
  */
 
@@ -12,7 +12,7 @@ class VetRateWebLLM {
     this.systemPrompt = `You are a VA Claims Assistant helping veterans understand their disability benefits.
 You specialize in:
 - 38 CFR regulations and diagnostic codes
-- Secondary service connection under 38 CFR § 3.310
+- Secondary service connection under 38 CFR ï¿½ 3.310
 - Rating criteria and schedules
 - PACT Act presumptive conditions
 

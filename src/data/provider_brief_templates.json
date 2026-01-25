@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "purpose": "Translate VA rating criteria into clinical questions for private providers",
+    "philosophy": "Doctors aren't lawyers. Ask medical questions, not legal ones.",
+    "last_updated": "2026-01"
+  },
+  "templates": {
+    "MIGRAINES_SECONDARY": {
+      "title": "Medical Opinion Request: Migraine Headaches",
+      "target_audience": "Neurologist / Primary Care Physician",
+      "condition_category": "Neurological",
+      "education_point": "The VA rates migraines based on frequency of 'prostrating' attacks (requiring the patient to lie down in a dark room). The rating schedule distinguishes between 0%, 30%, and 50% based on attack frequency.",
+      "required_verbiage": [
+        {
+          "concept": "Prostrating Attacks",
+          "doctor_ask": "Does the patient report headaches that require them to stop all activity and rest in a dark, quiet room? If so, please use the term 'prostrating' in your documentation if clinically accurate.",
+          "rating_relevance": "This term triggers higher ratings under 38 CFR § 4.124a, DC 8100"
+        },
+        {
+          "concept": "Frequency Documentation",
+          "doctor_ask": "Based on your treatment history, approximately how many prostrating attacks does the patient experience per month on average?",
+          "rating_relevance": "Frequency determines rating: <2/month=0%, 2+/month=30%, very frequent=50%"
+        },
+        {
+          "concept": "Etiology (Secondary Connection)",
+          "doctor_ask": "The patient has service-connected Tinnitus. Based on your medical knowledge, is it plausible that the chronic stress or sensory overload from tinnitus could aggravate or trigger migraines?",
+          "rating_relevance": "Establishes secondary service connection"
+        }
+      ],
+      "nexus_language_options": [
+        "The veteran's migraines are at least as likely as not aggravated by their service-connected tinnitus.",
+        "It is at least as likely as not that the veteran's migraine condition is secondary to their service-connected tinnitus.",
+        "The veteran's chronic tinnitus more likely than not contributes to the frequency and severity of their migraines."
+      ],
+      "cfr_citation": "38 CFR § 4.124a, Diagnostic Code 8100"
+    },
+    "PTSD_NON_COMBAT": {
+      "title": "Medical Opinion Request: Post-Traumatic Stress Disorder (Personal Trauma)",
+      "target_audience": "Psychologist / Psychiatrist / Licensed Clinical Social Worker",
+      "condition_category": "Mental Health",
+      "education_point": "For PTSD claims without combat stressors, the VA requires: (1) a confirmed stressor event, (2) current PTSD diagnosis per DSM-5, and (3) a medical nexus linking the stressor to current symptoms. The standard is 'at least as likely as not' (>50% probability).",
+      "required_verbiage": [
+        {
+          "concept": "DSM-5 Criteria Confirmation",
+          "doctor_ask": "Does the patient meet DSM-5 criteria for PTSD (Criterion A stressor, B intrusion, C avoidance, D cognition/mood, E arousal)?",
+          "rating_relevance": "VA requires formal DSM-5 diagnosis"
+        },
+        {
+          "concept": "Differential Diagnosis",
+          "doctor_ask": "Please note if symptoms are distinct from other diagnoses (e.g., Adjustment Disorder, Major Depressive Disorder) or if PTSD is the primary diagnosis.",
+          "rating_relevance": "VA denies claims when PTSD isn't clearly differentiated"
+        },
+        {
+          "concept": "Functional Impairment",
+          "doctor_ask": "Please describe how the condition affects occupational functioning, social relationships, and activities of daily living. Specific examples are helpful (e.g., 'Difficulty maintaining employment due to hypervigilance').",
+          "rating_relevance": "Severity determines rating percentage (0-100%)"
+        },
+        {
+          "concept": "Chronicity and Persistence",
+          "doctor_ask": "How long has the patient exhibited these symptoms? Are they chronic and persistent?",
+          "rating_relevance": "VA requires evidence symptoms persist beyond adjustment period"
+        }
+      ],
+      "nexus_language_options": [
+        "It is at least as likely as not that the veteran's PTSD is related to their reported in-service stressor.",
+        "Based on my clinical evaluation and review of the veteran's history, the current PTSD symptoms are more likely than not connected to their military service trauma.",
+        "The veteran's PTSD diagnosis is at least as likely as not caused by the traumatic event that occurred during their military service."
+      ],
+      "cfr_citation": "38 CFR § 4.130, Diagnostic Code 9411"
+    },
+    "SLEEP_APNEA_SECONDARY": {
+      "title": "Medical Opinion Request: Obstructive Sleep Apnea (Secondary to PTSD/Rhinitis)",
+      "target_audience": "Sleep Medicine Specialist / Pulmonologist / Primary Care",
+      "condition_category": "Respiratory",
+      "education_point": "Sleep apnea can be service-connected as secondary to other conditions (PTSD-related weight gain, rhinitis causing nasal obstruction, etc.). The VA requires sleep study results (AHI score) and a medical nexus.",
+      "required_verbiage": [
+        {
+          "concept": "Sleep Study Confirmation",
+          "doctor_ask": "What is the patient's Apnea-Hypopnea Index (AHI) from their most recent sleep study? Does it meet diagnostic criteria for OSA?",
+          "rating_relevance": "AHI >5 confirms diagnosis. AHI >20 supports higher ratings."
+        },
+        {
+          "concept": "CPAP Requirement",
+          "doctor_ask": "Is CPAP or similar breathing assistance device medically required? Is the patient compliant with therapy?",
+          "rating_relevance": "CPAP requirement = automatic 50% rating under VA rules"
+        },
+        {
+          "concept": "Secondary Causation - PTSD",
+          "doctor_ask": "If the patient has PTSD: Is it medically plausible that PTSD-related factors (weight gain from psychotropic medications, hypervigilance disrupting sleep architecture, alcohol use for symptom management) contributed to their sleep apnea?",
+          "rating_relevance": "Establishes secondary connection to service-connected PTSD"
+        },
+        {
+          "concept": "Secondary Causation - Rhinitis",
+          "doctor_ask": "If the patient has chronic rhinitis: Does nasal obstruction from rhinitis contribute to airway collapse during sleep?",
+          "rating_relevance": "Physical obstruction can establish direct secondary connection"
+        }
+      ],
+      "nexus_language_options": [
+        "It is at least as likely as not that the veteran's obstructive sleep apnea is secondary to (or aggravated by) their service-connected PTSD.",
+        "The veteran's sleep apnea is more likely than not caused or aggravated by their service-connected rhinitis.",
+        "Based on the temporal relationship and medical literature, the veteran's OSA is at least as likely as not related to weight gain from PTSD medications."
+      ],
+      "cfr_citation": "38 CFR § 4.97, Diagnostic Code 6847"
+    },
+    "TINNITUS": {
+      "title": "Medical Opinion Request: Tinnitus",
+      "target_audience": "Audiologist / ENT Specialist / Primary Care",
+      "condition_category": "Auditory",
+      "education_point": "Tinnitus is rated at 10% if recurrent (not constant tapping/clicking). The VA requires documentation that tinnitus exists and affects the veteran, plus a nexus to noise exposure during service.",
+      "required_verbiage": [
+        {
+          "concept": "Tinnitus Confirmation",
+          "doctor_ask": "Does the patient report persistent ringing, buzzing, or other sounds in their ears? Is it constant or intermittent?",
+          "rating_relevance": "Recurrent tinnitus qualifies for 10% rating"
+        },
+        {
+          "concept": "Impact on Function",
+          "doctor_ask": "How does the tinnitus affect the patient's daily life (sleep disturbance, concentration difficulties, emotional distress)?",
+          "rating_relevance": "Documents severity even though rating is fixed at 10%"
+        },
+        {
+          "concept": "Noise Exposure Nexus",
+          "doctor_ask": "Based on the patient's reported military occupational specialty (MOS) and noise exposure history, is it medically plausible that their service caused or aggravated their tinnitus?",
+          "rating_relevance": "Establishes service connection"
+        }
+      ],
+      "nexus_language_options": [
+        "It is at least as likely as not that the veteran's tinnitus is related to noise exposure during military service.",
+        "The veteran's tinnitus is more likely than not caused by their documented acoustic trauma during service.",
+        "Based on the veteran's military occupational specialty and reported noise exposure, their tinnitus is at least as likely as not service-connected."
+      ],
+      "cfr_citation": "38 CFR § 4.87, Diagnostic Code 6260"
+    },
+    "KNEE_PAIN_DIRECT": {
+      "title": "Medical Opinion Request: Knee Condition (Direct Service Connection)",
+      "target_audience": "Orthopedic Surgeon / Sports Medicine / Primary Care",
+      "condition_category": "Musculoskeletal",
+      "education_point": "The VA rates knee conditions based on limitation of motion (flexion degrees), instability, and pain on use. X-rays showing degenerative changes support higher ratings.",
+      "required_verbiage": [
+        {
+          "concept": "Range of Motion Measurement",
+          "doctor_ask": "Please measure and document knee flexion in degrees. Normal is 0-140°. Note any limitation.",
+          "rating_relevance": "Flexion to 45° = 30%, flexion to 15° = 40%, flexion <15° = 50%"
+        },
+        {
+          "concept": "Instability Assessment",
+          "doctor_ask": "Is there ligamentous instability (ACL/PCL/MCL/LCL)? Does the knee give way during normal activities?",
+          "rating_relevance": "Instability adds to rating under separate diagnostic codes"
+        },
+        {
+          "concept": "Pain on Motion/Use",
+          "doctor_ask": "Does the patient experience pain with normal use? Is function limited by pain (e.g., difficulty climbing stairs, kneeling)?",
+          "rating_relevance": "Painful motion triggers 'pain on use' rating principle"
+        },
+        {
+          "concept": "In-Service Nexus",
+          "doctor_ask": "Based on the patient's reported injury history (e.g., airborne landing, vehicle accident during service), is it medically plausible that their current knee condition originated from that event?",
+          "rating_relevance": "Establishes direct service connection"
+        }
+      ],
+      "nexus_language_options": [
+        "It is at least as likely as not that the veteran's current knee condition is related to their documented in-service injury.",
+        "The veteran's knee pathology is more likely than not a result of the traumatic event that occurred during active duty service.",
+        "Based on the temporal relationship and mechanism of injury, the veteran's knee condition is at least as likely as not service-connected."
+      ],
+      "cfr_citation": "38 CFR § 4.71a, Diagnostic Code 5260"
+    },
+    "LUMBAR_STRAIN": {
+      "title": "Medical Opinion Request: Lumbar Spine Condition",
+      "target_audience": "Orthopedic Surgeon / Physiatrist / Chiropractor / Primary Care",
+      "condition_category": "Musculoskeletal",
+      "education_point": "The VA rates spine conditions based on limitation of motion (forward flexion measured in degrees from vertical), incapacitating episodes, and functional impairment. Imaging showing degenerative changes supports the claim.",
+      "required_verbiage": [
+        {
+          "concept": "Range of Motion - Forward Flexion",
+          "doctor_ask": "Please measure lumbar forward flexion using goniometer or inclinometer (degrees from vertical). Normal is 90°. Document any limitation.",
+          "rating_relevance": "30° or less = 40%, 60° or less = 20%, limited but >60° = 10%"
+        },
+        {
+          "concept": "Incapacitating Episodes",
+          "doctor_ask": "Does the patient experience episodes of acute back pain requiring bed rest or significant activity limitation? If so, approximately how many episodes per year?",
+          "rating_relevance": "Incapacitating episodes can increase rating to 60% (6+ weeks/year)"
+        },
+        {
+          "concept": "Functional Impairment",
+          "doctor_ask": "How does the back condition limit the patient's ability to work, perform household tasks, or engage in recreational activities?",
+          "rating_relevance": "Supports 'unemployability' claims and secondary conditions"
+        },
+        {
+          "concept": "In-Service Origin/Aggravation",
+          "doctor_ask": "Based on the patient's military occupational history (heavy lifting, ruck marches, airborne operations), is it medically plausible that their service caused or permanently aggravated their lumbar condition?",
+          "rating_relevance": "Establishes service connection or aggravation"
+        }
+      ],
+      "nexus_language_options": [
+        "It is at least as likely as not that the veteran's lumbar spine condition is related to their military service activities.",
+        "The veteran's chronic back pain is more likely than not caused or permanently aggravated by the repetitive heavy lifting and physical demands of their military occupation.",
+        "Based on the veteran's service history and current pathology, their lumbar condition is at least as likely as not service-connected."
+      ],
+      "cfr_citation": "38 CFR § 4.71a, Diagnostic Code 5237"
+    },
+    "RHINITIS_PACT_ACT": {
+      "title": "Medical Opinion Request: Chronic Rhinitis (PACT Act Presumptive)",
+      "target_audience": "ENT Specialist / Allergist / Primary Care",
+      "condition_category": "Respiratory",
+      "education_point": "Under the PACT Act, chronic rhinitis is a presumptive condition for veterans with qualifying service in Southwest Asia or other covered locations. No nexus statement is required IF service meets PACT Act criteria. However, diagnosis confirmation is needed.",
+      "required_verbiage": [
+        {
+          "concept": "Diagnosis Confirmation",
+          "doctor_ask": "Does the patient have chronic rhinitis (inflammation of nasal passages lasting >12 weeks)? Please confirm diagnosis.",
+          "rating_relevance": "Formal diagnosis triggers presumptive service connection"
+        },
+        {
+          "concept": "Symptom Documentation",
+          "doctor_ask": "Please document symptoms: nasal congestion, rhinorrhea, post-nasal drip, facial pain/pressure. Are symptoms persistent or seasonal?",
+          "rating_relevance": "Severity affects rating percentage"
+        },
+        {
+          "concept": "Treatment History",
+          "doctor_ask": "What treatments have been tried (nasal sprays, antihistamines, etc.)? Is condition partially controlled or refractory?",
+          "rating_relevance": "Demonstrates chronicity and severity"
+        }
+      ],
+      "nexus_language_options": [
+        "The veteran has chronic rhinitis as defined by clinical criteria. (Note: If PACT Act service confirmed, no nexus statement needed.)",
+        "The patient's chronic rhinitis is documented and meets diagnostic criteria for presumptive service connection under the PACT Act."
+      ],
+      "cfr_citation": "38 CFR § 3.320 (PACT Act presumptives)"
+    }
+  }
+}

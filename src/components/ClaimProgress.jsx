@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Readiness Gauge (Claim Completeness Tracker)
+ * SupplyLocker.org - The Readiness Gauge (Claim Completeness Tracker)
  * 
  * Visual indicator showing how "complete" a veteran's claim packet is.
  * Checks for the "Holy Trinity" of a strong claim:

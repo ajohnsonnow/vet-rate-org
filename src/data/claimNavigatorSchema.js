@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Claim Navigator Schema
+ * SupplyLocker.org - Claim Navigator Schema
  * Master VA Claims Workflow Data Structures
  * 
  * This schema represents the complete state of a veteran's claim,

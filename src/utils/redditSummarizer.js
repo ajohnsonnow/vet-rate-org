@@ -1,11 +1,11 @@
 /**
- * Vet-Rate.org - Reddit Auto-Summarizer
+ * SupplyLocker.org - Reddit Auto-Summarizer
  * "The Squared Away Standard" - Intent-aware summarization
  * 
  * Automatically detects verbose AI responses and generates Reddit-style
  * BLUF summaries. Also detects when user explicitly requests summary format.
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

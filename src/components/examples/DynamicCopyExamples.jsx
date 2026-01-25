@@ -163,7 +163,7 @@ export const CustomTextExample = () => {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold">
-        {replace("Welcome to Vet-Rate")}
+        {replace("Welcome to SupplyLocker")}
       </h2>
       <p className="mt-2">
         {replace("This tool represents {{total_hours}} hours of work, with {{validation_count}} validated conditions.")}

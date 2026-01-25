@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See COPYRIGHT.js for full license terms.
@@ -100,7 +100,7 @@ export const downloadDebugDump = () => {
     const debugData = createDebugDump();
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const filename = `vet-rate-debug-dump-${timestamp}.json`;
+    const filename = `SupplyLocker-debug-dump-${timestamp}.json`;
     
     const json = JSON.stringify(debugData, null, 2);
     const blob = new Blob([json], { type: 'application/json' });

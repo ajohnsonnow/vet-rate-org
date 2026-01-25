@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - C-File AI Analysis Service
+ * SupplyLocker.org - C-File AI Analysis Service
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -24,7 +24,13 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAI
 // Conservative token limits (leaving room for system prompt + response)
 const TOKEN_LIMITS = {
   GEMINI: 800000,      // 800K tokens (conservative for 1M context)
-  LOCAL: 600,          // 600 tokens for 4K context (prompt ~1500 + doc 600 + output 500 + buffer 1500)
+  LOCAL: 250,          // 250 tokens for 4K context (Diamond Swarm prompt ~1500 + system prompt ~1800 + doc 250 + output 500 = ~4050 tokens)
+};
+
+// Maximum chunks to prevent crashes and excessive processing time
+const MAX_CHUNKS = {
+  GEMINI: 10,          // Cloud AI can handle larger chunks efficiently
+  LOCAL: 100,          // Local AI: max 100 chunks (still ~10-15 min processing)
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
@@ -34,7 +40,7 @@ const CHARS_PER_TOKEN = 4;
 const getMaxCharsPerChunk = (aiMode) => {
   if (aiMode === AI_MODES.LOCAL || aiMode === AI_MODES.SWARM || 
       aiMode === AI_MODES.WLLAMA || aiMode === AI_MODES.LOCAL_SERVER) {
-    return TOKEN_LIMITS.LOCAL * CHARS_PER_TOKEN; // ~2400 chars for local (fits in 4K context with prompt+output)
+    return TOKEN_LIMITS.LOCAL * CHARS_PER_TOKEN; // ~1000 chars for local (fits in 4K context with prompt+output)
   }
   return TOKEN_LIMITS.GEMINI * CHARS_PER_TOKEN; // ~3.2M chars for cloud
 };
@@ -141,6 +147,22 @@ CRITICAL RULES:
 6. DIAGNOSTIC CODES: When you identify a condition, try to match it to a VA diagnostic code from 38 CFR Part 4.
 7. PACT ACT AWARENESS: Flag any toxic exposure evidence for PACT Act presumptive claims.
 8. MENTAL HEALTH SENSITIVITY: Pay special attention to mental health indicators, even subtle ones.`;
+
+// Compact system prompt for local AI (token-constrained models)
+const CFILE_SYSTEM_PROMPT_LOCAL = `VA Claims Auditor: Extract from veteran's C-File.
+
+Find: 1) In-Service Events, 2) Current Diagnoses, 3) Nexus (connection).
+
+Return ONLY valid JSON:
+{
+  "summary": "2-3 sentence summary",
+  "timeline": [{"date":"YYYY-MM-DD","page_number":123,"category":"injury|diagnosis|exposure|mental_health","body_part":"part","description":"text","significance":"high|medium|low"}],
+  "potential_claims": [{"condition":"name","diagnosticCode":"code","likelihood":"high|medium|low","nexusStrength":"strong|moderate|weak|missing","evidence_pages":[]}],
+  "exposures": [{"type":"Burn Pits|Agent Orange|etc","location":"place","timeframe":"when"}],
+  "actionItems": ["Next steps"]
+}
+
+Track page numbers. Be accurate. No hallucinations.`;
 
 // Chunk-specific prompt (tells AI this is a partial file)
 const CHUNK_PROMPT_PREFIX = `IMPORTANT: This is CHUNK {chunkNum} of {totalChunks} from a large C-File.
@@ -254,6 +276,27 @@ function splitIntoChunks(fullText, aiMode) {
   chunks.forEach((chunk, i) => {
     console.log(`  Chunk ${i + 1}: Pages ${chunk.startPage}-${chunk.endPage}, ${chunk.text.length} chars`);
   });
+  
+  // Check if chunk count exceeds maximum - auto-resize if needed
+  const isLocalMode = aiMode === AI_MODES.LOCAL || 
+                      aiMode === AI_MODES.SWARM || 
+                      aiMode === AI_MODES.WLLAMA || 
+                      aiMode === AI_MODES.LOCAL_SERVER;
+  const maxChunks = isLocalMode ? MAX_CHUNKS.LOCAL : MAX_CHUNKS.GEMINI;
+  
+  if (chunks.length > maxChunks) {
+    console.warn(`⚠️ Too many chunks (${chunks.length} > ${maxChunks} max) - auto-resizing...`);
+    
+    // Calculate new chunk size to fit within limit
+    const newMaxCharsPerChunk = Math.ceil(fullText.length / maxChunks);
+    const estimatedTime = Math.ceil((maxChunks * 2.5) / 60); // 2.5s per chunk, convert to minutes
+    
+    console.log(`📏 Recalculating with larger chunks: ${newMaxCharsPerChunk} chars/chunk`);
+    console.log(`⏱️  Estimated processing time: ${estimatedTime} minutes for ${maxChunks} chunks`);
+    
+    // Recursively re-split with larger chunk size
+    return splitIntoChunks(fullText, aiMode, newMaxCharsPerChunk);
+  }
   
   return chunks;
 }
@@ -751,8 +794,15 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}, abor
  * Analyze a single chunk of text
  */
 async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
-  // Build prompt with chunk context
-  let prompt = CFILE_SYSTEM_PROMPT;
+  // Detect AI mode to choose appropriate prompt
+  const aiStatus = getAIStatus();
+  const isLocalMode = aiStatus.mode === AI_MODES.LOCAL || 
+                      aiStatus.mode === AI_MODES.SWARM || 
+                      aiStatus.mode === AI_MODES.WLLAMA || 
+                      aiStatus.mode === AI_MODES.LOCAL_SERVER;
+  
+  // Use compact prompt for local AI to save tokens
+  let prompt = isLocalMode ? CFILE_SYSTEM_PROMPT_LOCAL : CFILE_SYSTEM_PROMPT;
   
   if (totalChunks > 1) {
     prompt = CHUNK_PROMPT_PREFIX
@@ -930,7 +980,7 @@ When you use the C-File Analyzer:
 
 When you use the C-File Analyzer:
 
-1. YOUR FILE STAYS LOCAL: Your PDF is read directly in your browser. It is NEVER uploaded to Vet-Rate.org servers.
+1. YOUR FILE STAYS LOCAL: Your PDF is read directly in your browser. It is NEVER uploaded to SupplyLocker.org servers.
 
 2. TEXT ONLY TO AI: Only the extracted TEXT is sent to Google's Gemini AI for analysis. Images and formatting are stripped out.
 

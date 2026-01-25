@@ -1,5 +1,5 @@
 /**
- * Vet-Rate AI Assistant Hook
+ * SupplyLocker AI Assistant Hook
  * 💎 DIAMOND Knowledge Base (DKB) - Official sources only
  * CKB (Community) is NOT loaded here - not approved for training
  * Provides RAG-based VA claims assistance with official sources only

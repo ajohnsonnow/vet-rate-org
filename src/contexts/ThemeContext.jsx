@@ -32,24 +32,24 @@ export const COLOR_BLIND_MODES = {
 export function ThemeProvider({ children }) {
   // Initialize from localStorage or default to dark mode
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('vet-rate-theme');
+    const saved = localStorage.getItem('SupplyLocker-theme');
     if (saved) return saved;
     // Default to dark theme instead of checking system preference
     return THEME_MODES.DARK;
   });
 
   const [colorBlindMode, setColorBlindMode] = useState(() => {
-    return localStorage.getItem('vet-rate-color-blind-mode') || COLOR_BLIND_MODES.NONE;
+    return localStorage.getItem('SupplyLocker-color-blind-mode') || COLOR_BLIND_MODES.NONE;
   });
 
   const [reducedMotion, setReducedMotion] = useState(() => {
-    const saved = localStorage.getItem('vet-rate-reduced-motion');
+    const saved = localStorage.getItem('SupplyLocker-reduced-motion');
     if (saved) return saved === 'true';
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
 
   const [fontSize, setFontSize] = useState(() => {
-    return localStorage.getItem('vet-rate-font-size') || 'normal';
+    return localStorage.getItem('SupplyLocker-font-size') || 'normal';
   });
 
   // Apply theme to document
@@ -88,17 +88,17 @@ export function ThemeProvider({ children }) {
     root.classList.add(`font-${fontSize}`);
 
     // Save to localStorage
-    localStorage.setItem('vet-rate-theme', theme);
-    localStorage.setItem('vet-rate-color-blind-mode', colorBlindMode);
-    localStorage.setItem('vet-rate-reduced-motion', reducedMotion.toString());
-    localStorage.setItem('vet-rate-font-size', fontSize);
+    localStorage.setItem('SupplyLocker-theme', theme);
+    localStorage.setItem('SupplyLocker-color-blind-mode', colorBlindMode);
+    localStorage.setItem('SupplyLocker-reduced-motion', reducedMotion.toString());
+    localStorage.setItem('SupplyLocker-font-size', fontSize);
   }, [theme, colorBlindMode, reducedMotion, fontSize]);
 
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
-      if (!localStorage.getItem('vet-rate-theme')) {
+      if (!localStorage.getItem('SupplyLocker-theme')) {
         setTheme(e.matches ? THEME_MODES.DARK : THEME_MODES.LIGHT);
       }
     };

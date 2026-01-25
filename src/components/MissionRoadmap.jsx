@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Mission Roadmap Component
+ * SupplyLocker.org - Mission Roadmap Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * 
  * AAAAA Design System - "Command Center Dashboard"

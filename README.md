@@ -1,8 +1,8 @@
-# Vet-Rate.org - VA Disability Claims Command Center
+# SupplyLocker.org - VA Disability Claims Command Center
 
 A comprehensive, production-ready web application for veterans to research VA disability ratings, discover secondary conditions, practice C&P exams, and build evidence packets. Features official 38 CFR Parts 3 & 4 data fully validated against the eCFR.
 
-**🌐 Live Site:** [https://vet-rate.org](https://vet-rate.org)
+**🌐 Live Site:** [https://supply-locker.org](https://supply-locker.org)
 
 ## 🔒 Privacy & Security First
 
@@ -10,7 +10,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 - **100% Client-Side Processing**: Everything runs in your browser - no backend servers
 - **Zero Data Collection**: No accounts, no tracking, no analytics, no PII storage
-- **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/vet-rate-org) or use DevTools to watch network traffic
+- **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/supply-locker-org) or use DevTools to watch network traffic
 - **No "If It's Free, You're the Product"**: Static hosting costs ~$0/month. Built by a veteran for veterans.
 - **AI Options**: Custom local LLMs (100% private) or optional Google Gemini (BYOK) - your choice
 
@@ -18,11 +18,11 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ---
 
-## 💎 What Makes Vet-Rate.org Different
+## 💎 What Makes SupplyLocker.org Different
 
-While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **41 professional-grade tools completely free**:
+While other platforms charge $500+ per feature or take 30% of your backpay, SupplyLocker.org provides **41 professional-grade tools completely free**:
 
-| What Others Charge | Vet-Rate.org |
+| What Others Charge | SupplyLocker.org |
 |-------------------|--------------|
 | **$500-1,500** for C-File analysis | ✅ Free AI-powered C-File Analyzer |
 | **$1,500-2,000** per nexus letter | ✅ Free Nexus Builder with AI assistance |
@@ -97,7 +97,7 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 ## 🏆 The Complete Arsenal: 41 Professional Tools
 
-Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **41 specialized tools** across 6 categories:
+SupplyLocker.org isn't just a calculator - it's a complete VA claims command center with **41 specialized tools** across 6 categories:
 
 - **📊 Calculate Your Rating** (5 tools): Tactical Calculator, Million Dollar Dashboard, What-If Sandbox, Retro Pay Hunter, Time Machine
 - **🔍 Discover Your Claims** (6 tools): Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
@@ -267,11 +267,11 @@ This comprehensive platform represents significant development effort to create 
 - **Traditional Solo Development**: 15,420 hours (7.4 years full-time) @ $135/hr = $2,081,700
 - **Actual AI-Assisted Development**: 55 hours over 4.5 days (Jan 15-19, 2026) = $7,425
 - **Productivity Multiplier**: 280x (AI-assisted development vs. traditional)
-- **Lines of Code**: 167,298 lines (src directory)
-- **Total Files**: 1,141 project files
+- **Lines of Code**: 172,363 lines (src directory)
+- **Total Files**: 1,159 project files
 - **App Size**: 104.05 MB
-- **Components**: 173 React components (41 major tools + 132 supporting)
-- **Utilities**: 90 helper modules
+- **Components**: 177 React components (41 major tools + 136 supporting)
+- **Utilities**: 91 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR (250 hours validation work)
 - **VA Glossary**: 150+ VA terms and definitions
 
@@ -402,7 +402,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 **Commercial Development Cost**: $2,089,580 - $2,592,745  
 **Typical Veteran Service Fees**: $15,000 - $50,000 per successful claim  
-**Vet-Rate.org Cost**: **$0 Forever**
+**SupplyLocker.org Cost**: **$0 Forever**
 
 **This level of development** is why similar tools cost $500+ per use, charge 30% of backpay, or require $500-1,200/year subscriptions. A professional team would spend 12-24 months and $2.5M building this. We built it in 4.5 days with AI assistance for $7,425 and offer it completely free through veteran community support - not data sales, ads, or predatory pricing.
 
@@ -412,7 +412,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 ## ✨ AI Statement Assistant
 
-Vet-Rate.org offers **two AI options**: Custom local LLMs (recommended) for maximum privacy, or Google Gemini cloud AI for convenience.
+SupplyLocker.org offers **two AI options**: Custom local LLMs (recommended) for maximum privacy, or Google Gemini cloud AI for convenience.
 
 ### 🤖 Diamond Swarm - Custom Local AI Models (Recommended)
 
@@ -491,7 +491,7 @@ See [AI Privacy Documentation](docs/privacy/ai-assistant.md) for complete detail
 
 ## ☁️ Cloud Sync Setup (Optional)
 
-Vet-Rate.org includes optional Google Drive backup for automatic cloud sync. **Your data goes to YOUR Google Drive, not our servers.**
+SupplyLocker.org includes optional Google Drive backup for automatic cloud sync. **Your data goes to YOUR Google Drive, not our servers.**
 
 ### Quick Setup
 
@@ -500,7 +500,7 @@ Vet-Rate.org includes optional Google Drive backup for automatic cloud sync. **Y
    - Create a new project (or select existing)
    - Enable the **Google Drive API**
    - Create **OAuth 2.0 Client ID** (Web application type)
-   - Add authorized origins: `http://localhost:3000` (dev) and `https://vet-rate.org` (production)
+   - Add authorized origins: `http://localhost:3000` (dev) and `https://supply-locker.org` (production)
    - Copy your Client ID
 
 2. **Configure Environment**:
@@ -519,7 +519,7 @@ Vet-Rate.org includes optional Google Drive backup for automatic cloud sync. **Y
 
 4. **How It Works**:
    - Click "Connect Drive" in The Bunker (Backup Manager)
-   - Authorize Vet-Rate.org via Google OAuth popup
+   - Authorize SupplyLocker.org via Google OAuth popup
    - Your encrypted backup is uploaded to YOUR Google Drive
    - Access backups from any device by signing in
 
@@ -594,7 +594,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 This project is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License (AGPL)** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 **Why AGPLv3?**  
-Vet-Rate.org is built to protect veterans, not profit from them. This license ensures that:
+SupplyLocker.org is built to protect veterans, not profit from them. This license ensures that:
 1. **Transparency**: Anyone can audit the code to verify privacy claims.
 2. **Community First**: If anyone takes this code to run a public service (like a claims website), they **MUST** release their source code under this same license. This prevents predatory companies from taking this free tool, modifying it, and charging veterans for access without giving back to the community.
 
@@ -615,7 +615,7 @@ The information provided is based on publicly available eCFR data and should be 
 
 ## 📧 Support
 
-- **Website**: [https://vet-rate.org](https://vet-rate.org)
+- **Website**: [https://supply-locker.org](https://supply-locker.org)
 - **GitHub Issues**: [Open an issue](https://github.com/ajohnsonnow/vet-rate-org/issues)
 - **VA Resources**: https://www.va.gov/contact-us/
 - **Veterans Crisis Line**: 988 (Press 1)

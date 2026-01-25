@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Admin Authentication Context
+ * SupplyLocker.org - Admin Authentication Context
  * Gold Standard Security Implementation
  * 
  * Security Features:
@@ -72,7 +72,7 @@ const ADMIN_CREDENTIALS = [
  */
 export const hashPin = async (pin) => {
   const encoder = new TextEncoder();
-  const data = encoder.encode(pin + 'vetrate_salt_2024'); // Add salt
+  const data = encoder.encode(pin + 'supplylocker_salt_2024'); // Add salt
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -99,7 +99,7 @@ const verifyPin = async (pin, hash) => {
 // AUDIT LOGGING
 // ============================================
 
-const AUDIT_LOG_KEY = 'vetrate_admin_audit';
+const AUDIT_LOG_KEY = 'supplylocker_admin_audit';
 
 /**
  * Log an authentication event
@@ -139,7 +139,7 @@ export const getAuthAuditLog = () => {
 // LOCKOUT MANAGEMENT
 // ============================================
 
-const LOCKOUT_KEY = 'vetrate_admin_lockout';
+const LOCKOUT_KEY = 'supplylocker_admin_lockout';
 
 /**
  * Get lockout status

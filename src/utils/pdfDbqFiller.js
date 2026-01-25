@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -351,7 +351,7 @@ export async function createEncryptedZip(pdfBlob, filename, password) {
 SECURE MEDICAL DOCUMENT PACKAGE
 ================================
 
-This ZIP file contains sensitive medical documents prepared with Vet-Rate.org.
+This ZIP file contains sensitive medical documents prepared with SupplyLocker.org.
 
 CONTENTS:
 - ${filename}
@@ -369,7 +369,7 @@ USAGE:
 5. Return to the veteran or submit directly to the VA
 
 Generated: ${new Date().toLocaleString()}
-Source: Vet-Rate.org
+Source: SupplyLocker.org
 `;
     zip.file('README.txt', instructions);
     
@@ -424,7 +424,7 @@ export async function sharePdfNatively(pdfBlob, filename, title = 'Draft DBQ for
     // Attempt to share
     await navigator.share({
       title,
-      text: 'Draft DBQ prepared with Vet-Rate.org - For Physician Review',
+      text: 'Draft DBQ prepared with SupplyLocker.org - For Physician Review',
       files: [file],
     });
     
@@ -446,7 +446,7 @@ export async function copyDbqSummaryToClipboard(veteranInput) {
   try {
     let summary = `DBQ DRAFT SUMMARY\n`;
     summary += `Generated: ${new Date().toLocaleString()}\n`;
-    summary += `Source: Vet-Rate.org\n`;
+    summary += `Source: SupplyLocker.org\n`;
     summary += `======================\n\n`;
     
     for (const [key, value] of Object.entries(veteranInput)) {

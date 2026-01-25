@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Vet-Rate.org - Comprehensive MOS/AFSC/Rate Database
+ * SupplyLocker.org - Comprehensive MOS/AFSC/Rate Database
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * ============================================================================
@@ -161,8 +161,14 @@ export const CODE_ALIASES = {
   '35E': '35M',  // Counter Intelligence Agent
   '96R': '35S',  // Visual Information Operations Specialist
   '98G': '35P',  // Cryptologic Linguist
+  '98H': '35S',  // Morse Code Interceptor (merged into 35S mid-2000s) - Morse tones cause different hearing damage than voice
   '98C': '35N',  // Signals Intelligence Analyst
+  '98D': '35N',  // Electronic Warfare/Signal Intelligence (historical, merged to 35N)
   '98J': '35S',  // Signals Collector
+  '98K': '35S',  // Signals Collection/Identification Analyst (historical, merged to 35S)
+  '98X': '35F',  // Technical Intelligence Analyst (historical, merged to 35F general intel)
+  '98Y': '35F',  // Signals Intelligence Chief (historical, senior role)
+  '98Z': '35F',  // Senior Sergeant, Intelligence (historical, senior NCO role)
   '33W': '35T',  // Military Intelligence Systems Maintainer
   
   // Air Defense historical
@@ -714,6 +720,172 @@ export const MOS_DATABASE = {
       { condition: 'Tinnitus', prevalence: 'High', notes: 'Combat environment', ecfrCode: 'DC 6260' },
       { condition: 'Knee Injuries', prevalence: 'Moderate', notes: 'Kneeling for treatment', ecfrCode: 'DC 5260/5261' },
       { condition: 'Sleep Apnea', prevalence: 'Moderate', notes: 'Irregular schedules', ecfrCode: 'DC 6847' }
+    ]
+  },
+  '68E': {
+    branch: 'Army',
+    title: 'Dental Specialist',
+    aliases: ['91G'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light-Moderate',
+    hazards: [
+      'Bloodborne pathogen exposure',
+      'Sharps injuries (needles, dental instruments)',
+      'Mercury/amalgam exposure (historical)',
+      'Ergonomic strain from patient positioning',
+      'X-ray radiation exposure'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel Syndrome', prevalence: 'High', notes: 'Fine motor dental work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'Bent posture over patients', ecfrCode: 'DC 5237' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Standing, awkward positions', ecfrCode: 'DC 5237' },
+      { condition: 'Needlestick Injuries', prevalence: 'Moderate', notes: 'Sharp instrument handling', ecfrCode: 'Varies' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Fine detail work', ecfrCode: 'DC 6066' },
+      { condition: 'Skin Conditions', prevalence: 'Low-Moderate', notes: 'Latex/glove allergies', ecfrCode: 'DC 7806' }
+    ]
+  },
+  '68K': {
+    branch: 'Army',
+    title: 'Medical Laboratory Specialist',
+    aliases: ['91K'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Bloodborne pathogen exposure',
+      'Chemical/reagent exposure',
+      'Sharps injuries',
+      'Biohazard materials handling',
+      'Prolonged standing'
+    ],
+    commonConditions: [
+      { condition: 'Needlestick Injuries', prevalence: 'High', notes: 'Blood draws, specimen handling', ecfrCode: 'Varies' },
+      { condition: 'Skin Conditions', prevalence: 'Moderate', notes: 'Chemical/reagent contact, latex allergies', ecfrCode: 'DC 7806' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Chemical fumes, reagents', ecfrCode: 'DC 6600' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Prolonged standing at bench', ecfrCode: 'DC 5237' },
+      { condition: 'Carpal Tunnel', prevalence: 'Moderate', notes: 'Repetitive pipetting, fine work', ecfrCode: 'DC 8515' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Microscopy, fine detail', ecfrCode: 'DC 6066' }
+    ]
+  },
+  '68M': {
+    branch: 'Army',
+    title: 'Nutrition Care Specialist (Dietitian Assistant)',
+    aliases: ['91E'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Kitchen/food service operations',
+      'Hot surfaces and equipment',
+      'Prolonged standing',
+      'Food allergen exposure',
+      'Repetitive motions'
+    ],
+    commonConditions: [
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Prolonged standing, lifting supplies', ecfrCode: 'DC 5237' },
+      { condition: 'Burns', prevalence: 'Moderate', notes: 'Hot food, cooking equipment', ecfrCode: 'DC 7801' },
+      { condition: 'Plantar Fasciitis', prevalence: 'Moderate', notes: 'Extended standing', ecfrCode: 'DC 5276' },
+      { condition: 'Carpal Tunnel', prevalence: 'Moderate', notes: 'Food preparation, computer work', ecfrCode: 'DC 8515' },
+      { condition: 'Skin Conditions', prevalence: 'Low-Moderate', notes: 'Food allergies, sanitizers', ecfrCode: 'DC 7806' }
+    ]
+  },
+  '68P': {
+    branch: 'Army',
+    title: 'Radiology Specialist (X-Ray Technician)',
+    aliases: ['91D'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Ionizing radiation exposure',
+      'Patient lifting and positioning',
+      'Lead apron weight',
+      'Standing for extended periods',
+      'Contrast media handling'
+    ],
+    commonConditions: [
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Patient positioning, lead apron weight', ecfrCode: 'DC 5237' },
+      { condition: 'Radiation Exposure Effects', prevalence: 'Low-Moderate', notes: 'Cumulative X-ray exposure', ecfrCode: 'DC 7343' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Lead collar/apron, patient positioning', ecfrCode: 'DC 5237' },
+      { condition: 'Shoulder Injuries', prevalence: 'Moderate', notes: 'Lead apron wear, patient transfers', ecfrCode: 'DC 5201' },
+      { condition: 'Knee Injuries', prevalence: 'Moderate', notes: 'Kneeling for positioning', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Skin Conditions', prevalence: 'Low', notes: 'Contrast media sensitivity', ecfrCode: 'DC 7806' }
+    ]
+  },
+  '68S': {
+    branch: 'Army',
+    title: 'Preventive Medicine Specialist',
+    aliases: ['91P'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Field sanitation inspections',
+      'Vector control (pesticide) exposure',
+      'Biohazard sampling',
+      'Environmental health surveys',
+      'Confined space entry'
+    ],
+    commonConditions: [
+      { condition: 'Respiratory Issues', prevalence: 'High', notes: 'Pesticide/chemical exposure', ecfrCode: 'DC 6600' },
+      { condition: 'Skin Conditions', prevalence: 'Moderate', notes: 'Pesticide contact, PPE reactions', ecfrCode: 'DC 7806' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Field work, equipment carrying', ecfrCode: 'DC 5237' },
+      { condition: 'Anxiety', prevalence: 'Low-Moderate', notes: 'Disease outbreak response stress', ecfrCode: 'DC 9413' },
+      { condition: 'Cancer (various)', prevalence: 'Low-Moderate', notes: 'Long-term pesticide exposure - PACT Act', ecfrCode: 'DC 7715' }
+    ]
+  },
+  '68T': {
+    branch: 'Army',
+    title: 'Animal Care Specialist (Veterinary Technician)',
+    aliases: ['91T'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Animal bites and scratches',
+      'Zoonotic disease exposure',
+      'Large animal handling (MWD, horses)',
+      'Chemical/pharmaceutical exposure',
+      'Heavy lifting'
+    ],
+    commonConditions: [
+      { condition: 'Animal Bites/Injuries', prevalence: 'High', notes: 'Working with military working dogs, other animals', ecfrCode: 'DC 7805' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Restraining large animals, heavy lifting', ecfrCode: 'DC 5237' },
+      { condition: 'Allergic Conditions', prevalence: 'Moderate', notes: 'Animal dander, latex', ecfrCode: 'DC 6846' },
+      { condition: 'Zoonotic Infections', prevalence: 'Moderate', notes: 'Disease transmission from animals', ecfrCode: 'Varies' },
+      { condition: 'Knee Injuries', prevalence: 'Moderate', notes: 'Kneeling for animal care', ecfrCode: 'DC 5260/5261' },
+      { condition: 'PTSD', prevalence: 'Moderate', notes: 'MWD loss, euthanasia duties', ecfrCode: 'DC 9411' }
+    ]
+  },
+  '68V': {
+    branch: 'Army',
+    title: 'Respiratory Specialist',
+    aliases: ['91R', '91V'],
+    category: 'Medical',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Bloodborne pathogen exposure',
+      'Infectious respiratory disease exposure',
+      'Patient lifting/positioning',
+      'Equipment handling',
+      'Emergency response stress'
+    ],
+    commonConditions: [
+      { condition: 'Respiratory Infections', prevalence: 'High', notes: 'Direct exposure to respiratory patients', ecfrCode: 'DC 6600' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Patient positioning, equipment moves', ecfrCode: 'DC 5237' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Critical care emergencies', ecfrCode: 'DC 9413' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Shift work in ICU/ER', ecfrCode: 'DC 6847' },
+      { condition: 'PTSD', prevalence: 'Moderate', notes: 'Patient deaths, trauma cases', ecfrCode: 'DC 9411' },
+      { condition: 'Skin Conditions', prevalence: 'Low', notes: 'PPE irritation', ecfrCode: 'DC 7806' }
     ]
   },
   '88M': {
@@ -2251,6 +2423,54 @@ export const MOS_DATABASE = {
       { condition: 'Shoulder Injuries', prevalence: 'High', notes: 'Lifting, overhead', ecfrCode: 'DC 5201' }
     ]
   },
+  '15H': {
+    branch: 'Army',
+    title: 'Aircraft Pneudraulics Repairer',
+    aliases: ['68H'],
+    category: 'Aviation Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Hydraulic fluid exposure (Skydrol)',
+      'High-pressure pneumatic systems',
+      'Flight line aircraft noise',
+      'Heavy component handling',
+      'Chemical solvent exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Flight line operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Aircraft engine noise', ecfrCode: 'DC 6100' },
+      { condition: 'Skin Conditions', prevalence: 'High', notes: 'Skydrol hydraulic fluid exposure - highly caustic', ecfrCode: 'DC 7806' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Hydraulic fluid fumes, solvents', ecfrCode: 'DC 6600' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Component handling, awkward positions', ecfrCode: 'DC 5237' },
+      { condition: 'Carpal Tunnel', prevalence: 'Moderate', notes: 'Fine tubing work, fitting connections', ecfrCode: 'DC 8515' }
+    ]
+  },
+  '15Y': {
+    branch: 'Army',
+    title: 'AH-64D Armament/Electrical/Avionics Systems Repairer',
+    aliases: ['67Y'],
+    category: 'Aviation Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Apache attack helicopter operations',
+      'Weapons systems maintenance (30mm cannon, Hellfire)',
+      'High-voltage avionics systems',
+      'Soldering and electronic work',
+      'Live weapons handling'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Apache operations, weapons testing', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Attack helicopter noise', ecfrCode: 'DC 6100' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine avionics/electrical work', ecfrCode: 'DC 8515' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Awkward maintenance positions', ecfrCode: 'DC 5237' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Fine circuit work, soldering', ecfrCode: 'DC 6066' },
+      { condition: 'Respiratory Issues', prevalence: 'Low-Moderate', notes: 'Soldering fumes', ecfrCode: 'DC 6600' }
+    ]
+  },
 
   // ============================================================================
   // EXPANDED ARMY MOS - EOD & ENGINEER
@@ -2646,6 +2866,225 @@ export const MOS_DATABASE = {
       { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Hose handling', ecfrCode: 'DC 5237' }
     ]
   },
+  '1D7X1': {
+    branch: 'Air Force',
+    title: 'Cyber Defense Operations / Digital Communications',
+    aliases: ['3C031', '3C051', '2E231', '2E631', '3D031', '3D131', '3D1X1'],
+    category: 'Cyber/Communications',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Intensive computer/network operations',
+      'Shift work (24/7 operations)',
+      'Cyber security stress',
+      'Server room/data center environments'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel', prevalence: 'Very High', notes: 'Keyboard intensive work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'Computer posture', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Shift work', ecfrCode: 'DC 6847' },
+      { condition: 'Migraine', prevalence: 'Moderate', notes: 'Screen time', ecfrCode: 'DC 8100' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Cyber security incidents', ecfrCode: 'DC 9413' }
+    ]
+  },
+  '1T0X1': {
+    branch: 'Air Force',
+    title: 'SERE Specialist (Survival, Evasion, Resistance, Escape)',
+    aliases: ['1T031', '8R000'],
+    category: 'Special Operations Support',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Extreme',
+    hazards: [
+      'Extreme physical training/instruction',
+      'Environmental exposure (cold, heat, altitude)',
+      'Resistance training scenarios',
+      'Psychological stress',
+      'Weapons/survival training'
+    ],
+    commonConditions: [
+      { condition: 'Lumbar DDD', prevalence: 'Very High', notes: 'Extreme physical demands', ecfrCode: 'DC 5243' },
+      { condition: 'Knee Injuries', prevalence: 'Very High', notes: 'Training activities', ecfrCode: 'DC 5260/5261' },
+      { condition: 'PTSD', prevalence: 'High', notes: 'Resistance training, stress scenarios', ecfrCode: 'DC 9411' },
+      { condition: 'Cold Injuries', prevalence: 'Moderate', notes: 'Environmental training', ecfrCode: 'DC 7122' },
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Weapons training', ecfrCode: 'DC 6260' },
+      { condition: 'Shoulder Injuries', prevalence: 'High', notes: 'Physical training', ecfrCode: 'DC 5201' }
+    ]
+  },
+  '1T2X1': {
+    branch: 'Air Force',
+    title: 'Pararescue / SERE Operations',
+    aliases: ['1T231'],
+    category: 'Special Operations Support',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Extreme',
+    hazards: [
+      'Combat rescue support',
+      'Parachute operations',
+      'Extreme physical demands',
+      'Helicopter operations'
+    ],
+    commonConditions: [
+      { condition: 'Lumbar DDD', prevalence: 'Extreme', notes: 'Jump landings, heavy loads', ecfrCode: 'DC 5243' },
+      { condition: 'Knee Injuries', prevalence: 'Extreme', notes: 'Jump landings, operational demands', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Helicopter operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Aircraft noise', ecfrCode: 'DC 6100' },
+      { condition: 'PTSD', prevalence: 'High', notes: 'Combat support operations', ecfrCode: 'DC 9411' }
+    ]
+  },
+  '1N2X1': {
+    branch: 'Air Force',
+    title: 'Signals Intelligence Analyst',
+    aliases: ['1N231'],
+    category: 'Intelligence',
+    timePeriod: 'Active',
+    noiseExposure: 'Low-Moderate (Headset)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Extended headset use',
+      'Signal monitoring fatigue',
+      'Shift work',
+      'Classified information stress'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Headset monitoring', ecfrCode: 'DC 6260' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Transcription, keyboard work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Workstation posture', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Shift work', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Intelligence operations', ecfrCode: 'DC 9413' }
+    ]
+  },
+  '1A0X1': {
+    branch: 'Air Force',
+    title: 'In-Flight Refueling / Boom Operator',
+    aliases: ['1A031'],
+    category: 'Aircrew',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Extended flight operations',
+      'Pressurized cabin work',
+      'Awkward boom operator position',
+      'Shift/mission schedule disruption'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Aircraft engine noise', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Tanker aircraft operations', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Boom operator prone position', ecfrCode: 'DC 5237' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'Extended neck positioning', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Mission schedules, jet lag', ecfrCode: 'DC 6847' }
+    ]
+  },
+  '2A5X1': {
+    branch: 'Air Force',
+    title: 'Aerospace Maintenance',
+    aliases: ['2A531'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'Very High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Flight line aircraft maintenance',
+      'Jet engine noise exposure',
+      'Chemical/hydraulic fluid exposure',
+      'Working on elevated platforms'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Jet engine operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Flight line noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Very High', notes: 'Maintenance positions', ecfrCode: 'DC 5237' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Fumes, solvents', ecfrCode: 'DC 6600' }
+    ]
+  },
+  '2A6X1': {
+    branch: 'Air Force',
+    title: 'Aerospace Propulsion (Jet Engine Mechanic)',
+    aliases: ['452X0', '2A631'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Jet engine testing and maintenance',
+      'Hot engine components',
+      'Fuel/hydraulic exposure',
+      'Extreme noise during engine runs'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Engine testing, flight line', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Jet engine exposure', ecfrCode: 'DC 6100' },
+      { condition: 'Burns', prevalence: 'Moderate', notes: 'Hot engine components', ecfrCode: 'DC 7801' },
+      { condition: 'Respiratory Issues', prevalence: 'High', notes: 'Fuel fumes, exhaust', ecfrCode: 'DC 6600' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Engine component handling', ecfrCode: 'DC 5237' }
+    ]
+  },
+  '2A7X1': {
+    branch: 'Air Force',
+    title: 'Aircraft Metals Technology',
+    aliases: ['454X0', '2A731'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Welding operations',
+      'Metal fabrication',
+      'Heat treatment',
+      'Chemical exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Metal work, flight line', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Grinding, fabrication', ecfrCode: 'DC 6100' },
+      { condition: 'Respiratory Issues', prevalence: 'High', notes: 'Welding fumes, metal particles', ecfrCode: 'DC 6600' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Welding flash', ecfrCode: 'DC 6066' },
+      { condition: 'Burns', prevalence: 'Moderate', notes: 'Welding, hot metal', ecfrCode: 'DC 7801' }
+    ]
+  },
+  '2A0X1': {
+    branch: 'Air Force',
+    title: 'Avionics Test Station and Components',
+    aliases: ['2A031'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Electronic test equipment operation',
+      'Flight line avionics work',
+      'Soldering and fine electronics',
+      'Static discharge hazards'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Flight line exposure', ecfrCode: 'DC 6260' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine electronic work', ecfrCode: 'DC 8515' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Circuit board work', ecfrCode: 'DC 6066' },
+      { condition: 'Respiratory Issues', prevalence: 'Low-Moderate', notes: 'Soldering fumes', ecfrCode: 'DC 6600' }
+    ]
+  },
+  '2W2X1': {
+    branch: 'Air Force',
+    title: 'Nuclear Weapons',
+    aliases: ['2W231'],
+    category: 'Weapons',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Nuclear weapons handling',
+      'Radiation monitoring',
+      'High-security stress',
+      'Heavy component lifting'
+    ],
+    commonConditions: [
+      { condition: 'Anxiety', prevalence: 'High', notes: 'Nuclear weapons responsibility', ecfrCode: 'DC 9413' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Weapons handling', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Alert duty', ecfrCode: 'DC 6847' },
+      { condition: 'Radiation Exposure', prevalence: 'Low', notes: 'Controlled exposure possible', ecfrCode: 'DC 7343' }
+    ]
+  },
 
   // ============================================================================
   // EXPANDED NAVY RATINGS
@@ -3005,6 +3444,112 @@ export const MOS_DATABASE = {
       { condition: 'Cold Injuries', prevalence: 'Moderate', notes: 'Cold water', ecfrCode: 'DC 7122' }
     ]
   },
+  'AT': {
+    branch: 'Navy',
+    title: 'Aviation Electronics Technician',
+    aliases: ['AE'],
+    category: 'Aviation Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Flight line operations',
+      'Avionics systems repair',
+      'Soldering and electronic work',
+      'RF/radar exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Flight deck/line operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Aircraft operations', ecfrCode: 'DC 6100' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine electronic work', ecfrCode: 'DC 8515' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Circuit board work', ecfrCode: 'DC 6066' },
+      { condition: 'Respiratory Issues', prevalence: 'Low-Moderate', notes: 'Soldering fumes', ecfrCode: 'DC 6600' }
+    ]
+  },
+  'AZ': {
+    branch: 'Navy',
+    title: 'Aviation Maintenance Administrationman',
+    aliases: [],
+    category: 'Aviation Administration',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Flight line exposure (occasional)',
+      'Prolonged computer work',
+      'Administrative stress'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Flight line exposure', ecfrCode: 'DC 6260' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Computer work, typing', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Computer posture', ecfrCode: 'DC 5237' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Prolonged sitting', ecfrCode: 'DC 5237' }
+    ]
+  },
+  'PR': {
+    branch: 'Navy',
+    title: 'Aircrew Survival Equipmentman (Parachute Rigger)',
+    aliases: [],
+    category: 'Aviation Support',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Parachute rigging and inspection',
+      'Survival equipment maintenance',
+      'Flight line exposure',
+      'Sewing machine/fabric work'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Flight line', ecfrCode: 'DC 6260' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Rigging, sewing work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Inspection posture', ecfrCode: 'DC 5237' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Standing, bending', ecfrCode: 'DC 5237' }
+    ]
+  },
+  'IC': {
+    branch: 'Navy',
+    title: 'Interior Communications Electrician',
+    aliases: [],
+    category: 'Electronics',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Electrical systems work',
+      'Shipboard communications systems',
+      'Confined space work',
+      'Gyroscope and navigation equipment'
+    ],
+    commonConditions: [
+      { condition: 'Hearing Loss', prevalence: 'Moderate', notes: 'Shipboard noise', ecfrCode: 'DC 6100' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine wiring work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Overhead work', ecfrCode: 'DC 5237' },
+      { condition: 'Electrical Burns', prevalence: 'Low-Moderate', notes: 'Electrical systems', ecfrCode: 'DC 7801' }
+    ]
+  },
+  'STS': {
+    branch: 'Navy',
+    title: 'Sonar Technician (Submarine)',
+    aliases: [],
+    category: 'Operations',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Submarine operations',
+      'Sonar system monitoring',
+      'Confined submarine environment',
+      'Extended underwater deployments'
+    ],
+    commonConditions: [
+      { condition: 'Hearing Loss', prevalence: 'Moderate', notes: 'Sonar operations, submarine noise', ecfrCode: 'DC 6100' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Submarine schedules, no natural light', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety/Depression', prevalence: 'Moderate', notes: 'Confined space, extended deployments', ecfrCode: 'DC 9413/9434' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Console posture', ecfrCode: 'DC 5237' },
+      { condition: 'Vitamin D Deficiency', prevalence: 'High', notes: 'No sunlight exposure', ecfrCode: 'Varies' }
+    ]
+  },
 
   // ============================================================================
   // EXPANDED MARINE CORPS MOS
@@ -3243,6 +3788,116 @@ export const MOS_DATABASE = {
       { condition: 'PTSD/Anxiety', prevalence: 'Moderate', notes: 'Imagery exposure', ecfrCode: 'DC 9411/9413' },
       { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Posture', ecfrCode: 'DC 5237' },
       { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Shift work', ecfrCode: 'DC 6847' }
+    ]
+  },
+
+  '0651': {
+    branch: 'Marines',
+    title: 'Data Network Specialist (Cyber Network Operator)',
+    aliases: ['2542'],
+    category: 'Communications/Cyber',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Intensive computer/network operations',
+      'Shift work',
+      'Server room environments',
+      'Cyber security stress'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel', prevalence: 'Very High', notes: 'Keyboard intensive work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'Computer posture', ecfrCode: 'DC 5237' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Prolonged sitting', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Shift work', ecfrCode: 'DC 6847' },
+      { condition: 'Migraine', prevalence: 'Moderate', notes: 'Screen time', ecfrCode: 'DC 8100' }
+    ]
+  },
+  '0844': {
+    branch: 'Marines',
+    title: 'Fire Direction Controlman',
+    aliases: [],
+    category: 'Artillery',
+    timePeriod: 'Active',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Artillery fire coordination',
+      'Close proximity to howitzer fire',
+      'Field operations',
+      'High-stress fire missions'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Artillery operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Howitzer fire', ecfrCode: 'DC 6100' },
+      { condition: 'TBI', prevalence: 'High', notes: 'Blast overpressure', ecfrCode: 'DC 8045' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Equipment carry', ecfrCode: 'DC 5237' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Fire mission stress', ecfrCode: 'DC 9413' }
+    ]
+  },
+  '0861': {
+    branch: 'Marines',
+    title: 'Fire Support Marine (Forward Observer)',
+    aliases: [],
+    category: 'Artillery',
+    timePeriod: 'Active',
+    noiseExposure: 'Very High (Tier 1)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'Forward observer position in combat',
+      'Weapons fire coordination',
+      'Heavy equipment carrying (radios, optics)',
+      'Direct exposure to enemy fire'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Combat, artillery', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Weapons fire', ecfrCode: 'DC 6100' },
+      { condition: 'PTSD', prevalence: 'High', notes: 'Front-line combat exposure', ecfrCode: 'DC 9411' },
+      { condition: 'Lumbar Strain', prevalence: 'Very High', notes: 'Equipment carry', ecfrCode: 'DC 5237' },
+      { condition: 'Knee Injuries', prevalence: 'High', notes: 'Terrain navigation', ecfrCode: 'DC 5260/5261' }
+    ]
+  },
+  '2611': {
+    branch: 'Marines',
+    title: 'Cryptologic Digital Network Tech/Analyst',
+    aliases: ['2651'],
+    category: 'Intelligence/Cyber',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Cryptologic operations',
+      'Network monitoring',
+      'Classified information handling',
+      'Shift work'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Computer operations', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Workstation posture', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Shift work', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Classified operations', ecfrCode: 'DC 9413' }
+    ]
+  },
+  '2631': {
+    branch: 'Marines',
+    title: 'Signals Intelligence Analyst',
+    aliases: ['2691'],
+    category: 'Intelligence',
+    timePeriod: 'Active',
+    noiseExposure: 'Low-Moderate (Headset)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Extended headset monitoring',
+      'Signal analysis',
+      'Shift work',
+      'Intelligence operations stress'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Headset monitoring', ecfrCode: 'DC 6260' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Transcription, keyboard work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Workstation posture', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Shift work', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Intelligence operations', ecfrCode: 'DC 9413' }
     ]
   },
 
@@ -3694,6 +4349,81 @@ export const MOS_DATABASE = {
       { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Intelligence stress', ecfrCode: 'DC 9413' }
     ]
   },
+  '35N': {
+    branch: 'Army',
+    title: 'Signals Intelligence Analyst',
+    aliases: ['98C'],
+    category: 'Intelligence',
+    timePeriod: 'Active',
+    noiseExposure: 'Low (Tier 3)',
+    physicalDemand: 'Light',
+    hazards: [
+      'Intensive signal analysis on screens',
+      'Shift work (24/7 SIGINT operations)',
+      'Classified information stress',
+      'Headset use for signal monitoring',
+      'High-pressure intelligence deadlines'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Signal analysis, transcription', ecfrCode: 'DC 8515' },
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Headset monitoring', ecfrCode: 'DC 6260' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'Workstation posture', ecfrCode: 'DC 5237' },
+      { condition: 'Vision Problems', prevalence: 'High', notes: 'Screen analysis', ecfrCode: 'DC 6066' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Rotating shifts', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Intelligence operations stress', ecfrCode: 'DC 9413' },
+      { condition: 'Migraine/Headaches', prevalence: 'Moderate', notes: 'Screen time, stress', ecfrCode: 'DC 8100' }
+    ]
+  },
+  '35T': {
+    branch: 'Army',
+    title: 'Military Intelligence Systems Maintainer/Integrator',
+    aliases: ['33W'],
+    category: 'Intelligence',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Electronic equipment maintenance',
+      'Soldering and fine motor work',
+      'Generator noise exposure (field)',
+      'Classified facility work',
+      'Awkward positions in equipment bays'
+    ],
+    commonConditions: [
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine electronic work', ecfrCode: 'DC 8515' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Equipment maintenance postures', ecfrCode: 'DC 5237' },
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Generator/equipment noise in field', ecfrCode: 'DC 6260' },
+      { condition: 'Respiratory Issues', prevalence: 'Low-Moderate', notes: 'Soldering fumes', ecfrCode: 'DC 6600' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Fine detail work', ecfrCode: 'DC 6066' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Equipment lifting, awkward positions', ecfrCode: 'DC 5237' }
+    ]
+  },
+  '35S': {
+    branch: 'Army',
+    title: 'Signals Collector/Analyst (SIGINT)',
+    aliases: ['98H', '98J', '96R'],
+    category: 'Intelligence',
+    timePeriod: 'Active',
+    noiseExposure: 'Moderate (Tier 2) - Headset',
+    physicalDemand: 'Light',
+    hazards: [
+      'Extended headset use with high-frequency tones (Morse code)',
+      'Repetitive audio signals causing auditory fatigue',
+      'Shift work (24/7 SIGINT operations)',
+      'Classified information stress',
+      'Intensive listening concentration',
+      'Screen monitoring fatigue'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Morse code high-frequency tones cause different damage pattern than voice - sustained beeping frequencies', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'High', notes: 'Extended headset use, specific frequency damage from CW/Morse signals', ecfrCode: 'DC 6100' },
+      { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Signal transcription, keyboard work', ecfrCode: 'DC 8515' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Rotating shifts, 24/7 operations', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'High-stakes intelligence collection', ecfrCode: 'DC 9413' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Workstation posture, headset weight', ecfrCode: 'DC 5237' },
+      { condition: 'Migraine/Headaches', prevalence: 'Moderate', notes: 'Audio-induced from sustained high-frequency tones', ecfrCode: 'DC 8100' }
+    ]
+  },
   '91A': {
     branch: 'Army',
     title: 'M1 Abrams Tank System Maintainer',
@@ -3753,6 +4483,102 @@ export const MOS_DATABASE = {
       { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Weapons testing', ecfrCode: 'DC 6100' },
       { condition: 'Carpal Tunnel', prevalence: 'High', notes: 'Fine work', ecfrCode: 'DC 8515' },
       { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Solvents', ecfrCode: 'DC 6600' }
+    ]
+  },
+  '91C': {
+    branch: 'Army',
+    title: 'Utilities Equipment Repairer',
+    aliases: ['52C'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Generator and HVAC equipment repair',
+      'Electrical hazards',
+      'Refrigerant exposure',
+      'Heavy equipment lifting',
+      'Confined space work'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Generator/equipment noise', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Power equipment operation', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Heavy equipment lifting, awkward positions', ecfrCode: 'DC 5237' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Refrigerant, fumes exposure', ecfrCode: 'DC 6600' },
+      { condition: 'Electrical Burns', prevalence: 'Low-Moderate', notes: 'High voltage equipment', ecfrCode: 'DC 7801' },
+      { condition: 'Carpal Tunnel', prevalence: 'Moderate', notes: 'Tool use, wiring work', ecfrCode: 'DC 8515' }
+    ]
+  },
+  '91L': {
+    branch: 'Army',
+    title: 'Construction Equipment Repairer',
+    aliases: ['63D'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'Heavy construction equipment (bulldozers, graders, scrapers)',
+      'Diesel engine noise and fumes',
+      'Hydraulic system hazards',
+      'Heavy component lifting',
+      'Working under raised equipment'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Diesel engines, heavy equipment', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Construction equipment noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain / DDD', prevalence: 'Very High', notes: 'Heavy lifting, awkward positions', ecfrCode: 'DC 5237/5243' },
+      { condition: 'Shoulder Injuries', prevalence: 'High', notes: 'Overhead work, heavy parts', ecfrCode: 'DC 5201' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Diesel fumes, dust', ecfrCode: 'DC 6600' },
+      { condition: 'Knee Injuries', prevalence: 'High', notes: 'Kneeling on hard surfaces', ecfrCode: 'DC 5260/5261' }
+    ]
+  },
+  '91M': {
+    branch: 'Army',
+    title: 'Bradley Fighting Vehicle System Maintainer',
+    aliases: ['63E', '63M'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'Bradley IFV maintenance and repair',
+      'Track vehicle operations noise',
+      'Turret and weapons system work',
+      'Heavy component handling',
+      'Confined space work inside vehicle'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Bradley engine and operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Armored vehicle noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Very High', notes: 'Heavy track/component lifting', ecfrCode: 'DC 5237' },
+      { condition: 'Shoulder Injuries', prevalence: 'High', notes: 'Turret work, overhead lifting', ecfrCode: 'DC 5201' },
+      { condition: 'Knee Injuries', prevalence: 'High', notes: 'Confined space, kneeling', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Working in cramped vehicle spaces', ecfrCode: 'DC 5237' }
+    ]
+  },
+  '91P': {
+    branch: 'Army',
+    title: 'Artillery Mechanic',
+    aliases: ['63J', '45L'],
+    category: 'Maintenance',
+    timePeriod: 'Active',
+    noiseExposure: 'Very High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Self-propelled artillery (Paladin, MLRS) maintenance',
+      'Howitzer repair and test firing',
+      'Heavy barrel and breech handling',
+      'Hydraulic recoil systems',
+      'Propellant residue exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Artillery test firing, maintenance', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Howitzer/MLRS operations', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Very High', notes: 'Heavy gun components', ecfrCode: 'DC 5237' },
+      { condition: 'Shoulder Injuries', prevalence: 'High', notes: 'Barrel handling, overhead work', ecfrCode: 'DC 5201' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Propellant residue, hydraulic fluids', ecfrCode: 'DC 6600' },
+      { condition: 'Carpal Tunnel', prevalence: 'Moderate', notes: 'Fine adjustment work', ecfrCode: 'DC 8515' }
     ]
   },
 

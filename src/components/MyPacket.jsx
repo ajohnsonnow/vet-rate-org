@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+/**
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -391,7 +391,7 @@ Return ONLY the JSON object, no explanation.`,
     const veteranProfile = getVeteranProfile();
     const forms = getSavedForms();
     const exportData = exportCompletePacket(claims, statements, veteranProfile, forms);
-    downloadPacketBackup(exportData, `vet-rate-complete-backup-${new Date().toISOString().split('T')[0]}.json`);
+    downloadPacketBackup(exportData, `SupplyLocker-complete-backup-${new Date().toISOString().split('T')[0]}.json`);
     setImportStatus({ type: 'success', message: `Complete backup created with ${claims.length} claims, ${forms.length} forms, and your profile` });
     setBackupCreated(true);
     setTimeout(() => setImportStatus(null), 4000);
@@ -720,7 +720,7 @@ Return ONLY the JSON object, no explanation.`,
           <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6 rounded-t-lg flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h2 id="my-packet-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">📁 {t('myPacketSection.title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+                <h2 id="my-packet-title" className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">?? {t('myPacketSection.title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                 <p className="text-indigo-100 text-sm sm:text-base">
                   {t('myPacketSection.manageDescription')}
                 </p>
@@ -749,19 +749,19 @@ Return ONLY the JSON object, no explanation.`,
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">📊 {t('myPacketSection.total')}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">?? {t('myPacketSection.total')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.drafting}</div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">✏️ {t('myPacketSection.statusDrafting')}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">?? {t('myPacketSection.statusDrafting')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.statementGenerated}</div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">✅ {t('myPacketSection.ready')}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">? {t('myPacketSection.ready')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">{stats.filed}</div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">🏆 {t('myPacketSection.statusFiled')}</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">?? {t('myPacketSection.statusFiled')}</div>
             </div>
           </div>
 
@@ -803,7 +803,7 @@ Return ONLY the JSON object, no explanation.`,
                   onClick={onAnalyzeStrategy}
                   className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
                 >
-                  <span>🧭</span>
+                  <span>??</span>
                   {t('myPacketSection.analyzeStrategy')}
                 </button>
               )}
@@ -817,7 +817,7 @@ Return ONLY the JSON object, no explanation.`,
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-right">
-              💡 {t('myPacketSection.cloudBackupTip')}
+              ?? {t('myPacketSection.cloudBackupTip')}
             </p>
           </div>
 
@@ -851,7 +851,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                📋 <span className="hidden sm:inline">{t('myPacketSection.claims')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.claims')}</span>
                 <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-1.5 py-0.5 rounded-full">{claims.length}</span>
               </button>
               
@@ -863,7 +863,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                📊 <span className="hidden sm:inline">{t('myPacketSection.ratings')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.ratings')}</span>
                 <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">{myRatings.length}</span>
               </button>
               
@@ -878,7 +878,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                🎖️ <span className="hidden sm:inline">{t('myPacketSection.service')}</span>
+                ??? <span className="hidden sm:inline">{t('myPacketSection.service')}</span>
                 <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">{serviceHistory.deployments.length + serviceHistory.awards.length}</span>
               </button>
               
@@ -890,7 +890,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                🧵 <span className="hidden sm:inline">{t('myPacketSection.timeline')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.timeline')}</span>
                 <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">{timelineEvents.length}</span>
               </button>
               
@@ -905,7 +905,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                🎨 <span className="hidden sm:inline">{t('myPacketSection.painMaps')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.painMaps')}</span>
                 <span className="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">{painMaps.length}</span>
               </button>
               
@@ -917,7 +917,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                ✍️ <span className="hidden sm:inline">{t('myPacketSection.profile')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.profile')}</span>
               </button>
               
               <button
@@ -928,7 +928,7 @@ Return ONLY the JSON object, no explanation.`,
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                 }`}
               >
-                📄 <span className="hidden sm:inline">{t('myPacketSection.forms')}</span>
+                ?? <span className="hidden sm:inline">{t('myPacketSection.forms')}</span>
                 <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">{savedForms.length}</span>
               </button>
             </nav>
@@ -943,7 +943,7 @@ Return ONLY the JSON object, no explanation.`,
                     <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📊 {t('myPacketSection.noSavedRatings')}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">?? {t('myPacketSection.noSavedRatings')}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                       {t('myPacketSection.importRatingsDescription')}
                     </p>
@@ -1060,7 +1060,7 @@ Return ONLY the JSON object, no explanation.`,
               <>
                 <div className="mb-6">
                   <div className="flex items-start gap-3 mb-4">
-                    <span className="text-3xl">✍️</span>
+                    <span className="text-3xl">??</span>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('myPacketSection.veteranProfile')}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -1089,7 +1089,7 @@ Return ONLY the JSON object, no explanation.`,
                   {/* Personal Information Section */}
                   <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
                     <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                      👤 {t('myPacketSection.personalInformation')}
+                      ?? {t('myPacketSection.personalInformation')}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -1159,7 +1159,7 @@ Return ONLY the JSON object, no explanation.`,
                   {/* Contact Information Section */}
                   <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
                     <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                      📞 {t('myPacketSection.contactInformation')}
+                      ?? {t('myPacketSection.contactInformation')}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
@@ -1241,7 +1241,7 @@ Return ONLY the JSON object, no explanation.`,
                   <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        🎖️ {t('myPacketSection.servicePeriods')}
+                        ??? {t('myPacketSection.servicePeriods')}
                       </h4>
                       <button
                         onClick={() => {
@@ -1289,7 +1289,7 @@ Return ONLY the JSON object, no explanation.`,
                                 }}
                                 className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold"
                               >
-                                🗑️ {t('myPacketSection.remove')}
+                                ??? {t('myPacketSection.remove')}
                               </button>
                             </div>
                             
@@ -1445,11 +1445,11 @@ Return ONLY the JSON object, no explanation.`,
                     <button
                       onClick={() => {
                         localStorage.setItem('vet_rate_veteran_profile', JSON.stringify(veteranProfile));
-                        alert(`✅ ${t('myPacketSection.profileSaved')}`);
+                        alert(`? ${t('myPacketSection.profileSaved')}`);
                       }}
                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
                     >
-                      💾 {t('myPacketSection.saveProfile')}
+                      ?? {t('myPacketSection.saveProfile')}
                     </button>
                   </div>
                 </div>
@@ -1464,7 +1464,7 @@ Return ONLY the JSON object, no explanation.`,
                     <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📄 {t('myPacketSection.noSavedForms')}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">?? {t('myPacketSection.noSavedForms')}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                       {t('myPacketSection.formsDescription')}
                     </p>
@@ -1493,7 +1493,7 @@ Return ONLY the JSON object, no explanation.`,
                             
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               {t('myPacketSection.saved')}: {new Date(form.dateSaved).toLocaleDateString()}
-                              {form.dateUpdated && ` • ${t('myPacketSection.updated')}: ${new Date(form.dateUpdated).toLocaleDateString()}`}
+                              {form.dateUpdated && ` � ${t('myPacketSection.updated')}: ${new Date(form.dateUpdated).toLocaleDateString()}`}
                             </p>
                           </div>
 
@@ -1526,7 +1526,7 @@ Return ONLY the JSON object, no explanation.`,
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                      📜 {t('myPacketSection.dd214Information')}
+                      ?? {t('myPacketSection.dd214Information')}
                       {aiStatus.available && <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{t('myPacketSection.aiReady')}</span>}
                     </h3>
                     {!showDD214Processor && !serviceHistory.dd214Data && (
@@ -1535,14 +1535,14 @@ Return ONLY the JSON object, no explanation.`,
                           onClick={() => setShowDD214Processor(true)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                         >
-                          📝 {t('myPacketSection.pasteText')}
+                          ?? {t('myPacketSection.pasteText')}
                         </button>
                         <button
                           disabled
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
                           title="DD214 Analyzer - Coming Soon"
                         >
-                          📄 {t('myPacketSection.fullAnalyzerComingSoon')}
+                          ?? {t('myPacketSection.fullAnalyzerComingSoon')}
                         </button>
                       </div>
                     )}
@@ -1574,13 +1574,13 @@ Return ONLY the JSON object, no explanation.`,
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <p className="text-blue-700 dark:text-blue-300 font-medium mb-1">
-                          {isDraggingDD214 ? `📥 ${t('myPacketSection.dropDD214Here')}` : `📄 ${t('myPacketSection.dragDropDD214')}`}
+                          {isDraggingDD214 ? `?? ${t('myPacketSection.dropDD214Here')}` : `?? ${t('myPacketSection.dragDropDD214')}`}
                         </p>
                         <p className="text-sm text-blue-600 dark:text-blue-400">
                           {t('myPacketSection.orClickToBrowse')}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
-                          🔒 {t('myPacketSection.dd214PrivacyNote')}
+                          ?? {t('myPacketSection.dd214PrivacyNote')}
                         </p>
                       </div>
                       
@@ -1600,7 +1600,7 @@ Return ONLY the JSON object, no explanation.`,
                     <div className="space-y-4">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
                         {t('myPacketSection.dd214PasteInstructions')}
-                        <br/><span className="text-xs text-blue-600 dark:text-blue-400">⚠️ {t('myPacketSection.dd214SensitiveWarning')}</span>
+                        <br/><span className="text-xs text-blue-600 dark:text-blue-400">?? {t('myPacketSection.dd214SensitiveWarning')}</span>
                       </p>
                       <textarea
                         value={dd214Text}
@@ -1621,7 +1621,7 @@ Return ONLY the JSON object, no explanation.`,
                               {t('myPacketSection.processing')}
                             </>
                           ) : (
-                            <>🤖 {t('myPacketSection.extractWithAI')}</>
+                            <>?? {t('myPacketSection.extractWithAI')}</>
                           )}
                         </button>
                         <button
@@ -1629,14 +1629,14 @@ Return ONLY the JSON object, no explanation.`,
                           className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
                           title="DD214 Analyzer - Coming Soon"
                         >
-                          📄 {t('myPacketSection.fullAnalyzerComingSoon')}
+                          ?? {t('myPacketSection.fullAnalyzerComingSoon')}
                         </button>
                         <button
                           onClick={onOpenAISettings}
                           className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                           title="Open Faraday Cage - AI Settings"
                         >
-                          ⚙️ {t('myPacketSection.aiSettings')}
+                          ?? {t('myPacketSection.aiSettings')}
                         </button>
                         <button
                           onClick={() => { setShowDD214Processor(false); setDD214Text(''); }}
@@ -1647,7 +1647,7 @@ Return ONLY the JSON object, no explanation.`,
                       </div>
                       {!aiStatus.available && (
                         <p className="text-xs text-amber-600 dark:text-amber-400">
-                          ⚠️ {t('myPacketSection.configureAIWarning')}
+                          ?? {t('myPacketSection.configureAIWarning')}
                         </p>
                       )}
                     </div>
@@ -1696,20 +1696,20 @@ Return ONLY the JSON object, no explanation.`,
                           onClick={() => setShowDD214Processor(true)}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          🔄 {t('myPacketSection.reprocessDD214')}
+                          ?? {t('myPacketSection.reprocessDD214')}
                         </button>
                         <button
                           disabled
                           className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
                           title="Coming Soon"
                         >
-                          📄 {t('myPacketSection.fullAnalyzerComingSoon')}
+                          ?? {t('myPacketSection.fullAnalyzerComingSoon')}
                         </button>
                         <button
                           onClick={handleClearDD214}
                           className="text-sm text-red-600 dark:text-red-400 hover:underline"
                         >
-                          🗑️ {t('myPacketSection.clearDD214Data')}
+                          ??? {t('myPacketSection.clearDD214Data')}
                         </button>
                       </div>
                     </div>
@@ -1720,14 +1720,14 @@ Return ONLY the JSON object, no explanation.`,
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      🌍 {t('myPacketSection.deployments')}
+                      ?? {t('myPacketSection.deployments')}
                     </h3>
                     {!showDeploymentForm && (
                       <button
                         onClick={() => setShowDeploymentForm(true)}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
                       >
-                        ➕ {t('myPacketSection.addDeployment')}
+                        ? {t('myPacketSection.addDeployment')}
                       </button>
                     )}
                   </div>
@@ -1859,7 +1859,7 @@ Return ONLY the JSON object, no explanation.`,
                             onClick={() => handleRemoveDeployment(dep.id)}
                             className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
                           >
-                            🗑️
+                            ???
                           </button>
                         </div>
                       ))}
@@ -1871,14 +1871,14 @@ Return ONLY the JSON object, no explanation.`,
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      🎖️ {t('myPacketSection.awardsDecorations')}
+                      ??? {t('myPacketSection.awardsDecorations')}
                     </h3>
                     {!showAwardForm && (
                       <button
                         onClick={() => setShowAwardForm(true)}
                         className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
                       >
-                        ➕ {t('myPacketSection.addAward')}
+                        ? {t('myPacketSection.addAward')}
                       </button>
                     )}
                   </div>
@@ -1951,7 +1951,7 @@ Return ONLY the JSON object, no explanation.`,
                       {serviceHistory.awards.map(award => (
                         <div key={award.id} className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg">
                           <span className="text-amber-700 dark:text-amber-300 font-medium">
-                            🎖️ {award.abbreviation || award.name}
+                            ??? {award.abbreviation || award.name}
                           </span>
                           {award.isCombat && <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">{t('myPacketSection.combat')}</span>}
                           <button
@@ -1959,7 +1959,7 @@ Return ONLY the JSON object, no explanation.`,
                             className="text-red-400 hover:text-red-600 text-sm"
                             title={`Remove ${award.name}`}
                           >
-                            ×
+                            �
                           </button>
                         </div>
                       ))}
@@ -1970,7 +1970,7 @@ Return ONLY the JSON object, no explanation.`,
                 {/* Info Banner */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    💡 <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.serviceHistoryBannerText')}
+                    ?? <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.serviceHistoryBannerText')}
                   </p>
                 </div>
               </div>
@@ -1984,7 +1984,7 @@ Return ONLY the JSON object, no explanation.`,
                     <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">📂 {t('myPacketSection.noSavedClaims')}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">?? {t('myPacketSection.noSavedClaims')}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                       {t('myPacketSection.claimsDescription')}
                     </p>
@@ -2031,7 +2031,7 @@ Return ONLY the JSON object, no explanation.`,
                           
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {t('myPacketSection.saved')}: {new Date(claim.dateSaved).toLocaleDateString()}
-                            {claim.dateUpdated && ` • ${t('myPacketSection.updated')}: ${new Date(claim.dateUpdated).toLocaleDateString()}`}
+                            {claim.dateUpdated && ` � ${t('myPacketSection.updated')}: ${new Date(claim.dateUpdated).toLocaleDateString()}`}
                           </p>
                         </div>
 
@@ -2148,7 +2148,7 @@ Return ONLY the JSON object, no explanation.`,
                     <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">🧵 {t('myPacketSection.noTimelineEvents')}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">?? {t('myPacketSection.noTimelineEvents')}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
                       {t('myPacketSection.timelineDescription')}
                     </p>
@@ -2246,7 +2246,7 @@ Return ONLY the JSON object, no explanation.`,
                     {/* Info Banner */}
                     <div className="mt-6 bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                       <p className="text-sm text-slate-700 dark:text-slate-300">
-                        💡 <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.timelineBannerText')}
+                        ?? <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.timelineBannerText')}
                       </p>
                     </div>
                   </>
@@ -2262,7 +2262,7 @@ Return ONLY the JSON object, no explanation.`,
                     <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">🎨 {t('myPacketSection.noPainMapsSaved')}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">?? {t('myPacketSection.noPainMapsSaved')}</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
                       {t('myPacketSection.painMapsDescription')}
                     </p>
@@ -2308,7 +2308,7 @@ Return ONLY the JSON object, no explanation.`,
                               <img src={map.thumbnail} alt={map.name} className="w-full h-full object-contain" />
                             ) : (
                               <div className="text-center p-4">
-                                <span className="text-4xl">🎨</span>
+                                <span className="text-4xl">??</span>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{map.painPoints?.length || 0} {t('myPacketSection.painPoints')}</p>
                               </div>
                             )}
@@ -2358,7 +2358,7 @@ Return ONLY the JSON object, no explanation.`,
                     {/* Info Banner */}
                     <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                       <p className="text-sm text-red-700 dark:text-red-300">
-                        💡 <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.painMapsBannerText')}
+                        ?? <strong>{t('myPacketSection.whyTrackThis')}</strong> {t('myPacketSection.painMapsBannerText')}
                       </p>
                     </div>
                   </>
@@ -2396,7 +2396,7 @@ Return ONLY the JSON object, no explanation.`,
                             <img src={viewingPainMap.thumbnail} alt="Pain Map" className="max-w-full max-h-[400px] object-contain" />
                           ) : (
                             <div className="text-center py-12">
-                              <span className="text-6xl">🎨</span>
+                              <span className="text-6xl">??</span>
                               <p className="text-gray-500 dark:text-gray-400 mt-2">{t('myPacketSection.noPreviewAvailable')}</p>
                             </div>
                           )}
@@ -2602,17 +2602,17 @@ Return ONLY the JSON object, no explanation.`,
               aria-labelledby="import-confirm-title"
             >
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-lg">
-                <h3 id="import-confirm-title" className="text-xl font-bold">📥 {t('myPacketSection.confirmImport')}</h3>
+                <h3 id="import-confirm-title" className="text-xl font-bold">?? {t('myPacketSection.confirmImport')}</h3>
               </div>
               
               <div className="p-6">
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('myPacketSection.backupDetails')}:</p>
                   <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
-                    <li>• <strong>{showImportConfirm.meta.claimCount}</strong> {t('myPacketSection.claimsFound')}</li>
-                    <li>• <strong>{showImportConfirm.meta.statementCount}</strong> {t('myPacketSection.statementsFound')}</li>
+                    <li>� <strong>{showImportConfirm.meta.claimCount}</strong> {t('myPacketSection.claimsFound')}</li>
+                    <li>� <strong>{showImportConfirm.meta.statementCount}</strong> {t('myPacketSection.statementsFound')}</li>
                     {showImportConfirm.meta.exportDate && (
-                      <li>• {t('myPacketSection.backupDate')}: {new Date(showImportConfirm.meta.exportDate).toLocaleDateString()}</li>
+                      <li>� {t('myPacketSection.backupDate')}: {new Date(showImportConfirm.meta.exportDate).toLocaleDateString()}</li>
                     )}
                   </ul>
                 </div>
@@ -2649,7 +2649,7 @@ Return ONLY the JSON object, no explanation.`,
                 </div>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                  ⚠️ {t('myPacketSection.replaceAllWarning')}
+                  ?? {t('myPacketSection.replaceAllWarning')}
                 </p>
               </div>
             </div>

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Feature Request Storage
+ * SupplyLocker.org - Feature Request Storage
  * Persistent storage for feature requests using IndexedDB
  * 
  * Uses the same architecture as bugReportStorage for consistency.

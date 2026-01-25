@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -348,7 +348,7 @@ export default function BackupManager({ onClose }) {
                 <li>🌐 <strong>Works Offline:</strong> Opens in any browser without internet</li>
                 <li>🏛️ <strong>VSO Ready:</strong> Share with your Veterans Service Officer</li>
                 <li>♿ <strong>Printable:</strong> Print directly from your browser</li>
-                <li>🔒 <strong>You Own It:</strong> Your data, independent of Vet-Rate</li>
+                <li>🔒 <strong>You Own It:</strong> Your data, independent of SupplyLocker</li>
               </ul>
             </div>
           </div>

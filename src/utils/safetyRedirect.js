@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Safety Redirect ("Panic Key")
+ * SupplyLocker.org - Safety Redirect ("Panic Key")
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

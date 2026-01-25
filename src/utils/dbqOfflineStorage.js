@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -9,7 +9,7 @@
  * Enables offline access to all Disability Benefits Questionnaires
  */
 
-const DB_NAME = 'vet-rate-dbq-cache';
+const DB_NAME = 'SupplyLocker-dbq-cache';
 const DB_VERSION = 1;
 const STORE_PDFS = 'dbq-pdfs';
 const STORE_METADATA = 'dbq-metadata';

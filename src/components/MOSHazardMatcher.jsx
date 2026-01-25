@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - MOS Hazard Matcher
+ * SupplyLocker.org - MOS Hazard Matcher
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -1028,7 +1028,7 @@ export default function MOSHazardMatcher({ onClose, onAddToPathfinder, onReportB
                 <div className="flex items-center gap-4">
                   <img 
                     src="/images/Anth.jpg" 
-                    alt="Anthony - Vet-Rate Developer"
+                    alt="Anthony - SupplyLocker Developer"
                     className="w-14 h-14 rounded-full object-cover border-2 border-slate-500 shadow-lg flex-shrink-0"
                   />
                   <div className="flex-1">

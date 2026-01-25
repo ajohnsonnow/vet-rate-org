@@ -1,7 +1,7 @@
 /**
- * Vet-Rate.org - PWA Install Button
+ * SupplyLocker.org - PWA Install Button
  * 
- * Allows users to install Vet-Rate as a native-feeling app on their device.
+ * Allows users to install SupplyLocker as a native-feeling app on their device.
  * Shows up only when the browser supports installation.
  * 
  * Built by a fellow veteran. "Your field manual, always accessible."
@@ -119,7 +119,7 @@ const PWAInstallButton = ({ className = '' }) => {
           
           <div className="space-y-4">
             <p className="text-sm text-gray-700">
-              To install Vet-Rate.org on your iPhone or iPad:
+              To install SupplyLocker.org on your iPhone or iPad:
             </p>
             
             <ol className="space-y-3 text-sm text-gray-800">
@@ -165,7 +165,7 @@ const PWAInstallButton = ({ className = '' }) => {
             <div className="flex items-start gap-3 pr-6">
               <Smartphone className="w-8 h-8 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h4 className="font-bold text-lg mb-1">Install Vet-Rate</h4>
+                <h4 className="font-bold text-lg mb-1">Install SupplyLocker</h4>
                 <p className="text-sm text-blue-100 mb-3">
                   Access your field manual offline. Works without internet.
                 </p>
@@ -194,7 +194,7 @@ const PWAInstallButton = ({ className = '' }) => {
             <div className="pr-8">
               <div className="flex items-center gap-2 mb-2">
                 <Smartphone className="w-6 h-6" />
-                <h4 className="font-bold">Install Vet-Rate</h4>
+                <h4 className="font-bold">Install SupplyLocker</h4>
               </div>
               <p className="text-sm text-blue-100 mb-3">
                 Add to your home screen for offline access

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - VA Combined Rating Calculator Tests
+ * SupplyLocker.org - VA Combined Rating Calculator Tests
  * 
  * These tests prove mathematical accuracy of our calculator
  * against official VA examples from 38 CFR Part 4

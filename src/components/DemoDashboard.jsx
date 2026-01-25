@@ -729,7 +729,7 @@ const DemoDashboard = ({ onClose }) => {
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
             <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
               <p>
-                Vet-Rate.org • VA.gov API Integration v1.0
+                SupplyLocker.org • VA.gov API Integration v1.0
               </p>
               <p className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-green-500" />

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate AI Assistant Component
+ * SupplyLocker AI Assistant Component
  * 💎 DIAMOND Knowledge Base (DKB) - Official sources only
  * CKB (Community) is separate and NOT used for AI responses
  * RAG-based VA claims assistance with official sources only
@@ -47,7 +47,7 @@ const VetRateAIAssistant = ({ isOpen, onClose }) => {
     if (isReady && messages.length === 0) {
       setMessages([{
         type: 'assistant',
-        content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** with ${knowledgeCount.toLocaleString()} official entries.
+        content: `Welcome to the SupplyLocker AI Assistant! 💎 **Diamond Knowledge Base (DKB)** with ${knowledgeCount.toLocaleString()} official entries.
 
 **Official Sources Include:**
 • 🔴 **38 CFR Part 4** - Rating Schedule (1,070 entries)
@@ -139,7 +139,7 @@ How can I help you today?`,
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                Vet-Rate AI
+                SupplyLocker AI
                 {isDiamond && (
                   <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 rounded-full text-cyan-400 flex items-center gap-1">
                     <Gem className="w-3 h-3" />

@@ -1,0 +1,226 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "purpose": "Adversarial simulation protocols to stress-test VA claims before submission",
+    "philosophy": "Find weaknesses before the VA does",
+    "last_updated": "2026-01"
+  },
+  "scenarios": {
+    "NEXUS_WEAKNESS": {
+      "id": "DENIAL_CODE_104",
+      "category": "Medical Evidence",
+      "trigger_phrases": ["could be", "possibly", "might have", "may be related", "perhaps", "uncertain"],
+      "severity": "Critical",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Speculative Medical Opinion",
+        "rationale": "The medical opinion uses speculative language ('could be', 'possibly') instead of meeting the VA's evidentiary standard of 'at least as likely as not' (>50% probability).",
+        "fix_action": "Request provider to amend statement to use probability-based language: 'It is at least as likely as not that...' or 'More likely than not...'",
+        "interrogation_questions": [
+          "Dr. X says it 'might' be related. Why is there no definitive medical link?",
+          "Are there other non-service causes for this condition that are equally or more likely?",
+          "If the doctor is uncertain, how can the VA be certain?"
+        ]
+      }
+    },
+    "MISSING_DIAGNOSIS": {
+      "id": "DENIAL_CODE_NO_DX",
+      "category": "Medical Evidence",
+      "trigger_phrases": ["pain in", "soreness", "discomfort", "ache"],
+      "missing_keywords": ["diagnosis", "disorder", "syndrome", "disease", "condition (diagnosed)"],
+      "severity": "Critical",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "No Current Diagnosis",
+        "rationale": "Claimant lists symptoms (pain, soreness) but has not provided evidence of a current medical diagnosis. The VA cannot rate symptoms alone; they require a diagnosed condition.",
+        "fix_action": "Obtain formal diagnosis from healthcare provider. Upload current problem list or diagnostic report.",
+        "interrogation_questions": [
+          "What is the specific medical diagnosis (ICD-10 code)?",
+          "How do we know this isn't just normal aging or pre-existing condition?",
+          "Where is the diagnostic evidence from a qualified medical professional?"
+        ]
+      }
+    },
+    "NO_IN_SERVICE_EVIDENCE": {
+      "id": "DENIAL_CODE_NO_STR",
+      "category": "Service Connection",
+      "trigger_phrases": ["started after discharge", "began in civilian life", "noticed after service"],
+      "missing_keywords": ["service treatment record", "STR", "in-service diagnosis", "documented during service"],
+      "severity": "Critical",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "No In-Service Incurrence",
+        "rationale": "Claimant states condition began after discharge. Without evidence of in-service incurrence or a nexus linking post-service onset to in-service events, service connection cannot be established.",
+        "fix_action": "Obtain nexus statement from provider linking current condition to in-service events. OR search service medical records for documented symptoms/treatment during service.",
+        "interrogation_questions": [
+          "If this started after service, how is it service-connected?",
+          "Where is the evidence of in-service treatment or diagnosis?",
+          "What specific in-service event caused this condition?"
+        ]
+      }
+    },
+    "WEAK_STRESSOR": {
+      "id": "DENIAL_CODE_STRESSOR",
+      "category": "PTSD Claims",
+      "trigger_phrases": ["was stressful", "hard time", "difficult experience"],
+      "missing_keywords": ["life-threatening", "death", "serious injury", "sexual trauma", "combat"],
+      "severity": "High",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Stressor Does Not Meet Criterion A",
+        "rationale": "For PTSD diagnosis, the stressor must meet DSM-5 Criterion A (exposure to actual or threatened death, serious injury, or sexual violence). 'Stressful' work environments or general military hardships do not qualify.",
+        "fix_action": "Identify specific Criterion A stressor events. If none exist, consider alternative diagnoses (Adjustment Disorder, Anxiety Disorder).",
+        "interrogation_questions": [
+          "What specific life-threatening event occurred?",
+          "How does 'stressful work' meet the DSM-5 definition of trauma?",
+          "Did the psychologist verify this meets Criterion A requirements?"
+        ]
+      }
+    },
+    "SECONDARY_WITHOUT_PRIMARY": {
+      "id": "DENIAL_CODE_SEC_NO_PRI",
+      "category": "Secondary Claims",
+      "trigger_phrases": ["caused by my", "secondary to"],
+      "missing_keywords": ["service-connected primary condition", "rated condition"],
+      "severity": "Critical",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Primary Condition Not Service-Connected",
+        "rationale": "Claimant argues Condition B is secondary to Condition A, but Condition A is not service-connected. Secondary conditions require an established, rated primary condition.",
+        "fix_action": "First establish service connection for the primary condition. Then file for secondary condition.",
+        "interrogation_questions": [
+          "What is the VA rating decision number for the primary condition?",
+          "If the primary condition isn't service-connected, how can the secondary be?",
+          "Why should we grant a secondary claim when the foundation doesn't exist?"
+        ]
+      }
+    },
+    "AGGRAVATION_NO_BASELINE": {
+      "id": "DENIAL_CODE_AGG_NO_BASE",
+      "category": "Aggravation Claims",
+      "trigger_phrases": ["made worse by service", "aggravated by", "service worsened"],
+      "missing_keywords": ["pre-service diagnosis", "entrance examination", "baseline severity"],
+      "severity": "High",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "No Pre-Service Baseline Established",
+        "rationale": "Claimant argues service permanently aggravated a pre-existing condition, but has not provided evidence of the condition's severity BEFORE service. Without a baseline, we cannot determine if permanent aggravation occurred.",
+        "fix_action": "Obtain pre-service medical records or entrance examination documentation showing baseline condition. Provide current medical opinion comparing pre-service vs. post-service severity.",
+        "interrogation_questions": [
+          "What evidence shows this condition existed before service?",
+          "How severe was it before service compared to now?",
+          "How do we know service caused permanent worsening vs. natural progression?"
+        ]
+      }
+    },
+    "TIME_GAP_NO_CONTINUITY": {
+      "id": "DENIAL_CODE_TIME_GAP",
+      "category": "Service Connection",
+      "trigger_phrases": ["20 years after discharge", "many years later", "decades after service"],
+      "missing_keywords": ["continuity of treatment", "consistent symptoms", "continuous manifestation"],
+      "severity": "Medium",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Large Time Gap Without Continuity of Symptomatology",
+        "rationale": "Condition manifested or was diagnosed 20+ years after discharge with no evidence of continuous symptoms or treatment. The VA presumes conditions manifest within one year of discharge unless chronic.",
+        "fix_action": "Provide evidence of continuous symptoms since discharge (buddy statements, old medical records, employment history showing limitations). OR establish a strong nexus explaining the latency period (e.g., asbestos exposure).",
+        "interrogation_questions": [
+          "If this was service-connected, why did it take 20 years to manifest?",
+          "Where is the evidence of symptoms in the years following discharge?",
+          "What medical explanation justifies this extreme latency?"
+        ]
+      }
+    },
+    "PRESUMPTIVE_OUTSIDE_ZONE": {
+      "id": "DENIAL_CODE_PACT_ZONE",
+      "category": "PACT Act Presumptives",
+      "trigger_phrases": ["respiratory issues", "presumptive condition"],
+      "missing_keywords": ["Southwest Asia", "Afghanistan", "Iraq", "burn pit registry"],
+      "severity": "High",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Service Not in PACT Act Covered Location",
+        "rationale": "Claimant argues condition is presumptive under PACT Act, but service records do not show deployment to covered locations (Southwest Asia, Afghanistan, etc.). Presumption does not apply.",
+        "fix_action": "Verify deployment locations in DD-214 Box 13 (Campaign Medals) or obtain deployment orders. If not in covered location, pursue direct service connection instead.",
+        "interrogation_questions": [
+          "Where exactly did you serve? Which base?",
+          "What evidence proves exposure in a PACT Act location?",
+          "If you weren't in a covered location, why should presumption apply?"
+        ]
+      }
+    },
+    "DBQ_INSUFFICIENT_ROM": {
+      "id": "DENIAL_CODE_DBQ_ROM",
+      "category": "Disability Rating",
+      "trigger_phrases": ["limited range of motion", "can't move well"],
+      "missing_keywords": ["goniometer measurement", "degrees", "flexion to X degrees"],
+      "severity": "Medium",
+      "simulation_output": {
+        "verdict": "RATED LOWER THAN EXPECTED",
+        "lethalWeakness": "Range of Motion Not Objectively Measured",
+        "rationale": "Claimant reports limited ROM but DBQ lacks goniometer measurements in degrees. VA will default to lowest possible rating or request additional examination.",
+        "fix_action": "Ensure DBQ includes specific ROM measurements in degrees using goniometer. Compare to 38 CFR rating schedule thresholds.",
+        "interrogation_questions": [
+          "What is the exact flexion measurement in degrees?",
+          "Was a goniometer used or is this subjective observation?",
+          "Without objective data, how can we rate higher than 10%?"
+        ]
+      }
+    },
+    "UNEMPLOYABILITY_WITH_WORK": {
+      "id": "DENIAL_CODE_TDIU_WORK",
+      "category": "TDIU Claims",
+      "trigger_phrases": ["working part-time", "doing some work", "temporary job"],
+      "missing_keywords": ["substantially gainful employment", "SGA threshold"],
+      "severity": "Critical",
+      "simulation_output": {
+        "verdict": "DENIED",
+        "lethalWeakness": "Claimant Currently Employed",
+        "rationale": "Claimant argues total unemployability but is currently working. Work above the poverty threshold is considered 'substantially gainful' and disqualifies from TDIU.",
+        "fix_action": "If employment is marginal (below SGA threshold ~$13,000/year), document earnings. If employment ended, provide termination documentation and explanation of disability-related job loss.",
+        "interrogation_questions": [
+          "If you can work part-time, why can't you work full-time?",
+          "What is your annual income from this employment?",
+          "How do we justify 'total' unemployability when you're currently employed?"
+        ]
+      }
+    }
+  },
+  "scoring_modifiers": {
+    "COMBAT_VERIFICATION_PRESENT": {
+      "description": "Combat veteran with verified stressor (DD-214 awards)",
+      "score_adjustment": +25,
+      "note": "38 USC 1154(b) provides 'benefit of the doubt' for combat veterans"
+    },
+    "BUDDY_STATEMENTS_PRESENT": {
+      "description": "Lay witness statements from fellow service members",
+      "score_adjustment": +15,
+      "note": "Corroborates veteran's account of in-service events"
+    },
+    "PRIVATE_DBQ_COMPLETE": {
+      "description": "Private DBQ submitted (not relying on VA examination)",
+      "score_adjustment": +10,
+      "note": "Controls narrative; reduces risk of hostile VA examiner"
+    },
+    "PRESUMPTIVE_CONDITION": {
+      "description": "Condition qualifies for presumptive service connection",
+      "score_adjustment": +30,
+      "note": "No nexus required; only diagnosis needed"
+    },
+    "NO_MEDICAL_RECORDS": {
+      "description": "No STRs or current treatment records provided",
+      "score_adjustment": -40,
+      "note": "Claim lacks foundational evidence"
+    },
+    "SPECULATIVE_LANGUAGE": {
+      "description": "Medical opinion uses uncertain language",
+      "score_adjustment": -35,
+      "note": "Fails VA evidentiary standard"
+    },
+    "WILLFUL_MISCONDUCT": {
+      "description": "Condition potentially related to willful misconduct (drugs/alcohol)",
+      "score_adjustment": -50,
+      "note": "38 CFR 3.301 bars benefits for willful misconduct"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - System Capability Check
+ * SupplyLocker.org - System Capability Check
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -180,7 +180,7 @@ export function renderBrowserWarning(results) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browser Update Required - Vet-Rate.org</title>
+  <title>Browser Update Required - SupplyLocker.org</title>
   <style>
     * {
       margin: 0;
@@ -364,7 +364,7 @@ export function renderBrowserWarning(results) {
   <div class="container">
     <div class="icon-shield">🛡️</div>
     <h1>Browser Update Required</h1>
-    <p class="subtitle">To protect your data, Vet-Rate.org requires a modern browser</p>
+    <p class="subtitle">To protect your data, SupplyLocker.org requires a modern browser</p>
     
     <div class="message-box">
       <p>
@@ -374,7 +374,7 @@ export function renderBrowserWarning(results) {
         ${failedList}
       </ul>
       <p>
-        Vet-Rate.org uses cutting-edge security technology to protect your sensitive VA claim information. 
+        SupplyLocker.org uses cutting-edge security technology to protect your sensitive VA claim information. 
         Older browsers cannot provide the encryption and storage features needed to keep your data safe.
       </p>
     </div>
@@ -401,8 +401,8 @@ export function renderBrowserWarning(results) {
     </div>
     
     <div class="footer">
-      <p>Questions? Contact us at <a href="mailto:support@vet-rate.org">support@vet-rate.org</a></p>
-      <p style="margin-top: 8px;">Vet-Rate.org - Supporting those who served 🇺🇸</p>
+      <p>Questions? Contact us at <a href="mailto:support@SupplyLocker.org">support@SupplyLocker.org</a></p>
+      <p style="margin-top: 8px;">SupplyLocker.org - Supporting those who served 🇺🇸</p>
     </div>
   </div>
 </body>

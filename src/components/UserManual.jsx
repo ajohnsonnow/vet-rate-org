@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { resetTourState, triggerTourRestart } from './BootCampTour';
@@ -11,12 +11,12 @@ const navigationStructure = [
   {
     id: 'home',
     title: 'Home',
-    icon: '🏠',
+    icon: '??',
   },
   {
     id: 'getting-started',
     title: 'Getting Started',
-    icon: '🚀',
+    icon: '??',
     children: [
       { id: 'first-visit', title: 'Your First Visit' },
       { id: 'interface-overview', title: 'Interface Overview' },
@@ -26,7 +26,7 @@ const navigationStructure = [
   {
     id: 'search',
     title: 'Search & Explore',
-    icon: '🔍',
+    icon: '??',
     children: [
       { id: 'how-to-search', title: 'How to Search' },
       { id: 'search-results', title: 'Search Results' },
@@ -37,28 +37,28 @@ const navigationStructure = [
   // === CALCULATE YOUR RATING ===
   {
     id: 'category-calculate',
-    title: '📊 Calculate',
+    title: '?? Calculate',
     isCategory: true,
   },
   {
     id: 'what-if-sandbox',
     title: 'What-If Sandbox',
-    icon: '🧮',
+    icon: '??',
   },
   {
     id: 'retro-pay-hunter',
     title: 'Retro Pay Hunter',
-    icon: '🧮',
+    icon: '??',
   },
   {
     id: 'time-machine',
     title: 'Time Machine',
-    icon: '🧮',
+    icon: '??',
   },
   {
     id: 'tactical-calculator',
     title: 'Tactical Calculator',
-    icon: '🧮',
+    icon: '??',
     children: [
       { id: 'calc-overview', title: 'How VA Math Works' },
       { id: 'calc-bilateral', title: 'Bilateral Factor' },
@@ -69,28 +69,28 @@ const navigationStructure = [
   // === DISCOVER YOUR CLAIMS ===
   {
     id: 'category-discover',
-    title: '🔍 Discover',
+    title: '?? Discover',
     isCategory: true,
   },
   {
     id: 'cap-exam-simulator',
     title: 'C&P Exam Simulator',
-    icon: '🔍',
+    icon: '??',
   },
   {
     id: 'mos-hazard-matcher',
     title: 'MOS Hazard Matcher',
-    icon: '🔍',
+    icon: '??',
   },
   {
     id: 'web-of-conditions',
     title: 'Web of Conditions',
-    icon: '🔍',
+    icon: '??',
   },
   {
     id: 'secondary-scout',
     title: 'Secondary Scout',
-    icon: '🔬',
+    icon: '??',
     children: [
       { id: 'scout-launching', title: 'Launching Scout' },
       { id: 'scout-results', title: 'Understanding Results' },
@@ -100,7 +100,7 @@ const navigationStructure = [
   {
     id: 'cap-simulator',
     title: 'C&P Exam Simulator',
-    icon: '🎯',
+    icon: '??',
     children: [
       { id: 'simulator-getting-started', title: 'Getting Started' },
       { id: 'condition-selection', title: 'Condition Selection' },
@@ -112,7 +112,7 @@ const navigationStructure = [
   {
     id: 'dbq-library',
     title: 'DBQ Library',
-    icon: '📑',
+    icon: '??',
     children: [
       { id: 'dbq-overview', title: 'What are DBQs?' },
       { id: 'dbq-browse', title: 'Browsing DBQs' },
@@ -122,12 +122,12 @@ const navigationStructure = [
   {
     id: 'pathfinder',
     title: 'Pathfinder',
-    icon: '🧭',
+    icon: '??',
   },
   {
     id: 'workflow-guide',
     title: 'Workflow Guide',
-    icon: '🗺️',
+    icon: '???',
     children: [
       { id: 'workflow-overview', title: 'Mission Briefings' },
       { id: 'workflow-progress', title: 'Tracking Progress' },
@@ -136,38 +136,38 @@ const navigationStructure = [
   // === BUILD YOUR EVIDENCE ===
   {
     id: 'category-evidence',
-    title: '📋 Build Evidence',
+    title: '?? Build Evidence',
     isCategory: true,
   },
   {
     id: 'c-file-ai-analyzer',
     title: 'C-File AI Analyzer',
-    icon: '📋',
+    icon: '??',
   },
   {
     id: 'pdf-evidence-finder',
     title: 'PDF Evidence Finder',
-    icon: '📋',
+    icon: '??',
   },
   {
     id: 'somatic-target',
     title: 'Somatic Target',
-    icon: '📋',
+    icon: '??',
   },
   {
     id: 'evidence-timeline',
     title: 'Evidence Timeline',
-    icon: '📋',
+    icon: '??',
   },
   {
     id: 'foia-keysmith',
     title: 'FOIA Keysmith',
-    icon: '📋',
+    icon: '??',
   },
   {
     id: 'cfile-analyzer',
     title: 'C-File AI Analyzer',
-    icon: '🔎',
+    icon: '??',
     children: [
       { id: 'cfile-what-is', title: 'What is a C-File?' },
       { id: 'cfile-upload', title: 'Dropping In Records' },
@@ -177,7 +177,7 @@ const navigationStructure = [
   {
     id: 'blue-button',
     title: 'Blue Button X-Ray',
-    icon: '💙',
+    icon: '??',
     children: [
       { id: 'blue-overview', title: 'What Is Blue Button?' },
       { id: 'blue-extract', title: 'Extracting Evidence' },
@@ -186,7 +186,7 @@ const navigationStructure = [
   {
     id: 'witness-bench',
     title: 'Witness Bench',
-    icon: '👥',
+    icon: '??',
     children: [
       { id: 'witness-overview', title: 'Buddy Statements' },
       { id: 'witness-interview', title: 'The Interview' },
@@ -196,7 +196,7 @@ const navigationStructure = [
   {
     id: 'nexus-builder',
     title: 'Nexus Builder',
-    icon: '🔗',
+    icon: '??',
     children: [
       { id: 'what-is-nexus', title: 'What is a Nexus?' },
       { id: 'building-statement', title: 'Building Your Statement' },
@@ -207,7 +207,7 @@ const navigationStructure = [
   {
     id: 'forms-helper',
     title: 'Forms Helper',
-    icon: '📋',
+    icon: '??',
     children: [
       { id: 'available-forms', title: 'Available Forms' },
       { id: 'buddy-statements', title: 'Buddy Statements' },
@@ -219,33 +219,33 @@ const navigationStructure = [
   // === QUALITY CONTROL ===
   {
     id: 'category-qc',
-    title: '🎯 Quality Control',
+    title: '?? Quality Control',
     isCategory: true,
   },
   {
     id: 'the-war-game',
     title: 'The War Game',
-    icon: '✅',
+    icon: '?',
   },
   {
     id: 'denials-decoder',
     title: 'Denials Decoder',
-    icon: '✅',
+    icon: '?',
   },
   {
     id: 'consistency-engine',
     title: 'Consistency Engine',
-    icon: '✅',
+    icon: '?',
   },
   {
     id: 'evidence-gap-finder',
     title: 'Evidence Gap Finder',
-    icon: '✅',
+    icon: '?',
   },
   {
     id: 'red-team',
     title: 'Red Team Simulator',
-    icon: '🎭',
+    icon: '??',
     children: [
       { id: 'red-overview', title: 'What is Red Team?' },
       { id: 'red-analysis', title: 'Weakness Analysis' },
@@ -254,7 +254,7 @@ const navigationStructure = [
   {
     id: 'decision-decoder',
     title: 'Decision Decoder',
-    icon: '📜',
+    icon: '??',
     children: [
       { id: 'decoder-overview', title: 'Overview' },
       { id: 'decoder-upload', title: 'Drop In Decision' },
@@ -264,33 +264,33 @@ const navigationStructure = [
   {
     id: 'shark-radar',
     title: 'Shark Radar',
-    icon: '🦈',
+    icon: '??',
   },
   // === ADVANCED STRATEGY ===
   {
     id: 'category-advanced',
-    title: '⚡ Advanced Strategy',
+    title: '? Advanced Strategy',
     isCategory: true,
   },
   {
     id: 'state-benefit-hunter',
     title: 'State Benefit Hunter',
-    icon: '💰',
+    icon: '??',
   },
   {
     id: 'the-tribunal',
     title: 'The Tribunal',
-    icon: '💰',
+    icon: '??',
   },
   {
     id: 'legislative-watchdog',
     title: 'Legislative Watchdog',
-    icon: '💰',
+    icon: '??',
   },
   {
     id: 'tdiu-builder',
     title: 'TDIU Builder',
-    icon: '💼',
+    icon: '??',
     children: [
       { id: 'tdiu-overview', title: 'What is TDIU?' },
       { id: 'tdiu-eligibility', title: 'Eligibility Check' },
@@ -299,12 +299,12 @@ const navigationStructure = [
   {
     id: 'risk-assessment',
     title: 'Risk Assessment',
-    icon: '⚠️',
+    icon: '??',
   },
   {
     id: 'symptom-logger',
     title: 'Symptom Logger',
-    icon: '📊',
+    icon: '??',
     children: [
       { id: 'symptom-overview', title: 'Why Track Symptoms?' },
       { id: 'symptom-logging', title: 'Logging Symptoms' },
@@ -314,7 +314,7 @@ const navigationStructure = [
   {
     id: 'pact-act',
     title: 'PACT Act Navigator',
-    icon: '☢️',
+    icon: '??',
     children: [
       { id: 'pact-overview', title: 'What is PACT Act?' },
       { id: 'pact-conditions', title: 'Covered Conditions' },
@@ -324,80 +324,80 @@ const navigationStructure = [
   {
     id: 'foia-generator',
     title: 'FOIA Keysmith',
-    icon: '🔑',
+    icon: '??',
   },
   // === SHOCK & AWE ===
   {
     id: 'category-shock',
-    title: '💎 Shock & Awe',
+    title: '?? Shock & Awe',
     isCategory: true,
   },
   {
     id: 'million-dollar',
     title: 'Million Dollar Dashboard',
-    icon: '💰',
+    icon: '??',
   },
   {
     id: 'mos-matcher',
     title: 'MOS Hazard Matcher',
-    icon: '🎖️',
+    icon: '???',
   },
   {
     id: 'web-conditions',
     title: 'Web of Conditions',
-    icon: '🕸️',
+    icon: '???',
   },
   // === SUPPORT & RESOURCES ===
   {
     id: 'category-support',
-    title: '🤝 Support',
+    title: '?? Support',
     isCategory: true,
   },
   {
     id: 'the-bunker',
     title: 'The Bunker',
-    icon: '🤝',
+    icon: '??',
   },
   {
     id: 'cloud-sync',
     title: 'Cloud Sync',
-    icon: '🤝',
+    icon: '??',
   },
   {
     id: 'va-gov-integration',
     title: 'VA.gov Integration',
-    icon: '🤝',
+    icon: '??',
   },
   {
     id: 'knowledge-base',
     title: 'Knowledge Base',
-    icon: '🤝',
+    icon: '??',
   },
   {
     id: 'user-manual',
     title: 'User Manual',
-    icon: '🤝',
+    icon: '??',
   },
   {
     id: 'vso-finder',
     title: 'VSO Finder',
-    icon: '🏢',
+    icon: '??',
   },
   {
     id: 'state-benefits',
     title: 'State Benefit Hunter',
-    icon: '💵',
+    icon: '??',
   },
   // === DATA MANAGEMENT ===
   {
     id: 'category-data',
-    title: '📁 Data & Settings',
+    title: '?? Data & Settings',
     isCategory: true,
   },
   {
     id: 'my-packet',
     title: 'My Packet',
-    icon: '📁',
+    icon: '??',
     children: [
       { id: 'managing-claims', title: 'Managing Claims' },
       { id: 'saved-forms', title: 'Saved Forms' },
@@ -408,7 +408,7 @@ const navigationStructure = [
   {
     id: 'va-resources',
     title: 'VA Resources',
-    icon: '🏛️',
+    icon: '???',
     children: [
       { id: 'online-portals', title: 'Online Portals' },
       { id: 'phone-numbers', title: 'Phone Numbers' },
@@ -418,7 +418,7 @@ const navigationStructure = [
   {
     id: 'settings',
     title: 'Settings',
-    icon: '⚙️',
+    icon: '??',
     children: [
       { id: 'display-mode', title: 'Display Mode' },
       { id: 'accessibility-options', title: 'Accessibility Options' },
@@ -428,7 +428,7 @@ const navigationStructure = [
   {
     id: 'ai-settings',
     title: 'AI Settings',
-    icon: '🤖',
+    icon: '??',
     children: [
       { id: 'local-ai-overview', title: 'Local AI Overview' },
       { id: 'model-selection', title: 'Choosing the Right Model' },
@@ -439,7 +439,7 @@ const navigationStructure = [
   {
     id: 'reference',
     title: 'Reference',
-    icon: '📖',
+    icon: '??',
     children: [
       { id: 'glossary', title: 'Glossary' },
       { id: 'cfr-reference', title: 'CFR Reference' },
@@ -449,20 +449,20 @@ const navigationStructure = [
   {
     id: 'faq',
     title: 'FAQ',
-    icon: '❓',
+    icon: '?',
   },
 ];
 
 // Documentation content - organized by section ID
 const documentationContent = {
   home: {
-    title: 'Vet-Rate.org User Manual',
+    title: 'SupplyLocker.org User Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
+Welcome to the comprehensive user manual for **SupplyLocker.org** - your complete VA claims toolkit with **39 powerful tools**.
 
 ## About This Manual
 
-This manual covers every feature and function of the Vet-Rate.org platform, designed to help you:
+This manual covers every feature and function of the SupplyLocker.org platform, designed to help you:
 
 - **Search & understand** {getDisabilityCount()} VA disability conditions
 - **Discover secondary conditions** linked to your service-connected disabilities
@@ -553,7 +553,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 
 ## Important Notice
 
-> **🆘 Veterans Crisis Line:** Call 988, Press 1 | Text 838255 | Available 24/7
+> **?? Veterans Crisis Line:** Call 988, Press 1 | Text 838255 | Available 24/7
 
 This tool is for **educational purposes only**. It is not affiliated with the VA and does not constitute legal or medical advice.
 
@@ -566,7 +566,7 @@ All data stays in your browser. We don't collect, store, or transmit any persona
   'getting-started': {
     title: 'Getting Started',
     content: `
-Get up and running with Vet-Rate.org in minutes.
+Get up and running with SupplyLocker.org in minutes.
 
 ## What You'll Learn
 
@@ -577,7 +577,7 @@ Get up and running with Vet-Rate.org in minutes.
 
 ## Before You Begin
 
-**No account needed!** Vet-Rate.org works entirely in your browser. Your data stays on your device.
+**No account needed!** SupplyLocker.org works entirely in your browser. Your data stays on your device.
 
 ## Recommended First Steps
 
@@ -592,7 +592,7 @@ Get up and running with Vet-Rate.org in minutes.
   'first-visit': {
     title: 'Your First Visit',
     content: `
-Here's what to expect when you first visit Vet-Rate.org.
+Here's what to expect when you first visit SupplyLocker.org.
 
 ## Interactive Tour
 
@@ -650,7 +650,7 @@ After acknowledging the disclaimer, you'll see:
   'interface-overview': {
     title: 'Interface Overview',
     content: `
-Learn your way around the Vet-Rate.org interface.
+Learn your way around the SupplyLocker.org interface.
 
 ## Header Navigation
 
@@ -677,7 +677,7 @@ Learn your way around the Vet-Rate.org interface.
 
 ## Accessibility Menu
 
-Click the **☰** icon in the header for:
+Click the **?** icon in the header for:
 - Dark/Light mode toggle
 - Color blind modes
 - Font size adjustment
@@ -688,7 +688,7 @@ Click the **☰** icon in the header for:
   accessibility: {
     title: 'Accessibility',
     content: `
-Vet-Rate.org is designed to be accessible to all veterans.
+SupplyLocker.org is designed to be accessible to all veterans.
 
 ## Visual Options
 
@@ -859,10 +859,10 @@ Each rating level lists specific requirements. You must meet the criteria for th
 ## VA Math
 
 Combined ratings use VA math (not simple addition):
-- 50% + 30% ≠ 80%
+- 50% + 30% ? 80%
 - 50% + 30% = 65% (rounds to 70%)
 
-Formula: Combined = A + B × (1 - A)
+Formula: Combined = A + B � (1 - A)
     `,
   },
 
@@ -873,7 +873,7 @@ Discover secondary conditions linked to your service-connected disabilities.
 
 ## What Are Secondary Conditions?
 
-Conditions caused or aggravated by your service-connected disabilities under 38 CFR § 3.310.
+Conditions caused or aggravated by your service-connected disabilities under 38 CFR � 3.310.
 
 ## How Secondary Scout Works
 
@@ -1662,7 +1662,7 @@ Calculate your combined VA disability rating with precision.
 
 ## What It Does
 
-- Calculates combined ratings using official VA math (38 CFR § 4.25)
+- Calculates combined ratings using official VA math (38 CFR � 4.25)
 - Applies the Bilateral Factor for paired extremities
 - Shows 2026 compensation rates with dependents
 - Projects "What If" scenarios
@@ -1670,7 +1670,7 @@ Calculate your combined VA disability rating with precision.
 ## Why VA Math Matters
 
 The VA doesn't add ratings. They use "efficiency" math:
-- 50% + 30% ≠ 80%
+- 50% + 30% ? 80%
 - 50% + 30% = 65% (rounds to 70%)
 
 ## Features
@@ -1692,7 +1692,7 @@ Understanding the VA Combined Ratings Table.
 
 ## The Formula
 
-Combined = A + B × (1 - A)
+Combined = A + B � (1 - A)
 
 Where A and B are decimal ratings.
 
@@ -1700,7 +1700,7 @@ Where A and B are decimal ratings.
 
 50% + 30%:
 1. Convert: 0.50 + 0.30
-2. Calculate: 0.50 + (0.30 × 0.50) = 0.50 + 0.15 = 0.65
+2. Calculate: 0.50 + (0.30 � 0.50) = 0.50 + 0.15 = 0.65
 3. Result: 65% (rounds to 70%)
 
 ## Key Rules
@@ -1725,7 +1725,7 @@ Get a 10% boost for paired extremity conditions.
 
 ## What Is It?
 
-Per 38 CFR § 4.26, when you have conditions affecting both:
+Per 38 CFR � 4.26, when you have conditions affecting both:
 - Arms/shoulders
 - Legs/hips/knees
 - Hands/feet
@@ -1736,7 +1736,7 @@ You get a 10% increase on the COMBINED bilateral rating.
 
 Left knee 20% + Right knee 10%:
 1. Combine: 20% + 10% = 28%
-2. Add 10%: 28% × 1.10 = 30.8%
+2. Add 10%: 28% � 1.10 = 30.8%
 3. Use 31% in final calculation
 
 ## How to Use
@@ -2132,9 +2132,9 @@ Understanding Red Team results.
 
 ## Risk Levels
 
-- 🟢 **Low Risk** - Strong evidence
-- 🟡 **Medium Risk** - Needs strengthening
-- 🔴 **High Risk** - Likely denial point
+- ?? **Low Risk** - Strong evidence
+- ?? **Medium Risk** - Needs strengthening
+- ?? **High Risk** - Likely denial point
 
 ## Common Weaknesses
 
@@ -2489,7 +2489,7 @@ A 100% disabled veteran retiring at 50 with 35+ years of benefits often receives
 
 ## Calculations Include
 
-- Monthly compensation × life expectancy
+- Monthly compensation � life expectancy
 - Healthcare cost savings
 - Dependent benefits
 - COLA adjustments (estimated)
@@ -2698,10 +2698,10 @@ Your job specialty often involved exposures that cause conditions decades later.
 
 ## Examples
 
-- Infantry → Hearing loss, joint problems
-- Burn pit exposure → Respiratory conditions
-- Mechanics → Chemical exposures
-- Aviation → Hearing, toxic exposures
+- Infantry ? Hearing loss, joint problems
+- Burn pit exposure ? Respiratory conditions
+- Mechanics ? Chemical exposures
+- Aviation ? Hearing, toxic exposures
     `,
   },
 
@@ -2986,7 +2986,7 @@ Quick access to official VA resources.
 
 ## We Are NOT the VA
 
-Vet-Rate.org is independent. For official help, use VA resources.
+SupplyLocker.org is independent. For official help, use VA resources.
     `,
   },
 
@@ -3061,7 +3061,7 @@ Visit VA.gov and search for accredited representatives in your area.
   settings: {
     title: 'Settings',
     content: `
-Customize your Vet-Rate.org experience.
+Customize your SupplyLocker.org experience.
 
 ## Display Settings
 
@@ -3097,7 +3097,7 @@ Reduced brightness theme. Best for:
 
 ## How to Change
 
-1. Click the accessibility menu (☰)
+1. Click the accessibility menu (?)
 2. Toggle Dark Mode on/off
 
 Setting is saved for future visits.
@@ -3107,7 +3107,7 @@ Setting is saved for future visits.
   'accessibility-options': {
     title: 'Accessibility Options',
     content: `
-Make Vet-Rate.org work for you.
+Make SupplyLocker.org work for you.
 
 ## Color Blind Modes
 
@@ -3167,13 +3167,13 @@ Configure AI to power your claims analysis.
 
 ## Two AI Options
 
-### 🔒 Local AI (100% Private)
+### ?? Local AI (100% Private)
 Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
 - 3 specialized fine-tuned models plus fallback options
 - Works offline after initial download
 - Zero internet required during analysis
 
-### ☁️ Cloud AI (Google Gemini)
+### ?? Cloud AI (Google Gemini)
 Fast and powerful, requires internet.
 - Free tier available
 - Bring your own API key
@@ -3183,8 +3183,8 @@ Fast and powerful, requires internet.
 
 | Feature | Local AI | Cloud AI |
 |---------|----------|----------|
-| Data leaves device | ❌ Never | ✅ Yes |
-| Internet required | ❌ After download | ✅ Always |
+| Data leaves device | ? Never | ? Yes |
+| Internet required | ? After download | ? Always |
 | Speed | Varies by model | Fast |
 | Quality | Good to Excellent | Excellent |
 | Cost | Free (VRAM) | Free tier available |
@@ -3198,7 +3198,7 @@ Run AI 100% on your device - your data never leaves your computer.
 
 ## How It Works
 
-Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
+SupplyLocker.org uses **WebLLM** technology to run AI models directly in your browser:
 
 1. **Download Once**: Model downloads to your browser cache (one-time)
 2. **Run Locally**: All processing happens on YOUR GPU
@@ -3212,7 +3212,7 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 
 ## First Time Setup
 
-1. Click the 🤖 AI Settings button in the header
+1. Click the ?? AI Settings button in the header
 2. Select "Local AI" mode
 3. Choose a model (start with VetRate models)
 4. Click "Initialize" - model downloads (~2 min)
@@ -3231,7 +3231,7 @@ If you have a gaming laptop with both integrated and discrete GPUs:
     content: `
 The Diamond Swarm automatically selects the best model for each task:
 
-## 💎 Diamond Swarm Models
+## ?? Diamond Swarm Models
 
 | Model | Specialized For | Size |
 |-------|----------------|------|
@@ -3241,47 +3241,47 @@ The Diamond Swarm automatically selects the best model for each task:
 
 The system automatically routes your request to the appropriate specialist model.
 
-## 🔄 Fallback Options
+## ?? Fallback Options
 
 If Diamond Swarm is unavailable:
 - **Wllama**: Browser-based WASM inference (any device)
 - **Local Server**: Connect to llama.cpp server (advanced users)
 - **Cloud AI**: Google Gemini (requires API key)
 
-## 📄 Document Parsing (C-Files, DD214s, Medical Records)
+## ?? Document Parsing (C-Files, DD214s, Medical Records)
 
 | Model | Why |
 |-------|-----|
-| **VetRate Auditor ⭐** | Chain-of-thought reasoning finds evidence in complex files |
+| **VetRate Auditor ?** | Chain-of-thought reasoning finds evidence in complex files |
 | **VetRate Writer** | Excellent medical terminology understanding |
 
-## ✍️ Creative Writing (Nexus Letters, Statements)
+## ?? Creative Writing (Nexus Letters, Statements)
 
 | Model | Why |
 |-------|-----|
 | **VetRate Writer** | Most natural, persuasive writing |
 | **VetRate Writer** | Great fluency and varied prose |
 
-## ⚖️ Legal Analysis (Decisions, TDIU, Regulations)
+## ?? Legal Analysis (Decisions, TDIU, Regulations)
 
 | Model | Why |
 |-------|-----|
 | **DeepSeek R1 Llama 8B** | Professional-grade reasoning |
 | **VetRate models** | Specialized for regulatory interpretation |
 
-## 🔴 Adversarial (Red Team, War Room)
+## ?? Adversarial (Red Team, War Room)
 
 | Model | Why |
 |-------|-----|
 | **VetRate Auditor** | Thinks like a skeptical examiner |
 
-## 👁️ Vision (Scanned Documents, Photos)
+## ??? Vision (Scanned Documents, Photos)
 
 | Model | Why |
 |-------|-----|
-| **Vet-Rate Vision Phi ✅** | Custom build for standard Chrome! Reads images directly |
+| **SupplyLocker Vision Phi ?** | Custom build for standard Chrome! Reads images directly |
 
-## ⚡ Quick Tasks (Search, Calculator, Scout)
+## ? Quick Tasks (Search, Calculator, Scout)
 
 | Model | Why |
 |-------|-----|
@@ -3291,10 +3291,10 @@ If Diamond Swarm is unavailable:
 ## Smart Recommendations
 
 Each AI-powered tool shows a badge recommending the best model. Look for:
-- 👁️ Vision - Use Vet-Rate Vision Phi
-- ⭐ Recommended - Optimal for that tool
-- ⚡ Fast - Speed-optimized
-- 🧠 Reasoning - Complex analysis
+- ??? Vision - Use SupplyLocker Vision Phi
+- ? Recommended - Optimal for that tool
+- ? Fast - Speed-optimized
+- ?? Reasoning - Complex analysis
     `,
   },
 
@@ -3305,17 +3305,17 @@ Choose based on your priorities.
 
 ## Choose Local AI When:
 
-✅ **Privacy is critical** - Analyzing sensitive medical records
-✅ **Working offline** - No reliable internet
-✅ **Avoiding costs** - No API fees ever
-✅ **You have a modern GPU** - 4+ GB VRAM
+? **Privacy is critical** - Analyzing sensitive medical records
+? **Working offline** - No reliable internet
+? **Avoiding costs** - No API fees ever
+? **You have a modern GPU** - 4+ GB VRAM
 
 ## Choose Cloud AI When:
 
-✅ **Speed matters most** - Fastest responses
-✅ **Complex analysis** - Gemini is very capable
-✅ **Limited hardware** - Old computer or low VRAM
-✅ **Occasional use** - Free tier handles light usage
+? **Speed matters most** - Fastest responses
+? **Complex analysis** - Gemini is very capable
+? **Limited hardware** - Old computer or low VRAM
+? **Occasional use** - Free tier handles light usage
 
 ## Can I Use Both?
 
@@ -3343,8 +3343,8 @@ Choose a model that fits your GPU memory.
 ## How to Check Your VRAM
 
 **Windows:**
-1. Right-click desktop → Display Settings
-2. Advanced Display Settings → Display Adapter Properties
+1. Right-click desktop ? Display Settings
+2. Advanced Display Settings ? Display Adapter Properties
 3. Look for "Dedicated Video Memory"
 
 **Mac:** Apple Silicon has shared memory - use Light models
@@ -3352,17 +3352,17 @@ Choose a model that fits your GPU memory.
 ## Model Recommendations by VRAM
 
 ### 2 GB VRAM (Integrated Graphics)
-- VetRate models ⚡ (0.3 GB)
-- VetRate models ⚡ (0.7 GB)
+- VetRate models ? (0.3 GB)
+- VetRate models ? (0.7 GB)
 
 ### 4 GB VRAM (Entry Gaming GPU)
-- VetRate models ✓ (1.8 GB) - RECOMMENDED
+- VetRate models ? (1.8 GB) - RECOMMENDED
 - Qwen 2.5 3B (2.0 GB)
 - VetRate models (2.3 GB)
 
 ### 6 GB VRAM (GTX 1060, RTX 3060)
-- VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
-- VetRate Vision Phi 👁️ (3.5 GB)
+- VetRate Auditor ? (3.5 GB) - BEST VALUE
+- VetRate Vision Phi ??? (3.5 GB)
 
 ### 8+ GB VRAM (RTX 3070+, RTX 4070+)
 - VetRate Writer (4.8 GB) - TOP TIER
@@ -3622,22 +3622,22 @@ Key Code of Federal Regulations sections.
 
 ## 38 CFR Part 3 - Adjudication
 
-- **§ 3.303** - Principles of service connection
-- **§ 3.310** - Secondary service connection
-- **§ 3.317** - Gulf War presumptives
+- **� 3.303** - Principles of service connection
+- **� 3.310** - Secondary service connection
+- **� 3.317** - Gulf War presumptives
 
 ## 38 CFR Part 4 - Rating Schedule
 
-- **§ 4.71a** - Musculoskeletal system
-- **§ 4.97** - Respiratory system
-- **§ 4.104** - Cardiovascular system
-- **§ 4.124a** - Neurological conditions
-- **§ 4.130** - Mental disorders
+- **� 4.71a** - Musculoskeletal system
+- **� 4.97** - Respiratory system
+- **� 4.104** - Cardiovascular system
+- **� 4.124a** - Neurological conditions
+- **� 4.130** - Mental disorders
 
 ## Key Principles
 
-- **§ 4.3** - Reasonable doubt favors veteran
-- **§ 4.7** - Higher rating when between levels
+- **� 4.3** - Reasonable doubt favors veteran
+- **� 4.7** - Higher rating when between levels
     `,
   },
 
@@ -3680,7 +3680,7 @@ Common questions answered.
 
 ## General
 
-**Is Vet-Rate.org affiliated with the VA?**
+**Is SupplyLocker.org affiliated with the VA?**
 No. We are an independent educational resource.
 
 **Is it free?**
@@ -3726,7 +3726,7 @@ Contact a VSO - free and accredited assistance.
 
 ## Crisis Support
 
-**🆘 Veterans Crisis Line:** 988, Press 1 | Text 838255
+**?? Veterans Crisis Line:** 988, Press 1 | Text 838255
 Available 24/7
     `,
   },
@@ -3917,7 +3917,7 @@ const renderContent = (content, onClose) => {
             }}
             className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
           >
-            🎓 Restart Interactive Tour
+            ?? Restart Interactive Tour
           </button>
         </div>
       );
@@ -4072,14 +4072,14 @@ const UserManual = ({ onClose, onReportBug }) => {
     const catKeyMap = {
       'Getting Started': 'catGettingStarted',
       'Search & Explore': 'catSearchExplore',
-      '📊 Calculate': 'catCalculate',
-      '🔍 Discover': 'catDiscover',
-      '📋 Build Evidence': 'catBuildEvidence',
-      '🎯 Quality Control': 'catQualityControl',
-      '⚡ Advanced Strategy': 'catAdvancedStrategy',
-      '💎 Shock & Awe': 'catShockAwe',
-      '🤝 Support': 'catSupport',
-      '📁 Data & Settings': 'catDataSettings',
+      '?? Calculate': 'catCalculate',
+      '?? Discover': 'catDiscover',
+      '?? Build Evidence': 'catBuildEvidence',
+      '?? Quality Control': 'catQualityControl',
+      '? Advanced Strategy': 'catAdvancedStrategy',
+      '?? Shock & Awe': 'catShockAwe',
+      '?? Support': 'catSupport',
+      '?? Data & Settings': 'catDataSettings',
     };
     const key = catKeyMap[title];
     if (key) {

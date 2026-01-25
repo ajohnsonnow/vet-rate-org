@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org AI Assistant - "The Navigator"
+ * SupplyLocker.org AI Assistant - "The Navigator"
  * 
  * An intelligent AI guide that helps veterans and their families navigate
  * the complex VA claims process using natural language conversation.
@@ -171,17 +171,17 @@ const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
 
   // Build context-aware system prompt
   const buildSystemPrompt = () => {
-    const basePrompt = `You are "The Navigator", an expert AI assistant for Vet-Rate.org - a comprehensive VA disability claims toolkit.
+    const basePrompt = `You are "The Navigator", an expert AI assistant for SupplyLocker.org - a comprehensive VA disability claims toolkit.
 
 YOUR ROLE:
 - Help veterans and their families navigate the VA claims process
 - Explain VA regulations, terminology, and procedures in ${isHelperMode ? 'simple, caregiver-friendly language' : 'clear language'}
-- Guide users through the ${getTotalToolCount()}+ tools available on Vet-Rate.org
+- Guide users through the ${getTotalToolCount()}+ tools available on SupplyLocker.org
 - Provide accurate information based on 38 CFR (VA regulations)
 - Be empathetic, patient, and supportive
 
 IMPORTANT - eCFR INTEGRATION:
-Vet-Rate.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations):
+SupplyLocker.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations):
 - All ${getDisabilityCount()} VA disabilities are validated against official eCFR diagnostic codes
 - Direct links to eCFR sections are provided throughout the application
 - Rating criteria comes directly from 38 CFR Part 4 (validated January 2026)
@@ -195,7 +195,7 @@ CURRENT CONTEXT:
 - User is currently on: ${currentTool}
 - Helper Mode (for caregivers): ${isHelperMode ? 'ENABLED - Use simplified language' : 'Disabled'}
 
-AVAILABLE TOOLS ON VET-RATE.ORG:
+AVAILABLE TOOLS ON SupplyLocker.org:
 1. **Disability Search** - Search ${getDisabilityCount()} VA conditions with ratings (eCFR validated)
 2. **Rating Calculator** - Calculate combined disability rating using 38 CFR § 4.25
 3. **Secondary Scout** - Find conditions caused by existing disabilities (38 CFR § 3.310)

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import AccessibilityMenu from './AccessibilityMenu';
-import FundingModal from './FundingModal';
 import LanguageSelector from './LanguageSelector';
 import HelperModeToggle from './HelperModeToggle';
 import KnowledgeBaseStatus from './KnowledgeBaseStatus';
@@ -78,7 +77,6 @@ function Header({
   
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [showFundingModal, setShowFundingModal] = useState(false);
   const [shouldPulseBackup, setShouldPulseBackup] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -202,13 +200,14 @@ function Header({
           <div className="flex items-center gap-3 md:gap-4">
             <div className="rounded-full h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden shadow-md">
               <img 
-                src="/images/Vet-Rate-org-logo-official.png" 
-                alt="Vet-Rate.org Logo" 
+                src="/images/supply-locker-org-logo.png" 
+                alt="SupplyLocker.org Logo" 
                 className="h-full w-full object-cover"
               />
             </div>
             <div className="flex-shrink-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Vet-Rate.org</h1>
+              <p className="text-xs text-gray-300 dark:text-gray-400 mb-0.5">Sergeant Johnson's</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">SupplyLocker.org</h1>
               <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base">
                 {t('header', 'subtitle')}
               </p>
@@ -1151,16 +1150,6 @@ function Header({
                     </svg>
                     {t('header', 'ideas')}
                   </button>
-
-                  <button
-                    onClick={() => { setShowMobileMenu(false); setShowFundingModal(true); }}
-                    className="w-full px-4 py-3 rounded-lg bg-va-gold hover:bg-yellow-400 text-va-blue font-bold shadow-md flex items-center justify-center gap-2 min-h-[44px]"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
-                    {t('header', 'backTheMission')}
-                  </button>
                 </div>
 
                 {/* Bottom padding for safe area */}
@@ -1170,9 +1159,6 @@ function Header({
           </div>
         )}
       </div>
-      
-      {/* Funding Modal */}
-      <FundingModal show={showFundingModal} onClose={() => setShowFundingModal(false)} />
     </header>
   );
 }

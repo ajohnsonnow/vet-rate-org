@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Common Components Index
+ * SupplyLocker.org - Common Components Index
  * Re-exports all common/shared components
  */
 

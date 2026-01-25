@@ -208,7 +208,7 @@ const ProofTab = () => (
         </thead>
         <tbody className="dark:bg-gray-800 dark:text-gray-200">
           <tr>
-            <td className="border border-gray-300 dark:border-gray-600 p-2">vet-rate.org/assets/...</td>
+            <td className="border border-gray-300 dark:border-gray-600 p-2">SupplyLocker.org/assets/...</td>
             <td className="border border-gray-300 dark:border-gray-600 p-2">Loading app files (JS/CSS)</td>
             <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">❌ No</td>
           </tr>
@@ -323,7 +323,7 @@ const VerifyTab = () => (
           steps={[
             'Click "Application" (Chrome) or "Storage" (Firefox) tab',
             'Expand "Local Storage"',
-            'Click on vet-rate.org',
+            'Click on SupplyLocker.org',
             'See your data? It\'s ONLY on your device.'
           ]}
         />
@@ -332,7 +332,7 @@ const VerifyTab = () => (
           number={6}
           title="Audit the Code (Advanced)"
           steps={[
-            'Visit: github.com/ajohnsonnow/vet-rate-org',
+            'Visit: github.com/ajohnsonnow/SupplyLocker-org',
             'Read the source code',
             'Search for "fetch", "axios", "api" - see what they call',
             'Fork it and host it yourself if you want'
@@ -477,7 +477,7 @@ const FAQTab = () => (
               <tr>
                 <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Feature</th>
                 <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Typical VA Tools</th>
-                <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">Vet-Rate.org</th>
+                <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">SupplyLocker.org</th>
               </tr>
             </thead>
             <tbody className="dark:bg-gray-800">

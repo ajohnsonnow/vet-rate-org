@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - useRedditClipboard Hook
+ * SupplyLocker.org - useRedditClipboard Hook
  * "The Squared Away Standard" Edition
  * 
  * Features:
@@ -7,7 +7,7 @@
  * 2. "Mic Drop Linker": Auto-links 38 CFR and Diagnostic Codes to official eCFR.gov
  * 3. "PERSEC Shield": Auto-redacts dates, SSNs, and PII patterns
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 

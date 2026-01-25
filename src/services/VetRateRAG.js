@@ -1,5 +1,5 @@
 /**
- * Vet-Rate RAG (Retrieval-Augmented Generation) Integration
+ * SupplyLocker RAG (Retrieval-Augmented Generation) Integration
  * Uses existing knowledge base for instant VA claims assistance
  */
 

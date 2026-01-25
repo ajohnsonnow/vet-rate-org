@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Data Persistence Protection Utility
+ * SupplyLocker.org - Data Persistence Protection Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -7,8 +7,8 @@
  * Prevents data loss from cache clearing or accidental tab closure
  */
 
-const LAST_BACKUP_KEY = 'vetrate_last_backup_timestamp';
-const DATA_HASH_KEY = 'vetrate_data_hash';
+const LAST_BACKUP_KEY = 'supplylocker_last_backup_timestamp';
+const DATA_HASH_KEY = 'supplylocker_data_hash';
 
 /**
  * Generate a simple hash of the current localStorage data

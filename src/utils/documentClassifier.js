@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Document Classification System
+ * SupplyLocker.org - Document Classification System
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

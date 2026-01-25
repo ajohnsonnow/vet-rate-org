@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme, THEME_MODES, COLOR_BLIND_MODES } from '../contexts/ThemeContext';
 
 // LocalStorage key for Gemini API key (BYOK)
-const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
+const GEMINI_KEY_STORAGE = 'supplylocker_gemini_key';
 
 export default function AccessibilityMenu() {
   const { t } = useLanguage();

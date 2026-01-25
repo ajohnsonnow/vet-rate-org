@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Local OCR Engine for Scanned PDF Support
+ * SupplyLocker.org - Local OCR Engine for Scanned PDF Support
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -79,16 +79,21 @@ export async function analyzePDF(file, onProgress = () => {}) {
     message: 'Loading document...',
   });
 
+  let pdf = null;
+  let numPages = 0;
+  let textExtractionFailed = false;
+  let textResult = null;
+
   try {
     // Read file into ArrayBuffer
     const arrayBuffer = await readFileAsArrayBuffer(file);
     
     // Load PDF document
-    const pdf = await pdfjsLib.getDocument({ 
+    pdf = await pdfjsLib.getDocument({ 
       data: arrayBuffer,
       standardFontDataUrl: STANDARD_FONT_DATA_URL 
     }).promise;
-    const numPages = pdf.numPages;
+    numPages = pdf.numPages;
     
     onProgress({
       state: OCR_STATES.EXTRACTING_TEXT,
@@ -98,22 +103,28 @@ export async function analyzePDF(file, onProgress = () => {}) {
     });
 
     // STEP A: Try standard text extraction first (fast path)
-    const textResult = await extractTextFromPDF(pdf, numPages, (current, total) => {
-      const progress = 5 + (current / total) * 40; // 5-45%
-      onProgress({
-        state: OCR_STATES.EXTRACTING_TEXT,
-        progress: Math.round(progress),
-        message: `Extracting text: page ${current} of ${total}`,
-        currentPage: current,
-        totalPages: total,
+    try {
+      textResult = await extractTextFromPDF(pdf, numPages, (current, total) => {
+        const progress = 5 + (current / total) * 40; // 5-45%
+        onProgress({
+          state: OCR_STATES.EXTRACTING_TEXT,
+          progress: Math.round(progress),
+          message: `Extracting text: page ${current} of ${total}`,
+          currentPage: current,
+          totalPages: total,
+        });
       });
-    });
+    } catch (extractError) {
+      console.warn('Text extraction failed, will try OCR:', extractError);
+      textExtractionFailed = true;
+      textResult = { text: '', totalCharacters: 0, pageTexts: [] };
+    }
 
     // STEP B: Check if text extraction yielded sufficient content
     const avgCharsPerPage = textResult.totalCharacters / numPages;
     const hasAdequateText = avgCharsPerPage >= OCR_CONFIG.MIN_CHARS_PER_PAGE;
 
-    if (hasAdequateText) {
+    if (hasAdequateText && !textExtractionFailed) {
       // Text extraction was successful - return results
       onProgress({
         state: OCR_STATES.COMPLETE,
@@ -131,13 +142,19 @@ export async function analyzePDF(file, onProgress = () => {}) {
       };
     }
 
-    // STEP C: Text is sparse - switch to OCR mode
-    console.log(`Sparse text detected (${Math.round(avgCharsPerPage)} chars/page avg). Switching to OCR mode...`);
+    // STEP C: Text is sparse or extraction failed - switch to OCR mode
+    const reason = textExtractionFailed 
+      ? 'Text extraction failed (corrupted or image-based PDF)' 
+      : `Sparse text detected (${Math.round(avgCharsPerPage)} chars/page avg)`;
+    
+    console.log(`${reason}. Switching to OCR mode...`);
     
     onProgress({
       state: OCR_STATES.SCANNING_DOCUMENT,
       progress: 50,
-      message: 'Scanned document detected. Starting OCR analysis...',
+      message: textExtractionFailed 
+        ? 'Image-based PDF detected. Starting OCR analysis...'
+        : 'Scanned document detected. Starting OCR analysis...',
       totalPages: numPages,
     });
 
@@ -192,9 +209,22 @@ export async function analyzePDF(file, onProgress = () => {}) {
     onProgress({
       state: OCR_STATES.ERROR,
       progress: 0,
-      message: `Error: ${error.message}`,
+      message: `Processing failed: ${error.message}`,
     });
-    throw error;
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message;
+    if (error.message.includes('password')) {
+      errorMessage = 'PDF is password-protected. Please remove the password and try again.';
+    } else if (error.message.includes('Invalid PDF')) {
+      errorMessage = 'File appears to be corrupted or not a valid PDF. Try re-saving the document.';
+    } else if (error.message.includes('font') || error.message.includes('TT:')) {
+      errorMessage = 'PDF has corrupted fonts. The document may still be readable - trying OCR...';
+      // Font errors often don't prevent extraction, just log them
+      console.warn('PDF font warning (non-fatal):', error);
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 
@@ -206,6 +236,7 @@ async function extractTextFromPDF(pdf, numPages, onProgress) {
   let fullText = '';
   let totalCharacters = 0;
   const pageTexts = [];
+  let failedPages = 0;
 
   for (let i = 1; i <= numPages; i++) {
     try {
@@ -229,17 +260,33 @@ async function extractTextFromPDF(pdf, numPages, onProgress) {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
     } catch (pageError) {
-      console.warn(`Error extracting page ${i}:`, pageError);
-      pageTexts.push('');
-      fullText += `--- PAGE ${i} ---\n[Page extraction error]\n\n`;
+      failedPages++;
+      console.warn(`Error extracting page ${i}:`, pageError.message);
+      
+      // Font errors are usually non-fatal, continue with empty page
+      if (pageError.message?.includes('font') || pageError.message?.includes('TT:')) {
+        pageTexts.push('');
+        fullText += `--- PAGE ${i} ---\n[Font rendering error - page may need OCR]\n\n`;
+      } else {
+        // Other errors might be more serious
+        pageTexts.push('');
+        fullText += `--- PAGE ${i} ---\n[Page extraction error: ${pageError.message}]\n\n`;
+      }
+      
       onProgress(i, numPages);
     }
+  }
+
+  // If too many pages failed, this might not be a valid extraction
+  if (failedPages > numPages * 0.5) {
+    console.warn(`Too many failed pages (${failedPages}/${numPages}), document may need OCR`);
   }
 
   return {
     text: fullText,
     totalCharacters,
     pageTexts,
+    failedPages,
   };
 }
 

@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "last_validated": "2026-01",
+    "source": "DoD Instruction 1332.14 / National Archives",
+    "description": "Separation Program Numbers (SPN) decode database for DD-214 analysis"
+  },
+  "codes": {
+    "JFX": {
+      "code": "JFX",
+      "description": "Personality Disorder",
+      "category": "Medical/Psychiatric",
+      "risk_level": "High",
+      "narrative": "Discharged due to a diagnosed personality disorder that interfered with duty.",
+      "strategic_implications": {
+        "claim_potential": "High (Misdiagnosis Risk)",
+        "red_team_flag": "The VA often conflates 'Personality Disorder' with PTSD or TBI. If you have combat badges or TBI markers, this discharge code is a prime target for a challenge.",
+        "suggested_actions": [
+          {
+            "tool": "Pathfinder",
+            "action": "Initiate 'Discharge Upgrade' roadmap"
+          },
+          {
+            "tool": "EvidenceGapFinder",
+            "action": "Search STRs for 'concussion', 'blast exposure', or 'insomnia' pre-dating this diagnosis"
+          }
+        ]
+      }
+    },
+    "JEA": {
+      "code": "JEA",
+      "description": "Early Release - To Attend School",
+      "category": "Administrative",
+      "risk_level": "Low",
+      "narrative": "Released prior to expiration of term of service to attend an educational institution.",
+      "strategic_implications": {
+        "claim_potential": "Neutral",
+        "red_team_flag": "Generally benign. Ensure service dates in 'Time Machine' match the shortened service period to calculate accurate effective dates.",
+        "suggested_actions": []
+      }
+    },
+    "GFC": {
+      "code": "GFC",
+      "description": "Involuntary Release - Medical Condition (Not Disability)",
+      "category": "Medical",
+      "risk_level": "Medium",
+      "narrative": "Discharged for a medical condition that did not meet the definition of a disability for retirement purposes.",
+      "strategic_implications": {
+        "claim_potential": "Very High",
+        "red_team_flag": "This code admits a medical condition existed but claims it wasn't 'disabling.' This is a classic starting point for a Service Connection claim.",
+        "suggested_actions": [
+          {
+            "tool": "NexusBuilder",
+            "action": "Draft statement arguing condition has worsened since discharge"
+          },
+          {
+            "tool": "SecondaryScout",
+            "action": "Check if this condition causes other ratable issues"
+          }
+        ]
+      }
+    },
+    "KKA": {
+      "code": "KKA",
+      "description": "Drug Abuse - Board Waiver",
+      "category": "Misconduct",
+      "risk_level": "High",
+      "narrative": "Discharge related to drug use, often resulting in OTH (Other Than Honorable) characterization.",
+      "strategic_implications": {
+        "claim_potential": "Complex",
+        "red_team_flag": "Drug abuse is frequently a symptom of untreated PTSD (self-medication). 'Willful Misconduct' bars benefits, but proving the mental health root cause can overturn this.",
+        "suggested_actions": [
+          {
+            "tool": "WitnessBench",
+            "action": "Gather buddy statements confirming behavior changes after trauma events"
+          },
+          {
+            "tool": "Pathfinder",
+            "action": "Route to 'Character of Discharge' review"
+          }
+        ]
+      }
+    },
+    "MBK": {
+      "code": "MBK",
+      "description": "Completion of Active Duty Service Requirement",
+      "category": "Honorable",
+      "risk_level": "None",
+      "narrative": "Standard completion of contract.",
+      "strategic_implications": {
+        "claim_potential": "Standard",
+        "red_team_flag": "Clean discharge. Focus entirely on medical evidence.",
+        "suggested_actions": []
+      }
+    },
+    "JHJ": {
+      "code": "JHJ",
+      "description": "Physical Disability with Severance Pay",
+      "category": "Medical",
+      "risk_level": "Low",
+      "narrative": "Separated due to a physical disability that qualified for severance pay but not retirement.",
+      "strategic_implications": {
+        "claim_potential": "High",
+        "red_team_flag": "This confirms a service-connected disability existed. Check if the condition has worsened since discharge or caused secondary conditions.",
+        "suggested_actions": [
+          {
+            "tool": "NexusBuilder",
+            "action": "Argue for increased rating due to progression"
+          },
+          {
+            "tool": "SecondaryScout",
+            "action": "Identify secondary conditions stemming from original disability"
+          }
+        ]
+      }
+    },
+    "JFR": {
+      "code": "JFR",
+      "description": "Homosexual Conduct",
+      "category": "Policy-Based",
+      "risk_level": "Medium",
+      "narrative": "Discharged under pre-DADT policies. May qualify for discharge upgrade under current law.",
+      "strategic_implications": {
+        "claim_potential": "Upgrade Eligible",
+        "red_team_flag": "This discharge is now widely recognized as discriminatory. Veterans with this code may be eligible for discharge upgrade and back pay of benefits.",
+        "suggested_actions": [
+          {
+            "tool": "Pathfinder",
+            "action": "Initiate discharge upgrade under modern DoD review boards"
+          }
+        ]
+      }
+    },
+    "KFS": {
+      "code": "KFS",
+      "description": "Failure to Meet Weight Standards",
+      "category": "Administrative",
+      "risk_level": "Medium",
+      "narrative": "Separated for failure to maintain body composition standards.",
+      "strategic_implications": {
+        "claim_potential": "Medium (Underlying Condition)",
+        "red_team_flag": "Weight gain can be a symptom of mental health conditions, thyroid disorders, or medication side effects. Check service medical records for underlying causes.",
+        "suggested_actions": [
+          {
+            "tool": "EvidenceGapFinder",
+            "action": "Search for depression, hypothyroidism, or medication changes in STRs"
+          }
+        ]
+      }
+    }
+  }
+}

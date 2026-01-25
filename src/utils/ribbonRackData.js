@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Ribbon Rack Data Utilities
+ * SupplyLocker.org - Ribbon Rack Data Utilities
  * ==========================================
  * 
  * DD214 Parser, Precedence Sorter, and Device Handler

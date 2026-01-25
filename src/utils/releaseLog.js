@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Release Log
+ * SupplyLocker.org - Release Log
  * 
  * This file tracks resolved ticket IDs (FEAT-xxxx, BUG-xxxx) so veterans can
  * see when their reported issues have been fixed or features implemented.

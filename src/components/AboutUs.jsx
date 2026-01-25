@@ -200,7 +200,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
         
         <div className="overflow-y-auto px-6 py-6" style={{ maxHeight: 'calc(100vh - 240px)' }}>
           
-          {/* THE VET-RATE PROMISE - Trust Beacon */}
+          {/* THE SupplyLocker PROMISE - Trust Beacon */}
           <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">
             <div className="text-center mb-4">
               <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ {t('about', 'theVetRatePromise')}</h3>
@@ -248,7 +248,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <section className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 {t('about', 'myMission')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> {t('about', 'missionDescription')} ({getTotalToolCount()}+ {t('about', 'professionalTools')?.toLowerCase() || 'professional tools'})
+              <strong>SupplyLocker.org</strong> {t('about', 'missionDescription')} ({getTotalToolCount()}+ {t('about', 'professionalTools')?.toLowerCase() || 'professional tools'})
             </p>
           </section>
 
@@ -475,7 +475,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
                             <p><strong>Local Models:</strong> {PROJECT_STATS.localAIModels} Diamond Swarm agents</p>
                             <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
-                            <p><strong>Vision Model:</strong> <span className="text-green-600 dark:text-green-400 font-medium">Vet-Rate Vision Phi ✅ Standard Chrome!</span></p>
+                            <p><strong>Vision Model:</strong> <span className="text-green-600 dark:text-green-400 font-medium">SupplyLocker Vision Phi ✅ Standard Chrome!</span></p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
                           </div>
                           {/* Custom LLM Build Achievement */}
@@ -658,8 +658,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   </div>
                   
                   <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                    Float32 model: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">Vet-Rate Vision Phi</code> | 
-                    Legacy model at: <a href="https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi</a>
+                    Float32 model: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">SupplyLocker Vision Phi</code> | 
+                    Legacy model at: <a href="https://huggingface.co/SupplyLocker-org/SupplyLocker-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/SupplyLocker-org/SupplyLocker-Vision-Phi</a>
                   </p>
                 </div>
               </details>
@@ -678,61 +678,6 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 <strong>💼 {t('about', 'notAffiliatedWithVA')}</strong> {t('about', 'notAffiliatedWithVADesc')}
               </p>
             </div>
-          </section>
-
-          <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 {t('about', 'howProjectFunded')}</h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', 'fundingIntro')}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <a
-                href="https://buymeacoffee.com/vetrate"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">☕</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">{t('about', 'buyMeACoffee')}</span>
-                <span className="text-xs font-medium text-yellow-900 dark:text-yellow-900">vet-rate.org</span>
-              </a>
-              <a
-                href="https://paypal.me/ajohnsonnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">💳</span>
-                <span className="text-sm font-bold text-white dark:text-white">PayPal</span>
-                <span className="text-xs font-medium text-blue-100 dark:text-blue-100">ajohnsonnow</span>
-              </a>
-              <a
-                href="https://cash.app/$ajnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-green-600 hover:bg-green-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">💵</span>
-                <span className="text-sm font-bold text-white dark:text-white">Cash App</span>
-                <span className="text-xs font-medium text-green-100 dark:text-green-100">$ajnow</span>
-              </a>
-              <a
-                href="https://venmo.com/ajnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-sky-600 hover:bg-sky-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">📱</span>
-                <span className="text-sm font-bold text-white dark:text-white">Venmo</span>
-                <span className="text-xs font-medium text-sky-100 dark:text-sky-100">@ajnow</span>
-              </a>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', 'supportHelpsKeepFree')}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-              {t('about', 'allContributionsGo')}
-            </p>
           </section>
 
           <section className="mb-6">

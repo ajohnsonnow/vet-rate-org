@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Atomic Wipe (Panic Button)
+ * SupplyLocker.org - Atomic Wipe (Panic Button)
  * Copyright (c) 2024-2026 Anthony Johnson
  * 
  * AAAAA Design System - "The Panic Button"
@@ -285,7 +285,7 @@ export function BunkerPrivacyNotice() {
           </h3>
           <p className={`text-sm ${isDark || isTbiComfort ? 'text-gray-400' : 'text-slate-600'} mt-1`}>
             Your data is currently stored in your browser's local sandbox. Exporting a backup creates a private file on your computer. 
-            Vet-Rate.org never sees, stores, or transmits this data.
+            SupplyLocker.org never sees, stores, or transmits this data.
           </p>
         </div>
       </div>

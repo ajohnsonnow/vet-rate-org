@@ -1,4 +1,4 @@
-# Contributing to Vet-Rate.org
+# Contributing to SupplyLocker.org
 
 Thank you for considering contributing to this project! This guide explains how to contribute effectively.
 
@@ -43,9 +43,9 @@ Help expand our database of disabilities. See [Database Contributions](#database
 ### Fork & Clone
 ```bash
 # Fork on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/vet-rate-org.git
-cd vet-rate-org
-git remote add upstream https://github.com/ajohnsonnow/vet-rate-org.git
+git clone https://github.com/YOUR_USERNAME/supply-locker-org.git
+cd supply-locker-org
+git remote add upstream https://github.com/ajohnsonnow/supply-locker-org.git
 ```
 
 ### Setup Development Environment
@@ -440,11 +440,11 @@ Before submitting PR:
 
 ## ⚖️ Legal & Licensing
 
-By submitting a Pull Request (PR) to Vet-Rate.org, you certify the following:
+By submitting a Pull Request (PR) to SupplyLocker.org, you certify the following:
 
 1. **Originality**: The code you are submitting is your original work, or you have the necessary rights to contribute it (e.g., it is not proprietary code from your employer).
 2. **Licensing**: You agree to license your contribution under the project's **GNU Affero General Public License v3.0 (AGPLv3)**.
-3. **No Strings Attached**: You understand that your contribution is a donation to the open-source community and that Vet-Rate.org is distributed freely without warranty.
+3. **No Strings Attached**: You understand that your contribution is a donation to the open-source community and that SupplyLocker.org is distributed freely without warranty.
 
 **Note**: All contributions must align with the mission of providing free, secure, and private tools for veterans. We reserve the right to reject PRs that compromise user privacy or introduce monetization features.
 

@@ -1,0 +1,361 @@
+{
+  "meta": {
+    "version": "2.0.0",
+    "strategy": "Differential Intake",
+    "description": "Smart intake form that skips questions based on DD-214-derived tags",
+    "last_updated": "2026-01"
+  },
+  "sections": [
+    {
+      "id": "stressor_verification",
+      "title": "Service Experience Verification",
+      "description": "Confirm key events that establish claim eligibility",
+      "questions": [
+        {
+          "id": "q_combat_event",
+          "text": "Did you experience hostile fire or combat-related events during your service?",
+          "type": "yes_no",
+          "dependency": {
+            "condition": "NOT_HAS_TAG",
+            "tag": "COMBAT_STRESSOR"
+          },
+          "reason_for_skip": "DD-214 decorations already confirm combat service",
+          "virtual_answer": true,
+          "tags_on_yes": ["COMBAT_STRESSOR"]
+        },
+        {
+          "id": "q_combat_details",
+          "text": "Please briefly describe the nature of the combat event (e.g., IED, small arms fire, mortar attack).",
+          "type": "textarea",
+          "placeholder": "Example: Convoy hit by IED outside Fallujah, Nov 2005",
+          "dependency": {
+            "condition": "HAS_TAG",
+            "tag": "COMBAT_STRESSOR"
+          },
+          "context_note": "Since we verified your combat award, we just need the 'Who, What, Where' for your personal statement.",
+          "required": true
+        },
+        {
+          "id": "q_deployment_location",
+          "text": "Where were you deployed during your service?",
+          "type": "multi_select",
+          "options": [
+            "Iraq",
+            "Afghanistan", 
+            "Kuwait",
+            "Saudi Arabia",
+            "Djibouti",
+            "Somalia",
+            "Persian Gulf",
+            "Other Southwest Asia",
+            "Vietnam",
+            "Korea",
+            "Other"
+          ],
+          "dependency": {
+            "condition": "NOT_HAS_ANY_TAG",
+            "tags": ["PACT_POST_911", "PACT_GULF", "PACT_VIETNAM"]
+          },
+          "reason_for_skip": "DD-214 campaign medals already identify deployment zones"
+        }
+      ]
+    },
+    {
+      "id": "toxic_exposure",
+      "title": "Environmental Hazards (PACT Act)",
+      "description": "Identify presumptive exposure conditions",
+      "questions": [
+        {
+          "id": "q_burn_pit_location",
+          "text": "Did you serve in Iraq, Afghanistan, or other Southwest Asia locations after September 11, 2001?",
+          "type": "yes_no",
+          "dependency": {
+            "condition": "NOT_HAS_TAG",
+            "tag": "PACT_POST_911"
+          },
+          "reason_for_skip": "DD-214 campaign medals place you in PACT Act zone",
+          "virtual_answer": true
+        },
+        {
+          "id": "q_respiratory_symptoms",
+          "text": "Do you currently experience any of these respiratory or sinus conditions?",
+          "type": "multi_select",
+          "options": [
+            "Chronic cough",
+            "Chronic sinusitis", 
+            "Chronic rhinitis",
+            "Shortness of breath",
+            "Asthma (new or worsened)",
+            "Sleep apnea",
+            "None of these"
+          ],
+          "dependency": {
+            "condition": "OR",
+            "tags": ["PACT_POST_911", "PACT_GULF"]
+          },
+          "trigger_action": {
+            "on_answer": "ANY_EXCEPT_NONE",
+            "tool": "SecondaryScout",
+            "action": "Flag PACT Act presumptive respiratory conditions",
+            "priority": "High"
+          },
+          "help_text": "These conditions are presumed service-connected if you served in a PACT Act location."
+        },
+        {
+          "id": "q_cancer_diagnosis",
+          "text": "Have you been diagnosed with any form of cancer since your service?",
+          "type": "yes_no",
+          "dependency": {
+            "condition": "OR",
+            "tags": ["PACT_POST_911", "PACT_GULF", "PACT_VIETNAM"]
+          },
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "Pathfinder",
+            "action": "Route to PACT Act presumptive cancer pathway",
+            "priority": "Critical"
+          },
+          "context_note": "Many cancers are now presumed service-connected under the PACT Act."
+        },
+        {
+          "id": "q_cancer_type",
+          "text": "What type of cancer were you diagnosed with?",
+          "type": "text",
+          "placeholder": "Example: Lung cancer, brain cancer, lymphoma",
+          "dependency": {
+            "condition": "ANSWERED_YES",
+            "question_id": "q_cancer_diagnosis"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "mental_health",
+      "title": "Mental Health Conditions",
+      "description": "Screen for PTSD, depression, anxiety, and related conditions",
+      "questions": [
+        {
+          "id": "q_ptsd_symptoms",
+          "text": "Do you experience any of these symptoms?",
+          "type": "multi_select",
+          "options": [
+            "Nightmares or flashbacks",
+            "Avoiding certain places/people",
+            "Feeling on edge or easily startled",
+            "Difficulty sleeping",
+            "Anger or irritability",
+            "Difficulty concentrating",
+            "Feeling detached from others",
+            "None of these"
+          ],
+          "trigger_action": {
+            "on_answer": "ANY_EXCEPT_NONE",
+            "tool": "NexusBuilder",
+            "action": "Prepare PTSD nexus statement",
+            "priority": "High"
+          },
+          "help_text": "These are common symptoms of PTSD and other mental health conditions."
+        },
+        {
+          "id": "q_mh_treatment",
+          "text": "Have you received any mental health treatment since your service (therapy, medication, hospitalization)?",
+          "type": "yes_no",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "EvidenceGapFinder",
+            "action": "Request mental health treatment records",
+            "priority": "High"
+          }
+        },
+        {
+          "id": "q_personality_disorder_discharge",
+          "text": "Your discharge records indicate a personality disorder diagnosis. Did you experience any traumatic events (combat, MST, accidents) BEFORE this diagnosis?",
+          "type": "yes_no",
+          "dependency": {
+            "condition": "HAS_TAG",
+            "tag": "DISCHARGE_PERSONALITY_DISORDER"
+          },
+          "context_note": "Personality disorder discharges are often misdiagnosed PTSD. If trauma preceded the diagnosis, we can challenge this.",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "Pathfinder",
+            "action": "Initiate discharge upgrade with PTSD basis",
+            "priority": "Critical"
+          }
+        }
+      ]
+    },
+    {
+      "id": "physical_conditions",
+      "title": "Physical Health Conditions",
+      "description": "Document injuries and physical disabilities",
+      "questions": [
+        {
+          "id": "q_tbi_event",
+          "text": "Did you experience any head injuries, blasts, or loss of consciousness during service?",
+          "type": "yes_no",
+          "tags_on_yes": ["TBI_SUSPECTED"],
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "EvidenceGapFinder",
+            "action": "Search for TBI markers in service medical records",
+            "priority": "High"
+          }
+        },
+        {
+          "id": "q_tbi_symptoms",
+          "text": "Do you currently experience any of these symptoms?",
+          "type": "multi_select",
+          "options": [
+            "Chronic headaches/migraines",
+            "Memory problems",
+            "Difficulty concentrating",
+            "Balance/coordination issues",
+            "Sensitivity to light or noise",
+            "Tinnitus (ringing in ears)",
+            "None of these"
+          ],
+          "dependency": {
+            "condition": "HAS_TAG",
+            "tag": "TBI_SUSPECTED"
+          },
+          "trigger_action": {
+            "on_answer": "ANY_EXCEPT_NONE",
+            "tool": "SecondaryScout",
+            "action": "Link TBI secondary conditions",
+            "priority": "High"
+          }
+        },
+        {
+          "id": "q_chronic_pain",
+          "text": "Do you experience chronic pain in any part of your body?",
+          "type": "multi_select",
+          "options": [
+            "Back pain",
+            "Neck pain",
+            "Knee pain",
+            "Shoulder pain",
+            "Hip pain",
+            "Ankle/foot pain",
+            "Other joint pain",
+            "Nerve pain",
+            "None"
+          ],
+          "trigger_action": {
+            "on_answer": "ANY_EXCEPT_NONE",
+            "tool": "NexusBuilder",
+            "action": "Document musculoskeletal conditions",
+            "priority": "Medium"
+          }
+        },
+        {
+          "id": "q_hearing_loss",
+          "text": "Do you have difficulty hearing or ringing in your ears (tinnitus)?",
+          "type": "multi_select",
+          "options": [
+            "Hearing loss",
+            "Tinnitus (ringing/buzzing)",
+            "Both",
+            "Neither"
+          ],
+          "trigger_action": {
+            "on_answer": "ANY_EXCEPT_NEITHER",
+            "tool": "Pathfinder",
+            "action": "Add hearing conditions to claim list",
+            "priority": "High"
+          },
+          "help_text": "Hearing loss and tinnitus are among the most common service-connected disabilities."
+        }
+      ]
+    },
+    {
+      "id": "secondary_conditions",
+      "title": "Related Conditions",
+      "description": "Identify conditions caused by your primary disabilities",
+      "questions": [
+        {
+          "id": "q_sleep_issues",
+          "text": "Do you have trouble sleeping?",
+          "type": "yes_no",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "SecondaryScout",
+            "action": "Link sleep disorder as secondary to PTSD or pain",
+            "priority": "Medium"
+          }
+        },
+        {
+          "id": "q_unemployability",
+          "text": "Are you unable to maintain substantially gainful employment due to your service-connected conditions?",
+          "type": "yes_no",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "TDIUBuilder",
+            "action": "Initiate TDIU eligibility assessment",
+            "priority": "Critical"
+          },
+          "help_text": "If your disabilities prevent you from working, you may qualify for Total Disability Individual Unemployability (TDIU), which pays at the 100% rate."
+        },
+        {
+          "id": "q_medications",
+          "text": "Are you currently taking any medications for service-related conditions?",
+          "type": "yes_no",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "EvidenceGapFinder",
+            "action": "Document ongoing treatment as evidence of severity",
+            "priority": "Medium"
+          }
+        }
+      ]
+    },
+    {
+      "id": "character_of_service",
+      "title": "Discharge Status",
+      "description": "Assess eligibility based on discharge characterization",
+      "questions": [
+        {
+          "id": "q_discharge_type",
+          "text": "What was your discharge characterization?",
+          "type": "single_select",
+          "options": [
+            "Honorable",
+            "General (Under Honorable Conditions)",
+            "Other Than Honorable",
+            "Bad Conduct",
+            "Dishonorable",
+            "Unsure"
+          ],
+          "dependency": {
+            "condition": "NOT_HAS_TAG",
+            "tag": "CHARACTER_OF_SERVICE_KNOWN"
+          },
+          "reason_for_skip": "DD-214 analysis already extracted discharge character",
+          "trigger_action": {
+            "on_answer": ["General (Under Honorable Conditions)", "Other Than Honorable", "Bad Conduct"],
+            "tool": "Pathfinder",
+            "action": "Evaluate discharge upgrade eligibility",
+            "priority": "High"
+          }
+        },
+        {
+          "id": "q_discharge_upgrade_interest",
+          "text": "Your discharge may limit some benefits. Would you like guidance on requesting a discharge upgrade?",
+          "type": "yes_no",
+          "dependency": {
+            "condition": "HAS_ANY_TAG",
+            "tags": ["DISCHARGE_GENERAL", "DISCHARGE_OTH", "DISCHARGE_BCD"]
+          },
+          "context_note": "The VA evaluates benefit eligibility separately from your discharge character, but an upgrade can unlock additional benefits.",
+          "trigger_action": {
+            "on_answer": "yes",
+            "tool": "Pathfinder",
+            "action": "Initiate discharge upgrade roadmap",
+            "priority": "High"
+          }
+        }
+      ]
+    }
+  ]
+}

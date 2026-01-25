@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Language Suggestion Modal
+ * SupplyLocker.org - Language Suggestion Modal
  * Allows users to suggest new languages for inclusion
  * Generates a detailed feature request that can be passed to developers
  */
@@ -334,7 +334,7 @@ Verify translations with native speakers for accuracy!
                     Feature Request Generated!
                   </p>
                   <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                    Copy this request and share it with the Vet-Rate development team.
+                    Copy this request and share it with the SupplyLocker development team.
                   </p>
                 </div>
               </div>

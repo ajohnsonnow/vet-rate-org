@@ -1021,7 +1021,7 @@ const BodyMapSelector = ({ onSymptomUpdate, existingSymptoms = [], onLogToSympto
                         notes: symptoms.map(s => `${s.zoneName}: ${s.userDescription} (${s.medicalTerminology})`).join('\n'),
                         timestamp: Date.now()
                       };
-                      localStorage.setItem('vetrate_symptom_prefill', JSON.stringify(logData));
+                      localStorage.setItem('supplylocker_symptom_prefill', JSON.stringify(logData));
                       
                       // Call the callback if provided
                       if (onLogToSymptomLogger) {

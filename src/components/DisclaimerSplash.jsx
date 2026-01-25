@@ -19,7 +19,7 @@ function DisclaimerSplash({ onAcknowledge }) {
 
   useEffect(() => {
     // Check if user has already acknowledged
-    const hasAcknowledged = localStorage.getItem('vetrate-disclaimer-acknowledged');
+    const hasAcknowledged = localStorage.getItem('supplylocker-disclaimer-acknowledged');
     if (!hasAcknowledged) {
       setIsVisible(true);
     } else {
@@ -28,7 +28,7 @@ function DisclaimerSplash({ onAcknowledge }) {
   }, [onAcknowledge]);
 
   const handleAcknowledge = () => {
-    localStorage.setItem('vetrate-disclaimer-acknowledged', 'true');
+    localStorage.setItem('supplylocker-disclaimer-acknowledged', 'true');
     setIsVisible(false);
     onAcknowledge?.();
   };
@@ -47,8 +47,8 @@ function DisclaimerSplash({ onAcknowledge }) {
         <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 p-6 text-center">
           <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden w-24 h-24">
             <img 
-              src="/images/Vet-Rate-org-logo-official.png" 
-              alt="Vet-Rate.org Logo" 
+              src="/images/supply-locker-org-logo.png" 
+              alt="SupplyLocker.org Logo" 
               className="h-full w-full object-cover rounded-full"
             />
           </div>
@@ -62,6 +62,32 @@ function DisclaimerSplash({ onAcknowledge }) {
 
         {/* Content */}
         <div className="p-6 md:p-8">
+          {/* Beta Development Warning - Personal Message */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl p-5 mb-6 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+                  Active Development - Beta Tools
+                  <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">BETA</span>
+                </h3>
+                <div className="space-y-2 text-sm text-amber-900 dark:text-amber-100">
+                  <p className="leading-relaxed">
+                    <strong>All tools are currently in active development.</strong> I'm working hard every day to make SupplyLocker the best gift I can give to my fellow veterans.
+                  </p>
+                  <p className="leading-relaxed italic border-l-4 border-amber-500 pl-3 py-1">
+                    "Monty always told me to take care of my guys... and y'all are my guys."
+                  </p>
+                  <p className="text-xs text-amber-800 dark:text-amber-300 mt-3">
+                    💪 Every tool is marked BETA. Expect improvements, updates, and occasional rough edges as I build this for us. Your feedback helps make it better for everyone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Personal Message */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">

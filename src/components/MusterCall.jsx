@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Muster Call Component
+ * SupplyLocker.org - Muster Call Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -49,6 +49,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
 
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   /**
    * Handle file selection
@@ -64,7 +65,15 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
       setFiles(fileArray);
       setError(null);
     } else {
-      setError('No valid files selected. Please select PDF, DOCX, or TXT files.');
+      // Show detailed error with rejected files
+      const rejectedList = validationResult.invalid
+        .map(inv => `• ${inv.file.name}: ${inv.reason}`)
+        .join('\n');
+      const errorMsg = validationResult.invalid.length > 0
+        ? `Invalid files:\n${rejectedList}\n\nSupported: PDF, DOCX, TXT, RTF`
+        : 'No valid files selected. Supported: PDF, DOCX, TXT, RTF';
+      setError(errorMsg);
+      console.error('File validation failed:', validationResult);
     }
   }, []);
 
@@ -102,10 +111,26 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   }, [handleFileSelect]);
 
   /**
+   * Stop processing
+   */
+  const handleStopProcessing = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setProcessing(false);
+      setProcessingState(PROCESSING_STATES.IDLE);
+      setError('Processing stopped by user');
+    }
+  };
+
+  /**
    * Start processing files
    */
   const handleStartProcessing = async () => {
     if (files.length === 0) return;
+
+    // Create new AbortController for this batch
+    abortControllerRef.current = new AbortController();
 
     setProcessing(true);
     setProcessingState(PROCESSING_STATES.VALIDATING);
@@ -117,6 +142,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
     try {
       // Process all files
       const result = await processMusterCallBatch(files, {
+        abortSignal: abortControllerRef.current.signal,
         onProgress: (progressData) => {
           if (progressData.state) {
             setProcessingState(progressData.state);
@@ -178,10 +204,15 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
 
     } catch (err) {
       console.error('Muster Call processing error:', err);
-      setError(err.message);
+      if (err.name === 'AbortError') {
+        setError('Processing stopped by user');
+      } else {
+        setError(err.message);
+      }
       setProcessingState(PROCESSING_STATES.ERROR);
     } finally {
       setProcessing(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -367,8 +398,20 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {getStateLabel(processingState)}
                   </h3>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {progress.completed} / {progress.total} files
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {progress.completed} / {progress.total} files
+                    </div>
+                    <button
+                      onClick={handleStopProcessing}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                      title="Stop processing"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="6" width="12" height="12" strokeWidth="2" />
+                      </svg>
+                      Stop
+                    </button>
                   </div>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">

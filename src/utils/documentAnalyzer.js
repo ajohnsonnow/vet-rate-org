@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Universal Document Analyzer
+ * SupplyLocker.org - Universal Document Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

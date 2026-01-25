@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Stale Data Detection Utility
+ * SupplyLocker.org - Stale Data Detection Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -91,10 +91,10 @@ export function generateReportOutdatedLink(disability) {
     `[Please describe what you believe has changed or why this needs updating]\n\n` +
     `Source (if any):\n` +
     `[URL or reference to updated VA regulations]\n\n` +
-    `Thank you for helping keep Vet-Rate.org accurate!`
+    `Thank you for helping keep SupplyLocker.org accurate!`
   );
   
-  return `mailto:support@vet-rate.org?subject=${subject}&body=${body}`;
+  return `mailto:support@SupplyLocker.org?subject=${subject}&body=${body}`;
 }
 
 /**

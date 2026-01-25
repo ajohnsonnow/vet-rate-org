@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -156,7 +156,7 @@ export const exportPacketData = (claims, statements) => {
   const exportData = {
     version: '1.0',
     exportDate: new Date().toISOString(),
-    source: 'Vet-Rate.org',
+    source: 'SupplyLocker.org',
     disclaimer: 'This backup contains personal claim data. Keep it secure and private.',
     data: {
       claims: claims.map(claim => validateClaim(claim)).filter(Boolean),
@@ -221,9 +221,9 @@ export const importPacketData = (jsonString) => {
     return { success: false, error: 'Invalid format: expected object structure' };
   }
 
-  // Check for Vet-Rate format
-  if (parsed.source !== 'Vet-Rate.org') {
-    return { success: false, error: 'Invalid backup file: not a Vet-Rate.org backup' };
+  // Check for SupplyLocker format
+  if (parsed.source !== 'SupplyLocker.org') {
+    return { success: false, error: 'Invalid backup file: not a SupplyLocker.org backup' };
   }
 
   if (!parsed.data || typeof parsed.data !== 'object') {
@@ -275,7 +275,7 @@ export const importPacketData = (jsonString) => {
  */
 export const downloadPacketBackup = (exportData, filename = null) => {
   const date = new Date().toISOString().split('T')[0];
-  const defaultFilename = `vet-rate-packet-backup-${date}.json`;
+  const defaultFilename = `SupplyLocker-packet-backup-${date}.json`;
   
   const jsonString = JSON.stringify(exportData, null, 2);
   const blob = new Blob([jsonString], { type: 'application/json' });
@@ -303,7 +303,7 @@ export const exportCompletePacket = (claims, statements, veteranProfile = null, 
   const exportData = {
     version: '2.0',
     exportDate: new Date().toISOString(),
-    source: 'Vet-Rate.org',
+    source: 'SupplyLocker.org',
     disclaimer: 'This backup contains personal claim data and sensitive information. Keep it secure and private. NEVER share this file.',
     data: {
       claims: claims.map(claim => validateClaim(claim)).filter(Boolean),

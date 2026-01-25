@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - DD214 Information Analyzer
+ * SupplyLocker.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -24,6 +24,9 @@ import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVe
 import { parseDD214Text } from '../utils/ribbonRackData';
 import ProfileImportConfirmModal from './ProfileImportConfirmModal';
 import DD214FormBuilder from './DD214FormBuilder';
+import ManualDataEntry from './ManualDataEntry';
+import DocumentPicker from './DocumentPicker';
+import { getDocumentById } from '../utils/veteranKnowledgeBase';
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -228,6 +231,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   
   // Profile import confirmation modal
@@ -964,6 +968,16 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           {/* Input Method Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
+              onClick={() => setInputMethod('upload')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                inputMethod === 'upload'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              📤 {t('dd214Analyzer', 'uploadFile')}
+            </button>
+            <button
               onClick={() => setInputMethod('paste')}
               className={`px-6 py-3 font-medium text-sm transition-colors ${
                 inputMethod === 'paste'
@@ -972,6 +986,16 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
               }`}
             >
               📋 {t('dd214Analyzer', 'pasteText')}
+            </button>
+            <button
+              onClick={() => setInputMethod('vkb')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                inputMethod === 'vkb'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              🗂️ From VKB
             </button>
             <button
               onClick={() => setInputMethod('upload')}
@@ -1045,6 +1069,31 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
               {/* Show saved DD214s if any */}
               <SavedDD214List />
+            </div>
+          )}
+
+          {/* VKB Input - Select from uploaded documents */}
+          {inputMethod === 'vkb' && (
+            <div className="space-y-4">
+              <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <span className="text-4xl">🗂️</span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-purple-900 dark:text-purple-100 text-lg mb-2">
+                      Select from Veteran Knowledge Base
+                    </h3>
+                    <p className="text-purple-800 dark:text-purple-200 mb-4">
+                      Choose DD-214s you've already uploaded via Muster Call. No need to re-upload documents!
+                    </p>
+                    <button
+                      onClick={() => setShowDocumentPicker(true)}
+                      className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg flex items-center gap-2"
+                    >
+                      🗂️ Browse VKB Documents
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1179,9 +1228,19 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⚠️</span>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-semibold text-red-800 dark:text-red-200">{t('dd214Analyzer', 'error')}</h3>
                   <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                  
+                  {/* Manual Entry Fallback - Show when OCR fails */}
+                  {(error.includes('processing') || error.includes('Failed') || error.includes('OCR')) && (
+                    <button
+                      onClick={() => setShowManualEntry(true)}
+                      className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium text-sm transition-colors"
+                    >
+                      ✋ Enter Data Manually
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1189,41 +1248,44 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
           {/* Analysis Results */}
           {analysisResult && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                  ✅ {t('dd214Analyzer', 'analysisComplete')}
-                  {analysisResult.dd214Count > 1 && (
-                    <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded-full">
-                      {analysisResult.dd214Count} {t('dd214Analyzer', 'dd214sConsolidated')}
-                    </span>
-                  )}
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-2xl p-6 border border-blue-200 dark:border-gray-700 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>📋</span>
+                  <span>{t('dd214Analyzer', 'analysisComplete')}</span>
                 </h3>
+                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full font-medium">
+                  {analysisResult.source === 'MANUAL_ENTRY' ? `✏️ ${t('dd214Analyzer', 'manual')}` : `🤖 ${t('dd214Analyzer', 'ai')}`}
+                </span>
               </div>
 
-              {/* Service Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+              {/* Service Information Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'branch')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.branch || t('dd214Analyzer', 'na')}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'mos')}</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">
-                    {typeof analysisResult.mos === 'object' 
-                      ? (analysisResult.mos?.code || JSON.stringify(analysisResult.mos)) 
-                      : (analysisResult.mos || t('dd214Analyzer', 'na'))}
-                  </p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.mos || t('dd214Analyzer', 'na')}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'timeInService')}</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">
-                    {analysisResult.yearsService ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m` : t('dd214Analyzer', 'na')}
-                  </p>
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'character')}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.characterOfService || t('dd214Analyzer', 'na')}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'entry')}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.entryDate || t('dd214Analyzer', 'na')}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'separation')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationDate || t('dd214Analyzer', 'na')}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'timeInService')}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">
+                    {analysisResult.yearsService}y {analysisResult.monthsService}m
+                  </p>
                 </div>
               </div>
 
@@ -1352,6 +1414,80 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           }}
         />
       )}
+
+      {/* Manual Entry Modal */}
+      {showManualEntry && (
+        <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <ManualDataEntry
+              onSubmit={(manualData) => {
+                console.log('Manual entry data:', manualData);
+                // Create analysis result from manual data
+                const mockResult = {
+                  branch: 'Unknown',
+                  mos: manualData.spnCode,
+                  mosTitle: manualData.spnCodeInfo?.title || 'Unknown',
+                  entryDate: manualData.serviceStartDate || null,
+                  separationDate: manualData.serviceEndDate || null,
+                  separationType: 'Manual Entry',
+                  characterOfService: manualData.characterOfService || 'Honorable',
+                  reenlisted: false,
+                  foreignService: false,
+                  yearsService: 0,
+                  monthsService: 0,
+                  awards: manualData.medals.map(m => ({ name: m.name, abbreviation: m.abbreviation || m.name })),
+                  combatService: { hasVerifiedCombat: manualData.tags.includes('COMBAT_STRESSOR'), indicators: manualData.tags },
+                  specialQualifications: [],
+                  extractionNotes: ['Data entered manually by user'],
+                  tags: manualData.tags,
+                  source: 'MANUAL_ENTRY'
+                };
+                setAnalysisResult(mockResult);
+                setShowManualEntry(false);
+                setError(null);
+              }}
+              onCancel={() => setShowManualEntry(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Document Picker Modal - Select from VKB */}
+      <DocumentPicker
+        isOpen={showDocumentPicker}
+        onClose={() => setShowDocumentPicker(false)}
+        filterType="dd214"
+        multiSelect={true}
+        title="Select DD-214s from VKB"
+        emptyMessage="No DD-214s found in VKB. Use Muster Call to upload documents first."
+        onSelect={async (selectedDocuments) => {
+          try {
+            console.log('Selected documents from VKB:', selectedDocuments);
+            
+            // Combine all selected DD-214 texts
+            const combinedText = selectedDocuments.map(doc => doc.rawText).join('\n\n---\n\n');
+            
+            if (!combinedText) {
+              setError('Selected documents have no extracted text. Try re-uploading via Muster Call.');
+              return;
+            }
+            
+            // Set as pasted text and trigger analysis
+            setPastedText(combinedText);
+            setExtractedTexts([combinedText]);
+            setInputMethod('paste');
+            
+            // Auto-trigger analysis if AI is ready
+            if (aiStatus.anyAvailable) {
+              console.log('Auto-triggering analysis for VKB documents...');
+              await handleAnalyzeAI();
+            }
+          } catch (err) {
+            console.error('Error loading VKB documents:', err);
+            setError(err.message);
+          }
+        }}
+      />
     </div>
   );
 };

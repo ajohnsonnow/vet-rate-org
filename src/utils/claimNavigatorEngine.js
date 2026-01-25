@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Claim Navigator Engine
+ * SupplyLocker.org - Claim Navigator Engine
  * "The Brain" - State-aware logic controller for VA claims navigation
  * 
  * This engine analyzes a veteran's current claim state and generates

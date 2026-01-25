@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Knowledge Base Status Component
+ * SupplyLocker.org - Knowledge Base Status Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

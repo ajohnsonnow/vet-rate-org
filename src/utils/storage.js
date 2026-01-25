@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  *
@@ -140,8 +140,8 @@ export async function needsMigration() {
     'vet_rate_saved_forms',
     'vet_rate_my_ratings',
     'vet_rate_saved_claims',
-    'vet-rate-tos-accepted',
-    'vet-rate-tos-accepted-date',
+    'SupplyLocker-tos-accepted',
+    'SupplyLocker-tos-accepted-date',
     'vetrate_gemini_key',
     'vet_rate_app_version',
     'vet_rate_data_schema_version',

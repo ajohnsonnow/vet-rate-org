@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - Cloud Sync Manager Component
+/**
+ * SupplyLocker.org - Cloud Sync Manager Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -79,7 +79,7 @@ const CloudSyncManager = ({ onClose }) => {
       const user = await signInToGoogleDrive();
       setUserInfo(user);
       setIsSignedIn(true);
-      setStatus('✅ Connected to Google Drive');
+      setStatus('? Connected to Google Drive');
       
       // Load existing backups
       await loadBackups();
@@ -126,7 +126,7 @@ const CloudSyncManager = ({ onClose }) => {
       // Save to Google Drive
       const result = await saveBackupToGoogleDrive(appData);
       
-      setStatus(`✅ Backup saved: ${result.fileName}`);
+      setStatus(`? Backup saved: ${result.fileName}`);
       
       // Refresh backup list
       await loadBackups();
@@ -158,7 +158,7 @@ const CloudSyncManager = ({ onClose }) => {
       // Import into app
       await importAllData(restoredData);
       
-      setStatus('✅ Backup restored successfully! Refreshing page...');
+      setStatus('? Backup restored successfully! Refreshing page...');
       
       // Reload page to reflect changes
       setTimeout(() => {
@@ -182,7 +182,7 @@ const CloudSyncManager = ({ onClose }) => {
     try {
       setIsLoading(true);
       await deleteBackupFromGoogleDrive(fileId);
-      setStatus(`✅ Deleted: ${fileName}`);
+      setStatus(`? Deleted: ${fileName}`);
       await loadBackups();
     } catch (err) {
       setError('Failed to delete backup: ' + err.message);
@@ -208,7 +208,7 @@ const CloudSyncManager = ({ onClose }) => {
         {/* Header */}
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">☁️</div>
+            <div className="text-3xl">??</div>
             <div>
               <h1 className="text-xl font-bold text-white">
                 The Off-Site Bunker
@@ -223,7 +223,7 @@ const CloudSyncManager = ({ onClose }) => {
             className="text-white hover:text-green-200 transition-colors text-2xl font-bold"
             aria-label="Close"
           >
-            ×
+            �
           </button>
         </div>
 
@@ -233,22 +233,22 @@ const CloudSyncManager = ({ onClose }) => {
           {/* Explainer */}
           <div className="bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-blue-400/30 rounded-lg p-6 mb-6">
             <div className="flex items-start gap-4">
-              <div className="text-4xl">🛡️</div>
+              <div className="text-4xl">???</div>
               <div>
                 <h2 className="text-xl font-bold text-blue-300 mb-2">
                   Your Data, Your Cloud, Zero Liability <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
                 </h2>
                 <ul className="space-y-2 text-gray-300 text-sm">
                   <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
+                    <span className="text-green-400">?</span>
                     <span>Backups are encrypted and saved to <strong>YOUR</strong> Google Drive</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
+                    <span className="text-green-400">?</span>
                     <span>We never see your data-it goes directly from your browser to your cloud</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-green-400">✓</span>
+                    <span className="text-green-400">?</span>
                     <span>If your computer dies, your claim data is safe</span>
                   </li>
                 </ul>
@@ -259,7 +259,7 @@ const CloudSyncManager = ({ onClose }) => {
           {/* Not Initialized Warning */}
           {!isInitialized && (
             <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-6 mb-6">
-              <h3 className="text-red-300 font-bold mb-2">⚠️ Google API Not Loaded</h3>
+              <h3 className="text-red-300 font-bold mb-2">?? Google API Not Loaded</h3>
               <p className="text-gray-300 text-sm mb-2">
                 {status || 'Waiting for Google API to load...'}
               </p>
@@ -277,7 +277,7 @@ const CloudSyncManager = ({ onClose }) => {
           {/* Sign In Section */}
           {isInitialized && !isSignedIn && (
             <div className="text-center py-8">
-              <div className="text-6xl mb-4">🔐</div>
+              <div className="text-6xl mb-4">??</div>
               <h3 className="text-2xl font-bold text-white mb-3">
                 Connect Your Google Drive
               </h3>
@@ -331,7 +331,7 @@ const CloudSyncManager = ({ onClose }) => {
 
               {/* Create Backup Button */}
               <ToolCardButton className="w-full" type="button" onClick={handleCreateBackup} disabled={isLoading}>
-                <span className="text-2xl">💾</span>
+                <span className="text-2xl">??</span>
                 <span>{isLoading ? 'Creating Backup...' : 'Create New Backup Now'}</span>
               </ToolCardButton>
 
@@ -344,7 +344,7 @@ const CloudSyncManager = ({ onClose }) => {
 
               {error && (
                 <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-3">
-                  <p className="text-red-300 text-sm">⚠️ {error}</p>
+                  <p className="text-red-300 text-sm">?? {error}</p>
                 </div>
               )}
 
@@ -359,7 +359,7 @@ const CloudSyncManager = ({ onClose }) => {
                     disabled={isLoading}
                     className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
                   >
-                    🔄 Refresh
+                    ?? Refresh
                   </button>
                 </div>
 

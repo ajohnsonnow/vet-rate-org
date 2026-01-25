@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Device Capability Detection for AI Features
+ * SupplyLocker.org - Device Capability Detection for AI Features
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

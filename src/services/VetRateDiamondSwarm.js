@@ -1,5 +1,5 @@
 /**
- * Vet-Rate Diamond Swarm Integration
+ * SupplyLocker Diamond Swarm Integration
  * 💎 Client-side AI inference using specialized agents
  * 
  * This service replaces the old WebLLM integration with the Diamond Swarm

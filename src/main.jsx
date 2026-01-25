@@ -1,5 +1,5 @@
 /*
- * Vet-Rate.org - VA Disability Claims Command Center
+ * SupplyLocker.org - VA Disability Claims Command Center
  * Copyright (C) 2024-2026 Anthony Johnson
  *
  * This program is free software: you can redistribute it and/or modify

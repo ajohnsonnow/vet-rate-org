@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Denials Decoder (OCR + AI Simplifier)
+ * SupplyLocker.org - The Denials Decoder (OCR + AI Simplifier)
  * 
  * Helps veterans understand their VA denial letters.
  * Uses local OCR (Tesseract.js) to scan denial letters, then AI to:

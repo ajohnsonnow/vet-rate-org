@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Unified AI Service
+ * SupplyLocker.org - Unified AI Service
  * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  * 
  * This service provides a unified interface for AI operations using the
@@ -1207,7 +1207,7 @@ const getUserPreset = () => {
 export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
   // Validate vision model is loaded
   if (!localAIIsVisionModel) {
-    throw new Error('Vision model not loaded. Please load a vision model (like Vet-Rate Vision Phi) to analyze images directly.');
+    throw new Error('Vision model not loaded. Please load a vision model (like SupplyLocker Vision Phi) to analyze images directly.');
   }
   
   if (!localAIEngine) {
@@ -1321,7 +1321,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
     const errorMsg = err.message || '';
     
     if (errorMsg.includes('not of type ModelType.VLM')) {
-      throw new Error('The loaded model does not support image input. Please load a vision model like Vet-Rate Vision Phi.');
+      throw new Error('The loaded model does not support image input. Please load a vision model like SupplyLocker Vision Phi.');
     }
     if (errorMsg.includes('image_url')) {
       throw new Error('Image format error. Please ensure images are valid base64 data URLs.');
@@ -1618,7 +1618,7 @@ export const getLocalModelName = () => {
   const modelId = localStorage.getItem('vet_rate_local_ai_model');
   if (!modelId) return 'Local AI';  // Generic name when no specific model selected
   
-  // Diamond Swarm agents (fine-tuned VetRate models)
+  // Diamond Swarm agents (fine-tuned SupplyLocker models)
   if (modelId.includes('vetrate-auditor')) return '💎 Diamond Auditor';
   if (modelId.includes('vetrate-writer')) return '💎 Diamond Writer';
   if (modelId.includes('vetrate-rater')) return '💎 Diamond Rater';
@@ -1661,8 +1661,8 @@ export const getLocalModelName = () => {
   if (modelId.includes('Llama')) return 'Llama';
   
   // Phi Series (Microsoft) & Custom Vision Models
-  if (modelId.includes('Vet-Rate-Vision-Phi-Float32')) return 'Vet-Rate Vision Phi';
-  if (modelId.includes('Vet-Rate-Vision-Phi')) return 'Vet-Rate Vision Phi (Legacy)';
+  if (modelId.includes('SupplyLocker-Vision-Phi-Float32')) return 'SupplyLocker Vision Phi';
+  if (modelId.includes('SupplyLocker-Vision-Phi')) return 'SupplyLocker Vision Phi (Legacy)';
   if (modelId.includes('Phi-3.5-vision')) return 'Phi 3.5 Vision';
   if (modelId.includes('Phi-3.5')) return 'Phi 3.5 Mini';
   if (modelId.includes('Phi')) return 'Phi';

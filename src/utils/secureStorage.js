@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -298,7 +298,7 @@ export const needsMigration = () => {
   const legacyKeys = [
     'vet_rate_saved_claims',
     'vet_rate_statements',
-    'vet-rate-user-profile'
+    'SupplyLocker-user-profile'
   ];
   
   return legacyKeys.some(key => localStorage.getItem(key) !== null);
@@ -312,7 +312,7 @@ export const migrateLegacyData = async (pin) => {
     const legacyKeys = [
       'vet_rate_saved_claims',
       'vet_rate_statements',
-      'vet-rate-user-profile',
+      'SupplyLocker-user-profile',
       'vet_rate_nexus_statements',
       'vet_rate_cap_simulator_data'
     ];
@@ -352,7 +352,7 @@ export const completeMigrationCleanup = () => {
   const legacyKeys = [
     'vet_rate_saved_claims',
     'vet_rate_statements',
-    'vet-rate-user-profile',
+    'SupplyLocker-user-profile',
     'vet_rate_nexus_statements',
     'vet_rate_cap_simulator_data'
   ];

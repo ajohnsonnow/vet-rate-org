@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Consent Modal
+ * SupplyLocker.org - AI Consent Modal
  * 
  * Displays privacy disclosure and gets user consent before
  * sending any data to the AI service (Google Gemini).

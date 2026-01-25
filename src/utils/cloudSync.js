@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Off-Site Bunker (Cloud Sync Utility)
+ * SupplyLocker.org - The Off-Site Bunker (Cloud Sync Utility)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -22,8 +22,8 @@ const GDRIVE_CONFIG = {
   clientId: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID || '',
   scopes: 'https://www.googleapis.com/auth/drive.file',
   discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-  folderName: 'Vet-Rate-Backups',
-  filePrefix: 'vetrate_backup_'
+  folderName: 'SupplyLocker-Backups',
+  filePrefix: 'supplylocker_backup_'
 };
 
 // Store access token and user info
@@ -288,7 +288,7 @@ async function encryptData(text, password) {
   const key = await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode('vet-rate-salt-v1'),
+      salt: encoder.encode('SupplyLocker-salt-v1'),
       iterations: 100000,
       hash: 'SHA-256'
     },
@@ -330,7 +330,7 @@ async function decryptData(encryptedBase64, password) {
   const key = await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: encoder.encode('vet-rate-salt-v1'),
+      salt: encoder.encode('SupplyLocker-salt-v1'),
       iterations: 100000,
       hash: 'SHA-256'
     },
@@ -354,7 +354,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
     }
     
     // Use email as default encryption key
-    const encryptionKey = password || currentUser?.email || 'vet-rate-default-key';
+    const encryptionKey = password || currentUser?.email || 'SupplyLocker-default-key';
     
     const jsonData = JSON.stringify(data);
     const encryptedData = await encryptData(jsonData, encryptionKey);
@@ -367,7 +367,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
     const fileMetadata = {
       name: fileName,
       parents: [folderId],
-      description: 'Vet-Rate.org encrypted backup'
+      description: 'SupplyLocker.org encrypted backup'
     };
     
     const fileContent = new Blob([encryptedData], { type: 'application/json' });
@@ -418,7 +418,7 @@ export async function listBackupsFromGoogleDrive() {
  */
 export async function restoreBackupFromGoogleDrive(fileId, password = null) {
   try {
-    const encryptionKey = password || currentUser?.email || 'vet-rate-default-key';
+    const encryptionKey = password || currentUser?.email || 'SupplyLocker-default-key';
     
     const response = await window.gapi.client.drive.files.get({
       fileId: fileId,

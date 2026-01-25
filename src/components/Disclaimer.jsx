@@ -62,7 +62,7 @@ function Disclaimer({ compact = false }) {
           {/* Content */}
           <div className="text-amber-700 dark:text-amber-100 space-y-3 max-w-2xl">
             <p>
-              <strong className="text-amber-800 dark:text-amber-200">Vet-Rate.org</strong> {t('disclaimer', 'informationalOnly')}.
+              <strong className="text-amber-800 dark:text-amber-200">SupplyLocker.org</strong> {t('disclaimer', 'informationalOnly')}.
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-400">
               {t('disclaimer', 'consultVSO')}

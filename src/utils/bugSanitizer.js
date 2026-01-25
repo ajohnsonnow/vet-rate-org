@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Bug Report Sanitizer
+ * SupplyLocker.org - Bug Report Sanitizer
  * "Safe-Squash" Architecture - Privacy-First Error Logging
  * 
  * Recursively scans and redacts PII before storage:

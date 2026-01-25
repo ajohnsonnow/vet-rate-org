@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -25,8 +25,8 @@ import {
 } from '../utils/secureStorage';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const STORAGE_KEY_VAULT_ENABLED = 'vet-rate-vault-enabled';
-const STORAGE_KEY_SESSION_LOCK_ENABLED = 'vet-rate-session-lock-enabled';
+const STORAGE_KEY_VAULT_ENABLED = 'SupplyLocker-vault-enabled';
+const STORAGE_KEY_SESSION_LOCK_ENABLED = 'SupplyLocker-session-lock-enabled';
 
 const SecurityManager = ({ children }) => {
   const { t } = useLanguage();
@@ -42,7 +42,7 @@ const SecurityManager = ({ children }) => {
     return localStorage.getItem(STORAGE_KEY_SESSION_LOCK_ENABLED) !== 'false'; // Default true
   });
   const [panicButtonEnabled, setPanicButtonEnabled] = useState(() => {
-    return localStorage.getItem('vet-rate-panic-button-enabled') !== 'false'; // Default true
+    return localStorage.getItem('SupplyLocker-panic-button-enabled') !== 'false'; // Default true
   });
   const [showMigrationPrompt, setShowMigrationPrompt] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -173,7 +173,7 @@ const SecurityManager = ({ children }) => {
   const togglePanicButton = () => {
     const newState = !panicButtonEnabled;
     setPanicButtonEnabled(newState);
-    localStorage.setItem('vet-rate-panic-button-enabled', newState.toString());
+    localStorage.setItem('SupplyLocker-panic-button-enabled', newState.toString());
   };
 
   // Provide security context to children

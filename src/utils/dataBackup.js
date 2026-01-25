@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -12,7 +12,7 @@
 // Schema version for future compatibility
 const SCHEMA_VERSION = '1.0.0';
 
-// All localStorage keys used by Vet-Rate.org
+// All localStorage keys used by SupplyLocker.org
 const STORAGE_KEYS = [
   'vet_rate_saved_claims',
   'vet_rate_statements',
@@ -22,10 +22,10 @@ const STORAGE_KEYS = [
   'vetrate-helper-mode',
   'vetrate-helper-tooltips',
   'vetrate-disclaimer-acknowledged',
-  'vet-rate-theme',
-  'vet-rate-color-blind-mode',
-  'vet-rate-reduced-motion',
-  'vet-rate-font-size',
+  'SupplyLocker-theme',
+  'SupplyLocker-color-blind-mode',
+  'SupplyLocker-reduced-motion',
+  'SupplyLocker-font-size',
   'vetrate-mobile-notice-dismissed'
 ];
 
@@ -72,7 +72,7 @@ export const exportData = () => {
 export const downloadBackup = (backupData, filename = null) => {
   try {
     const date = new Date().toISOString().split('T')[0];
-    const defaultFilename = `vet-rate-bunker-backup-${date}.json`;
+    const defaultFilename = `SupplyLocker-bunker-backup-${date}.json`;
     const finalFilename = filename || defaultFilename;
 
     const json = JSON.stringify(backupData, null, 2);
@@ -105,7 +105,7 @@ export const validateBackup = (backupData) => {
     if (!backupData || typeof backupData !== 'object') {
       return {
         success: false,
-        message: 'Invalid backup file format. Please select a valid Vet-Rate backup file.'
+        message: 'Invalid backup file format. Please select a valid SupplyLocker backup file.'
       };
     }
 
@@ -113,7 +113,7 @@ export const validateBackup = (backupData) => {
     if (!backupData.schemaVersion) {
       return {
         success: false,
-        message: 'This file is missing version information. It may not be a valid Vet-Rate backup.'
+        message: 'This file is missing version information. It may not be a valid SupplyLocker backup.'
       };
     }
 
@@ -234,7 +234,7 @@ export const parseBackupFile = (file) => {
 };
 
 /**
- * Clear all Vet-Rate data from localStorage (nuclear option)
+ * Clear all SupplyLocker data from localStorage (nuclear option)
  * @returns {number} Number of keys cleared
  */
 export const clearAllData = () => {

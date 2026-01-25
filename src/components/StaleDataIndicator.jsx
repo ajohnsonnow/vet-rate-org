@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Stale Data Indicator Component
+ * SupplyLocker.org - Stale Data Indicator Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

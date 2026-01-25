@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Bug Report Storage
+ * SupplyLocker.org - Bug Report Storage
  * "Safe-Squash" Architecture - Persistent Bug Report Database
  * 
  * Uses IndexedDB for reliable, persistent storage of sanitized bug reports.

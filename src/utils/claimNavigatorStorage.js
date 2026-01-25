@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Claim Navigator Storage
+ * SupplyLocker.org - Claim Navigator Storage
  * Persistent storage for claim navigator state
  * 
  * Privacy-first: All data stays on user's device (localStorage)

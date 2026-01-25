@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -381,7 +381,7 @@ export default function TimeMachine({ isWidget = false, onClose = null, onReport
                   </h4>
                   <p className="text-yellow-700 dark:text-yellow-300">
                     Time is running out. Prioritize completing your claim packet. Use all the tools 
-                    in Vet-Rate to expedite your preparation.
+                    in SupplyLocker to expedite your preparation.
                   </p>
                 </div>
               )}

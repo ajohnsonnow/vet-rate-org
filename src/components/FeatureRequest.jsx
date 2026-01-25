@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * 
  * FeatureRequest Component
@@ -133,7 +133,7 @@ function FeatureRequest({ onClose, appState = {} }) {
     
     return `
 ╔══════════════════════════════════════════════════════════════╗
-║              💡 VET-RATE.ORG FEATURE REQUEST                 ║
+║              💡 SupplyLocker.org FEATURE REQUEST                 ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Request ID: ${featureId}
 ║  Submitted: ${timestamp}

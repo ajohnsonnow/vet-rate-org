@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Veteran Knowledge Base Viewer
+ * SupplyLocker.org - Veteran Knowledge Base Viewer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

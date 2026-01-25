@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Mobile Bottom Navigation
+ * SupplyLocker.org - Mobile Bottom Navigation
  * Copyright (c) 2024-2026 Anthony Johnson
  * 
  * AAAAA Design System - "Thumb Zone" Optimized Navigation

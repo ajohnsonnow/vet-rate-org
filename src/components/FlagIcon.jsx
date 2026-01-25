@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - FlagIcon Component
+ * SupplyLocker.org - FlagIcon Component
  * 
  * Renders country/region flags using flag-icons CSS library or fallback text.
  * Solves the issue where Windows browsers display emoji flags like 🇺🇸 as "US" letters.

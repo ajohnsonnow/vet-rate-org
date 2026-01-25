@@ -1,11 +1,11 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  *
  * VA API Status Monitor - "The Lighthouse Keeper"
  * 
  * Monitors VA Lighthouse API status page to inform users when
- * VA APIs are experiencing issues (not a Vet-Rate.org problem).
+ * VA APIs are experiencing issues (not a SupplyLocker.org problem).
  * 
  * Status Page: https://valighthouse.statuspage.io/
  * JSON API: https://valighthouse.statuspage.io/api/v2/summary.json
@@ -26,7 +26,7 @@ let lastFetchTime = null;
 
 /**
  * Map of VA API names to StatusPage component names
- * These are the APIs that Vet-Rate.org uses
+ * These are the APIs that SupplyLocker.org uses
  */
 export const VA_API_MAPPING = {
   // OAuth-protected APIs
@@ -243,7 +243,7 @@ function normalizeStatus(status) {
 }
 
 /**
- * Get status for a specific Vet-Rate feature's required APIs
+ * Get status for a specific SupplyLocker feature's required APIs
  * 
  * @param {string} feature - Feature name (e.g., 'claims', 'facilities')
  * @param {Object} statusData - Status data from fetchVaApiStatus

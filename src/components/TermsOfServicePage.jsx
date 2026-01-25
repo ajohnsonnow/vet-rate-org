@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const TermsOfServicePage = ({ onClose }) => {
@@ -17,7 +17,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 </svg>
                 <div>
                   <h1 className="text-3xl font-bold">Terms of Service & Liability Waiver</h1>
-                  <p className="text-sm text-red-100 mt-1">Vet-Rate.org Legal Framework</p>
+                  <p className="text-sm text-red-100 mt-1">SupplyLocker.org Legal Framework</p>
                 </div>
               </div>
             </div>
@@ -40,7 +40,7 @@ const TermsOfServicePage = ({ onClose }) => {
           {/* Effective Date */}
           <div className="text-center py-4 bg-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Last Updated: <strong>January 18, 2026</strong></p>
-            <p className="text-xs text-gray-500 mt-1">By using Vet-Rate.org, you accept these terms in full</p>
+            <p className="text-xs text-gray-500 mt-1">By using SupplyLocker.org, you accept these terms in full</p>
           </div>
 
           {/* Introduction */}
@@ -48,14 +48,14 @@ const TermsOfServicePage = ({ onClose }) => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 space-y-3">
               <p className="leading-relaxed">
-                <strong>Vet-Rate.org</strong> is a free, privacy-first educational platform designed to help United 
+                <strong>SupplyLocker.org</strong> is a free, privacy-first educational platform designed to help United 
                 States veterans understand VA disability rating criteria, organize their claim documentation, and 
                 navigate the complex veterans benefits system.
               </p>
               <p className="leading-relaxed">
                 This Terms of Service agreement establishes the legal framework governing your use of this platform. 
                 These terms are designed to protect both you (the veteran user) and the operators of this service by 
-                clearly defining what Vet-Rate.org is, what it is not, and the inherent limitations of self-help 
+                clearly defining what SupplyLocker.org is, what it is not, and the inherent limitations of self-help 
                 legal technology.
               </p>
               <p className="leading-relaxed font-semibold text-yellow-900">
@@ -68,25 +68,25 @@ const TermsOfServicePage = ({ onClose }) => {
           {/* Section 1: Non-Accreditation */}
           <section className="border-l-4 border-blue-500 pl-6">
             <h2 className="text-2xl font-bold text-blue-900 mb-4">
-              1. Non-Accreditation Clause (38 U.S.C. § 5901)
+              1. Non-Accreditation Clause (38 U.S.C. � 5901)
             </h2>
             <div className="space-y-4 leading-relaxed">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="font-bold text-lg text-blue-900 mb-2">CRITICAL LEGAL DISCLOSURE:</p>
                 <p className="text-blue-900">
-                  Vet-Rate.org and its operators are <strong>NOT</strong>:
+                  SupplyLocker.org and its operators are <strong>NOT</strong>:
                 </p>
                 <ul className="list-disc list-inside space-y-1 mt-2 ml-4">
-                  <li>An accredited Veterans Service Organization (VSO) under 38 U.S.C. § 5902</li>
+                  <li>An accredited Veterans Service Organization (VSO) under 38 U.S.C. � 5902</li>
                   <li>A licensed attorney or law firm</li>
-                  <li>A VA-recognized claims agent under 38 C.F.R. § 14.627</li>
+                  <li>A VA-recognized claims agent under 38 C.F.R. � 14.627</li>
                   <li>A representative authorized to practice before the Department of Veterans Affairs</li>
                   <li>Affiliated with, endorsed by, or operating under the authority of the U.S. Department of Veterans Affairs</li>
                 </ul>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">What Vet-Rate.org Is:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">What SupplyLocker.org Is:</h3>
                 <p>
                   This platform is a <strong>self-help educational tool</strong> that provides:
                 </p>
@@ -104,7 +104,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <p>
                   <span className="font-bold underline">You remain solely responsible for</span>: filing your own 
                   claims, verifying the accuracy of all information, making legal decisions, and ensuring compliance 
-                  with VA regulations. Vet-Rate.org does not file claims on your behalf, represent you before the VA, 
+                  with VA regulations. SupplyLocker.org does not file claims on your behalf, represent you before the VA, 
                   or make legal determinations about your eligibility.
                 </p>
               </div>
@@ -141,7 +141,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="font-bold text-lg text-green-900 mb-2">MEDICAL DISCLAIMER:</p>
                 <p className="text-green-900">
-                  No feature of Vet-Rate.org-including but not limited to the Nexus Letter Builder, Symptom Database, 
+                  No feature of SupplyLocker.org-including but not limited to the Nexus Letter Builder, Symptom Database, 
                   Secondary Conditions Scout, or any AI-generated content-constitutes medical advice, diagnosis, or 
                   treatment recommendations.
                 </p>
@@ -172,7 +172,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div className="bg-red-50 border-2 border-red-400 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-red-900 mb-2">
-                  ⚠️ Medical Evidence Requirements:
+                  ?? Medical Evidence Requirements:
                 </h3>
                 <p>
                   <strong>VA claims require medical opinions from licensed healthcare professionals.</strong> You 
@@ -184,7 +184,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm">
-                  <strong>Healthcare Provider Relationship:</strong> Nothing in Vet-Rate.org creates a physician-patient 
+                  <strong>Healthcare Provider Relationship:</strong> Nothing in SupplyLocker.org creates a physician-patient 
                   relationship, therapist-client relationship, or any professional medical relationship. Always consult 
                   with your own healthcare providers for medical advice.
                 </p>
@@ -248,17 +248,17 @@ const TermsOfServicePage = ({ onClose }) => {
                   YOUR CRITICAL RESPONSIBILITY:
                 </h3>
                 <div className="space-y-2 text-yellow-900">
-                  <p className="font-semibold">✓ Independently verify all AI-generated content</p>
-                  <p className="font-semibold">✓ Cross-reference legal citations with official sources</p>
-                  <p className="font-semibold">✓ Confirm medical information with healthcare professionals</p>
-                  <p className="font-semibold">✓ Review all VA form submissions for accuracy</p>
-                  <p className="font-semibold">✓ Never submit AI-generated content without thorough human review</p>
+                  <p className="font-semibold">? Independently verify all AI-generated content</p>
+                  <p className="font-semibold">? Cross-reference legal citations with official sources</p>
+                  <p className="font-semibold">? Confirm medical information with healthcare professionals</p>
+                  <p className="font-semibold">? Review all VA form submissions for accuracy</p>
+                  <p className="font-semibold">? Never submit AI-generated content without thorough human review</p>
                 </div>
               </div>
 
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm">
-                  <strong>No Liability for AI Errors:</strong> Vet-Rate.org and its operators disclaim all liability 
+                  <strong>No Liability for AI Errors:</strong> SupplyLocker.org and its operators disclaim all liability 
                   for errors, omissions, or inaccuracies in AI-generated content. You use AI-assisted features at 
                   your own risk.
                 </p>
@@ -275,8 +275,8 @@ const TermsOfServicePage = ({ onClose }) => {
               <div className="bg-orange-50 p-4 rounded-lg">
                 <p className="font-bold text-lg text-orange-900 mb-2">PRIVACY-FIRST ARCHITECTURE:</p>
                 <p className="text-orange-900">
-                  Vet-Rate.org is intentionally designed as a <strong>serverless, browser-based application</strong> 
-                  to protect your privacy. Vet-Rate.org does not store your data on any servers, in cloud databases, or in any 
+                  SupplyLocker.org is intentionally designed as a <strong>serverless, browser-based application</strong> 
+                  to protect your privacy. SupplyLocker.org does not store your data on any servers, in cloud databases, or in any 
                   remote location.
                 </p>
               </div>
@@ -287,7 +287,7 @@ const TermsOfServicePage = ({ onClose }) => {
                   <li>All data is stored in your web browser's <code className="bg-gray-200 px-2 py-1 rounded text-sm">localStorage</code></li>
                   <li>Data remains on your local device only</li>
                   <li>No automatic cloud backups are created</li>
-                  <li>Data is not transmitted to Vet-Rate.org servers (the webapp doesn't have data servers)</li>
+                  <li>Data is not transmitted to SupplyLocker.org servers (the webapp doesn't have data servers)</li>
                   <li>Export functionality allows you to save data to your own files</li>
                 </ul>
               </div>
@@ -321,7 +321,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div className="bg-green-50 border-2 border-green-500 p-5 rounded-lg">
                 <h3 className="text-xl font-bold text-green-900 mb-3">
-                  📦 Data Protection Best Practices:
+                  ?? Data Protection Best Practices:
                 </h3>
                 <div className="space-y-2 text-green-900">
                   <p><strong>1. Export Regularly:</strong> Use the built-in export features after each work session</p>
@@ -334,7 +334,7 @@ const TermsOfServicePage = ({ onClose }) => {
 
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm">
-                  <strong>No Liability for Data Loss:</strong> By using Vet-Rate.org, you acknowledge and accept 
+                  <strong>No Liability for Data Loss:</strong> By using SupplyLocker.org, you acknowledge and accept 
                   full responsibility for backing up your data. We are not liable for any data loss, regardless of 
                   cause, including but not limited to browser issues, technical failures, user error, or circumstances 
                   beyond our control.
@@ -352,7 +352,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div className="bg-red-50 p-4 rounded-lg">
                 <p className="font-bold text-lg text-red-900 mb-2">NO OUTCOME GUARANTEES:</p>
                 <p className="text-red-900">
-                  Use of Vet-Rate.org, completion of any tools or forms, or implementation of any suggestions does 
+                  Use of SupplyLocker.org, completion of any tools or forms, or implementation of any suggestions does 
                   <strong> NOT guarantee, promise, or predict</strong> any specific outcome from the Department of 
                   Veterans Affairs.
                 </p>
@@ -407,7 +407,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div className="bg-blue-50 border border-blue-300 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">What Vet-Rate.org CAN Help With:</h3>
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">What SupplyLocker.org CAN Help With:</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4 text-blue-900">
                   <li>Understanding VA rating criteria and diagnostic codes</li>
                   <li>Organizing your symptoms and evidence systematically</li>
@@ -422,7 +422,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm">
                   <strong>Realistic Expectations:</strong> The VA disability claims process is complex, time-consuming, 
-                  and often unpredictable. While Vet-Rate.org provides tools to help you present the strongest possible 
+                  and often unpredictable. While SupplyLocker.org provides tools to help you present the strongest possible 
                   case, ultimate decisions rest with VA adjudicators applying legal and medical criteria to your specific 
                   evidence.
                 </p>
@@ -450,7 +450,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Limitation of Liability</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  TO THE MAXIMUM EXTENT PERMITTED BY LAW, VET-RATE.ORG, ITS CREATORS, CONTRIBUTORS, AND OPERATORS 
+                  TO THE MAXIMUM EXTENT PERMITTED BY LAW, SupplyLocker.org, ITS CREATORS, CONTRIBUTORS, AND OPERATORS 
                   SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR 
                   PUNITIVE DAMAGES (INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF BENEFITS, CLAIM DENIALS, OR 
                   LOST OPPORTUNITIES) ARISING FROM OR RELATED TO YOUR USE OF THIS PLATFORM, EVEN IF ADVISED OF THE 
@@ -462,7 +462,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Indemnification</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  You agree to indemnify, defend, and hold harmless Vet-Rate.org and its operators from any claims, 
+                  You agree to indemnify, defend, and hold harmless SupplyLocker.org and its operators from any claims, 
                   damages, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from your 
                   use of the platform, your violation of these terms, or your violation of any third-party rights.
                 </p>
@@ -482,7 +482,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Entire Agreement</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
                   These Terms of Service, together with the Privacy Policy, constitute the entire agreement between 
-                  you and Vet-Rate.org regarding use of this platform and supersede all prior agreements and 
+                  you and SupplyLocker.org regarding use of this platform and supersede all prior agreements and 
                   understandings.
                 </p>
               </div>
@@ -492,7 +492,7 @@ const TermsOfServicePage = ({ onClose }) => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Modifications to Terms</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
                   The webapp reserves the right to modify these terms at any time. Material changes will be indicated by 
-                  updating the "Last Updated" date at the top of this document. Continued use of Vet-Rate.org after 
+                  updating the "Last Updated" date at the top of this document. Continued use of SupplyLocker.org after 
                   changes constitutes acceptance of the modified terms.
                 </p>
               </div>
@@ -511,7 +511,7 @@ const TermsOfServicePage = ({ onClose }) => {
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Accessibility Commitment</h3>
                 <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
-                  I strive to make Vet-Rate.org accessible to veterans with disabilities. If you encounter 
+                  I strive to make SupplyLocker.org accessible to veterans with disabilities. If you encounter 
                   accessibility barriers, please contact me through the app so I can work to address them.
                 </p>
               </div>
@@ -536,7 +536,7 @@ const TermsOfServicePage = ({ onClose }) => {
           <section className="bg-green-50 border-4 border-green-600 p-6 rounded-lg">
             <h2 className="text-2xl font-bold text-green-900 mb-4">Your Acceptance</h2>
             <p className="leading-relaxed mb-3">
-              By using Vet-Rate.org, you acknowledge that you have read, understood, and agree to be bound by these 
+              By using SupplyLocker.org, you acknowledge that you have read, understood, and agree to be bound by these 
               Terms of Service. You specifically acknowledge understanding of:
             </p>
             <ul className="list-decimal list-inside space-y-1 ml-4 text-green-900">
@@ -547,14 +547,14 @@ const TermsOfServicePage = ({ onClose }) => {
               <li>That no claim outcomes are guaranteed</li>
             </ul>
             <p className="mt-4 text-sm italic">
-              If you do not agree to these terms, you must immediately cease using Vet-Rate.org.
+              If you do not agree to these terms, you must immediately cease using SupplyLocker.org.
             </p>
           </section>
 
           {/* Final Statement */}
           <div className="text-center py-6 border-t-2 border-gray-300">
             <p className="text-lg font-semibold text-gray-900">
-              Thank you for using Vet-Rate.org
+              Thank you for using SupplyLocker.org
             </p>
             <p className="text-sm text-gray-600 mt-2">
               I'm honored to serve those who served. Stay safe, document everything, and never give up on your claim.

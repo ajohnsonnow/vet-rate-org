@@ -8,21 +8,21 @@ import { getDisabilityCount } from './disabilityCount';
 import { getFormsCount } from './formsCount';
 
 /**
- * Vet-Rate.org Application Context Prompt
+ * SupplyLocker.org Application Context Prompt
  * This is injected into every AI call to ensure the model understands the app
  */
-const getVetRateAppContext = () => `=== VET-RATE.ORG APPLICATION CONTEXT ===
+const getVetRateAppContext = () => `=== SupplyLocker.org APPLICATION CONTEXT ===
 
-You are an AI assistant integrated into Vet-Rate.org, a FREE, 100% client-side web application that helps U.S. military veterans navigate the VA disability claims process.
+You are an AI assistant integrated into SupplyLocker.org, a FREE, 100% client-side web application that helps U.S. military veterans navigate the VA disability claims process.
 
-ABOUT VET-RATE.ORG:
+ABOUT SupplyLocker.org:
 - Mission: Empower veterans with FREE tools to understand, prepare, and strengthen their VA disability claims
 - Privacy: ALL data stays on the veteran's device. Nothing is sent to servers (except AI calls if using Cloud mode)
 - Cost: 100% free. No subscriptions, no fees, no "claim sharks"
 - Created by: A veteran, for veterans
 
 eCFR INTEGRATION (IMPORTANT):
-Vet-Rate.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations). This means:
+SupplyLocker.org is FULLY INTEGRATED with the official eCFR (Electronic Code of Federal Regulations). This means:
 - All ${getDisabilityCount()} VA disabilities are validated against official eCFR diagnostic codes
 - Direct links to eCFR sections are provided throughout the application
 - Rating criteria comes directly from 38 CFR Part 4 (validated January 2026)
@@ -35,7 +35,7 @@ Official eCFR Sources Used:
 - eCFR Part 4 (Rating Schedule): https://www.ecfr.gov/current/title-38/chapter-I/part-4
 - eCFR Part 19/20 (Appeals): https://www.ecfr.gov/current/title-38/chapter-I/part-19
 
-TOOLS AVAILABLE IN VET-RATE.ORG (${getTotalToolCount()} tools organized by category):
+TOOLS AVAILABLE IN SupplyLocker.org (${getTotalToolCount()} tools organized by category):
 
 📊 CALCULATE YOUR RATING (Blue Category):
 - Tactical Calculator: VA Math with bilateral factors, 2026 pay rates
@@ -90,9 +90,9 @@ TOOLS AVAILABLE IN VET-RATE.ORG (${getTotalToolCount()} tools organized by categ
 - User Manual: Comprehensive documentation
 
 🛡️ YOUR CURRENT ROLE:
-You are operating inside one of these tools. The veteran is using Vet-Rate.org to prepare their claim, and you are here to help them with accurate, regulation-based guidance.
+You are operating inside one of these tools. The veteran is using SupplyLocker.org to prepare their claim, and you are here to help them with accurate, regulation-based guidance.
 
-=== END VET-RATE.ORG CONTEXT ===
+=== END SupplyLocker.org CONTEXT ===
 `;
 
 export const VET_RATE_APP_CONTEXT = getVetRateAppContext();
@@ -104,7 +104,7 @@ export const VET_RATE_APP_CONTEXT = getVetRateAppContext();
 export const KEY_REGULATIONS_SUMMARY = `=== KEY 38 CFR REGULATIONS ===
 
 DATA SOURCE: All regulations are sourced from the official eCFR (Electronic Code of Federal Regulations).
-Vet-Rate.org validates all ${getDisabilityCount()} disabilities against eCFR Title 38, Parts 3 & 4.
+SupplyLocker.org validates all ${getDisabilityCount()} disabilities against eCFR Title 38, Parts 3 & 4.
 Last validated: January 2026.
 
 SERVICE CONNECTION (38 CFR Part 3):
@@ -192,7 +192,7 @@ MENTAL HEALTH CLAIMS - IMPORTANT DISTINCTIONS:
  * Base System Prompt - Applied to ALL AI operations
  * This is the foundation that prevents hallucinations
  */
-export const BASE_SYSTEM_PROMPT = `You are a VA disability claims expert assistant integrated into Vet-Rate.org.
+export const BASE_SYSTEM_PROMPT = `You are a VA disability claims expert assistant integrated into SupplyLocker.org.
 
 CRITICAL RULES - NEVER VIOLATE:
 1. You ONLY provide information based on:
@@ -750,7 +750,7 @@ function buildVeteranDataPrompt(veteranContext) {
 
 /**
  * Function to build complete system prompt with veteran's data
- * Now includes full Vet-Rate.org context, key regulations, and veteran's My Packet data
+ * Now includes full SupplyLocker.org context, key regulations, and veteran's My Packet data
  */
 export function buildSystemPrompt(options = {}) {
   const {
@@ -764,7 +764,7 @@ export function buildSystemPrompt(options = {}) {
     toolContext = null, // Which tool modal the AI is operating in
   } = options;
 
-  // Start with Vet-Rate.org app context (so AI knows what app it's in)
+  // Start with SupplyLocker.org app context (so AI knows what app it's in)
   let systemPrompt = includeAppContext ? VET_RATE_APP_CONTEXT : '';
 
   // Add key regulations summary
@@ -777,7 +777,7 @@ export function buildSystemPrompt(options = {}) {
 
   // Add tool-specific context if provided
   if (toolContext) {
-    systemPrompt += `\n\nCURRENT TOOL CONTEXT:\nYou are currently operating inside the "${toolContext}" tool in Vet-Rate.org.\n`;
+    systemPrompt += `\n\nCURRENT TOOL CONTEXT:\nYou are currently operating inside the "${toolContext}" tool in SupplyLocker.org.\n`;
   }
 
   // Add task-specific prompt (append to context, don't replace)
@@ -1172,7 +1172,7 @@ export async function buildDKBContext(query, options = {}) {
   }
   
   let context = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
+The following information comes from SupplyLocker.org's validated Diamond Knowledge Base.
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers.
 

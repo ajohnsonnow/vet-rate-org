@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Pain Painter (Interactive Body Map 2.0)
+ * SupplyLocker.org - Pain Painter (Interactive Body Map 2.0)
  * "Translates Grunt to Doctor" - Advanced visual pain mapping
  * 
  * Veterans often know WHERE it hurts but not the MEDICAL NAME.

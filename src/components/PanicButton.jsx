@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -15,7 +15,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 // Configuration
 const RAPID_ESC_THRESHOLD = 800; // ms between ESC presses to count as "rapid"
 const ESC_COUNT_REQUIRED = 3;    // Number of ESC presses needed
-const STORAGE_KEY = 'vet-rate-panic-enabled';
+const STORAGE_KEY = 'SupplyLocker-panic-enabled';
 
 const PanicButton = ({ 
   isEnabled = true,

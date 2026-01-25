@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Easter Egg: The "Zonk" Button
+ * SupplyLocker.org - Easter Egg: The "Zonk" Button
  * 
  * A little culture for the veterans. Sometimes you just need a smile.
  * Hidden in settings, does nothing except bring a moment of levity.

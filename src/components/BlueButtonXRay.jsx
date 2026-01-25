@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Blue Button X-Ray Component
+ * SupplyLocker.org - Blue Button X-Ray Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -20,6 +20,9 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import AIModelQuickLoad from './AIModelQuickLoad';
 import ReportBugLink from './ReportBugLink';
+import { injectMedicalData, getInjectionSummary } from '../hooks/useBlueButtonInjection';
+import DocumentPicker from './DocumentPicker';
+import { getAllDocuments, getDocumentById } from '../utils/veteranKnowledgeBase';
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -233,6 +236,11 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
     return () => clearInterval(interval);
   }, []);
   
+  // Input method state
+  // Input method state
+  const [inputMethod, setInputMethod] = useState('dropin'); // 'dropin' or 'vkb'
+  const [showDocumentPicker, setShowDocumentPicker] = useState(false);
+  
   // File state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -259,7 +267,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       const fileName = droppedFile.name.toLowerCase();
       
       if (fileType !== 'application/pdf' && fileType !== 'text/plain' && !fileName.endsWith('.txt')) {
-        setError('Please upload a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
+        setError('Please drop in a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
         return;
       }
       setFile(droppedFile);
@@ -285,7 +293,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       const fileName = selectedFile.name.toLowerCase();
       
       if (fileType !== 'application/pdf' && fileType !== 'text/plain' && !fileName.endsWith('.txt')) {
-        setError('Please upload a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
+        setError('Please drop in a PDF or TXT file. Blue Button reports are typically downloaded as .txt or .pdf files.');
         return;
       }
       setFile(selectedFile);
@@ -715,6 +723,31 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
         setError('No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.');
       } else {
         setExtractedConditions(result.conditions);
+        
+        // Auto-inject medical data to Smart Intake (if conditions found)
+        try {
+          const { answers, tags } = injectMedicalData(result.conditions);
+          
+          // Merge with existing intake answers
+          const existingAnswers = JSON.parse(localStorage.getItem('vet_rate_intake_answers') || '{}');
+          const existingTags = JSON.parse(localStorage.getItem('vet_rate_user_tags') || '[]');
+          
+          const mergedAnswers = { ...existingAnswers, ...answers };
+          const mergedTags = [...new Set([...existingTags, ...tags])];
+          
+          localStorage.setItem('vet_rate_intake_answers', JSON.stringify(mergedAnswers));
+          localStorage.setItem('vet_rate_user_tags', JSON.stringify(mergedTags));
+          
+          console.log(`Blue Button Injection: ${Object.keys(answers).length} questions auto-answered, ${tags.length} tags added`);
+          
+          // Show summary
+          const summary = getInjectionSummary(result.conditions);
+          if (summary.length > 0) {
+            console.log('Injection Summary:', summary);
+          }
+        } catch (injectionError) {
+          console.error('Medical data injection failed (non-fatal):', injectionError);
+        }
       }
       
     } catch (err) {
@@ -858,11 +891,38 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
             {!extractedConditions.length && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-                  Step 1: Drop In Your Blue Button Report
+                  Step 1: Choose Input Method
                 </h3>
                 
-                {/* Drop Zone */}
-                <div
+                {/* Input Method Tabs */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setInputMethod('dropin')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
+                      inputMethod === 'dropin'
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    📥 Drop In File
+                  </button>
+                  <button
+                    onClick={() => setInputMethod('vkb')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors ${
+                      inputMethod === 'vkb'
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    🗂️ From VKB
+                  </button>
+                </div>
+
+                {/* Drop In Input */}
+                {inputMethod === 'dropin' && (
+                  <>
+                    {/* Drop Zone */}
+                    <div
                   className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
                     isDragging
                       ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30'
@@ -946,6 +1006,31 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                     <li>Click <strong>"Download report"</strong> and drop the file in here</li>
                   </ol>
                 </div>
+                  </>
+                )}
+
+                {/* VKB Input */}
+                {inputMethod === 'vkb' && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                      <span className="text-4xl">🗂️</span>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-purple-900 dark:text-purple-100 text-lg mb-2">
+                          Select from Veteran Knowledge Base
+                        </h3>
+                        <p className="text-purple-800 dark:text-purple-200 mb-4">
+                          Choose Blue Button reports you've already dropped in via Muster Call. No need to re-drop documents!
+                        </p>
+                        <button
+                          onClick={() => setShowDocumentPicker(true)}
+                          className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-lg flex items-center gap-2"
+                        >
+                          🗂️ Browse VKB Documents
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
@@ -1152,7 +1237,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 <div className="flex items-center gap-4">
                   <img 
                     src="/images/Anth.jpg" 
-                    alt="Anthony - Vet-Rate Developer"
+                    alt="Anthony - SupplyLocker Developer"
                     className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-lg flex-shrink-0"
                   />
                   <div className="flex-1">
@@ -1171,6 +1256,87 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
           </div>
         </div>
       </div>
+      
+      {/* Document Picker Modal - Select from VKB */}
+      <DocumentPicker
+        isOpen={showDocumentPicker}
+        onClose={() => setShowDocumentPicker(false)}
+        filterType="bluebutton"
+        multiSelect={true}
+        title="Select Blue Button Reports from VKB"
+        emptyMessage="No Blue Button reports found in VKB. Use Muster Call to drop in documents first."
+        onSelect={async (selectedDocuments) => {
+          try {
+            console.log('Selected Blue Button documents from VKB:', selectedDocuments);
+            
+            // Combine all selected Blue Button texts
+            const combinedText = selectedDocuments.map(doc => doc.rawText).join('\n\n--- Next Blue Button Report ---\n\n');
+            
+            if (!combinedText) {
+              setError('Selected documents have no extracted text. Try re-dropping via Muster Call.');
+              setShowDocumentPicker(false);
+              return;
+            }
+            
+            // Set raw text for processing
+            setRawText(combinedText);
+            setShowDocumentPicker(false);
+            
+            // Auto-trigger AI analysis
+            if (isAnyAIAvailable()) {
+              console.log('Auto-triggering Blue Button analysis for VKB documents...');
+              setIsProcessing(true);
+              setProcessingStage('Analyzing Blue Button reports from VKB...');
+              setError(null);
+              
+              try {
+                // Use the existing AI extraction logic
+                const aiResult = await generateAI(BLUE_BUTTON_AI_PROMPT + '\n\n' + combinedText);
+                console.log('AI extraction result:', aiResult);
+                
+                // Parse JSON result
+                let parsedResult;
+                try {
+                  const cleanedResult = aiResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                  parsedResult = JSON.parse(cleanedResult);
+                } catch (parseError) {
+                  console.error('JSON parse error:', parseError);
+                  throw new Error('AI returned invalid JSON format');
+                }
+                
+                // Process and set conditions
+                if (parsedResult.conditions && Array.isArray(parsedResult.conditions)) {
+                  const conditions = parsedResult.conditions.map(c => ({
+                    ...c,
+                    id: `${c.name}-${Date.now()}-${Math.random()}`
+                  }));
+                  setExtractedConditions(conditions);
+                  
+                  // Inject medical data into intake system
+                  const injectionResult = injectMedicalData(conditions);
+                  console.log('Medical data injection result:', injectionResult);
+                } else {
+                  throw new Error('No conditions found in AI response');
+                }
+                
+                setProcessingStage('');
+                setIsProcessing(false);
+              } catch (err) {
+                console.error('Error processing VKB Blue Button documents:', err);
+                setError(err.message || 'Failed to process Blue Button reports from VKB');
+                setIsProcessing(false);
+                setProcessingStage('');
+              }
+            } else {
+              setError('Please configure AI to analyze Blue Button reports');
+            }
+          } catch (err) {
+            console.error('Error loading VKB Blue Button documents:', err);
+            setError(err.message);
+            setShowDocumentPicker(false);
+          }
+        }}
+      />
       
       {/* BuyMeCoffee - shows after successful extraction */}
       <BuyMeCoffee 

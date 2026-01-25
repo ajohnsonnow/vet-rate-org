@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - Dossier Export
+/**
+ * SupplyLocker.org - Dossier Export
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -79,7 +79,7 @@ function generateProfileSection(profile) {
   if (!profile) {
     return `
       <section class="section">
-        <h2>📋 Veteran Profile</h2>
+        <h2>?? Veteran Profile</h2>
         <p class="empty-notice">No profile information saved.</p>
       </section>
     `;
@@ -87,7 +87,7 @@ function generateProfileSection(profile) {
 
   return `
     <section class="section">
-      <h2>📋 Veteran Profile</h2>
+      <h2>?? Veteran Profile</h2>
       <div class="profile-grid">
         <div class="profile-item">
           <span class="label">Name:</span>
@@ -132,7 +132,7 @@ function generateClaimsSection(claims) {
   if (!claims || !Array.isArray(claims) || claims.length === 0) {
     return `
       <section class="section">
-        <h2>📑 Saved Claims</h2>
+        <h2>?? Saved Claims</h2>
         <p class="empty-notice">No saved claims found.</p>
       </section>
     `;
@@ -168,7 +168,7 @@ function generateClaimsSection(claims) {
 
   return `
     <section class="section">
-      <h2>📑 Saved Claims (${claims.length})</h2>
+      <h2>?? Saved Claims (${claims.length})</h2>
       <div class="claims-grid">
         ${claimCards}
       </div>
@@ -185,7 +185,7 @@ function generateStatementsSection(statements) {
   if (!statements || !Array.isArray(statements) || statements.length === 0) {
     return `
       <section class="section">
-        <h2>📝 Personal Statements</h2>
+        <h2>?? Personal Statements</h2>
         <p class="empty-notice">No personal statements saved.</p>
       </section>
     `;
@@ -228,7 +228,7 @@ function generateStatementsSection(statements) {
 
   return `
     <section class="section">
-      <h2>📝 Personal Statements (${statements.length})</h2>
+      <h2>?? Personal Statements (${statements.length})</h2>
       ${statementCards}
     </section>
   `;
@@ -243,7 +243,7 @@ function generateRatingsSection(ratings) {
   if (!ratings) {
     return `
       <section class="section">
-        <h2>📊 My Ratings</h2>
+        <h2>?? My Ratings</h2>
         <p class="empty-notice">No ratings data saved.</p>
       </section>
     `;
@@ -255,7 +255,7 @@ function generateRatingsSection(ratings) {
   if (ratingsList.length === 0) {
     return `
       <section class="section">
-        <h2>📊 My Ratings</h2>
+        <h2>?? My Ratings</h2>
         <p class="empty-notice">No ratings data saved.</p>
       </section>
     `;
@@ -272,7 +272,7 @@ function generateRatingsSection(ratings) {
 
   return `
     <section class="section">
-      <h2>📊 My Ratings (${ratingsList.length})</h2>
+      <h2>?? My Ratings (${ratingsList.length})</h2>
       <table class="ratings-table">
         <thead>
           <tr>
@@ -299,7 +299,7 @@ function generateFormsSection(forms) {
   if (!forms) {
     return `
       <section class="section">
-        <h2>📄 Saved Forms</h2>
+        <h2>?? Saved Forms</h2>
         <p class="empty-notice">No saved forms found.</p>
       </section>
     `;
@@ -314,7 +314,7 @@ function generateFormsSection(forms) {
   if (formsList.length === 0) {
     return `
       <section class="section">
-        <h2>📄 Saved Forms</h2>
+        <h2>?? Saved Forms</h2>
         <p class="empty-notice">No saved forms found.</p>
       </section>
     `;
@@ -336,7 +336,7 @@ function generateFormsSection(forms) {
 
   return `
     <section class="section">
-      <h2>📄 Saved Forms (${formsList.length})</h2>
+      <h2>?? Saved Forms (${formsList.length})</h2>
       <div class="forms-grid">
         ${formCards}
       </div>
@@ -367,7 +367,7 @@ export function generateDossierHTML() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VA Claims Dossier - Exported from Vet-Rate.org</title>
+  <title>VA Claims Dossier - Exported from SupplyLocker.org</title>
   <style>
     /* Reset and Base Styles */
     *, *::before, *::after {
@@ -766,19 +766,19 @@ export function generateDossierHTML() {
 </head>
 <body>
   <header class="dossier-header">
-    <div class="flag">🇺🇸</div>
+    <div class="flag">????</div>
     <h1>VA Claims Dossier</h1>
-    <p class="subtitle">Complete Export of Your Vet-Rate.org Data</p>
+    <p class="subtitle">Complete Export of Your SupplyLocker.org Data</p>
     <div class="meta">
-      <span>📅 Exported: ${formattedDate}</span>
-      <span>🔒 For Your Records Only</span>
-      <span>📄 Standalone Document</span>
+      <span>?? Exported: ${formattedDate}</span>
+      <span>?? For Your Records Only</span>
+      <span>?? Standalone Document</span>
     </div>
   </header>
   
   <div class="disclaimer-banner">
-    <h3>⚠️ Important Notice</h3>
-    <p>This document is for your personal records only. It contains information you entered into Vet-Rate.org 
+    <h3>?? Important Notice</h3>
+    <p>This document is for your personal records only. It contains information you entered into SupplyLocker.org 
     to help organize your VA claims. This is NOT an official VA document. Always verify information with 
     official VA sources and consult with an accredited VSO or attorney for legal advice.</p>
   </div>
@@ -791,7 +791,7 @@ export function generateDossierHTML() {
   
   <div class="raw-data-section">
     <section class="section">
-      <h2>🔧 Raw Data Backup</h2>
+      <h2>?? Raw Data Backup</h2>
       <p style="margin-bottom: 16px; color: #718096;">
         This section contains your complete data in JSON format for technical backup purposes.
       </p>
@@ -803,8 +803,8 @@ export function generateDossierHTML() {
   </div>
   
   <footer class="dossier-footer">
-    <p>Generated by <a href="https://vet-rate.org" target="_blank">Vet-Rate.org</a></p>
-    <p>Supporting Those Who Served 🎖️</p>
+    <p>Generated by <a href="https://SupplyLocker.org" target="_blank">SupplyLocker.org</a></p>
+    <p>Supporting Those Who Served ???</p>
     <p style="margin-top: 16px; font-size: 12px;">
       This file is a complete, standalone backup of your data. 
       You can open it in any web browser, anywhere, anytime - even without internet access.

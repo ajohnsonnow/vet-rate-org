@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Web of Conditions
+ * SupplyLocker.org - Web of Conditions
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

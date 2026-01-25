@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Needle Component
+ * SupplyLocker.org - The Needle Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

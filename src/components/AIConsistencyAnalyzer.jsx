@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Consistency Analyzer
+ * SupplyLocker.org - AI Consistency Analyzer
  * "The Cross-Examination" - AI-powered contradiction detection
  * 
  * This component provides a "split view" interface where veterans can:
@@ -9,7 +9,7 @@
  * 
  * Uses DiffHighlighter to visually show problem areas.
  * 
- * @author Vet-Rate.org Development Team
+ * @author SupplyLocker.org Development Team
  * @version 1.0.0
  */
 
@@ -387,7 +387,7 @@ function formatIssuesForReddit(analysis) {
     text += '\n';
   });
   
-  text += '*Analyzed using Vet-Rate.org Consistency Engine*';
+  text += '*Analyzed using SupplyLocker.org Consistency Engine*';
   return text;
 }
 

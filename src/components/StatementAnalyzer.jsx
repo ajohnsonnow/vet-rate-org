@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - The Diplomat (Tone & Sentiment Analysis)
+ * SupplyLocker.org - The Diplomat (Tone & Sentiment Analysis)
  * 
  * Helps veterans write clinical, objective statements instead of emotional ones.
  * Analyzes personal statements for hostile/subjective language and suggests

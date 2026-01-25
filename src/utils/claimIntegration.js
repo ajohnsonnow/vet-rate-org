@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Claim Integration Bridge
+ * SupplyLocker.org - Claim Integration Bridge
  * Connects ClaimNavigator with existing tools (ClaimProgress, useClaimProgress)
  * 
  * This bridge ensures all tools share data and work as a unified system:

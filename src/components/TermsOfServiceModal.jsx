@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useColorSchemas } from '../hooks/useColorSchemas';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -14,7 +14,7 @@ const TermsOfServiceModal = () => {
 
   useEffect(() => {
     // Check if user has already accepted terms
-    const hasAccepted = localStorage.getItem('vet-rate-tos-accepted');
+    const hasAccepted = localStorage.getItem('SupplyLocker-tos-accepted');
     if (hasAccepted) {
       return; // Already accepted, don't show
     }
@@ -63,8 +63,8 @@ const TermsOfServiceModal = () => {
   };
 
   const handleAccept = () => {
-    localStorage.setItem('vet-rate-tos-accepted', 'true');
-    localStorage.setItem('vet-rate-tos-accepted-date', new Date().toISOString());
+    localStorage.setItem('SupplyLocker-tos-accepted', 'true');
+    localStorage.setItem('SupplyLocker-tos-accepted-date', new Date().toISOString());
     setIsOpen(false);
     
     // Dispatch event so App can show What's New modal
@@ -93,7 +93,7 @@ const TermsOfServiceModal = () => {
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
             <p className="font-semibold text-lg mb-2">IMPORTANT NOTICE</p>
             <p className="text-sm leading-relaxed">
-              Before using Vet-Rate.org, you must understand the limitations and risks of this tool. 
+              Before using SupplyLocker.org, you must understand the limitations and risks of this tool. 
               This agreement protects both you and this service by clearly defining what this platform 
               is-and what it is not. Please read each section carefully.
             </p>
@@ -102,20 +102,20 @@ const TermsOfServiceModal = () => {
           {/* Clause 1: Non-Accreditation */}
           <section className="border-l-4 border-blue-500 pl-4">
             <h3 className="text-xl font-bold text-blue-900 mb-3">
-              1. Non-Accreditation Clause (38 U.S.C. § 5901)
+              1. Non-Accreditation Clause (38 U.S.C. � 5901)
             </h3>
             <div className="space-y-2 text-sm leading-relaxed">
               <p>
-                <strong>Vet-Rate.org is NOT:</strong>
+                <strong>SupplyLocker.org is NOT:</strong>
               </p>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>An accredited Veterans Service Organization (VSO)</li>
                 <li>A licensed attorney or law firm</li>
                 <li>A VA-recognized claims agent</li>
-                <li>A representative authorized under 38 U.S.C. § 5901</li>
+                <li>A representative authorized under 38 U.S.C. � 5901</li>
               </ul>
               <p className="mt-3">
-                <strong>What This Tool Is:</strong> Vet-Rate.org is a self-help educational platform 
+                <strong>What This Tool Is:</strong> SupplyLocker.org is a self-help educational platform 
                 designed to help veterans organize their thoughts, understand VA rating criteria, and 
                 prepare documentation for their claims. <span className="font-semibold underline">You are 
                 ultimately responsible for your own claim filing, accuracy, and legal decisions.</span>
@@ -194,7 +194,7 @@ const TermsOfServiceModal = () => {
             </h3>
             <div className="space-y-2 text-sm leading-relaxed">
               <p>
-                <strong>Privacy-First Architecture:</strong> Vet-Rate.org is designed with your privacy 
+                <strong>Privacy-First Architecture:</strong> SupplyLocker.org is designed with your privacy 
                 as the top priority. We do not store your data on our servers.
               </p>
               <p className="mt-2">
@@ -206,11 +206,11 @@ const TermsOfServiceModal = () => {
                 <li>No cloud backups are created automatically</li>
               </ul>
               <p className="mt-3 bg-red-50 border-2 border-red-500 p-4 rounded">
-                <strong className="text-red-700 text-lg">⚠️ CRITICAL DATA WARNING:</strong>
+                <strong className="text-red-700 text-lg">?? CRITICAL DATA WARNING:</strong>
                 <br/>
                 If you clear your browser cache, uninstall your browser, or use incognito/private mode, 
                 <span className="font-bold underline"> your data WILL BE PERMANENTLY DELETED</span>. 
-                Vet-Rate.org has no way to recover lost data. 
+                SupplyLocker.org has no way to recover lost data. 
                 <strong> You must regularly export and back up your work using the built-in export features.</strong>
               </p>
               <p className="mt-3 text-xs text-gray-600">
@@ -227,7 +227,7 @@ const TermsOfServiceModal = () => {
             </h3>
             <div className="space-y-2 text-sm leading-relaxed">
               <p>
-                <strong>Use of Vet-Rate.org does NOT guarantee:</strong>
+                <strong>Use of SupplyLocker.org does NOT guarantee:</strong>
               </p>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>That your VA claim will be approved</li>
@@ -259,7 +259,7 @@ const TermsOfServiceModal = () => {
                 fitness for a particular purpose, or non-infringement.
               </p>
               <p>
-                <strong>Limitation of Liability:</strong> In no event shall Vet-Rate.org, its creators, 
+                <strong>Limitation of Liability:</strong> In no event shall SupplyLocker.org, its creators, 
                 or contributors be liable for any direct, indirect, incidental, special, consequential, 
                 or punitive damages arising from your use of this tool.
               </p>
@@ -297,7 +297,7 @@ const TermsOfServiceModal = () => {
               <p className="mt-1">
                 Review full terms anytime at{' '}
                 <a href="/terms" className="text-blue-600 hover:underline">
-                  Vet-Rate.org/terms
+                  SupplyLocker.org/terms
                 </a>
               </p>
             </div>

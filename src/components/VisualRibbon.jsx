@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Visual Ribbon Component
+ * SupplyLocker.org - Visual Ribbon Component
  * =======================================
  * 
  * Renders a single military ribbon with dynamic device overlays.

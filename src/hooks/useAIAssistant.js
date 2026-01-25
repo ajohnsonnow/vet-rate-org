@@ -10,7 +10,7 @@ export const useAIAssistant = () => {
     // Check if user has interacted with assistant before
     const hasUsed = localStorage.getItem('vet_rate_ai_assistant_used');
     // Check if tour has been completed - don't auto-open if tour hasn't been seen
-    const tourSeen = localStorage.getItem('vetrate-tour-completed');
+    const tourSeen = localStorage.getItem('supplylocker-tour-completed');
     // Auto-open on first visit ONLY if used before AND tour has been seen
     // (prevents Navigator from opening during the tour)
     return hasUsed && tourSeen ? false : (hasUsed ? true : false);

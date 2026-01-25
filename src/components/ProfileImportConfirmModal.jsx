@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Profile Import Confirmation Modal
+ * SupplyLocker.org - Profile Import Confirmation Modal
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

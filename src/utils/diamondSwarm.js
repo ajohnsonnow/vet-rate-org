@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Diamond Swarm AI Service
+ * SupplyLocker.org - Diamond Swarm AI Service
  * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  * 
  * This service orchestrates 3 specialized fine-tuned models:
@@ -12,8 +12,8 @@
  */
 
 // Storage keys
-const SWARM_CONFIG_KEY = 'vetrate_diamond_swarm_config';
-const SWARM_STATUS_KEY = 'vetrate_diamond_swarm_status';
+const SWARM_CONFIG_KEY = 'supplylocker_diamond_swarm_config';
+const SWARM_STATUS_KEY = 'supplylocker_diamond_swarm_status';
 
 /**
  * Diamond Swarm Agent Types

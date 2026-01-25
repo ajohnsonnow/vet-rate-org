@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Rate Limiter Hook
+ * SupplyLocker.org - Rate Limiter Hook
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

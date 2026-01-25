@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Multi-Provider Cloud Storage
+ * SupplyLocker.org - Multi-Provider Cloud Storage
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  *
@@ -30,7 +30,7 @@ const PROVIDERS = {
     name: 'Google Drive',
     icon: '📁',
     color: 'from-blue-500 to-green-500',
-    folderName: 'Vet-Rate-Backups',
+    folderName: 'SupplyLocker-Backups',
     scopes: 'https://www.googleapis.com/auth/drive.file',
     security: {
       encryptionInTransit: true,
@@ -45,7 +45,7 @@ const PROVIDERS = {
     name: 'Dropbox',
     icon: '📦',
     color: 'from-blue-600 to-blue-400',
-    folderName: '/Vet-Rate-Backups',
+    folderName: '/SupplyLocker-Backups',
     scopes: 'files.content.write files.content.read',
     security: {
       encryptionInTransit: true,
@@ -60,7 +60,7 @@ const PROVIDERS = {
     name: 'OneDrive',
     icon: '☁️',
     color: 'from-blue-500 to-cyan-400',
-    folderName: 'Vet-Rate-Backups',
+    folderName: 'SupplyLocker-Backups',
     scopes: 'Files.ReadWrite.AppFolder',
     security: {
       encryptionInTransit: true,

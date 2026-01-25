@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Settings Modal
+ * SupplyLocker.org - AI Settings Modal
  * Global AI configuration accessible from the header AI badge
  */
 
@@ -15,7 +15,7 @@ import ReportBugLink from './ReportBugLink';
 import TokenLimitConfig from './TokenLimitConfig';
 import PresetSelector from './PresetSelector';
 
-const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
+const GEMINI_KEY_STORAGE = 'supplylocker_gemini_key';
 
 const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
   const { t } = useLanguage();
@@ -41,7 +41,7 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
     }
     
     // Load saved preset
-    const savedPreset = localStorage.getItem('vetrate_ai_preset');
+    const savedPreset = localStorage.getItem('supplylocker_ai_preset');
     if (savedPreset && ['LEGAL', 'CREATIVE', 'ADVERSARIAL', 'BALANCED'].includes(savedPreset)) {
       setSelectedPreset(savedPreset);
     }
@@ -109,7 +109,7 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
   // Handle preset change
   const handlePresetChange = (presetName, presetConfig) => {
     setSelectedPreset(presetName);
-    localStorage.setItem('vetrate_ai_preset', presetName);
+    localStorage.setItem('supplylocker_ai_preset', presetName);
     console.log('AI Preset changed to:', presetName, presetConfig);
   };
 

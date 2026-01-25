@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Guided Onboarding Flow
+ * SupplyLocker.org - Guided Onboarding Flow
  * Copyright (c) 2024-2026 Anthony Johnson
  * 
  * AAAAA Design System - "Mission Planning" Intake

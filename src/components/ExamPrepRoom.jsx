@@ -1,5 +1,5 @@
-﻿/**
- * Vet-Rate.org - The Exam Prep Room Component
+/**
+ * SupplyLocker.org - The Exam Prep Room Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -107,7 +107,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/30 rounded-lg p-6">
         <div className="flex items-start gap-4">
-          <div className="text-4xl">📋</div>
+          <div className="text-4xl">??</div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-cyan-300 mb-2">
               {t('examPrepRoom', 'openBookTest')}
@@ -154,7 +154,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                 {cond.condition_name}
               </div>
               <div className="text-sm text-gray-400 mt-1">
-                DC {cond.diagnostic_code} • {cond.cfr_reference}
+                DC {cond.diagnostic_code} � {cond.cfr_reference}
               </div>
             </button>
           ))}
@@ -163,7 +163,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
 
       {filteredConditions.length === 0 && (
         <div className="text-center py-12 text-gray-400">
-          <div className="text-4xl mb-4">🔍</div>
+          <div className="text-4xl mb-4">??</div>
           <p>{t('examPrepRoom', 'noConditionsFound')} "{searchTerm}"</p>
           <p className="text-sm mt-2">{t('examPrepRoom', 'tryDifferentSearch')}</p>
         </div>
@@ -190,7 +190,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               {currentDBQ.condition_name} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">{t('common', 'beta')}</span>
             </h2>
             <p className="text-sm text-gray-400">
-              {t('examPrepRoom', 'diagnosticCode')}: {currentDBQ.diagnostic_code} • {currentDBQ.cfr_reference}
+              {t('examPrepRoom', 'diagnosticCode')}: {currentDBQ.diagnostic_code} � {currentDBQ.cfr_reference}
             </p>
           </div>
         </div>
@@ -199,7 +199,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {relevantTips.length > 0 && (
           <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6">
             <div className="flex items-start gap-3 mb-4">
-              <div className="text-3xl">💡</div>
+              <div className="text-3xl">??</div>
               <div>
                 <h3 className="text-xl font-bold text-yellow-300 mb-2">
                   {t('examPrepRoom', 'strategicTipsForCondition')}
@@ -213,7 +213,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
               {relevantTips.map((tip) => (
                 <div key={tip.key} className="bg-gray-900/50 rounded-lg p-4">
                   <h4 className="font-bold text-yellow-200 mb-2">
-                    ⚠️ {t('examPrepRoom', tip.titleKey)}
+                    ?? {t('examPrepRoom', tip.titleKey)}
                   </h4>
                   <p className="text-gray-300 text-sm leading-relaxed">
                     {t('examPrepRoom', tip.contentKey)}
@@ -228,7 +228,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {currentDBQ.tipping_points && currentDBQ.tipping_points.length > 0 && (
           <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
             <h3 className="text-xl font-bold text-cyan-300 mb-4">
-              📋 {t('examPrepRoom', 'questionsExaminerWillAsk')}
+              ?? {t('examPrepRoom', 'questionsExaminerWillAsk')}
             </h3>
             <p className="text-gray-400 text-sm mb-6">
               {t('examPrepRoom', 'actualQuestionsFromDBQ')}
@@ -255,7 +255,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       )}
                     </div>
                     <span className="text-gray-500 text-xl ml-4">
-                      {expandedQuestion === q.id ? '−' : '+'}
+                      {expandedQuestion === q.id ? '-' : '+'}
                     </span>
                   </button>
 
@@ -264,7 +264,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {/* Intent */}
                       <div>
                         <h4 className="text-sm font-bold text-yellow-300 mb-2">
-                          🎯 {t('examPrepRoom', 'whatTheyReallyLookingFor')}
+                          ?? {t('examPrepRoom', 'whatTheyReallyLookingFor')}
                         </h4>
                         <p className="text-gray-300 text-sm leading-relaxed">
                           {q.intent}
@@ -275,7 +275,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {q.definition && (
                         <div>
                           <h4 className="text-sm font-bold text-blue-300 mb-2">
-                            📖 {t('examPrepRoom', 'officialDefinition')}
+                            ?? {t('examPrepRoom', 'officialDefinition')}
                           </h4>
                           <p className="text-gray-300 text-sm leading-relaxed">
                             {q.definition}
@@ -287,7 +287,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                       {q.options && q.options.length > 0 && (
                         <div>
                           <h4 className="text-sm font-bold text-green-300 mb-2">
-                            ✅ {t('examPrepRoom', 'possibleAnswers')}
+                            ? {t('examPrepRoom', 'possibleAnswers')}
                           </h4>
                           <div className="space-y-2">
                             {q.options.map((opt, i) => (
@@ -304,7 +304,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
                                       : 'bg-green-500/20 text-green-300'
                                   }`}
                                 >
-                                  {opt.weight >= 3 ? '⚠️' : opt.weight >= 2 ? '⚡' : '✓'}
+                                  {opt.weight >= 3 ? '??' : opt.weight >= 2 ? '?' : '?'}
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-white font-medium">{opt.label}</p>
@@ -330,7 +330,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {/* Additional Notes Section */}
         {currentDBQ.notes && (
           <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-4">
-            <h4 className="font-bold text-blue-300 mb-2">📝 {t('examPrepRoom', 'importantNotes')}</h4>
+            <h4 className="font-bold text-blue-300 mb-2">?? {t('examPrepRoom', 'importantNotes')}</h4>
             <p className="text-gray-300 text-sm">{currentDBQ.notes}</p>
           </div>
         )}
@@ -368,7 +368,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
         {/* Header Bar */}
         <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">📋</div>
+            <div className="text-3xl">??</div>
             <div>
               <h1 className="text-xl font-bold text-white">
                 {t('examPrepRoom', 'title')}
@@ -383,7 +383,7 @@ const ExamPrepRoom = ({ onClose, preselectedCondition = null }) => {
             className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
             aria-label={t('common', 'close')}
           >
-            ×
+            �
           </button>
         </div>
 

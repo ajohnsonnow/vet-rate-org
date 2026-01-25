@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - AI Statement Assistant
+ * SupplyLocker.org - AI Statement Assistant
  * Powered by Unified AI Service - Cloud (Gemini) or Local (WebLLM)
  * 
  * PRIVACY NOTE: Users can now choose between:
@@ -24,7 +24,7 @@ import {
 } from './unifiedAIService';
 
 // LocalStorage key for BYOK (Bring Your Own Key)
-const STORAGE_KEY = 'vetrate_gemini_key';
+const STORAGE_KEY = 'supplylocker_gemini_key';
 
 /**
  * Check if AI features are available (either cloud or local)
@@ -217,7 +217,7 @@ Write the statement now:`;
 // "THE COOLDOWN" - Built-in Rate Limiting for AI Calls
 // Prevents accidental double-clicks and excessive API usage
 // ═══════════════════════════════════════════════════════════════════════════════
-const RATE_LIMIT_KEY = 'vetrate_ai_ratelimit';
+const RATE_LIMIT_KEY = 'supplylocker_ai_ratelimit';
 const COOLDOWN_MS = 10000; // 10 seconds between requests
 const HOURLY_LIMIT = 30;   // Max 30 requests per hour
 const HOURLY_LOCKOUT_MS = 30 * 60 * 1000; // 30 min lockout if exceeded

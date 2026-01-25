@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - TDIU Work Impact Builder
+ * SupplyLocker.org - TDIU Work Impact Builder
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -1018,7 +1018,7 @@ export default function TDIUBuilder({ onClose, onReportBug, onOpenAISettings }) 
               <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">\n                <div className="flex items-center gap-4">
                   <img 
                     src="/images/Anth.jpg" 
-                    alt="Anthony - Vet-Rate Developer"
+                    alt="Anthony - SupplyLocker Developer"
                     className="w-14 h-14 rounded-full object-cover border-2 border-green-500 shadow-lg flex-shrink-0"
                   />
                   <div className="flex-1">

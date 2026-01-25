@@ -1,7 +1,7 @@
 /**
  * Toolkit Data - Single Source of Truth
  * 
- * This file defines all tools in the Vet-Rate.org arsenal.
+ * This file defines all tools in the SupplyLocker.org arsenal.
  * Used by: AboutUs.jsx, and should match README.md
  * 
  * CATEGORY METHODOLOGY:

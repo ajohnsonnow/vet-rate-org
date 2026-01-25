@@ -1,14 +1,14 @@
 /**
- * Vet-Rate.org - Voice Orchestrator Service
+ * SupplyLocker.org - Voice Orchestrator Service
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
  * 🎭 Unified Voice Service for Diamond Swarm
  * 
  * Centralized voice management for all three custom LLMs:
- * - VetRate-Auditor: Evidence review and regulatory analysis
- * - VetRate-Scribe: Statement and nexus letter writing
- * - VetRate-Rater: VA math and rating calculations
+ * - SupplyLocker-Auditor: Evidence review and regulatory analysis
+ * - SupplyLocker-Scribe: Statement and nexus letter writing
+ * - SupplyLocker-Rater: VA math and rating calculations
  * 
  * This orchestrator ensures consistent compassionate tone across all models.
  */
@@ -37,7 +37,7 @@ let instance = null;
 
 /**
  * Voice Orchestrator Class
- * Manages voice output for all Vet-Rate LLMs with unified compassionate tone
+ * Manages voice output for all SupplyLocker LLMs with unified compassionate tone
  */
 class VoiceOrchestrator {
   constructor() {

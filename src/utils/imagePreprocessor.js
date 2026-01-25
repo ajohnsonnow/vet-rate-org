@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Image Preprocessing for OCR Enhancement
+ * SupplyLocker.org - Image Preprocessing for OCR Enhancement
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 

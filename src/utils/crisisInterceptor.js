@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Crisis Interceptor
+ * SupplyLocker.org - Crisis Interceptor
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
@@ -180,7 +180,7 @@ export function logCrisisIntercept(severity, source = 'unknown') {
     };
     
     // Store in localStorage for potential future review/improvement
-    const existingLogs = JSON.parse(localStorage.getItem('vetrate_crisis_logs') || '[]');
+    const existingLogs = JSON.parse(localStorage.getItem('supplylocker_crisis_logs') || '[]');
     existingLogs.push(event);
     
     // Keep only last 100 events
@@ -188,7 +188,7 @@ export function logCrisisIntercept(severity, source = 'unknown') {
       existingLogs.shift();
     }
     
-    localStorage.setItem('vetrate_crisis_logs', JSON.stringify(existingLogs));
+    localStorage.setItem('supplylocker_crisis_logs', JSON.stringify(existingLogs));
     
     // Also log to console for immediate developer visibility
     console.warn('🚨 CRISIS INTERCEPTOR TRIGGERED:', { severity, source });

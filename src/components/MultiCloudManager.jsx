@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Multi-Cloud Backup Manager
+ * SupplyLocker.org - Multi-Cloud Backup Manager
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  *
@@ -448,7 +448,7 @@ const MultiCloudManager = ({ onClose }) => {
                 </h3>
                 <div className="text-gray-300 text-sm space-y-2">
                   <p>
-                    <strong>This is NOT a HIPAA-covered service.</strong> Vet-Rate.org is a free educational tool 
+                    <strong>This is NOT a HIPAA-covered service.</strong> SupplyLocker.org is a free educational tool 
                     that runs entirely in your browser. We do not store, process, or have access to your health information.
                   </p>
                   <p>
@@ -884,7 +884,7 @@ const MultiCloudManager = ({ onClose }) => {
                 </h4>
                 <div className="text-gray-300 text-sm space-y-3">
                   <p>
-                    <strong>Vet-Rate.org does NOT store Protected Health Information (PHI).</strong> All data 
+                    <strong>SupplyLocker.org does NOT store Protected Health Information (PHI).</strong> All data 
                     remains in your browser's local storage and/or your personal cloud accounts.
                   </p>
                   <div className="bg-gray-900/50 p-3 rounded-lg">

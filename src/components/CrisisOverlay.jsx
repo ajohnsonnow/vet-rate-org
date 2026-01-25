@@ -106,7 +106,7 @@ const CrisisOverlay = ({ isOpen, onClose }) => {
           {/* Why we're showing this */}
           <div className="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-4">
             <p>
-              <strong>Why am I seeing this?</strong> Vet-Rate.org detected language that may indicate distress. We care about your well-being and want you to know help is available 24/7.
+              <strong>Why am I seeing this?</strong> SupplyLocker.org detected language that may indicate distress. We care about your well-being and want you to know help is available 24/7.
             </p>
           </div>
 

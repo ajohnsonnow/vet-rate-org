@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * 
  * DemoDataLoader Component
@@ -324,7 +324,7 @@ const DemoDataLoader = ({ onDataLoaded, variant = 'link' }) => {
           <div className="flex items-start gap-3">
             <span className="text-2xl">📋</span>
             <div className="flex-1">
-              <h3 className="font-bold text-white mb-1">New to Vet-Rate?</h3>
+              <h3 className="font-bold text-white mb-1">New to SupplyLocker?</h3>
               <p className="text-gray-300 text-sm mb-3">
                 See what a <strong>complete, well-documented claim</strong> looks like. 
                 Load our example packet to learn by example.

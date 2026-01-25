@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See src/COPYRIGHT.js for full license terms.
@@ -414,7 +414,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
       {/* Footer */}
       <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          🔒 Your data never leaves your device. Vet-Rate.org processes everything locally.
+          🔒 Your data never leaves your device. SupplyLocker.org processes everything locally.
         </p>
       </div>
     </div>

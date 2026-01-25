@@ -4,7 +4,7 @@
  * Enables 100% local LLM inference in the browser using WebAssembly.
  * Falls back to llama.cpp server if available, then to Gemini cloud.
  * 
- * Models: VetRate Auditor, Writer, Rater (GGUF Q4_K_M)
+ * Models: SupplyLocker Auditor, Writer, Rater (GGUF Q4_K_M)
  */
 
 // Dynamic import to avoid bundling Node.js code from wllama's embedded worker strings
@@ -37,36 +37,36 @@ const WLLAMA_CONFIG_KEY = 'vetrate_wllama_config';
  */
 export const WLLAMA_MODELS = {
   auditor: {
-    name: 'VetRate Auditor',
+    name: 'SupplyLocker Auditor',
     description: 'Reviews claims for accuracy and compliance',
     // Model URL - can be local server or CDN
     url: '/models/vetrate-auditor-7b-v2-Q4_K_M.gguf',
     // Fallback to HuggingFace or other CDN
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-auditor-7b-v2-gguf/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Auditor, an expert VA claims reviewer.
+    systemPrompt: `You are the SupplyLocker Diamond Auditor, an expert VA claims reviewer.
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
 Always cite specific CFR sections. Never fabricate regulatory information.
 Be thorough but compassionate - veterans deserve accurate guidance.`
   },
   writer: {
-    name: 'VetRate Writer',
+    name: 'SupplyLocker Writer',
     description: 'Creates compelling personal statements',
     url: '/models/vetrate-writer-7b-v2-Q4_K_M.gguf',
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-writer-7b-v2-gguf/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Writer, specializing in VA claims documentation.
+    systemPrompt: `You are the SupplyLocker Diamond Writer, specializing in VA claims documentation.
 Write compelling, truthful personal statements from the veteran's perspective.
 Include specific dates, locations, and details. Connect symptoms to daily life impact.
 Use medical terminology correctly. Balance emotional resonance with factual accuracy.`
   },
   rater: {
-    name: 'VetRate Rater',
+    name: 'SupplyLocker Rater',
     description: 'Calculates VA disability ratings',
     url: '/models/vetrate-rater-7b-v2-Q4_K_M.gguf',
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-rater-7b-v2-gguf/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Rater, expert in VA disability calculations.
+    systemPrompt: `You are the SupplyLocker Diamond Rater, expert in VA disability calculations.
 Calculate combined ratings using the official VA bilateral factor formula.
 Explain rating criteria for specific conditions. Identify potential rating increases.
 Always show your work and cite 38 CFR Part 4 rating criteria.`

@@ -1,5 +1,5 @@
 /**
- * Vet-Rate.org - Feature Request Lookup (Admin Interface)
+ * SupplyLocker.org - Feature Request Lookup (Admin Interface)
  * Secure Feature Request Retrieval and Management
  * 
  * Admin tool to search, view and manage feature requests.

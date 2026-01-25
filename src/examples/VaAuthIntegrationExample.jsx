@@ -233,7 +233,7 @@ function App() {
       <div className="app">
         {/* Header with login button */}
         <header className="app-header">
-          <h1>Vet-Rate.org</h1>
+          <h1>SupplyLocker.org</h1>
           <VaLoginButton />
         </header>
 
@@ -252,7 +252,7 @@ function HomePage() {
 
   return (
     <div className="home">
-      <h1>Welcome to Vet-Rate.org</h1>
+      <h1>Welcome to SupplyLocker.org</h1>
       
       {isAuthenticated ? (
         <div>

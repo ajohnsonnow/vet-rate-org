@@ -1,15 +1,15 @@
 /**
  * ============================================================================
- * VET-RATE.ORG - COPYRIGHT NOTICE
+ * SUPPLYLOCKER.ORG - COPYRIGHT NOTICE
  * ============================================================================
  * 
- * Copyright (c) 2024-2026 Anthony Johnson (Vet-Rate.org)
+ * Copyright (c) 2024-2026 Anthony Johnson (SupplyLocker.org)
  * All Rights Reserved.
  * 
  * PROPRIETARY SOFTWARE LICENSE
  * 
  * This software and its source code are the exclusive property of Anthony 
- * Johnson and Vet-Rate.org. Unauthorized copying, modification, distribution, 
+ * Johnson and SupplyLocker.org. Unauthorized copying, modification, distribution, 
  * or use of this software, in whole or in part, is strictly prohibited.
  * 
  * LICENSE RESTRICTIONS:
@@ -29,7 +29,7 @@
  *    services is expressly prohibited.
  * 
  * 5. ATTRIBUTION REQUIRED: If permission is granted for any use, proper 
- *    attribution to Vet-Rate.org and the original author must be maintained.
+ *    attribution to SupplyLocker.org and the original author must be maintained.
  * 
  * LEGAL NOTICE:
  * 
@@ -50,7 +50,7 @@
  * is prohibited under 17 U.S.C. § 1201.
  * 
  * CONTACT:
- * For licensing inquiries: https://vet-rate.org/contact
+ * For licensing inquiries: https://supply-locker.org/contact
  * 
  * Built with love by a fellow service-disabled veteran.
  * "Serving those who served."
@@ -59,16 +59,16 @@
  */
 
 export const COPYRIGHT = {
-  owner: 'Anthony Johnson (Vet-Rate.org)',
+  owner: 'Anthony Johnson (SupplyLocker.org)',
   years: '2024-2026',
-  website: 'https://vet-rate.org',
+  website: 'https://supply-locker.org',
   notice: 'All Rights Reserved. Unauthorized use prohibited.',
   version: '1.0.0'
 };
 
 export const COPYRIGHT_HEADER = `
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SupplyLocker.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
  * See COPYRIGHT.js for full license terms.

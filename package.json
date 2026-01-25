@@ -1,7 +1,7 @@
 {
-  "name": "veteran-disability-search",
+  "name": "supply-locker",
   "version": "1.8.5",
-  "description": "Comprehensive veteran disability search and resource guide using eCFR data",
+  "description": "SupplyLocker.org - Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
     "dev": "vite",
