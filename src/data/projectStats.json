@@ -29,9 +29,9 @@
     "research": 150,
     "deployment": 73
   },
-  "days_dev": "9",
+  "days_dev": "10",
   "productivity_multiplier": "208",
-  "total_commits": "142",
+  "total_commits": "143",
   "ai_tools": {
     "planning": "Gemini 3",
     "coding": [
@@ -47,8 +47,8 @@
     ]
   },
   "first_commit": "January 15, 2026",
-  "last_updated": "2026-01-24",
-  "version": "20260124",
+  "last_updated": "2026-01-25",
+  "version": "20260125",
   "total_hours_numeric": 20766,
   "coding_hours_numeric": 17124,
   "loc_count_numeric": 167298,
@@ -73,6 +73,6 @@
     "vaFormsCount": 94,
     "localAIModels": 3,
     "appSizeMB": 167.22,
-    "calculatedAt": "2026-01-25T00:21:20.065Z"
+    "calculatedAt": "2026-01-25T21:18:39.731Z"
   }
 }
