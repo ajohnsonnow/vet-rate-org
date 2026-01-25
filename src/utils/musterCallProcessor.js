@@ -740,13 +740,32 @@ export const generateMusterCallReport = async (processedResults, classified) => 
     r.classification?.category === 'medical' && r.status === 'complete'
   );
 
+  // Summarize extracted data to avoid token overflow
+  const summarizeData = (data) => {
+    if (!data) return 'No data extracted';
+    const summary = [];
+    if (data.name) summary.push(`Name: ${data.name}`);
+    if (data.serviceNumber) summary.push(`Service #: ${data.serviceNumber}`);
+    if (data.branch) summary.push(`Branch: ${data.branch}`);
+    if (data.entryDate) summary.push(`Entry: ${data.entryDate}`);
+    if (data.dischargeDate) summary.push(`Discharge: ${data.dischargeDate}`);
+    if (data.mos) summary.push(`MOS: ${data.mos}`);
+    if (data.rank) summary.push(`Rank: ${data.rank}`);
+    if (data.conditions && Array.isArray(data.conditions)) {
+      summary.push(`Conditions (${data.conditions.length}): ${data.conditions.slice(0, 10).map(c => c.name || c).join(', ')}`);
+    }
+    if (data.rating) summary.push(`Rating: ${data.rating}%`);
+    if (data.effectiveDate) summary.push(`Effective: ${data.effectiveDate}`);
+    return summary.length > 0 ? summary.join(', ') : 'Limited data';
+  };
+
   const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
 
 SERVICE RECORDS (${serviceRecords.length} documents):
-${serviceRecords.map(r => `- ${r.filename}: ${JSON.stringify(r.extractedData, null, 2)}`).join('\n')}
+${serviceRecords.map(r => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join('\n')}
 
 RATING DECISIONS (${ratingDocs.length} documents):
-${ratingDocs.map(r => `- ${r.filename}: ${JSON.stringify(r.extractedData, null, 2)}`).join('\n')}
+${ratingDocs.map(r => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join('\n')}
 
 MEDICAL RECORDS (${medicalDocs.length} documents):
 ${medicalDocs.map(r => `- ${r.filename}: ${r.classification.type}`).join('\n')}

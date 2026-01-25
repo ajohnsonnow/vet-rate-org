@@ -314,6 +314,7 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
             });
           },
           logLevel: 'SILENT',
+          context_window_size: 8192, // Increase context window to handle larger prompts
         });
         
         loadedModel = modelId;
@@ -402,6 +403,26 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   
   // Use custom system prompt or agent's default
   const finalSystemPrompt = systemPrompt || agent.systemPrompt;
+  
+  // Rough token estimation (1 token ≈ 4 characters)
+  const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 4);
+  const estimatedPromptTokens = Math.ceil(prompt.length / 4);
+  const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
+  const contextLimit = 8192; // Match our configured context window size
+  
+  // Warn if prompt is too large
+  if (estimatedTotalTokens > contextLimit - maxTokens) {
+    console.warn(`💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${contextLimit - maxTokens})`);
+    
+    // Truncate prompt if needed (keep last N characters which are usually most relevant)
+    if (estimatedTotalTokens > contextLimit - maxTokens) {
+      const maxPromptChars = (contextLimit - maxTokens - estimatedSystemTokens) * 4;
+      if (prompt.length > maxPromptChars) {
+        console.log(`💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`);
+        prompt = '...\n' + prompt.slice(-maxPromptChars);
+      }
+    }
+  }
   
   console.log(`💎 Generating with ${agent.name} (${agent.icon})`);
   
