@@ -607,7 +607,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
   };
 
   // Start processing with concurrency limit
-  console.log(`🚀 Starting batch processing: ${validation.valid.length} files with ${maxConcurrent} workers`);
+  console.log('Starting batch processing: ' + validation.valid.length + ' files with ' + maxConcurrent + ' workers');
   
   const workers = [];
   for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
@@ -618,7 +618,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
         if (queue.length === 0) {
           // No more files in queue, but wait for other workers to finish
           if (processing === 0) {
-            console.log(`✅ Worker ${workerId} finished - all done`);
+            console.log('Worker ' + workerId + ' finished - all done');
             break;
           }
           // Wait a bit for other workers to finish processing
@@ -629,7 +629,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
         // Process next file
         const result = await processNext();
         if (result === null && queue.length === 0) {
-          console.log(`✅ Worker ${workerId} finished - no more files`);
+          console.log('Worker ' + workerId + ' finished - no more files');
           break;
         }
       }
@@ -637,7 +637,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
   }
 
   await Promise.all(workers);
-  console.log(`✅ All workers finished. Processed ${results.length} files`);
+  console.log('All workers finished. Processed ' + results.length + ' files');
 
   // Classify and group results
   onProgress?.({
