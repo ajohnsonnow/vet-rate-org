@@ -225,20 +225,13 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
   const pagesToProcess = Math.min(numPages, config.MAX_OCR_PAGES);
   const results = [];
   
-  // Initialize Tesseract worker with optimized settings
-  const worker = await Tesseract.createWorker(config.LANGUAGES, 1, {
-    logger: () => {}, // Suppress verbose logs
-    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/',
-    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/worker.min.js',
-    langPath: 'https://cdn.jsdelivr.net/npm/tessdata@4.0.0/',
-  });
+  // Initialize Tesseract worker with optimized settings for v7
+  const worker = await Tesseract.createWorker(config.LANGUAGES);
   
   // Configure Tesseract for maximum accuracy
   await worker.setParameters({
     tessedit_pageseg_mode: Tesseract.PSM.AUTO,
     preserve_interword_spaces: '1',
-    tessjs_create_hocr: '0',
-    tessjs_create_tsv: '0',
   });
   
   try {
