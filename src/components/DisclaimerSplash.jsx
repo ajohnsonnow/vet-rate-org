@@ -62,6 +62,31 @@ function DisclaimerSplash({ onAcknowledge }) {
 
         {/* Content */}
         <div className="p-6 md:p-8">
+          {/* Beta Development Warning - Personal Message */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl p-5 mb-6 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+                  Active Development - Beta Tools
+                  <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">BETA</span>
+                </h3>
+                <div className="space-y-2 text-sm text-amber-900 dark:text-amber-100">
+                  <p className="leading-relaxed">
+                    "Monty always told me to take care of my guys... and y'all are my guys."
+                  </p>
+                  <p className="text-xs text-amber-800 dark:text-amber-300 mt-3">
+                    🏗️ Every tool is marked BETA. Expect improvements, updates, and occasional rough edges as I build this for us. Your feedback helps make it better for everyone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Personal Message */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
