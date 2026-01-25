@@ -15,6 +15,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import useAutoInitAI from '../hooks/useAutoInitAI';
 import {
   processMusterCallBatch,
   autoPopulateProfile,
@@ -34,6 +35,9 @@ import ReactMarkdown from 'react-markdown';
 export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   const { t } = useLanguage();
   useBodyScrollLock(isOpen);
+  
+  // Auto-initialize AI when component mounts
+  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('war-room', 'auditor');
 
   // State management
   const [files, setFiles] = useState([]);
@@ -276,6 +280,47 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          
+          {/* AI Initialization Banner */}
+          {aiInitializing && (
+            <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border-l-4 border-purple-500">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="text-3xl animate-pulse">💎</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                      Initializing Diamond Swarm AI...
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {initMessage || 'Preparing AI agent for analysis'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {initProgress}%
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
+                  style={{ width: `${initProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
+          {aiReady && !aiInitializing && (
+            <div className="mb-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500">
+              <div className="flex items-center">
+                <span className="text-2xl mr-3">✅</span>
+                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                  Diamond Auditor AI ready - Intelligence Briefing will be generated automatically
+                </span>
+              </div>
+            </div>
+          )}
           
           {/* File Drop Zone */}
           {processingState === PROCESSING_STATES.IDLE && (

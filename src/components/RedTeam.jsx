@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import useAutoInitAI from '../hooks/useAutoInitAI';
 import { stressTestStatement, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
@@ -23,6 +24,9 @@ import VoiceInputButton from './VoiceInput';
 const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
+  
+  // Auto-initialize AI when component mounts
+  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('red-team', 'auditor');
   
   const [draftStatement, setDraftStatement] = useState('');
   const [results, setResults] = useState(null);
