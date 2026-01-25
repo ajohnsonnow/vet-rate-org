@@ -600,11 +600,6 @@ export const processMusterCallBatch = async (files, options = {}) => {
       return null;
     }
   };
-      processing
-    });
-
-    return result;
-  };
 
   // Start processing with concurrency limit
   const workers = [];
