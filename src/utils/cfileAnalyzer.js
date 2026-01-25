@@ -24,7 +24,7 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAI
 // Conservative token limits (leaving room for system prompt + response)
 const TOKEN_LIMITS = {
   GEMINI: 800000,      // 800K tokens (conservative for 1M context)
-  LOCAL: 1500,         // 1.5K tokens (VERY conservative for 4K context - system prompt is ~1K)
+  LOCAL: 600,          // 600 tokens for 4K context (prompt ~1500 + doc 600 + output 500 + buffer 1500)
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
@@ -34,16 +34,16 @@ const CHARS_PER_TOKEN = 4;
 const getMaxCharsPerChunk = (aiMode) => {
   if (aiMode === AI_MODES.LOCAL || aiMode === AI_MODES.SWARM || 
       aiMode === AI_MODES.WLLAMA || aiMode === AI_MODES.LOCAL_SERVER) {
-    return TOKEN_LIMITS.LOCAL * CHARS_PER_TOKEN; // ~12,000 chars for local
+    return TOKEN_LIMITS.LOCAL * CHARS_PER_TOKEN; // ~2400 chars for local (fits in 4K context with prompt+output)
   }
   return TOKEN_LIMITS.GEMINI * CHARS_PER_TOKEN; // ~3.2M chars for cloud
 };
 
 // Overlap between chunks (in pages) to catch context that spans boundaries
-const CHUNK_OVERLAP_PAGES = 5;
+const CHUNK_OVERLAP_PAGES = 2; // Reduced from 5 to minimize processing time
 
 // Minimum pages per chunk (don't create tiny chunks)
-const MIN_PAGES_PER_CHUNK = 10;
+const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks better
 
 // ============================================================================
 // SYSTEM PROMPTS

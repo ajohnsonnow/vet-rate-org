@@ -20,11 +20,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { X, Sparkles, CheckCircle, Wrench, Shield, Zap, Star, Rocket, Gift, Bug } from 'lucide-react';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { generateWhatsNewChangelog } from '../utils/changelogGenerator';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const WhatsNewModal = ({ changelog: propChangelog, version: propVersion, onClose }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   // Use dynamic changelog if not provided via props
   const [dynamicData, setDynamicData] = useState(null);
   

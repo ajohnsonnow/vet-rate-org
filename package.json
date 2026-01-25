@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {

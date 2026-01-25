@@ -18,6 +18,9 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+// Standard fonts CDN path (suppresses font warnings)
+const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/';
+
 /**
  * Search result object
  * @typedef {Object} SearchResult
@@ -247,7 +250,10 @@ export const COMMON_MEDICAL_KEYWORDS = {
  */
 export async function extractPageText(pdfData, pageNum) {
   try {
-    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: pdfData,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    }).promise;
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
     

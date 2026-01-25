@@ -20,6 +20,9 @@ import { preprocessImageForOCR, detectOptimalPreprocessing, PREPROCESS_OPTIONS }
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+// Standard fonts CDN path (suppresses font warnings)
+const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/';
+
 // OCR Configuration
 const OCR_CONFIG = {
   MIN_CHARS_PER_PAGE: 50, // Below this threshold, we assume scanned/image PDF
@@ -81,7 +84,10 @@ export async function analyzePDF(file, onProgress = () => {}) {
     const arrayBuffer = await readFileAsArrayBuffer(file);
     
     // Load PDF document
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: arrayBuffer,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    }).promise;
     const numPages = pdf.numPages;
     
     onProgress({

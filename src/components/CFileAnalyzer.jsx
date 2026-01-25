@@ -9,6 +9,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
 import { analyzeCFile, getCFilePrivacyDisclosure, estimateChunks, getContextWindowInfo } from '../utils/cfileAnalyzer';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
@@ -23,6 +24,10 @@ import CFileClaimsCards from './CFileClaimsCards';
 
 export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   // File drop state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);

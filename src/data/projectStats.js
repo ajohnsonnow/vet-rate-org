@@ -18,21 +18,24 @@ const parseNumeric = (str) => {
 };
 
 export const PROJECT_STATS = {
-  // Project Scale (from dynamic JSON)
-  totalFiles: parseNumeric(dynamicStats.total_files) || 1127,
-  linesOfCode: parseNumeric(dynamicStats.loc_count) || 138219,
-  appSizeMB: 104.05,
-  components: parseNumeric(dynamicStats.component_count) || 115,
-  majorTools: parseNumeric(dynamicStats.major_tools) || 40,
-  supportingComponents: 75,
-  utilities: parseNumeric(dynamicStats.utility_count) || 49,
-  disabilitiesValidated: parseNumeric(dynamicStats.validation_count) || 748,
+  // Project Scale (from dynamic JSON - auto-calculated by scripts/update-stats.js)
+  totalFiles: dynamicStats.live?.totalFiles || parseNumeric(dynamicStats.total_files) || 1127,
+  linesOfCode: dynamicStats.live?.linesOfCode || parseNumeric(dynamicStats.loc_count) || 138219,
+  appSizeMB: dynamicStats.live?.appSizeMB || 104.05,
+  components: dynamicStats.live?.componentCount || parseNumeric(dynamicStats.component_count) || 115,
+  majorTools: dynamicStats.live?.toolCount || parseNumeric(dynamicStats.major_tools) || 40,
+  supportingComponents: dynamicStats.live?.supportingComponents || 75,
+  utilities: dynamicStats.live?.utilityCount || parseNumeric(dynamicStats.utility_count) || 49,
+  disabilitiesValidated: dynamicStats.live?.disabilityCount || parseNumeric(dynamicStats.validation_count) || 748,
   
-  // Content Counts (matches README.md)
-  vaForms: parseNumeric(dynamicStats.forms_supported) || 16,
-  secondaryConditions: parseNumeric(dynamicStats.secondary_conditions) || 500,
+  // Content Counts (from live calculation)
+  vaForms: dynamicStats.live?.vaFormsCount || parseNumeric(dynamicStats.forms_supported) || 16,
+  secondaryConditions: dynamicStats.live?.secondaryCount || parseNumeric(dynamicStats.secondary_conditions) || 500,
   statesCovered: 51,      // All 50 states + DC
   glossaryTerms: 150,     // VA terminology definitions
+  
+  // Local AI Models (from live calculation)
+  localAIModels: dynamicStats.live?.localAIModels || parseNumeric(dynamicStats.local_ai_models) || 3,
   
   // Tool Categories (for dynamic references)
   // Matches categories in toolkitData.js
@@ -60,9 +63,13 @@ export const PROJECT_STATS = {
   productivityMultiplier: parseNumeric(dynamicStats.productivity_multiplier) || 280,
   
   // Time Breakdown (from dynamic JSON - calculated from LOC and percentages)
-  breakdown: dynamicStats.breakdown || {
+  breakdown: dynamicStats.breakdown ? {
+    ...dynamicStats.breakdown,
+    dataValidation: dynamicStats.breakdown.validation, // alias for AboutUs.jsx
+  } : {
     coding: parseNumeric(dynamicStats.coding_hours) || 13147,
     validation: parseNumeric(dynamicStats.validation_hours) || 250,
+    dataValidation: parseNumeric(dynamicStats.validation_hours) || 250, // alias
     testing: Math.round((parseNumeric(dynamicStats.coding_hours) || 13147) * 0.15),
     uiux: 400,
     documentation: 200,
@@ -119,7 +126,7 @@ export const getTotalToolCount = () => {
 export const FORMATTED_STATS = {
   totalFiles: formatNumber(PROJECT_STATS.totalFiles),
   linesOfCode: formatNumber(PROJECT_STATS.linesOfCode),
-  appSize: `${PROJECT_STATS.appSizeMB} MB`,
+  appSize: `${PROJECT_STATS.appSizeMB.toFixed(2)} MB`,
   components: `${PROJECT_STATS.components} React components (${PROJECT_STATS.majorTools} major tools + ${PROJECT_STATS.supportingComponents} supporting)`,
   utilities: `${PROJECT_STATS.utilities} helper modules`,
   vaForms: `${PROJECT_STATS.vaForms}+ PDF forms ready to download`,
@@ -136,6 +143,7 @@ export const FORMATTED_STATS = {
   professionalTeamCost: `$${(PROJECT_STATS.professionalTeamCostMin / 1000000).toFixed(1)}M-$${(PROJECT_STATS.professionalTeamCostMax / 1000000).toFixed(1)}M`,
   commits: `${PROJECT_STATS.git.totalCommits} commits across ${PROJECT_STATS.git.activeSessions} active coding sessions`,
   linesChanged: `+${formatNumber(PROJECT_STATS.git.linesAdded)} lines added, -${formatNumber(PROJECT_STATS.git.linesRemoved)} lines removed`,
+  localAIModels: `${PROJECT_STATS.localAIModels} Diamond Swarm agents`,
 };
 
 export default PROJECT_STATS;

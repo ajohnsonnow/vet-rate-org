@@ -11,6 +11,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import {
   exportData,
   downloadBackup,
@@ -28,6 +29,10 @@ import { getCacheStats } from '../utils/dbqOfflineStorage';
 
 export default function BackupManager({ onClose }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success'|'error'|'info', message: '', details: {} }
   const [showStats, setShowStats] = useState(false);

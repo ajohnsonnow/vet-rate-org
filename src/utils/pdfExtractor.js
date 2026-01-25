@@ -13,6 +13,9 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 // Configure pdf.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+// Standard fonts CDN path (suppresses font warnings)
+const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/';
+
 /**
  * Extract text from a PDF file client-side
  * @param {ArrayBuffer} fileData - The PDF file as an ArrayBuffer
@@ -21,7 +24,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
  */
 export async function ripTextFromPdf(fileData, onProgress = () => {}) {
   try {
-    const pdf = await pdfjsLib.getDocument({ data: fileData }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: fileData, 
+      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    }).promise;
     const numPages = pdf.numPages;
     let fullText = "";
     let totalCharacters = 0;

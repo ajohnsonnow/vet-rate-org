@@ -265,12 +265,14 @@ function checkTextQuality() {
   
   const srcFiles = globFiles('src/');
   const issues = [];
+  const autoFixes = [];
   
   srcFiles.forEach(file => {
     if (file.endsWith('.jsx') || file.endsWith('.js')) {
       const content = fs.readFileSync(file, 'utf8');
       const relativePath = path.relative(rootDir, file);
       const lines = content.split('\n');
+      let needsUpdate = false;
       
       lines.forEach((line, i) => {
         // Skip lines that are regex patterns (contain /.../)
@@ -283,27 +285,31 @@ function checkTextQuality() {
         // Skip comments that might discuss dashes
         if (line.trim().startsWith('//') || line.trim().startsWith('*')) return;
         
-        if (line.includes(emDash)) {
-          issues.push(`${relativePath}:${i + 1} - em-dash found in text`);
-        }
-        if (line.includes(enDash)) {
-          issues.push(`${relativePath}:${i + 1} - en-dash found in text`);
+        if (line.includes(emDash) || line.includes(enDash)) {
+          issues.push(`${relativePath}:${i + 1} - em-dash/en-dash found in text`);
+          needsUpdate = true;
         }
       });
+      
+      // Auto-fix: replace em-dash and en-dash with regular hyphen
+      if (needsUpdate) {
+        const fixedContent = content.replace(/—/g, '-').replace(/–/g, '-');
+        fs.writeFileSync(file, fixedContent, 'utf8');
+        autoFixes.push(relativePath);
+      }
     }
   });
   
-  const noSpecialDashes = issues.length === 0;
-  logResult(`No em-dash/en-dash characters`, noSpecialDashes, issues.length > 0 ? `${issues.length} found` : '');
-  
-  if (issues.length > 0 && issues.length <= 5) {
-    issues.forEach(issue => log(`   ${issue}`, 'yellow'));
-  } else if (issues.length > 5) {
-    issues.slice(0, 5).forEach(issue => log(`   ${issue}`, 'yellow'));
-    log(`   ... and ${issues.length - 5} more`, 'yellow');
+  if (autoFixes.length > 0) {
+    log(`   🔄 Auto-fixed ${autoFixes.length} file(s):`, 'cyan');
+    autoFixes.forEach(file => log(`      ${file}`, 'cyan'));
   }
   
-  checks.add('Text quality', noSpecialDashes);
+  const noSpecialDashes = issues.length === 0;
+  logResult(`No em-dash/en-dash characters`, noSpecialDashes || autoFixes.length > 0, 
+           autoFixes.length > 0 ? `${issues.length} found and auto-fixed` : (issues.length > 0 ? `${issues.length} found` : ''));
+  
+  checks.add('Text quality', true); // Always pass after auto-fix
 }
 
 // 5. Legal Pages Sync

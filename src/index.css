@@ -212,6 +212,107 @@ html.dark {
   --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
+/* ============================================
+   TBI-COMFORT MODE - "The Night Bunker"
+   Zero blue light, warm amber tones for veterans
+   with TBI, migraines, or light sensitivity
+   ============================================ */
+html.tbi-comfort {
+  --bg-primary: #1a1a16;       /* Deep warm charcoal */
+  --bg-secondary: #252520;     /* Slightly lighter warm tone */
+  --bg-tertiary: #2f2f28;      /* Surface elevation */
+  --text-primary: #e8d5b5;     /* Soft amber/parchment text */
+  --text-secondary: #c9b896;   /* Muted amber */
+  --text-muted: #a89a78;       /* Warm gray */
+  --border-color: #3d3a30;     /* Warm dark border */
+  --shadow-color: rgba(0, 0, 0, 0.6);
+  --accent-primary: #c5a059;   /* Service Gold accent */
+  --focus-ring: #e8d5b5;       /* Warm focus indicator */
+}
+
+html.tbi-comfort body {
+  background-color: #1a1a16 !important;
+  color: #e8d5b5 !important;
+  /* Apply amber filter to reduce blue light */
+  filter: sepia(10%) saturate(90%);
+}
+
+html.tbi-comfort * {
+  border-color: #3d3a30 !important;
+}
+
+/* TBI mode - Override harsh whites and blues */
+html.tbi-comfort .bg-white,
+html.tbi-comfort .bg-gray-50,
+html.tbi-comfort .bg-gray-100 {
+  background-color: #252520 !important;
+}
+
+html.tbi-comfort .text-white,
+html.tbi-comfort .text-gray-900 {
+  color: #e8d5b5 !important;
+}
+
+html.tbi-comfort .text-blue-600,
+html.tbi-comfort .text-blue-700 {
+  color: #c5a059 !important;
+}
+
+html.tbi-comfort .bg-blue-600,
+html.tbi-comfort .bg-blue-700 {
+  background-color: #7a6535 !important;
+}
+
+/* ============================================
+   AAA HIGH CONTRAST MODE
+   WCAG 2.2 Level AAA (7:1 contrast ratios)
+   For users with severe visual impairments
+   ============================================ */
+html.aaa-high-contrast {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #e0e0e0;
+  --border-color: #ffffff;
+  --shadow-color: none;
+  --accent-primary: #ffff00;
+  --focus-ring: #00ffff;
+}
+
+html.aaa-high-contrast body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.aaa-high-contrast * {
+  border-width: 2px !important;
+  border-color: #ffffff !important;
+}
+
+html.aaa-high-contrast a,
+html.aaa-high-contrast button {
+  text-decoration: underline !important;
+}
+
+html.aaa-high-contrast button:focus,
+html.aaa-high-contrast a:focus,
+html.aaa-high-contrast input:focus,
+html.aaa-high-contrast select:focus,
+html.aaa-high-contrast textarea:focus {
+  outline: 3px solid #00ffff !important;
+  outline-offset: 2px !important;
+}
+
+html.aaa-high-contrast .bg-blue-600,
+html.aaa-high-contrast .bg-blue-700,
+html.aaa-high-contrast .bg-green-600,
+html.aaa-high-contrast .bg-green-700 {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+}
+
 /* Apply theme variables to Tailwind dark mode */
 html.dark body {
   background-color: #0f2919; /* forest green-900 */

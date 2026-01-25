@@ -14,11 +14,16 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import useConsistencyCheck, { getHealthStatus } from '../utils/useConsistencyCheck';
 import AIConsistencyAnalyzer from './AIConsistencyAnalyzer';
 
 export default function ConsistencyEngine({ onClose }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   const [activeTab, setActiveTab] = useState('rules'); // 'rules' or 'ai'
   const { contradictions, isChecking, lastCheck, refresh, criticalCount, highCount, mediumCount, totalCount } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);

@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { getVeteranProfile } from '../utils/veteranProfile';
 import { getSavedClaims } from '../utils/claimsStorage';
 import { generateAI, getAIStatus } from '../utils/unifiedAIService';
@@ -76,6 +77,10 @@ const TRIBUNAL_QUESTIONS = [
 
 export default function TheTribunal({ onClose, onReportBug, onOpenAISettings }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);

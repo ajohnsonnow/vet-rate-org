@@ -12,6 +12,7 @@
 import React, { useState } from 'react';
 import useClaimProgress from '../utils/useClaimProgress';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 // Tool navigation mapping
 const TOOL_LINKS = {
@@ -33,6 +34,9 @@ export default function CommandersChecklist({ isWidget = false, isEmbedded = fal
   const { t } = useLanguage();
   const progress = useClaimProgress();
   const [showModal, setShowModal] = useState(!isWidget && !isEmbedded);
+  
+  // Lock background scroll when opened as full modal (not widget/embedded)
+  useBodyScrollLock(showModal && !isWidget && !isEmbedded);
 
   const handleMilestoneClick = (milestone) => {
     if (onToolSelect && TOOL_LINKS[milestone.id]) {

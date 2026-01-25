@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { CRISIS_RESOURCES, getCrisisMessage } from '../utils/crisisInterceptor';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { useLanguage } from '../contexts/LanguageContext';
 
 /**
@@ -21,6 +22,10 @@ import { useLanguage } from '../contexts/LanguageContext';
  */
 const CrisisModal = ({ severity = 'high', source = 'application' }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   const message = getCrisisMessage(severity);
 
   const handleCallClick = () => {

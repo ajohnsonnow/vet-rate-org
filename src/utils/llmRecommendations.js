@@ -11,6 +11,7 @@
  */
 
 import { SWARM_AGENTS, TOOL_AGENT_MAP } from './diamondSwarm';
+import { PROJECT_STATS } from '../data/projectStats';
 
 /**
  * Tool categories and their AI requirements
@@ -835,7 +836,7 @@ export const getLLMStats = () => {
     toolsWithRecommendations: toolCount,
     categories: categoryCount,
     uniqueModelsRecommended: uniqueModels.size,
-    totalLocalModels: 17, // From LocalAIPanel
+    totalLocalModels: PROJECT_STATS.localAIModels, // From projectStats
   };
 };
 

@@ -385,6 +385,8 @@ export async function renderPDFToImages(file, options = {}, onProgress = () => {
   const pdfjsLib = await import('pdfjs-dist');
   const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
+  
+  const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/';
 
   onProgress({
     state: OCR_STATES.LOADING,
@@ -397,7 +399,10 @@ export async function renderPDFToImages(file, options = {}, onProgress = () => {
     const arrayBuffer = await readFileAsArrayBuffer(file);
     
     // Load PDF document
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: arrayBuffer,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    }).promise;
     const numPages = pdf.numPages;
     const pagesToRender = Math.min(numPages, maxPages);
     

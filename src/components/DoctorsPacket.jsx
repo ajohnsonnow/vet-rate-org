@@ -14,6 +14,7 @@ import {
   getNexusLogicPrivacyDisclosure 
 } from '../utils/nexusLogicGenerator';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
@@ -99,6 +100,10 @@ export default function DoctorsPacket({
   onOpenAISettings
 }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(isOpen);
+  
   // State
   const [step, setStep] = useState('consent'); // consent, input, loading, result, error
   const [primaryCondition, setPrimaryCondition] = useState(initialPrimary);

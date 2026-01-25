@@ -1,0 +1,294 @@
+/**
+ * Vet-Rate.org - Atomic Wipe (Panic Button)
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * 
+ * AAAAA Design System - "The Panic Button"
+ * 
+ * A single-click feature that immediately clears all local storage,
+ * IndexedDB, and cache, restoring the app to a clean state for maximum privacy.
+ * 
+ * Use cases:
+ * - User needs to quickly clear sensitive data
+ * - Shared/public computer usage
+ * - Privacy-conscious data clearing
+ */
+
+import React, { useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
+
+export default function AtomicWipe({ compact = false, onWipeComplete }) {
+  const { isDark, isTbiComfort } = useTheme();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
+  
+  const handleAtomicWipe = async () => {
+    setIsWiping(true);
+    
+    try {
+      // 1. Clear all localStorage
+      console.log('🔥 Clearing localStorage...');
+      localStorage.clear();
+      
+      // 2. Clear all sessionStorage
+      console.log('🔥 Clearing sessionStorage...');
+      sessionStorage.clear();
+      
+      // 3. Clear IndexedDB (Vector Store, AI Models, etc.)
+      console.log('🔥 Clearing IndexedDB...');
+      if (window.indexedDB && window.indexedDB.databases) {
+        try {
+          const databases = await window.indexedDB.databases();
+          for (const db of databases) {
+            if (db.name) {
+              console.log(`  Deleting database: ${db.name}`);
+              window.indexedDB.deleteDatabase(db.name);
+            }
+          }
+        } catch (e) {
+          console.log('  Note: indexedDB.databases() not supported, using fallback');
+          // Fallback: delete known database names
+          const knownDbs = [
+            'vetrate-storage',
+            'vetrate-ai-models',
+            'vetrate-vectors',
+            'voy-vectors',
+            'transformers-cache',
+            'onnx-models',
+          ];
+          for (const dbName of knownDbs) {
+            try {
+              window.indexedDB.deleteDatabase(dbName);
+            } catch (err) {
+              // Ignore errors for non-existent databases
+            }
+          }
+        }
+      }
+      
+      // 4. Clear Cache Storage (PWA caches)
+      console.log('🔥 Clearing Cache Storage...');
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          console.log(`  Deleting cache: ${cacheName}`);
+          await caches.delete(cacheName);
+        }
+      }
+      
+      // 5. Unregister Service Workers
+      console.log('🔥 Unregistering Service Workers...');
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          console.log('  Unregistering service worker');
+          await registration.unregister();
+        }
+      }
+      
+      console.log('✅ Atomic Wipe complete!');
+      
+      // Notify completion
+      if (onWipeComplete) {
+        onWipeComplete();
+      }
+      
+      // Hard reload to clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error during atomic wipe:', error);
+      // Still try to reload
+      window.location.reload();
+    }
+  };
+  
+  if (compact) {
+    return (
+      <>
+        <button
+          onClick={() => setShowConfirm(true)}
+          className={`
+            text-xs font-bold uppercase tracking-tight px-2 py-1 rounded border
+            ${isDark || isTbiComfort 
+              ? 'text-red-400 border-red-800 hover:bg-red-900/30 hover:border-red-600' 
+              : 'text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}
+            focus:outline-none focus:ring-2 focus:ring-red-500
+            transition-colors
+          `}
+          title="Clear all local data"
+        >
+          🔥 Clear Data
+        </button>
+        
+        {showConfirm && (
+          <ConfirmModal
+            isDark={isDark || isTbiComfort}
+            isWiping={isWiping}
+            onConfirm={handleAtomicWipe}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+      </>
+    );
+  }
+  
+  return (
+    <>
+      <button
+        onClick={() => setShowConfirm(true)}
+        className={`
+          flex items-center gap-2 px-4 py-3 rounded-xl font-bold min-h-touch
+          ${isDark || isTbiComfort 
+            ? 'bg-red-900/30 border border-red-800 text-red-400 hover:bg-red-900/50 hover:border-red-600' 
+            : 'bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300'}
+          focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
+          transition-colors
+        `}
+        title="Clear all local data"
+      >
+        <span className="text-xl">🔥</span>
+        <div className="text-left">
+          <span className="block text-sm font-bold">Atomic Wipe</span>
+          <span className={`block text-xs ${isDark || isTbiComfort ? 'text-red-500/70' : 'text-red-500'}`}>
+            Clear All Local Data
+          </span>
+        </div>
+      </button>
+      
+      {showConfirm && (
+        <ConfirmModal
+          isDark={isDark || isTbiComfort}
+          isWiping={isWiping}
+          onConfirm={handleAtomicWipe}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function ConfirmModal({ isDark, isWiping, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className={`
+        max-w-md w-full rounded-2xl shadow-2xl overflow-hidden
+        ${isDark ? 'bg-gray-900 border border-gray-700' : 'bg-white border border-slate-200'}
+      `}>
+        {/* Header */}
+        <div className={`p-6 ${isDark ? 'bg-red-900/30' : 'bg-red-50'} border-b ${isDark ? 'border-red-900' : 'border-red-100'}`}>
+          <div className="flex items-center gap-4">
+            <span className="text-4xl">⚠️</span>
+            <div>
+              <h2 className={`text-xl font-black ${isDark ? 'text-red-400' : 'text-red-700'}`}>
+                ATOMIC WIPE
+              </h2>
+              <p className={`text-sm ${isDark ? 'text-red-300/70' : 'text-red-600'}`}>
+                This action cannot be undone
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6">
+          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-slate-700'} mb-4`}>
+            This will permanently delete:
+          </p>
+          
+          <ul className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-600'} space-y-2 mb-6`}>
+            <li className="flex items-center gap-2">
+              <span className="text-red-500">✗</span>
+              All saved conditions and claims data
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-500">✗</span>
+              Local AI models and vector databases
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-500">✗</span>
+              All preferences and settings
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-red-500">✗</span>
+              Cached files and offline data
+            </li>
+          </ul>
+          
+          <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-900/30 border border-amber-800' : 'bg-amber-50 border border-amber-200'}`}>
+            <p className={`text-xs ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+              <strong>Note:</strong> If you want to keep your data, use "Export Backup" in The Bunker first.
+            </p>
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className={`p-4 flex gap-3 ${isDark ? 'bg-gray-800/50' : 'bg-slate-50'} border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+          <button
+            onClick={onCancel}
+            disabled={isWiping}
+            className={`
+              flex-1 px-4 py-3 rounded-xl font-medium min-h-touch
+              ${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'}
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+              disabled:opacity-50 disabled:cursor-not-allowed
+            `}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isWiping}
+            className={`
+              flex-1 px-4 py-3 rounded-xl font-bold min-h-touch
+              bg-red-600 text-white hover:bg-red-700
+              focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-colors
+            `}
+          >
+            {isWiping ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Wiping...
+              </span>
+            ) : (
+              '🔥 Confirm Wipe'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Privacy Notice for The Bunker
+ */
+export function BunkerPrivacyNotice() {
+  const { isDark, isTbiComfort } = useTheme();
+  
+  return (
+    <div className={`
+      p-4 rounded-xl border
+      ${isDark || isTbiComfort ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-50 border-slate-200'}
+    `}>
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">🔒</span>
+        <div>
+          <h3 className={`font-bold ${isDark || isTbiComfort ? 'text-white' : 'text-slate-900'}`}>
+            Security Protocol
+          </h3>
+          <p className={`text-sm ${isDark || isTbiComfort ? 'text-gray-400' : 'text-slate-600'} mt-1`}>
+            Your data is currently stored in your browser's local sandbox. Exporting a backup creates a private file on your computer. 
+            Vet-Rate.org never sees, stores, or transmits this data.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -17,6 +17,8 @@ const ThemeContext = createContext();
 export const THEME_MODES = {
   LIGHT: 'light',
   DARK: 'dark',
+  TBI_COMFORT: 'tbi-comfort',      // "The Night Bunker" - Zero blue light
+  AAA_CONTRAST: 'aaa-high-contrast', // WCAG AAA 7:1 contrast
 };
 
 export const COLOR_BLIND_MODES = {
@@ -55,8 +57,16 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     
     // Remove all theme classes
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
+    root.classList.remove('light', 'dark', 'tbi-comfort', 'aaa-high-contrast');
+    
+    // Apply the correct theme class
+    if (theme === THEME_MODES.TBI_COMFORT) {
+      root.classList.add('tbi-comfort');
+    } else if (theme === THEME_MODES.AAA_CONTRAST) {
+      root.classList.add('aaa-high-contrast');
+    } else {
+      root.classList.add(theme);
+    }
     
     // Remove all color blind classes
     Object.values(COLOR_BLIND_MODES).forEach(mode => {
@@ -99,20 +109,35 @@ export function ThemeProvider({ children }) {
   const toggleTheme = () => {
     setTheme(prev => prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT);
   };
+  
+  // Cycle through all theme modes
+  const cycleTheme = () => {
+    const modes = [THEME_MODES.LIGHT, THEME_MODES.DARK, THEME_MODES.TBI_COMFORT, THEME_MODES.AAA_CONTRAST];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setTheme(modes[nextIndex]);
+  };
 
-  const isDark = theme === THEME_MODES.DARK;
+  const isDark = theme === THEME_MODES.DARK || theme === THEME_MODES.TBI_COMFORT || theme === THEME_MODES.AAA_CONTRAST;
+  const isTbiComfort = theme === THEME_MODES.TBI_COMFORT;
+  const isAaaContrast = theme === THEME_MODES.AAA_CONTRAST;
 
   const value = {
     theme,
     setTheme,
     toggleTheme,
+    cycleTheme,
     isDark,
+    isTbiComfort,
+    isAaaContrast,
     colorBlindMode,
     setColorBlindMode,
     reducedMotion,
     setReducedMotion,
     fontSize,
     setFontSize,
+    // Theme mode constants
+    THEME_MODES,
     // Color utility functions
     getModalClasses: () => getModalClasses(theme, colorBlindMode),
     getSectionClasses: () => getSectionClasses(theme, colorBlindMode),

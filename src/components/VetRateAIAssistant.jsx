@@ -7,6 +7,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useVetRateAI } from '../hooks/useVetRateAI';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { 
   Bot, 
   Send, 
@@ -25,6 +26,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const VetRateAIAssistant = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(isOpen);
+  
   const { isReady, isLoading, ask, knowledgeCount, metadata, sourceColors, isDiamond, bvaApiPending } = useVetRateAI();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');

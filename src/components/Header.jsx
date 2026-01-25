@@ -5,7 +5,7 @@ import LanguageSelector from './LanguageSelector';
 import HelperModeToggle from './HelperModeToggle';
 import KnowledgeBaseStatus from './KnowledgeBaseStatus';
 import VersionDropdown from './VersionDropdown';
-import { ConsistencyBadge } from './ConsistencyEngine';
+// ConsistencyBadge removed from header - accessed via Tools menu
 import { AIStatusBadge } from './AIModeSelector';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHelperMode } from '../contexts/HelperModeContext';
@@ -198,8 +198,8 @@ function Header({
       </div>
       
       <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
-          <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-4">
             <div className="rounded-full h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden shadow-md">
               <img 
                 src="/images/Vet-Rate-org-logo-official.png" 
@@ -207,65 +207,78 @@ function Header({
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-shrink-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Vet-Rate.org</h1>
               <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base">
                 {t('header', 'subtitle')}
               </p>
-              <div className="mt-1 flex flex-wrap items-center gap-1 md:gap-2">
-                <KnowledgeBaseStatus compact />
-                <AIStatusBadge showLabel={false} onClick={onAISettingsClick} />
-                <VersionDropdown />
-              </div>
             </div>
           </div>
 
-          {/* Desktop Navigation - Hidden on mobile */}
-          <nav className="hidden md:flex flex-wrap justify-end gap-2 lg:gap-4 items-center w-full md:w-auto" role="navigation" aria-label="Main navigation">
-            {/* Help - First thing users need */}
-            <button
-              id="tour-help-btn"
-              onClick={onUserManualClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
-              title={t('common', 'help')}
-              aria-label={t('common', 'help')}
-            >
-              ❓ <span className="hidden lg:inline">{t('common', 'help')}</span>
-            </button>
-            
-            {/* Workflow Guide - Step-by-step mission briefings */}
-            <button
-              id="tour-workflow-guide-btn"
-              onClick={onWorkflowGuideClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-              title={t('tools', 'missions')}
-              aria-label={t('tools', 'missions')}
-            >
-              🗺️ <span className="hidden lg:inline">{t('tools', 'missions')}</span>
-              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
-            </button>
-            
-            {/* My Packet - Where users save everything */}
-            <button
-              id="tour-my-packet-btn"
-              onClick={onMyPacketClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
-              title={t('tools', 'myPacket')}
-              aria-label={t('tools', 'myPacket')}
-            >
-              📁 <span className="hidden lg:inline">{t('tools', 'myPacket')}</span>
-            </button>
+          {/* Desktop Navigation - Hidden on mobile - DOUBLE STACKED */}
+          <nav className="hidden md:flex flex-col gap-1 items-center" role="navigation" aria-label="Main navigation">
+            {/* ROW 1: Quick actions */}
+            <div className="flex flex-wrap justify-center gap-2 lg:gap-3 items-center">
+              {/* Quick Dark Mode Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium"
+                aria-label={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
+                title={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
+              >
+                {isDark ? <><span>☀️</span><span>Light</span></> : <><span>🌙</span><span>Dark</span></>}
+              </button>
 
-            {/* Knowledge Base - AI-powered knowledge graph */}
-            <button
-              onClick={onKnowledgeBaseClick}
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
-              title="Knowledge Base"
-              aria-label="Knowledge Base"
-            >
-              📚 <span className="hidden lg:inline">Knowledge Base</span>
-              <span className="px-1.5 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
-            </button>
+              {/* Legislative Watchdog */}
+              <button
+                onClick={onLegislativeWatchdogClick}
+                className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium relative"
+                aria-label={t('tools', 'legislativeWatchdog')}
+                title={t('header', 'legislativeWatchdogTooltip')}
+              >
+                <span>📡</span>
+                <span>Watch</span>
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></span>
+              </button>
+
+              {/* Help */}
+              <button
+                id="tour-help-btn"
+                onClick={onUserManualClick}
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm whitespace-nowrap"
+                title={t('common', 'help')}
+                aria-label={t('common', 'help')}
+              >
+                ❓ <span className="hidden lg:inline">{t('common', 'help')}</span>
+              </button>
+              
+              {/* Missions */}
+              <button
+                id="tour-workflow-guide-btn"
+                onClick={onWorkflowGuideClick}
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm flex items-center gap-1 whitespace-nowrap"
+                title={t('tools', 'missions')}
+                aria-label={t('tools', 'missions')}
+              >
+                🗺️ <span className="hidden lg:inline">{t('tools', 'missions')}</span>
+                <span className="px-1 py-0.5 bg-va-gold text-gray-900 text-[9px] font-bold rounded">{t('common', 'new').toUpperCase()}</span>
+              </button>
+            </div>
+            
+            {/* ROW 2: Main nav items */}
+            <div className="flex flex-wrap justify-center gap-2 lg:gap-3 items-center">
+              {/* My Packet */}
+              <button
+                id="tour-my-packet-btn"
+                onClick={onMyPacketClick}
+                className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
+                title={t('tools', 'myPacket')}
+                aria-label={t('tools', 'myPacket')}
+              >
+                📁 <span className="hidden lg:inline">{t('tools', 'myPacket')}</span>
+              </button>
+
+
             
             {/* Tools Dropdown - Main feature tools */}
             <div id="tour-tools-dropdown" className="relative static sm:relative">
@@ -829,6 +842,39 @@ function Header({
                       {t('header', 'veteranResources')}
                     </p>
                     
+                    {/* Official VA Links - TOP OF DROPDOWN */}
+                    <a
+                      href="https://www.va.gov/disability/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-3 py-2 rounded-md transition-colors bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 border-l-4 border-blue-600 mb-1"
+                    >
+                      <span className="font-medium text-blue-700 dark:text-blue-100 flex items-center gap-2">
+                        🏛️ {t('header', 'disabilityBenefits')}
+                        <span className="px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-bold rounded">VA.GOV</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-blue-600 dark:text-blue-400">
+                        Official VA disability benefits portal
+                      </p>
+                    </a>
+                    
+                    <a
+                      href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-3 py-2 rounded-md transition-colors bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border-l-4 border-indigo-600 mb-2"
+                    >
+                      <span className="font-medium text-indigo-700 dark:text-indigo-100 flex items-center gap-2">
+                        ⚖️ {t('header', 'ratingSchedule')}
+                        <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded">38 CFR</span>
+                      </span>
+                      <p className="text-xs mt-0.5 text-indigo-600 dark:text-indigo-400">
+                        Official rating criteria & diagnostic codes
+                      </p>
+                    </a>
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    
                     {/* VA Resources Hub Button */}
                     <button
                       onClick={() => {
@@ -885,120 +931,7 @@ function Header({
                 </div>
               )}
             </div>
-
-            <a
-              href="https://www.va.gov/disability/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title={t('header', 'disabilityBenefits')}
-              aria-label={`${t('header', 'disabilityBenefits')} (opens in new tab)`}
-            >
-              🏛️ <span className="hidden lg:inline">{t('header', 'disabilityBenefits')}</span><span className="lg:hidden">{t('header', 'va')}</span>
-            </a>
-            <a
-              href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-2 py-1"
-              title={t('header', 'ratingSchedule')}
-              aria-label={`${t('header', 'ratingSchedule')} (opens in new tab)`}
-            >
-              ⚖️ <span className="hidden lg:inline">{t('header', 'ratingSchedule')}</span><span className="lg:hidden">{t('header', 'ecfr')}</span>
-            </a>
-            
-            {/* Quick Dark Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold"
-              aria-label={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
-              title={isDark ? t('header', 'switchToLight') : t('header', 'switchToDark')}
-            >
-              {isDark ? (
-                <svg className="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                </svg>
-              )}
-            </button>
-
-            {/* Legislative Watchdog - Rule Change Alerts */}
-            <button
-              onClick={onLegislativeWatchdogClick}
-              className="p-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative"
-              aria-label={t('tools', 'legislativeWatchdog')}
-              title={t('header', 'legislativeWatchdogTooltip')}
-            >
-              <span className="text-lg">📡</span>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full animate-pulse"></span>
-            </button>
-
-            {/* Consistency Engine Badge - Auto Contradiction Detection */}
-            <ConsistencyBadge onClick={onConsistencyEngineClick} />
-
-            {/* The Bunker - Data Backup */}
-            <button
-              onClick={onBackupManagerClick}
-              className={`p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative group ${shouldPulseBackup ? 'animate-pulse-glow' : ''}`}
-              aria-label={t('tools', 'theBunker')}
-              title={shouldPulseBackup ? `⚠️ ${t('header', 'theBunkerUnsaved')}` : t('header', 'theBunkerTooltip')}
-            >
-              <span className="text-lg">🏰</span>
-              {shouldPulseBackup && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse"></span>
-              )}
-              {!shouldPulseBackup && (
-                <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-blue-500 text-white text-[8px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity">NEW</span>
-              )}
-            </button>
-
-            {/* Time Machine - ITF Countdown */}
-            <button
-              onClick={onTimeMachineClick}
-              className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold relative group"
-              aria-label={t('tools', 'timeMachine')}
-              title={t('header', 'timeMachineTooltip')}
-            >
-              <span className="text-lg">⏰</span>
-              <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-white text-[8px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity">NEW</span>
-            </button>
-
-            {/* Helper Mode Toggle (Spouse/Caregiver Mode) */}
-            <HelperModeToggle compact />
-
-            {/* Language Selector - Full app language switching */}
-            <LanguageSelector variant="compact" />
-
-            {/* Accessibility Menu */}
-            <AccessibilityMenu />
-
-            {/* Feature Request Button */}
-            <button
-              onClick={onFeatureRequestClick}
-              className="inline-flex items-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm lg:text-base whitespace-nowrap"
-              title={t('header', 'featureRequestTooltip')}
-              aria-label={t('buttons', 'featureRequest')}
-            >
-              <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span className="hidden lg:inline">{t('header', 'ideas')}</span>
-            </button>
-            
-            <button
-              onClick={() => setShowFundingModal(true)}
-              className="inline-flex items-center gap-1 bg-va-gold hover:bg-yellow-400 hover:scale-105 text-va-blue px-2 lg:px-4 py-1.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white animate-pulse-subtle text-sm lg:text-base whitespace-nowrap"
-              title={t('header', 'supportTooltip')}
-              aria-label={t('header', 'backTheMission')}
-            >
-              <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-              </svg>
-              <span className="hidden lg:inline">{t('header', 'backTheMission')}</span>
-            </button>
+            </div>{/* End ROW 2 */}
           </nav>
 
           {/* Mobile Menu Button - Shows below md (768px) */}
@@ -1017,6 +950,38 @@ function Header({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
+          </button>
+        </div>
+
+        {/* Lower Header Row - Status badges and quick actions */}
+        <div className="hidden md:flex items-center justify-center gap-3 mt-3 pt-3 border-t border-white/20">
+          <KnowledgeBaseStatus compact />
+          <VersionDropdown />
+          <AIStatusBadge showLabel={false} onClick={onAISettingsClick} />
+          
+          {/* Divider */}
+          <div className="h-6 w-px bg-white/30"></div>
+          
+          {/* Helper Mode Toggle (Spouse/Caregiver Mode) */}
+          <HelperModeToggle compact />
+
+          {/* Language Selector */}
+          <LanguageSelector variant="compact" />
+
+          {/* Accessibility Menu */}
+          <AccessibilityMenu />
+
+          {/* Feature Request Button */}
+          <button
+            onClick={onFeatureRequestClick}
+            className="inline-flex items-center justify-center gap-1 bg-purple-500 hover:bg-purple-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
+            title={t('header', 'featureRequestTooltip')}
+            aria-label={t('buttons', 'featureRequest')}
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <span>{t('header', 'ideas')}</span>
           </button>
         </div>
 

@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const PinEntryModal = ({ 
   isOpen, 
@@ -21,6 +22,10 @@ const PinEntryModal = ({
   error: externalError
 }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(isOpen);
+  
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [oldPin, setOldPin] = useState('');

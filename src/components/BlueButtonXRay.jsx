@@ -311,7 +311,10 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
    */
   const extractTextFromPDF = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({ 
+      data: arrayBuffer, 
+      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    }).promise;
     let fullText = '';
     
     for (let i = 1; i <= pdf.numPages; i++) {
