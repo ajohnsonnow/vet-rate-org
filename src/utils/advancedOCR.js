@@ -43,7 +43,7 @@ export const ADVANCED_OCR_CONFIG = {
   
   // Quality settings
   CANVAS_SCALES: [2.0, 3.0, 4.0], // Try multiple resolutions
-  TESSDATA_PATH: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/',
+  TESSDATA_PATH: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/',
   
   // Languages (prioritize English but support others)
   LANGUAGES: 'eng',
@@ -228,7 +228,9 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
   // Initialize Tesseract worker with optimized settings
   const worker = await Tesseract.createWorker(config.LANGUAGES, 1, {
     logger: () => {}, // Suppress verbose logs
-    langPath: config.TESSDATA_PATH,
+    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/',
+    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/worker.min.js',
+    langPath: 'https://cdn.jsdelivr.net/npm/tessdata@4.0.0/',
   });
   
   // Configure Tesseract for maximum accuracy
