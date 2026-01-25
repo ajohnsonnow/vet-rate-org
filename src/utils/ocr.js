@@ -8,6 +8,7 @@
 
 import advancedPDFAnalysis from './advancedOCR';
 export { ADVANCED_OCR_CONFIG as OCR_CONFIG, PREPROCESS_STRATEGIES } from './advancedOCR';
+export { formatFileSize } from './pdfExtractor';
 
 export const OCR_STATES = {
   IDLE: 'idle',
@@ -18,6 +19,51 @@ export const OCR_STATES = {
   COMPLETE: 'complete',
   ERROR: 'error',
 };
+
+/**
+ * Utility Functions
+ */
+export function isImageFile(filename) {
+  const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|tiff)$/i;
+  return imageExtensions.test(filename);
+}
+
+export function isPDFFile(filename) {
+  return /\.pdf$/i.test(filename);
+}
+
+export async function analyzeImage(file, onProgress = () => {}) {
+  // For image files, wrap them in a single-page PDF-like result
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const img = new Image();
+        img.onload = () => {
+          resolve({
+            text: '', // Images require OCR processing
+            method: 'image',
+            confidence: 0,
+            pageCount: 1,
+            processingTime: 0,
+            metadata: {
+              width: img.width,
+              height: img.height,
+              filename: file.name,
+              size: file.size,
+            },
+          });
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target.result;
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.readAsDataURL(file);
+  });
+}
 
 /**
  * Main PDF Analysis Function
