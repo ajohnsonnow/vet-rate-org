@@ -462,6 +462,24 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
           {/* Results View */}
           {processingState === PROCESSING_STATES.COMPLETE && results && (
             <div className="space-y-6">
+              {/* Storage Warning (if quota exceeded) */}
+              {results.results.some(r => r.storageWarning) && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-6 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">💾</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
+                        Storage Limit Reached
+                      </h3>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        Your document library is large! Data is safely stored in IndexedDB backup. 
+                        All features will continue to work normally.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Success Banner */}
               <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-6 rounded-lg">
                 <div className="flex items-center gap-3">

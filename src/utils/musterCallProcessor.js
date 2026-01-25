@@ -195,6 +195,11 @@ const processSingleDocument = async (file, onProgress) => {
     if (vkbResult.success) {
       result.vkbDocumentId = vkbResult.documentId;
       console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
+      
+      if (vkbResult.storageWarning) {
+        console.warn(`⚠️ ${vkbResult.storageWarning}`);
+        result.storageWarning = vkbResult.storageWarning;
+      }
     }
 
     result.status = 'complete';
