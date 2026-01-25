@@ -618,7 +618,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
               {processingState === PROCESSING_STATES.IDLE && files.length > 0 && (
                 <button
                   onClick={handleStartProcessing}
-                  disabled={!validation || validation.valid.length === 0}
+                  disabled={!aiReady || aiInitializing || !validation || validation.valid.length === 0}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Start Muster Call
