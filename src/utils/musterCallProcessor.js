@@ -508,8 +508,14 @@ export const processMusterCallBatch = async (files, options = {}) => {
   const {
     onProgress,
     onComplete,
+    signal,  // AbortSignal from abort controller
     maxConcurrent = 3  // Process 3 files at a time to avoid memory issues
   } = options;
+
+  // Check if already aborted
+  if (signal?.aborted) {
+    throw new DOMException('Processing aborted', 'AbortError');
+  }
 
   // Validation
   const validation = validateFilesBatch(files);
@@ -536,28 +542,64 @@ export const processMusterCallBatch = async (files, options = {}) => {
 
   // Process files with concurrency limit
   const processNext = async () => {
+    // Check for abort signal
+    if (signal?.aborted) {
+      throw new DOMException('Processing aborted', 'AbortError');
+    }
+    
     if (queue.length === 0) return null;
 
     const file = queue.shift();
     processing++;
 
-    const result = await processSingleDocument(file, (fileProgress) => {
+    try {
+      const result = await processSingleDocument(file, (fileProgress) => {
+        onProgress?.({
+          ...fileProgress,
+          total: validation.valid.length,
+          completed,
+          processing
+        });
+      });
+
+      processing--;
+      completed++;
+      results.push(result);
+
       onProgress?.({
-        ...fileProgress,
+        state: PROCESSING_STATES.LOADING,
         total: validation.valid.length,
         completed,
         processing
       });
-    });
 
-    processing--;
-    completed++;
-    results.push(result);
+      return result;
+    } catch (error) {
+      // Catch any errors that slip through processSingleDocument
+      console.error(`Failed to process ${file.name}:`, error);
+      processing--;
+      completed++;
+      
+      // Add error result
+      results.push({
+        filename: file.name,
+        status: 'error',
+        error: error.message || 'Unknown error',
+        fileSize: file.size
+      });
 
-    onProgress?.({
-      state: PROCESSING_STATES.LOADING,
-      total: validation.valid.length,
-      completed,
+      onProgress?.({
+        state: PROCESSING_STATES.ERROR,
+        total: validation.valid.length,
+        completed,
+        processing,
+        filename: file.name,
+        error: error.message
+      });
+
+      return null;
+    }
+  };
       processing
     });
 
@@ -565,16 +607,36 @@ export const processMusterCallBatch = async (files, options = {}) => {
   };
 
   // Start processing with concurrency limit
+  console.log(`🚀 Starting batch processing: ${validation.valid.length} files with ${maxConcurrent} workers`);
+  
   const workers = [];
   for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
     workers.push((async () => {
-      while (queue.length > 0 || processing > 0) {
-        await processNext();
+      while (true) {
+        // Check if there's work to do
+        if (queue.length === 0) {
+          // No more files in queue, but wait for other workers to finish
+          if (processing === 0) {
+            console.log(`✅ Worker ${i} finished - all done`);
+            break;
+          }
+          // Wait a bit for other workers to finish processing
+          await new Promise(resolve => setTimeout(resolve, 100));
+          continue;
+        }
+        
+        // Process next file
+        const result = await processNext();
+        if (result === null && queue.length === 0) {
+          console.log(`✅ Worker ${i} finished - no more files`);
+          break;
+        }
       }
     })());
   }
 
   await Promise.all(workers);
+  console.log(`✅ All workers finished. Processed ${results.length} files`);
 
   // Classify and group results
   onProgress?.({
