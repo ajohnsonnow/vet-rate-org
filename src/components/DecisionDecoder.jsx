@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import useAutoInitAI from '../hooks/useAutoInitAI';
 import { decodeDecision, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
@@ -28,6 +29,9 @@ import { analyzePDF, analyzeImage, OCR_STATES, formatFileSize, isImageFile, isPD
 const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
+  
+  // Auto-initialize AI when component mounts
+  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('decision-decoder', 'auditor');
   
   const [denialText, setDenialText] = useState('');
   const [results, setResults] = useState(null);
