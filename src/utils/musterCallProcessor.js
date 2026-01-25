@@ -150,8 +150,9 @@ const processSingleDocument = async (file, onProgress) => {
       });
     });
 
-    if (!extractionResult.success) {
-      throw new Error(extractionResult.error || 'Text extraction failed');
+    // analyzeDocument throws on error, no need to check .success
+    if (!extractionResult.text || extractionResult.text.trim().length === 0) {
+      throw new Error('No text could be extracted from document');
     }
 
     result.text = extractionResult.text;
