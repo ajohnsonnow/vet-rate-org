@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 const WARNING_TIME = 2 * 60 * 1000; // Show warning 2 minutes before lock

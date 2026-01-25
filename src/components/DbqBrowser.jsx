@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import {
   isDbqCached,
   downloadAndCacheDbq,
@@ -55,6 +56,9 @@ const CATEGORY_ICONS = {
  */
 export default function DbqBrowser({ onClose }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
   
   // State
   const [dbqForms, setDbqForms] = useState([]);

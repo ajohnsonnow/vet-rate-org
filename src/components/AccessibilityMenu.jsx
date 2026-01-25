@@ -19,8 +19,11 @@ export default function AccessibilityMenu() {
   
   const {
     theme,
+    setTheme,
     toggleTheme,
     isDark,
+    isTbiComfort,
+    isAaaContrast,
     colorBlindMode,
     setColorBlindMode,
     reducedMotion,
@@ -93,6 +96,34 @@ export default function AccessibilityMenu() {
     { value: 'normal', label: t('accessibility', 'normal'), size: '16px' },
     { value: 'large', label: t('accessibility', 'large'), size: '18px' },
     { value: 'xlarge', label: t('accessibility', 'extraLarge'), size: '20px' },
+  ];
+
+  // AAAAA Theme Mode Options (Diamond Standard)
+  const themeModeOptions = [
+    { 
+      value: THEME_MODES.LIGHT, 
+      label: 'Light Mode',
+      description: 'Standard bright interface',
+      icon: '☀️'
+    },
+    { 
+      value: THEME_MODES.DARK, 
+      label: 'Dark Mode',
+      description: 'Reduced eye strain for night ops',
+      icon: '🌙'
+    },
+    { 
+      value: THEME_MODES.TBI_COMFORT, 
+      label: 'TBI Comfort',
+      description: 'Warm amber tones for light sensitivity',
+      icon: '🧠'
+    },
+    { 
+      value: THEME_MODES.AAA_CONTRAST, 
+      label: 'AAA High Contrast',
+      description: '7:1 contrast ratio for low vision',
+      icon: '👁️'
+    },
   ];
 
   return (
@@ -168,40 +199,54 @@ export default function AccessibilityMenu() {
           </div>
 
           <div className="p-4 space-y-5 max-h-[70vh] overflow-y-auto">
-            {/* Dark Mode Toggle */}
-            <div className="space-y-2">
-              <label className="flex items-center justify-between cursor-pointer group">
-                <span className="flex items-center gap-2 text-gray-700 dark:text-gray-200 font-medium">
-                  {isDark ? (
-                    <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                    </svg>
-                  )}
-                  {isDark ? t('accessibility', 'lightMode') : t('accessibility', 'darkMode')}
-                </span>
-                <button
-                  onClick={toggleTheme}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-va-blue focus:ring-offset-2 ${
-                    isDark ? 'bg-va-gold' : 'bg-gray-300'
-                  }`}
-                  role="switch"
-                  aria-checked={isDark}
-                  aria-label={isDark ? t('accessibility', 'switchToLight') : t('accessibility', 'switchToDark')}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
-                      isDark ? 'translate-x-6' : 'translate-x-1'
+            {/* Theme Mode Selector - AAAAA Diamond Standard */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <svg className="w-5 h-5 text-va-blue dark:text-va-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                Display Mode
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {themeModeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setTheme(option.value)}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-va-blue ${
+                      theme === option.value
+                        ? 'bg-va-blue/10 dark:bg-va-gold/20 border-2 border-va-blue dark:border-va-gold ring-2 ring-va-blue/30 dark:ring-va-gold/30'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-600'
                     }`}
-                  />
-                </button>
-              </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
-                {t('accessibility', 'eyeStrainHelp')}
-              </p>
+                    aria-pressed={theme === option.value}
+                    aria-label={`${option.label}: ${option.description}`}
+                  >
+                    <span className="text-2xl" aria-hidden="true">{option.icon}</span>
+                    <span className={`text-xs font-medium text-center ${
+                      theme === option.value
+                        ? 'text-va-blue dark:text-va-gold'
+                        : 'text-gray-700 dark:text-gray-200'
+                    }`}>
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {/* TBI Comfort Info */}
+              {isTbiComfort && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2">
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    🧠 <strong>TBI Comfort Mode Active</strong> - Warm amber tones reduce visual stress for veterans with light sensitivity or traumatic brain injury.
+                  </p>
+                </div>
+              )}
+              {/* AAA Contrast Info */}
+              {isAaaContrast && (
+                <div className="bg-gray-900 border border-yellow-400 rounded-lg p-2">
+                  <p className="text-xs text-yellow-400">
+                    👁️ <strong>AAA High Contrast Active</strong> - Maximum 7:1 contrast ratio for low vision. WCAG 2.2 AAA compliant.
+                  </p>
+                </div>
+              )}
             </div>
 
             <hr className="border-gray-200 dark:border-gray-600" />
@@ -386,6 +431,7 @@ export default function AccessibilityMenu() {
             {/* Reset Button */}
             <button
               onClick={() => {
+                setTheme(THEME_MODES.LIGHT);
                 setColorBlindMode(COLOR_BLIND_MODES.NONE);
                 setFontSize('normal');
                 setReducedMotion(false);

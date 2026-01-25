@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { resetTourState, triggerTourRestart } from './BootCampTour';
 import { getTotalToolCount } from '../data/toolkitData';
 import { PROJECT_STATS } from '../data/projectStats';
@@ -3944,6 +3945,9 @@ const renderContent = (content, onClose) => {
 
 const UserManual = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
   
   const [currentSection, setCurrentSection] = useState('home');
   const [expandedSections, setExpandedSections] = useState(['getting-started']);

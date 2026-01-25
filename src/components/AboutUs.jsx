@@ -185,7 +185,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
     >
       <div className={`${modalClasses.content} max-w-4xl my-8`}>
         <div className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}>
-          <h2 id="about-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>ℹ️ {t('about', '')}</h2>
+          <h2 id="about-us-title" className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}>ℹ️ {t('about', 'aboutVetRate')}</h2>
           <div className="flex items-center gap-3">
             {onReportBug && <ReportBugLink onClick={onReportBug} variant="dark" moduleName="About Us" />}
             <button
@@ -203,59 +203,59 @@ const AboutUs = ({ onClose, onReportBug }) => {
           {/* THE VET-RATE PROMISE - Trust Beacon */}
           <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">
             <div className="text-center mb-4">
-              <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ {t('about', '')}</h3>
+              <h3 className="text-2xl font-bold text-va-gold mb-2">🎖️ {t('about', 'theVetRatePromise')}</h3>
               <div className="w-20 h-1 bg-va-gold mx-auto rounded"></div>
             </div>
             
             <div className="font-mono text-gray-300 space-y-4 text-sm leading-relaxed">
               <p className="text-center text-lg text-white font-semibold">
-                "{t('about', '')}"
+                "{t('about', 'builtByVeteranForVeterans')}"
               </p>
               
               <p>
-                {t('about', '')}
+                {t('about', 'promiseIntro')}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-green-500/30">
                   <span className="text-3xl block mb-2">💵</span>
-                  <span className="text-green-400 font-bold">{t('about', '')}</span>
-                  <p className="text-xs text-gray-400 mt-1">{t('about', '')}</p>
+                  <span className="text-green-400 font-bold">{t('about', 'zeroCost')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about', 'zeroCostDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-blue-500/30">
                   <span className="text-3xl block mb-2">🛡️</span>
-                  <span className="text-blue-400 font-bold">{t('about', '')}</span>
-                  <p className="text-xs text-gray-400 mt-1">{t('about', '')}</p>
+                  <span className="text-blue-400 font-bold">{t('about', 'hundredPercentPrivate')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about', 'privateDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-red-500/30">
                   <span className="text-3xl block mb-2">🚫</span>
-                  <span className="text-red-400 font-bold">{t('about', '')}</span>
-                  <p className="text-xs text-gray-400 mt-1">{t('about', '')}</p>
+                  <span className="text-red-400 font-bold">{t('about', 'noTracking')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about', 'noTrackingDesc')}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-purple-500/30">
                   <span className="text-3xl block mb-2">🤖</span>
-                  <span className="text-purple-400 font-bold">17 {t('about', '')}</span>
-                  <p className="text-xs text-gray-400 mt-1">{t('about', '')}</p>
+                  <span className="text-purple-400 font-bold">{PROJECT_STATS.localAIModels} {t('about', 'localAiModels')}</span>
+                  <p className="text-xs text-gray-400 mt-1">{t('about', 'localAiDesc')}</p>
                 </div>
               </div>
               
               <p className="text-center italic text-gray-400 mt-4 text-xs">
-                {t('about', '')}
+                {t('about', 'toolToEmpower')}
               </p>
             </div>
           </section>
           
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 {t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🎯 {t('about', 'myMission')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>Vet-Rate.org</strong> {t('about', '')} ({getTotalToolCount()}+ {t('about', '')?.toLowerCase() || 'professional tools'})
+              <strong>Vet-Rate.org</strong> {t('about', 'missionDescription')} ({getTotalToolCount()}+ {t('about', 'professionalTools')?.toLowerCase() || 'professional tools'})
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ {t('about', '')} - {getTotalToolCount()}+ {t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🛠️ {t('about', 'completeClaimsArsenal')} - {getTotalToolCount()}+ {t('about', 'professionalTools')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'arsenalDescription')}
             </p>
             
             <div className="space-y-4">
@@ -278,53 +278,53 @@ const AboutUs = ({ onClose, onReportBug }) => {
             
             <div className="mt-4 bg-gradient-to-r from-va-gold/20 to-green-600/20 border-l-4 border-va-gold rounded p-3">
               <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                🎖️ {getTotalToolCount()}+ {t('about', '')}
+                🎖️ {getTotalToolCount()}+ {t('about', 'arsenalHighlight')}
               </p>
             </div>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'dataSources')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'dataSourcesIntro')}
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
               <li>
-                <strong>{t('about', '')}</strong> {t('about', '')}
+                <strong>{t('about', 'cfrPart3Verified')}</strong> {t('about', 'cfrPart3Desc')}
               </li>
               <li>
-                <strong>{t('about', '')}</strong> {t('about', '')}
+                <strong>{t('about', 'cfrPart4Verified')}</strong> {t('about', 'cfrPart4Desc')}
               </li>
               <li>
-                <strong>{PROJECT_STATS.disabilitiesValidated} {t('about', '')}</strong> {t('about', '')}
+                <strong>{PROJECT_STATS.disabilitiesValidated} {t('about', 'vaDisabilitiesCompleteCoverage')}</strong> {t('about', 'allBodySystems')}
               </li>
               <li>
-                <strong>{t('about', '')}</strong> {t('about', '')}
+                <strong>{t('about', 'ratingCriteriaValidated')}</strong> {t('about', 'ratingCriteriaDesc')}
               </li>
               <li>
-                <strong>{t('about', '')}</strong> {t('about', '')}
+                <strong>{t('about', 'secondaryConditionsDatabase')}</strong> {t('about', 'secondaryConditionsDesc')}
               </li>
             </ul>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 italic">
-              {t('about', '')} January 2026 {t('about', '')}
+              {t('about', 'lastValidated')} January 2026 {t('about', 'againstEcfr')}
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'whyIBuiltThis')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')} ({getTotalToolCount()}+ {t('about', '')})
+              {t('about', 'whyIBuiltThisDesc1')} ({getTotalToolCount()}+ {t('about', 'tools')})
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'whyIBuiltThisDesc2')}
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              <strong>{t('about', '')}</strong>
+              <strong>{t('about', 'whyIBuiltThisDesc3')}</strong>
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'whoIAm')}</h3>
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
                 <img 
@@ -336,10 +336,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
               </div>
               <div className="flex-1">
                 <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  {t('about', '')}
+                  {t('about', 'whoIAmDesc1')}
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  {t('about', '')}
+                  {t('about', 'whoIAmDesc2')}
                 </p>
                 <p className="text-gray-600 dark:text-gray-400 italic text-left mt-4">~ Anth</p>
               </div>
@@ -347,10 +347,10 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🐱 {t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">🐱 {t('about', 'developmentTeam')}</h3>
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                {t('about', '')}
+                {t('about', 'developmentTeamIntro')}
               </p>
               {/* Luna and Midnight - 2 column grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -361,11 +361,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                     <span className="text-xs bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300 px-2 py-0.5 rounded-full">aka Sweet Baby Kitty Cat</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {t('about', '')}. {t('about', '')}
+                    {t('about', 'chiefMoraleOfficer')}. {t('about', 'lunaDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-pink-600 hover:text-pink-800 font-medium">
-                      📸 {t('about', '')}
+                      📸 {t('about', 'viewGallery')}
                     </summary>
                     <div className="mt-3 grid grid-cols-1 gap-3">
                       <div>
@@ -399,14 +399,14 @@ const AboutUs = ({ onClose, onReportBug }) => {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">🖥️</span>
                     <h4 className="font-bold text-gray-800 dark:text-gray-200">Midnight</h4>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{t('about', '')}</span>
+                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{t('about', 'theWorkstation')}</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {t('about', '')}
+                    {t('about', 'midnightDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
-                      🔧 {t('about', '')}
+                      🔧 {t('about', 'viewSpecs')}
                     </summary>
                     <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 space-y-1 text-gray-600 dark:text-gray-400">
                       <p><strong>CPU:</strong> AMD Ryzen 9 7950X3D 4.2 GHz 16-Core</p>
@@ -429,15 +429,15 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">⚡</span>
-                    <h4 className="font-bold text-gray-800 dark:text-gray-200">{t('about', '')}</h4>
-                    <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{t('about', '')} 💚</span>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200">{t('about', 'theCodebase')}</h4>
+                    <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">{t('about', 'builtWithLove')} 💚</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {t('about', '')}
+                    {t('about', 'codebaseDescription')}
                   </p>
                   <details className="text-xs">
                     <summary className="cursor-pointer text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium">
-                      📊 {t('about', '')}
+                      📊 {t('about', 'viewCodebaseStats')}
                     </summary>
                     <div className="mt-2 bg-gray-50 dark:bg-gray-900/50 rounded p-3 text-gray-600 dark:text-gray-400">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -473,7 +473,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🤖 Local AI Arsenal</p>
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
-                            <p><strong>Local Models:</strong> 18 models available</p>
+                            <p><strong>Local Models:</strong> {PROJECT_STATS.localAIModels} Diamond Swarm agents</p>
                             <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
                             <p><strong>Vision Model:</strong> <span className="text-green-600 dark:text-green-400 font-medium">Vet-Rate Vision Phi ✅ Standard Chrome!</span></p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
@@ -584,31 +584,31 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💻 {t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💻 {t('about', 'howThisWasBuilt')}</h3>
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <p className="text-gray-700 dark:text-gray-300 mb-3">
-                {t('about', '')}
+                {t('about', 'howBuiltIntro')}
               </p>
               <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">📖</span>
-                  <span><strong>{t('about', '')}</strong> {t('about', '')} (<a href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">eCFR</a>)</span>
+                  <span><strong>{t('about', 'dataSource')}</strong> {t('about', 'dataSourceDesc')} (<a href="https://www.ecfr.gov/current/title-38/chapter-I/part-4" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">eCFR</a>)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">🛠️</span>
-                  <span><strong>{t('about', '')}</strong> Visual Studio Code with GitHub Copilot integration</span>
+                  <span><strong>{t('about', 'developmentEnvironment')}</strong> Visual Studio Code with GitHub Copilot integration</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600 mt-1">🤖</span>
-                  <span><strong>{t('about', '')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5</span>
+                  <span><strong>{t('about', 'aiAssistedDevelopment')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-violet-600 mt-1">⚡</span>
-                  <span><strong>{t('about', '')}</strong> React 18, Vite, Tailwind CSS</span>
+                  <span><strong>{t('about', 'modernStack')}</strong> React 18, Vite, Tailwind CSS</span>
                 </li>
               </ul>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">
-                {t('about', '')}
+                {t('about', 'aiDevelopmentNote')}
               </p>
               
               {/* Custom Vision Model Build Details */}
@@ -667,23 +667,23 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'importantDisclaimers')}</h3>
             <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 mb-4">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>⚠️ {t('about', '')}</strong> {t('about', '')}
+                <strong>⚠️ {t('about', 'notLegalOrMedicalAdvice')}</strong> {t('about', 'notLegalOrMedicalAdviceDesc')}
               </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>💼 {t('about', '')}</strong> {t('about', '')}
+                <strong>💼 {t('about', 'notAffiliatedWithVA')}</strong> {t('about', 'notAffiliatedWithVADesc')}
               </p>
             </div>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 {t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 {t('about', 'howProjectFunded')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'fundingIntro')}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <a
@@ -693,7 +693,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 className="flex flex-col items-center p-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-all hover:scale-105 shadow-sm"
               >
                 <span className="text-2xl mb-1">☕</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">{t('about', '')}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">{t('about', 'buyMeACoffee')}</span>
                 <span className="text-xs font-medium text-yellow-900 dark:text-yellow-900">vet-rate.org</span>
               </a>
               <a
@@ -728,38 +728,38 @@ const AboutUs = ({ onClose, onReportBug }) => {
               </a>
             </div>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'supportHelpsKeepFree')}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-              {t('about', '')}
+              {t('about', 'allContributionsGo')}
             </p>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'myCommitmentToVeterans')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'commitmentIntro')}
             </p>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-3 ml-4">
-              <li>✅ {t('about', '')} ({getTotalToolCount()}+)</li>
-              <li>✅ {t('about', '')}</li>
-              <li>✅ {t('about', '')}</li>
-              <li>✅ {t('about', '')}</li>
-              <li>✅ {t('about', '')}</li>
+              <li>✅ {t('about', 'commitment1')} ({getTotalToolCount()}+)</li>
+              <li>✅ {t('about', 'commitment2')}</li>
+              <li>✅ {t('about', 'commitment3')}</li>
+              <li>✅ {t('about', 'commitment4')}</li>
+              <li>✅ {t('about', 'commitment5')}</li>
             </ul>
           </section>
 
           <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', '')}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">{t('about', 'contactFeedback')}</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', '')}
+              {t('about', 'contactPageLink')}
             </p>
           </section>
 
           <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mt-6">
             <p className="text-sm text-green-800 dark:text-green-200">
-              <strong>{t('about', '')}</strong><br />
-              {t('about', '')} ({getTotalToolCount()}+ {t('about', '')})
+              <strong>{t('about', 'thankYouForService')}</strong><br />
+              {t('about', 'thankYouMessage')} ({getTotalToolCount()}+ {t('about', 'tools')})
             </p>
           </div>
         </div>
@@ -768,7 +768,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="flex items-center gap-4">
               <VersionDropUp />
-              <span className="text-xs text-gray-500 dark:text-gray-400">• {t('about', '')}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">• {t('about', 'builtWithLoveForVeterans')}</span>
               
               {/* The Zonk Button - Easter Egg */}
               <button
@@ -776,7 +776,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-sm"
                 title="Zonk! (Click me)"
               >
-                {t('about', '')}
+                {t('about', 'dismissed')}
               </button>
             </div>
             
@@ -796,9 +796,9 @@ const AboutUs = ({ onClose, onReportBug }) => {
           <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white px-8 py-6 rounded-xl shadow-2xl transform animate-bounce">
             <div className="text-6xl mb-2 text-center">🎖️</div>
             <div className="text-3xl font-bold text-center mb-2">ZONK!</div>
-            <div className="text-lg text-center">{t('about', '')}</div>
+            <div className="text-lg text-center">{t('about', 'zonkMessage')}</div>
             <div className="text-sm text-center mt-2 text-white/80">
-              ({t('about', '')})
+              ({t('about', 'zonkThanks')})
             </div>
           </div>
         </div>

@@ -113,6 +113,10 @@ import VaSandboxTest from './components/VaSandboxTest';
 import DemoDashboard from './components/DemoDashboard';
 import { VaApiStatusBanner } from './components/VaApiStatus';
 import { MobileSaveReminder } from './components/PacketPersistence';
+// AAAAA Diamond Standard Components
+import GlobalCommandSearch from './components/GlobalCommandSearch';
+import MobileBottomNav, { MobileNavSpacer } from './components/MobileBottomNav';
+import AtomicWipe from './components/AtomicWipe';
 import { HelperModeProvider } from './contexts/HelperModeContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -226,6 +230,10 @@ function App() {
   
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
+  
+  // AAAAA DIAMOND STANDARD: Command Search & Privacy
+  const [showCommandSearch, setShowCommandSearch] = useState(false);
+  const [showAtomicWipe, setShowAtomicWipe] = useState(false);
   
   // MOBILE: Small screen warning
   const [dismissedSmallScreenWarning, setDismissedSmallScreenWarning] = useState(
@@ -377,6 +385,12 @@ function App() {
   // DEMO: Keyboard shortcut to open Demo Dashboard (Ctrl+Shift+D)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // CMD/Ctrl + K: Open Global Command Search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandSearch(true);
+      }
+      // Ctrl+Shift+D: Open Demo Dashboard
       if (e.ctrlKey && e.shiftKey && e.key === 'D') {
         e.preventDefault();
         setShowDemoDashboard(true);
@@ -964,6 +978,82 @@ function App() {
       {/* Mobile device notice */}
       <MobileNotice />
       
+      {/* AAAAA Diamond Standard: Global Command Search (CMD+K) */}
+      <GlobalCommandSearch
+        isOpen={showCommandSearch}
+        onClose={() => setShowCommandSearch(false)}
+        onSelectTool={(toolId) => {
+          setShowCommandSearch(false);
+          // Map tool IDs to their respective state setters
+          const toolHandlers = {
+            'tactical-calculator': () => setShowTacticalCalculator(true),
+            'my-packet': () => setShowMyPacket(true),
+            'secondary-scout': () => setShowSecondaryScoutLauncher(true),
+            'cap-simulator': () => setShowCAPSimulator(true),
+            'nexus-builder': () => setShowNexusBuilder(true),
+            'pathfinder': () => setShowPathfinder(true),
+            'claim-navigator': () => setShowClaimNavigator(true),
+            'cfile-analyzer': () => setShowCFileAnalyzer(true),
+            'forms-helper': () => setShowFormsHelper(true),
+            'red-team': () => setShowRedTeam(true),
+            'shark-radar': () => setShowSharkRadar(true),
+            'denial-decoder': () => setShowDenialDecoder(true),
+            'decision-decoder': () => setShowDecisionDecoder(true),
+            'consistency-engine': () => setShowConsistencyEngine(true),
+            'claim-stress-test': () => setShowClaimStressTest(true),
+            'evidence-gap': () => setShowEvidenceGapVisualizer(true),
+            'risk-assessment': () => setShowRiskAssessment(true),
+            'tdiu-builder': () => setShowTDIUBuilder(true),
+            'state-benefits': () => setShowStateBenefitHunter(true),
+            'the-tribunal': () => setShowTheTribunal(true),
+            'vso-finder': () => setShowVSOFinder(true),
+            'user-manual': () => setShowUserManual(true),
+            'knowledge-base': () => setShowVKBViewer(true),
+            'million-dollar': () => setShowMillionDollarDashboard(true),
+            'what-if-sandbox': () => setShowWhatIfSandbox(true),
+            'retro-pay': () => setShowRetroPayHunter(true),
+            'time-machine': () => setShowTimeMachine(true),
+            'pact-act': () => setShowPACTActNavigator(true),
+            'mos-hazard': () => setShowMOSHazardMatcher(true),
+            'web-of-conditions': () => setShowWebOfConditions(true),
+            'blue-button': () => setShowBlueButtonXRay(true),
+            'witness-bench': () => setShowWitnessBench(true),
+            'symptom-logger': () => setShowSymptomLogger(true),
+            'pain-painter': () => setShowPainPainter(true),
+            'evidence-timeline': () => setShowEvidenceTimeline(true),
+            'foia-generator': () => setShowFOIAGenerator(true),
+            'legislative-watchdog': () => setShowLegislativeWatchdog(true),
+            'backup-manager': () => setShowBackupManager(true),
+            'ai-settings': () => setShowAISettings(true),
+            'workflow-guide': () => setShowWorkflowGuide(true),
+            'record-search': () => setShowRecordSearch(true),
+            'dd214-analyzer': () => setShowDD214Analyzer(true),
+          };
+          const handler = toolHandlers[toolId];
+          if (handler) handler();
+        }}
+        onSelectDiagnosticCode={(code) => {
+          setShowCommandSearch(false);
+          // Search for the diagnostic code
+          setSearchTerm(code.code);
+          handleSearch(code.code);
+        }}
+      />
+      
+      {/* AAAAA Diamond Standard: Atomic Wipe (Panic Button) */}
+      <AtomicWipe
+        isOpen={showAtomicWipe}
+        onClose={() => setShowAtomicWipe(false)}
+        onWipeComplete={() => {
+          setShowAtomicWipe(false);
+          // Reset all state to initial values
+          setUserConditions([]);
+          setSearchTerm('');
+          setResults([]);
+          setSelectedResult(null);
+        }}
+      />
+      
       <Header 
         // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
@@ -1427,7 +1517,7 @@ function App() {
           <h2 className="text-2xl font-bold text-rose-700 dark:text-rose-300 text-center mb-2 mt-12">✅ Quality Control</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Review your work, decode VA decisions, and protect yourself from scams</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Red Team CTA */}
             <div className="bg-gradient-to-br from-rose-50 via-red-50 to-rose-50 dark:from-rose-900/40 dark:via-red-900/40 dark:to-rose-900/40 border-2 border-rose-300 dark:border-rose-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               <div className="flex items-center justify-center gap-4 mb-4 flex-col">
@@ -1720,7 +1810,7 @@ function App() {
           <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300 text-center mb-2 mt-12">⚔️ Force Multipliers</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Advanced simulators and interactive tools that transform how you build your claim</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Somatic Target - Body Map CTA */}
             <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900/40 dark:via-gray-900/40 dark:to-slate-900/40 border-2 border-slate-300 dark:border-slate-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               <div className="flex items-center justify-center gap-4 mb-4 flex-col">
@@ -1822,7 +1912,7 @@ function App() {
           <h2 className="text-2xl font-bold text-sky-700 dark:text-sky-300 text-center mb-2 mt-12">🤝 Support & Resources</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6">Find free representation, track VA rule changes, understand VA's AI systems, and unlock state-specific benefits</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* VSO Finder CTA */}
             <div className="bg-gradient-to-br from-sky-50 via-cyan-50 to-sky-50 dark:from-sky-900/40 dark:via-cyan-900/40 dark:to-sky-900/40 border-2 border-sky-300 dark:border-sky-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col text-center">
               {/* Decorative element */}
@@ -1935,7 +2025,7 @@ function App() {
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Premium visualizations that make you say "Whoa"</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
               {/* Million Dollar Dashboard - Gold/Yellow Theme */}
               <div className="relative bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 dark:from-yellow-900/40 dark:via-amber-900/40 dark:to-yellow-900/40 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-6 hover:shadow-xl transition-all flex flex-col overflow-hidden text-center">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-300/20 to-transparent rounded-full -translate-y-16 translate-x-16 pointer-events-none"></div>
@@ -3085,6 +3175,17 @@ function App() {
       
       {/* Security Badge - Always visible proof of privacy */}
       <SecurityBadge />
+      
+      {/* AAAAA Diamond Standard: Mobile Bottom Navigation */}
+      <MobileBottomNav
+        onSearchClick={() => setShowCommandSearch(true)}
+        onCalculatorClick={() => setShowTacticalCalculator(true)}
+        onPacketClick={() => setShowMyPacket(true)}
+        onMissionsClick={() => setShowWorkflowGuide(true)}
+        packetCount={userConditions.length}
+        currentRating={userConditions.length > 0 ? userConditions.reduce((acc, c) => Math.max(acc, c.rating || 0), 0) : null}
+      />
+      <MobileNavSpacer />
     </div>
   );
 }

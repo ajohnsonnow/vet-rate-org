@@ -18,6 +18,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import {
   Map, Plus, ChevronRight, ChevronDown, AlertTriangle, AlertCircle,
   CheckCircle, Circle, Clock, Calendar, FileText, Scale, TrendingUp,
@@ -106,6 +107,10 @@ const UrgencyIcons = {
 // ============================================
 const ClaimNavigator = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+  
   // State
   const [claims, setClaims] = useState([]);
   const [selectedClaim, setSelectedClaim] = useState(null);

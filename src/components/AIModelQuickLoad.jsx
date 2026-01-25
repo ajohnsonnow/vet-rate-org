@@ -18,7 +18,8 @@ import {
   isLocalServerAvailable,
   switchAgent,
   unloadSwarm,
-  getAgentForTool
+  getAgentForTool,
+  initializeSwarm
 } from '../utils/unifiedAIService';
 import { SWARM_AGENTS, TOOL_AGENT_MAP } from '../utils/diamondSwarm';
 
@@ -63,22 +64,25 @@ export default function AIModelQuickLoad({
     setError(null);
 
     try {
-      // Unload any current AI first
+      // If Diamond Swarm is already initialized, just switch agents
       if (isDiamondSwarmReady()) {
-        console.log('🔄 Unloading current Diamond Swarm agent...');
-        await unloadSwarm();
+        console.log('💎 Diamond Swarm already ready, switching agent...');
+        await switchAgent(recommendedAgentId);
+      } else {
+        // Initialize Diamond Swarm with the recommended agent
+        console.log(`💎 Initializing Diamond Swarm with ${recommendedAgent.name}...`);
+        await initializeSwarm(recommendedAgentId, {
+          onProgress: (progress) => {
+            console.log(`Loading progress: ${progress.message} (${progress.progress}%)`);
+          },
+          onComplete: () => {
+            console.log(`✅ ${recommendedAgent.name} loaded successfully`);
+          },
+          onError: (err) => {
+            throw err;
+          }
+        });
       }
-
-      // Small delay to ensure cleanup
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Switch to recommended agent
-      console.log(`💎 Loading recommended agent: ${recommendedAgent.name}`);
-      await switchAgent(recommendedAgentId, {
-        onProgress: (progress) => {
-          console.log(`Loading progress: ${progress.text} (${progress.progress}%)`);
-        }
-      });
 
       if (onLoadComplete) {
         onLoadComplete(recommendedAgent);
@@ -225,10 +229,19 @@ export default function AIModelQuickLoad({
                   key={agent.id}
                   onClick={async () => {
                     setLoading(true);
+                    setError(null);
                     try {
-                      if (isDiamondSwarmReady()) await unloadSwarm();
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                      await switchAgent(agent.id);
+                      // If Diamond Swarm is already initialized, just switch agents
+                      if (isDiamondSwarmReady()) {
+                        await switchAgent(agent.id);
+                      } else {
+                        // Initialize with the selected agent
+                        await initializeSwarm(agent.id, {
+                          onProgress: (progress) => console.log(progress.message),
+                          onComplete: () => console.log(`✅ ${agent.name} loaded`),
+                          onError: (err) => { throw err; }
+                        });
+                      }
                       if (onLoadComplete) onLoadComplete(agent);
                       setShowDropdown(false);
                     } catch (err) {

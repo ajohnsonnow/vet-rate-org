@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { calculatePaymentEffectiveDate, calculateBackpayMonths } from '../utils/vaCalculator';
 import ReportBugLink from './ReportBugLink';
 
@@ -35,6 +36,10 @@ const VA_MONTHLY_RATES = {
 
 export default function TimeMachine({ isWidget = false, onClose = null, onReportBug }) {
   const { t } = useLanguage();
+  
+  // Lock background scroll when opened as full modal (not widget)
+  useBodyScrollLock(!isWidget);
+  
   const [itfDate, setItfDate] = useState('');
   const [estimatedRating, setEstimatedRating] = useState(70);
   const [countdown, setCountdown] = useState(null);

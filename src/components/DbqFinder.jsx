@@ -16,6 +16,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { 
   Search, 
   FileText, 
@@ -92,6 +93,9 @@ const DBQ_PREFIXES = ['21-0960'];
 
 const DbqFinder = ({ onClose }) => {
   const { t } = useLanguage();
+  
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState([]);
