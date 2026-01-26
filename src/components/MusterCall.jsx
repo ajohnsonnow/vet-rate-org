@@ -576,12 +576,15 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                       <span className="text-2xl">🤖</span>
                       AI Analysis & Recommendations
                     </h3>
-                    <button
-                      onClick={() => setShowReport(!showReport)}
-                      className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
-                    >
-                      {showReport ? 'Hide' : 'Show'} Report
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <ReportBugLink context="muster-call-report" />
+                      <button
+                        onClick={() => setShowReport(!showReport)}
+                        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                      >
+                        {showReport ? 'Hide' : 'Show'} Report
+                      </button>
+                    </div>
                   </div>
                   {showReport && (
                     <div className="prose prose-sm dark:prose-invert max-w-none">
