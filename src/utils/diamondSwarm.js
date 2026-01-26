@@ -1,6 +1,6 @@
 /**
- * Vet-Rate.org - Diamond Swarm AI Service
- * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
+ * Vet-Rate.org - Warrant Council AI Service
+ * 🎖️ "The Warrant Standard" - 3-Model Swarm Architecture
  * 
  * This service orchestrates 3 specialized fine-tuned models:
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
@@ -16,12 +16,13 @@ const SWARM_CONFIG_KEY = 'vetrate_diamond_swarm_config';
 const SWARM_STATUS_KEY = 'vetrate_diamond_swarm_status';
 
 /**
- * Diamond Swarm Agent Types
+ * Warrant Council Agent Types
+ * CW5-CW3 ranks correspond to technical expertise levels
  */
 export const SWARM_AGENTS = {
   AUDITOR: {
     id: 'auditor',
-    name: 'Diamond Auditor',
+    name: 'CW5 Auditor',
     rank: 'First Sergeant (E-8)',
     militaryContext: 'Your platoon first sergeant who inspects gear, catches mistakes, and ensures you have everything squared away before the mission',
     description: 'Reviews claims for accuracy, compliance, and identifies issues',
@@ -34,7 +35,7 @@ export const SWARM_AGENTS = {
       'Regulatory compliance check',
       'Missing documentation identification'
     ],
-    systemPrompt: `You are the VetRate Diamond Auditor, an expert VA claim reviewer.
+    systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claim reviewer.
 Your role is to analyze VA disability claims for accuracy, completeness, and compliance.
 
 CRITICAL RULES:
@@ -63,7 +64,7 @@ Always be thorough but compassionate - veterans deserve accurate guidance.`
   },
   WRITER: {
     id: 'writer',
-    name: 'Diamond Writer',
+    name: 'CW4 Writer',
     rank: 'First Sergeant (E-8)',
     militaryContext: 'The first sergeant who writes you up for awards, helps draft your statements, and knows exactly how to make your accomplishments sound impressive',
     description: 'Creates compelling personal statements and nexus letters',
@@ -90,7 +91,7 @@ Your writing should be honest, powerful, and human-sounding.`
   },
   RATER: {
     id: 'rater',
-    name: 'Diamond Rater',
+    name: 'CW3 Rater',
     rank: 'First Sergeant (E-8)',
     militaryContext: 'The promotion board first sergeant who knows the point system inside-out and can calculate your ranking down to the decimal',
     description: 'Calculates VA disability ratings with bilateral factor',
@@ -150,7 +151,7 @@ export const TOOL_AGENT_MAP = {
 };
 
 /**
- * Diamond Swarm state
+ * Warrant Council state
  */
 let swarmEngine = null;
 let swarmReady = false;
@@ -195,12 +196,12 @@ export const getAgentForTool = (toolId) => {
 export const getAllAgents = () => Object.values(SWARM_AGENTS);
 
 /**
- * Check if Diamond Swarm is ready
+ * Check if Warrant Council is ready
  */
 export const isSwarmReady = () => swarmReady && !swarmInitializing;
 
 /**
- * Check if Diamond Swarm is initializing
+ * Check if Warrant Council is initializing
  */
 export const isSwarmInitializing = () => swarmInitializing;
 
@@ -245,13 +246,13 @@ export const registerSwarmEngine = (engine, ready, initializing = false, agentId
     loadedAgents.add(agentId);
     currentAgent = agentId;
   }
-  console.log(`💎 Diamond Swarm registered: agent=${agentId}, ready=${ready}`);
+  console.log(`🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`);
 };
 
 // WebLLM engine reference for real inference
 let webllmEngine = null;
 
-// Fallback models for Diamond Swarm - try smaller models first to avoid cache issues
+// Fallback models for Warrant Council - try smaller models first to avoid cache issues
 const DIAMOND_MODELS = [
   'Qwen2.5-3B-Instruct-q4f32_1-MLC',  // 2GB - good balance
   'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', // 1GB - faster
@@ -278,8 +279,8 @@ const clearCorruptedCache = async () => {
 };
 
 /**
- * Initialize Diamond Swarm with WebLLM model loading
- * Uses a real WebLLM model with Diamond Swarm specialized prompts
+ * Initialize Warrant Council with WebLLM model loading
+ * Uses a real WebLLM model with Warrant Council specialized prompts
  */
 export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
   const { onProgress, onComplete, onError } = callbacks;
@@ -289,18 +290,18 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
     
     // Check for WebGPU support
     if (typeof navigator === 'undefined' || !navigator.gpu) {
-      throw new Error('WebGPU not available. Diamond Swarm requires Chrome 113+.');
+      throw new Error('WebGPU not available. Warrant Council requires Chrome 113+.');
     }
     
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) {
-      throw new Error('No compatible GPU found for Diamond Swarm.');
+      throw new Error('No compatible GPU found for Warrant Council.');
     }
     
     const agentInfo = SWARM_AGENTS[agentId.toUpperCase()];
     onProgress?.({ stage: 'init', message: `Initializing ${agentInfo?.name || 'Diamond Agent'}...`, progress: 0 });
     
-    console.log(`💎 Initializing Diamond Swarm agent: ${agentId}`);
+    console.log(`🎖️ Initializing Warrant Council agent: ${agentId}`);
     
     // Load real WebLLM model for inference - try multiple models
     let loadedModel = null;
@@ -325,7 +326,7 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
         
         loadedModel = modelId;
         loadedModelId = modelId; // Store globally for status reporting
-        console.log(`💎 WebLLM engine loaded for Diamond Swarm: ${modelId}`);
+        console.log(`🎖️ WebLLM engine loaded for Warrant Council: ${modelId}`);
         break; // Success!
         
       } catch (modelError) {
@@ -357,13 +358,13 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
   } catch (error) {
     swarmInitializing = false;
     onError?.(error);
-    console.error('💎 Diamond Swarm initialization failed:', error);
+    console.error('🎖️ Warrant Council initialization failed:', error);
     throw error;
   }
 };
 
 /**
- * Switch to a different Diamond Swarm agent
+ * Switch to a different Warrant Council agent
  */
 export const switchAgent = async (agentId, callbacks = {}) => {
   if (!SWARM_AGENTS[agentId.toUpperCase()]) {
@@ -386,7 +387,7 @@ export const switchAgent = async (agentId, callbacks = {}) => {
 };
 
 /**
- * Generate response using Diamond Swarm
+ * Generate response using Warrant Council
  * Uses WebLLM engine with agent-specific system prompts
  */
 export const generateWithSwarm = async (prompt, options = {}) => {
@@ -485,7 +486,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   }
   
   // Fallback: placeholder response when no engine available
-  const placeholderText = `[Diamond Swarm - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join('\n• ')}\n\nYour question: "${prompt.slice(0, 150)}..."`;
+  const placeholderText = `[Warrant Council - ${agent.name}]\n\n⚠️ Local AI model is still loading. Please wait for the download to complete.\n\nOnce loaded, this ${agent.name} agent will help with:\n• ${agent.capabilities.join('\n• ')}\n\nYour question: "${prompt.slice(0, 150)}..."`;
   
   // Call onStream so the UI shows the placeholder immediately
   if (onStream) {
@@ -574,7 +575,7 @@ export const processClaimWithSwarm = async (claimData, callbacks = {}) => {
 };
 
 /**
- * Unload Diamond Swarm and free resources
+ * Unload Warrant Council and free resources
  */
 export const unloadSwarm = async () => {
   try {
@@ -597,16 +598,16 @@ export const unloadSwarm = async () => {
     loadedAgents.clear();
     currentAgent = null;
     
-    console.log('💎 Diamond Swarm unloaded');
+    console.log('🎖️ Warrant Council unloaded');
     return true;
   } catch (error) {
-    console.error('Error unloading Diamond Swarm:', error);
+    console.error('Error unloading Warrant Council:', error);
     return false;
   }
 };
 
 /**
- * Get Diamond Swarm configuration
+ * Get Warrant Council configuration
  */
 export const getSwarmConfig = () => {
   try {

@@ -112,7 +112,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 - **100% Client-Side**: All core processing happens in your browser
 - **Zero Data Collection**: No accounts, no tracking, no PII storage
 - **No External Transmission**: Your searches never leave your device
-- **AI Options**: Local Diamond Swarm models (recommended) or optional Gemini cloud with YOUR API key
+- **AI Options**: Local Warrant Council models (recommended) or optional Gemini cloud with YOUR API key
 
 ### Accessibility
 - **WCAG 2.1 AA Compliant**: Full keyboard navigation and screen reader support
@@ -414,7 +414,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 Vet-Rate.org offers **two AI options**: Custom local LLMs (recommended) for maximum privacy, or Google Gemini cloud AI for convenience.
 
-### 🤖 Diamond Swarm - Custom Local AI Models (Recommended)
+### 🤖 Warrant Council - Custom Local AI Models (Recommended)
 
 **100% Private • Zero Cloud Dependencies • Trained on VA-Specific Data**
 

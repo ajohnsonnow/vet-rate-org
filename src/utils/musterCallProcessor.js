@@ -743,6 +743,121 @@ export const autoPopulateProfile = async (processedResults) => {
 };
 
 /**
+ * Extract and consolidate data for Intelligence Briefing
+ * Transforms processed document results into structured data for review
+ */
+export const extractIntelligenceBriefingData = (processedResults) => {
+  console.log('📋 Extracting Intelligence Briefing data...');
+  
+  const briefingData = {
+    // Personal Information
+    fullName: null,
+    dob: null,
+    ssnLast4: null,
+    vaFileNumber: null,
+    
+    // Service History
+    branch: null,
+    serviceStart: null,
+    serviceEnd: null,
+    characterOfService: null,
+    mos: null,
+    mosTitle: null,
+    
+    // Ratings & Claims
+    currentCombinedRating: null,
+    conditions: [],
+    claimNumbers: [],
+    
+    // Documents processed
+    documentsProcessed: processedResults?.length || 0,
+    documentTypes: {}
+  };
+
+  if (!processedResults || processedResults.length === 0) {
+    console.warn('⚠️ No results to extract from');
+    return briefingData;
+  }
+
+  for (const result of processedResults) {
+    if (result.status !== 'complete' || !result.extractedData) continue;
+
+    const { type } = result.extractedData;
+    
+    // Count document types
+    if (!briefingData.documentTypes[type]) {
+      briefingData.documentTypes[type] = 0;
+    }
+    briefingData.documentTypes[type]++;
+
+    switch (type) {
+      case 'service_record':
+        // Extract from DD214 - data might be in array format
+        const serviceData = result.extractedData;
+        console.log('📝 Extracting service record:', serviceData);
+        
+        // Handle array-structured data (indexed 0, 1, 2, etc.)
+        if (serviceData[0]) {
+          // Data is in numbered keys
+          Object.keys(serviceData).forEach(key => {
+            if (!isNaN(key) && serviceData[key]) {
+              const entry = serviceData[key];
+              if (entry.branch) briefingData.branch = entry.branch;
+              if (entry.entryDate) briefingData.serviceStart = entry.entryDate;
+              if (entry.separationDate) briefingData.serviceEnd = entry.separationDate;
+              if (entry.mos) briefingData.mos = entry.mos;
+              if (entry.mosTitle) briefingData.mosTitle = entry.mosTitle;
+              if (entry.characterOfService) briefingData.characterOfService = entry.characterOfService;
+            }
+          });
+        } else {
+          // Direct field structure
+          if (serviceData.branch) briefingData.branch = serviceData.branch;
+          if (serviceData.entryDate) briefingData.serviceStart = serviceData.entryDate;
+          if (serviceData.separationDate) briefingData.serviceEnd = serviceData.separationDate;
+          if (serviceData.mos) briefingData.mos = serviceData.mos;
+          if (serviceData.mosTitle) briefingData.mosTitle = serviceData.mosTitle;
+          if (serviceData.characterOfService) briefingData.characterOfService = serviceData.characterOfService;
+        }
+        break;
+
+      case 'rating_decision':
+        console.log('📊 Extracting rating decision:', result.extractedData);
+        if (result.extractedData.combinedRating) {
+          briefingData.currentCombinedRating = result.extractedData.combinedRating;
+        }
+        if (result.extractedData.conditions && Array.isArray(result.extractedData.conditions)) {
+          result.extractedData.conditions.forEach(condition => {
+            // Check if condition already exists
+            const exists = briefingData.conditions.find(c => 
+              c.name?.toLowerCase() === condition.name?.toLowerCase()
+            );
+            if (!exists && condition.name) {
+              briefingData.conditions.push({
+                name: condition.name,
+                rating: condition.rating || null,
+                diagnosticCode: condition.diagnosticCode || null,
+                effectiveDate: condition.effectiveDate || result.extractedData.effectiveDate || null
+              });
+            }
+          });
+        }
+        break;
+
+      case 'claim_letter':
+        console.log('📬 Extracting claim letter:', result.extractedData);
+        if (result.extractedData.claimNumber && !briefingData.claimNumbers.includes(result.extractedData.claimNumber)) {
+          briefingData.claimNumbers.push(result.extractedData.claimNumber);
+        }
+        break;
+    }
+  }
+
+  console.log('✅ Intelligence Briefing data extracted:', briefingData);
+  return briefingData;
+};
+
+/**
  * Generate comprehensive analysis report using LLM
  */
 export const generateMusterCallReport = async (processedResults, classified) => {

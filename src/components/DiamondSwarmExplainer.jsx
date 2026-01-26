@@ -1,6 +1,6 @@
 /**
- * DiamondSwarmExplainer Component
- * Explains the Diamond Swarm AI in veteran-friendly terms
+ * WarrantCouncilExplainer Component
+ * Explains the Warrant Council AI in veteran-friendly terms
  */
 
 import React, { useState } from 'react';
@@ -12,7 +12,7 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
   if (variant === 'inline') {
     return (
       <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-        💎 Three specialized First Sergeants (E-8) trained to analyze your claim, write statements, and calculate ratings
+        🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical experts trained to analyze your claim, write statements, and calculate ratings
       </div>
     );
   }
@@ -25,13 +25,13 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
           className="w-full flex items-center justify-between text-left"
         >
           <div className="flex items-center space-x-3">
-            <span className="text-2xl">💎</span>
+            <span className="text-2xl">🎖️</span>
             <div>
               <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                What is Diamond Swarm?
+                What is Warrant Council?
               </h4>
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                Three AI First Sergeants (E-8) that have your back
+                Three Chief Warrant Officers (CW3-CW5) that have your back
               </p>
             </div>
           </div>
@@ -43,8 +43,8 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
         {expanded && (
           <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800 space-y-3">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              Just like different first sergeants specialize in different things (supply, admin, operations), 
-              Diamond Swarm has three specialized E-8 level AI agents:
+              Chief Warrant Officers are technical experts in their field - across all branches they're the go-to for specialized knowledge. 
+              Warrant Council has three CWO-level AI agents:
             </p>
             
             <div className="space-y-3">
@@ -70,12 +70,12 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
             
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 mt-4">
               <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                <strong>Branch-Specific E-8 Equivalents:</strong>
+                <strong>Chief Warrant Officer Across Branches:</strong>
               </p>
               <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-2 space-y-1">
-                <li>🪖 <strong>Army/Marines:</strong> First Sergeant (1SG/1stSgt)</li>
-                <li>✈️ <strong>Air Force/Space Force:</strong> First Sergeant (SMSgt)</li>
-                <li>⚓ <strong>Navy/Coast Guard:</strong> Senior Chief Petty Officer (SCPO - SEL)</li>
+                <li>🪖 <strong>Army/Marines:</strong> CW2-CW5 (Technical specialists)</li>
+                <li>✈️ <strong>Air Force:</strong> No warrant officer rank</li>
+                <li>⚓ <strong>Navy/Coast Guard:</strong> CWO2-CWO5 (Technical experts)</li>
               </ul>
             </div>
           </div>
@@ -88,22 +88,22 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
   return (
     <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border-2 border-purple-200 dark:border-purple-800">
       <div className="flex items-center space-x-4 mb-6">
-        <div className="text-4xl">💎</div>
+        <div className="text-4xl">🎖️</div>
         <div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Diamond Swarm AI
+            Warrant Council AI
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Three Specialized First Sergeants (E-8) for Your VA Claim
+            Three Chief Warrant Officers (CW3-CW5) for Your VA Claim
           </p>
         </div>
       </div>
 
       <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
         <p className="text-gray-700 dark:text-gray-300">
-          Remember the first sergeants in your unit? The ones who knew the regs inside-out, 
-          caught your paperwork mistakes before they became problems, and made sure you were 
-          squared away? That's what Diamond Swarm is - but specialized for VA claims.
+          Remember the Chief Warrant Officers in your unit? The technical experts who knew their specialty 
+          inside-out - the intel CWO who could break down any situation, the logistics CWO who kept everything 
+          running? That's what Warrant Council is - but specialized for VA claims.
         </p>
       </div>
 

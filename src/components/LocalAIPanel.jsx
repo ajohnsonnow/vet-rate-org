@@ -315,7 +315,7 @@ const AVAILABLE_MODELS = [
   // === 💎 DIAMOND SWARM AGENTS - Specialized for VA Claims ===
   {
     id: 'diamond-auditor',
-    name: '💎 Diamond Auditor (Recommended)',
+    name: '🎖️ CW5 Auditor (Recommended)',
     size: '4.0 GB',
     description: 'Specialized agent for claim review, compliance, and document analysis',
     bestFor: '🔍 Claim Review & Analysis',
@@ -1236,7 +1236,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     // Diamond Swarm agents get special messages
     if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
       const agentMessages = {
-        'diamond-auditor': "*Meow!* 💎 Testing the Diamond Auditor! This one's trained to sniff out claim issues like I sniff out treats! Watch it analyze those VA regulations! 😸",
+        'diamond-auditor': "*Meow!* 🎖️ Testing the CW5 Auditor! This one's trained to sniff out claim issues like I sniff out treats! Watch it analyze those VA regulations! 😸",
         'diamond-writer': "*Purrrr* 💎 Diamond Writer test time! This fuzzy brain helper writes statements better than I write on keyboards (which is pretty good, actually). 📝😺",
         'diamond-rater': "*Mrrrow!* 💎 Testing Diamond Rater! It calculates ratings faster than I calculate my treat schedule. Math whiskers activated! 🧮😸",
       };
@@ -1252,7 +1252,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     // Diamond Swarm agents get special completion messages
     if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
       const completionMessages = {
-        'diamond-auditor': "*Purrrrr!* 💎✨ Knowledge test complete! The Diamond Auditor nailed it! This AI knows VA regulations better than most VSOs. Your claims just got a whole lot stronger! 😸🎉",
+        'diamond-auditor': "*Purrrrr!* 🎖️✨ Knowledge test complete! The CW5 Auditor nailed it! This AI knows VA regulations better than most VSOs. Your claims just got a whole lot stronger! 😸🎉",
         'diamond-writer': "*Mrrrrrow!* 💎✨ Test passed with flying whiskers! Diamond Writer's ready to craft those statements! Watch those nexus letters practically write themselves! 📝😺",
         'diamond-rater': "*Meow meow!* 💎✨ Knowledge test SUCCESS! Diamond Rater's math whiskers are on point! It knows the combined ratings formula like I know my treat jar location! 🧮😸🎊",
       };

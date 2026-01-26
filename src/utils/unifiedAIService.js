@@ -54,7 +54,7 @@ const TOKEN_LIMIT_KEY = 'vetrate_token_limit_config';
 // Updated to gemini-2.5-flash which has same 1M token context window
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-// Diamond Swarm state (primary AI engine)
+// Warrant Council state (primary AI engine)
 let swarmEngine = null;
 let swarmReady = false;
 let swarmGenerating = false;
@@ -241,7 +241,7 @@ export const checkWebGPUSupport = async () => {
 export const AI_MODES = {
   CLOUD: 'cloud',
   LOCAL: 'local',
-  SWARM: 'swarm',           // 💎 Diamond Swarm - 3 specialized agents (WebGPU/MLC)
+  SWARM: 'swarm',           // 🎖️ Warrant Council - 3 specialized agents (WebGPU/MLC)
   WLLAMA: 'wllama',         // 🌐 Wllama - Browser WASM inference (works everywhere)
   LOCAL_SERVER: 'local_server', // 🖥️ llama.cpp server - Desktop inference via API
   AUTO: 'auto',             // Prefer swarm → wllama → local_server → cloud
@@ -257,7 +257,7 @@ export const getAIMode = () => {
     localStorage.setItem(AI_MODE_KEY, AI_MODES.SWARM);
     return AI_MODES.SWARM;
   }
-  return stored || AI_MODES.SWARM; // Default to Diamond Swarm
+  return stored || AI_MODES.SWARM; // Default to Warrant Council
 };
 
 /**
@@ -283,7 +283,7 @@ export const registerSwarmEngine = (engine, ready, initializing = false, agentId
   swarmReady = ready;
   swarmInitializingState = initializing;
   swarmCurrentAgent = agentId;
-  console.log(`💎 Diamond Swarm registered: agent=${agentId}, ready=${ready}`);
+  console.log(`🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`);
 };
 
 /**
@@ -363,10 +363,10 @@ export const isDiamondSwarmReady = () => {
 };
 
 /**
- * Check if local AI is ready (includes Diamond Swarm)
+ * Check if local AI is ready (includes Warrant Council)
  */
 export const isLocalAIReady = () => {
-  // Diamond Swarm takes priority
+  // Warrant Council takes priority
   if (isDiamondSwarmReady()) return true;
   // Fallback to legacy local AI
   return localAIEngine !== null && localAIReady && !localAIInitializing;
@@ -528,7 +528,7 @@ export const isAnyAIAvailable = () => {
 export const getEffectiveAIMode = () => {
   const preferredMode = getAIMode();
   
-  // Diamond Swarm mode (preferred - WebGPU)
+  // Warrant Council mode (preferred - WebGPU)
   if (preferredMode === AI_MODES.SWARM) {
     if (isDiamondSwarmReady()) return AI_MODES.SWARM;
     if (isWllamaAvailable()) return AI_MODES.WLLAMA;
@@ -776,13 +776,13 @@ const generateWithDiamondSwarm = async (prompt, options = {}) => {
   if (scrubPIIEnabled) {
     const piiAnalysis = analyzePII(prompt);
     if (piiAnalysis.hasPII) {
-      console.warn(`⚠️ PII Detected before Diamond Swarm call:`, piiAnalysis.types);
+      console.warn(`⚠️ PII Detected before Warrant Council call:`, piiAnalysis.types);
       const { scrubbedText, details } = scrubPII(prompt, {
         aggressive: true,
         preservePartial: false
       });
       scrubbedPrompt = scrubbedText;
-      console.info(`🛡️ PII Scrubbed (Diamond Swarm):`, details);
+      console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
     }
   }
 
@@ -809,7 +809,7 @@ const generateWithDiamondSwarm = async (prompt, options = {}) => {
     agentId = taskToAgent[taskType] || 'auditor';
   }
 
-  console.log(`💎 Diamond Swarm: Using ${agentId.toUpperCase()} agent for ${taskType || toolId || 'general'} task`);
+  console.log(`🎖️ Warrant Council: Using ${agentId.toUpperCase()} agent for ${taskType || toolId || 'general'} task`);
 
   try {
     swarmGenerating = true;
@@ -825,7 +825,7 @@ const generateWithDiamondSwarm = async (prompt, options = {}) => {
     return result.text;
   } catch (err) {
     swarmGenerating = false;
-    throw new Error(`Diamond Swarm error (${agentId}): ${err.message}`);
+    throw new Error(`Warrant Council error (${agentId}): ${err.message}`);
   }
 };
 
@@ -926,9 +926,9 @@ const generateWithLocalServer = async (prompt, options = {}) => {
  * Generate text using Local AI (Legacy WebLLM - fallback only)
  */
 const generateWithLocalAI = async (prompt, options = {}) => {
-  // First try Diamond Swarm if available
+  // First try Warrant Council if available
   if (isDiamondSwarmReady()) {
-    console.log('💎 Routing to Diamond Swarm (upgraded from legacy local AI)');
+    console.log('🎖️ Routing to Warrant Council (upgraded from legacy local AI)');
     return generateWithDiamondSwarm(prompt, options);
   }
 
@@ -1619,7 +1619,7 @@ export const getLocalModelName = () => {
   if (!modelId) return 'Local AI';  // Generic name when no specific model selected
   
   // Diamond Swarm agents (fine-tuned VetRate models)
-  if (modelId.includes('vetrate-auditor')) return '💎 Diamond Auditor';
+  if (modelId.includes('vetrate-auditor')) return '🎖️ CW5 Auditor';
   if (modelId.includes('vetrate-writer')) return '💎 Diamond Writer';
   if (modelId.includes('vetrate-rater')) return '💎 Diamond Rater';
   

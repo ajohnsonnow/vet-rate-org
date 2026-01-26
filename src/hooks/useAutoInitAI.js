@@ -25,6 +25,7 @@ export const useAutoInitAI = (toolId = null, agentId = null) => {
 
   useEffect(() => {
     let mounted = true;
+    console.log(`💎 useAutoInitAI hook mounted with toolId: ${toolId}, agentId: ${agentId}`);
 
     const initializeAI = async () => {
       try {
@@ -77,8 +78,8 @@ export const useAutoInitAI = (toolId = null, agentId = null) => {
           return () => clearInterval(pollInterval);
         }
 
-        // Initialize Diamond Swarm
-        console.log(`💎 Auto-initializing Diamond Swarm with ${targetAgent} agent...`);
+        // Initialize Warrant Council
+        console.log(`🎖️ Auto-initializing Warrant Council with ${targetAgent} agent...`);
         if (mounted) {
           setAiInitializing(true);
           setInitMessage(`Initializing AI agent...`);
@@ -86,9 +87,11 @@ export const useAutoInitAI = (toolId = null, agentId = null) => {
 
         await initializeSwarm(targetAgent, {
           onProgress: (progress) => {
+            console.log('💎 Auto-init progress:', progress);
             if (mounted) {
               setInitProgress(progress.progress || 0);
               setInitMessage(progress.message || 'Loading...');
+              console.log(`💎 Progress state updated: ${progress.progress}% - ${progress.message}`);
             }
           },
           onComplete: () => {
