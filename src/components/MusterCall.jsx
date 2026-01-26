@@ -11,7 +11,7 @@
  * the system analyze everything automatically.
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
@@ -21,6 +21,7 @@ import {
   autoPopulateProfile,
   generateMusterCallReport,
   validateFilesBatch,
+  extractIntelligenceBriefingData,
   PROCESSING_STATES,
   formatFileSize
 } from '../utils/musterCallProcessor';
@@ -38,6 +39,11 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   
   // Auto-initialize AI when component mounts
   const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('war-room', 'auditor');
+  
+  // Debug: Log progress updates
+  useEffect(() => {
+    console.log(`💎 MusterCall progress state: ${initProgress}%, initializing: ${aiInitializing}, ready: ${aiReady}`);
+  }, [initProgress, aiInitializing, aiReady]);
 
   // State management
   const [files, setFiles] = useState([]);
@@ -202,7 +208,9 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
           
           // Trigger Intelligence Briefing if callback provided
           if (onProcessComplete && completeData && completeData.results) {
-            onProcessComplete(completeData.results);
+            // Transform results into Intelligence Briefing format
+            const briefingData = extractIntelligenceBriefingData(completeData.results);
+            onProcessComplete(briefingData);
           }
         }
       });
@@ -286,16 +294,21 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
             <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border-l-4 border-purple-500">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="text-3xl animate-pulse">💎</div>
+                  <div className="relative">
+                    {/* Spinning circular progress indicator */}
+                    <div className="w-12 h-12 rounded-full border-4 border-purple-200 dark:border-purple-800 border-t-purple-600 dark:border-t-purple-400 animate-spin"></div>
+                    {/* CWO icon in center */}
+                    <div className="absolute inset-0 flex items-center justify-center text-xl">🎖️</div>
+                  </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                      Initializing Diamond Swarm AI...
+                      Initializing Warrant Council AI...
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       {initMessage || 'Preparing AI agent for analysis'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-500 italic">
-                      💎 Three specialized First Sergeants (E-8) trained to analyze your claim, write statements, and calculate ratings
+                      🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical experts trained to analyze your claim, write statements, and calculate ratings
                     </p>
                   </div>
                 </div>
@@ -305,11 +318,19 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden relative">
                 <div 
                   className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
                   style={{ width: `${initProgress}%` }}
                 />
+                {/* Guidon flag marching across */}
+                <div 
+                  className="absolute -top-6 transform -translate-x-1/2 transition-all duration-500 text-2xl"
+                  style={{ left: `${initProgress}%` }}
+                  title="Warrant Council loading progress"
+                >
+                  🚩
+                </div>
               </div>
             </div>
           )}
@@ -320,7 +341,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                 <span className="text-2xl mr-3">✅</span>
                 <div>
                   <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Diamond Auditor ready - Your claim accuracy First Sergeant is standing by
+                    CW5 Auditor ready - Your claim accuracy Chief Warrant Officer is standing by
                   </span>
                   <p className="text-xs text-green-700 dark:text-green-300 mt-1">
                     Intelligence Briefing will be generated automatically after document processing
@@ -329,6 +350,22 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
               </div>
             </div>
           )}
+          
+          {/* Processing Time Warning */}
+          <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border-l-4 border-yellow-500">
+            <div className="flex items-start">
+              <span className="text-xl mr-3 mt-0.5">⏱️</span>
+              <div>
+                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Processing Time Notice
+                </span>
+                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                  Large files (like 320MB+ C-files) and poor-quality scanned images may take several minutes to process. 
+                  Please be patient while we extract and analyze your documents with maximum accuracy.
+                </p>
+              </div>
+            </div>
+          </div>
           
           {/* File Drop Zone */}
           {processingState === PROCESSING_STATES.IDLE && (

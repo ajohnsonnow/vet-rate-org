@@ -1,8 +1,8 @@
 /**
- * Vet-Rate.org - Diamond Swarm Agent Recommendations
- * 💎 "The Diamond Standard" - Specialized Agents for Each Task
+ * Vet-Rate.org - Warrant Council Agent Recommendations
+ * 🎖️ "The Warrant Standard" - Specialized Agents for Each Task
  * 
- * This utility maps each tool to the appropriate Diamond Swarm agent:
+ * This utility maps each tool to the appropriate Warrant Council agent:
  * - AUDITOR: Document analysis, claim review, compliance checking
  * - WRITER: Personal statements, nexus letters, buddy statements  
  * - RATER: Rating calculations, bilateral factor, TDIU assessment
@@ -76,7 +76,7 @@ export const TOOL_CATEGORIES = {
 };
 
 /**
- * Tool-specific Diamond Swarm agent recommendations
+ * Tool-specific Warrant Council agent recommendations
  * Each tool maps to the best agent with explanations
  */
 export const TOOL_LLM_RECOMMENDATIONS = {
@@ -86,19 +86,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
       modelId: 'diamond-auditor',
-      modelName: '💎 Diamond Auditor',
+      modelName: '🎖️ CW5 Auditor',
       reason: 'Specialized agent trained to extract service dates, MOS codes, and discharge info with high accuracy.',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-auditor',
-        modelName: '💎 Diamond Auditor',
+        modelName: '🎖️ CW5 Auditor',
         reason: 'Best for DD214 analysis - trained on official military document formats',
       },
     ],
     tips: [
-      '💎 Diamond Auditor is optimized for military document parsing',
+      '🎖️ CW5 Auditor is optimized for military document parsing',
       'Agent automatically validates extracted data against known formats',
       'Supports both text PDFs and OCR results from scanned images',
     ],
@@ -109,19 +109,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
       modelId: 'diamond-auditor',
-      modelName: '💎 Diamond Auditor',
+      modelName: '🎖️ CW5 Auditor',
       reason: 'Specialized for complex multi-page VA claim files with regulatory compliance checking',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-auditor',
-        modelName: '💎 Diamond Auditor',
+        modelName: '🎖️ CW5 Auditor',
         reason: 'Trained on C-File formats and VA procedures',
       },
     ],
     tips: [
-      '💎 Diamond Auditor handles 100+ page C-Files efficiently',
+      '🎖️ CW5 Auditor handles 100+ page C-Files efficiently',
       'Agent identifies missing evidence and compliance issues',
       'Automatically cross-references with 38 CFR regulations',
     ],
@@ -132,19 +132,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.DOCUMENT_PARSING,
     primary: {
       modelId: 'diamond-auditor',
-      modelName: '💎 Diamond Auditor',
+      modelName: '🎖️ CW5 Auditor',
       reason: 'Expert at parsing medical records and identifying service-connected conditions',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-auditor',
-        modelName: '💎 Diamond Auditor',
+        modelName: '🎖️ CW5 Auditor',
         reason: 'Trained on medical terminology and VA health records',
       },
     ],
     tips: [
-      '💎 Diamond Auditor understands medical terminology',
+      '🎖️ CW5 Auditor understands medical terminology',
       'Agent extracts condition diagnoses and treatment history',
       'Identifies potential secondary conditions automatically',
     ],
@@ -156,19 +156,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
       modelId: 'diamond-writer',
-      modelName: '💎 Diamond Writer',
+      modelName: '🎖️ CW4 Writer',
       reason: 'Specialized for nexus letters balancing medical accuracy with persuasive writing',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-writer',
-        modelName: '💎 Diamond Writer',
+        modelName: '🎖️ CW4 Writer',
         reason: 'Fine-tuned on successful VA nexus letter formats',
       },
     ],
     tips: [
-      '💎 Diamond Writer creates medically accurate, persuasive nexus letters',
+      '🎖️ CW4 Writer creates medically accurate, persuasive nexus letters',
       'Agent understands the "at least as likely as not" standard',
       'Review AI output carefully - nexus letters are critical documents',
     ],
@@ -179,19 +179,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
       modelId: 'diamond-writer',
-      modelName: '💎 Diamond Writer',
+      modelName: '🎖️ CW4 Writer',
       reason: 'Generates empathetic witness statement templates and interview guides',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-writer',
-        modelName: '💎 Diamond Writer',
+        modelName: '🎖️ CW4 Writer',
         reason: 'Trained on effective buddy/witness statement formats',
       },
     ],
     tips: [
-      '💎 Diamond Writer creates emotionally resonant statements',
+      '🎖️ CW4 Writer creates emotionally resonant statements',
       'Agent focuses on observable behaviors and specific incidents',
       'Templates guide witnesses on what details to include',
     ],
@@ -202,19 +202,19 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
       modelId: 'diamond-writer',
-      modelName: '💎 Diamond Writer',
+      modelName: '🎖️ CW4 Writer',
       reason: 'Creates compelling personal narratives with proper VA formatting',
-      badge: '💎 Diamond',
+      badge: '🎖️ Warrant',
     },
     alternatives: [
       {
         modelId: 'diamond-writer',
-        modelName: '💎 Diamond Writer',
+        modelName: '🎖️ CW4 Writer',
         reason: 'Specialized for first-person veteran narratives',
       },
     ],
     tips: [
-      '💎 Diamond Writer creates authentic, powerful personal statements',
+      '🎖️ CW4 Writer creates authentic, powerful personal statements',
       'Agent connects symptoms to daily life impact',
       'Use AI as a starting point - customize with your own voice',
     ],

@@ -33,7 +33,7 @@ const WLLAMA_CACHE_KEY = 'vetrate_wllama_cache';
 const WLLAMA_CONFIG_KEY = 'vetrate_wllama_config';
 
 /**
- * Model configurations for Diamond Swarm agents
+ * Model configurations for Warrant Council agents
  */
 export const WLLAMA_MODELS = {
   auditor: {
@@ -44,7 +44,7 @@ export const WLLAMA_MODELS = {
     // Fallback to HuggingFace or other CDN
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-auditor-7b-v2-gguf/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Auditor, an expert VA claims reviewer.
+    systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claims reviewer.
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
 Always cite specific CFR sections. Never fabricate regulatory information.
 Be thorough but compassionate - veterans deserve accurate guidance.`
