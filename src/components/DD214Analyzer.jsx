@@ -322,39 +322,47 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
 
     setError(null);
     
-    for (const file of unprocessedFiles) {
-      if (!isFileSupported(file)) {
-        setError(`${file.name} is not a supported format. Use PDF, DOCX, TXT, or RTF.`);
-        continue;
-      }
+    try {
+      for (const file of unprocessedFiles) {
+        if (!isFileSupported(file)) {
+          setError(`${file.name} is not a supported format. Use PDF, DOCX, TXT, or RTF.`);
+          continue;
+        }
 
-      setIsProcessing(true);
-      setOcrProgress({
-        state: OCR_STATES.LOADING,
-        progress: 0,
-        message: `Processing ${file.name}...`,
-      });
+        setIsProcessing(true);
+        setOcrProgress({
+          state: OCR_STATES.LOADING,
+          progress: 0,
+          message: `Processing ${file.name}...`,
+        });
 
-      try {
-        const result = await analyzeDocument(file, setOcrProgress);
-        
-        setExtractedTexts(prev => [...prev, {
-          filename: file.name,
-          text: result.text,
-          pageCount: result.pageCount,
-          method: result.method,
-          fileType: result.fileType,
-          ocrUsed: result.ocrUsed,
-        }]);
-        
-      } catch (err) {
-        console.error('File processing error:', err);
-        setError(`Failed to process ${file.name}: ${err.message}`);
+        try {
+          console.log(`🔍 Starting analysis of ${file.name}...`);
+          const result = await analyzeDocument(file, setOcrProgress);
+          console.log(`✅ Analysis complete for ${file.name}`);
+          
+          setExtractedTexts(prev => [...prev, {
+            filename: file.name,
+            text: result.text,
+            pageCount: result.pageCount,
+            method: result.method,
+            fileType: result.fileType,
+            ocrUsed: result.ocrUsed,
+          }]);
+          
+        } catch (err) {
+          console.error('File processing error:', err);
+          setError(`Failed to process ${file.name}: ${err.message}`);
+          // Continue to next file instead of stopping entire batch
+        }
       }
+    } catch (err) {
+      console.error('OCR batch processing error:', err);
+      setError(`Processing failed: ${err.message}`);
+    } finally {
+      setIsProcessing(false);
+      setOcrProgress(null);
     }
-    
-    setIsProcessing(false);
-    setOcrProgress(null);
   };
 
   /**
