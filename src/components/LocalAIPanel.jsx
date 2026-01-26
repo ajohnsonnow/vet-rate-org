@@ -1225,7 +1225,11 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
   const [isTestGenerating, setIsTestGenerating] = useState(false);
   const [isChangingGPU, setIsChangingGPU] = useState(false);
   const [lunaTestMessage, setLunaTestMessage] = useState(null);
+  const [lunaDisabled, setLunaDisabled] = useState(() => {
+    return localStorage.getItem('luna_messages_disabled') === 'true';
+  });
   const testAbortRef = React.useRef(null);
+  const lunaTimerRef = React.useRef(null);
 
   // Generate contextual Luna message based on loaded AI model
   const getLunaTestMessage = () => {
@@ -1287,6 +1291,15 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       setStreamedResponse('');
     }
   }, [isLoading]);
+
+  // Cleanup Luna timer on unmount
+  useEffect(() => {
+    return () => {
+      if (lunaTimerRef.current) {
+        clearTimeout(lunaTimerRef.current);
+      }
+    };
+  }, []);
 
   // Handle GPU preference change
   const handleGPUChange = async (newPreference) => {
@@ -1369,8 +1382,17 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     setStreamedResponse('');
     setTestResponse('');
     
-    // Show Luna's contextual message for the loaded AI
-    setLunaTestMessage(getLunaTestMessage());
+    // Show Luna's contextual message for the loaded AI (if not disabled)
+    if (!lunaDisabled) {
+      const message = getLunaTestMessage();
+      setLunaTestMessage(message);
+      
+      // Auto-dismiss after 8 seconds
+      if (lunaTimerRef.current) clearTimeout(lunaTimerRef.current);
+      lunaTimerRef.current = setTimeout(() => {
+        setLunaTestMessage(null);
+      }, 8000);
+    }
     
     try {
       // Direct import and call to avoid context issues
@@ -1408,9 +1430,17 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
         setStreamedResponse('');
         setTestResponse(responseText || 'AI response completed.');
         
-        // Show Luna's completion celebration message
-        const completionMessage = getLunaCompletionMessage();
-        setLunaTestMessage(completionMessage);
+        // Show Luna's completion celebration message (if not disabled)
+        if (!lunaDisabled) {
+          const completionMessage = getLunaCompletionMessage();
+          setLunaTestMessage(completionMessage);
+          
+          // Auto-dismiss after 8 seconds
+          if (lunaTimerRef.current) clearTimeout(lunaTimerRef.current);
+          lunaTimerRef.current = setTimeout(() => {
+            setLunaTestMessage(null);
+          }, 8000);
+        }
       }
     } catch (err) {
       if (err.name === 'AbortError' || err.message === 'Aborted') {
@@ -2042,7 +2072,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                     </div>
 
                     {/* Luna's Test Message - Shows contextual message for loaded AI */}
-                    {lunaTestMessage && (
+                    {lunaTestMessage && !lunaDisabled && (
                       <div className="mb-4 p-4 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30 border border-purple-500/40 rounded-lg animate-luna-bounce-in">
                         <div className="flex items-start gap-3">
                           <span className="text-2xl flex-shrink-0">😸</span>
@@ -2054,15 +2084,34 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
                               - Luna, Chief Treat Officer 🐾
                             </p>
                           </div>
-                          <button 
-                            onClick={() => setLunaTestMessage(null)}
-                            className="text-purple-400/60 hover:text-purple-300 transition-colors"
-                            aria-label="Dismiss Luna's message"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => {
+                                if (lunaTimerRef.current) clearTimeout(lunaTimerRef.current);
+                                setLunaTestMessage(null);
+                              }}
+                              className="text-purple-400/60 hover:text-purple-300 transition-colors"
+                              aria-label="Dismiss Luna's message"
+                              title="Close"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                            <button 
+                              onClick={() => {
+                                if (lunaTimerRef.current) clearTimeout(lunaTimerRef.current);
+                                localStorage.setItem('luna_messages_disabled', 'true');
+                                setLunaDisabled(true);
+                                setLunaTestMessage(null);
+                              }}
+                              className="text-purple-400/60 hover:text-purple-300 transition-colors text-xs px-2 py-1 rounded border border-purple-500/30 hover:border-purple-400/50"
+                              aria-label="Don't show Luna messages again"
+                              title="Don't show again"
+                            >
+                              🚫
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
