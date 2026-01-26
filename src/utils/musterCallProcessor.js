@@ -726,8 +726,6 @@ export const autoPopulateProfile = async (processedResults) => {
         
       default:
         console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
-      default:
-        console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
     }
   }
 
