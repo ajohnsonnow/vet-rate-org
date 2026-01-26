@@ -10,7 +10,7 @@
   2. Run: npm run build (auto-syncs) OR npm run sync-legal-pages
   3. This HTML will be regenerated automatically
   
-  Generated: 2026-01-25T22:12:30.437Z
+  Generated: 2026-01-26T18:57:41.902Z
   Generator: scripts/sync-legal-pages.js
 -->
 <html lang="en">
@@ -20,7 +20,7 @@
     <title>Privacy Policy - Vet-Rate.org</title>
     <meta name="description" content="Vet-Rate.org Privacy Policy - How we protect your data with our privacy-first, browser-based approach.">
     <meta name="generator" content="Vet-Rate.org Legal Pages Auto-Generator">
-    <meta name="generated-date" content="2026-01-25T22:12:30.437Z">
+    <meta name="generated-date" content="2026-01-26T18:57:41.902Z">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <style>
     * {
@@ -436,32 +436,61 @@
         </section>
 
         <section >
-        <h3 >{t('privacyPolicy', 'section7Title')}</h3>
-        <div class="alert alert-blue">
+        <div class="alert alert-red">
+        <div >
+        <div>
+        <p >⚠️ CRITICAL PRIVACY NOTICE - READ CAREFULLY</p>
         <p >
-        <strong>{t('privacyPolicy', 'section7OptionalAI')}</strong> {t('privacyPolicy', 'section7OptionalAIText')}
-              </p>
-        <p >
-        <strong>{t('privacyPolicy', 'section7WhatThisMeans')}</strong>
+        <strong>Using Google Gemini API with your own key (BYOK) sends your data to Google's cloud data centers.</strong> Your 
+                    text, documents, and prompts are transmitted over the internet to Google's servers for processing. While this is a direct 
+                    connection between you and Google (Vet-Rate.org does not see your data), your information leaves your device and enters 
+                    Google's infrastructure. <strong >For maximum privacy, use Local AI models that run entirely on your device.</strong>
         </p>
-        <ul >
-        <li>{t('privacyPolicy', 'section7AIItem1')}</li>
-        <li>{t('privacyPolicy', 'section7AIItem2')}</li>
-        <li>{t('privacyPolicy', 'section7AIItem3')}</li>
-        <li>{t('privacyPolicy', 'section7AIItem4')}</li>
-        </ul>
+        </div>
+        </div>
+        </div>
+        <h3 >
+        <span >🔐</span>
+              {t('privacyPolicy', 'section7Title')}
+            </h3>
+        <div >
         <p >
-        <strong>{t('privacyPolicy', 'analyticsTransparency')}</strong> 
-                {t('privacyPolicy', 'section7TransparencyNote').split('Google')[0]}
-                <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" >
-                  Google's Gemini API Terms
-                </a> 
-                and 
-                <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" >
-                  Anthropic's Privacy Policy
-                </a>.
-                 {t('privacyPolicy', 'section7TransparencyNote').split('Privacy Policy.')[1]?.trim() || 'We strive to use zero-retention settings where available.'}
-              </p>
+        <strong >{t('privacyPolicy', 'section7OptionalAI')}</strong>
+        <br ></br>
+        <span >{t('privacyPolicy', 'section7OptionalAIText')}</span>
+        </p>
+        <div >
+        <p >
+                  {t('privacyPolicy', 'section7WhatThisMeans')}
+                </p>
+        <ul >
+        <li >{t('privacyPolicy', 'section7AIItem1')}</li>
+        <li ><strong >Cloud AI Warning:</strong> {t('privacyPolicy', 'section7AIItem2')}</li>
+        <li >{t('privacyPolicy', 'section7AIItem3')}</li>
+        <li >{t('privacyPolicy', 'section7AIItem4')}</li>
+        </ul>
+        </div>
+        <div >
+        <p >
+        <strong >Privacy Recommendation:</strong> 
+                  {t('privacyPolicy', 'section7TransparencyNote')}
+                </p>
+        <div >
+        <p ><strong>Cloud AI Provider Links:</strong></p>
+        <ul >
+        <li>
+        <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" >
+                        Google's Gemini API Terms
+                      </a>
+        </li>
+        <li>
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" >
+                        Google's Privacy Policy
+                      </a>
+        </li>
+        </ul>
+        </div>
+        </div>
         </div>
         </section>
 

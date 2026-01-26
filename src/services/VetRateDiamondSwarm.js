@@ -1,8 +1,8 @@
 /**
- * Vet-Rate Diamond Swarm Integration
+ * Vet-Rate Warrant Council Integration
  * 💎 Client-side AI inference using specialized agents
  * 
- * This service replaces the old WebLLM integration with the Diamond Swarm
+ * This service replaces the old WebLLM integration with the Warrant Council
  * architecture - 3 specialized agents for VA claim processing.
  */
 
@@ -45,15 +45,15 @@ Always cite specific regulations. Accuracy is paramount.`;
         },
         onComplete: () => {
           this.currentAgent = agentId;
-          console.log(`💎 Diamond Swarm initialized with ${agentId.toUpperCase()} agent`);
+          console.log(`🎖️ Warrant Council initialized with ${agentId.toUpperCase()} agent`);
         },
         onError: (err) => {
-          console.error('💎 Diamond Swarm initialization failed:', err);
+          console.error('🎖️ Warrant Council initialization failed:', err);
         }
       });
       return true;
     } catch (error) {
-      console.error('Diamond Swarm initialization error:', error);
+      console.error('Warrant Council initialization error:', error);
       throw error;
     }
   }
@@ -66,7 +66,7 @@ Always cite specific regulations. Accuracy is paramount.`;
 
   async chat(userMessage, options = {}) {
     if (!isSwarmReady()) {
-      throw new Error("Diamond Swarm not initialized. Call initialize() first.");
+      throw new Error("Warrant Council not initialized. Call initialize() first.");
     }
 
     const {
@@ -107,7 +107,7 @@ Always cite specific regulations. Accuracy is paramount.`;
   async unload() {
     await unloadSwarm();
     this.currentAgent = null;
-    console.log('💎 Diamond Swarm unloaded');
+    console.log('🎖️ Warrant Council unloaded');
   }
 }
 

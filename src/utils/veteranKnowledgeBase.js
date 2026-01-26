@@ -305,11 +305,44 @@ export const saveVKB = async (vkb) => {
 };
 
 /**
- * Add a document to VKB with full metadata
- * Keeps each document's data separate and organized
+ * Add a document to VKB with full metadata and version tracking
+ * Keeps each document's data separate - NEVER overwrites existing documents
  */
 export const addDocumentToVKB = async (documentInfo) => {
   const vkb = await loadVKB();
+  
+  // Determine document category
+  let category = 'otherEvidence';
+  switch (documentInfo.classification) {
+    case 'DD214':
+    case 'service_record':
+      category = 'dd214s';
+      break;
+    case 'blue_button':
+    case 'medical_record':
+      category = 'blueButtonReports';
+      break;
+    case 'c_file':
+    case 'rating_decision':
+    case 'claim_letter':
+    case 'va_decision':
+      category = 'cFiles';
+      break;
+    case 'private_medical':
+    case 'provider_letter':
+    case 'nexus_letter':
+      category = 'privateRecords';
+      break;
+  }
+  
+  // Calculate version number (count existing documents of this type + 1)
+  const existingDocs = vkb.documentation[category] || [];
+  const versionNumber = existingDocs.length + 1;
+  
+  // Mark all previous documents as NOT most recent
+  existingDocs.forEach(doc => {
+    doc.mostRecent = false;
+  });
   
   const docEntry = {
     id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -322,6 +355,9 @@ export const addDocumentToVKB = async (documentInfo) => {
     extractedData: documentInfo.extractedData || {},
     ocrUsed: documentInfo.ocrUsed || false,
     method: documentInfo.method || 'text',
+    version: versionNumber,
+    mostRecent: true,
+    category: category,
   };
 
   // Route to appropriate documentation category
@@ -386,11 +422,193 @@ export const getAllDocumentsFromVKB = async () => {
 };
 
 /**
+ * Get all documents grouped by category with metadata
+ * Useful for timeline/overview displays
+ */
+export const getAllDocumentsByCategory = async () => {
+  const vkb = await loadVKB();
+  return {
+    dd214s: {
+      label: 'DD-214 Service Records',
+      icon: '🎖️',
+      documents: vkb.documentation.dd214s.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      count: vkb.documentation.dd214s.length,
+    },
+    blueButtonReports: {
+      label: 'Blue Button Medical Records',
+      icon: '🏥',
+      documents: vkb.documentation.blueButtonReports.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      count: vkb.documentation.blueButtonReports.length,
+    },
+    cFiles: {
+      label: 'VA Claims & Decisions',
+      icon: '📋',
+      documents: vkb.documentation.cFiles.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      count: vkb.documentation.cFiles.length,
+    },
+    privateRecords: {
+      label: 'Private Medical Records',
+      icon: '🩺',
+      documents: vkb.documentation.privateRecords.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      count: vkb.documentation.privateRecords.length,
+    },
+    otherEvidence: {
+      label: 'Other Evidence',
+      icon: '📄',
+      documents: vkb.documentation.otherEvidence.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      count: vkb.documentation.otherEvidence.length,
+    },
+  };
+};
+
+/**
  * Get specific document by ID
  */
 export const getDocumentFromVKB = async (documentId) => {
   const allDocs = await getAllDocumentsFromVKB();
   return allDocs.find(doc => doc.id === documentId);
+};
+
+/**
+ * Get all documents of a specific type/category
+ * @param {string} category - One of: dd214s, blueButtonReports, cFiles, privateRecords, otherEvidence
+ * @returns {Promise<Array>} All documents of that type, sorted by version (newest first)
+ */
+export const getDocumentsByType = async (category) => {
+  const vkb = await loadVKB();
+  const docs = vkb.documentation[category] || [];
+  
+  // Sort by version number descending (newest first)
+  return docs.sort((a, b) => (b.version || 0) - (a.version || 0));
+};
+
+/**
+ * Get the most recent document of a specific type
+ * @param {string} category - One of: dd214s, blueButtonReports, cFiles, privateRecords, otherEvidence
+ * @returns {Promise<object|null>} Most recent document or null if none exist
+ */
+export const getMostRecentDocument = async (category) => {
+  const vkb = await loadVKB();
+  const docs = vkb.documentation[category] || [];
+  
+  // Find document marked as mostRecent
+  const mostRecent = docs.find(doc => doc.mostRecent === true);
+  if (mostRecent) return mostRecent;
+  
+  // Fallback: return document with highest version number
+  if (docs.length === 0) return null;
+  return docs.reduce((latest, doc) => 
+    (doc.version || 0) > (latest.version || 0) ? doc : latest
+  );
+};
+
+/**
+ * Compare two document versions side-by-side
+ * @param {string} docId1 - ID of first document
+ * @param {string} docId2 - ID of second document
+ * @returns {Promise<object>} Comparison object with differences highlighted
+ */
+export const compareDocumentVersions = async (docId1, docId2) => {
+  const doc1 = await getDocumentFromVKB(docId1);
+  const doc2 = await getDocumentFromVKB(docId2);
+  
+  if (!doc1 || !doc2) {
+    return { error: 'One or both documents not found' };
+  }
+  
+  const differences = [];
+  const allFields = new Set([
+    ...Object.keys(doc1.extractedData || {}),
+    ...Object.keys(doc2.extractedData || {})
+  ]);
+  
+  allFields.forEach(field => {
+    const val1 = doc1.extractedData[field];
+    const val2 = doc2.extractedData[field];
+    
+    // Deep comparison
+    const val1Str = JSON.stringify(val1);
+    const val2Str = JSON.stringify(val2);
+    
+    if (val1Str !== val2Str) {
+      differences.push({
+        field,
+        doc1Value: val1,
+        doc2Value: val2,
+        changed: val1 !== undefined && val2 !== undefined,
+        addedInDoc2: val1 === undefined && val2 !== undefined,
+        removedInDoc2: val1 !== undefined && val2 === undefined,
+      });
+    }
+  });
+  
+  return {
+    doc1: {
+      id: doc1.id,
+      fileName: doc1.fileName,
+      uploadDate: doc1.uploadDate,
+      version: doc1.version,
+    },
+    doc2: {
+      id: doc2.id,
+      fileName: doc2.fileName,
+      uploadDate: doc2.uploadDate,
+      version: doc2.version,
+    },
+    differences,
+    differenceCount: differences.length,
+    identical: differences.length === 0,
+  };
+};
+
+/**
+ * Remove a document from VKB (useful for duplicates or errors)
+ * @param {string} documentId - ID of document to remove
+ * @returns {Promise<object>} Result with success status
+ */
+export const removeDocumentFromVKB = async (documentId) => {
+  const vkb = await loadVKB();
+  let removed = false;
+  let category = null;
+  
+  // Search all categories
+  const categories = ['dd214s', 'blueButtonReports', 'cFiles', 'privateRecords', 'otherEvidence'];
+  
+  for (const cat of categories) {
+    const index = vkb.documentation[cat].findIndex(doc => doc.id === documentId);
+    if (index !== -1) {
+      vkb.documentation[cat].splice(index, 1);
+      removed = true;
+      category = cat;
+      
+      // Recalculate version numbers
+      vkb.documentation[cat].forEach((doc, idx) => {
+        doc.version = idx + 1;
+      });
+      
+      // Mark most recent
+      if (vkb.documentation[cat].length > 0) {
+        vkb.documentation[cat][vkb.documentation[cat].length - 1].mostRecent = true;
+      }
+      
+      break;
+    }
+  }
+  
+  if (removed) {
+    // Update document count
+    vkb.metadata.documentCount = 
+      vkb.documentation.dd214s.length +
+      vkb.documentation.blueButtonReports.length +
+      vkb.documentation.cFiles.length +
+      vkb.documentation.privateRecords.length +
+      vkb.documentation.otherEvidence.length;
+    
+    const saveResult = await saveVKB(vkb);
+    return { success: saveResult.success, category, documentId };
+  }
+  
+  return { success: false, error: 'Document not found' };
 };
 
 /**

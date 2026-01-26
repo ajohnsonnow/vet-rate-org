@@ -629,11 +629,11 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}, abor
   const aiStatus = getAIStatus();
   const aiMode = aiStatus.effectiveMode;
   
-  // Special check for Diamond Swarm mode - ensure model is fully loaded
+  // Special check for Warrant Council mode - ensure model is fully loaded
   if (aiMode === 'swarm') {
     const { hasWebLLMEngine } = await import('./diamondSwarm');
     if (!hasWebLLMEngine()) {
-      throw new Error('Diamond Swarm mode selected but model is still loading. Please wait for the model download to complete (check Local AI panel), or switch to Cloud AI in settings.');
+      throw new Error('Warrant Council mode selected but model is still loading. Please wait for the model download to complete (check Local AI panel), or switch to Cloud AI in settings.');
     }
   }
   
@@ -795,7 +795,7 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   cleanContent = cleanContent.trim();
   
   // Check for placeholder/loading responses
-  if (cleanContent.includes('[Diamond Swarm') || cleanContent.includes('model is still loading')) {
+  if (cleanContent.includes('[Warrant Council') || cleanContent.includes('model is still loading')) {
     throw new Error('Local AI model is still loading. Please wait for the model to fully download before analyzing documents.');
   }
   

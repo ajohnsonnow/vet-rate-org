@@ -1,9 +1,48 @@
 services:
+  # Vet-Rate.org - Free Version
   - type: web
     name: vet-rate-org
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_BRAND_MODE
+        value: vetrate
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=()
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*.js
+        name: Content-Type
+        value: application/javascript; charset=utf-8
+      - path: /*.css
+        name: Content-Type
+        value: text/css; charset=utf-8
+
+  # Supply Locker - Supporter Version (same codebase, different branding)
+  - type: web
+    name: supply-locker
+    env: static
+    buildCommand: npm install && npm run build:supplylocker
+    staticPublishPath: ./dist-supplylocker
+    envVars:
+      - key: VITE_BRAND_MODE
+        value: supplylocker
     headers:
       - path: /*
         name: X-Frame-Options

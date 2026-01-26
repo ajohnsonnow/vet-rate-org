@@ -1,13 +1,17 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.8.5",
+  "version": "1.11.0",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:webgpu": "pwsh -File scripts/launch-chrome-dev.ps1",
     "dev:chrome": "pwsh -File scripts/launch-chrome-dev.ps1",
+    "dev:supplylocker": "cross-env VITE_BRAND_MODE=supplylocker vite",
     "build": "npm run sync-version && npm run update-stats && npm run update-docs && npm run sync-legal-pages && npm run check-legal-pages && vite build",
+    "build:vetrate": "cross-env VITE_BRAND_MODE=vetrate npm run build",
+    "build:supplylocker": "cross-env VITE_BRAND_MODE=supplylocker vite build --outDir dist-supplylocker",
+    "build:all": "node scripts/build-brands.js",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
@@ -60,6 +64,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
+    "cross-env": "^10.1.0",
     "eslint": "^8.52.0",
     "eslint-plugin-react": "^7.33.2",
     "postcss": "^8.4.31",

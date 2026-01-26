@@ -131,7 +131,7 @@ export function generateWhatsNewChangelog() {
     // v1.6.1 - DIAMOND SWARM - ELITE AI SQUADRON
     {
       type: 'feature',
-      title: '💎 Diamond Swarm - 3 Specialized AI Agents',
+      title: '🎖️ Warrant Council - 3 Specialized AI Agents',
       description: 'Fine-tuned Qwen2.5-7B models: Auditor (legal analysis), Writer (statement generation), Rater (disability assessment) - purpose-built for VA claims, not generic chat!',
       isNew: true
     },
@@ -150,7 +150,7 @@ export function generateWhatsNewChangelog() {
     {
       type: 'improvement',
       title: '🧹 Streamlined Model Selection',
-      description: 'Removed 16 generic models to focus exclusively on Diamond Swarm agents. No more choice paralysis - just elite, purpose-built AI for veterans.',
+      description: 'Removed 16 generic models to focus exclusively on Warrant Council agents. No more choice paralysis - just elite, purpose-built AI for veterans.',
       isNew: true
     },
     {

@@ -203,6 +203,7 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 {t('denialDecoder.title')}
                 <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">{t('denialDecoder.ai')}</span>
+                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
               </h2>
               <p className="text-blue-100 text-sm mt-1">
                 {t('denialDecoder.subtitle')}
@@ -291,8 +292,8 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
               >
                 <Upload className="w-12 h-12 text-blue-600" />
                 <div className="text-center">
-                  <p className="font-semibold text-gray-900">{t('denialDecoder.uploadImage')}</p>
-                  <p className="text-xs text-gray-600 mt-1">{t('denialDecoder.selectFromFiles')}</p>
+                  <p className="font-semibold text-gray-900">Select Image</p>
+                  <p className="text-xs text-gray-600 mt-1">Choose from files (stays in your browser)</p>
                 </div>
               </button>
 

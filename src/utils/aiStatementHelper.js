@@ -1530,7 +1530,7 @@ export const decodeDecision = async (decisionText) => {
       // Check if response is an error message (not JSON)
       // Note: '[]' is valid JSON (empty array), so we check specifically for error-like patterns
       if (cleanedText.startsWith('[') && !cleanedText.startsWith('[{') && cleanedText !== '[]') {
-        // Likely an error message like "[Diamond Swarm..."
+        // Likely an error message like "[Warrant Council..."
         console.error('AI returned error message instead of JSON:', cleanedText.substring(0, 200));
         return {
           success: false,

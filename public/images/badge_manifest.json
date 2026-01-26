@@ -1,0 +1,218 @@
+{
+  "generated": "2026-01-26T11:15:57.659Z",
+  "source": "Wikimedia Commons",
+  "license": "Public Domain / CC-BY-SA",
+  "badges": [],
+  "tabs": [],
+  "failed": [
+    {
+      "id": "combat-infantryman-badge",
+      "name": "Combat Infantryman Badge",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "combat-action-badge",
+      "name": "Combat Action Badge",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "combat-medical-badge",
+      "name": "Combat Medical Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "expert-infantryman-badge",
+      "name": "Expert Infantryman Badge",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "expert-field-medical-badge",
+      "name": "Expert Field Medical Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "expert-soldier-badge",
+      "name": "Expert Soldier Badge",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "master-parachutist-badge",
+      "name": "Master Parachutist Badge",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "senior-parachutist-badge",
+      "name": "Senior Parachutist Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "parachutist-badge",
+      "name": "Parachutist Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "air-assault-badge",
+      "name": "Air Assault Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "pathfinder-badge",
+      "name": "Pathfinder Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "surface-warfare-officer",
+      "name": "Surface Warfare Officer",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "enlisted-surface-warfare",
+      "name": "Enlisted Surface Warfare Specialist",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "submarine-warfare-officer",
+      "name": "Submarine Warfare Officer",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "submarine-warfare-enlisted",
+      "name": "Submarine Warfare Enlisted",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "naval-aviator",
+      "name": "Naval Aviator Wings",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "navy-seal-trident",
+      "name": "SEAL Trident",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "fleet-marine-force",
+      "name": "Fleet Marine Force",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "command-pilot",
+      "name": "Command Pilot Wings",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "senior-pilot",
+      "name": "Senior Pilot Wings",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "pilot-wings",
+      "name": "Pilot Wings",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "combat-control-team",
+      "name": "Combat Control Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "pararescue",
+      "name": "Pararescue Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "tactical-air-control",
+      "name": "TACP Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "space-operations-badge",
+      "name": "Space Operations Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "master-space-badge",
+      "name": "Master Space Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "senior-space-badge",
+      "name": "Senior Space Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "cutterman-officer",
+      "name": "Cutterman Officer",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "rescue-swimmer",
+      "name": "Rescue Swimmer",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "expert-marksmanship-rifle",
+      "name": "Expert Rifle Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "sharpshooter-marksmanship-rifle",
+      "name": "Sharpshooter Rifle Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "marksman-marksmanship-rifle",
+      "name": "Marksman Rifle Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "driver-badge-w",
+      "name": "Driver Badge Wheeled",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "driver-badge-t",
+      "name": "Driver Badge Tracked",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "mechanic-badge",
+      "name": "Mechanic Badge",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "ranger-tab",
+      "name": "Ranger Tab",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "special-forces-tab",
+      "name": "Special Forces Tab",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "sapper-tab",
+      "name": "Sapper Tab",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "airborne-tab",
+      "name": "Airborne Tab",
+      "error": "HTTP 301 after redirect"
+    },
+    {
+      "id": "mountain-tab",
+      "name": "Mountain Tab",
+      "error": "HTTP 404 after redirect"
+    },
+    {
+      "id": "presidents-hundred-tab",
+      "name": "President's Hundred Tab",
+      "error": "HTTP 404 after redirect"
+    }
+  ],
+  "directories": {
+    "badges": "/images/badges/",
+    "tabs": "/images/tabs/"
+  }
+}

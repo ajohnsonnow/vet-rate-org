@@ -3,7 +3,7 @@
  * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  * 
  * This service provides a unified interface for AI operations using the
- * Diamond Swarm - 3 specialized fine-tuned models:
+ * Warrant Council - 3 specialized fine-tuned models:
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters  
  * - RATER: Calculates VA disability ratings using bilateral factor formula
@@ -272,7 +272,7 @@ export const setAIMode = (mode) => {
 };
 
 /**
- * Register the Diamond Swarm engine (primary AI)
+ * Register the Warrant Council engine (primary AI)
  * @param {object} engine - The swarm engine instance
  * @param {boolean} ready - Whether the swarm is fully ready
  * @param {boolean} initializing - Whether the swarm is currently loading
@@ -356,7 +356,7 @@ export const unloadLocalAI = async () => {
 };
 
 /**
- * Check if Diamond Swarm is ready (primary)
+ * Check if Warrant Council is ready (primary)
  */
 export const isDiamondSwarmReady = () => {
   return isSwarmReady() || (swarmEngine !== null && swarmReady && !swarmInitializingState);
@@ -759,10 +759,10 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 };
 
 /**
- * Generate text using Diamond Swarm (Primary AI Engine)
+ * Generate text using Warrant Council (Primary AI Engine)
  * Routes to the appropriate specialized agent based on task type
  */
-const generateWithDiamondSwarm = async (prompt, options = {}) => {
+const generateWithWarrantCouncil = async (prompt, options = {}) => {
   const {
     taskType = 'general',
     toolId = null,
@@ -929,7 +929,7 @@ const generateWithLocalAI = async (prompt, options = {}) => {
   // First try Warrant Council if available
   if (isDiamondSwarmReady()) {
     console.log('🎖️ Routing to Warrant Council (upgraded from legacy local AI)');
-    return generateWithDiamondSwarm(prompt, options);
+    return generateWithWarrantCouncil(prompt, options);
   }
 
   // Check for various initialization states and provide helpful error messages
@@ -1416,7 +1416,7 @@ export const generateAI = async (prompt, options = {}) => {
     let usedMode;
     let agentUsed = null;
     
-    // Determine which AI to use - Diamond Swarm is primary, then Wllama, then Local Server
+    // Determine which AI to use - Warrant Council is primary, then Wllama, then Local Server
     const useSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
     const useWllama = effectiveMode === AI_MODES.WLLAMA || (!useSwarm && isWllamaAvailable());
     const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER || (!useSwarm && !useWllama && isLocalServerAvailable());
@@ -1424,11 +1424,11 @@ export const generateAI = async (prompt, options = {}) => {
     const useLocal = !useSwarm && !useWllama && !useLocalServer && !useCloud && effectiveMode === AI_MODES.LOCAL;
     
     if (useSwarm && isDiamondSwarmReady()) {
-      // 💎 Diamond Swarm - Primary AI Engine (WebGPU)
-      text = await generateWithDiamondSwarm(fullPrompt, enhancedOptions);
+      // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
+      text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.SWARM;
       agentUsed = getCurrentAgent() || 'auditor';
-      console.log(`💎 Generated with Diamond Swarm (${agentUsed.toUpperCase()} agent)`);
+      console.log(`🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`);
     } else if (useWllama && isWllamaAvailable()) {
       // 🌐 Wllama - Browser WASM inference
       text = await generateWithWllama(fullPrompt, enhancedOptions);
@@ -1461,7 +1461,7 @@ export const generateAI = async (prompt, options = {}) => {
       text = await generateWithLocalAI(fullPrompt, enhancedOptions);
       usedMode = AI_MODES.LOCAL;
     } else {
-      throw new Error('No AI available. Please initialize Diamond Swarm, start the local server, or configure a Gemini API key.');
+      throw new Error('No AI available. Please initialize Warrant Council, start the local server, or configure a Gemini API key.');
     }
     
     // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
@@ -1582,7 +1582,7 @@ export const generateAI = async (prompt, options = {}) => {
       console.warn(`💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`, err.message);
       try {
         if (fallbackMode === AI_MODES.SWARM) {
-          const text = await generateWithDiamondSwarm(fullPrompt, options);
+          const text = await generateWithWarrantCouncil(fullPrompt, options);
           return { text, mode: AI_MODES.SWARM, agent: getCurrentAgent(), fallback: true };
         } else if (fallbackMode === AI_MODES.LOCAL) {
           const text = await generateWithLocalAI(fullPrompt, options);
@@ -1602,7 +1602,7 @@ export const generateAI = async (prompt, options = {}) => {
 
 /**
  * Get the currently loaded AI model name
- * Prioritizes Diamond Swarm agents over legacy models
+ * Prioritizes Warrant Council agents over legacy models
  */
 export const getLocalModelName = () => {
   // Diamond Swarm takes priority
@@ -1612,16 +1612,16 @@ export const getLocalModelName = () => {
       const agentInfo = SWARM_AGENTS[agent.toUpperCase()];
       return agentInfo ? `💎 ${agentInfo.name}` : `💎 Diamond ${agent}`;
     }
-    return '💎 Diamond Swarm';
+    return '🎖️ Warrant Council';
   }
   
   const modelId = localStorage.getItem('vet_rate_local_ai_model');
   if (!modelId) return 'Local AI';  // Generic name when no specific model selected
   
-  // Diamond Swarm agents (fine-tuned VetRate models)
+  // Warrant Council agents (fine-tuned VetRate models)
   if (modelId.includes('vetrate-auditor')) return '🎖️ CW5 Auditor';
-  if (modelId.includes('vetrate-writer')) return '💎 Diamond Writer';
-  if (modelId.includes('vetrate-rater')) return '💎 Diamond Rater';
+  if (modelId.includes('vetrate-writer')) return '🎖️ CW4 Writer';
+  if (modelId.includes('vetrate-rater')) return '🎖️ CW3 Rater';
   
   // Extract friendly name from model ID
   // DeepSeek R1 Reasoning Models
@@ -1698,7 +1698,7 @@ export const getAIStatus = () => {
   const swarmStatus = getSwarmStatus();
   const currentAgent = getCurrentAgent();
   
-  // Check if using Diamond Swarm or other local backends
+  // Check if using Warrant Council or other local backends
   const isSwarm = effectiveMode === AI_MODES.SWARM || isDiamondSwarmReady();
   const isWllama = effectiveMode === AI_MODES.WLLAMA;
   const isLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
@@ -1708,8 +1708,8 @@ export const getAIStatus = () => {
   let fullStatusText = '⚠️ No AI Available';
   
   if (isSwarm) {
-    statusText = `💎 Diamond Swarm: ${currentAgent?.toUpperCase() || 'AUDITOR'}`;
-    fullStatusText = `💎 Diamond Swarm (${currentAgent?.toUpperCase() || 'AUDITOR'}) - 100% Private`;
+    statusText = `🎖️ Warrant Council: ${currentAgent?.toUpperCase() || 'AUDITOR'}`;
+    fullStatusText = `🎖️ Warrant Council (${currentAgent?.toUpperCase() || 'AUDITOR'}) - 100% Private`;
   } else if (isWllama) {
     statusText = `🌐 Wllama: ${wllamaCurrentModel?.toUpperCase() || 'AUDITOR'}`;
     fullStatusText = `🌐 Wllama (Browser WASM) - 100% Private`;
@@ -1754,7 +1754,7 @@ export const getAIDataDisclosure = () => {
   
   if (status.effectiveMode === AI_MODES.SWARM) {
     return {
-      title: '💎 Diamond Swarm - 100% Private',
+      title: '🎖️ Warrant Council - 100% Private',
       description: 'All AI processing uses specialized VetRate agents running directly on your device. No data ever leaves.',
       bullets: [
         '✅ Your data NEVER leaves your device',
@@ -1775,7 +1775,7 @@ export const getAIDataDisclosure = () => {
         '✅ Your data NEVER leaves your device',
         '✅ Works even offline once loaded',
         '✅ No API keys required',
-        '💡 Upgrade to Diamond Swarm for specialized VA agents',
+        '💡 Upgrade to Warrant Council for specialized VA agents',
       ],
       isPrivate: true,
     };
@@ -1789,7 +1789,7 @@ export const getAIDataDisclosure = () => {
         '⚠️ Data is sent to Google\'s servers',
         '✅ No personal identifying information sent',
         '✅ Your API key, your control',
-        '💡 Switch to Diamond Swarm for 100% privacy + specialized VA agents',
+        '💡 Switch to Warrant Council for 100% privacy + specialized VA agents',
       ],
       isPrivate: false,
     };
@@ -1799,7 +1799,7 @@ export const getAIDataDisclosure = () => {
     title: '⚠️ No AI Available',
     description: 'Configure AI to enable intelligent features.',
     bullets: [
-      '💎 Option 1: Enable Diamond Swarm (recommended - specialized VA agents)',
+      '🎖️ Option 1: Enable Warrant Council (recommended - specialized VA agents)',
       '🌐 Option 2: Enable Wllama (browser WASM - works everywhere)',
       '🖥️ Option 3: Start local llama.cpp server (desktop inference)',
       '🔒 Option 4: Enable Local AI (100% private legacy)',

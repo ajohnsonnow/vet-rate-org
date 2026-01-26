@@ -47,7 +47,7 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
     if (status.localInitializing || status.wllamaInitializing) {
       return 'bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse';
     }
-    // Diamond Swarm - purple/diamond
+    // Warrant Council - purple/diamond
     if (status.effectiveMode === AI_MODES.SWARM) {
       return 'bg-purple-500/30 text-purple-300 border-purple-400 shadow-purple-500/50 shadow-md';
     }
@@ -86,7 +86,7 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
       return (
         <>
           <span className="w-3 h-3 bg-purple-400 rounded-full animate-pulse" />
-          <span className="text-base">Diamond Swarm</span>
+          <span className="text-base">Warrant Council</span>
         </>
       );
     }
@@ -140,7 +140,7 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
 
   const getTooltip = () => {
     if (status.localInitializing || status.wllamaInitializing) return 'AI is warming up...';
-    if (status.effectiveMode === AI_MODES.SWARM) return 'Diamond Swarm - 100% Private';
+    if (status.effectiveMode === AI_MODES.SWARM) return 'Warrant Council - 100% Private';
     if (status.effectiveMode === AI_MODES.WLLAMA) return 'Wllama (Browser) - 100% Private';
     if (status.effectiveMode === AI_MODES.LOCAL_SERVER) return 'Local Server (llama.cpp) - 100% Private';
     if (status.effectiveMode === AI_MODES.LOCAL) return `${status.localModelName} - 100% Private`;

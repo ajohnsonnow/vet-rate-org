@@ -42,8 +42,8 @@ Veterans deserve to know what powers their AI. Our Diamond Swarm agents show:
 | Agent | Base Model | Specialization |
 |-------|------------|----------------|
 | 💎 Diamond Auditor | Qwen2.5-7B-Instruct | VA regulations, 38 CFR, evidence analysis |
-| 💎 Diamond Writer | Qwen2.5-7B-Instruct | Veteran-voice writing, empathetic statements |
-| 💎 Diamond Rater | Qwen2.5-7B-Instruct | VA math, bilateral factor, combined ratings |
+| 🎖️ CW4 Writer | Qwen2.5-7B-Instruct | Veteran-voice writing, empathetic statements |
+| 🎖️ CW3 Rater | Qwen2.5-7B-Instruct | VA math, bilateral factor, combined ratings |
 
 All models are fine-tuned from **Alibaba's Qwen 2.5** (7 billion parameters) - an open-source, privacy-respecting foundation model.
 

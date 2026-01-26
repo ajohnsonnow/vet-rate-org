@@ -1,6 +1,7 @@
 import React from 'react';
 import { Info, Shield, BookOpen, Lock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import BRAND from '../config/branding';
 
 function Disclaimer({ compact = false }) {
   const { t } = useLanguage();
@@ -62,7 +63,7 @@ function Disclaimer({ compact = false }) {
           {/* Content */}
           <div className="text-amber-700 dark:text-amber-100 space-y-3 max-w-2xl">
             <p>
-              <strong className="text-amber-800 dark:text-amber-200">Vet-Rate.org</strong> {t('disclaimer', 'informationalOnly')}.
+              <strong className="text-amber-800 dark:text-amber-200">{BRAND.appName}</strong> {t('disclaimer', 'informationalOnly')}.
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-400">
               {t('disclaimer', 'consultVSO')}

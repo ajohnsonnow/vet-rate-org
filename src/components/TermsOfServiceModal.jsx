@@ -21,7 +21,7 @@ const TermsOfServiceModal = () => {
     
     // Wait for the DisclaimerSplash to be acknowledged first
     const checkDisclaimer = () => {
-      const disclaimerDone = localStorage.getItem('vetrate-disclaimer-acknowledged');
+      const disclaimerDone = localStorage.getItem('vetrate_disclaimer-acknowledged');
       if (disclaimerDone) {
         // Small delay to let the disclaimer modal fully close
         setTimeout(() => {

@@ -165,6 +165,9 @@ module.exports = {
         'luna-fade-zoom': 'lunaFadeZoom 0.5s ease-out',
         'wiggle': 'wiggle 1s ease-in-out infinite',
         'pulse-subtle': 'pulseSubtle 2s ease-in-out infinite',
+        // Toast notifications
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-out-right': 'slideOutRight 0.3s ease-in',
       },
       keyframes: {
         // Bouncy entrance like a cat pouncing
@@ -207,6 +210,15 @@ module.exports = {
         pulseSubtle: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(168, 85, 247, 0.4)' },
           '50%': { boxShadow: '0 0 0 8px rgba(168, 85, 247, 0)' },
+        },
+        // Toast slide animations
+        slideInRight: {
+          '0%': { transform: 'translateX(400px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideOutRight: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(400px)', opacity: '0' },
         },
       },
     },

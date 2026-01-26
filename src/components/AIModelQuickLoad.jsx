@@ -64,13 +64,13 @@ export default function AIModelQuickLoad({
     setError(null);
 
     try {
-      // If Diamond Swarm is already initialized, just switch agents
+      // If Warrant Council is already initialized, just switch agents
       if (isDiamondSwarmReady()) {
-        console.log('💎 Diamond Swarm already ready, switching agent...');
+        console.log('🎖️ Warrant Council already ready, switching agent...');
         await switchAgent(recommendedAgentId);
       } else {
-        // Initialize Diamond Swarm with the recommended agent
-        console.log(`💎 Initializing Diamond Swarm with ${recommendedAgent.name}...`);
+        // Initialize Warrant Council with the recommended agent
+        console.log(`🎖️ Initializing Warrant Council with ${recommendedAgent.name}...`);
         await initializeSwarm(recommendedAgentId, {
           onProgress: (progress) => {
             console.log(`Loading progress: ${progress.message} (${progress.progress}%)`);
@@ -219,7 +219,7 @@ export default function AIModelQuickLoad({
       {showFullDropdown && showDropdown && (
         <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-700">
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-            Alternative Diamond Swarm Agents:
+            Alternative Warrant Council Agents:
           </p>
           <div className="grid grid-cols-3 gap-2">
             {Object.values(SWARM_AGENTS)
@@ -231,7 +231,7 @@ export default function AIModelQuickLoad({
                     setLoading(true);
                     setError(null);
                     try {
-                      // If Diamond Swarm is already initialized, just switch agents
+                      // If Warrant Council is already initialized, just switch agents
                       if (isDiamondSwarmReady()) {
                         await switchAgent(agent.id);
                       } else {

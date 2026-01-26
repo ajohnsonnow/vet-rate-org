@@ -402,8 +402,41 @@ export function parseDD214Text(rawText, branch = 'Army') {
     return [];
   }
 
+  // ============================================================
+  // DD214 FORM STRUCTURE:
+  // 1. FIELD LABELS = BOLD ALL CAPS
+  // 2. INSTRUCTIONS = (parenthetic, often lowercase/mixed case)
+  //    These contain EXAMPLE awards like "Silver Star, Bronze Star..."
+  // 3. ACTUAL DATA = ALL CAPS, not in parentheses
+  //
+  // Key: Remove parenthetical content and lowercase text!
+  // ============================================================
+  
+  let cleanedText = rawText;
+  
+  // STEP 1: Remove ALL parenthetical content (instructions/examples)
+  cleanedText = cleanedText.replace(/\([^)]*\)/g, ' ');
+  
+  // STEP 2: Remove instructional patterns
+  const INSTRUCTIONAL_PATTERNS = [
+    /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi,
+    /SUCH\s+AS|FOR\s+EXAMPLE|E\.?G\.?|I\.?E\.?/gi,
+    /EXAMPLES?\s+(?:OF\s+)?(?:DECORATIONS|MEDALS|AWARDS)/gi,
+    // Remove words with 3+ lowercase letters (instructions, not data)
+    /[a-z]{3,}/g,
+  ];
+  
+  for (const pattern of INSTRUCTIONAL_PATTERNS) {
+    cleanedText = cleanedText.replace(pattern, ' ');
+  }
+
+  // If the cleaned text is nearly empty, the input was likely all instructional
+  if (cleanedText.trim().length < 20) {
+    return [];
+  }
+
   // Normalize text: uppercase, remove extra spaces
-  const normalizedText = rawText
+  const normalizedText = cleanedText
     .toUpperCase()
     .replace(/\s+/g, ' ')
     .replace(/[,;]/g, ' ')

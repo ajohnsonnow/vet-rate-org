@@ -1,5 +1,5 @@
 /**
- * Wllama Browser Integration for Diamond Swarm
+ * Wllama Browser Integration for Warrant Council
  * 
  * Enables 100% local LLM inference in the browser using WebAssembly.
  * Falls back to llama.cpp server if available, then to Gemini cloud.
@@ -55,7 +55,7 @@ Be thorough but compassionate - veterans deserve accurate guidance.`
     url: '/models/vetrate-writer-7b-v2-Q4_K_M.gguf',
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-writer-7b-v2-gguf/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Writer, specializing in VA claims documentation.
+    systemPrompt: `You are the VetRate CW4 Writer, a Chief Warrant Officer Four specializing in VA claims documentation.
 Write compelling, truthful personal statements from the veteran's perspective.
 Include specific dates, locations, and details. Connect symptoms to daily life impact.
 Use medical terminology correctly. Balance emotional resonance with factual accuracy.`
@@ -66,7 +66,7 @@ Use medical terminology correctly. Balance emotional resonance with factual accu
     url: '/models/vetrate-rater-7b-v2-Q4_K_M.gguf',
     fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-rater-7b-v2-gguf/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf',
     contextSize: 4096,
-    systemPrompt: `You are the VetRate Diamond Rater, expert in VA disability calculations.
+    systemPrompt: `You are the VetRate CW3 Rater, a Chief Warrant Officer Three expert in VA disability calculations.
 Calculate combined ratings using the official VA bilateral factor formula.
 Explain rating criteria for specific conditions. Identify potential rating increases.
 Always show your work and cite 38 CFR Part 4 rating criteria.`

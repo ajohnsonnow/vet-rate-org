@@ -122,8 +122,8 @@ const OverviewTab = () => (
       />
       <SecurityFeature
         icon={Network}
-        title="Zero Tracking"
-        description="No analytics, no cookies, no tracking pixels, no fingerprinting."
+        title="Privacy-First Analytics"
+        description="Only basic page views via GoatCounter (no cookies, no personal data). See our public stats!"
         color="purple"
       />
       <SecurityFeature
@@ -240,10 +240,13 @@ const ProofTab = () => (
         <ul className="list-disc ml-5 mt-2 text-blue-800 dark:text-blue-300 text-sm">
           <li>Open-source, privacy-first analytics</li>
           <li>No cookies, no fingerprinting, no tracking across sites</li>
-          <li>Only counts page views and referrers</li>
+          <li>Only counts page views, referrers, and screen sizes</li>
           <li>GDPR-compliant by design</li>
           <li>See: <a href="https://www.goatcounter.com/help/privacy" target="_blank" rel="noopener noreferrer" className="underline">GoatCounter Privacy Policy</a></li>
         </ul>
+        <p className="text-xs text-blue-700 dark:text-blue-400 mt-2 italic">
+          📱 Fun fact: GoatCounter helped us realize how many veterans use mobile devices - sorry for the early UI struggles, small screen folks! We're on it! 🫡
+        </p>
       </div>
 
       <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mt-4">

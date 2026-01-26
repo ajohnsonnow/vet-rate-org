@@ -21,7 +21,7 @@ const STORAGE_KEYS = [
   'vet_rate_my_ratings',
   'vetrate-helper-mode',
   'vetrate-helper-tooltips',
-  'vetrate-disclaimer-acknowledged',
+  'vetrate_disclaimer-acknowledged',
   'vet-rate-theme',
   'vet-rate-color-blind-mode',
   'vet-rate-reduced-motion',

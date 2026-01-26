@@ -220,7 +220,7 @@ const SecondaryScout = ({ userDisabilities = [], onLearnHow, onViewPacket, onOpe
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">🔍 {t('secondaryScoutSection.title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">🔍 {t('secondaryScoutSection.title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h1>
         <p className="text-gray-600">
           {t('secondaryScoutSection.potentialClaimsSubtitle')}
         </p>

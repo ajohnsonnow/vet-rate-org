@@ -19,6 +19,7 @@ import {
   isFormationComplete,
   getFormationProgress,
   saveFormationState,
+  loadFormationState,
   clearFormationState,
   FORMATION_STATUS
 } from '../utils/formationQueue';
@@ -31,11 +32,31 @@ export const useFormationQueue = () => {
   const [currentEntry, setCurrentEntry] = useState(null);
   const [stats, setStats] = useState(null);
 
+  // Load saved formation on mount
+  useEffect(() => {
+    const savedFormation = loadFormationState();
+    if (savedFormation && savedFormation.length > 0) {
+      setFormation(savedFormation);
+      console.log(`🚩 Formation initialized with ${savedFormation.length} documents`);
+    }
+  }, []);
+
   // Update stats whenever formation changes
   useEffect(() => {
     if (formation.length > 0) {
-      setStats(getFormationStats(formation));
-      setCurrentEntry(getCurrentDocument(formation));
+      const newStats = getFormationStats(formation);
+      const current = getCurrentDocument(formation);
+      setStats(newStats);
+      setCurrentEntry(current);
+      
+      // Debug logging
+      console.log('📊 Formation stats updated:', {
+        total: newStats.total,
+        waiting: newStats.waiting,
+        inProgress: newStats.inProgress,
+        currentEntry: current ? current.filename : 'none',
+        isProcessing: current !== null
+      });
       
       // Auto-save state
       saveFormationState(formation);
@@ -49,9 +70,20 @@ export const useFormationQueue = () => {
    * Initialize formation from files
    */
   const initializeFormation = useCallback((files) => {
+    console.log('🚩 initializeFormation called with:', files?.length, 'files');
+    console.log('🚩 Files are:', files);
+    
+    if (!files || files.length === 0) {
+      console.error('🚩 ERROR: No files provided to initializeFormation!');
+      return [];
+    }
+    
     const newFormation = buildFormation(files);
+    console.log('🚩 buildFormation returned:', newFormation?.length, 'entries');
+    console.log('🚩 First entry:', newFormation?.[0]);
+    
     setFormation(newFormation);
-    console.log(`🚩 Formation initialized with ${newFormation.length} documents`);
+    console.log(`🚩 Formation state updated with ${newFormation.length} documents`);
     return newFormation;
   }, []);
 

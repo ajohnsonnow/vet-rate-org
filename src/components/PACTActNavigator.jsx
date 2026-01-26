@@ -742,7 +742,7 @@ export default function PACTActNavigator({ onClose, onReportBug }) {
             <div className="flex items-center gap-3">
               <span className="text-3xl">🔥</span>
               <div>
-                <h2 className="text-xl font-bold text-white">PACT Act Navigator</h2>
+                <h2 className="text-xl font-bold text-white">PACT Act Navigator <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
                 <p className="text-sm text-amber-100">Presumptive Condition Checker</p>
               </div>
             </div>

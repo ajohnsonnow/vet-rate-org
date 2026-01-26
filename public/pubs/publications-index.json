@@ -1,0 +1,296 @@
+{
+  "publications": [
+    {
+      "id": "ar-635-8",
+      "title": "AR 635-8: Separation Processing and Documents",
+      "shortTitle": "Separation Documents",
+      "branch": "Army",
+      "category": "separations",
+      "filename": "ARN38821-AR_635-8-001-WEB-3.pdf",
+      "description": "Governs the DD214 and other separation documents. Essential for understanding what should be on your DD214.",
+      "useFor": ["DD214 review", "Separation documentation", "Characterization of service"]
+    },
+    {
+      "id": "ar-635-200",
+      "title": "AR 635-200: Active Duty Enlisted Administrative Separations",
+      "shortTitle": "Enlisted Separations",
+      "branch": "Army",
+      "category": "separations",
+      "filename": "ARN40515-AR_635-200-000-WEB-1.pdf",
+      "description": "Rules for enlisted separations. Important for understanding discharge types and upgrade eligibility.",
+      "useFor": ["Discharge characterization", "Separation reasons", "Upgrade eligibility"]
+    },
+    {
+      "id": "ar-135-200",
+      "title": "AR 135-200: Separation of Enlisted Personnel",
+      "shortTitle": "Reserve Separations",
+      "branch": "Army",
+      "category": "separations",
+      "filename": "ARN43071-AR_135-200-000-WEB-1.pdf",
+      "description": "Reserve component separation procedures. Important for Guard/Reserve veterans.",
+      "useFor": ["Reserve separations", "Guard discharges", "Component transfers"]
+    },
+    {
+      "id": "ar-614-200",
+      "title": "AR 614-200: Enlisted Assignments and Utilization Management",
+      "shortTitle": "Assignments",
+      "branch": "Army",
+      "category": "assignments",
+      "filename": "ARN44417-AR_614-200-001-WEB-2.pdf",
+      "description": "Assignment procedures and policies. Useful for deployment history verification.",
+      "useFor": ["Deployment verification", "Assignment history", "Duty station records"]
+    },
+    {
+      "id": "ar-635-40",
+      "title": "AR 635-40: Physical Evaluation for Retention, Retirement, or Separation",
+      "shortTitle": "Physical Evaluation",
+      "branch": "Army",
+      "category": "disability",
+      "filename": "ARN6811_AR635-40_ADMIN_WEB_Final.pdf",
+      "description": "The Army's disability evaluation regulation. Critical for understanding MEB/PEB processes.",
+      "useFor": ["MEB process", "PEB procedures", "Medical retirement", "TDRL"]
+    },
+    {
+      "id": "da-pam-635-40",
+      "title": "DA PAM 635-40: Procedures for the Disability Evaluation System",
+      "shortTitle": "DES Procedures",
+      "branch": "Army",
+      "category": "disability",
+      "filename": "PAM635-40_Web_FINAL.pdf",
+      "description": "Step-by-step procedures for the disability evaluation system. The 'how-to' companion to AR 635-40.",
+      "useFor": ["MEB procedures", "PEB timeline", "IDES process", "Appeals"]
+    },
+    {
+      "id": "38-cfr-chapter-1",
+      "title": "38 CFR Chapter I: Complete Veterans Benefits Regulations",
+      "shortTitle": "Full VA Regulations",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/38_CFR_Chapter1_Full.pdf",
+      "description": "Complete 38 CFR Chapter I containing ALL VA benefits regulations. The comprehensive reference.",
+      "useFor": ["Complete VA regulations", "Benefits overview", "Legal reference"]
+    },
+    {
+      "id": "38-cfr-part-3",
+      "title": "38 CFR Part 3: Adjudication Rules",
+      "shortTitle": "Service Connection Rules",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/38_CFR_Part3_Claims.pdf",
+      "description": "Service connection requirements, presumptive conditions, effective dates. The foundation of all claims.",
+      "useFor": ["Service connection", "Presumptives", "Secondary conditions", "Effective dates"]
+    },
+    {
+      "id": "38-cfr-part-4",
+      "title": "38 CFR Part 4: Schedule for Rating Disabilities (VASRD)",
+      "shortTitle": "VA Rating Schedule",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/38_CFR_Part4_Ratings.pdf",
+      "description": "THE rating schedule used by VA to assign disability percentages. The most important document for claims.",
+      "useFor": ["Disability ratings", "Rating criteria", "Combined ratings", "Diagnostic codes"]
+    },
+    {
+      "id": "vasrd-schedule",
+      "title": "VASRD: VA Schedule for Rating Disabilities (Searchable)",
+      "shortTitle": "VASRD Quick Reference",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/VASRD_Schedule.pdf",
+      "description": "Condensed version of the VA rating schedule for quick reference.",
+      "useFor": ["Quick rating lookup", "Diagnostic codes", "Percentage criteria"]
+    },
+    {
+      "id": "m21-1-part1",
+      "title": "M21-1 Part I: Claims Intake",
+      "shortTitle": "Claims Intake Manual",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part1_Ch1_Claims.pdf",
+      "description": "VA Adjudication Manual Part I - Claims intake procedures. How the VA processes your claim.",
+      "useFor": ["Claims process", "Filing procedures", "Documentation requirements"]
+    },
+    {
+      "id": "m21-1-part3-ch1",
+      "title": "M21-1 Part III.iv.1: Service Connection",
+      "shortTitle": "Service Connection Guide",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part3_Ch1.pdf",
+      "description": "M21-1 guidance on establishing service connection. Key reference for proving your conditions.",
+      "useFor": ["Service connection proof", "Evidence requirements", "Nexus"]
+    },
+    {
+      "id": "m21-1-part3-ch2",
+      "title": "M21-1 Part III.iv.2: Secondary Conditions",
+      "shortTitle": "Secondary Conditions",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part3_Ch2.pdf",
+      "description": "M21-1 guidance on secondary service-connected conditions.",
+      "useFor": ["Secondary conditions", "Aggravation claims", "Pyramiding rules"]
+    },
+    {
+      "id": "m21-1-part3-ch3",
+      "title": "M21-1 Part III.iv.3: Presumptive Conditions",
+      "shortTitle": "Presumptive Conditions",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part3_Ch3.pdf",
+      "description": "M21-1 guidance on presumptive service connection. Agent Orange, Gulf War, radiation exposure.",
+      "useFor": ["Presumptive conditions", "Agent Orange", "Gulf War syndrome", "Radiation"]
+    },
+    {
+      "id": "m21-1-part3-ch4",
+      "title": "M21-1 Part III.iv.4: Special Claims",
+      "shortTitle": "Special Claims Guide",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part3_Ch4.pdf",
+      "description": "M21-1 guidance on special claims - TDIU, SMC, Aid & Attendance.",
+      "useFor": ["TDIU", "SMC", "Aid & Attendance", "Special monthly compensation"]
+    },
+    {
+      "id": "m21-1-part4-medical",
+      "title": "M21-1 Part IV.i: Medical Evidence",
+      "shortTitle": "Medical Evidence Guide",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part4_Medical.pdf",
+      "description": "M21-1 guidance on medical evidence requirements and C&P exams.",
+      "useFor": ["C&P exam requirements", "Medical evidence", "DBQs", "Nexus letters"]
+    },
+    {
+      "id": "m21-1-part4-nexus",
+      "title": "M21-1 Part IV.ii: Nexus & Medical Opinions",
+      "shortTitle": "Nexus Requirements",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part4_Nexus.pdf",
+      "description": "M21-1 guidance on nexus requirements and independent medical opinions.",
+      "useFor": ["Nexus letters", "IMO requirements", "Medical opinion standards"]
+    },
+    {
+      "id": "m21-1-part5-awards",
+      "title": "M21-1 Part V: Awards Processing",
+      "shortTitle": "Awards Processing",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Part5_Awards.pdf",
+      "description": "M21-1 guidance on awards processing and effective dates.",
+      "useFor": ["Effective dates", "Back pay", "Award calculations"]
+    },
+    {
+      "id": "m21-1-ratings",
+      "title": "M21-1: Rating Procedures",
+      "shortTitle": "Rating Procedures",
+      "branch": "VA",
+      "category": "va-rating",
+      "filename": "va/M21-1_Ratings.pdf",
+      "description": "M21-1 rating procedures and guidelines.",
+      "useFor": ["Rating decisions", "Evaluation criteria", "Combined ratings"]
+    },
+    {
+      "id": "ar-40-501",
+      "title": "AR 40-501: Standards of Medical Fitness",
+      "shortTitle": "Medical Fitness Standards",
+      "branch": "Army",
+      "category": "medical",
+      "filename": null,
+      "description": "Medical standards for enlistment, retention, and deployment. Key for proving condition existed in service.",
+      "useFor": ["Medical standards", "Fitness determinations", "Retention standards"],
+      "externalUrl": "https://armypubs.army.mil/ProductMaps/PubForm/Details.aspx?PUB_ID=1021829"
+    },
+    {
+      "id": "ar-600-8-22",
+      "title": "AR 600-8-22: Military Awards",
+      "shortTitle": "Army Awards Manual",
+      "branch": "Army",
+      "category": "awards",
+      "filename": null,
+      "description": "Army awards and decorations. Useful for proving combat service and hazardous duty.",
+      "useFor": ["Combat verification", "Award eligibility", "Ribbon rack verification"],
+      "externalUrl": "https://armypubs.army.mil/ProductMaps/PubForm/Details.aspx?PUB_ID=1021286"
+    },
+    {
+      "id": "dodi-1332-18",
+      "title": "DoDI 1332.18: Disability Evaluation System",
+      "shortTitle": "DoD DES Policy",
+      "branch": "DoD",
+      "category": "disability",
+      "filename": null,
+      "description": "DoD-wide disability evaluation policy. Governs IDES across all services.",
+      "useFor": ["IDES overview", "Cross-service policy", "Unfitting conditions"],
+      "externalUrl": "https://www.esd.whs.mil/Directives/issuances/dodi/"
+    },
+    {
+      "id": "afi-36-3212",
+      "title": "AFI 36-3212: Physical Evaluation for Retention, Retirement, and Separation",
+      "shortTitle": "AF Physical Eval",
+      "branch": "Air Force",
+      "category": "disability",
+      "filename": null,
+      "description": "Air Force disability evaluation regulation.",
+      "useFor": ["AF MEB", "AF PEB", "Medical retirement"],
+      "externalUrl": "https://www.e-publishing.af.mil/"
+    },
+    {
+      "id": "secnavinst-1850-4",
+      "title": "SECNAVINST 1850.4: Disability Evaluation Manual",
+      "shortTitle": "Navy DES Manual",
+      "branch": "Navy",
+      "category": "disability",
+      "filename": null,
+      "description": "Navy and Marine Corps disability evaluation manual.",
+      "useFor": ["Navy MEB", "Marine PEB", "LIMDU", "Medical separations"],
+      "externalUrl": "https://www.secnav.navy.mil/doni/"
+    }
+  ],
+  "categories": {
+    "separations": {
+      "name": "Separations & Discharges",
+      "icon": "📋",
+      "description": "Regulations governing military separations and discharge documentation"
+    },
+    "disability": {
+      "name": "Disability Evaluation",
+      "icon": "🏥",
+      "description": "Medical boards, physical evaluations, and disability determinations"
+    },
+    "medical": {
+      "name": "Medical Standards",
+      "icon": "⚕️",
+      "description": "Medical fitness standards and health programs"
+    },
+    "awards": {
+      "name": "Awards & Decorations",
+      "icon": "🎖️",
+      "description": "Military awards, decorations, and combat verification"
+    },
+    "occupational": {
+      "name": "Occupational Information",
+      "icon": "👷",
+      "description": "MOS/Rating codes, duties, and occupational hazards"
+    },
+    "va-rating": {
+      "name": "VA Rating & Claims",
+      "icon": "📊",
+      "description": "VA disability rating schedules and claims procedures"
+    },
+    "assignments": {
+      "name": "Assignments & Deployments",
+      "icon": "🗺️",
+      "description": "Assignment policies and deployment documentation"
+    }
+  },
+  "branches": {
+    "Army": { "color": "#4B5320", "icon": "🪖" },
+    "Navy": { "color": "#000080", "icon": "⚓" },
+    "Air Force": { "color": "#00308F", "icon": "✈️" },
+    "Marines": { "color": "#8B0000", "icon": "🦅" },
+    "Coast Guard": { "color": "#FF6600", "icon": "🛟" },
+    "Space Force": { "color": "#1C1C1C", "icon": "🚀" },
+    "DoD": { "color": "#333333", "icon": "🏛️" },
+    "VA": { "color": "#003F72", "icon": "🇺🇸" }
+  }
+}

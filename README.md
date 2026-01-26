@@ -91,7 +91,7 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 - **Cloud Sync**: ☁️ 🆕 Back up to YOUR Google Drive (encrypted)
 - **My Packet**: 📁 Save and manage all your claims evidence in one place
 - **VA Resources Hub**: Direct links to official VA programs, crisis support, and benefits
-- **User Manual**: Comprehensive guide to using every feature
+- **Field Manual**: Comprehensive guide to using every feature
 
 ---
 
@@ -104,7 +104,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 - **📋 Build Your Evidence** (10 tools): C-File Analyzer, Blue Button X-Ray, PDF Evidence Finder, Witness Bench, Nexus Builder, Forms Helper, Symptom Logger, Somatic Target, Evidence Timeline, FOIA Keysmith
 - **✅ Quality Control** (8 tools): Red Team, War Game, Decision Decoder, Denials Decoder, Shark Radar, Consistency Engine, Evidence Gap Finder, Risk Assessment
 - **💰 Maximize Your Rating** (4 tools): TDIU Builder, State Benefit Hunter, The Tribunal, Legislative Watchdog
-- **🤝 Support & Resources** (8 tools): VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, Knowledge Base, VA Resources Hub, User Manual
+- **🤝 Support & Resources** (8 tools): VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, Knowledge Base, VA Resources Hub, Field Manual
 
 **What others charge $10K+ for in services, we provide free forever.**
 
@@ -267,11 +267,11 @@ This comprehensive platform represents significant development effort to create 
 - **Traditional Solo Development**: 15,420 hours (7.4 years full-time) @ $135/hr = $2,081,700
 - **Actual AI-Assisted Development**: 55 hours over 4.5 days (Jan 15-19, 2026) = $7,425
 - **Productivity Multiplier**: 280x (AI-assisted development vs. traditional)
-- **Lines of Code**: 167,159 lines (src directory)
-- **Total Files**: 1,139 project files
+- **Lines of Code**: 178,166 lines (src directory)
+- **Total Files**: 1,581 project files
 - **App Size**: 104.05 MB
-- **Components**: 172 React components (41 major tools + 131 supporting)
-- **Utilities**: 89 helper modules
+- **Components**: 180 React components (41 major tools + 139 supporting)
+- **Utilities**: 93 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR (250 hours validation work)
 - **VA Glossary**: 150+ VA terms and definitions
 
@@ -324,7 +324,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 - **250 hrs** - Data validation (748 disabilities against 38 CFR)
 - **1,200 hrs** - Testing & QA (15% of dev time)
 - **400 hrs** - UI/UX design & iterations
-- **200 hrs** - Documentation & user manual
+- **200 hrs** - Documentation & field manual
 - **150 hrs** - Research (38 CFR regulations)
 - **73 hrs** - Deployment & optimization
 - **Total: 15,420 hours** (7.4 years solo, 12-24 months with team)
@@ -386,7 +386,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | VA Resources Hub | 210 hrs | 2,100 | 1 Junior | Comprehensive VA program directory |
 | VSO Finder | 190 hrs | 1,900 | 1 Mid | Accredited Veterans Service Officer locator |
 | Accessibility Features | 160 hrs | 1,600 | 1 Senior | WCAG 2.1 AA compliance, screen readers |
-| User Manual | 180 hrs | 1,800 | 1 Mid, 1 Junior | Complete documentation system |
+| Field Manual | 180 hrs | 1,800 | 1 Mid, 1 Junior | Complete documentation system |
 
 **Notes**: 
 - Hours are estimated based on **blended team composition** (not solo development)

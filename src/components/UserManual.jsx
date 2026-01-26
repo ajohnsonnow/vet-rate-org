@@ -354,6 +354,11 @@ const navigationStructure = [
     isCategory: true,
   },
   {
+    id: 'field-manual',
+    title: 'Field Manual',
+    icon: '🤝',
+  },
+  {
     id: 'the-bunker',
     title: 'The Bunker',
     icon: '🤝',
@@ -375,7 +380,7 @@ const navigationStructure = [
   },
   {
     id: 'user-manual',
-    title: 'User Manual',
+    title: 'Field Manual',
     icon: '🤝',
   },
   {
@@ -456,9 +461,9 @@ const navigationStructure = [
 // Documentation content - organized by section ID
 const documentationContent = {
   home: {
-    title: 'Vet-Rate.org User Manual',
+    title: 'Vet-Rate.org Field Manual',
     content: `
-Welcome to the comprehensive user manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
+Welcome to the comprehensive field manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
 
 ## About This Manual
 
@@ -486,7 +491,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 | **Web of Conditions** | Interactive visualization of connected disabilities |
 | **Legislative Watchdog** | Track Federal Register changes affecting veterans |
 | **VA Resources Hub** | Direct access to official VA programs |
-| **User Manual** | Complete documentation for all features |
+| **Field Manual** | Complete documentation for all features |
 
 ### Rating & Benefits Calculators
 | Tool | What It Does |

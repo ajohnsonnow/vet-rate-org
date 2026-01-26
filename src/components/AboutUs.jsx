@@ -473,27 +473,32 @@ const AboutUs = ({ onClose, onReportBug }) => {
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🤖 Local AI Arsenal</p>
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
-                            <p><strong>Local Models:</strong> {PROJECT_STATS.localAIModels} Diamond Swarm agents</p>
-                            <p><strong>Model Families:</strong> Llama, Qwen, Mistral, Phi, Gemma, DeepSeek, SmolLM, Hermes</p>
-                            <p><strong>Vision Model:</strong> <span className="text-green-600 dark:text-green-400 font-medium">Vet-Rate Vision Phi ✅ Standard Chrome!</span></p>
+                            <p><strong>Local Models:</strong> {PROJECT_STATS.localAIModels} Warrant Council agents</p>
+                            <p><strong>Model Families:</strong> Qwen 2.5, Llama 3.2, Mistral, Gemma, DeepSeek, SmolLM, Hermes</p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
                           </div>
-                          {/* Custom LLM Build Achievement */}
+                          {/* Warrant Council Architecture */}
                           <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                            <p className="font-semibold text-green-600 dark:text-green-400 mb-1">🏆 Float32 Bypass Vision Model</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              We compiled a custom vision model with Float32 pixel inputs that works in standard Chrome!
+                            <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">🎖️ The Warrant Council</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                              Our specialized 3-agent AI architecture, each with military expertise:
                             </p>
-                            <div className="grid grid-cols-2 gap-1 text-xs">
-                              <p>• <strong>Source:</strong> Phi 3.5 Vision (8.3 GB)</p>
-                              <p>• <strong>Compiled:</strong> 2.6 GB (68% smaller)</p>
-                              <p>• <strong>WASM Library:</strong> 6.7 MB</p>
-                              <p>• <strong>Parameters:</strong> 4 billion</p>
-                              <p>• <strong>Build Time:</strong> 2.5 hours</p>
-                              <p>• <strong>Quantization:</strong> q4f16_1</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                              <div className="bg-blue-50 dark:bg-blue-900/30 rounded p-2">
+                                <p className="font-bold text-blue-700 dark:text-blue-300">🔍 CW5 Auditor</p>
+                                <p className="text-gray-600 dark:text-gray-400">Reviews claims for accuracy, compliance, and completeness against 38 CFR</p>
+                              </div>
+                              <div className="bg-purple-50 dark:bg-purple-900/30 rounded p-2">
+                                <p className="font-bold text-purple-700 dark:text-purple-300">✍️ CW4 Writer</p>
+                                <p className="text-gray-600 dark:text-gray-400">Crafts compelling personal statements and nexus letters</p>
+                              </div>
+                              <div className="bg-green-50 dark:bg-green-900/30 rounded p-2">
+                                <p className="font-bold text-green-700 dark:text-green-300">🧮 CW3 Rater</p>
+                                <p className="text-gray-600 dark:text-gray-400">Calculates VA disability ratings with bilateral factor precision</p>
+                              </div>
                             </div>
-                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                              ✅ Float32 Bypass: Works in Chrome/Edge without experimental flags!
+                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                              🎖️ Fine-tuned on official VA regulations for Diamond Standard accuracy
                             </p>
                           </div>
                         </div>
@@ -507,7 +512,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               • {PROJECT_STATS.breakdown.dataValidation} hrs data validation ({PROJECT_STATS.disabilitiesValidated} disabilities against 38 CFR)<br />
                               • {formatNumber(PROJECT_STATS.breakdown.testing)} hrs testing & QA (15% of dev time)<br />
                               • {PROJECT_STATS.breakdown.uiux} hrs UI/UX design & iterations<br />
-                              • {PROJECT_STATS.breakdown.documentation} hrs documentation & user manual<br />
+                              • {PROJECT_STATS.breakdown.documentation} hrs documentation & field manual<br />
                               • {PROJECT_STATS.breakdown.research} hrs research (38 CFR regulations)<br />
                               • {PROJECT_STATS.breakdown.deployment} hrs deployment & optimization
                             </p>
@@ -522,11 +527,14 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               • {FORMATTED_STATS.commits}<br />
                               • {FORMATTED_STATS.linesChanged}
                             </p>
+                            <p className="text-xs mt-1 text-amber-600 dark:text-amber-400 italic">
+                              📚 Plot twist: I spent 5 days before that first commit figuring out how to do it <em>wrong</em> before I figured out how to do it right. The clock starts AFTER the learning curve! 😅
+                            </p>
                             <p className="text-xs mt-1 font-medium text-green-600 dark:text-green-400">
                               🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
                             </p>
                             <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours for ${formatNumber(PROJECT_STATS.actualCost)} using GitHub Copilot, Claude 3.5, ChatGPT-4, and Gemini 1.5 - enabling us to offer everything FREE to veterans forever.
+                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours for ${formatNumber(PROJECT_STATS.actualCost)} using GitHub Copilot, Claude 3.5, ChatGPT-4, Gemini 1.5, and Roo Code - enabling us to offer everything FREE to veterans forever.
                             </p>
                           </div>
                         </div>
@@ -566,7 +574,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               <p>• <strong>VA Resources Hub:</strong> 150 hrs / 2,100 lines</p>
                               <p>• <strong>VSO Finder:</strong> 140 hrs / 1,900 lines</p>
                               <p>• <strong>Accessibility Features:</strong> 120 hrs / 1,600 lines</p>
-                              <p>• <strong>User Manual:</strong> 100 hrs / 1,800 lines</p>
+                              <p>• <strong>Field Manual:</strong> 100 hrs / 1,800 lines</p>
                             </div>
                             <p className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
                               Plus 200 hours validating 15,000 lines of disability data against 38 CFR
@@ -600,7 +608,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600 mt-1">🤖</span>
-                  <span><strong>{t('about', 'aiAssistedDevelopment')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5</span>
+                  <span><strong>{t('about', 'aiAssistedDevelopment')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5, Roo Code</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-violet-600 mt-1">⚡</span>
@@ -610,59 +618,6 @@ const AboutUs = ({ onClose, onReportBug }) => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">
                 {t('about', 'aiDevelopmentNote')}
               </p>
-              
-              {/* Custom Vision Model Build Details */}
-              <details className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-                <summary className="font-semibold text-amber-600 dark:text-amber-400 cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
-                  🏆 Custom Vision Model Build Story (Click to expand)
-                </summary>
-                <div className="mt-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-sm">
-                  <p className="text-gray-700 dark:text-gray-300 mb-3">
-                    <strong>The Challenge:</strong> Standard vision AI models required experimental Chrome features that most users don't have. 
-                    We needed a vision model that could read DD214 documents in any browser.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                    <div className="bg-white dark:bg-gray-800 rounded p-2">
-                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">📊 Build Statistics</p>
-                      <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>• Source Model: microsoft/Phi-3.5-vision-instruct</li>
-                        <li>• Original Size: 8.3 GB → Compiled: 2.78 GB</li>
-                        <li>• Parameters: 4,048,120,832 (~4B)</li>
-                        <li>• WASM Library: 6.6 MB</li>
-                        <li>• Context Window: 131,072 tokens</li>
-                        <li>• Build Time: ~4 hours</li>
-                      </ul>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded p-2">
-                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🛠️ Build Process</p>
-                      <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>1. Set up WSL2 Ubuntu 24.04 environment</li>
-                        <li>2. Install MLC-LLM from nightly builds</li>
-                        <li>3. Download Phi 3.5 Vision (8.3 GB)</li>
-                        <li>4. Quantize with q4f32_1 (avoids u8 shaders)</li>
-                        <li>5. Install Emscripten SDK 3.1.56</li>
-                        <li>6. Build WASM runtime libraries</li>
-                        <li>7. Compile to WebGPU WASM</li>
-                        <li>8. Upload to HuggingFace</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-green-100 dark:bg-green-900/30 rounded p-2 mb-2">
-                    <p className="font-semibold text-green-700 dark:text-green-300 text-xs mb-1">✅ Float32 Bypass Build Complete!</p>
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      As of January 21, 2026, we've compiled a Float32 Bypass version that works in <strong>standard Chrome/Edge</strong> without experimental flags!
-                      The model uses Float32 pixel inputs instead of uint8, enabling universal WebGPU compatibility.
-                    </p>
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                    Float32 model: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">Vet-Rate Vision Phi</code> | 
-                    Legacy model at: <a href="https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi</a>
-                  </p>
-                </div>
-              </details>
             </div>
           </section>
 

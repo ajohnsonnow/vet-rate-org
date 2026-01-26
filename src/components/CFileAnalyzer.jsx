@@ -95,7 +95,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== 'application/pdf') {
-        setError(t('cfileAnalyzer', 'pleaseUploadPdf'));
+        setError(t('cfileAnalyzer', 'pleaseDropPdf'));
         return;
       }
       setFile(selectedFile);

@@ -423,10 +423,49 @@ export const CODE_ALIASES = {
   // Interior Communications Electrician
   'IC': 'IC',    // Interior Communications (established 1948)
   
-  // Special Warfare historical
+  // Special Warfare historical (enlisted)
   'UDT': 'SO',   // Underwater Demolition Team → SEAL
   'SEAL': 'SO',  // Common name → Official SO rating
   'SWCC': 'SB',  // Common name → Official SB rating
+  
+  // === NAVY OFFICER DESIGNATOR ALIASES ===
+  // Reference: NOOCS Manual I - PTA Designators (Jan 2025)
+  // Suffix: 0 = Active Duty, 5 = SELRES, 7 = TAR (Training and Administration of the Reserve)
+  
+  // Surface Warfare Officer (SWO) variants
+  'SWO': '1110',        // Common name → Active duty code
+  '1115': '1115',       // SELRES (kept as-is, has own entry)
+  '1117': '1117',       // TAR (kept as-is, has own entry)
+  
+  // Submarine Officer variants
+  'SUBOFF': '1120',     // Common name → Active duty code
+  '1125': '1125',       // SELRES
+  '1127': '1127',       // TAR
+  
+  // SEAL Officer variants
+  'SEAL Officer': '1130', // Common name → Active duty code
+  'NSW Officer': '1130',  // Naval Special Warfare Officer
+  '1135': '1135',       // SELRES
+  '1137': '1137',       // TAR
+  
+  // EOD Officer variants
+  'EOD Officer': '1140', // Common name → Active duty code
+  '1145': '1145',       // SELRES
+  '1147': '1147',       // TAR
+  
+  // Naval Aviator variants
+  'Naval Aviator': '1310', // Common name → Active duty code
+  'Naval Pilot': '1310',   // Alternate name
+  'Pilot Navy': '1310',    // Alternate search
+  '1315': '1315',       // SELRES
+  '1317': '1317',       // TAR
+  
+  // Naval Flight Officer (NFO) variants
+  'NFO': '1320',        // Common name → Active duty code
+  'RIO': '1320',        // Radar Intercept Officer (F-14 era)
+  'WSO': '1320',        // Weapon Systems Officer
+  '1325': '1325',       // SELRES
+  '1327': '1327',       // TAR
   
   // === MARINE CORPS MOS HISTORICAL ALIASES ===
   // Infantry changes
@@ -1429,6 +1468,466 @@ export const MOS_DATABASE = {
       { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Boiler maintenance, heavy equipment', ecfrCode: 'DC 5237' },
       { condition: 'Burns', prevalence: 'High', notes: 'Steam/hot surfaces', ecfrCode: 'DC 7801' },
       { condition: 'Respiratory Issues/Asbestosis', prevalence: 'High', notes: 'Boiler room, insulation', ecfrCode: 'DC 6833' }
+    ]
+  },
+
+  // ============================================================================
+  // NAVY OFFICER DESIGNATORS (NOOCs) - Line Officers
+  // Reference: https://www.mynavyhr.navy.mil/Portals/55/Reference/NOOCS/Vol1/Manual_I_90_PTA_DESIG_Jan25.pdf
+  // Suffix: 0 = Active Duty, 5 = SELRES (Selected Reserve), 7 = TAR (Training and Administration of the Reserve)
+  // ============================================================================
+  
+  // === SURFACE WARFARE OFFICER (SWO) ===
+  '1110': {
+    branch: 'Navy',
+    title: 'Surface Warfare Officer (Active)',
+    aliases: ['SWO', '1115', '1117'],  // Include SELRES and TAR variants
+    category: 'Surface Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - Surface Warfare qualified. Primary shipboard leadership.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Shipboard operations in all weather conditions',
+      'Bridge watch standing (extended hours)',
+      'Weapons/ordnance operations',
+      'Engineering casualty response',
+      'Man overboard/SAR operations',
+      'Combat operations stress',
+      'Sleep deprivation from watch rotation',
+      'Heavy seas/ship motion'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'High', notes: 'Ship machinery, weapons fire', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'High', notes: 'Engine rooms, deck equipment, gunfire', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Ladder climbing, ship motion compensation', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Very High', notes: 'Watch rotation, combat operations', ecfrCode: 'DC 6847' },
+      { condition: 'PTSD', prevalence: 'Moderate', notes: 'Combat operations, casualties', ecfrCode: 'DC 9411' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Command responsibility, combat stress', ecfrCode: 'DC 9413' },
+      { condition: 'Knee Injuries', prevalence: 'Moderate', notes: 'Ladder climbing, steel decks', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Vision Problems', prevalence: 'Moderate', notes: 'Night vision, radar screens', ecfrCode: 'DC 6066' }
+    ]
+  },
+  '1115': {
+    branch: 'Navy',
+    title: 'Surface Warfare Officer (SELRES)',
+    aliases: ['SWO SELRES'],
+    category: 'Surface Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve Surface Warfare Officer. Part-time duty with periodic activation.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Shipboard operations during drills/activations',
+      'Bridge watch standing',
+      'Weapons operations',
+      'Transition stress between civilian/military'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Ship machinery, weapons fire during drills', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Moderate', notes: 'Engine rooms, deck equipment', ecfrCode: 'DC 6100' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Drill weekends, activation stress', ecfrCode: 'DC 6847' },
+      { condition: 'Anxiety', prevalence: 'Moderate', notes: 'Dual civilian/military role', ecfrCode: 'DC 9413' }
+    ]
+  },
+  '1117': {
+    branch: 'Navy',
+    title: 'Surface Warfare Officer (TAR/FTS)',
+    aliases: ['SWO TAR', 'SWO FTS'],
+    category: 'Surface Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'Training and Administration of the Reserve. Full-time active duty supporting reserve forces.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Shipboard operations on reserve vessels',
+      'Training evolutions',
+      'Watch standing',
+      'Administrative duties'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'High', notes: 'Ship machinery', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'High', notes: 'Engine rooms, equipment', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Shipboard duties', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Underway periods', ecfrCode: 'DC 6847' }
+    ]
+  },
+
+  // === SUBMARINE OFFICER ===
+  '1120': {
+    branch: 'Navy',
+    title: 'Submarine Officer (Active)',
+    aliases: ['1125', '1127', 'SUBOFF'],
+    category: 'Submarine Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - Submarine Warfare qualified. Nuclear propulsion trained.',
+    noiseExposure: 'Very High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Extended underwater deployments (60-90+ days)',
+      'Nuclear reactor operations/radiation monitoring',
+      'Confined space operations',
+      'Machinery noise in enclosed hull',
+      'Emergency blow/casualty drills',
+      'Sleep deprivation (6-hour watch cycles)',
+      'Pressure changes during depth operations',
+      'Limited sunlight exposure',
+      'CO/atmosphere monitoring'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Enclosed hull machinery noise', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Continuous machinery noise, sonar', ecfrCode: 'DC 6100' },
+      { condition: 'Sleep Disorders', prevalence: 'Extreme', notes: '18-hour cycles, no natural light', ecfrCode: 'DC 6847' },
+      { condition: 'Depression', prevalence: 'High', notes: 'Extended isolation, no communication', ecfrCode: 'DC 9434' },
+      { condition: 'Anxiety', prevalence: 'High', notes: 'Confined space, emergency response', ecfrCode: 'DC 9413' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Cramped quarters, ladder wells', ecfrCode: 'DC 5237' },
+      { condition: 'Vitamin D Deficiency', prevalence: 'Very High', notes: 'No sunlight exposure', ecfrCode: 'DC 5309' },
+      { condition: 'Respiratory Issues', prevalence: 'Moderate', notes: 'Enclosed atmosphere, amine exposure', ecfrCode: 'DC 6600' },
+      { condition: 'Cervical Strain', prevalence: 'Moderate', notes: 'Low overhead clearance', ecfrCode: 'DC 5237' }
+    ]
+  },
+  '1125': {
+    branch: 'Navy',
+    title: 'Submarine Officer (SELRES)',
+    aliases: ['SUBOFF SELRES'],
+    category: 'Submarine Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve Submarine Officer. Limited billets, typically staff/shore positions.',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Periodic submarine operations during drills',
+      'Staff/planning duties',
+      'Training evolutions'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Prior submarine service', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Moderate', notes: 'Cumulative submarine exposure', ecfrCode: 'DC 6100' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Activation periods', ecfrCode: 'DC 6847' }
+    ]
+  },
+  '1127': {
+    branch: 'Navy',
+    title: 'Submarine Officer (TAR/FTS)',
+    aliases: ['SUBOFF TAR'],
+    category: 'Submarine Warfare',
+    timePeriod: 'Active',
+    historicalNotes: 'TAR Submarine Officer. Full-time reserve support.',
+    noiseExposure: 'Moderate (Tier 2)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Training and administration duties',
+      'Periodic submarine operations',
+      'Reserve unit support'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Moderate', notes: 'Training operations', ecfrCode: 'DC 6260' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Training schedule demands', ecfrCode: 'DC 6847' }
+    ]
+  },
+
+  // === SEAL (SPECIAL WARFARE OFFICER) ===
+  '1130': {
+    branch: 'Navy',
+    title: 'Special Warfare Officer - SEAL (Active)',
+    aliases: ['SEAL Officer', '1135', '1137', 'NSW Officer'],
+    category: 'Special Operations',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - Naval Special Warfare. Sea, Air, Land Teams.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Extreme',
+    hazards: [
+      'Combat diving operations',
+      'HALO/HAHO parachute operations',
+      'Direct action missions',
+      'Close quarters combat',
+      'Explosive breaching',
+      'Extreme physical conditioning (BUD/S)',
+      'Cold water exposure',
+      'Extended isolation operations',
+      'Weapons fire in close proximity',
+      'Blast/concussion exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Weapons, explosives, diving', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Combat noise, breaching charges', ecfrCode: 'DC 6100' },
+      { condition: 'TBI', prevalence: 'Very High', notes: 'Repeated blast exposure, diving', ecfrCode: 'DC 8045' },
+      { condition: 'PTSD', prevalence: 'Very High', notes: 'Direct action combat', ecfrCode: 'DC 9411' },
+      { condition: 'Lumbar/Cervical DDD', prevalence: 'Extreme', notes: 'Equipment load, parachute landings', ecfrCode: 'DC 5237/5243' },
+      { condition: 'Bilateral Knee Injuries', prevalence: 'Extreme', notes: 'BUD/S training, operations', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Shoulder Injuries', prevalence: 'Very High', notes: 'Parachute opening shock, climbing', ecfrCode: 'DC 5201' },
+      { condition: 'Ankle Injuries', prevalence: 'Very High', notes: 'Jump landings, terrain', ecfrCode: 'DC 5270/5271' },
+      { condition: 'Decompression Sickness Residuals', prevalence: 'High', notes: 'Combat diving', ecfrCode: 'DC 6817' },
+      { condition: 'Cold Injuries', prevalence: 'Moderate', notes: 'Cold water operations', ecfrCode: 'DC 7122' }
+    ]
+  },
+  '1135': {
+    branch: 'Navy',
+    title: 'Special Warfare Officer - SEAL (SELRES)',
+    aliases: ['SEAL SELRES'],
+    category: 'Special Operations',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve SEAL Officer. Maintains qualifications, periodic activations.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'Qualification maintenance training',
+      'Periodic combat exercises',
+      'Physical fitness requirements'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Prior SEAL service', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Cumulative exposure', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar DDD', prevalence: 'Very High', notes: 'Career injuries', ecfrCode: 'DC 5243' },
+      { condition: 'PTSD', prevalence: 'High', notes: 'Prior combat service', ecfrCode: 'DC 9411' },
+      { condition: 'Bilateral Knee Arthritis', prevalence: 'Very High', notes: 'Cumulative damage', ecfrCode: 'DC 5003' }
+    ]
+  },
+  '1137': {
+    branch: 'Navy',
+    title: 'Special Warfare Officer - SEAL (TAR/FTS)',
+    aliases: ['SEAL TAR'],
+    category: 'Special Operations',
+    timePeriod: 'Active',
+    historicalNotes: 'TAR SEAL Officer. Full-time reserve force support.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'Training unit support',
+      'Qualification training',
+      'Reserve SEAL team operations'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Training operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Weapons training', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Physical demands', ecfrCode: 'DC 5237' },
+      { condition: 'Knee Injuries', prevalence: 'High', notes: 'Physical training', ecfrCode: 'DC 5260/5261' }
+    ]
+  },
+
+  // === EOD OFFICER ===
+  '1140': {
+    branch: 'Navy',
+    title: 'Explosive Ordnance Disposal (EOD) Officer (Active)',
+    aliases: ['EOD Officer', '1145', '1147'],
+    category: 'EOD',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - EOD qualified. IED/UXO disposal specialist.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Very Heavy',
+    hazards: [
+      'IED/UXO disposal operations',
+      'Controlled detonations',
+      'Diving EOD operations',
+      'Bomb suit operations (80+ lbs)',
+      'Chemical/biological ordnance',
+      'Combat zone operations',
+      'Extreme stress during render safe procedures',
+      'Blast overpressure exposure'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Detonations, blast exposure', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Controlled detonations', ecfrCode: 'DC 6100' },
+      { condition: 'TBI', prevalence: 'Very High', notes: 'Repeated blast overpressure', ecfrCode: 'DC 8045' },
+      { condition: 'PTSD', prevalence: 'Extreme', notes: 'IED disposal stress, combat', ecfrCode: 'DC 9411' },
+      { condition: 'Lumbar/Cervical DDD', prevalence: 'Very High', notes: 'Bomb suit weight', ecfrCode: 'DC 5237/5243' },
+      { condition: 'Bilateral Knee Injuries', prevalence: 'Very High', notes: 'Kneeling in bomb suit', ecfrCode: 'DC 5260/5261' },
+      { condition: 'Anxiety', prevalence: 'Very High', notes: 'High-stakes operations', ecfrCode: 'DC 9413' },
+      { condition: 'Heat Injuries', prevalence: 'Moderate', notes: 'Bomb suit operations', ecfrCode: 'DC 7899' },
+      { condition: 'Decompression Sickness', prevalence: 'Moderate', notes: 'Diving EOD', ecfrCode: 'DC 6817' }
+    ]
+  },
+  '1145': {
+    branch: 'Navy',
+    title: 'Explosive Ordnance Disposal (EOD) Officer (SELRES)',
+    aliases: ['EOD SELRES'],
+    category: 'EOD',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve EOD Officer. Maintains qualifications.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Training detonations',
+      'Qualification maintenance',
+      'Periodic activation for operations'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Training operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Detonations', ecfrCode: 'DC 6100' },
+      { condition: 'TBI', prevalence: 'High', notes: 'Blast exposure history', ecfrCode: 'DC 8045' },
+      { condition: 'PTSD', prevalence: 'High', notes: 'Prior EOD service', ecfrCode: 'DC 9411' }
+    ]
+  },
+  '1147': {
+    branch: 'Navy',
+    title: 'Explosive Ordnance Disposal (EOD) Officer (TAR/FTS)',
+    aliases: ['EOD TAR'],
+    category: 'EOD',
+    timePeriod: 'Active',
+    historicalNotes: 'TAR EOD Officer. Full-time reserve support.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Training unit operations',
+      'Reserve EOD team support',
+      'Controlled training detonations'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Training operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Detonations', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'EOD equipment', ecfrCode: 'DC 5237' }
+    ]
+  },
+
+  // === NAVAL AVIATOR ===
+  '1310': {
+    branch: 'Navy',
+    title: 'Naval Aviator (Active)',
+    aliases: ['Pilot', '1315', '1317', 'Naval Pilot'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - Aviator. Fixed-wing and rotary-wing pilots.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Carrier operations (catapult/arrested landing)',
+      'High-G maneuvering (fighter/attack aircraft)',
+      'Ejection seat injury risk',
+      'Night vision goggle operations',
+      'Jet engine/rotor noise',
+      'Cabin pressure changes',
+      'Sleep disruption from mission schedules',
+      'Combat operations',
+      'Helicopter rescue operations'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Aircraft engine noise', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Jet/helicopter operations', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar/Cervical DDD', prevalence: 'Extreme', notes: 'High-G forces, ejection injury', ecfrCode: 'DC 5237/5243' },
+      { condition: 'Cervical Strain', prevalence: 'Very High', notes: 'G-forces, helmet weight', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Very High', notes: 'Flight schedules, circadian disruption', ecfrCode: 'DC 6847' },
+      { condition: 'Vision Problems', prevalence: 'High', notes: 'NVG use, cockpit displays', ecfrCode: 'DC 6066' },
+      { condition: 'Sinus Issues', prevalence: 'High', notes: 'Pressure changes', ecfrCode: 'DC 6510' },
+      { condition: 'PTSD', prevalence: 'Moderate', notes: 'Combat operations', ecfrCode: 'DC 9411' },
+      { condition: 'Hypertension', prevalence: 'Moderate', notes: 'Operational stress', ecfrCode: 'DC 7101' }
+    ]
+  },
+  '1315': {
+    branch: 'Navy',
+    title: 'Naval Aviator (SELRES)',
+    aliases: ['Pilot SELRES'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve Naval Aviator. Maintains flight qualifications.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Periodic flight operations',
+      'Currency flights',
+      'Training missions'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Flight operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Aircraft noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'High', notes: 'Flight posture', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Moderate', notes: 'Drill schedules', ecfrCode: 'DC 6847' }
+    ]
+  },
+  '1317': {
+    branch: 'Navy',
+    title: 'Naval Aviator (TAR/FTS)',
+    aliases: ['Pilot TAR', 'FTS Pilot'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'TAR/FTS Naval Aviator. Full-time reserve aviation support.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Regular flight operations',
+      'Reserve squadron support',
+      'Training flights',
+      'Carrier qualifications'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Regular flight operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Aircraft noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar DDD', prevalence: 'High', notes: 'Flight operations', ecfrCode: 'DC 5243' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Flight schedules', ecfrCode: 'DC 6847' },
+      { condition: 'Cervical Strain', prevalence: 'High', notes: 'G-forces', ecfrCode: 'DC 5237' }
+    ]
+  },
+
+  // === NAVAL FLIGHT OFFICER (NFO) ===
+  '1320': {
+    branch: 'Navy',
+    title: 'Naval Flight Officer (Active)',
+    aliases: ['NFO', '1325', '1327', 'Radar Intercept Officer', 'RIO', 'WSO'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'Unrestricted Line Officer - NFO. Weapons systems, radar, navigation specialists.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Carrier operations',
+      'High-G maneuvering (fighter aircraft)',
+      'Ejection seat injury risk',
+      'Radar/electronic systems exposure',
+      'Night vision goggle operations',
+      'Jet engine noise',
+      'Combat operations',
+      'Extended mission durations'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Aircraft engine noise', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Jet operations, headset use', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar/Cervical DDD', prevalence: 'Very High', notes: 'High-G forces, ejection injury', ecfrCode: 'DC 5237/5243' },
+      { condition: 'Cervical Strain', prevalence: 'Very High', notes: 'G-forces, head turning for radar', ecfrCode: 'DC 5237' },
+      { condition: 'Sleep Disorders', prevalence: 'Very High', notes: 'Mission schedules', ecfrCode: 'DC 6847' },
+      { condition: 'Vision Problems', prevalence: 'High', notes: 'Radar screens, displays, NVG', ecfrCode: 'DC 6066' },
+      { condition: 'Migraines', prevalence: 'Moderate', notes: 'Screen time, G-forces', ecfrCode: 'DC 8100' },
+      { condition: 'PTSD', prevalence: 'Moderate', notes: 'Combat operations', ecfrCode: 'DC 9411' }
+    ]
+  },
+  '1325': {
+    branch: 'Navy',
+    title: 'Naval Flight Officer (SELRES)',
+    aliases: ['NFO SELRES'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'Selected Reserve NFO. Maintains flight qualifications.',
+    noiseExposure: 'High (Tier 1)',
+    physicalDemand: 'Moderate',
+    hazards: [
+      'Periodic flight operations',
+      'Currency flights',
+      'Training missions'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Very High', notes: 'Flight operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Very High', notes: 'Aircraft noise', ecfrCode: 'DC 6100' },
+      { condition: 'Lumbar Strain', prevalence: 'Moderate', notes: 'Flight posture', ecfrCode: 'DC 5237' }
+    ]
+  },
+  '1327': {
+    branch: 'Navy',
+    title: 'Naval Flight Officer (TAR/FTS)',
+    aliases: ['NFO TAR', 'FTS NFO'],
+    category: 'Aviation',
+    timePeriod: 'Active',
+    historicalNotes: 'TAR/FTS Naval Flight Officer. Full-time reserve aviation support.',
+    noiseExposure: 'Extreme (Tier 1+)',
+    physicalDemand: 'Heavy',
+    hazards: [
+      'Regular flight operations',
+      'Reserve squadron support',
+      'Training flights'
+    ],
+    commonConditions: [
+      { condition: 'Tinnitus', prevalence: 'Extreme', notes: 'Regular flight operations', ecfrCode: 'DC 6260' },
+      { condition: 'Hearing Loss', prevalence: 'Extreme', notes: 'Aircraft noise', ecfrCode: 'DC 6100' },
+      { condition: 'Cervical DDD', prevalence: 'High', notes: 'G-forces', ecfrCode: 'DC 5243' },
+      { condition: 'Sleep Disorders', prevalence: 'High', notes: 'Flight schedules', ecfrCode: 'DC 6847' },
+      { condition: 'Vision Problems', prevalence: 'High', notes: 'Radar screens', ecfrCode: 'DC 6066' }
     ]
   },
 

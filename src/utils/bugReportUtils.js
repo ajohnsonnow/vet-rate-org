@@ -10,7 +10,7 @@ export const APP_MODULES = {
   SEARCH: 'Disability Search',
   DISABILITY_DETAILS: 'Disability Details View',
   MY_PACKET: 'My Packet',
-  USER_MANUAL: 'User Manual',
+  USER_MANUAL: 'Field Manual',
   
   // Calculate Tools
   TACTICAL_CALCULATOR: 'Tactical Calculator (Rating)',

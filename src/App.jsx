@@ -18,6 +18,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import BRAND from './config/branding';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import SearchResultCard from './components/SearchResultCard';
@@ -35,6 +36,7 @@ import MyPacket from './components/MyPacket';
 import CAPSimulator from './components/CAPSimulator';
 import VAResources from './components/VAResources';
 import FormsHelper from './components/FormsHelper';
+import PublicationsLibrary from './components/PublicationsLibrary';
 import CFileAnalyzer from './components/CFileAnalyzer';
 import SharkRadar from './components/SharkRadar';
 import Pathfinder from './components/Pathfinder';
@@ -90,6 +92,7 @@ import QuickExitButton from './components/QuickExitButton';
 import MusterCall from './components/MusterCall';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
 import VKBViewer from './components/VKBViewer';
+import VKBTimeline from './components/VKBTimeline';
 // ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
@@ -117,6 +120,7 @@ import GlobalCommandSearch from './components/GlobalCommandSearch';
 import MobileBottomNav, { MobileNavSpacer } from './components/MobileBottomNav';
 import AtomicWipe from './components/AtomicWipe';
 import { HelperModeProvider } from './contexts/HelperModeContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { FocusModeProvider } from './contexts/FocusModeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { initializeCompassionateVoice } from './utils/voiceIndex';
@@ -168,6 +172,7 @@ function App() {
   const [showCAPSimulator, setShowCAPSimulator] = useState(false);
   const [showVAResources, setShowVAResources] = useState(false);
   const [showFormsHelper, setShowFormsHelper] = useState(false);
+  const [showPublicationsLibrary, setShowPublicationsLibrary] = useState(false);
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showSharkRadar, setShowSharkRadar] = useState(false);
   const [showPathfinder, setShowPathfinder] = useState(false);
@@ -228,6 +233,7 @@ function App() {
   
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
+  const [showVKBTimeline, setShowVKBTimeline] = useState(false);
   
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
   const [showCommandSearch, setShowCommandSearch] = useState(false);
@@ -262,7 +268,7 @@ function App() {
   
   const [capSimulatorResults, setCapSimulatorResults] = useState([]);
   const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(
-    () => localStorage.getItem('vetrate-disclaimer-acknowledged') === 'true'
+    () => localStorage.getItem('vetrate_disclaimer-acknowledged') === 'true'
   );
   
   // LIVE OPS: Debug dump handler (Easter egg)
@@ -335,7 +341,7 @@ function App() {
   // Helper function to get current tool name for AI Assistant context
   const getCurrentToolName = () => {
     if (showMyPacket) return 'My Packet';
-    if (showUserManual) return 'User Manual';
+    if (showUserManual) return 'Field Manual';
     if (showTacticalCalculator) return 'Rating Calculator';
     if (showSecondaryScout) return 'Secondary Scout';
     if (showCFileAnalyzer) return 'C-File Analyzer';
@@ -839,7 +845,7 @@ function App() {
     currentModule: (() => {
       // Priority order: most specific tools first
       if (showMyPacket) return 'My Packet';
-      if (showUserManual) return 'User Manual';
+      if (showUserManual) return 'Field Manual';
       if (showTacticalCalculator) return 'Tactical Calculator (Rating)';
       if (showMillionDollarDashboard) return 'Million Dollar Dashboard';
       if (showWhatIfSandbox) return 'What-If Sandbox';
@@ -1066,6 +1072,7 @@ function App() {
         // Core Navigation
         onMyPacketClick={() => setShowMyPacket(true)}
         onKnowledgeBaseClick={() => setShowVKBViewer(true)}
+        onVKBTimelineClick={() => setShowVKBTimeline(true)}
         onUserManualClick={() => setShowUserManual(true)}
         onVAResourcesClick={() => setShowVAResources(true)}
         // Calculate
@@ -2179,7 +2186,7 @@ function App() {
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h4 className="font-bold mb-3">ℹ️ About Vet-Rate.org</h4>
+              <h4 className="font-bold mb-3">ℹ️ About {BRAND.appName}</h4>
               <p className="text-gray-400 text-sm mb-3">
                 The most comprehensive free VA claims arsenal - {getTotalToolCount()} professional-grade tools covering research, calculators, AI analysis, C&P prep, evidence builders, and strategic planning. What claim sharks charge thousands for, absolutely free.
               </p>
@@ -2195,12 +2202,22 @@ function App() {
               <p className="text-gray-400 text-sm mb-3">
                 This system operates locally and does not store Personally Identifiable Information (PII) on external servers. All data processing happens in your browser.
               </p>
-              <button
-                onClick={() => setShowPrivacyPolicy(true)}
-                className="text-va-gold hover:underline text-sm font-semibold"
-              >
-                Privacy Policy →
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setShowPrivacyPolicy(true)}
+                  className="text-va-gold hover:underline text-sm font-semibold text-left"
+                >
+                  Privacy Policy →
+                </button>
+                <a
+                  href={BRAND.goatCounterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-400 hover:underline text-sm font-semibold inline-flex items-center gap-1"
+                >
+                  📊 View Live Analytics →
+                </a>
+              </div>
             </div>
             <div>
               <h4 className="font-bold mb-3">⚖️ Legal Notice</h4>
@@ -2271,7 +2288,14 @@ function App() {
                 onClick={() => setShowUserManual(true)}
                 className="text-gray-400 hover:text-va-gold text-sm transition-colors"
               >
-                📖 User Manual
+                📖 Field Manual
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => setShowPublicationsLibrary(true)}
+                className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+              >
+                📚 Pubs Library
               </button>
               <span className="text-gray-600">|</span>
               <button
@@ -2290,7 +2314,7 @@ function App() {
                 className="cursor-default select-none"
                 title="Copyright Notice"
               >
-                &copy; 2024-2026 Vet-Rate.org
+                {BRAND.copyright}
               </span>
               {' '}- Your Complete VA Claims Toolkit. Data sourced from{' '}
               <a
@@ -2303,7 +2327,7 @@ function App() {
               </a>
             </p>
             <p className="text-center text-gray-500 text-xs mt-3 border-t border-gray-800 pt-3">
-              <strong>Important:</strong> Vet-Rate.org is a private, veteran-built project and is <strong>not affiliated with, endorsed by, or a part of the Department of Veterans Affairs or the United States Government.</strong>
+              <strong>Important:</strong> {BRAND.appName} is a private, veteran-built project and is <strong>not affiliated with, endorsed by, or a part of the Department of Veterans Affairs or the United States Government.</strong>
             </p>
           </div>
         </div>
@@ -2442,6 +2466,28 @@ function App() {
         />
       )}
       
+      {/* Publications Library */}
+      {showPublicationsLibrary && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                📚 Publications Library <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
+              </h2>
+              <button
+                onClick={() => setShowPublicationsLibrary(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <PublicationsLibrary />
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* C-File Analyzer */}
       {showCFileAnalyzer && (
         <CFileAnalyzer
@@ -2503,6 +2549,17 @@ function App() {
         />
       )}
       
+      {/* VKB Timeline - Document Version History */}
+      {showVKBTimeline && (
+        <VKBTimeline
+          onDocumentClick={(doc) => {
+            console.log('Document clicked:', doc);
+            // Could open Intelligence Briefing modal here to view document
+          }}
+          onClose={() => setShowVKBTimeline(false)}
+        />
+      )}
+      
       {/* Shark Radar */}
       {showSharkRadar && (
         <div 
@@ -2522,6 +2579,7 @@ function App() {
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                       Shark Radar
                       <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">AI</span>
+                      <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                     </h2>
                     <p className="text-sm text-rose-100">Contract & Email Scanner • AI-Powered Analysis</p>
                   </div>
@@ -2566,6 +2624,7 @@ function App() {
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                       The Pathfinder
                       <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">AI</span>
+                      <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">BETA</span>
                     </h2>
                     <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
                   </div>
@@ -2621,7 +2680,7 @@ function App() {
       <AdminLogin />
       <AdminPanel />
       
-      {/* User Manual */}
+      {/* Field Manual */}
       {showUserManual && (
         <UserManual
           onClose={() => setShowUserManual(false)}
@@ -3188,11 +3247,13 @@ function AppWrapper() {
     <AdminAuthProvider>
       <LanguageProvider>
         <LocalAIProvider>
-          <FocusModeProvider>
-            <HelperModeProvider>
-              <App />
-            </HelperModeProvider>
-          </FocusModeProvider>
+          <ToastProvider>
+            <FocusModeProvider>
+              <HelperModeProvider>
+                <App />
+              </HelperModeProvider>
+            </FocusModeProvider>
+          </ToastProvider>
         </LocalAIProvider>
       </LanguageProvider>
     </AdminAuthProvider>

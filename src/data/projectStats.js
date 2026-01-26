@@ -143,7 +143,7 @@ export const FORMATTED_STATS = {
   professionalTeamCost: `$${(PROJECT_STATS.professionalTeamCostMin / 1000000).toFixed(1)}M-$${(PROJECT_STATS.professionalTeamCostMax / 1000000).toFixed(1)}M`,
   commits: `${PROJECT_STATS.git.totalCommits} commits across ${PROJECT_STATS.git.activeSessions} active coding sessions`,
   linesChanged: `+${formatNumber(PROJECT_STATS.git.linesAdded)} lines added, -${formatNumber(PROJECT_STATS.git.linesRemoved)} lines removed`,
-  localAIModels: `${PROJECT_STATS.localAIModels} Diamond Swarm agents`,
+  localAIModels: `${PROJECT_STATS.localAIModels} Warrant Council agents`,
 };
 
 export default PROJECT_STATS;

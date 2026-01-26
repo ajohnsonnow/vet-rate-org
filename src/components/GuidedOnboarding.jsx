@@ -74,8 +74,8 @@ const BODY_SYSTEMS = [
 const AI_OPTIONS = [
   {
     id: 'local-ai',
-    icon: '💎',
-    title: 'Diamond Swarm (Local AI)',
+    icon: '🎖️',
+    title: 'Warrant Council (Local AI)',
     description: '100% offline, maximum privacy. AI runs entirely on your device.',
     badge: 'Recommended',
     privacy: 'Maximum',
