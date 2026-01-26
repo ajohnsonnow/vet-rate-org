@@ -161,7 +161,7 @@ export const COMPONENT_STATS = {
     description: `${getDisabilityCount()} conditions with synonym matching and advanced filters`
   },
   'user-manual': {
-    name: 'User Manual',
+    name: 'Field Manual',
     hours: 100,
     lines: 1800,
     description: `Complete documentation for all ${getTotalToolCount()}+ tools`

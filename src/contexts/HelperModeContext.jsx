@@ -59,7 +59,7 @@ export const CAREGIVER_PRIORITY_TOOLS = [
   'Symptom Logger',     // They can help document symptoms
   'Forms Helper',       // Help with paperwork
   'VSO Finder',         // Find free help
-  'User Manual',        // Understanding how to use the site
+  'Field Manual',       // Understanding how to use the site
 ];
 
 export function HelperModeProvider({ children }) {

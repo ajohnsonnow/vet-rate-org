@@ -102,7 +102,7 @@ export const TOOLKIT_CATEGORIES = [
       { name: 'My Packet', description: 'Save and manage all your claims evidence in one place' },
       { name: 'Knowledge Base', description: 'AI-powered knowledge graph built from your documents', isNew: true },
       { name: 'VA Resources Hub', description: 'Direct links to official VA programs, crisis support, and benefits' },
-      { name: 'User Manual', description: 'Comprehensive guide to using every feature' },
+      { name: 'Field Manual', description: 'Comprehensive guide to using every feature' },
     ]
   },
 ];

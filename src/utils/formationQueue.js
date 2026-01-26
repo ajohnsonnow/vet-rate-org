@@ -357,6 +357,50 @@ export const canResumeFormation = () => {
 };
 
 /**
+ * Load saved formation state from localStorage
+ * Note: File objects can't be serialized, so entries without actual files
+ * will be displayed but can't be reprocessed
+ */
+export const loadFormationState = () => {
+  try {
+    const saved = localStorage.getItem('vetrate_formation_state');
+    if (!saved) return null;
+    
+    const state = JSON.parse(saved);
+    if (!state.formation || state.formation.length === 0) return null;
+    
+    console.log(`📂 Loading ${state.formation.length} documents from saved formation`);
+    
+    // Return the formation entries (without actual File objects)
+    // Reset status to WAITING if not already completed/saved
+    // This allows resuming formation after page refresh
+    return state.formation.map(entry => {
+      // Keep completed/saved/skipped/error statuses as-is
+      // Reset in-progress statuses back to WAITING
+      let status = entry.status;
+      if (status === FORMATION_STATUS.CALLED ||
+          status === FORMATION_STATUS.OCR_IN_PROGRESS ||
+          status === FORMATION_STATUS.INTEL_BRIEFING ||
+          status === FORMATION_STATUS.USER_REVIEW ||
+          status === FORMATION_STATUS.VERIFIED) {
+        status = FORMATION_STATUS.WAITING;
+        console.log(`   ⏸️ Reset ${entry.filename} from ${entry.status} to WAITING`);
+      }
+      
+      return {
+        ...entry,
+        status,
+        // Mark that this is restored from storage (no actual File object)
+        isRestored: true
+      };
+    });
+  } catch (error) {
+    console.error('Failed to load formation state:', error);
+    return null;
+  }
+};
+
+/**
  * Clear saved formation state
  */
 export const clearFormationState = () => {

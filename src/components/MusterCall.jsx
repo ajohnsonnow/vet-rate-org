@@ -9,15 +9,26 @@
  * 
  * "Answer the Muster Call" - Drop your entire VA file and let
  * the system analyze everything automatically.
+ * 
+ * ARMY INSPECTION TERMINOLOGY (TC 3-21.5 Drill and Ceremonies):
+ * - "Open Ranks, MARCH" - Begin inspection (front rank forward, creates inspection lanes)
+ * - "Count, OFF" - Verify all personnel/documents present
+ * - "Dress Right, DRESS" - Align formation (prepare documents)
+ * - "Inspection, ARMS" - Show weapon is clear (extract document content)
+ * - "Platoon, ATTENTION" - Formation ready for inspection
+ * - "Sir/Ma'am, platoon prepared for inspection" - Report to inspector (AI analysis)
+ * - "Close Ranks, MARCH" - Return to compact formation (finalize)
+ * - "AT EASE" - Inspection complete, formation dismissed
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useAutoInitAI from '../hooks/useAutoInitAI';
 import {
   processMusterCallBatch,
+  processFormationDocument,
   autoPopulateProfile,
   generateMusterCallReport,
   validateFilesBatch,
@@ -26,7 +37,11 @@ import {
   formatFileSize
 } from '../utils/musterCallProcessor';
 import { DOCUMENT_TYPES, getDocumentTypeLabel } from '../utils/documentClassifier';
-import { isAnyAIAvailable, getAIStatus } from '../utils/unifiedAIService';
+import { isAnyAIAvailable, getAIStatus, isSwarmReady, initializeSwarm } from '../utils/unifiedAIService';
+import useFormationQueue from '../hooks/useFormationQueue';
+import FormationLineup from './FormationLineup';
+import PlatoonSergeantReview from './PlatoonSergeantReview';
+import DocumentIntelligenceBriefing from './DocumentIntelligenceBriefing';
 import ReportBugLink from './ReportBugLink';
 import ReactMarkdown from 'react-markdown';
 
@@ -35,15 +50,80 @@ import ReactMarkdown from 'react-markdown';
  */
 export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   const { t } = useLanguage();
+  const toast = useToast();
   useBodyScrollLock(isOpen);
   
-  // Auto-initialize AI when component mounts
-  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('war-room', 'auditor');
+  // AI state - NO auto-init, user must manually load
+  const [aiReady, setAiReady] = useState(false);
+  const [aiInitializing, setAiInitializing] = useState(false);
+  const [initProgress, setInitProgress] = useState(0);
+  const [initMessage, setInitMessage] = useState('');
   
-  // Debug: Log progress updates
+  // Formation queue management
+  const {
+    formation,
+    currentEntry,
+    stats,
+    isProcessing: formationProcessing,
+    isComplete: formationComplete,
+    progress: formationProgress,
+    hasDocuments,
+    initializeFormation,
+    startFormation,
+    completeCurrentAndNext,
+    skipCurrentAndNext,
+    errorCurrentAndNext,
+    updateEntry,
+    reorderDocuments,
+    removeDocument,
+    clearFormation
+  } = useFormationQueue();
+  
+  // Check if AI is already ready on mount
   useEffect(() => {
-    console.log(`💎 MusterCall progress state: ${initProgress}%, initializing: ${aiInitializing}, ready: ${aiReady}`);
-  }, [initProgress, aiInitializing, aiReady]);
+    if (isSwarmReady()) {
+      setAiReady(true);
+    }
+  }, []);
+
+  // Debug: Log formation changes
+  useEffect(() => {
+    console.log(`📋 MusterCall formation changed: length=${formation.length}, hasDocuments=${hasDocuments}`);
+  }, [formation, hasDocuments]);
+
+  /**
+   * Manual AI Load function
+   */
+  const handleLoadAI = useCallback(async () => {
+    if (aiInitializing || aiReady) return;
+    
+    setAiInitializing(true);
+    setInitMessage('Initializing CW5 Auditor...');
+    
+    try {
+      await initializeSwarm('auditor', {
+        onProgress: (progress) => {
+          setInitProgress(progress.progress || 0);
+          setInitMessage(progress.message || 'Loading...');
+        },
+        onComplete: () => {
+          setAiReady(true);
+          setAiInitializing(false);
+          setInitProgress(100);
+          setInitMessage('CW5 Auditor ready!');
+          toast.success('🎖️ Warrant Council AI loaded and ready!');
+        },
+        onError: (error) => {
+          setAiInitializing(false);
+          setInitMessage('Failed to load AI');
+          toast.error('Failed to load AI: ' + error.message);
+        }
+      });
+    } catch (err) {
+      setAiInitializing(false);
+      toast.error('Failed to initialize AI');
+    }
+  }, [aiInitializing, aiReady, toast]);
 
   // State management
   const [files, setFiles] = useState([]);
@@ -51,11 +131,23 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   const [processingState, setProcessingState] = useState(PROCESSING_STATES.IDLE);
   const [progress, setProgress] = useState({ completed: 0, total: 0, processing: 0 });
   const [fileProgress, setFileProgress] = useState({});
+  const [currentProgress, setCurrentProgress] = useState(null); // For Platoon Sergeant Review
+  const [activeEntry, setActiveEntry] = useState(null); // Track the document being processed
+  const [extractionResult, setExtractionResult] = useState(null); // For Intel Briefing
+  const [showIntelBriefing, setShowIntelBriefing] = useState(false);
   const [results, setResults] = useState(null);
   const [report, setReport] = useState(null);
   const [validation, setValidation] = useState(null);
   const [error, setError] = useState(null);
   const [showReport, setShowReport] = useState(false);
+  const [useSequentialMode, setUseSequentialMode] = useState(true); // Toggle between modes
+
+  // Compute locally to avoid stale closure issues (MUST be after processingState is declared)
+  // Use !currentEntry instead of === null because .find() returns undefined, not null
+  const shouldShowFormation = processingState === PROCESSING_STATES.IDLE && useSequentialMode && formation.length > 0 && !currentEntry && !activeEntry;
+  
+  // Show processing view when we have an active entry being processed
+  const showProcessingView = activeEntry && currentProgress && !showIntelBriefing;
 
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
@@ -65,19 +157,38 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
    * Handle file selection
    */
   const handleFileSelect = useCallback((selectedFiles) => {
+    console.log('🎯 handleFileSelect called with', selectedFiles?.length, 'files');
     const fileArray = Array.from(selectedFiles);
+    console.log('🎯 fileArray:', fileArray.length, 'files');
     
     // Validate files
     const validationResult = validateFilesBatch(fileArray);
+    console.log('🎯 validationResult:', validationResult);
     setValidation(validationResult);
 
     if (validationResult.valid.length > 0) {
       setFiles(fileArray);
+      
+      // Initialize formation if in sequential mode
+      if (useSequentialMode) {
+        console.log('🎯 Calling initializeFormation with', validationResult.valid.length, 'files');
+        const result = initializeFormation(validationResult.valid);
+        console.log('🎯 initializeFormation returned:', result?.length, 'entries');
+        toast.success(`${validationResult.valid.length} document${validationResult.valid.length !== 1 ? 's' : ''} added to Formation queue`);
+      } else {
+        toast.info(`${validationResult.valid.length} file${validationResult.valid.length !== 1 ? 's' : ''} selected`);
+      }
+      
+      if (validationResult.invalid.length > 0) {
+        toast.warning(`${validationResult.invalid.length} file${validationResult.invalid.length !== 1 ? 's' : ''} skipped (unsupported format)`);
+      }
+      
       setError(null);
     } else {
       setError('No valid files selected. Please select PDF, DOCX, or TXT files.');
+      toast.error('No valid files selected. Only PDF, DOCX, and TXT files are supported.');
     }
-  }, []);
+  }, [useSequentialMode, initializeFormation, toast]);
 
   /**
    * Handle drag and drop
@@ -129,8 +240,32 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
    * Start processing files
    */
   const handleStartProcessing = async () => {
-    if (files.length === 0) return;
+    console.log('🚩 handleStartProcessing called');
+    console.log('🚩 files.length:', files.length);
+    console.log('🚩 formation.length:', formation.length);
+    console.log('🚩 useSequentialMode:', useSequentialMode);
+    console.log('🚩 hasDocuments:', hasDocuments);
 
+    // Use sequential mode if enabled
+    if (useSequentialMode && formation.length > 0) {
+      console.log('🚩 Starting sequential formation processing...');
+      const firstEntry = startFormation();
+      console.log('🚩 First entry:', firstEntry);
+      
+      if (firstEntry) {
+        // Process the first document directly instead of relying on currentEntry
+        processDocumentEntry(firstEntry);
+      }
+      return;
+    }
+
+    // Legacy batch mode requires files
+    if (files.length === 0) {
+      console.log('🚩 No files for batch processing');
+      return;
+    }
+
+    // LEGACY: Batch processing mode (kept for fallback)
     // Create new abort controller for this processing run
     abortControllerRef.current = new AbortController();
 
@@ -234,6 +369,174 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
   };
 
   /**
+   * Process a specific document entry (SEQUENTIAL MODE)
+   * This can be called with an entry directly, avoiding stale state issues
+   */
+  const processDocumentEntry = async (entry) => {
+    if (!entry) {
+      console.log('✅ Formation complete!');
+      setProcessingState(PROCESSING_STATES.COMPLETE);
+      setActiveEntry(null);
+      setCurrentProgress(null);
+      toast.success(`Formation complete! ${stats?.completed || 0} document${(stats?.completed || 0) !== 1 ? 's' : ''} processed successfully.`, 7000);
+      return;
+    }
+
+    const file = entry.file;
+    console.log(`🎖️ Processing document: ${file.name}`);
+
+    // Set active entry for UI display
+    setActiveEntry(entry);
+    
+    // Update entry status
+    updateEntry(entry.id, { status: 'CALLED' });
+    setCurrentProgress({ 
+      filename: file.name,
+      fileSize: entry.fileSize || file.size,
+      state: 'initializing',
+      stage: 'platoon_sergeant',
+      progress: 0,
+      message: 'Count, OFF! Preparing formation for inspection...'
+    });
+    setProcessingState(PROCESSING_STATES.EXTRACTING);
+
+    try {
+      // Process document with progress callbacks
+      const result = await processFormationDocument(file, (progressData) => {
+        console.log('📊 Progress update received:', progressData);
+        setCurrentProgress({
+          filename: file.name,
+          fileSize: entry.fileSize || file.size,
+          ...progressData
+        });
+
+        // Update entry based on stage
+        if (progressData.stage === 'platoon_sergeant') {
+          updateEntry(entry.id, { 
+            status: 'OCR_IN_PROGRESS',
+            progress: progressData.progress 
+          });
+        } else if (progressData.stage === 'intel_classify' || progressData.stage === 'intel_extract') {
+          updateEntry(entry.id, { 
+            status: 'INTEL_BRIEFING',
+            progress: progressData.progress 
+          });
+        }
+      });
+
+      console.log('✅ Document processed:', result);
+
+      // Show Intelligence Briefing for user verification
+      // Check status === 'complete' since processFormationDocument sets that, not success
+      if (result.status === 'complete' && result.readyForReview) {
+        setExtractionResult(result);
+        setShowIntelBriefing(true);
+        updateEntry(entry.id, { status: 'USER_REVIEW' });
+      } else if (result.status === 'error') {
+        throw new Error(result.error || 'Processing failed');
+      }
+
+    } catch (err) {
+      console.error('❌ Document processing error:', err);
+      const nextEntry = errorCurrentAndNext(err.message);
+      setCurrentProgress(null);
+      setActiveEntry(null);
+      
+      // Move to next document after error
+      setTimeout(() => {
+        if (nextEntry) {
+          processDocumentEntry(nextEntry);
+        } else {
+          const next = formation.find(e => e.status === 'WAITING');
+          if (next) {
+            processDocumentEntry(next);
+          } else {
+            processDocumentEntry(null); // Triggers completion
+          }
+        }
+      }, 1000);
+    }
+  };
+
+  /**
+   * Process next document in formation (SEQUENTIAL MODE)
+   * Uses currentEntry from hook - call this after state has updated
+   */
+  const processNextDocument = async () => {
+    const next = formation.find(e => e.status === 'WAITING' || e.status === 'CALLED');
+    processDocumentEntry(next);
+  };
+
+  /**
+   * Handle Intel Briefing verification (SEQUENTIAL MODE)
+   */
+  const handleVerifyAndSave = async (verifiedData) => {
+    console.log('✅ User verified data:', verifiedData);
+
+    try {
+      // Complete current document and move to next
+      const nextEntry = completeCurrentAndNext({
+        ...extractionResult,
+        verifiedData
+      });
+
+      toast.success(`Document "${extractionResult.filename}" saved to Knowledge Base`);
+
+      setShowIntelBriefing(false);
+      setExtractionResult(null);
+      setCurrentProgress(null);
+      setActiveEntry(null);
+
+      // Process next in formation
+      setTimeout(() => {
+        if (nextEntry) {
+          processDocumentEntry(nextEntry);
+        } else {
+          // Check if there are more documents
+          const next = formation.find(e => e.status === 'WAITING' || e.status === 'CALLED');
+          if (next) {
+            processDocumentEntry(next);
+          } else {
+            processDocumentEntry(null); // Triggers completion
+          }
+        }
+      }, 500);
+
+    } catch (err) {
+      console.error('❌ Save error:', err);
+      setError(err.message);
+      toast.error(`Failed to save document: ${err.message}`);
+    }
+  };
+
+  /**
+   * Handle skip document (SEQUENTIAL MODE)
+   */
+  const handleSkipDocument = () => {
+    console.log('⏭️ Skipping document:', activeEntry?.file?.name);
+    
+    const nextEntry = skipCurrentAndNext('User skipped');
+    setShowIntelBriefing(false);
+    setExtractionResult(null);
+    setCurrentProgress(null);
+    setActiveEntry(null);
+
+    // Process next in formation
+    setTimeout(() => {
+      if (nextEntry) {
+        processDocumentEntry(nextEntry);
+      } else {
+        const next = formation.find(e => e.status === 'WAITING');
+        if (next) {
+          processDocumentEntry(next);
+        } else {
+          processDocumentEntry(null); // Triggers completion
+        }
+      }
+    }, 500);
+  };
+
+  /**
    * Reset to initial state
    */
   const handleReset = () => {
@@ -264,7 +567,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
             <div>
               <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
                 <span className="text-4xl">📋</span>
-                Muster Call
+                Muster Call <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
               </h2>
               <p className="text-blue-100 text-sm max-w-2xl">
                 Drop your entire VA file - claim letters, C-Files, DD214s. We'll analyze everything and build your complete profile automatically.
@@ -351,6 +654,31 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
             </div>
           )}
           
+          {/* Load AI Button - Show when AI not loaded and not initializing */}
+          {!aiReady && !aiInitializing && (
+            <div className="mb-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border-l-4 border-purple-500">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">🎖️</span>
+                  <div>
+                    <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                      Warrant Council AI Required
+                    </span>
+                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                      Load AI to enable intelligent document analysis and processing
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLoadAI}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                >
+                  🎖️ Load AI
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Processing Time Warning */}
           <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border-l-4 border-yellow-500">
             <div className="flex items-start">
@@ -367,8 +695,8 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
             </div>
           </div>
           
-          {/* File Drop Zone */}
-          {processingState === PROCESSING_STATES.IDLE && (
+          {/* File Drop Zone - Hide when files are loaded in sequential mode */}
+          {processingState === PROCESSING_STATES.IDLE && !(useSequentialMode && hasDocuments) && (
             <>
               <div
                 ref={dropZoneRef}
@@ -389,12 +717,17 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                   type="file"
                   multiple
                   accept=".pdf,.docx,.doc,.txt,.rtf"
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e) => {
+                    console.log('🎯 File input onChange fired, files:', e.target.files?.length);
+                    handleFileSelect(e.target.files);
+                  }}
+                  onClick={(e) => console.log('🎯 File input clicked')}
                   className="hidden"
                   id="muster-call-files"
                 />
                 <label
                   htmlFor="muster-call-files"
+                  onClick={() => console.log('🎯 Label clicked')}
                   className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold cursor-pointer transition-colors"
                 >
                   Select Files
@@ -405,7 +738,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
               </div>
 
               {/* File List */}
-              {files.length > 0 && (
+              {files.length > 0 && !useSequentialMode && (
                 <div className="mt-6 bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -485,6 +818,58 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
                 </div>
               )}
             </>
+          )}
+          
+          {/* Formation Lineup (SEQUENTIAL MODE) - Use locally computed shouldShowFormation */}
+          {shouldShowFormation && (
+            <div className="mt-6">
+              <FormationLineup
+                formation={formation}
+                onReorder={reorderDocuments}
+                onRemove={removeDocument}
+                onStartFormation={handleStartProcessing}
+                onClearFormation={clearFormation}
+                aiReady={aiReady}
+                aiInitializing={aiInitializing}
+              />
+            </div>
+          )}
+          
+          {/* Platoon Sergeant Review (SEQUENTIAL MODE - Active Processing) */}
+          {showProcessingView && (
+            <div className="space-y-4">
+              {/* Show compact formation status */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    📋 Processing {stats?.completed || 0} of {formation.length} documents
+                  </span>
+                  <span className="text-xs text-blue-600 dark:text-blue-400">
+                    {stats?.waiting || 0} waiting • {stats?.skipped || 0} skipped • {stats?.errors || 0} errors
+                  </span>
+                </div>
+              </div>
+              
+              <PlatoonSergeantReview
+                document={activeEntry.file}
+                progress={currentProgress}
+                onComplete={() => {}}
+                onError={(error) => errorCurrentAndNext(error)}
+                onSkip={handleSkipDocument}
+              />
+            </div>
+          )}
+          
+          {/* Intelligence Briefing Modal (SEQUENTIAL MODE - User Verification) */}
+          {showIntelBriefing && extractionResult && activeEntry && (
+            <DocumentIntelligenceBriefing
+              document={activeEntry.file}
+              extractionResult={extractionResult}
+              conflicts={[]} // TODO: Implement conflict detection
+              onVerify={handleVerifyAndSave}
+              onSkip={handleSkipDocument}
+              onClose={() => setShowIntelBriefing(false)}
+            />
           )}
 
           {/* Processing View */}
@@ -655,22 +1040,36 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
         <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {processingState === PROCESSING_STATES.IDLE && files.length > 0 && (
+              {processingState === PROCESSING_STATES.IDLE && files.length > 0 && !useSequentialMode && (
                 <button
                   onClick={handleStartProcessing}
                   disabled={!aiReady || aiInitializing || !validation || validation.valid.length === 0}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Start Muster Call
+                  🎖️ Open Ranks, MARCH!
                 </button>
               )}
-              {processingState === PROCESSING_STATES.COMPLETE && (
+              {(processingState === PROCESSING_STATES.COMPLETE || formationComplete) && (
                 <button
                   onClick={handleReset}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                 >
-                  Process More Files
+                  🎖️ Fall In - New Formation
                 </button>
+              )}
+            </div>
+            
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              {useSequentialMode ? (
+                <span className="flex items-center gap-2">
+                  <span className="text-green-600 dark:text-green-400">●</span>
+                  Formation Mode (Sequential)
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <span className="text-blue-600 dark:text-blue-400">●</span>
+                  Batch Mode
+                </span>
               )}
             </div>
           </div>
@@ -686,15 +1085,15 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
  */
 function getStateLabel(state) {
   const labels = {
-    [PROCESSING_STATES.IDLE]: 'Ready',
-    [PROCESSING_STATES.VALIDATING]: 'Validating Files...',
-    [PROCESSING_STATES.LOADING]: 'Loading Documents...',
-    [PROCESSING_STATES.EXTRACTING]: 'Extracting Text...',
-    [PROCESSING_STATES.CLASSIFYING]: 'Classifying Documents...',
-    [PROCESSING_STATES.ANALYZING]: 'Analyzing with AI...',
-    [PROCESSING_STATES.POPULATING]: 'Auto-Filling Profile...',
-    [PROCESSING_STATES.COMPLETE]: 'Complete',
-    [PROCESSING_STATES.ERROR]: 'Error'
+    [PROCESSING_STATES.IDLE]: 'Formation Ready',
+    [PROCESSING_STATES.VALIDATING]: 'Count, OFF! Verifying personnel...',
+    [PROCESSING_STATES.LOADING]: 'Dress Right, DRESS! Loading documents...',
+    [PROCESSING_STATES.EXTRACTING]: 'Inspection, ARMS! Extracting content...',
+    [PROCESSING_STATES.CLASSIFYING]: 'Platoon, ATTENTION! Classifying documents...',
+    [PROCESSING_STATES.ANALYZING]: 'Sir/Ma\'am, platoon prepared for inspection...',
+    [PROCESSING_STATES.POPULATING]: 'Close Ranks, MARCH! Auto-filling profile...',
+    [PROCESSING_STATES.COMPLETE]: 'AT EASE - Inspection Complete',
+    [PROCESSING_STATES.ERROR]: 'Fall Out - Error Encountered'
   };
-  return labels[state] || 'Processing...';
+  return labels[state] || 'Ready, FRONT...';
 }

@@ -514,7 +514,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
           <LLMRecommendationBadge toolId="pathfinder" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('pathfinder', 'title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('pathfinder', 'title')} <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           {t('pathfinder', 'subtitle')}
         </p>
@@ -856,10 +856,10 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  📄 {t('pathfinder', 'uploadDocument')}
+                  📄 {t('pathfinder', 'dropInFile') || 'Drop In Document'}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {t('pathfinder', 'uploadDocumentDesc')}
+                  Files stay in your browser - never uploaded to any server
                 </p>
               </div>
               <button

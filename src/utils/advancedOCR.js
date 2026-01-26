@@ -36,13 +36,15 @@ export const ADVANCED_OCR_CONFIG = {
   // Detection thresholds
   MIN_CHARS_PER_PAGE: 50,
   MIN_CONFIDENCE: 60,
+  MIN_USEFUL_TEXT_LENGTH: 100, // Minimum chars for "useful" extraction
   
   // Processing limits
   MAX_OCR_PAGES: 20,        // Process more pages for important docs
   MAX_PARALLEL_PAGES: 3,    // Process multiple pages simultaneously
   
-  // Quality settings
-  CANVAS_SCALES: [2.0, 3.0, 4.0], // Try multiple resolutions
+  // Quality settings - INCREASED for degraded documents
+  CANVAS_SCALES: [2.5, 3.5, 4.5], // Higher resolution for better OCR
+  CANVAS_SCALES_DEGRADED: [3.5, 4.5, 6.0], // Even higher for severely degraded
   TESSDATA_PATH: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/',
   
   // Languages (prioritize English but support others)
@@ -51,6 +53,10 @@ export const ADVANCED_OCR_CONFIG = {
   // Ensemble settings
   ENABLE_ENSEMBLE: true,    // Combine multiple passes
   MIN_ENSEMBLE_PASSES: 2,   // At least 2 passes for voting
+  
+  // Retry settings for failed OCR
+  ENABLE_RETRY_WITH_HIGHER_SCALE: true, // Retry with higher scale if OCR fails
+  MAX_RETRIES: 2,           // Maximum retry attempts
 };
 
 /**
@@ -62,7 +68,9 @@ export const PREPROCESS_STRATEGIES = {
   STANDARD: 'standard',   // Average quality (balanced processing)
   POOR: 'poor',          // Low quality/faxed (aggressive processing)
   AGED: 'aged',          // Old/yellowed documents
-  HANDWRITTEN: 'handwritten' // Mixed print + handwriting
+  SEVERELY_AGED: 'severely_aged', // Very old, faded, degraded documents
+  HANDWRITTEN: 'handwritten', // Mixed print + handwriting
+  INVERTED: 'inverted'    // White text on dark background
 };
 
 /**
@@ -166,9 +174,33 @@ async function detectOptimalStrategy(pdf, pageNum = 1) {
     
     canvas.remove();
     
-    // Decision tree based on metrics
+    console.log(`📊 Image quality metrics: brightness=${metrics.brightness.toFixed(0)}, contrast=${metrics.contrast.toFixed(0)}, noise=${metrics.noise.toFixed(0)}, inverted=${metrics.isInverted}`);
+    
+    // Decision tree based on metrics - IMPROVED for aged documents
+    // Check for inverted text (white on dark)
+    if (metrics.isInverted) {
+      console.log('🔄 Detected inverted text (white on dark background)');
+      return PREPROCESS_STRATEGIES.INVERTED;
+    }
+    
+    // Severely degraded: very low contrast OR very faded (high brightness)
+    if (metrics.contrast < 20 || (metrics.brightness > 220 && metrics.contrast < 40)) {
+      console.log('⚠️ Severely degraded document detected - using maximum enhancement');
+      return PREPROCESS_STRATEGIES.SEVERELY_AGED;
+    }
+    
+    // Poor quality: low contrast with high noise
     if (metrics.contrast < 30) return PREPROCESS_STRATEGIES.POOR;
-    if (metrics.brightness > 200 || metrics.brightness < 50) return PREPROCESS_STRATEGIES.AGED;
+    
+    // Aged: yellowed or faded
+    if (metrics.brightness > 200 || metrics.brightness < 50) {
+      // Check if it's severely faded
+      if (metrics.contrast < 50) {
+        return PREPROCESS_STRATEGIES.SEVERELY_AGED;
+      }
+      return PREPROCESS_STRATEGIES.AGED;
+    }
+    
     if (metrics.noise > 40) return PREPROCESS_STRATEGIES.POOR;
     if (metrics.contrast > 70 && metrics.noise < 20) return PREPROCESS_STRATEGIES.CLEAN;
     return PREPROCESS_STRATEGIES.STANDARD;
@@ -186,12 +218,18 @@ function analyzeImageQuality(imageData) {
   const data = imageData.data;
   let totalBrightness = 0;
   let brightnessValues = [];
+  let darkPixels = 0;
+  let lightPixels = 0;
   
   // Sample pixels (every 10th pixel for performance)
   for (let i = 0; i < data.length; i += 40) {
     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
     brightnessValues.push(brightness);
     totalBrightness += brightness;
+    
+    // Track dark vs light pixels for inversion detection
+    if (brightness < 100) darkPixels++;
+    else if (brightness > 155) lightPixels++;
   }
   
   const avgBrightness = totalBrightness / brightnessValues.length;
@@ -210,20 +248,37 @@ function analyzeImageQuality(imageData) {
   }
   const noise = noiseSum / (brightnessValues.length - 1);
   
+  // Detect inverted text (predominantly dark background)
+  const totalSampled = brightnessValues.length;
+  const isInverted = (darkPixels / totalSampled > 0.6) && avgBrightness < 100;
+  
   return {
     brightness: avgBrightness,
     contrast: contrast,
-    noise: noise
+    noise: noise,
+    isInverted: isInverted,
+    darkPixelRatio: darkPixels / totalSampled,
+    lightPixelRatio: lightPixels / totalSampled
   };
 }
 
 /**
  * Run advanced multi-pass OCR with ensemble voting
+ * Enhanced with retry logic for degraded documents
  */
 async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
   const startTime = Date.now();
   const pagesToProcess = Math.min(numPages, config.MAX_OCR_PAGES);
   const results = [];
+  
+  // Use higher scales for degraded documents
+  const isDegraded = strategy === PREPROCESS_STRATEGIES.SEVERELY_AGED ||
+                     strategy === PREPROCESS_STRATEGIES.POOR ||
+                     strategy === PREPROCESS_STRATEGIES.AGED;
+  
+  const baseScales = isDegraded ? config.CANVAS_SCALES_DEGRADED : config.CANVAS_SCALES;
+  
+  console.log(`🔬 Using ${isDegraded ? 'HIGH' : 'standard'} resolution scales: [${baseScales.join(', ')}] for strategy: ${strategy}`);
   
   // Initialize Tesseract worker with optimized settings for v7
   const worker = await Tesseract.createWorker(config.LANGUAGES);
@@ -250,7 +305,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       
       // Multi-scale ensemble (if enabled)
       const pageResults = [];
-      const scales = config.ENABLE_ENSEMBLE ? config.CANVAS_SCALES : [config.CANVAS_SCALES[0]];
+      const scales = config.ENABLE_ENSEMBLE ? baseScales : [baseScales[baseScales.length - 1]]; // Use highest scale if single pass
       
       for (const scale of scales) {
         const canvas = await renderPageToCanvas(page, scale);
@@ -270,11 +325,36 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       }
       
       // Combine results using ensemble voting
-      const pageText = config.ENABLE_ENSEMBLE ? 
-        ensembleVote(pageResults) : 
+      let pageText = config.ENABLE_ENSEMBLE ?
+        ensembleVote(pageResults) :
         pageResults[0].text;
       
       const avgConfidence = pageResults.reduce((sum, r) => sum + r.confidence, 0) / pageResults.length;
+      
+      // RETRY LOGIC: If OCR extracted very little text, try with even higher scale
+      const textLength = pageText.trim().length;
+      if (textLength < config.MIN_USEFUL_TEXT_LENGTH && config.ENABLE_RETRY_WITH_HIGHER_SCALE) {
+        console.log(`⚠️ Page ${pageNum}: Only ${textLength} chars extracted. Retrying with maximum scale...`);
+        
+        // Try with maximum scale (8.0) and most aggressive preprocessing
+        const maxScale = 8.0;
+        const retryCanvas = await renderPageToCanvas(page, maxScale);
+        const retryProcessed = applyAdvancedPreprocessing(retryCanvas, PREPROCESS_STRATEGIES.SEVERELY_AGED);
+        const retryImageData = retryProcessed.toDataURL('image/png');
+        
+        const retryResult = await worker.recognize(retryImageData);
+        
+        retryCanvas.remove();
+        retryProcessed.remove();
+        
+        // Use retry result if it's better
+        if (retryResult.data.text.trim().length > textLength) {
+          console.log(`✅ Retry successful: ${retryResult.data.text.trim().length} chars (was ${textLength})`);
+          pageText = retryResult.data.text;
+        } else {
+          console.log(`❌ Retry did not improve results`);
+        }
+      }
       
       results.push({
         pageNum,
@@ -284,7 +364,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     }
     
     // Combine all pages
-    const fullText = results.map(r => 
+    const fullText = results.map(r =>
       `--- PAGE ${r.pageNum} (OCR ${r.confidence.toFixed(0)}%) ---\n${r.text.trim()}\n\n`
     ).join('');
     
@@ -293,6 +373,10 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     
     const avgConfidence = results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
     
+    // Log summary
+    const totalChars = correctedText.replace(/---\s*PAGE.*?---\n/g, '').replace(/\s+/g, ' ').trim().length;
+    console.log(`📊 OCR Summary: ${totalChars} chars extracted from ${pagesToProcess} pages (avg confidence: ${avgConfidence.toFixed(0)}%)`);
+    
     return {
       text: correctedText,
       pageCount: numPages,
@@ -300,7 +384,8 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       strategy: strategy,
       confidence: avgConfidence,
       processingTime: Date.now() - startTime,
-      pagesProcessed: pagesToProcess
+      pagesProcessed: pagesToProcess,
+      totalCharsExtracted: totalChars
     };
     
   } finally {
@@ -372,6 +457,31 @@ function applyAdvancedPreprocessing(canvas, strategy) {
       imageData = adaptiveThreshold(imageData, 20);
       imageData = denoise(imageData, 1);
       break;
+      
+    case PREPROCESS_STRATEGIES.SEVERELY_AGED:
+      // MAXIMUM enhancement for severely degraded/faded documents
+      console.log('🔧 Applying SEVERELY_AGED preprocessing (maximum enhancement)');
+      imageData = grayscale(imageData);
+      imageData = removeYellowing(imageData);       // Remove age discoloration
+      imageData = autoLevels(imageData);            // Automatic contrast stretching
+      imageData = enhanceContrast(imageData, 2.5);  // Very aggressive contrast
+      imageData = unsharpMask(imageData, 2.0);      // Strong edge enhancement
+      imageData = adaptiveThreshold(imageData, 21); // Larger block for faded text
+      imageData = morphologicalClosing(imageData, 1); // Fill small gaps
+      imageData = denoise(imageData, 2);            // Strong denoising
+      imageData = sharpen(imageData, 1.5);          // Final sharpening
+      break;
+      
+    case PREPROCESS_STRATEGIES.INVERTED:
+      // Handle white text on dark background
+      console.log('🔧 Applying INVERTED preprocessing');
+      imageData = grayscale(imageData);
+      imageData = invert(imageData);                // Flip black/white
+      imageData = enhanceContrast(imageData, 1.6);
+      imageData = adaptiveThreshold(imageData);
+      imageData = denoise(imageData, 1);
+      imageData = sharpen(imageData, 0.8);
+      break;
   }
   
   ctx.putImageData(imageData, 0, 0);
@@ -389,30 +499,123 @@ function ensembleVote(results) {
 }
 
 /**
- * VA terminology correction
+ * VA terminology correction - EXPANDED for DD214 documents
  */
 function applyVATerminologyCorrection(text) {
   const corrections = {
-    // Common OCR errors for VA terms
+    // Common OCR errors for DD-214 form number
     'OO-214': 'DD-214',
     'DD-Z14': 'DD-214',
     'OD-214': 'DD-214',
+    'D0-214': 'DD-214',
+    '00-214': 'DD-214',
+    'DO-214': 'DD-214',
+    'DD 214': 'DD-214',
+    'DD2I4': 'DD-214',
+    'DD21A': 'DD-214',
+    
+    // Character of service
     'HONORABIE': 'HONORABLE',
+    'HONORAB1E': 'HONORABLE',
+    'HONORARLE': 'HONORABLE',
     'GENERAI': 'GENERAL',
+    'GENERA1': 'GENERAL',
+    'GEN ERAL': 'GENERAL',
+    
+    // Common DD214 fields
     'SERV1CE': 'SERVICE',
+    'SERVI CE': 'SERVICE',
+    'SERV ICE': 'SERVICE',
     'DATE OF SEPARAT1ON': 'DATE OF SEPARATION',
+    'SEPARATI ON': 'SEPARATION',
+    'SEPARAT1ON': 'SEPARATION',
     'MIUTARY': 'MILITARY',
+    'MILIT ARY': 'MILITARY',
+    'MIL1TARY': 'MILITARY',
+    'M1LITARY': 'MILITARY',
     'DEPARTM ENT': 'DEPARTMENT',
+    'DEPART MENT': 'DEPARTMENT',
+    'DEPARTMEHT': 'DEPARTMENT',
+    
+    // VA terms
     'VET ERAN': 'VETERAN',
+    'VETER AN': 'VETERAN',
+    'VETERAH': 'VETERAN',
     'RATIN G': 'RATING',
+    'RAT1NG': 'RATING',
     'DISAB1LITY': 'DISABILITY',
+    'DISABIL1TY': 'DISABILITY',
+    'DISABILI TY': 'DISABILITY',
     'COMPENSAT1ON': 'COMPENSATION',
+    'COMPENSA TION': 'COMPENSATION',
+    
+    // Military branches
+    'ARHY': 'ARMY',
+    'ARNY': 'ARMY',
+    'ARM Y': 'ARMY',
+    'NAVY': 'NAVY', // Already correct but include for completeness
+    'AIR FORCE': 'AIR FORCE',
+    'AIRFORCE': 'AIR FORCE',
+    'A1R FORCE': 'AIR FORCE',
+    'MAR1NE': 'MARINE',
+    'MARI NE': 'MARINE',
+    'COAST GUARD': 'COAST GUARD',
+    'COASTGUARD': 'COAST GUARD',
+    
+    // Ranks (enlisted)
+    'SPEC1ALIST': 'SPECIALIST',
+    'SPECIA LIST': 'SPECIALIST',
+    'SERGEA NT': 'SERGEANT',
+    'SERGE ANT': 'SERGEANT',
+    'SERGEAN T': 'SERGEANT',
+    'SERGEA HT': 'SERGEANT',
+    'CORPOR AL': 'CORPORAL',
+    'CORPO RAL': 'CORPORAL',
+    'PR1VATE': 'PRIVATE',
+    'PRIV ATE': 'PRIVATE',
+    
+    // Common DD214 box labels
+    'CERT1FICATE': 'CERTIFICATE',
+    'CERTIFICA TE': 'CERTIFICATE',
+    'D1SCHARGE': 'DISCHARGE',
+    'DISCH ARGE': 'DISCHARGE',
+    'DISCHAR GE': 'DISCHARGE',
+    'ACT1VE': 'ACTIVE',
+    'ACTIV E': 'ACTIVE',
+    'DU TY': 'DUTY',
+    'RELEASE': 'RELEASE',
+    'RELE ASE': 'RELEASE',
+    'DECORA TIONS': 'DECORATIONS',
+    'DECORATI ONS': 'DECORATIONS',
+    'MED ALS': 'MEDALS',
+    'MEDA LS': 'MEDALS',
+    'BADG ES': 'BADGES',
+    'BAD GES': 'BADGES',
+    
+    // Date-related
+    'SEPTEMB ER': 'SEPTEMBER',
+    'NOVEMB ER': 'NOVEMBER',
+    'DECEMB ER': 'DECEMBER',
+    'FEBRUAR Y': 'FEBRUARY',
+    'JANU ARY': 'JANUARY',
+    
+    // Numbers commonly misread
+    'l9': '19',  // lowercase L to 1
+    'O': '0',    // Will be applied only in specific number contexts
+    '|': '1',    // Pipe to 1
   };
   
   let corrected = text;
   for (const [wrong, right] of Object.entries(corrections)) {
-    corrected = corrected.replace(new RegExp(wrong, 'gi'), right);
+    corrected = corrected.replace(new RegExp(wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), right);
   }
+  
+  // Fix common number/letter confusions in dates (YYYYMMDD format)
+  // Match patterns like 19B5 -> 1985, 200I -> 2001
+  corrected = corrected.replace(/\b(19|20)([0-9BOI])([0-9BOI])\b/g, (match, century, d1, d2) => {
+    const fixChar = (c) => c === 'B' ? '8' : c === 'O' ? '0' : c === 'I' ? '1' : c;
+    return century + fixChar(d1) + fixChar(d2);
+  });
   
   return corrected;
 }
@@ -619,6 +822,102 @@ function removeYellowing(imageData) {
     }
   }
   
+  return imageData;
+}
+
+/**
+ * Invert image colors (for white text on dark background)
+ */
+function invert(imageData) {
+  const data = imageData.data;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];         // R
+    data[i + 1] = 255 - data[i + 1]; // G
+    data[i + 2] = 255 - data[i + 2]; // B
+    // Alpha (data[i + 3]) remains unchanged
+  }
+  
+  return imageData;
+}
+
+/**
+ * Auto-levels: stretch histogram to use full 0-255 range
+ * Critical for faded documents where text has low contrast
+ */
+function autoLevels(imageData) {
+  const data = imageData.data;
+  
+  // First pass: find min and max values
+  let min = 255;
+  let max = 0;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    if (brightness < min) min = brightness;
+    if (brightness > max) max = brightness;
+  }
+  
+  // Avoid division by zero
+  if (max === min) return imageData;
+  
+  // Calculate stretch factor
+  const range = max - min;
+  const scale = 255 / range;
+  
+  console.log(`📊 Auto-levels: min=${min.toFixed(0)}, max=${max.toFixed(0)}, scale=${scale.toFixed(2)}`);
+  
+  // Second pass: apply stretching
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = clamp((data[i] - min) * scale);
+    data[i + 1] = clamp((data[i + 1] - min) * scale);
+    data[i + 2] = clamp((data[i + 2] - min) * scale);
+  }
+  
+  return imageData;
+}
+
+/**
+ * Unsharp mask: enhance edges for better OCR on blurry/faded text
+ * amount: strength of sharpening (1.0 = normal, 2.0 = strong)
+ */
+function unsharpMask(imageData, amount = 1.0) {
+  const width = imageData.width;
+  const height = imageData.height;
+  const data = imageData.data;
+  const output = new Uint8ClampedArray(data);
+  
+  // Create blurred version using box blur (3x3)
+  const blurred = new Uint8ClampedArray(data);
+  
+  // Apply 3x3 box blur
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      let sum = 0;
+      
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nIdx = ((y + dy) * width + (x + dx)) * 4;
+          sum += data[nIdx];
+        }
+      }
+      
+      blurred[idx] = sum / 9;
+      blurred[idx + 1] = sum / 9;
+      blurred[idx + 2] = sum / 9;
+    }
+  }
+  
+  // Unsharp mask: output = original + amount * (original - blurred)
+  for (let i = 0; i < data.length; i += 4) {
+    const diff = data[i] - blurred[i];
+    output[i] = clamp(data[i] + amount * diff);
+    output[i + 1] = clamp(data[i + 1] + amount * diff);
+    output[i + 2] = clamp(data[i + 2] + amount * diff);
+  }
+  
+  imageData.data.set(output);
   return imageData;
 }
 

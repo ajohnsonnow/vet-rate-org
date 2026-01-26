@@ -1,8 +1,46 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Brand configurations for build-time HTML transformation
+const BRAND_CONFIGS = {
+  vetrate: {
+    appName: 'Vet-Rate.org',
+    title: 'Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE',
+    description: 'Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans.',
+    logo: '/images/Vet-Rate-org-logo-official.png',
+    themeColor: '#003f87',
+    analytics: 'https://vet-rate-org.goatcounter.com/count'
+  },
+  supplylocker: {
+    appName: 'Supply Locker',
+    title: 'Supply Locker | Premium VA Claims Toolkit - 39 Pro Tools · Rating Calculator · AI Analysis',
+    description: 'Supply Locker - Your premium VA claims toolkit. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. Supporting veterans who support us.',
+    logo: '/images/supply-locker-logo.png',
+    themeColor: '#065f46',
+    analytics: 'https://supply-locker.goatcounter.com/count'
+  }
+};
+
+// HTML transformation plugin for branding
+function brandingPlugin() {
+  const brandMode = process.env.VITE_BRAND_MODE || 'vetrate';
+  const brand = BRAND_CONFIGS[brandMode] || BRAND_CONFIGS.vetrate;
+  
+  return {
+    name: 'branding-transform',
+    transformIndexHtml(html) {
+      return html
+        .replace(/<title>.*?<\/title>/, `<title>${brand.title}</title>`)
+        .replace(/content="Vet-Rate\.org[^"]*"/, `content="${brand.description}"`)
+        .replace(/Vet-Rate-org-logo-official\.png/g, brand.logo.replace('/images/', ''))
+        .replace(/#003f87/g, brand.themeColor)
+        .replace(/vet-rate-org\.goatcounter\.com\/count/g, brand.analytics.replace('https://', ''));
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), brandingPlugin()],
   server: {
     port: 5173,
     host: '127.0.0.1', // Required for VA OAuth redirect URI

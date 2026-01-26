@@ -119,6 +119,7 @@ export const validateFilesBatch = (files) => {
 
 /**
  * Process a single document: extract text, classify, parse
+ * Enhanced for sequential formation processing
  */
 const processSingleDocument = async (file, onProgress) => {
   const result = {
@@ -129,25 +130,37 @@ const processSingleDocument = async (file, onProgress) => {
     classification: null,
     extractedData: null,
     error: null,
-    processingTime: 0
+    processingTime: 0,
+    pageCount: 0,
+    method: null,
+    ocrUsed: false,
+    quality: null,
+    confidence: null
   };
 
   const startTime = Date.now();
 
   try {
-    // Step 1: Extract text
+    // Step 1: Extract text (Platoon Sergeant Review)
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.EXTRACTING,
-      progress: 25
+      progress: 25,
+      stage: 'platoon_sergeant'
     });
 
     const extractionResult = await analyzeDocument(file, (state) => {
+      // Enhanced progress callback with detailed OCR state
       onProgress?.({
         filename: file.name,
         state: PROCESSING_STATES.EXTRACTING,
         progress: 25 + (state.progress || 0) * 0.5, // 25-75%
-        ocrState: state
+        ocrState: state.message || state.state,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        quality: state.quality,
+        confidence: state.confidence,
+        stage: 'platoon_sergeant'
       });
     });
 
@@ -157,21 +170,28 @@ const processSingleDocument = async (file, onProgress) => {
     }
 
     result.text = extractionResult.text;
+    result.pageCount = extractionResult.pageCount || 1;
+    result.method = extractionResult.method || 'text';
+    result.ocrUsed = extractionResult.ocrUsed || false;
 
-    // Step 2: Classify document
+    // Step 2: Classify document (SecOps Intelligence Briefing - Part 1)
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.CLASSIFYING,
-      progress: 75
+      progress: 75,
+      stage: 'intel_classify'
     });
 
     result.classification = classifyDocument(result.text, file.name);
 
-    // Step 3: Parse based on classification
+    // Step 3: Parse based on classification (SecOps Intelligence Briefing - Part 2)
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.ANALYZING,
-      progress: 85
+      progress: 85,
+      stage: 'intel_extract',
+      docType: result.classification.type,
+      confidence: result.classification.confidence
     });
 
     result.extractedData = await parseDocumentByType(
@@ -206,7 +226,15 @@ const processSingleDocument = async (file, onProgress) => {
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.COMPLETE,
-      progress: 100
+      progress: 100,
+      stage: 'complete',
+      result: {
+        classification: result.classification,
+        extractedData: result.extractedData,
+        pageCount: result.pageCount,
+        method: result.method,
+        ocrUsed: result.ocrUsed
+      }
     });
 
   } catch (error) {
@@ -216,12 +244,198 @@ const processSingleDocument = async (file, onProgress) => {
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.ERROR,
-      error: error.message
+      error: error.message,
+      stage: 'error'
     });
   }
 
   result.processingTime = Date.now() - startTime;
   return result;
+};
+
+/**
+ * Process single document for formation workflow
+ * Returns enhanced result object for user verification
+ */
+export const processFormationDocument = async (file, onProgress) => {
+  console.log(`🎖️ Platoon Sergeant inspecting: ${file.name}`);
+  
+  // Use enhanced single document processor
+  const result = await processSingleDocument(file, onProgress);
+  
+  // Return result ready for intelligence briefing
+  return {
+    ...result,
+    readyForReview: result.status === 'complete',
+    requiresVerification: true,
+    vkbSaved: !!result.vkbDocumentId
+  };
+};
+
+/**
+ * Detect and split multiple DD214s from a multi-page document
+ * Each DD214 typically starts with "CERTIFICATE OF RELEASE OR DISCHARGE"
+ * Returns array of text segments, one per DD214
+ */
+const splitMultipleDD214s = (text) => {
+  // Split by page markers first
+  const pagePattern = /---\s*PAGE\s+(\d+).*?---/gi;
+  
+  // Find all page boundaries
+  const pageMatches = [...text.matchAll(pagePattern)];
+  
+  if (pageMatches.length === 0) {
+    // No page markers, return as single document
+    return [{ text, pages: '1', startPage: 1 }];
+  }
+  
+  // Group pages by DD214 (look for "CERTIFICATE OF RELEASE" to start a new one)
+  const dd214Segments = [];
+  let currentSegment = '';
+  let segmentPageStart = 1;
+  
+  for (let i = 0; i < pageMatches.length; i++) {
+    const pageNum = parseInt(pageMatches[i][1]);
+    const pageStart = pageMatches[i].index;
+    const pageEnd = pageMatches[i + 1]?.index || text.length;
+    const pageText = text.substring(pageStart, pageEnd);
+    
+    // Check if this page starts a new DD214
+    const isNewDD214 = /CERTIFICATE\s+OF\s+RELEASE\s+OR\s+DISCHARGE/i.test(pageText) &&
+                       pageText.indexOf('CERTIFICATE OF RELEASE') < 200; // Near start of page
+    
+    if (isNewDD214 && currentSegment.length > 0) {
+      // Save previous segment
+      dd214Segments.push({
+        text: currentSegment.trim(),
+        pages: `${segmentPageStart}-${pageNum - 1}`,
+        startPage: segmentPageStart
+      });
+      currentSegment = pageText;
+      segmentPageStart = pageNum;
+    } else {
+      currentSegment += pageText;
+    }
+  }
+  
+  // Add final segment
+  if (currentSegment.length > 0) {
+    dd214Segments.push({
+      text: currentSegment.trim(),
+      pages: segmentPageStart === pageMatches.length ? `${segmentPageStart}` : `${segmentPageStart}-${pageMatches.length}`,
+      startPage: segmentPageStart
+    });
+  }
+  
+  console.log(`📄 Detected ${dd214Segments.length} DD214(s) in document`);
+  return dd214Segments;
+};
+
+/**
+ * Extract a quick name from DD214 text segment for matching purposes
+ * Returns last name only (most reliable for filename matching)
+ */
+const extractQuickName = (text) => {
+  // Clean the text first
+  const cleanedText = text.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ');
+  
+  const namePatterns = [
+    // "1. NAME" followed by name: WILLIAMS, ROBERT
+    /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s*/i,
+    // Name pattern: LASTNAME, FIRSTNAME
+    /\b([A-Z]{3,})\s*[,;]\s*[A-Z]{2,}/,
+  ];
+  
+  for (const pattern of namePatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const lastName = match[1]?.trim().toUpperCase();
+      // Validate it's not a form field label
+      const FIELD_LABELS = ['DEPARTMENT', 'COMPONENT', 'BRANCH', 'GRADE', 'RANK',
+                            'SERVICE', 'SOCIAL', 'SECURITY', 'NUMBER', 'NAME', 'DATE',
+                            'CERTIFICATE', 'RELEASE', 'DISCHARGE', 'ACTIVE', 'DUTY'];
+      if (lastName && lastName.length >= 3 && !FIELD_LABELS.includes(lastName)) {
+        return lastName;
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * Select the best DD214 segment from multiple found in a document
+ * Prioritizes by: 1) Filename match, 2) Data completeness
+ */
+const selectBestDD214Segment = (segments, filename) => {
+  if (segments.length === 0) return null;
+  if (segments.length === 1) return segments[0];
+  
+  console.log(`🎯 Multiple DD214s found (${segments.length}), selecting best match for filename: ${filename}`);
+  
+  // Extract potential names from filename
+  // "Johnson Service Records DD214 ALL.pdf" -> "JOHNSON"
+  // "Smith_John_DD214.pdf" -> "SMITH"
+  const filenameUpper = filename.toUpperCase();
+  const filenameWords = filenameUpper.replace(/[_\-\.]/g, ' ').split(/\s+/);
+  
+  // Common words to ignore in filename
+  const IGNORE_WORDS = ['SERVICE', 'RECORDS', 'DD214', 'DD', '214', 'ALL', 'PDF',
+                        'MILITARY', 'DISCHARGE', 'COPY', 'MEMBER', 'SCAN', 'FILE'];
+  const potentialNames = filenameWords.filter(word =>
+    word.length >= 3 && !IGNORE_WORDS.includes(word) && /^[A-Z]+$/.test(word)
+  );
+  
+  console.log(`📛 Potential name(s) from filename: [${potentialNames.join(', ')}]`);
+  
+  // Score each segment
+  const scoredSegments = segments.map((segment, index) => {
+    const extractedName = extractQuickName(segment.text);
+    let score = 0;
+    let matchReason = 'default';
+    
+    // Check if extracted name matches any potential name from filename
+    if (extractedName && potentialNames.length > 0) {
+      for (const potentialName of potentialNames) {
+        if (extractedName === potentialName) {
+          score += 100; // Exact match
+          matchReason = `exact match: ${extractedName}`;
+          break;
+        } else if (extractedName.startsWith(potentialName) || potentialName.startsWith(extractedName)) {
+          score += 50; // Partial match
+          matchReason = `partial match: ${extractedName} ~ ${potentialName}`;
+        }
+      }
+    }
+    
+    // Bonus for data completeness (look for key fields)
+    const hasRank = /4[aA]?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(segment.text);
+    const hasBranch = /ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD/i.test(segment.text);
+    const hasDates = /\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/g.test(segment.text);
+    const hasAwards = /MEDAL|RIBBON|BADGE|AWARD/i.test(segment.text);
+    
+    if (hasRank) score += 5;
+    if (hasBranch) score += 5;
+    if (hasDates) score += 5;
+    if (hasAwards) score += 5;
+    
+    // Small bonus for earlier segments if no strong match found
+    // (first DD214 is often the "primary" one)
+    if (score < 50) {
+      score += (segments.length - index);
+    }
+    
+    console.log(`  Segment ${index + 1} (pages ${segment.pages}): name="${extractedName}", score=${score}, reason="${matchReason}"`);
+    
+    return { ...segment, score, extractedName, matchReason };
+  });
+  
+  // Sort by score (highest first)
+  scoredSegments.sort((a, b) => b.score - a.score);
+  
+  const best = scoredSegments[0];
+  console.log(`✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) with name "${best.extractedName}" - ${best.matchReason}`);
+  
+  return best;
 };
 
 /**
@@ -235,7 +449,43 @@ const parseDocumentByType = async (text, docType, filename) => {
     case DOCUMENT_TYPES.NGB22:
     case DOCUMENT_TYPES.DD256:
     case DOCUMENT_TYPES.DD257:
-      return await parseServiceRecord(text);
+      // Check for multiple DD214s in the document
+      const dd214Segments = splitMultipleDD214s(text);
+      
+      if (dd214Segments.length > 1) {
+        // Multiple DD214s found - use intelligent selection based on filename
+        console.log(`🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`);
+        
+        // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
+        const bestSegment = selectBestDD214Segment(dd214Segments, filename);
+        
+        if (bestSegment) {
+          // Parse just the selected DD214
+          const parsed = await parseServiceRecord(bestSegment.text);
+          parsed.sourcePages = bestSegment.pages;
+          parsed.multiDocument = true;
+          parsed.selectedFromCount = dd214Segments.length;
+          parsed.selectionReason = bestSegment.matchReason || 'filename match';
+          
+          // Also store info about other DD214s found (but don't parse them in detail)
+          parsed.otherDD214sFound = dd214Segments
+            .filter(seg => seg !== bestSegment)
+            .map(seg => ({
+              pages: seg.pages,
+              extractedName: extractQuickName(seg.text)
+            }));
+          
+          console.log(`✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || 'name TBD'})`);
+          return parsed;
+        }
+        
+        // Fallback: if selection fails, parse first one
+        console.warn('⚠️ Selection failed, falling back to first DD214');
+        return await parseServiceRecord(dd214Segments[0].text);
+      }
+      
+      // Single DD214
+      return await parseServiceRecord(dd214Segments[0]?.text || text);
       
     case DOCUMENT_TYPES.RATING_DECISION:
       return await parseRatingDecision(text);
@@ -260,19 +510,785 @@ const parseDocumentByType = async (text, docType, filename) => {
 
 /**
  * Parse DD214 and other service records
+ * Extracts all standard DD214 boxes and fields
+ * Field names match collectionRules.js expectations
  */
 const parseServiceRecord = async (text) => {
+  const data = {
+    type: 'service_record',
+    // ============================================================
+    // DD214 FORM BOX STRUCTURE (VERIFIED FROM ACTUAL FORMS):
+    // Box 1: Name (Last, first, middle)
+    // Box 2: Department, Component, Branch
+    // Box 3: Social Security Number (we don't store)
+    // Box 4a: Grade/Rank
+    // Box 4b: Pay Grade
+    // Box 5: Date of Birth ⚠️ NOT Box 6!
+    // Box 6: Reserve Obligation Termination Date
+    // Box 7a: Place of Entry into Active Duty
+    // Box 7b: Home of Record at Time of Entry
+    // Box 8a: Last Duty Assignment
+    // Box 8b: Station Where Separated
+    // Box 11: Primary Specialty (MOS/AFSC/Rate)
+    // Box 12a: Date Entered AD This Period ⚠️ Entry Date!
+    // Box 12b: Separation Date This Period ⚠️ End Date!
+    // Box 12c-e: Service Time calculations
+    // Box 13: Decorations, Medals, Badges
+    // Box 14: Military Education
+    // Box 18: Remarks
+    // Box 23: Type of Separation
+    // Box 24: Character of Service
+    // Box 25: Separation Authority
+    // Box 26: SPD Code
+    // Box 27: Reentry Code
+    // Box 28: Narrative Reason
+    // ============================================================
+    
+    // Box 1: Name (matches collectionRules: veteranName)
+    veteranName: null,
+    lastName: null,
+    firstName: null,
+    middleName: null,
+    // Box 2: Department, Component, Branch (matches collectionRules: branch)
+    branch: null,
+    component: null,
+    // Box 4a: Grade/Rate/Rank (matches collectionRules: rank)
+    rank: null,
+    // Box 4b: Pay Grade
+    payGrade: null,
+    // Box 5: Date of Birth (matches collectionRules: dateOfBirth)
+    dateOfBirth: null,
+    // Box 12a: Date Entered AD This Period (matches collectionRules: serviceStartDate)
+    serviceStartDate: null,
+    // Box 7a: Place of Entry
+    placeOfEntry: null,
+    // Box 11: Primary MOS/Specialty (matches collectionRules: mos)
+    mos: null,
+    mosTitle: null,
+    // Box 12b: Separation Date (matches collectionRules: serviceEndDate)
+    serviceEndDate: null,
+    // Box 12c-e: Service Time
+    totalActiveService: null,
+    totalPriorActiveService: null,
+    totalPriorInactiveService: null,
+    foreignService: null,
+    seaService: null,
+    // Box 13: Decorations, Medals, Badges (parsed awards - matches collectionRules: awards)
+    awards: [],
+    // Box 14: Military Education (cleaned/validated)
+    militaryEducation: null,
+    // Box 18: Remarks - extracted key info (deployments, operations)
+    remarks: null,
+    deployments: [],
+    // Box 23: Type of Separation
+    separationType: null,
+    // Box 24: Character of Service (matches collectionRules: dischargeType)
+    dischargeType: null,
+    // Box 25: Separation Authority
+    separationAuthority: null,
+    // Box 26: Separation Code (SPD)
+    spdCode: null,
+    // Box 27: Reentry Code
+    reentryCode: null,
+    // Box 28: Narrative Reason
+    narrativeReason: null,
+    // Metadata
+    raw: text.substring(0, 1000)
+  };
+
   try {
-    // Use existing DD214 parser
-    const parsed = parseDD214Text(text);
-    return {
-      type: 'service_record',
-      ...parsed,
-      raw: text.substring(0, 500)
+    const upperText = text.toUpperCase();
+    const normalizedText = text.replace(/\s+/g, ' ').trim();
+    
+    // ============================================================
+    // DD214 FORM STRUCTURE (Critical for parsing):
+    // 
+    // 1. FIELD LABELS = BOLD ALL CAPS (e.g., "NAME", "GRADE", "DECORATIONS")
+    // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
+    //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
+    // 3. ACTUAL DATA = ALL CAPS, not bold, NOT in parentheses
+    //    Example: "WILLIAMS, ROBERT LEE"
+    //
+    // Key insight: Remove EVERYTHING in parentheses - that's instructional!
+    // Then look for ALL CAPS text that's NOT a field label.
+    // ============================================================
+    
+    let cleanedText = text;
+    
+    // STEP 1: Remove ALL parenthetical content (instructions/examples)
+    // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
+    cleanedText = cleanedText.replace(/\([^)]*\)/g, ' ');
+    
+    // STEP 2: Remove common instructional phrases (not always in parentheses)
+    const INSTRUCTIONAL_PATTERNS = [
+      /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi,  // Example awards list
+      /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi,            // "Decorations awarded such as"
+      /EXAMPLE[S]?:/gi,
+      /\bE\.?G\.?\b/gi,
+      /FOR\s+EXAMPLE/gi,
+      /INSTRUCTIONS?:/gi,
+      /SUCH\s+AS/gi,
+      /INCLUDING\s+BUT\s+NOT\s+LIMITED/gi,
+      /SEE\s+INSTRUCTIONS/gi,
+      // Mixed case phrases are likely instructions (real data is ALL CAPS)
+      /[a-z]{3,}/g,  // Remove any word with 3+ lowercase letters
+    ];
+    
+    for (const pattern of INSTRUCTIONAL_PATTERNS) {
+      cleanedText = cleanedText.replace(pattern, ' ');
+    }
+    
+    // STEP 3: Clean up multiple spaces
+    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+    
+    // === BOX 1: NAME ===
+    // Look for name after "1. NAME" heading - the actual veteran name
+    // Format is typically: LAST, FIRST MIDDLE or LAST; FIRST MIDDLE
+    // 
+    // CRITICAL: DD214 forms have field LABELS like "DEPARTMENT, COMPONENT AND BRANCH"
+    // that look like names (LASTNAME, FIRSTNAME MIDDLE) but are NOT names!
+    // Also exclude address components (counties, cities, states) that look like names
+    const DD214_FIELD_LABELS = [
+      // Field labels
+      'DEPARTMENT', 'COMPONENT', 'BRANCH', 'GRADE', 'RANK', 'RATE',
+      'SERVICE', 'SOCIAL', 'SECURITY', 'NUMBER', 'NAME', 'DATE',
+      'BIRTH', 'PLACE', 'ENTRY', 'HOME', 'RECORD', 'RESERVE',
+      'ACTIVE', 'DUTY', 'SEPARATION', 'AUTHORITY', 'CODE',
+      'MEMBER', 'COPY', 'MILITARY', 'COMMAND', 'REMARKS',
+      'DECORATIONS', 'MEDALS', 'BADGES', 'CITATIONS', 'CAMPAIGN',
+      'RIBBONS', 'AWARDED', 'EDUCATION', 'TRAINING', 'PRIMARY',
+      'SPECIALTY', 'FOREIGN', 'SEA', 'LAST', 'FIRST', 'MIDDLE',
+      'TYPE', 'CHARACTER', 'NARRATIVE', 'REASON', 'REENTRY',
+      'MEMBER', 'VETERAN', 'CERTIFICATE', 'RELEASE', 'DISCHARGE',
+      // Address components that look like names
+      'COUNTY', 'CITY', 'STATE', 'TOWN', 'VILLAGE', 'TOWNSHIP',
+      'OREGON', 'WASHINGTON', 'CALIFORNIA', 'TEXAS', 'FLORIDA',
+      'LINN', 'MARION', 'LANE', 'POLK', 'BENTON', 'CLACKAMAS',
+      'MULTNOMAH', 'JACKSON', 'DOUGLAS', 'CLARK', 'LEWIS',
+      // Common location words
+      'FORT', 'CAMP', 'BASE', 'AIR', 'FORCE', 'NAVAL', 'STATION'
+    ];
+    
+    // ============================================================
+    // COMMON NAME ABBREVIATIONS TO EXPAND
+    // OCR often truncates names - expand common abbreviations
+    // ============================================================
+    const NAME_EXPANSIONS = {
+      'CR': ['CRAIG', 'CHRISTOPHER', 'CRYSTAL'],
+      'JR': ['JUNIOR', 'JAMES'],
+      'WM': ['WILLIAM'],
+      'JN': ['JOHN'],
+      'JS': ['JAMES'],
+      'RB': ['ROBERT'],
+      'RD': ['RICHARD'],
+      'MD': ['MICHAEL', 'DAVID'],
+      'TH': ['THOMAS'],
+      'ED': ['EDWARD', 'EDWIN'],
+      'GR': ['GREGORY'],
+      'DN': ['DANIEL'],
+      'AN': ['ANTHONY'],
     };
+    
+    // === BOX 1 NAME EXTRACTION ===
+    // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
+    // Box 1 is always near the top of the document, before "2. DEPARTMENT"
+    
+    // First, try to isolate Box 1 content (everything between "1. NAME" and "2. DEPARTMENT")
+    const box1Match = cleanedText.match(/1\.\s*NAME[^2]*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is);
+    const box1Text = box1Match ? box1Match[0] : cleanedText.substring(0, 500); // Fallback: first 500 chars
+    
+    const namePatterns = [
+      // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
+      /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+      // Name on line after "1. NAME" label
+      /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+      // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
+      /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
+    ];
+    
+    // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
+    for (const pattern of namePatterns) {
+      const match = box1Text.match(pattern);
+      if (match) {
+        let potentialLastName = match[1]?.trim().toUpperCase();
+        let potentialFirstName = match[2]?.trim().toUpperCase();
+        let potentialMiddleName = match[3]?.trim().toUpperCase() || null;
+        
+        // === VALIDATION ===
+        // Reject if ANY part matches a DD214 field label
+        const isFieldLabel = DD214_FIELD_LABELS.some(label =>
+          potentialLastName === label ||
+          potentialFirstName === label ||
+          potentialMiddleName === label
+        );
+        
+        // Reject garbage: too short, or looks like form text
+        const isGarbage = !potentialLastName ||
+                         potentialLastName.length < 3 ||
+                         !potentialFirstName ||
+                         /^\d+$/.test(potentialLastName) ||  // Just numbers
+                         /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
+        
+        if (!isFieldLabel && !isGarbage) {
+          data.lastName = potentialLastName;
+          
+          // Check if first name is a common abbreviation that needs expansion hint
+          if (potentialFirstName && potentialFirstName.length <= 2) {
+            // Very short first name - might be truncated
+            const expansion = NAME_EXPANSIONS[potentialFirstName];
+            if (expansion) {
+              // Mark as potentially abbreviated, keep original but note expansion
+              data.firstName = potentialFirstName;
+              data.firstNamePossibleExpansions = expansion;
+            } else {
+              data.firstName = potentialFirstName;
+            }
+          } else {
+            data.firstName = potentialFirstName;
+          }
+          
+          data.middleName = potentialMiddleName;
+          data.veteranName = `${data.lastName}, ${data.firstName}${data.middleName ? ' ' + data.middleName : ''}`;
+          
+          // Flag if first name looks like it might be abbreviated
+          if (potentialFirstName && potentialFirstName.length <= 2) {
+            data.nameNeedsVerification = true;
+            console.warn(`⚠️ Short first name detected: "${potentialFirstName}" - may be OCR abbreviation`);
+          }
+          
+          break;
+        }
+      }
+    }
+
+    // === BOX 2: BRANCH/COMPONENT ===
+    // Handle abbreviations like ARNGUS, ORARNG, USMC, etc.
+    const branchPatterns = [
+      /2\.\s*DEPARTMENT[^:]*[:\s]+([A-Z0-9/\s]+?)(?:\s+3\.|$)/i,
+      /COMPONENT\s+AND\s+BRANCH[:\s]+([A-Z0-9/\s]+)/i,
+      // Common branch abbreviations
+      /\b(ARMY|ARNGUS|ORARNG|[A-Z]{2}ARNG|USAR|USN|USNR|USMC|USMCR|USAF|USAFR|USCG|USCGR|USSF)\b/i,
+    ];
+    for (const pattern of branchPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        const branchText = match[1]?.toUpperCase().trim();
+        // Detect branch from abbreviations
+        if (branchText?.includes('ARMY') || /ARN|USAR/i.test(branchText)) {
+          data.branch = 'Army';
+        } else if (branchText?.includes('NAVY') || /USN/i.test(branchText)) {
+          data.branch = 'Navy';
+        } else if (branchText?.includes('AIR FORCE') || /USAF/i.test(branchText)) {
+          data.branch = 'Air Force';
+        } else if (branchText?.includes('MARINE') || /USMC/i.test(branchText)) {
+          data.branch = 'Marine Corps';
+        } else if (branchText?.includes('COAST GUARD') || /USCG/i.test(branchText)) {
+          data.branch = 'Coast Guard';
+        } else if (branchText?.includes('SPACE FORCE') || /USSF/i.test(branchText)) {
+          data.branch = 'Space Force';
+        }
+        
+        // Detect component
+        if (branchText?.includes('RESERVE') || /US[A-Z]R\b/.test(branchText)) {
+          data.component = 'Reserve';
+        } else if (branchText?.includes('GUARD') || /ARNG|[A-Z]{2}ARNG/.test(branchText)) {
+          data.component = 'National Guard';
+        } else {
+          data.component = 'Active Duty';
+        }
+        if (data.branch) break;
+      }
+    }
+
+    // === BOX 4a: RANK/GRADE ===
+    // Look for rank specifically in Box 4a context
+    const rankPatterns = [
+      /4[aA]?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
+      /GRADE.*?RANK[:\s]+([A-Z]{2,4}\d?)/i,
+      // Enlisted ranks
+      /\b(SPC|SGT|SSG|SFC|MSG|1SG|SGM|CSM|CPL|PFC|PV2|PVT)\b/i,
+      // Officer ranks
+      /\b(2LT|1LT|CPT|MAJ|LTC|COL|BG|MG|LTG|GEN)\b/i,
+      // Navy/CG ranks
+      /\b(SN|PO3|PO2|PO1|CPO|SCPO|MCPO|ENS|LTJG|LT|LCDR|CDR|CAPT)\b/i,
+    ];
+    for (const pattern of rankPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        const rank = match[1]?.trim().toUpperCase();
+        // Validate it's a real rank, not garbage like "AN" or "oe"
+        const validRanks = ['PVT','PV2','PFC','SPC','CPL','SGT','SSG','SFC','MSG','1SG','SGM','CSM',
+                          '2LT','1LT','CPT','MAJ','LTC','COL','BG','MG','LTG','GEN',
+                          'SN','SA','SR','AA','AN','PO3','PO2','PO1','CPO','SCPO','MCPO',
+                          'ENS','LTJG','LT','LCDR','CDR','CAPT'];
+        if (validRanks.includes(rank)) {
+          data.rank = rank;
+          break;
+        }
+      }
+    }
+
+    // Box 4b: Pay Grade - Handle OCR garbling like "Ed" for "E4"
+    const payGradePatterns = [
+      /4[bB]?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+      /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+      /\b([EO]-?\d)\b/,
+      // OCR might garble E4 as "Ed" or similar
+      /\b(E[a-z])\b/gi, // Lowercase letter after E might be garbled number
+    ];
+    for (const pattern of payGradePatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        let grade = match[1]?.toUpperCase();
+        // Attempt to fix OCR garbling: Ed->E4, Eb->E8, etc.
+        grade = grade?.replace(/ED$/i, 'E4')
+                     .replace(/EB$/i, 'E8')
+                     .replace(/EG$/i, 'E6')
+                     .replace(/ES$/i, 'E5');
+        if (grade && /^[EO]-?\d$/.test(grade)) {
+          data.payGrade = grade.replace(/([EO])(\d)/, '$1-$2'); // Normalize E4 to E-4
+          break;
+        }
+      }
+    }
+
+    // ============================================================
+    // BOX 5: DATE OF BIRTH (NOT Box 6! Box 6 is Reserve Obligation)
+    // Common formats: YYYYMMDD, MM/DD/YYYY, DD-MMM-YYYY
+    // ============================================================
+    const dobPatterns = [
+      // Explicit Box 5 reference
+      /5\.\s*(?:DATE\s+OF\s+)?BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // "DATE OF BIRTH" label (near start of doc, not near service dates)
+      /DATE\s+OF\s+BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // DOB abbreviation
+      /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // Box 5 with compact YYYYMMDD format
+      /5\.\s*[^0-9]*(\d{8})\b/i,
+    ];
+    for (const pattern of dobPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        let dob = match[1];
+        // Convert compact YYYYMMDD to readable format
+        if (/^\d{8}$/.test(dob)) {
+          const year = dob.substring(0, 4);
+          const month = dob.substring(4, 6);
+          const day = dob.substring(6, 8);
+          // Validate it's a reasonable DOB (year 1940-2010)
+          if (parseInt(year) >= 1940 && parseInt(year) <= 2010) {
+            dob = `${month}/${day}/${year}`;
+          } else {
+            // Might be MMDDYYYY format instead
+            const altYear = dob.substring(4, 8);
+            const altMonth = dob.substring(0, 2);
+            const altDay = dob.substring(2, 4);
+            if (parseInt(altYear) >= 1940 && parseInt(altYear) <= 2010) {
+              dob = `${altMonth}/${altDay}/${altYear}`;
+            }
+          }
+        }
+        data.dateOfBirth = dob;
+        break;
+      }
+    }
+
+    // ============================================================
+    // BOX 12a: DATE ENTERED AD THIS PERIOD (NOT Box 7!)
+    // Box 7 is Place of Entry, NOT date!
+    // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+    // ============================================================
+    const entryPatterns = [
+      // Explicit Box 12a reference
+      /12[aA]\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // "DATE ENTERED AD" or "ENTERED ACTIVE DUTY" label
+      /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // Box 12a with compact YYYYMMDD
+      /12[aA]\.?[^0-9]*(\d{8})\b/i,
+      // Table format: "2004 | 06 | 22" or "04 06 22"
+      /12[aA]\.?[^0-9]*(\d{2,4})\s*[|/\-]\s*(\d{2})\s*[|/\-]\s*(\d{2})/i,
+      // Fallback: "DATE ENTERED" followed by date anywhere
+      /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    ];
+    for (const pattern of entryPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        let dateStr;
+        
+        // Handle table format (year, month, day in separate groups)
+        if (match[2] && match[3]) {
+          let year = match[1];
+          const month = match[2];
+          const day = match[3];
+          // Handle 2-digit year
+          if (year.length === 2) {
+            year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+          }
+          dateStr = `${month}/${day}/${year}`;
+        } else {
+          dateStr = match[1];
+          // Convert YYYYMMDD to readable format
+          if (/^\d{8}$/.test(dateStr)) {
+            const year = dateStr.substring(0, 4);
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            if (parseInt(year) >= 1950 && parseInt(year) <= 2030) {
+              dateStr = `${month}/${day}/${year}`;
+            }
+          }
+        }
+        
+        // Sanity check: Entry date should NOT be same as DOB
+        if (dateStr !== data.dateOfBirth) {
+          data.serviceStartDate = dateStr;
+          break;
+        }
+      }
+    }
+
+    // Box 8: Place of Entry  
+    const placeMatch = cleanedText.match(/8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Za-z\s,]+?)(?:\s+9\.|$)/i);
+    if (placeMatch) {
+      data.placeOfEntry = placeMatch[1]?.trim();
+    }
+
+    // Box 11: Primary MOS/Specialty (mos) - Handle various formats
+    // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
+    const mosPatterns = [
+      /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Za-z\s-]+?)(?:\s+12\.|$)/i,
+      // MOS followed by title: "92Y10 UNIT SUPPLY SP" or "92Y UNIT SUPPLY SPECIALIST"
+      /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
+      // Marine MOS: 0311, 0341, etc.
+      /\b(0[1-9]\d{2})\s+([A-Z][A-Z\s]+)/i,
+      // Air Force AFSC: 2A3X1, etc.
+      /\b(\d[A-Z]\d[A-Z]\d[A-Z]?)\s+([A-Z][A-Z\s]+)?/i,
+      // Navy Rate: BM2, IT1, etc.
+      /\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i,
+      // Generic fallback
+      /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Za-z\s-]*)/i,
+      /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
+    ];
+    for (const pattern of mosPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        data.mos = match[1]?.trim();
+        // Clean up MOS title - remove trailing garbage
+        let title = match[2]?.trim();
+        if (title) {
+          // Remove numbers and noise at end, keep just the job title
+          title = title.replace(/\s+\d+.*$/, '').trim();
+          if (title.length >= 5 && title.length <= 50) {
+            data.mosTitle = title;
+          }
+        }
+        break;
+      }
+    }
+
+    // ============================================================
+    // BOX 12b: SEPARATION DATE THIS PERIOD (NOT Box 12a!)
+    // Box 12a is Entry Date, Box 12b is Separation Date!
+    // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+    // ============================================================
+    const separationPatterns = [
+      // Explicit Box 12b reference
+      /12[bB]\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // "SEPARATION DATE" or "DATE OF SEPARATION" label
+      /SEPARATION\s+DATE[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /DATE\s+OF\s+(?:SEPARATION|RELEASE)[^0-9]*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      // Box 12b with compact YYYYMMDD
+      /12[bB]\.?[^0-9]*(\d{8})\b/i,
+      // Table format: "2007 | 06 | 29" or "07 06 29"
+      /12[bB]\.?[^0-9]*(\d{2,4})\s*[|/\-]\s*(\d{2})\s*[|/\-]\s*(\d{2})/i,
+    ];
+    for (const pattern of separationPatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        let dateStr;
+        
+        // Handle table format (year, month, day in separate groups)
+        if (match[2] && match[3]) {
+          let year = match[1];
+          const month = match[2];
+          const day = match[3];
+          // Handle 2-digit year
+          if (year.length === 2) {
+            year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+          }
+          dateStr = `${month}/${day}/${year}`;
+        } else {
+          dateStr = match[1];
+          // Convert YYYYMMDD to readable format
+          if (/^\d{8}$/.test(dateStr)) {
+            const year = dateStr.substring(0, 4);
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            if (parseInt(year) >= 1950 && parseInt(year) <= 2030) {
+              dateStr = `${month}/${day}/${year}`;
+            }
+          }
+        }
+        
+        // Sanity check: Separation date should be AFTER entry date
+        // And should NOT be same as DOB
+        if (dateStr !== data.dateOfBirth && dateStr !== data.serviceStartDate) {
+          data.serviceEndDate = dateStr;
+          break;
+        }
+      }
+    }
+
+    // === BOX 12b-d: SERVICE TIME ===
+    // CRITICAL: Box 12b is "NET ACTIVE SERVICE THIS PERIOD" - the actual active duty time
+    // Box 12c is "TOTAL PRIOR ACTIVE SERVICE" - previous active duty
+    // Box 12d is "TOTAL PRIOR INACTIVE SERVICE" - reserve/guard time (not active duty)
+    // Box 12e is "FOREIGN SERVICE" - overseas time
+    // We need to be VERY specific about which box we're reading
+    
+    // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
+    const netActivePatterns = [
+      /12[bB]\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
+      /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
+      // Look for pattern: "12b. XX YY ZZ" (years months days)
+      /12[bB]\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
+    ];
+    for (const pattern of netActivePatterns) {
+      const match = cleanedText.match(pattern);
+      if (match) {
+        const years = parseInt(match[1]) || 0;
+        const months = parseInt(match[2]) || 0;
+        const days = parseInt(match[3]) || 0;
+        // Sanity check: active duty period should be reasonable (< 40 years)
+        if (years < 40 && months <= 12) {
+          data.totalActiveService = days > 0 
+            ? `${years} years, ${months} months, ${days} days`
+            : `${years} years, ${months} months`;
+          break;
+        }
+      }
+    }
+    
+    // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
+    const priorActiveMatch = cleanedText.match(/12[cC]\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i);
+    if (priorActiveMatch) {
+      const years = parseInt(priorActiveMatch[1]) || 0;
+      const months = parseInt(priorActiveMatch[2]) || 0;
+      if (years > 0 || months > 0) {
+        data.totalPriorActiveService = `${years} years, ${months} months`;
+      }
+    }
+    
+    // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
+    const priorInactiveMatch = cleanedText.match(/12[dD]\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i);
+    if (priorInactiveMatch) {
+      const years = parseInt(priorInactiveMatch[1]) || 0;
+      const months = parseInt(priorInactiveMatch[2]) || 0;
+      if (years > 0 || months > 0) {
+        data.totalPriorInactiveService = `${years} years, ${months} months`;
+      }
+    }
+
+    // === BOX 13: DECORATIONS/MEDALS/AWARDS ===
+    // CRITICAL: Only parse Block 13 section, NOT instructional text
+    // DD214 forms have INSTRUCTIONAL TEXT listing example awards on the blank form
+    // Common instructional awards: Silver Star, Bronze Star, Air Medal, Purple Heart
+    // These are NOT the veteran's awards unless they appear WITHOUT the instructional context
+    
+    // Awards that commonly appear in DD214 instructions (should be filtered unless clearly real)
+    const INSTRUCTIONAL_AWARDS = ['SILVER STAR', 'BRONZE STAR', 'AIR MEDAL', 'PURPLE HEART', 
+                                   'DISTINGUISHED FLYING CROSS', 'ARMY COMMENDATION'];
+    
+    // Look specifically for Block 13 content
+    const block13Match = cleanedText.match(/13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is);
+    
+    if (block13Match) {
+      const block13Text = block13Match[1];
+      
+      // Check if this looks like instructional text
+      const hasInstructionalPattern = /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(block13Text);
+      const hasMultipleHighAwards = (block13Text.match(/SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi) || []).length >= 3;
+      
+      // Only parse if it doesn't look like instructional text
+      if (block13Text && block13Text.length > 20 && !hasInstructionalPattern && !hasMultipleHighAwards) {
+        const parsedAwards = parseDD214Text(block13Text, data.branch || 'Army');
+        if (parsedAwards && parsedAwards.length > 0) {
+          // Filter out awards that are likely instructional (high valor awards are rare)
+          data.awards = parsedAwards.filter(award => {
+            const awardName = award.award?.name?.toUpperCase() || award.matchedText?.toUpperCase() || '';
+            // Keep service ribbons, campaign medals, marksmanship - these are common real awards
+            // Be skeptical of high valor awards appearing with other instructional patterns
+            return !INSTRUCTIONAL_AWARDS.some(ia => awardName.includes(ia)) || 
+                   // Unless it's the ONLY high-value award found (might be real)
+                   parsedAwards.filter(a => INSTRUCTIONAL_AWARDS.some(ia => 
+                     (a.award?.name?.toUpperCase() || '').includes(ia))).length === 1;
+          });
+        }
+      }
+    }
+    
+    // Fallback: If no awards found in Block 13, look for award patterns in general
+    // but be very conservative about what we accept
+    if (!data.awards || data.awards.length === 0) {
+      // Only parse if we DON'T see ANY classic instructional patterns
+      const hasAnyInstructionalText = /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(cleanedText);
+      
+      if (!hasAnyInstructionalText) {
+        const parsedAwards = parseDD214Text(cleanedText, data.branch || 'Army');
+        if (parsedAwards && parsedAwards.length > 0) {
+          // Only keep clearly real awards (service ribbons, qualification badges, etc.)
+          data.awards = parsedAwards.filter(award => {
+            const awardName = award.award?.name?.toUpperCase() || '';
+            // Service ribbons and campaign medals are almost always real
+            return awardName.includes('SERVICE RIBBON') || 
+                   awardName.includes('CAMPAIGN') ||
+                   awardName.includes('QUALIFICATION') ||
+                   awardName.includes('MARKSMAN') ||
+                   awardName.includes('EXPERT') ||
+                   awardName.includes('GOOD CONDUCT') ||
+                   // Or it's explicitly NOT an instructional award
+                   !INSTRUCTIONAL_AWARDS.some(ia => awardName.includes(ia));
+          });
+        }
+      }
+    }
+
+    // Box 14: Military Education - extract ONLY the structured education portion
+    const eduPatterns = [
+      /14\.\s*MILITARY\s+EDUCATION[^:]*:\s*(.+?)(?=\s*15\s*[.ab]|\s+HIGH\s+SCHOOL)/is,
+      /MILITARY\s+EDUCATION[^:]*:\s*([A-Z\s,0-9]+?(?:WEEKS?|WK|MONTHS?)[^15]*)/is,
+    ];
+    for (const pattern of eduPatterns) {
+      const eduMatch = text.match(pattern);
+      if (eduMatch) {
+        // Clean up: remove noise, limit length
+        let edu = eduMatch[1]?.replace(/\s+/g, ' ').trim();
+        // Only keep if it looks like actual education (course names, durations)
+        if (edu && edu.length > 10 && edu.length < 500 && /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)) {
+          // Remove trailing noise like NOTHING FOLLOWS
+          edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, '').trim();
+          data.militaryEducation = edu;
+        }
+        break;
+      }
+    }
+
+    // Box 18: Remarks - Extract only key deployment/service info, not entire text
+    // Look for specific valuable info in remarks rather than dumping entire section
+    const remarksKeyInfo = [];
+    
+    // Check for deployment info
+    const deploymentInfo = text.match(/(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s,]+?)(?:\.|\/\/|$)/gi);
+    if (deploymentInfo) {
+      remarksKeyInfo.push(...deploymentInfo.map(d => d.trim()));
+    }
+    
+    // Check for OEF/OIF/OND service
+    if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(text)) {
+      const opMatch = text.match(/(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i);
+      if (opMatch) remarksKeyInfo.push(opMatch[1]);
+    }
+    
+    // Only store remarks if we found valuable info
+    if (remarksKeyInfo.length > 0) {
+      data.remarks = remarksKeyInfo.join(' | ');
+    }
+
+    // Box 23: Type of Separation
+    const sepTypeMatch = text.match(/23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Za-z\s]+?)(?:\s+24\.|$)/i);
+    if (sepTypeMatch) {
+      data.separationType = sepTypeMatch[1]?.trim();
+    }
+
+    // Box 24: Character of Service - CRITICAL for benefits (dischargeType)
+    const characterPatterns = [
+      /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Za-z\s]+?)(?:\s+25\.|$)/i,
+      /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Za-z\s]+)/i,
+      /(HONORABLE|GENERAL|OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT)/i,
+    ];
+    for (const pattern of characterPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        data.dischargeType = match[1]?.trim();
+        break;
+      }
+    }
+
+    // Box 25: Separation Authority (regulation)
+    const authMatch = text.match(/25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Za-z0-9\s.-]+?)(?:\s+26\.|$)/i);
+    if (authMatch) {
+      data.separationAuthority = authMatch[1]?.trim();
+    }
+
+    // Box 26: SPD Code
+    const spdMatch = text.match(/26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i) ||
+                     text.match(/SPD[:\s]+([A-Z]{3})/i);
+    if (spdMatch) {
+      data.spdCode = spdMatch[1]?.toUpperCase();
+    }
+
+    // Box 27: Reentry Code - Valid RE codes are: RE-1, RE-2, RE-3, RE-4 (with optional letter suffix)
+    // Also NA for not applicable
+    const rePatterns = [
+      /27\.\s*(?:REENTRY|RE)\s+CODE[:\s]*([A-Z0-9-]{1,4})/i,
+      /RE\s*CODE[:\s]*([A-Z0-9-]{1,4})/i,
+      /\b(RE-?[1-4][A-Z]?|NA)\b/i,
+    ];
+    for (const pattern of rePatterns) {
+      const reMatch = text.match(pattern);
+      if (reMatch) {
+        const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        // Validate it's a real RE code format (RE-1, RE-2A, NA, etc) not OCR garbage
+        if (code && /^(?:RE-?[1-4][A-Z]?|NA|[1-4][A-Z]?)$/.test(code)) {
+          // Normalize format
+          if (/^[1-4][A-Z]?$/.test(code)) {
+            data.reentryCode = `RE-${code}`;
+          } else if (code === 'NA') {
+            data.reentryCode = 'NA';
+          } else {
+            data.reentryCode = code.replace(/RE-?/, 'RE-');
+          }
+          break;
+        }
+      }
+    }
+
+    // Box 28: Narrative Reason
+    const narrativeMatch = text.match(/28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i);
+    if (narrativeMatch) {
+      data.narrativeReason = narrativeMatch[1]?.trim();
+    }
+
+    // Extract deployments from remarks (Box 18) - common locations
+    const deploymentPatterns = [
+      /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s]+?)(?:\.|,|$)/gi,
+      /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi
+    ];
+    for (const pattern of deploymentPatterns) {
+      let match;
+      while ((match = pattern.exec(upperText)) !== null) {
+        const deployment = match[1]?.trim();
+        if (deployment && !data.deployments.includes(deployment)) {
+          data.deployments.push(deployment);
+        }
+      }
+    }
+
+    console.log('📋 DD214 parsed fields:', {
+      veteranName: data.veteranName,
+      branch: data.branch,
+      rank: data.rank,
+      mos: data.mos,
+      serviceStartDate: data.serviceStartDate,
+      serviceEndDate: data.serviceEndDate,
+      dischargeType: data.dischargeType,
+      awardsCount: data.awards?.length || 0,
+      deploymentsCount: data.deployments?.length || 0
+    });
+
+    return data;
   } catch (error) {
     console.error('Service record parsing error:', error);
-    return { type: 'service_record', error: error.message, raw: text.substring(0, 500) };
+    return { ...data, error: error.message };
   }
 };
 

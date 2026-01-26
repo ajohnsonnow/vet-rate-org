@@ -16,6 +16,7 @@ function Header({
   // Core Navigation
   onMyPacketClick,
   onKnowledgeBaseClick,
+  onVKBTimelineClick,
   onUserManualClick,
   onVAResourcesClick,
   // Calculate Your Rating (Blue)
@@ -1042,6 +1043,15 @@ function Header({
                   <span className="text-xl">📚</span>
                   <span className="font-medium">Knowledge Base</span>
                   <span className="ml-auto px-2 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">NEW</span>
+                </button>
+
+                <button
+                  onClick={() => { setShowMobileMenu(false); onVKBTimelineClick?.(); }}
+                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
+                >
+                  <span className="text-xl">📅</span>
+                  <span className="font-medium">Document Timeline</span>
+                  <span className="ml-auto px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded">v4</span>
                 </button>
 
                 {/* Tools Section */}

@@ -392,10 +392,14 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
               </div>
             )}
             
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                ⚠️ <strong>Privacy Note:</strong> Cloud AI sends your condition names and symptoms to Google's servers. 
-                Use Local AI above for maximum privacy.
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border-2 border-amber-300 dark:border-amber-700">
+              <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                ⚠️ <strong>Data Center Warning:</strong> Using your Gemini API key sends your condition names, symptoms,
+                and any text you enter to Google's data centers. Your data will be processed on remote servers.
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                💡 <strong>Your API key is yours</strong> - we never see it and it stays in your browser.
+                But any AI queries you make will travel to Google. Use Local AI above for 100% offline, zero-transmission privacy.
               </p>
             </div>
             
@@ -504,9 +508,9 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
             </h4>
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
               <li>• <strong>Local AI (Recommended)</strong> - 100% private, works offline, data never leaves your device</li>
-              <li>• <strong>Cloud AI (Gemini)</strong> - Faster responses, requires internet, data sent to Google</li>
+              <li>• <strong>Cloud AI (Gemini)</strong> - Faster responses, but <strong>sends data to Google's data centers</strong></li>
+              <li>• <strong>BYOK (Bring Your Own Key)</strong> - Your API key stays in YOUR browser - we never see it</li>
               <li>• <strong>Response Length</strong> - Adjust token limits above to control response length and resource usage</li>
-              <li>• Your API key is stored only in your browser - we never see it</li>
               <li>• <strong>Unload AI</strong> frees up GPU memory when you're done using AI features</li>
             </ul>
           </div>

@@ -331,7 +331,7 @@ const AVAILABLE_MODELS = [
   },
   {
     id: 'diamond-writer',
-    name: '💎 Diamond Writer (Creative)',
+    name: '🎖️ CW4 Writer (Creative)',
     size: '4.0 GB',
     description: 'Specialized agent for personal statements, nexus letters, buddy statements',
     bestFor: '✍️ Statement Writing',
@@ -347,7 +347,7 @@ const AVAILABLE_MODELS = [
   },
   {
     id: 'diamond-rater',
-    name: '💎 Diamond Rater (Calculations)',
+    name: '🎖️ CW3 Rater (Calculations)',
     size: '4.0 GB',
     description: 'Specialized agent for VA rating calculations and bilateral factor',
     bestFor: '🧮 Rating Calculations',
@@ -530,7 +530,7 @@ export const LocalAIProvider = ({ children }) => {
             });
           },
           onComplete: () => {
-            setLoadProgress({ progress: 100, text: '💎 Diamond Swarm ready!' });
+            setLoadProgress({ progress: 100, text: '🎖️ Warrant Council ready!' });
           },
           onError: (err) => {
             throw err;
@@ -547,11 +547,11 @@ export const LocalAIProvider = ({ children }) => {
         setLoadProgress({ progress: 100, text: `💎 ${agentInfo?.name} ready!` });
         localStorage.setItem('vet_rate_local_ai_model', modelId);
         
-        console.log(`💎 Diamond Swarm ${agentId.toUpperCase()} agent initialized successfully`);
+        console.log(`🎖️ Warrant Council ${agentId.toUpperCase()} agent initialized successfully`);
         return true;
       } catch (err) {
-        console.error('💎 Diamond Swarm initialization failed:', err);
-        setError(`Diamond Swarm error: ${err.message}`);
+        console.error('🎖️ Warrant Council initialization failed:', err);
+        setError(`Warrant Council error: ${err.message}`);
         setIsLoading(false);
         return null;
       }
@@ -1237,10 +1237,10 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
       const agentMessages = {
         'diamond-auditor': "*Meow!* 🎖️ Testing the CW5 Auditor! This one's trained to sniff out claim issues like I sniff out treats! Watch it analyze those VA regulations! 😸",
-        'diamond-writer': "*Purrrr* 💎 Diamond Writer test time! This fuzzy brain helper writes statements better than I write on keyboards (which is pretty good, actually). 📝😺",
-        'diamond-rater': "*Mrrrow!* 💎 Testing Diamond Rater! It calculates ratings faster than I calculate my treat schedule. Math whiskers activated! 🧮😸",
+        'diamond-writer': "*Purrrr* 🎖️ CW4 Writer test time! This fuzzy brain helper writes statements better than I write on keyboards (which is pretty good, actually). 📝😺",
+        'diamond-rater': "*Mrrrow!* 🎖️ Testing CW3 Rater! It calculates ratings faster than I calculate my treat schedule. Math whiskers activated! 🧮😸",
       };
-      return agentMessages[loadedModelId] || "*Meow!* 💎 Testing our Diamond Swarm AI! These veteran-trained models are purr-fectly tuned for VA claims! 😸✨";
+      return agentMessages[loadedModelId] || "*Meow!* 🎖️ Testing our Warrant Council AI! These veteran-trained models are purr-fectly tuned for VA claims! 😸✨";
     }
     
     // Generic local AI message
@@ -1253,10 +1253,10 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
     if (loadedModelId?.includes('diamond') || selectedModel?.isDiamond) {
       const completionMessages = {
         'diamond-auditor': "*Purrrrr!* 🎖️✨ Knowledge test complete! The CW5 Auditor nailed it! This AI knows VA regulations better than most VSOs. Your claims just got a whole lot stronger! 😸🎉",
-        'diamond-writer': "*Mrrrrrow!* 💎✨ Test passed with flying whiskers! Diamond Writer's ready to craft those statements! Watch those nexus letters practically write themselves! 📝😺",
-        'diamond-rater': "*Meow meow!* 💎✨ Knowledge test SUCCESS! Diamond Rater's math whiskers are on point! It knows the combined ratings formula like I know my treat jar location! 🧮😸🎊",
+        'diamond-writer': "*Mrrrrrow!* 🎖️✨ Test passed with flying whiskers! CW4 Writer's ready to craft those statements! Watch those nexus letters practically write themselves! 📝😺",
+        'diamond-rater': "*Meow meow!* 🎖️✨ Knowledge test SUCCESS! CW3 Rater's math whiskers are on point! It knows the combined ratings formula like I know my treat jar location! 🧮😸🎊",
       };
-      return completionMessages[loadedModelId] || "*PURRRR!* 💎✨ Knowledge test PASSED! Your Diamond Swarm AI is veteran-ready! Time to put this knowledge to work on your claim! 😸🚀";
+      return completionMessages[loadedModelId] || "*PURRRR!* 🎖️✨ Knowledge test PASSED! Your Warrant Council AI is veteran-ready! Time to put this knowledge to work on your claim! 😸🚀";
     }
     
     // Generic local AI completion message

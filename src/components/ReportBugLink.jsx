@@ -27,7 +27,10 @@ function ReportBugLink({ onClick, variant = 'light', moduleName = '' }) {
     if (moduleName) {
       sessionStorage.setItem('bugReport_currentModule', moduleName);
     }
-    onClick();
+    // Only call onClick if it's provided
+    if (onClick && typeof onClick === 'function') {
+      onClick();
+    }
   };
 
   const baseStyles = "inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded transition-all opacity-80 hover:opacity-100";

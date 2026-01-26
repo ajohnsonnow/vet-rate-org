@@ -87,7 +87,7 @@ TOOLS AVAILABLE IN VET-RATE.ORG (${getTotalToolCount()} tools organized by categ
 - VA.gov Integration: Demo mode for claims/service history
 - My Packet: Save and organize all evidence items
 - VA Resources Hub: Curated external links
-- User Manual: Comprehensive documentation
+- Field Manual: Comprehensive documentation
 
 🛡️ YOUR CURRENT ROLE:
 You are operating inside one of these tools. The veteran is using Vet-Rate.org to prepare their claim, and you are here to help them with accurate, regulation-based guidance.

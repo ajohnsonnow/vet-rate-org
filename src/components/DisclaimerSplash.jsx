@@ -5,6 +5,7 @@ import { useColorSchemas } from '../hooks/useColorSchemas';
 import { PROJECT_STATS } from '../data/projectStats';
 import { getTotalToolCount } from '../data/toolkitData';
 import { useLanguage } from '../contexts/LanguageContext';
+import BRAND, { getStorageKey } from '../config/branding';
 
 function DisclaimerSplash({ onAcknowledge }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -19,7 +20,7 @@ function DisclaimerSplash({ onAcknowledge }) {
 
   useEffect(() => {
     // Check if user has already acknowledged
-    const hasAcknowledged = localStorage.getItem('vetrate-disclaimer-acknowledged');
+    const hasAcknowledged = localStorage.getItem(getStorageKey('disclaimer-acknowledged'));
     if (!hasAcknowledged) {
       setIsVisible(true);
     } else {
@@ -28,7 +29,7 @@ function DisclaimerSplash({ onAcknowledge }) {
   }, [onAcknowledge]);
 
   const handleAcknowledge = () => {
-    localStorage.setItem('vetrate-disclaimer-acknowledged', 'true');
+    localStorage.setItem(getStorageKey('disclaimer-acknowledged'), 'true');
     setIsVisible(false);
     onAcknowledge?.();
   };
@@ -47,8 +48,8 @@ function DisclaimerSplash({ onAcknowledge }) {
         <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 p-6 text-center">
           <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden w-24 h-24">
             <img 
-              src="/images/Vet-Rate-org-logo-official.png" 
-              alt="Vet-Rate.org Logo" 
+              src={BRAND.logo} 
+              alt={`${BRAND.appName} Logo`} 
               className="h-full w-full object-cover rounded-full"
             />
           </div>
@@ -81,6 +82,9 @@ function DisclaimerSplash({ onAcknowledge }) {
                   </p>
                   <p className="text-xs text-amber-800 dark:text-amber-300 mt-3">
                     🏗️ Every tool is marked BETA. Expect improvements, updates, and occasional rough edges as I build this for us. Your feedback helps make it better for everyone.
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-3 italic">
+                    💻 Thanks to Uncle Norb for sending me a 286 desktop computer when I was 12 years old.
                   </p>
                 </div>
               </div>

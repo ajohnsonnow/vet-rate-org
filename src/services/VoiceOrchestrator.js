@@ -3,7 +3,7 @@
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
- * 🎭 Unified Voice Service for Diamond Swarm
+ * 🎭 Unified Voice Service for Warrant Council
  * 
  * Centralized voice management for all three custom LLMs:
  * - VetRate-Auditor: Evidence review and regulatory analysis
