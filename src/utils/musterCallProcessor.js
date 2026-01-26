@@ -671,19 +671,34 @@ export const processMusterCallBatch = async (files, options = {}) => {
  * Auto-populate veteran profile from processed documents
  */
 export const autoPopulateProfile = async (processedResults) => {
+  console.log('📋 Auto-populate Profile starting...');
+  console.log('📊 Total results to process:', processedResults?.length);
+  
   const currentProfile = getVeteranProfile();
   const updates = { ...currentProfile };
 
   let updateCount = 0;
 
   for (const result of processedResults) {
-    if (result.status !== 'complete' || !result.extractedData) continue;
+    console.log(`📄 Checking ${result.filename}:`, {
+      status: result.status,
+      hasExtractedData: !!result.extractedData,
+      extractedDataType: result.extractedData?.type,
+      classification: result.classification?.type
+    });
+    
+    if (result.status !== 'complete' || !result.extractedData) {
+      console.log(`⏭️ Skipping ${result.filename} - status: ${result.status}, hasData: ${!!result.extractedData}`);
+      continue;
+    }
 
     const { type } = result.extractedData;
+    console.log(`🔍 Processing ${result.filename} with type: ${type}`);
 
     switch (type) {
       case 'service_record':
         // Populate from DD214
+        console.log('📝 Found service record, extracting data:', result.extractedData);
         if (result.extractedData.branch) updates.branch = result.extractedData.branch;
         if (result.extractedData.entryDate) updates.serviceStartDate = result.extractedData.entryDate;
         if (result.extractedData.separationDate) updates.serviceEndDate = result.extractedData.separationDate;
@@ -696,6 +711,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
       case 'rating_decision':
         // Populate from rating decision
+        console.log('📊 Found rating decision, extracting data:', result.extractedData);
         if (result.extractedData.combinedRating) updates.currentCombinedRating = result.extractedData.combinedRating;
         if (result.extractedData.effectiveDate) updates.effectiveDate = result.extractedData.effectiveDate;
         updateCount++;
@@ -703,17 +719,28 @@ export const autoPopulateProfile = async (processedResults) => {
 
       case 'claim_letter':
         // Populate from claim letter
+        console.log('📬 Found claim letter, extracting data:', result.extractedData);
         if (result.extractedData.claimNumber) updates.claimNumber = result.extractedData.claimNumber;
         updateCount++;
         break;
+        
+      default:
+        console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
+      default:
+        console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
     }
   }
 
+  console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
+  console.log('📝 Profile updates:', updates);
+
   if (updateCount > 0) {
     const success = updateVeteranProfile(updates);
+    console.log(`✅ Profile update ${success ? 'successful' : 'failed'}`);
     return { success, updates, count: updateCount };
   }
 
+  console.log('⚠️ No profile updates made');
   return { success: false, updates: {}, count: 0 };
 };
 
