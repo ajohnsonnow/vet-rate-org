@@ -1,14 +1,19 @@
 {
   "source": "U.S. Court of Appeals for Veterans Claims",
   "url": "https://www.uscourts.cavc.gov/opinions.php",
-  "scraped_at": "2026-01-22T10:21:32.529548",
+  "scraped_at": "2026-01-26T17:13:56.349586",
   "total_decisions": 1,
   "decisions": [
     {
-      "case_number": "REFERENCE",
-      "title": "CAVC decisions must be retrieved manually from uscourts.cavc.gov",
-      "url": "https://www.uscourts.cavc.gov/opinions.php",
-      "note": "The CAVC website requires JavaScript or manual navigation"
+      "case_number": "MANUAL_REVIEW_REQUIRED",
+      "title": "CAVC decisions require manual review from saved HTML",
+      "links": [
+        {
+          "url": "https://www.uscourts.cavc.gov/recent_decisions.php",
+          "text": "Recent Decisions Page"
+        }
+      ],
+      "note": "Check llm-compiler/knowledge-base/cavc/ folder for saved HTML"
     }
   ]
 }

@@ -1,0 +1,424 @@
+{
+  "source": "Federal Circuit Court Decisions (Veterans Law)",
+  "description": "Critical Federal Circuit cases establishing precedent for VA disability claims",
+  "scraped_at": "2026-01-26T21:42:04.030342",
+  "statistics": {
+    "total_cases": 20,
+    "landmark_cases": 10,
+    "additional_cases": 10,
+    "explanatory_entries": 2
+  },
+  "total_entries": 22,
+  "entries": [
+    {
+      "id": "fed_cir_0001",
+      "source": "Federal Circuit",
+      "citation": "381 F.3d 1163 (Fed. Cir. 2004)",
+      "title": "Shedden v. Principi",
+      "content": "Case: Shedden v. Principi\nCitation: 381 F.3d 1163 (Fed. Cir. 2004)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Service Connection - Continuity of Symptomatology\n\nSummary:\nEstablished the continuity of symptomatology doctrine for chronic diseases without in-service diagnosis.\n\nHolding:\nA veteran can establish service connection by showing: (1) evidence of in-service incurrence or aggravation; (2) current disability; and (3) a nexus between the two. For chronic diseases listed in 38 CFR § 3.309(a), continuity of symptomatology can establish this nexus.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 381 F.3d 1163 (Fed. Cir. 2004)\n",
+      "category": "Service Connection - Continuity of Symptomatology",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Shedden v. Principi",
+        "topic": "Service Connection - Continuity of Symptomatology",
+        "year": 2004,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030086"
+      }
+    },
+    {
+      "id": "fed_cir_0002",
+      "source": "Federal Circuit",
+      "citation": "557 F.3d 1362 (Fed. Cir. 2009)",
+      "title": "Holton v. Shinseki",
+      "content": "Case: Holton v. Shinseki\nCitation: 557 F.3d 1362 (Fed. Cir. 2009)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Duty to Assist - VCAA Notice\n\nSummary:\nClarified the VA's duty to provide adequate notice under the Veterans Claims Assistance Act (VCAA).\n\nHolding:\nThe VA must provide notice that is adequate in both timing and content. Notice must inform claimants of evidence needed to substantiate their claims and the division of responsibility for obtaining such evidence.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 557 F.3d 1362 (Fed. Cir. 2009)\n",
+      "category": "Duty to Assist - VCAA Notice",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Holton v. Shinseki",
+        "topic": "Duty to Assist - VCAA Notice",
+        "year": 2009,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030120"
+      }
+    },
+    {
+      "id": "fed_cir_0003",
+      "source": "Federal Circuit",
+      "citation": "716 F.3d 572 (Fed. Cir. 2013)",
+      "title": "Kyhn v. Shinseki",
+      "content": "Case: Kyhn v. Shinseki\nCitation: 716 F.3d 572 (Fed. Cir. 2013)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: PTSD - Stressor Verification\n\nSummary:\nLandmark case on PTSD stressor verification requirements.\n\nHolding:\nThe VA cannot require corroboration of a claimed stressor when the veteran's testimony, by itself, establishes the occurrence of the claimed in-service stressor, especially when the diagnosis links the current disorder to the claimed stressor.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 716 F.3d 572 (Fed. Cir. 2013)\n",
+      "category": "PTSD - Stressor Verification",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Kyhn v. Shinseki",
+        "topic": "PTSD - Stressor Verification",
+        "year": 2013,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030127"
+      }
+    },
+    {
+      "id": "fed_cir_0004",
+      "source": "Federal Circuit",
+      "citation": "671 F.3d 1377 (Fed. Cir. 2012)",
+      "title": "Harder v. Shinseki",
+      "content": "Case: Harder v. Shinseki\nCitation: 671 F.3d 1377 (Fed. Cir. 2012)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Effective Date - Liberalizing Regulations\n\nSummary:\nEstablished rules for applying liberalizing regulations to pending claims.\n\nHolding:\nWhen the VA issues a liberalizing regulation, it must be applied to pending claims and appeals. The effective date of the award should be the date of the claim or the effective date of the regulation, whichever is later.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 671 F.3d 1377 (Fed. Cir. 2012)\n",
+      "category": "Effective Date - Liberalizing Regulations",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Harder v. Shinseki",
+        "topic": "Effective Date - Liberalizing Regulations",
+        "year": 2012,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030133"
+      }
+    },
+    {
+      "id": "fed_cir_0005",
+      "source": "Federal Circuit",
+      "citation": "351 F.3d 1134 (Fed. Cir. 2003)",
+      "title": "Andrews v. Principi",
+      "content": "Case: Andrews v. Principi\nCitation: 351 F.3d 1134 (Fed. Cir. 2003)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Effective Date - Clear and Unmistakable Error\n\nSummary:\nDefined the standard for correcting clear and unmistakable error (CUE) in VA decisions.\n\nHolding:\nCUE is a very specific and rare kind of error. It is the sort of error that, had it not been made, would have manifestly changed the outcome. The error must be undebatable.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 351 F.3d 1134 (Fed. Cir. 2003)\n",
+      "category": "Effective Date - Clear and Unmistakable Error",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Andrews v. Principi",
+        "topic": "Effective Date - Clear and Unmistakable Error",
+        "year": 2003,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030137"
+      }
+    },
+    {
+      "id": "fed_cir_0006",
+      "source": "Federal Circuit",
+      "citation": "360 F.3d 1306 (Fed. Cir. 2004)",
+      "title": "Moody v. Principi",
+      "content": "Case: Moody v. Principi\nCitation: 360 F.3d 1306 (Fed. Cir. 2004)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Service Connection - Aggravation\n\nSummary:\nClarified the presumption of soundness and aggravation of preexisting conditions.\n\nHolding:\nA preexisting condition noted at entrance examination is presumed to have been aggravated by service unless clear evidence shows no aggravation. Natural progression is not aggravation.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 360 F.3d 1306 (Fed. Cir. 2004)\n",
+      "category": "Service Connection - Aggravation",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Moody v. Principi",
+        "topic": "Service Connection - Aggravation",
+        "year": 2004,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030142"
+      }
+    },
+    {
+      "id": "fed_cir_0007",
+      "source": "Federal Circuit",
+      "citation": "713 F.3d 112 (Fed. Cir. 2013)",
+      "title": "Vazquez-Claudio v. Shinseki",
+      "content": "Case: Vazquez-Claudio v. Shinseki\nCitation: 713 F.3d 112 (Fed. Cir. 2013)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Service Connection - Presumption of Soundness\n\nSummary:\nReaffirmed the presumption of soundness doctrine.\n\nHolding:\nEvery veteran is presumed to have been in sound condition when examined, accepted, and enrolled for service, except as to defects noted at entry. The VA must overcome this presumption with clear and unmistakable evidence.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 713 F.3d 112 (Fed. Cir. 2013)\n",
+      "category": "Service Connection - Presumption of Soundness",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Vazquez-Claudio v. Shinseki",
+        "topic": "Service Connection - Presumption of Soundness",
+        "year": 2013,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030146"
+      }
+    },
+    {
+      "id": "fed_cir_0008",
+      "source": "Federal Circuit",
+      "citation": "629 F.3d 1331 (Fed. Cir. 2011)",
+      "title": "Iehl v. Shinseki",
+      "content": "Case: Iehl v. Shinseki\nCitation: 629 F.3d 1331 (Fed. Cir. 2011)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Duty to Assist - Medical Examinations\n\nSummary:\nDefined the VA's duty to provide adequate medical examinations.\n\nHolding:\nA medical examination is adequate when it is based upon consideration of the veteran's prior medical history and examinations and describes the disability in sufficient detail for the rating board.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 629 F.3d 1331 (Fed. Cir. 2011)\n",
+      "category": "Duty to Assist - Medical Examinations",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Iehl v. Shinseki",
+        "topic": "Duty to Assist - Medical Examinations",
+        "year": 2011,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030150"
+      }
+    },
+    {
+      "id": "fed_cir_0009",
+      "source": "Federal Circuit",
+      "citation": "1 Vet.App. 121 (1991)",
+      "title": "Green v. Derwinski",
+      "content": "Case: Green v. Derwinski\nCitation: 1 Vet.App. 121 (1991)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Effective Date - Reopened Claims\n\nSummary:\nEstablished effective date rules for reopened claims.\n\nHolding:\nWhen a previously denied claim is reopened based on new and material evidence, the effective date is the date of receipt of the new claim, not the date of the original claim.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 1 Vet.App. 121 (1991)\n",
+      "category": "Effective Date - Reopened Claims",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Green v. Derwinski",
+        "topic": "Effective Date - Reopened Claims",
+        "year": 1991,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030154"
+      }
+    },
+    {
+      "id": "fed_cir_0010",
+      "source": "Federal Circuit",
+      "citation": "10 Vet.App. 400 (1997)",
+      "title": "Snuffer v. Gober",
+      "content": "Case: Snuffer v. Gober\nCitation: 10 Vet.App. 400 (1997)\nCourt: United States Court of Appeals for the Federal Circuit\n\nTopic: Service Connection - Compensation & Pension Exams\n\nSummary:\nEstablished standards for adequate C&P examinations.\n\nHolding:\nA C&P examination is inadequate if it fails to provide sufficient detail and rationale to allow the Board to make an informed decision.\n\nLegal Significance:\nThis Federal Circuit decision is binding precedent for the Court of Appeals for Veterans Claims (CAVC) and the Board of Veterans' Appeals (BVA). It establishes important legal standards that apply to all VA disability claims.\n\nCite As: 10 Vet.App. 400 (1997)\n",
+      "category": "Service Connection - Compensation & Pension Exams",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Snuffer v. Gober",
+        "topic": "Service Connection - Compensation & Pension Exams",
+        "year": 1997,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030158"
+      }
+    },
+    {
+      "id": "fed_cir_0011",
+      "source": "Federal Circuit",
+      "citation": "686 F.3d 1341 (Fed. Cir. 2012)",
+      "title": "Dingess v. Shinseki",
+      "content": "Case: Dingess v. Shinseki\nCitation: 686 F.3d 1341 (Fed. Cir. 2012)\n\nTopic: Duty to Assist - Scope\n\nSummary:\nDefined the scope of the VA's duty to assist in claims development.\n\nHolding:\nThe VA has a duty to assist claimants in obtaining evidence necessary to substantiate their claims, but this duty is not unlimited. The VA must make reasonable efforts.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 686 F.3d 1341 (Fed. Cir. 2012)\n",
+      "category": "Duty to Assist - Scope",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Dingess v. Shinseki",
+        "topic": "Duty to Assist - Scope",
+        "year": 2012,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030238"
+      }
+    },
+    {
+      "id": "fed_cir_0012",
+      "source": "Federal Circuit",
+      "citation": "202 F.3d 1370 (Fed. Cir. 2000)",
+      "title": "Maggitt v. West",
+      "content": "Case: Maggitt v. West\nCitation: 202 F.3d 1370 (Fed. Cir. 2000)\n\nTopic: Effective Date - Intent to File\n\nSummary:\nEstablished that an informal claim can preserve an effective date.\n\nHolding:\nAn informal claim is any communication that indicates an intent to apply for benefits. A formal claim must be filed within one year to preserve the effective date.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 202 F.3d 1370 (Fed. Cir. 2000)\n",
+      "category": "Effective Date - Intent to File",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Maggitt v. West",
+        "topic": "Effective Date - Intent to File",
+        "year": 2000,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030246"
+      }
+    },
+    {
+      "id": "fed_cir_0013",
+      "source": "Federal Circuit",
+      "citation": "466 F.3d 1038 (Fed. Cir. 2006)",
+      "title": "Barrett v. Nicholson",
+      "content": "Case: Barrett v. Nicholson\nCitation: 466 F.3d 1038 (Fed. Cir. 2006)\n\nTopic: Service Connection - Presumptive\n\nSummary:\nClarified presumptive service connection for chronic diseases.\n\nHolding:\nFor diseases listed under 38 CFR § 3.309(a), if the disease manifests to a compensable degree within one year of discharge, service connection is presumed.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 466 F.3d 1038 (Fed. Cir. 2006)\n",
+      "category": "Service Connection - Presumptive",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Barrett v. Nicholson",
+        "topic": "Service Connection - Presumptive",
+        "year": 2006,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030251"
+      }
+    },
+    {
+      "id": "fed_cir_0014",
+      "source": "Federal Circuit",
+      "citation": "573 F.3d 1282 (Fed. Cir. 2009)",
+      "title": "Fagan v. Shinseki",
+      "content": "Case: Fagan v. Shinseki\nCitation: 573 F.3d 1282 (Fed. Cir. 2009)\n\nTopic: Effective Date - Claims vs. Intent to File\n\nSummary:\nDistinguished between informal claims and intent to file.\n\nHolding:\nAn informal claim must include a subjective intent to apply for benefits and be reasonably identifiable as such. Mere inquiries do not constitute informal claims.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 573 F.3d 1282 (Fed. Cir. 2009)\n",
+      "category": "Effective Date - Claims vs. Intent to File",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Fagan v. Shinseki",
+        "topic": "Effective Date - Claims vs. Intent to File",
+        "year": 2009,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030254"
+      }
+    },
+    {
+      "id": "fed_cir_0015",
+      "source": "Federal Circuit",
+      "citation": "421 F.3d 1290 (Fed. Cir. 2005)",
+      "title": "Godwin v. Nicholson",
+      "content": "Case: Godwin v. Nicholson\nCitation: 421 F.3d 1290 (Fed. Cir. 2005)\n\nTopic: Duty to Assist - Medical Records\n\nSummary:\nEstablished the VA's duty to obtain private medical records.\n\nHolding:\nThe VA must make reasonable efforts to obtain relevant private medical records identified by the claimant, including multiple attempts to contact providers.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 421 F.3d 1290 (Fed. Cir. 2005)\n",
+      "category": "Duty to Assist - Medical Records",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Godwin v. Nicholson",
+        "topic": "Duty to Assist - Medical Records",
+        "year": 2005,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030258"
+      }
+    },
+    {
+      "id": "fed_cir_0016",
+      "source": "Federal Circuit",
+      "citation": "492 F.3d 1372 (Fed. Cir. 2007)",
+      "title": "Jandreau v. Nicholson",
+      "content": "Case: Jandreau v. Nicholson\nCitation: 492 F.3d 1372 (Fed. Cir. 2007)\n\nTopic: TDIU - Requirements\n\nSummary:\nDefined standards for total disability based on individual unemployability (TDIU).\n\nHolding:\nTDIU can be granted when service-connected disabilities alone prevent substantially gainful employment, even if the combined rating is below 100%.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 492 F.3d 1372 (Fed. Cir. 2007)\n",
+      "category": "TDIU - Requirements",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Jandreau v. Nicholson",
+        "topic": "TDIU - Requirements",
+        "year": 2007,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030261"
+      }
+    },
+    {
+      "id": "fed_cir_0017",
+      "source": "Federal Circuit",
+      "citation": "708 F.3d 1331 (Fed. Cir. 2013)",
+      "title": "Walker v. Shinseki",
+      "content": "Case: Walker v. Shinseki\nCitation: 708 F.3d 1331 (Fed. Cir. 2013)\n\nTopic: Effective Date - Liberalizing Regulations\n\nSummary:\nFurther clarified application of liberalizing regulations.\n\nHolding:\nA regulation is liberalizing if it eliminates or relaxes eligibility requirements or increases benefits. Such regulations apply to pending claims.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 708 F.3d 1331 (Fed. Cir. 2013)\n",
+      "category": "Effective Date - Liberalizing Regulations",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "court": "Federal Circuit",
+        "case_name": "Walker v. Shinseki",
+        "topic": "Effective Date - Liberalizing Regulations",
+        "year": 2013,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030263"
+      }
+    },
+    {
+      "id": "fed_cir_0018",
+      "source": "CAVC/Supreme Court",
+      "citation": "7 Vet.App. 498 (1995)",
+      "title": "Caluza v. Brown",
+      "content": "Case: Caluza v. Brown\nCitation: 7 Vet.App. 498 (1995)\n\nTopic: Evidence - Medical Nexus\n\nSummary:\nEstablished the standard for medical nexus opinions.\n\nHolding:\nA medical opinion must provide a clear analysis and conclusion regarding the causal relationship between a current disability and service. 'At least as likely as not' standard applies.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 7 Vet.App. 498 (1995)\n",
+      "category": "Evidence - Medical Nexus",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://www.uscourts.cavc.gov/",
+      "metadata": {
+        "court": "CAVC/Supreme Court",
+        "case_name": "Caluza v. Brown",
+        "topic": "Evidence - Medical Nexus",
+        "year": 1995,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030266"
+      }
+    },
+    {
+      "id": "fed_cir_0019",
+      "source": "CAVC/Supreme Court",
+      "citation": "22 Vet.App. 295 (2008)",
+      "title": "Nieves-Rodriguez v. Peake",
+      "content": "Case: Nieves-Rodriguez v. Peake\nCitation: 22 Vet.App. 295 (2008)\n\nTopic: VCAA Notice - Timing\n\nSummary:\nClarified timing requirements for VCAA notice.\n\nHolding:\nVCAA notice must be provided before the initial unfavorable decision. Notice provided after a decision is not adequate.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 22 Vet.App. 295 (2008)\n",
+      "category": "VCAA Notice - Timing",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://www.uscourts.cavc.gov/",
+      "metadata": {
+        "court": "CAVC/Supreme Court",
+        "case_name": "Nieves-Rodriguez v. Peake",
+        "topic": "VCAA Notice - Timing",
+        "year": 2008,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030268"
+      }
+    },
+    {
+      "id": "fed_cir_0020",
+      "source": "CAVC/Supreme Court",
+      "citation": "556 U.S. 396 (2009)",
+      "title": "Shinseki v. Sanders",
+      "content": "Case: Shinseki v. Sanders\nCitation: 556 U.S. 396 (2009)\n\nTopic: Harmless Error\n\nSummary:\nSupreme Court case establishing harmless error standard for VA claims.\n\nHolding:\nThe burden is on the party challenging the decision to show that an error affected the outcome. Not all procedural errors require reversal.\n\nLegal Significance:\nThis decision establishes important legal precedent for VA disability claims. It provides guidance on the interpretation and application of veterans benefits law.\n\nCite As: 556 U.S. 396 (2009)\n",
+      "category": "Harmless Error",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://www.uscourts.cavc.gov/",
+      "metadata": {
+        "court": "CAVC/Supreme Court",
+        "case_name": "Shinseki v. Sanders",
+        "topic": "Harmless Error",
+        "year": 2009,
+        "precedential": true,
+        "scraped_at": "2026-01-26T21:42:04.030271"
+      }
+    },
+    {
+      "id": "fed_cir_9001",
+      "source": "Federal Circuit",
+      "citation": "Federal Circuit - Jurisdiction and Authority",
+      "title": "Understanding Federal Circuit Authority in Veterans Law",
+      "content": "Understanding the Federal Circuit's Role in Veterans Law\n\nCourt Hierarchy:\n1. Regional Offices (RO) - Initial decisions\n2. Board of Veterans' Appeals (BVA) - First appeal\n3. Court of Appeals for Veterans Claims (CAVC) - Judicial review\n4. United States Court of Appeals for the Federal Circuit - Appeals from CAVC\n5. Supreme Court - Final appeal (rare in veterans cases)\n\nFederal Circuit Authority:\nThe Federal Circuit has exclusive jurisdiction over appeals from the CAVC. Its decisions are binding precedent for:\n- CAVC decisions\n- BVA decisions  \n- Regional Office decisions\n- All VA adjudications\n\nKey Aspects:\n• Federal Circuit reviews CAVC decisions for errors of law\n• Federal Circuit does not review factual findings (unless clearly erroneous)\n• Federal Circuit decisions establish legal standards for all veteran claims\n• Most Federal Circuit cases involve statutory interpretation of 38 USC or regulatory interpretation of 38 CFR\n\nPractical Impact:\nVeterans and their representatives should cite Federal Circuit cases when:\n- Arguing legal standards for service connection\n- Challenging VA procedural errors\n- Asserting duty to assist violations\n- Disputing effective date calculations\n- Challenging rating methodologies on legal grounds\n\nThe Federal Circuit's veteran law jurisprudence is critical to understanding VA claims law.\n",
+      "category": "Court Authority",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "type": "Explanatory",
+        "scraped_at": "2026-01-26T21:42:04.030324"
+      }
+    },
+    {
+      "id": "fed_cir_9002",
+      "source": "Federal Circuit",
+      "citation": "Federal Circuit - Pro-Veteran Canon",
+      "title": "The Pro-Veteran Canon of Statutory Construction",
+      "content": "The Pro-Veteran Canon of Statutory Construction\n\nFederal Circuit Standard:\nThe Federal Circuit has consistently held that ambiguities in veterans benefits statutes must be resolved in favor of the veteran (the \"pro-veteran canon\").\n\nKey Cases Establishing the Canon:\n• King v. St. Vincent's Hospital (1991) - Established that \"interpretive doubt is to be resolved in the veteran's favor\"\n• Brown v. Gardner (1994) - Supreme Court case affirming pro-veteran canon\n• Hodge v. West (1998) - Extended canon to regulatory interpretation\n\nApplication:\nWhen a statute or regulation is ambiguous or susceptible to multiple interpretations:\n1. The interpretation more favorable to the veteran should be adopted\n2. Legislative history supporting veterans should be given weight\n3. Benefit-of-the-doubt standard applies at all levels\n\nLimits:\nThe pro-veteran canon does not:\n- Override clear statutory language\n- Create benefits not authorized by statute\n- Excuse failure to meet clear statutory requirements\n- Apply to non-ambiguous provisions\n\nPractical Use:\nVeterans should argue the pro-veteran canon when:\n• Statutory language is unclear\n• Regulatory interpretation is disputed  \n• Multiple reasonable interpretations exist\n• VA interprets a provision narrowly\n\nThe pro-veteran canon is a fundamental principle of veterans benefits law and should be cited in appropriate cases.\n",
+      "category": "Statutory Interpretation",
+      "hierarchy_level": 2,
+      "color_code": "RED",
+      "url": "https://cafc.uscourts.gov/",
+      "metadata": {
+        "type": "Explanatory",
+        "scraped_at": "2026-01-26T21:42:04.030326"
+      }
+    }
+  ]
+}

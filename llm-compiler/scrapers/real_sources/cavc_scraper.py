@@ -3,27 +3,36 @@ CAVC Decision Scraper - Court of Appeals for Veterans Claims
 ============================================================
 Scrapes REAL veteran appeal decisions from the U.S. Court of Appeals for Veterans Claims.
 
-OFFICIAL SOURCE: https://www.uscourts.cavc.gov/opinions.php
-This is the REAL data source to replace the fake BVA citations.
+OFFICIAL SOURCE: https://www.uscourts.cavc.gov/recent_decisions.php
+This scraper pulls recent CAVC decisions to enhance the Diamond Knowledge Base (DKB).
+
+CAVC is the appellate court for VA disability claims. These decisions are binding precedent.
 """
 
 import json
 import re
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 import sys
 import time
+import urllib3
+
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Force UTF-8 output
 sys.stdout.reconfigure(encoding='utf-8')
 
 class CAVCScraper:
-    """Scrapes real CAVC decisions"""
+    """Scrapes real CAVC decisions from recent_decisions.php"""
     
     BASE_URL = "https://www.uscourts.cavc.gov"
+    RECENT_DECISIONS_URL = f"{BASE_URL}/recent_decisions.php"
     OPINIONS_URL = f"{BASE_URL}/opinions.php"
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -66,85 +75,169 @@ class CAVCScraper:
         self.decisions: List[dict] = []
         self.output_dir = Path(__file__).parent.parent.parent / "knowledge-base" / "cavc"
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Configure session with retries and SSL handling
         self.session = requests.Session()
         
-    def fetch_opinions_page(self) -> Optional[str]:
-        """Fetch the main opinions page"""
-        print(f"[INFO] Fetching CAVC opinions page: {self.OPINIONS_URL}")
+        # Retry strategy
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
+        # Update headers with more modern User-Agent
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        })
+        
+    def fetch_opinions_page(self, url: str = None) -> Optional[str]:
+        """Fetch an opinions page"""
+        url = url or self.RECENT_DECISIONS_URL
+        print(f"[INFO] Fetching CAVC page: {url}")
         
         try:
-            response = self.session.get(self.OPINIONS_URL, headers=self.HEADERS, timeout=30)
+            # Try with SSL verification first
+            response = self.session.get(url, timeout=30)
             if response.status_code == 200:
-                print(f"[OK] Got opinions page ({len(response.content):,} bytes)")
+                print(f"[OK] Got page ({len(response.content):,} bytes)")
                 return response.text
             else:
                 print(f"[ERROR] Status {response.status_code}")
+                return None
+        except requests.exceptions.SSLError:
+            # If SSL fails, try without verification
+            print("[WARN] SSL verification failed, trying without verification...")
+            try:
+                response = self.session.get(url, timeout=30, verify=False)
+                if response.status_code == 200:
+                    print(f"[OK] Got page ({len(response.content):,} bytes) [SSL verification disabled]")
+                    return response.text
+                else:
+                    print(f"[ERROR] Status {response.status_code}")
+                    return None
+            except Exception as e:
+                print(f"[ERROR] {e}")
                 return None
         except Exception as e:
             print(f"[ERROR] {e}")
             return None
     
     def parse_opinions_page(self, html: str) -> List[dict]:
-        """Parse the opinions list page"""
+        """Parse the opinions/recent decisions page"""
         soup = BeautifulSoup(html, 'html.parser')
         opinions = []
         
-        # Find all opinion links
-        # CAVC typically lists opinions in tables or lists
+        print("[INFO] Parsing page structure...")
         
-        # Method 1: Look for table rows with case numbers
+        # Method 1: Look for table rows with case information
         tables = soup.find_all('table')
-        for table in tables:
+        print(f"[INFO] Found {len(tables)} tables")
+        
+        for table_idx, table in enumerate(tables):
             rows = table.find_all('tr')
+            print(f"[INFO] Table {table_idx}: {len(rows)} rows")
+            
             for row in rows:
                 cols = row.find_all(['td', 'th'])
                 if len(cols) >= 2:
-                    # Look for case number pattern: XX-XXXX
+                    # Look for case number pattern: XX-XXXX or XXXX
                     text = row.get_text()
-                    case_match = re.search(r'(\d{2}-\d{4})', text)
+                    
+                    # CAVC case numbers can be: 21-1234, 2021-1234, or just 1234
+                    case_match = re.search(r'(\d{2,4}[-]\d{3,4})', text)
+                    if not case_match:
+                        case_match = re.search(r'No\.\s*(\d{2,4}[-]\d{3,4})', text, re.I)
+                    
                     if case_match:
+                        case_num = case_match.group(1)
+                        
+                        # Extract veteran name if present (pattern: "Smith v. McDonough" or "In re: Smith")
+                        name_match = re.search(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+v\.\s+\w+', text)
+                        if not name_match:
+                            name_match = re.search(r'In re:\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)', text)
+                        
+                        veteran_name = name_match.group(1) if name_match else "Unknown"
+                        
+                        # Extract date if present
+                        date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', text)
+                        decision_date = date_match.group(1) if date_match else None
+                        
                         opinion = {
-                            'case_number': case_match.group(1),
+                            'case_number': case_num,
+                            'veteran_name': veteran_name,
+                            'decision_date': decision_date,
                             'text': text.strip()[:500],
                             'links': []
                         }
+                        
+                        # Find all links in this row
                         for a in row.find_all('a', href=True):
-                            opinion['links'].append(a['href'])
+                            href = a['href']
+                            if not href.startswith('http'):
+                                href = f"{self.BASE_URL}/{href.lstrip('/')}"
+                            opinion['links'].append({
+                                'url': href,
+                                'text': a.get_text().strip()
+                            })
+                        
                         opinions.append(opinion)
         
-        # Method 2: Look for links to PDF opinions
-        pdf_links = soup.find_all('a', href=re.compile(r'\.pdf', re.I))
+        # Method 2: Look for PDF/document links with case numbers in filename
+        pdf_links = soup.find_all('a', href=re.compile(r'\.(pdf|doc|docx)', re.I))
+        print(f"[INFO] Found {len(pdf_links)} document links")
+        
         for link in pdf_links:
             href = link.get('href', '')
             text = link.get_text().strip()
             
-            # Extract case number from filename or text
-            case_match = re.search(r'(\d{2}-\d{3,4})', href + text)
-            if case_match and not any(o['case_number'] == case_match.group(1) for o in opinions):
-                opinions.append({
-                    'case_number': case_match.group(1),
-                    'title': text[:200] if text else f"CAVC Case {case_match.group(1)}",
-                    'pdf_url': href if href.startswith('http') else f"{self.BASE_URL}/{href.lstrip('/')}"
-                })
+            # Extract case number from filename or link text
+            case_match = re.search(r'(\d{2,4}[-]\d{3,4})', href + ' ' + text)
+            if case_match:
+                case_num = case_match.group(1)
+                
+                # Check if we already have this case
+                if not any(o.get('case_number') == case_num for o in opinions):
+                    full_url = href if href.startswith('http') else f"{self.BASE_URL}/{href.lstrip('/')}"
+                    
+                    opinions.append({
+                        'case_number': case_num,
+                        'title': text[:200] if text else f"CAVC Case {case_num}",
+                        'links': [{'url': full_url, 'text': 'PDF', 'type': 'pdf'}]
+                    })
         
-        # Method 3: Look for any links with case patterns
-        all_links = soup.find_all('a', href=True)
-        for link in all_links:
-            href = link.get('href', '')
-            text = link.get_text().strip()
-            
-            if 'opinion' in href.lower() or 'decision' in href.lower():
-                case_match = re.search(r'(\d{2}-\d{3,4})', text + href)
-                if case_match:
-                    case_num = case_match.group(1)
-                    if not any(o.get('case_number') == case_num for o in opinions):
-                        opinions.append({
-                            'case_number': case_num,
-                            'title': text[:200] if text else f"CAVC Case {case_num}",
-                            'url': href if href.startswith('http') else f"{self.BASE_URL}/{href.lstrip('/')}"
-                        })
+        # Method 3: Look for div/list structures with case information
+        decision_divs = soup.find_all(['div', 'li'], class_=re.compile(r'(decision|opinion|case)', re.I))
+        print(f"[INFO] Found {len(decision_divs)} decision containers")
         
-        print(f"[INFO] Found {len(opinions)} potential opinions on page")
+        for div in decision_divs:
+            text = div.get_text()
+            case_match = re.search(r'(\d{2,4}[-]\d{3,4})', text)
+            if case_match:
+                case_num = case_match.group(1)
+                if not any(o.get('case_number') == case_num for o in opinions):
+                    links = []
+                    for a in div.find_all('a', href=True):
+                        href = a['href']
+                        if not href.startswith('http'):
+                            href = f"{self.BASE_URL}/{href.lstrip('/')}"
+                        links.append({'url': href, 'text': a.get_text().strip()})
+                    
+                    opinions.append({
+                        'case_number': case_num,
+                        'text': text.strip()[:500],
+                        'links': links
+                    })
+        
+        print(f"[INFO] Extracted {len(opinions)} opinions from page")
         return opinions
     
     def fetch_recent_opinions(self) -> List[dict]:
@@ -196,17 +289,30 @@ class CAVCScraper:
         """Main scraping function"""
         all_decisions = []
         
-        # Step 1: Get opinions from main page
-        main_html = self.fetch_opinions_page()
-        if main_html:
-            page_opinions = self.parse_opinions_page(main_html)
-            all_decisions.extend(page_opinions)
+        # Step 1: Get recent decisions (primary source)
+        print("\n[STEP 1] Fetching recent_decisions.php...")
+        recent_html = self.fetch_opinions_page(self.RECENT_DECISIONS_URL)
+        if recent_html:
+            recent_opinions = self.parse_opinions_page(recent_html)
+            all_decisions.extend(recent_opinions)
             
             # Save raw HTML for analysis
+            html_path = self.output_dir / "cavc_recent_decisions.html"
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(recent_html)
+            print(f"[OK] Saved raw HTML to {html_path}")
+        
+        # Step 2: Get from opinions.php (secondary source)
+        print("\n[STEP 2] Fetching opinions.php...")
+        opinions_html = self.fetch_opinions_page(self.OPINIONS_URL)
+        if opinions_html:
+            page_opinions = self.parse_opinions_page(opinions_html)
+            all_decisions.extend(page_opinions)
+            
             html_path = self.output_dir / "cavc_opinions_page.html"
             with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(main_html)
-            print(f"[OK] Saved raw HTML to {html_path}")
+                f.write(opinions_html)
+            print(f"[OK] Saved opinions HTML to {html_path}")
         
         # Step 2: Try to get more from archives
         archive_opinions = self.fetch_recent_opinions()
@@ -231,6 +337,18 @@ class CAVCScraper:
         
         for d in decisions:
             case_num = d.get('case_number', 'Unknown')
+            veteran_name = d.get('veteran_name', 'Unknown')
+            decision_date = d.get('decision_date', 'Unknown')
+            
+            # Extract primary link
+            links = d.get('links', [])
+            primary_url = links[0]['url'] if links else self.RECENT_DECISIONS_URL
+            
+            # Create title
+            if veteran_name and veteran_name != 'Unknown':
+                title = f"{veteran_name} v. McDonough, CAVC No. {case_num}"
+            else:
+                title = d.get('title', f"CAVC Case {case_num}")
             
             # Create knowledge base entry
             entry = {
@@ -238,15 +356,20 @@ class CAVCScraper:
                 'type': 'cavc_decision',
                 'case_number': case_num,
                 'citation': f"CAVC No. {case_num}",
-                'title': d.get('title', f"CAVC Case {case_num}"),
+                'title': title,
+                'veteran_name': veteran_name,
+                'decision_date': decision_date,
                 'source': 'U.S. Court of Appeals for Veterans Claims',
-                'source_url': d.get('url', d.get('pdf_url', f"{self.OPINIONS_URL}")),
+                'source_url': primary_url,
+                'document_links': links,
                 'scraped_at': datetime.now().isoformat(),
                 'verified': True,
-                'data_source': 'OFFICIAL - uscourts.cavc.gov'
+                'data_source': 'OFFICIAL - uscourts.cavc.gov',
+                'hierarchy_level': 2,  # Court decisions are authoritative
+                'color_code': 'GREEN'  # CAVC decisions = GREEN (judicial precedent)
             }
             
-            # Add any additional metadata
+            # Add summary if available
             if 'text' in d:
                 entry['summary'] = d['text'][:500]
             
@@ -306,26 +429,27 @@ class CAVCScraper:
     
     def run(self):
         """Main execution"""
-        print("="*60)
-        print("CAVC DECISION SCRAPER")
+        print("="*70)
+        print("CAVC DECISION SCRAPER - DIAMOND KNOWLEDGE BASE")
         print("U.S. Court of Appeals for Veterans Claims")
-        print("SOURCE: https://www.uscourts.cavc.gov")
-        print("="*60)
-        print("\nThis scrapes REAL decisions to replace fake BVA data.\n")
+        print("PRIMARY SOURCE: https://www.uscourts.cavc.gov/recent_decisions.php")
+        print("="*70)
+        print("\nCAVC decisions are binding precedent for VA disability claims.\n")
         
         # Scrape
         decisions = self.scrape_all()
         
         if not decisions:
-            print("[WARN] No decisions found from page scraping")
-            print("[INFO] Creating documented reference for manual retrieval")
+            print("[WARN] No decisions found from automated scraping")
+            print("[INFO] The CAVC website may require JavaScript or manual navigation")
+            print("[INFO] Check saved HTML files for manual extraction")
             
             # Create a documented reference
             decisions = [{
-                'case_number': 'REFERENCE',
-                'title': 'CAVC decisions must be retrieved manually from uscourts.cavc.gov',
-                'url': self.OPINIONS_URL,
-                'note': 'The CAVC website requires JavaScript or manual navigation'
+                'case_number': 'MANUAL_REVIEW_REQUIRED',
+                'title': 'CAVC decisions require manual review from saved HTML',
+                'links': [{'url': self.RECENT_DECISIONS_URL, 'text': 'Recent Decisions Page'}],
+                'note': 'Check llm-compiler/knowledge-base/cavc/ folder for saved HTML'
             }]
         
         # Convert to KB format
@@ -334,12 +458,14 @@ class CAVCScraper:
         # Save
         self.save_results(decisions, kb_entries)
         
-        print("\n" + "="*60)
+        print("\n" + "="*70)
         print("SCRAPE COMPLETE")
-        print("="*60)
+        print("="*70)
         print(f"\nFound {len(decisions)} CAVC decisions")
-        print(f"All data is from OFFICIAL government source")
-        print(f"NO fake citations - only real CAVC case numbers")
+        print(f"All data from OFFICIAL government source: uscourts.cavc.gov")
+        print(f"Hierarchy: Judicial precedent (binding authority)")
+        print(f"Color Code: GREEN (court decisions)")
+        print(f"\nTo integrate into DKB, run: python kb_merger.py")
 
 
 if __name__ == '__main__':

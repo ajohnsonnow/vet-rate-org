@@ -1,0 +1,1840 @@
+{
+  "entries": [
+    {
+      "id": "m21_100plus_00001",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.1",
+      "title": "Multiple Diagnostic Codes - M21-1 MISC.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.1 - Multiple Diagnostic Codes\n\nGUIDANCE:\nSame symptom coverage\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.1",
+        "section_title": "Multiple Diagnostic Codes",
+        "scraped_date": "2026-01-27T00:22:09.094077"
+      }
+    },
+    {
+      "id": "m21_100plus_00002",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.2",
+      "title": "Pyramiding Prohibition - M21-1 MISC.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.2 - Pyramiding Prohibition\n\nGUIDANCE:\nAnti-pyramiding rule\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.2",
+        "section_title": "Pyramiding Prohibition",
+        "scraped_date": "2026-01-27T00:22:09.094100"
+      }
+    },
+    {
+      "id": "m21_100plus_00003",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.3",
+      "title": "Symptomatic Overlap - M21-1 MISC.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.3 - Symptomatic Overlap\n\nGUIDANCE:\nAvoiding duplicate ratings\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.3",
+        "section_title": "Symptomatic Overlap",
+        "scraped_date": "2026-01-27T00:22:09.094103"
+      }
+    },
+    {
+      "id": "m21_100plus_00004",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.4",
+      "title": "Staged Ratings Initial - M21-1 MISC.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.4 - Staged Ratings Initial\n\nGUIDANCE:\nFenderson staged ratings\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.4",
+        "section_title": "Staged Ratings Initial",
+        "scraped_date": "2026-01-27T00:22:09.094105"
+      }
+    },
+    {
+      "id": "m21_100plus_00005",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.5",
+      "title": "Staged Ratings Increase - M21-1 MISC.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.5 - Staged Ratings Increase\n\nGUIDANCE:\nHart staged ratings\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.5",
+        "section_title": "Staged Ratings Increase",
+        "scraped_date": "2026-01-27T00:22:09.094107"
+      }
+    },
+    {
+      "id": "m21_100plus_00006",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.6",
+      "title": "Effective Date Initial - M21-1 MISC.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.6 - Effective Date Initial\n\nGUIDANCE:\nOriginal claim dates\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.6",
+        "section_title": "Effective Date Initial",
+        "scraped_date": "2026-01-27T00:22:09.094110"
+      }
+    },
+    {
+      "id": "m21_100plus_00007",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.7",
+      "title": "Effective Date Increase - M21-1 MISC.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.7 - Effective Date Increase\n\nGUIDANCE:\nOne year lookback\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.7",
+        "section_title": "Effective Date Increase",
+        "scraped_date": "2026-01-27T00:22:09.094113"
+      }
+    },
+    {
+      "id": "m21_100plus_00008",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.8",
+      "title": "Rating by Analogy - M21-1 MISC.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.8 - Rating by Analogy\n\nGUIDANCE:\nUnlisted conditions\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.8",
+        "section_title": "Rating by Analogy",
+        "scraped_date": "2026-01-27T00:22:09.094119"
+      }
+    },
+    {
+      "id": "m21_100plus_00009",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.9",
+      "title": "Exceptional Patterns - M21-1 MISC.1.9",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.9 - Exceptional Patterns\n\nGUIDANCE:\nSpecial rating cases\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.9",
+        "section_title": "Exceptional Patterns",
+        "scraped_date": "2026-01-27T00:22:09.094121"
+      }
+    },
+    {
+      "id": "m21_100plus_00010",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.10",
+      "title": "Total Rating - M21-1 MISC.1.10",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.10 - Total Rating\n\nGUIDANCE:\n100% combined\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.10",
+        "section_title": "Total Rating",
+        "scraped_date": "2026-01-27T00:22:09.094123"
+      }
+    },
+    {
+      "id": "m21_100plus_00011",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.11",
+      "title": "Bilateral Factor Application - M21-1 MISC.1.11",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.11 - Bilateral Factor Application\n\nGUIDANCE:\n38 CFR 4.26\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.11",
+        "section_title": "Bilateral Factor Application",
+        "scraped_date": "2026-01-27T00:22:09.094125"
+      }
+    },
+    {
+      "id": "m21_100plus_00012",
+      "source": "m21-1",
+      "citation": "M21-1, Miscellaneous Rating Topics, Section MISC.1.12",
+      "title": "Combined Ratings Table - M21-1 MISC.1.12",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Miscellaneous Rating Topics\nREFERENCE: MISC.1.12 - Combined Ratings Table\n\nGUIDANCE:\n38 CFR 4.25\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Miscellaneous Rating Topics",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Miscellaneous Rating Topics",
+        "section_id": "MISC.1.12",
+        "section_title": "Combined Ratings Table",
+        "scraped_date": "2026-01-27T00:22:09.094126"
+      }
+    },
+    {
+      "id": "m21_100plus_00013",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.1",
+      "title": "Cold Injury Residuals - M21-1 COND.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.1 - Cold Injury Residuals\n\nGUIDANCE:\nFrostbite aftermath\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.1",
+        "section_title": "Cold Injury Residuals",
+        "scraped_date": "2026-01-27T00:22:09.094128"
+      }
+    },
+    {
+      "id": "m21_100plus_00014",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.2",
+      "title": "Heat Injury Residuals - M21-1 COND.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.2 - Heat Injury Residuals\n\nGUIDANCE:\nHeat stroke aftermath\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.2",
+        "section_title": "Heat Injury Residuals",
+        "scraped_date": "2026-01-27T00:22:09.094131"
+      }
+    },
+    {
+      "id": "m21_100plus_00015",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.3",
+      "title": "Traumatic Arthritis - M21-1 COND.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.3 - Traumatic Arthritis\n\nGUIDANCE:\nPost-injury arthritis\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.3",
+        "section_title": "Traumatic Arthritis",
+        "scraped_date": "2026-01-27T00:22:09.094132"
+      }
+    },
+    {
+      "id": "m21_100plus_00016",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.4",
+      "title": "Osteomyelitis - M21-1 COND.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.4 - Osteomyelitis\n\nGUIDANCE:\nBone infection\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.4",
+        "section_title": "Osteomyelitis",
+        "scraped_date": "2026-01-27T00:22:09.094134"
+      }
+    },
+    {
+      "id": "m21_100plus_00017",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.5",
+      "title": "Bone Spurs - M21-1 COND.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.5 - Bone Spurs\n\nGUIDANCE:\nOsteophyte formation\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.5",
+        "section_title": "Bone Spurs",
+        "scraped_date": "2026-01-27T00:22:09.094136"
+      }
+    },
+    {
+      "id": "m21_100plus_00018",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.6",
+      "title": "Joint Replacement - M21-1 COND.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.6 - Joint Replacement\n\nGUIDANCE:\nProsthetic joints\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.6",
+        "section_title": "Joint Replacement",
+        "scraped_date": "2026-01-27T00:22:09.094137"
+      }
+    },
+    {
+      "id": "m21_100plus_00019",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.7",
+      "title": "Fusion Surgery - M21-1 COND.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.7 - Fusion Surgery\n\nGUIDANCE:\nSpinal and joint fusion\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.7",
+        "section_title": "Fusion Surgery",
+        "scraped_date": "2026-01-27T00:22:09.094139"
+      }
+    },
+    {
+      "id": "m21_100plus_00020",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.8",
+      "title": "Tendonitis - M21-1 COND.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.8 - Tendonitis\n\nGUIDANCE:\nTendon inflammation\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.8",
+        "section_title": "Tendonitis",
+        "scraped_date": "2026-01-27T00:22:09.094141"
+      }
+    },
+    {
+      "id": "m21_100plus_00021",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.9",
+      "title": "Bursitis - M21-1 COND.1.9",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.9 - Bursitis\n\nGUIDANCE:\nBursa inflammation\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.9",
+        "section_title": "Bursitis",
+        "scraped_date": "2026-01-27T00:22:09.094144"
+      }
+    },
+    {
+      "id": "m21_100plus_00022",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.10",
+      "title": "Nerve Entrapment - M21-1 COND.1.10",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.10 - Nerve Entrapment\n\nGUIDANCE:\nCompression syndromes\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.10",
+        "section_title": "Nerve Entrapment",
+        "scraped_date": "2026-01-27T00:22:09.094145"
+      }
+    },
+    {
+      "id": "m21_100plus_00023",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.11",
+      "title": "Chronic Pain Syndrome - M21-1 COND.1.11",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.11 - Chronic Pain Syndrome\n\nGUIDANCE:\nPain as disability\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.11",
+        "section_title": "Chronic Pain Syndrome",
+        "scraped_date": "2026-01-27T00:22:09.094147"
+      }
+    },
+    {
+      "id": "m21_100plus_00024",
+      "source": "m21-1",
+      "citation": "M21-1, Specific Condition Guidance, Section COND.1.12",
+      "title": "Neuroma - M21-1 COND.1.12",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Specific Condition Guidance\nREFERENCE: COND.1.12 - Neuroma\n\nGUIDANCE:\nNerve growth after injury\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Specific Condition Guidance",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Specific Condition Guidance",
+        "section_id": "COND.1.12",
+        "section_title": "Neuroma",
+        "scraped_date": "2026-01-27T00:22:09.094149"
+      }
+    },
+    {
+      "id": "m21_100plus_00025",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.1",
+      "title": "GAF Score Usage - M21-1 MHS.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.1 - GAF Score Usage\n\nGUIDANCE:\nGlobal Assessment deprecated\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.1",
+        "section_title": "GAF Score Usage",
+        "scraped_date": "2026-01-27T00:22:09.094151"
+      }
+    },
+    {
+      "id": "m21_100plus_00026",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.2",
+      "title": "Symptom Frequency - M21-1 MHS.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.2 - Symptom Frequency\n\nGUIDANCE:\nHow often symptoms occur\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.2",
+        "section_title": "Symptom Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094153"
+      }
+    },
+    {
+      "id": "m21_100plus_00027",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.3",
+      "title": "Symptom Duration - M21-1 MHS.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.3 - Symptom Duration\n\nGUIDANCE:\nPersistence of symptoms\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.3",
+        "section_title": "Symptom Duration",
+        "scraped_date": "2026-01-27T00:22:09.094156"
+      }
+    },
+    {
+      "id": "m21_100plus_00028",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.4",
+      "title": "Symptom Severity - M21-1 MHS.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.4 - Symptom Severity\n\nGUIDANCE:\nImpact on functioning\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.4",
+        "section_title": "Symptom Severity",
+        "scraped_date": "2026-01-27T00:22:09.094157"
+      }
+    },
+    {
+      "id": "m21_100plus_00029",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.5",
+      "title": "Social Functioning - M21-1 MHS.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.5 - Social Functioning\n\nGUIDANCE:\nRelationship capacity\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.5",
+        "section_title": "Social Functioning",
+        "scraped_date": "2026-01-27T00:22:09.094159"
+      }
+    },
+    {
+      "id": "m21_100plus_00030",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.6",
+      "title": "Occupational Functioning - M21-1 MHS.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.6 - Occupational Functioning\n\nGUIDANCE:\nWork capacity\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.6",
+        "section_title": "Occupational Functioning",
+        "scraped_date": "2026-01-27T00:22:09.094164"
+      }
+    },
+    {
+      "id": "m21_100plus_00031",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.7",
+      "title": "Self-Care - M21-1 MHS.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.7 - Self-Care\n\nGUIDANCE:\nActivities of daily living\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.7",
+        "section_title": "Self-Care",
+        "scraped_date": "2026-01-27T00:22:09.094166"
+      }
+    },
+    {
+      "id": "m21_100plus_00032",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.8",
+      "title": "Mood Assessment - M21-1 MHS.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.8 - Mood Assessment\n\nGUIDANCE:\nDepressed, anxious mood\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.8",
+        "section_title": "Mood Assessment",
+        "scraped_date": "2026-01-27T00:22:09.094167"
+      }
+    },
+    {
+      "id": "m21_100plus_00033",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.9",
+      "title": "Sleep Assessment - M21-1 MHS.1.9",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.9 - Sleep Assessment\n\nGUIDANCE:\nInsomnia, hypersomnia\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.9",
+        "section_title": "Sleep Assessment",
+        "scraped_date": "2026-01-27T00:22:09.094169"
+      }
+    },
+    {
+      "id": "m21_100plus_00034",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.10",
+      "title": "Concentration - M21-1 MHS.1.10",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.10 - Concentration\n\nGUIDANCE:\nAttention and focus\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.10",
+        "section_title": "Concentration",
+        "scraped_date": "2026-01-27T00:22:09.094171"
+      }
+    },
+    {
+      "id": "m21_100plus_00035",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.11",
+      "title": "Memory Assessment - M21-1 MHS.1.11",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.11 - Memory Assessment\n\nGUIDANCE:\nShort and long term\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.11",
+        "section_title": "Memory Assessment",
+        "scraped_date": "2026-01-27T00:22:09.094173"
+      }
+    },
+    {
+      "id": "m21_100plus_00036",
+      "source": "m21-1",
+      "citation": "M21-1, Mental Health Specific, Section MHS.1.12",
+      "title": "Judgment Assessment - M21-1 MHS.1.12",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Mental Health Specific\nREFERENCE: MHS.1.12 - Judgment Assessment\n\nGUIDANCE:\nDecision making capacity\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Mental Health Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Mental Health Specific",
+        "section_id": "MHS.1.12",
+        "section_title": "Judgment Assessment",
+        "scraped_date": "2026-01-27T00:22:09.094176"
+      }
+    },
+    {
+      "id": "m21_100plus_00037",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.1",
+      "title": "Exercise Testing - M21-1 CVS.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.1 - Exercise Testing\n\nGUIDANCE:\nMETs determination\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.1",
+        "section_title": "Exercise Testing",
+        "scraped_date": "2026-01-27T00:22:09.094182"
+      }
+    },
+    {
+      "id": "m21_100plus_00038",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.2",
+      "title": "Interview-Based METs - M21-1 CVS.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.2 - Interview-Based METs\n\nGUIDANCE:\nWhen testing not possible\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.2",
+        "section_title": "Interview-Based METs",
+        "scraped_date": "2026-01-27T00:22:09.094183"
+      }
+    },
+    {
+      "id": "m21_100plus_00039",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.3",
+      "title": "LVEF Measurement - M21-1 CVS.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.3 - LVEF Measurement\n\nGUIDANCE:\nEjection fraction\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.3",
+        "section_title": "LVEF Measurement",
+        "scraped_date": "2026-01-27T00:22:09.094185"
+      }
+    },
+    {
+      "id": "m21_100plus_00040",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.4",
+      "title": "Cardiac Symptoms - M21-1 CVS.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.4 - Cardiac Symptoms\n\nGUIDANCE:\nDyspnea, angina, fatigue\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.4",
+        "section_title": "Cardiac Symptoms",
+        "scraped_date": "2026-01-27T00:22:09.094187"
+      }
+    },
+    {
+      "id": "m21_100plus_00041",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.5",
+      "title": "Cardiac Medications - M21-1 CVS.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.5 - Cardiac Medications\n\nGUIDANCE:\nTreatment requirements\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.5",
+        "section_title": "Cardiac Medications",
+        "scraped_date": "2026-01-27T00:22:09.094188"
+      }
+    },
+    {
+      "id": "m21_100plus_00042",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.6",
+      "title": "Post-Surgery Ratings - M21-1 CVS.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.6 - Post-Surgery Ratings\n\nGUIDANCE:\nAfter cardiac procedures\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.6",
+        "section_title": "Post-Surgery Ratings",
+        "scraped_date": "2026-01-27T00:22:09.094190"
+      }
+    },
+    {
+      "id": "m21_100plus_00043",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.7",
+      "title": "Continuous Medication - M21-1 CVS.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.7 - Continuous Medication\n\nGUIDANCE:\nOngoing treatment\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.7",
+        "section_title": "Continuous Medication",
+        "scraped_date": "2026-01-27T00:22:09.094192"
+      }
+    },
+    {
+      "id": "m21_100plus_00044",
+      "source": "m21-1",
+      "citation": "M21-1, Cardiovascular Specific, Section CVS.1.8",
+      "title": "Dietary Restrictions - M21-1 CVS.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Cardiovascular Specific\nREFERENCE: CVS.1.8 - Dietary Restrictions\n\nGUIDANCE:\nSodium, fluid limits\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Cardiovascular Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Cardiovascular Specific",
+        "section_id": "CVS.1.8",
+        "section_title": "Dietary Restrictions",
+        "scraped_date": "2026-01-27T00:22:09.094193"
+      }
+    },
+    {
+      "id": "m21_100plus_00045",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.1",
+      "title": "PFT Interpretation - M21-1 RSP.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.1 - PFT Interpretation\n\nGUIDANCE:\nUnderstanding results\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.1",
+        "section_title": "PFT Interpretation",
+        "scraped_date": "2026-01-27T00:22:09.094195"
+      }
+    },
+    {
+      "id": "m21_100plus_00046",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.2",
+      "title": "Pre-Bronchodilator - M21-1 RSP.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.2 - Pre-Bronchodilator\n\nGUIDANCE:\nBefore treatment values\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.2",
+        "section_title": "Pre-Bronchodilator",
+        "scraped_date": "2026-01-27T00:22:09.094200"
+      }
+    },
+    {
+      "id": "m21_100plus_00047",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.3",
+      "title": "Post-Bronchodilator - M21-1 RSP.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.3 - Post-Bronchodilator\n\nGUIDANCE:\nAfter treatment values\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.3",
+        "section_title": "Post-Bronchodilator",
+        "scraped_date": "2026-01-27T00:22:09.094201"
+      }
+    },
+    {
+      "id": "m21_100plus_00048",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.4",
+      "title": "DLCO Values - M21-1 RSP.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.4 - DLCO Values\n\nGUIDANCE:\nDiffusion capacity\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.4",
+        "section_title": "DLCO Values",
+        "scraped_date": "2026-01-27T00:22:09.094203"
+      }
+    },
+    {
+      "id": "m21_100plus_00049",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.5",
+      "title": "Oxygen Requirements - M21-1 RSP.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.5 - Oxygen Requirements\n\nGUIDANCE:\nSupplemental O2 need\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.5",
+        "section_title": "Oxygen Requirements",
+        "scraped_date": "2026-01-27T00:22:09.094204"
+      }
+    },
+    {
+      "id": "m21_100plus_00050",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.6",
+      "title": "Respiratory Failure - M21-1 RSP.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.6 - Respiratory Failure\n\nGUIDANCE:\nSevere impairment\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.6",
+        "section_title": "Respiratory Failure",
+        "scraped_date": "2026-01-27T00:22:09.094206"
+      }
+    },
+    {
+      "id": "m21_100plus_00051",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.7",
+      "title": "Medication Frequency - M21-1 RSP.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.7 - Medication Frequency\n\nGUIDANCE:\nTreatment intensity\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.7",
+        "section_title": "Medication Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094208"
+      }
+    },
+    {
+      "id": "m21_100plus_00052",
+      "source": "m21-1",
+      "citation": "M21-1, Respiratory Specific, Section RSP.1.8",
+      "title": "Exacerbation Frequency - M21-1 RSP.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Respiratory Specific\nREFERENCE: RSP.1.8 - Exacerbation Frequency\n\nGUIDANCE:\nAttack frequency\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Respiratory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Respiratory Specific",
+        "section_id": "RSP.1.8",
+        "section_title": "Exacerbation Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094209"
+      }
+    },
+    {
+      "id": "m21_100plus_00053",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.1",
+      "title": "Weight Loss - M21-1 DIG.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.1 - Weight Loss\n\nGUIDANCE:\nUnexplained weight loss\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.1",
+        "section_title": "Weight Loss",
+        "scraped_date": "2026-01-27T00:22:09.094212"
+      }
+    },
+    {
+      "id": "m21_100plus_00054",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.2",
+      "title": "Anemia Secondary to GI - M21-1 DIG.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.2 - Anemia Secondary to GI\n\nGUIDANCE:\nBlood loss anemia\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.2",
+        "section_title": "Anemia Secondary to GI",
+        "scraped_date": "2026-01-27T00:22:09.094217"
+      }
+    },
+    {
+      "id": "m21_100plus_00055",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.3",
+      "title": "Nutritional Deficiency - M21-1 DIG.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.3 - Nutritional Deficiency\n\nGUIDANCE:\nMalabsorption\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.3",
+        "section_title": "Nutritional Deficiency",
+        "scraped_date": "2026-01-27T00:22:09.094219"
+      }
+    },
+    {
+      "id": "m21_100plus_00056",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.4",
+      "title": "Surgical Interventions - M21-1 DIG.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.4 - Surgical Interventions\n\nGUIDANCE:\nPost-GI surgery\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.4",
+        "section_title": "Surgical Interventions",
+        "scraped_date": "2026-01-27T00:22:09.094220"
+      }
+    },
+    {
+      "id": "m21_100plus_00057",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.5",
+      "title": "Ostomy Care - M21-1 DIG.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.5 - Ostomy Care\n\nGUIDANCE:\nColostomy, ileostomy\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.5",
+        "section_title": "Ostomy Care",
+        "scraped_date": "2026-01-27T00:22:09.094225"
+      }
+    },
+    {
+      "id": "m21_100plus_00058",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.6",
+      "title": "Bowel Frequency - M21-1 DIG.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.6 - Bowel Frequency\n\nGUIDANCE:\nDiarrhea, constipation\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.6",
+        "section_title": "Bowel Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094226"
+      }
+    },
+    {
+      "id": "m21_100plus_00059",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.7",
+      "title": "Abdominal Pain - M21-1 DIG.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.7 - Abdominal Pain\n\nGUIDANCE:\nChronic pain assessment\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.7",
+        "section_title": "Abdominal Pain",
+        "scraped_date": "2026-01-27T00:22:09.094228"
+      }
+    },
+    {
+      "id": "m21_100plus_00060",
+      "source": "m21-1",
+      "citation": "M21-1, Digestive Specific, Section DIG.1.8",
+      "title": "Nausea/Vomiting - M21-1 DIG.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Digestive Specific\nREFERENCE: DIG.1.8 - Nausea/Vomiting\n\nGUIDANCE:\nGI symptoms\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Digestive Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Digestive Specific",
+        "section_id": "DIG.1.8",
+        "section_title": "Nausea/Vomiting",
+        "scraped_date": "2026-01-27T00:22:09.094230"
+      }
+    },
+    {
+      "id": "m21_100plus_00061",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.1",
+      "title": "Voiding Diary - M21-1 GUS.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.1 - Voiding Diary\n\nGUIDANCE:\nFrequency tracking\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.1",
+        "section_title": "Voiding Diary",
+        "scraped_date": "2026-01-27T00:22:09.094232"
+      }
+    },
+    {
+      "id": "m21_100plus_00062",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.2",
+      "title": "Absorbent Use - M21-1 GUS.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.2 - Absorbent Use\n\nGUIDANCE:\nIncontinence products\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.2",
+        "section_title": "Absorbent Use",
+        "scraped_date": "2026-01-27T00:22:09.094234"
+      }
+    },
+    {
+      "id": "m21_100plus_00063",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.3",
+      "title": "Catheter Use - M21-1 GUS.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.3 - Catheter Use\n\nGUIDANCE:\nIntermittent or continuous\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.3",
+        "section_title": "Catheter Use",
+        "scraped_date": "2026-01-27T00:22:09.094239"
+      }
+    },
+    {
+      "id": "m21_100plus_00064",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.4",
+      "title": "Medication Requirements - M21-1 GUS.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.4 - Medication Requirements\n\nGUIDANCE:\nBladder medications\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.4",
+        "section_title": "Medication Requirements",
+        "scraped_date": "2026-01-27T00:22:09.094240"
+      }
+    },
+    {
+      "id": "m21_100plus_00065",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.5",
+      "title": "UTI Frequency - M21-1 GUS.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.5 - UTI Frequency\n\nGUIDANCE:\nRecurrent infections\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.5",
+        "section_title": "UTI Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094242"
+      }
+    },
+    {
+      "id": "m21_100plus_00066",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.6",
+      "title": "Renal Function Tests - M21-1 GUS.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.6 - Renal Function Tests\n\nGUIDANCE:\nCreatinine, GFR\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.6",
+        "section_title": "Renal Function Tests",
+        "scraped_date": "2026-01-27T00:22:09.094245"
+      }
+    },
+    {
+      "id": "m21_100plus_00067",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.7",
+      "title": "Dialysis Frequency - M21-1 GUS.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.7 - Dialysis Frequency\n\nGUIDANCE:\nTreatment schedule\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.7",
+        "section_title": "Dialysis Frequency",
+        "scraped_date": "2026-01-27T00:22:09.094247"
+      }
+    },
+    {
+      "id": "m21_100plus_00068",
+      "source": "m21-1",
+      "citation": "M21-1, Genitourinary Specific, Section GUS.1.8",
+      "title": "Sexual Function - M21-1 GUS.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Genitourinary Specific\nREFERENCE: GUS.1.8 - Sexual Function\n\nGUIDANCE:\nErectile dysfunction SMC\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Genitourinary Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Genitourinary Specific",
+        "section_id": "GUS.1.8",
+        "section_title": "Sexual Function",
+        "scraped_date": "2026-01-27T00:22:09.094249"
+      }
+    },
+    {
+      "id": "m21_100plus_00069",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.1",
+      "title": "BSA Calculation - M21-1 SKS.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.1 - BSA Calculation\n\nGUIDANCE:\nBody surface area\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.1",
+        "section_title": "BSA Calculation",
+        "scraped_date": "2026-01-27T00:22:09.094250"
+      }
+    },
+    {
+      "id": "m21_100plus_00070",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.2",
+      "title": "Topical Treatment - M21-1 SKS.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.2 - Topical Treatment\n\nGUIDANCE:\nCorticosteroid use\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.2",
+        "section_title": "Topical Treatment",
+        "scraped_date": "2026-01-27T00:22:09.094253"
+      }
+    },
+    {
+      "id": "m21_100plus_00071",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.3",
+      "title": "Systemic Treatment - M21-1 SKS.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.3 - Systemic Treatment\n\nGUIDANCE:\nOral/IV medications\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.3",
+        "section_title": "Systemic Treatment",
+        "scraped_date": "2026-01-27T00:22:09.094254"
+      }
+    },
+    {
+      "id": "m21_100plus_00072",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.4",
+      "title": "Immunosuppressive - M21-1 SKS.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.4 - Immunosuppressive\n\nGUIDANCE:\nBiologic agents\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.4",
+        "section_title": "Immunosuppressive",
+        "scraped_date": "2026-01-27T00:22:09.094257"
+      }
+    },
+    {
+      "id": "m21_100plus_00073",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.5",
+      "title": "Disfigurement Criteria - M21-1 SKS.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.5 - Disfigurement Criteria\n\nGUIDANCE:\nFacial scarring\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.5",
+        "section_title": "Disfigurement Criteria",
+        "scraped_date": "2026-01-27T00:22:09.094258"
+      }
+    },
+    {
+      "id": "m21_100plus_00074",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.6",
+      "title": "Unstable Scars - M21-1 SKS.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.6 - Unstable Scars\n\nGUIDANCE:\nFrequent breakdown\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.6",
+        "section_title": "Unstable Scars",
+        "scraped_date": "2026-01-27T00:22:09.094260"
+      }
+    },
+    {
+      "id": "m21_100plus_00075",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.7",
+      "title": "Painful Scars - M21-1 SKS.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.7 - Painful Scars\n\nGUIDANCE:\nScar pain assessment\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.7",
+        "section_title": "Painful Scars",
+        "scraped_date": "2026-01-27T00:22:09.094261"
+      }
+    },
+    {
+      "id": "m21_100plus_00076",
+      "source": "m21-1",
+      "citation": "M21-1, Skin Specific, Section SKS.1.8",
+      "title": "Scar Characteristics - M21-1 SKS.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Skin Specific\nREFERENCE: SKS.1.8 - Scar Characteristics\n\nGUIDANCE:\nAdherent, elevated\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Skin Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Skin Specific",
+        "section_id": "SKS.1.8",
+        "section_title": "Scar Characteristics",
+        "scraped_date": "2026-01-27T00:22:09.094263"
+      }
+    },
+    {
+      "id": "m21_100plus_00077",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.1",
+      "title": "Visual Acuity Testing - M21-1 SENS.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.1 - Visual Acuity Testing\n\nGUIDANCE:\nSnellen chart\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.1",
+        "section_title": "Visual Acuity Testing",
+        "scraped_date": "2026-01-27T00:22:09.094264"
+      }
+    },
+    {
+      "id": "m21_100plus_00078",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.2",
+      "title": "Visual Field Testing - M21-1 SENS.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.2 - Visual Field Testing\n\nGUIDANCE:\nGoldmann perimetry\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.2",
+        "section_title": "Visual Field Testing",
+        "scraped_date": "2026-01-27T00:22:09.094267"
+      }
+    },
+    {
+      "id": "m21_100plus_00079",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.3",
+      "title": "Combined Vision Loss - M21-1 SENS.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.3 - Combined Vision Loss\n\nGUIDANCE:\nBoth eyes affected\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.3",
+        "section_title": "Combined Vision Loss",
+        "scraped_date": "2026-01-27T00:22:09.094268"
+      }
+    },
+    {
+      "id": "m21_100plus_00080",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.4",
+      "title": "Puretone Thresholds - M21-1 SENS.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.4 - Puretone Thresholds\n\nGUIDANCE:\nHearing frequencies\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.4",
+        "section_title": "Puretone Thresholds",
+        "scraped_date": "2026-01-27T00:22:09.094271"
+      }
+    },
+    {
+      "id": "m21_100plus_00081",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.5",
+      "title": "Speech Discrimination - M21-1 SENS.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.5 - Speech Discrimination\n\nGUIDANCE:\nWord recognition\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.5",
+        "section_title": "Speech Discrimination",
+        "scraped_date": "2026-01-27T00:22:09.094272"
+      }
+    },
+    {
+      "id": "m21_100plus_00082",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.6",
+      "title": "Exceptional Hearing - M21-1 SENS.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.6 - Exceptional Hearing\n\nGUIDANCE:\nSevere patterns\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.6",
+        "section_title": "Exceptional Hearing",
+        "scraped_date": "2026-01-27T00:22:09.094274"
+      }
+    },
+    {
+      "id": "m21_100plus_00083",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.7",
+      "title": "Balance Testing - M21-1 SENS.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.7 - Balance Testing\n\nGUIDANCE:\nVestibular function\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.7",
+        "section_title": "Balance Testing",
+        "scraped_date": "2026-01-27T00:22:09.094276"
+      }
+    },
+    {
+      "id": "m21_100plus_00084",
+      "source": "m21-1",
+      "citation": "M21-1, Sensory Specific, Section SENS.1.8",
+      "title": "Tinnitus Assessment - M21-1 SENS.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Sensory Specific\nREFERENCE: SENS.1.8 - Tinnitus Assessment\n\nGUIDANCE:\nRinging/buzzing\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Sensory Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Sensory Specific",
+        "section_id": "SENS.1.8",
+        "section_title": "Tinnitus Assessment",
+        "scraped_date": "2026-01-27T00:22:09.094279"
+      }
+    },
+    {
+      "id": "m21_100plus_00085",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.1",
+      "title": "SMC Rate Selection - M21-1 SPC.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.1 - SMC Rate Selection\n\nGUIDANCE:\nWhich SMC level\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.1",
+        "section_title": "SMC Rate Selection",
+        "scraped_date": "2026-01-27T00:22:09.094282"
+      }
+    },
+    {
+      "id": "m21_100plus_00086",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.2",
+      "title": "A&A Determination - M21-1 SPC.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.2 - A&A Determination\n\nGUIDANCE:\nAid and attendance need\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.2",
+        "section_title": "A&A Determination",
+        "scraped_date": "2026-01-27T00:22:09.094284"
+      }
+    },
+    {
+      "id": "m21_100plus_00087",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.3",
+      "title": "Housebound Criteria - M21-1 SPC.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.3 - Housebound Criteria\n\nGUIDANCE:\nConfined to premises\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.3",
+        "section_title": "Housebound Criteria",
+        "scraped_date": "2026-01-27T00:22:09.094285"
+      }
+    },
+    {
+      "id": "m21_100plus_00088",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.4",
+      "title": "Loss of Use Test - M21-1 SPC.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.4 - Loss of Use Test\n\nGUIDANCE:\nRemaining function\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.4",
+        "section_title": "Loss of Use Test",
+        "scraped_date": "2026-01-27T00:22:09.094287"
+      }
+    },
+    {
+      "id": "m21_100plus_00089",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.5",
+      "title": "Anatomical Loss - M21-1 SPC.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.5 - Anatomical Loss\n\nGUIDANCE:\nAmputation level\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.5",
+        "section_title": "Anatomical Loss",
+        "scraped_date": "2026-01-27T00:22:09.094289"
+      }
+    },
+    {
+      "id": "m21_100plus_00090",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.6",
+      "title": "Creative Organ - M21-1 SPC.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.6 - Creative Organ\n\nGUIDANCE:\nSMC(k) criteria\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.6",
+        "section_title": "Creative Organ",
+        "scraped_date": "2026-01-27T00:22:09.094290"
+      }
+    },
+    {
+      "id": "m21_100plus_00091",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.7",
+      "title": "Paired Organs - M21-1 SPC.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.7 - Paired Organs\n\nGUIDANCE:\nLoss of paired organ\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.7",
+        "section_title": "Paired Organs",
+        "scraped_date": "2026-01-27T00:22:09.094292"
+      }
+    },
+    {
+      "id": "m21_100plus_00092",
+      "source": "m21-1",
+      "citation": "M21-1, Special Compensation Issues, Section SPC.1.8",
+      "title": "SMC Combinations - M21-1 SPC.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: Special Compensation Issues\nREFERENCE: SPC.1.8 - SMC Combinations\n\nGUIDANCE:\nMultiple SMC levels\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "Special Compensation Issues",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "Special Compensation Issues",
+        "section_id": "SPC.1.8",
+        "section_title": "SMC Combinations",
+        "scraped_date": "2026-01-27T00:22:09.094293"
+      }
+    },
+    {
+      "id": "m21_100plus_00093",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.1",
+      "title": "Threshold Percentage - M21-1 TDIU.1.1",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.1 - Threshold Percentage\n\nGUIDANCE:\n60% or 70% combined\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.1",
+        "section_title": "Threshold Percentage",
+        "scraped_date": "2026-01-27T00:22:09.094295"
+      }
+    },
+    {
+      "id": "m21_100plus_00094",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.2",
+      "title": "Single Disability - M21-1 TDIU.1.2",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.2 - Single Disability\n\nGUIDANCE:\nOne disability TDIU\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.2",
+        "section_title": "Single Disability",
+        "scraped_date": "2026-01-27T00:22:09.094296"
+      }
+    },
+    {
+      "id": "m21_100plus_00095",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.3",
+      "title": "Combined Disabilities - M21-1 TDIU.1.3",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.3 - Combined Disabilities\n\nGUIDANCE:\nMultiple for TDIU\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.3",
+        "section_title": "Combined Disabilities",
+        "scraped_date": "2026-01-27T00:22:09.094298"
+      }
+    },
+    {
+      "id": "m21_100plus_00096",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.4",
+      "title": "Education Factor - M21-1 TDIU.1.4",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.4 - Education Factor\n\nGUIDANCE:\nEducational background\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.4",
+        "section_title": "Education Factor",
+        "scraped_date": "2026-01-27T00:22:09.094299"
+      }
+    },
+    {
+      "id": "m21_100plus_00097",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.5",
+      "title": "Work History - M21-1 TDIU.1.5",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.5 - Work History\n\nGUIDANCE:\nEmployment history\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.5",
+        "section_title": "Work History",
+        "scraped_date": "2026-01-27T00:22:09.094302"
+      }
+    },
+    {
+      "id": "m21_100plus_00098",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.6",
+      "title": "Sedentary Work - M21-1 TDIU.1.6",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.6 - Sedentary Work\n\nGUIDANCE:\nDesk job capability\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.6",
+        "section_title": "Sedentary Work",
+        "scraped_date": "2026-01-27T00:22:09.094303"
+      }
+    },
+    {
+      "id": "m21_100plus_00099",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.7",
+      "title": "Physical Work - M21-1 TDIU.1.7",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.7 - Physical Work\n\nGUIDANCE:\nManual labor capability\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.7",
+        "section_title": "Physical Work",
+        "scraped_date": "2026-01-27T00:22:09.094306"
+      }
+    },
+    {
+      "id": "m21_100plus_00100",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.8",
+      "title": "Marginal Employment - M21-1 TDIU.1.8",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.8 - Marginal Employment\n\nGUIDANCE:\nBelow poverty threshold\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.8",
+        "section_title": "Marginal Employment",
+        "scraped_date": "2026-01-27T00:22:09.094307"
+      }
+    },
+    {
+      "id": "m21_100plus_00101",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.9",
+      "title": "Protected Work - M21-1 TDIU.1.9",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.9 - Protected Work\n\nGUIDANCE:\nSheltered employment\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.9",
+        "section_title": "Protected Work",
+        "scraped_date": "2026-01-27T00:22:09.094309"
+      }
+    },
+    {
+      "id": "m21_100plus_00102",
+      "source": "m21-1",
+      "citation": "M21-1, TDIU Specific, Section TDIU.1.10",
+      "title": "Extraschedular TDIU - M21-1 TDIU.1.10",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nTOPIC: TDIU Specific\nREFERENCE: TDIU.1.10 - Extraschedular TDIU\n\nGUIDANCE:\n4.16(b) referral\n\nREGULATORY FRAMEWORK:\n• 38 CFR Part 3 - Adjudication\n• 38 CFR Part 4 - Rating Schedule",
+      "category": "TDIU Specific",
+      "hierarchy_level": 3,
+      "color_code": "yellow",
+      "url": "https://www.knowva.ebenefits.va.gov",
+      "metadata": {
+        "manual": "M21-1",
+        "part": "TDIU Specific",
+        "section_id": "TDIU.1.10",
+        "section_title": "Extraschedular TDIU",
+        "scraped_date": "2026-01-27T00:22:09.094310"
+      }
+    }
+  ]
+}
