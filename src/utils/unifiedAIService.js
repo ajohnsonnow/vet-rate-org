@@ -302,13 +302,26 @@ export const registerLocalAIEngine = (engine, ready, initializing = false, model
   localAIIsVisionModel = isVisionModel;
   console.log(`📝 Legacy Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`);
   
-  // Also register with Diamond Swarm system
+  // Dispatch event for DKB status update when Local AI is ready
   if (ready && modelId) {
+    window.dispatchEvent(new CustomEvent('local-ai-status-change', {
+      detail: { 
+        ready: true, 
+        modelId,
+        fullDKBAvailable: true // Local AI has access to full 130K+ DKB
+      }
+    }));
+    
     // Map legacy model to closest Diamond Swarm agent
     const agentId = modelId.toLowerCase().includes('writer') ? 'writer' 
       : modelId.toLowerCase().includes('rater') ? 'rater' 
       : 'auditor';
     registerSwarmEngine(engine, ready, initializing, agentId);
+  } else if (!ready && !initializing) {
+    // AI unloaded or failed - dispatch status change
+    window.dispatchEvent(new CustomEvent('local-ai-status-change', {
+      detail: { ready: false, fullDKBAvailable: false }
+    }));
   }
 };
 
