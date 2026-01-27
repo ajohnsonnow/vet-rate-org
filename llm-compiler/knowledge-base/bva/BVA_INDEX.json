@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "source": "Board of Veterans Appeals (BVA)",
+    "url": "https://www.va.gov/vetapp/",
+    "scraped_date": "2026-01-27T08:15:33.818883",
+    "total_decisions": 116106
+  },
+  "years": {
+    "2025": 13514,
+    "2024": 34664,
+    "2023": 67928
+  },
+  "files": [
+    "bva_2025_complete.json",
+    "bva_2024_complete.json",
+    "bva_2023_complete.json"
+  ]
+}

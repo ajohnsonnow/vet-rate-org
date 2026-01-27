@@ -1,0 +1,1069 @@
+{
+  "source": "Board of Veterans' Appeals - Precedential Decisions",
+  "generated_at": "2026-01-26T22:32:22.790588",
+  "total_entries": 53,
+  "landmark_decisions": 44,
+  "search_results": 9,
+  "entries": [
+    {
+      "id": "bva-landmark-001",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Caluza v. Brown, 7 Vet.App. 498 (1995)",
+      "title": "Caluza v. Brown - Benefit of the Doubt Standard",
+      "content": "Established that when evidence is in approximate balance, the benefit of the doubt must be given to the claimant. This is a fundamental principle in VA disability claims.\n\nLegal Principle: Benefit of the doubt applies when evidence is in approximate balance\n\nCategories: Evidence, Benefit of the Doubt\n\nYear: 1995",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1995/",
+      "metadata": {
+        "year": "1995",
+        "principle": "Benefit of the doubt applies when evidence is in approximate balance",
+        "categories": [
+          "Evidence",
+          "Benefit of the Doubt"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-002",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Fenderson v. West, 12 Vet.App. 119 (1999)",
+      "title": "Fenderson v. West - Duty to Assist",
+      "content": "Clarified VA's duty to assist claimants in developing evidence for their claims, including obtaining relevant medical records and providing medical examinations.\n\nLegal Principle: VA has duty to assist in developing claims\n\nCategories: Duty to Assist, Evidence Development\n\nYear: 1999",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1999/",
+      "metadata": {
+        "year": "1999",
+        "principle": "VA has duty to assist in developing claims",
+        "categories": [
+          "Duty to Assist",
+          "Evidence Development"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-003",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Gilbert v. Derwinski, 1 Vet.App. 49 (1990)",
+      "title": "Gilbert v. Derwinski - Service Connection Requirements",
+      "content": "Established the three-part test for service connection: (1) current disability, (2) in-service incurrence or aggravation, and (3) nexus between the two.\n\nLegal Principle: Three elements required for service connection\n\nCategories: Service Connection, Evidence\n\nYear: 1990",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1990/",
+      "metadata": {
+        "year": "1990",
+        "principle": "Three elements required for service connection",
+        "categories": [
+          "Service Connection",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-004",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Hickson v. West, 12 Vet.App. 247 (1999)",
+      "title": "Hickson v. West - Lay Testimony Competence",
+      "content": "Veterans are competent to testify about observable symptoms and can provide competent evidence about matters within their personal knowledge.\n\nLegal Principle: Lay testimony can be competent for observable symptoms\n\nCategories: Evidence, Lay Testimony\n\nYear: 1999",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1999/",
+      "metadata": {
+        "year": "1999",
+        "principle": "Lay testimony can be competent for observable symptoms",
+        "categories": [
+          "Evidence",
+          "Lay Testimony"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-005",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Jandreau v. Nicholson, 492 F.3d 1372 (Fed. Cir. 2007)",
+      "title": "Jandreau v. Nicholson - Continuity of Symptomatology",
+      "content": "Established that continuity of symptomatology can substitute for medical evidence of nexus in service connection claims.\n\nLegal Principle: Continuity of symptomatology can establish service connection\n\nCategories: Service Connection, Evidence\n\nYear: 2007",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2007/",
+      "metadata": {
+        "year": "2007",
+        "principle": "Continuity of symptomatology can establish service connection",
+        "categories": [
+          "Service Connection",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-006",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Nieves-Rodriguez v. Peake, 22 Vet.App. 295 (2008)",
+      "title": "Nieves-Rodriguez v. Peake - Medical Treatise Evidence",
+      "content": "Medical treatises and scientific articles can constitute substantial evidence supporting a veteran's claim when combined with other evidence.\n\nLegal Principle: Medical treatises can be substantial evidence\n\nCategories: Evidence, Medical Opinion\n\nYear: 2008",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2008/",
+      "metadata": {
+        "year": "2008",
+        "principle": "Medical treatises can be substantial evidence",
+        "categories": [
+          "Evidence",
+          "Medical Opinion"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-007",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Colvin v. Derwinski, 1 Vet.App. 171 (1991)",
+      "title": "Colvin v. Derwinski - Statement of Reasons",
+      "content": "Established that VA must provide a statement of reasons or bases for its decisions that is adequate to allow effective judicial review.\n\nLegal Principle: VA must provide adequate reasons for denial\n\nCategories: Due Process, Statement of Reasons\n\nYear: 1991",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1991/",
+      "metadata": {
+        "year": "1991",
+        "principle": "VA must provide adequate reasons for denial",
+        "categories": [
+          "Due Process",
+          "Statement of Reasons"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-008",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "DeLuca v. Brown, 8 Vet.App. 202 (1995)",
+      "title": "DeLuca v. Brown - Duty to Notify",
+      "content": "VA has a duty to notify claimants of evidence necessary to substantiate their claims and which evidence VA will obtain.\n\nLegal Principle: VA must notify claimants of evidence needed\n\nCategories: Duty to Notify, Due Process\n\nYear: 1995",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1995/",
+      "metadata": {
+        "year": "1995",
+        "principle": "VA must notify claimants of evidence needed",
+        "categories": [
+          "Duty to Notify",
+          "Due Process"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-009",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Gabor v. Shinseki, 26 Vet.App. 413 (2014)",
+      "title": "Gabor v. Shinseki - Medical Opinion Adequacy",
+      "content": "A medical opinion based on an inaccurate factual premise is inadequate and cannot support a rating decision.\n\nLegal Principle: Medical opinions must be based on accurate facts\n\nCategories: Medical Opinion, Evidence\n\nYear: 2014",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2014/",
+      "metadata": {
+        "year": "2014",
+        "principle": "Medical opinions must be based on accurate facts",
+        "categories": [
+          "Medical Opinion",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-010",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Locklear v. Nicholson, 20 Vet.App. 410 (2006)",
+      "title": "Locklear v. Nicholson - Staging Requirements",
+      "content": "When multiple staging criteria exist for a condition, VA must consider which is most appropriate and explain its choice.\n\nLegal Principle: VA must consider all staging options for disabilities\n\nCategories: Rating, Medical Examination\n\nYear: 2006",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2006/",
+      "metadata": {
+        "year": "2006",
+        "principle": "VA must consider all staging options for disabilities",
+        "categories": [
+          "Rating",
+          "Medical Examination"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-011",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "McLendon v. Nicholson, 20 Vet.App. 79 (2006)",
+      "title": "McLendon v. Nicholson - Secondary Service Connection",
+      "content": "A condition can be service-connected as secondary even if it was caused or aggravated by a service-connected disability.\n\nLegal Principle: Secondary conditions can be service-connected through aggravation\n\nCategories: Secondary Service Connection, Aggravation\n\nYear: 2006",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2006/",
+      "metadata": {
+        "year": "2006",
+        "principle": "Secondary conditions can be service-connected through aggravation",
+        "categories": [
+          "Secondary Service Connection",
+          "Aggravation"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-012",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Mittleider v. West, 11 Vet.App. 181 (1998)",
+      "title": "Mittleider v. West - TDIU Requirements",
+      "content": "To establish entitlement to TDIU, veteran must show inability to secure or follow substantially gainful occupation due to service-connected disabilities.\n\nLegal Principle: TDIU requires unemployability due to service-connected disabilities\n\nCategories: TDIU, Individual Unemployability\n\nYear: 1998",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1998/",
+      "metadata": {
+        "year": "1998",
+        "principle": "TDIU requires unemployability due to service-connected disabilities",
+        "categories": [
+          "TDIU",
+          "Individual Unemployability"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-013",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Shedden v. Principi, 381 F.3d 1163 (Fed. Cir. 2004)",
+      "title": "Shedden v. Principi - Effective Date for Increased Rating",
+      "content": "Effective date for increased rating is the date of receipt of claim or date entitlement arose, whichever is later.\n\nLegal Principle: Effective date rules for rating increases\n\nCategories: Effective Date, Rating\n\nYear: 2004",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2004/",
+      "metadata": {
+        "year": "2004",
+        "principle": "Effective date rules for rating increases",
+        "categories": [
+          "Effective Date",
+          "Rating"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-014",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Buchanan v. Nicholson, 451 F.3d 1331 (Fed. Cir. 2006)",
+      "title": "Buchanan v. Nicholson - Informal Claims",
+      "content": "Any communication expressing intent to apply for benefits can constitute an informal claim, potentially establishing an earlier effective date.\n\nLegal Principle: Informal claims can establish effective dates\n\nCategories: Effective Date, Informal Claim\n\nYear: 2006",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2006/",
+      "metadata": {
+        "year": "2006",
+        "principle": "Informal claims can establish effective dates",
+        "categories": [
+          "Effective Date",
+          "Informal Claim"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-015",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Stefl v. Nicholson, 21 Vet.App. 120 (2007)",
+      "title": "Stefl v. Nicholson - Rating Changes During Appeal",
+      "content": "When a veteran's condition worsens during the appellate period, VA must consider whether an increased rating is warranted.\n\nLegal Principle: Rating changes during appeal period\n\nCategories: Rating, Appeals\n\nYear: 2007",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2007/",
+      "metadata": {
+        "year": "2007",
+        "principle": "Rating changes during appeal period",
+        "categories": [
+          "Rating",
+          "Appeals"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-016",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Acevedo v. Shinseki, 25 Vet.App. 286 (2012)",
+      "title": "Acevedo v. Shinseki - Multi-Symptom Conditions",
+      "content": "When rating a condition, VA must consider all symptoms and their combined effect on functional impairment, not just individual symptoms.\n\nLegal Principle: All symptoms must be considered in rating\n\nCategories: Rating, Functional Impairment\n\nYear: 2012",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2012/",
+      "metadata": {
+        "year": "2012",
+        "principle": "All symptoms must be considered in rating",
+        "categories": [
+          "Rating",
+          "Functional Impairment"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-017",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Bradley v. Peake, 22 Vet.App. 280 (2008)",
+      "title": "Bradley v. Peake - Residuals of Resolved Conditions",
+      "content": "Residual effects of a resolved service-connected condition can themselves be service-connected.\n\nLegal Principle: Residuals can be service-connected after condition resolves\n\nCategories: Service Connection, Residuals\n\nYear: 2008",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2008/",
+      "metadata": {
+        "year": "2008",
+        "principle": "Residuals can be service-connected after condition resolves",
+        "categories": [
+          "Service Connection",
+          "Residuals"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-018",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Clyburn v. West, 12 Vet.App. 296 (1999)",
+      "title": "Clyburn v. West - Duty to Expedite Claims",
+      "content": "VA has a duty to expedite the processing of claims that have been pending for extended periods.\n\nLegal Principle: VA must expedite processing of older claims\n\nCategories: Due Process, Claims Processing\n\nYear: 1999",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1999/",
+      "metadata": {
+        "year": "1999",
+        "principle": "VA must expedite processing of older claims",
+        "categories": [
+          "Due Process",
+          "Claims Processing"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-019",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Davidson v. Shinseki, 581 F.3d 1313 (Fed. Cir. 2009)",
+      "title": "Davidson v. Shinseki - VCAA Notice Requirements",
+      "content": "VA must provide VCAA notice before the initial unfavorable decision on a claim, not after.\n\nLegal Principle: Timing requirements for VCAA notice\n\nCategories: Duty to Notify, VCAA\n\nYear: 2009",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2009/",
+      "metadata": {
+        "year": "2009",
+        "principle": "Timing requirements for VCAA notice",
+        "categories": [
+          "Duty to Notify",
+          "VCAA"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-020",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Disabled American Veterans v. Secretary, 327 F.3d 1339 (Fed. Cir. 2003)",
+      "title": "DAV v. Secretary - Clear and Unmistakable Error",
+      "content": "Clear and unmistakable error must be undebatable and of the sort that had it not been made would have manifestly changed the outcome.\n\nLegal Principle: Standards for finding clear and unmistakable error\n\nCategories: CUE, Reopening\n\nYear: 2003",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2003/",
+      "metadata": {
+        "year": "2003",
+        "principle": "Standards for finding clear and unmistakable error",
+        "categories": [
+          "CUE",
+          "Reopening"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-021",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Edenfield v. Brown, 8 Vet.App. 384 (1995)",
+      "title": "Edenfield v. Brown - Reasonable Doubt Rule",
+      "content": "The reasonable doubt rule applies when there is approximate balance of positive and negative evidence.\n\nLegal Principle: Application of reasonable doubt in claims\n\nCategories: Evidence, Benefit of the Doubt\n\nYear: 1995",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1995/",
+      "metadata": {
+        "year": "1995",
+        "principle": "Application of reasonable doubt in claims",
+        "categories": [
+          "Evidence",
+          "Benefit of the Doubt"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-022",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Esteban v. Brown, 6 Vet.App. 259 (1994)",
+      "title": "Esteban v. Brown - Extraschedular Ratings",
+      "content": "Extraschedular ratings may be warranted when the schedular rating does not adequately compensate for the veteran's disability.\n\nLegal Principle: When extraschedular ratings are warranted\n\nCategories: Rating, Extraschedular\n\nYear: 1994",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1994/",
+      "metadata": {
+        "year": "1994",
+        "principle": "When extraschedular ratings are warranted",
+        "categories": [
+          "Rating",
+          "Extraschedular"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-023",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Evans v. Brown, 9 Vet.App. 273 (1996)",
+      "title": "Evans v. Brown - Duty to Reexamine Records",
+      "content": "On appeal, VA must reexamine all evidence of record, not just new evidence submitted.\n\nLegal Principle: VA must reexamine all evidence on appeal\n\nCategories: Appeals, Evidence\n\nYear: 1996",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1996/",
+      "metadata": {
+        "year": "1996",
+        "principle": "VA must reexamine all evidence on appeal",
+        "categories": [
+          "Appeals",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-024",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Floyd v. Brown, 9 Vet.App. 88 (1996)",
+      "title": "Floyd v. Brown - Aggravation vs. Natural Progress",
+      "content": "VA must distinguish between aggravation of a condition during service and its natural progression.\n\nLegal Principle: Distinguishing aggravation from natural progression\n\nCategories: Aggravation, Service Connection\n\nYear: 1996",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1996/",
+      "metadata": {
+        "year": "1996",
+        "principle": "Distinguishing aggravation from natural progression",
+        "categories": [
+          "Aggravation",
+          "Service Connection"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-025",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Guerra v. Shinseki, 642 F.3d 1046 (Fed. Cir. 2011)",
+      "title": "Guerra v. Shinseki - Presumption of Competence",
+      "content": "There is a presumption that medical examiners are competent, but this can be rebutted by evidence.\n\nLegal Principle: Presumption of medical examiner competence\n\nCategories: Medical Examination, Evidence\n\nYear: 2011",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2011/",
+      "metadata": {
+        "year": "2011",
+        "principle": "Presumption of medical examiner competence",
+        "categories": [
+          "Medical Examination",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-026",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Hatlestad v. Brown, 5 Vet.App. 524 (1993)",
+      "title": "Hatlestad v. Brown - Contemporaneous Evidence Value",
+      "content": "Contemporaneous evidence, such as service medical records, is generally afforded greater probative weight.\n\nLegal Principle: Value of contemporaneous evidence\n\nCategories: Evidence, Service Records\n\nYear: 1993",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1993/",
+      "metadata": {
+        "year": "1993",
+        "principle": "Value of contemporaneous evidence",
+        "categories": [
+          "Evidence",
+          "Service Records"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-027",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Henderson v. Shinseki, 562 U.S. 428 (2011)",
+      "title": "Henderson v. Shinseki - NOD Filing Requirements",
+      "content": "The 1-year deadline to file a Notice of Disagreement is not jurisdictional but is a claim-processing rule.\n\nLegal Principle: Notice of Disagreement filing is not jurisdictional\n\nCategories: Appeals, Notice of Disagreement\n\nYear: 2011",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2011/",
+      "metadata": {
+        "year": "2011",
+        "principle": "Notice of Disagreement filing is not jurisdictional",
+        "categories": [
+          "Appeals",
+          "Notice of Disagreement"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-028",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Horn v. Shinseki, 25 Vet.App. 231 (2012)",
+      "title": "Horn v. Shinseki - Intent to File Benefits",
+      "content": "Filing an intent to file can preserve an earlier effective date for benefits.\n\nLegal Principle: Effect of intent to file on effective date\n\nCategories: Effective Date, Intent to File\n\nYear: 2012",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2012/",
+      "metadata": {
+        "year": "2012",
+        "principle": "Effect of intent to file on effective date",
+        "categories": [
+          "Effective Date",
+          "Intent to File"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-029",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Irvin v. Brown, 4 Vet.App. 23 (1993)",
+      "title": "Irvin v. Brown - Liberal Construction of Claims",
+      "content": "VA must liberally construe pro se claims to include all disabilities that can reasonably be encompassed.\n\nLegal Principle: Claims must be liberally construed\n\nCategories: Claims Processing, Liberal Construction\n\nYear: 1993",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1993/",
+      "metadata": {
+        "year": "1993",
+        "principle": "Claims must be liberally construed",
+        "categories": [
+          "Claims Processing",
+          "Liberal Construction"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-030",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "King v. Shinseki, 700 F.3d 1339 (Fed. Cir. 2012)",
+      "title": "King v. Shinseki - VCAA Substantial Compliance",
+      "content": "VA substantially complies with VCAA notice requirements if the claimant understands what is needed for the claim.\n\nLegal Principle: Substantial compliance with VCAA notice requirements\n\nCategories: Duty to Notify, VCAA\n\nYear: 2012",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2012/",
+      "metadata": {
+        "year": "2012",
+        "principle": "Substantial compliance with VCAA notice requirements",
+        "categories": [
+          "Duty to Notify",
+          "VCAA"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-031",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Leonard v. Nicholson, 405 F.3d 1333 (Fed. Cir. 2005)",
+      "title": "Leonard v. Nicholson - Duty to Assist Scope",
+      "content": "VA's duty to assist does not require it to reexamine or readjudicate previously and finally decided claims.\n\nLegal Principle: Limits on duty to assist\n\nCategories: Duty to Assist, Evidence Development\n\nYear: 2005",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2005/",
+      "metadata": {
+        "year": "2005",
+        "principle": "Limits on duty to assist",
+        "categories": [
+          "Duty to Assist",
+          "Evidence Development"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-032",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Masors v. Derwinski, 2 Vet.App. 181 (1992)",
+      "title": "Masors v. Derwinski - Inferences from Service Records",
+      "content": "Reasonable inferences may be drawn from service records, even if they don't explicitly document a condition.\n\nLegal Principle: Reasonable inferences from service records\n\nCategories: Evidence, Service Records\n\nYear: 1992",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1992/",
+      "metadata": {
+        "year": "1992",
+        "principle": "Reasonable inferences from service records",
+        "categories": [
+          "Evidence",
+          "Service Records"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-033",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Maxson v. Gober, 230 F.3d 1330 (Fed. Cir. 2000)",
+      "title": "Maxson v. Gober - Scope of VCAA Duty to Notify",
+      "content": "VCAA notice must inform claimants of information and evidence necessary to substantiate the claim.\n\nLegal Principle: Comprehensive VCAA notice requirements\n\nCategories: Duty to Notify, VCAA\n\nYear: 2000",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2000/",
+      "metadata": {
+        "year": "2000",
+        "principle": "Comprehensive VCAA notice requirements",
+        "categories": [
+          "Duty to Notify",
+          "VCAA"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-034",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Moody v. Principi, 360 F.3d 1306 (Fed. Cir. 2004)",
+      "title": "Moody v. Principi - Rating Reductions",
+      "content": "VA must show sustained improvement in the disability before reducing a rating, following proper procedures.\n\nLegal Principle: Requirements for reducing disability ratings\n\nCategories: Rating, Rating Reductions\n\nYear: 2004",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2004/",
+      "metadata": {
+        "year": "2004",
+        "principle": "Requirements for reducing disability ratings",
+        "categories": [
+          "Rating",
+          "Rating Reductions"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-035",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Murphy v. Derwinski, 1 Vet.App. 78 (1990)",
+      "title": "Murphy v. Derwinski - Service Connection Elements",
+      "content": "Service connection requires competent evidence of current disability, in-service incurrence, and a nexus.\n\nLegal Principle: Elements required for service connection\n\nCategories: Service Connection, Evidence\n\nYear: 1990",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1990/",
+      "metadata": {
+        "year": "1990",
+        "principle": "Elements required for service connection",
+        "categories": [
+          "Service Connection",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-036",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "O'Hare v. Derwinski, 1 Vet.App. 365 (1991)",
+      "title": "O'Hare v. Derwinski - Duty to Maximize Benefits",
+      "content": "VA has a duty to maximize the benefits available to veterans under the law.\n\nLegal Principle: VA must maximize veteran benefits\n\nCategories: Due Process, Benefits\n\nYear: 1991",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1991/",
+      "metadata": {
+        "year": "1991",
+        "principle": "VA must maximize veteran benefits",
+        "categories": [
+          "Due Process",
+          "Benefits"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-037",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Roberson v. Principi, 251 F.3d 1378 (Fed. Cir. 2001)",
+      "title": "Roberson v. Principi - SMC Requirements",
+      "content": "Standards for determining entitlement to Special Monthly Compensation for loss of use or anatomical loss.\n\nLegal Principle: Special Monthly Compensation entitlement standards\n\nCategories: SMC, Rating\n\nYear: 2001",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2001/",
+      "metadata": {
+        "year": "2001",
+        "principle": "Special Monthly Compensation entitlement standards",
+        "categories": [
+          "SMC",
+          "Rating"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-038",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Schafrath v. Derwinski, 1 Vet.App. 589 (1991)",
+      "title": "Schafrath v. Derwinski - VA Medical Opinion Requirements",
+      "content": "VA medical opinions must be based on consideration of the veteran's prior medical history and examinations.\n\nLegal Principle: Adequacy of VA medical opinions\n\nCategories: Medical Opinion, Evidence\n\nYear: 1991",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1991/",
+      "metadata": {
+        "year": "1991",
+        "principle": "Adequacy of VA medical opinions",
+        "categories": [
+          "Medical Opinion",
+          "Evidence"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-039",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Shinseki v. Sanders, 556 U.S. 396 (2009)",
+      "title": "Shinseki v. Sanders - Prejudice Required for Error",
+      "content": "To overturn a VA decision, the veteran must show that an error was prejudicial, not merely that error occurred.\n\nLegal Principle: Material prejudice required to overturn decision\n\nCategories: Appeals, Prejudicial Error\n\nYear: 2009",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2009/",
+      "metadata": {
+        "year": "2009",
+        "principle": "Material prejudice required to overturn decision",
+        "categories": [
+          "Appeals",
+          "Prejudicial Error"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-040",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Thun v. Peake, 22 Vet.App. 111 (2008)",
+      "title": "Thun v. Peake - Compensation for Pain",
+      "content": "Painful motion and functional loss due to pain can support a higher disability rating.\n\nLegal Principle: Pain as basis for higher rating\n\nCategories: Rating, Pain\n\nYear: 2008",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2008/",
+      "metadata": {
+        "year": "2008",
+        "principle": "Pain as basis for higher rating",
+        "categories": [
+          "Rating",
+          "Pain"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-041",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Washington v. Nicholson, 19 Vet.App. 362 (2005)",
+      "title": "Washington v. Nicholson - Multiple Disabilities Rating",
+      "content": "Each separate disability must be rated separately and then combined using the combined ratings table.\n\nLegal Principle: Separate ratings for multiple disabilities\n\nCategories: Rating, Multiple Disabilities\n\nYear: 2005",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2005/",
+      "metadata": {
+        "year": "2005",
+        "principle": "Separate ratings for multiple disabilities",
+        "categories": [
+          "Rating",
+          "Multiple Disabilities"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-042",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Wise v. Shinseki, 26 Vet.App. 517 (2014)",
+      "title": "Wise v. Shinseki - Duty to Assist in Appeals",
+      "content": "VA's duty to assist continues throughout the appellate process.\n\nLegal Principle: Continuing duty to assist during appeals\n\nCategories: Duty to Assist, Appeals\n\nYear: 2014",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2014/",
+      "metadata": {
+        "year": "2014",
+        "principle": "Continuing duty to assist during appeals",
+        "categories": [
+          "Duty to Assist",
+          "Appeals"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-043",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Yates v. West, 13 Vet.App. 112 (1999)",
+      "title": "Yates v. West - Adequate Statement of Reasons",
+      "content": "VA's statement of reasons must be adequate to enable the veteran to understand the decision and appeal effectively.\n\nLegal Principle: Requirements for adequate reasons in decisions\n\nCategories: Due Process, Statement of Reasons\n\nYear: 1999",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1999/",
+      "metadata": {
+        "year": "1999",
+        "principle": "Requirements for adequate reasons in decisions",
+        "categories": [
+          "Due Process",
+          "Statement of Reasons"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-landmark-044",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "Zarris v. West, 12 Vet.App. 93 (1998)",
+      "title": "Zarris v. West - Pyramiding Prohibition",
+      "content": "VA may not award separate ratings for the same manifestation of a disability under different diagnostic codes.\n\nLegal Principle: Prohibition against pyramiding ratings\n\nCategories: Rating, Pyramiding\n\nYear: 1998",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1998/",
+      "metadata": {
+        "year": "1998",
+        "principle": "Prohibition against pyramiding ratings",
+        "categories": [
+          "Rating",
+          "Pyramiding"
+        ],
+        "landmark": true
+      }
+    },
+    {
+      "id": "bva-precedential-045",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "13 Vet.App. 282 (1999)",
+      "title": "Sanchez-Benitez v. West - Presumptive Service Connection for Herbicide Exposure",
+      "content": "Established standards for presumptive service connection for conditions related to herbicide exposure during Vietnam service.\n\nLegal Principle: Presumptive service connection for Agent Orange exposure\n\nCategories: Presumptive Service Connection, Agent Orange\n\nYear: 1999",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1999/",
+      "metadata": {
+        "year": "1999",
+        "principle": "Presumptive service connection for Agent Orange exposure",
+        "categories": [
+          "Presumptive Service Connection",
+          "Agent Orange"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-046",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "34 F.3d 1039 (Fed. Cir. 1994)",
+      "title": "Combee v. Brown - Aggravation During Service",
+      "content": "Clarified standards for determining whether a pre-existing condition was aggravated during military service.\n\nLegal Principle: Aggravation of pre-existing conditions\n\nCategories: Service Connection, Aggravation\n\nYear: 1994",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1994/",
+      "metadata": {
+        "year": "1994",
+        "principle": "Aggravation of pre-existing conditions",
+        "categories": [
+          "Service Connection",
+          "Aggravation"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-047",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "20 Vet.App. 296 (2006)",
+      "title": "Rudd v. Nicholson - Effective Date for Reopened Claims",
+      "content": "Effective date for reopened claims is date of receipt, not date of original claim.\n\nLegal Principle: Effective date rules for reopened claims\n\nCategories: Effective Date, Reopened Claims\n\nYear: 2006",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2006/",
+      "metadata": {
+        "year": "2006",
+        "principle": "Effective date rules for reopened claims",
+        "categories": [
+          "Effective Date",
+          "Reopened Claims"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-048",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "16 Vet.App. 183 (2002)",
+      "title": "Quartuccio v. Principi - Scope of Duty to Assist",
+      "content": "VA's duty to assist includes obtaining relevant federal records and providing adequate medical examinations.\n\nLegal Principle: Comprehensive duty to assist requirements\n\nCategories: Duty to Assist, Medical Examinations\n\nYear: 2002",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2002/",
+      "metadata": {
+        "year": "2002",
+        "principle": "Comprehensive duty to assist requirements",
+        "categories": [
+          "Duty to Assist",
+          "Medical Examinations"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-049",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "21 Vet.App. 303 (2007)",
+      "title": "Barr v. Nicholson - Inadequate Medical Examination",
+      "content": "A medical examination is inadequate if it fails to address all claimed conditions or provide sufficient rationale.\n\nLegal Principle: Standards for adequate medical examinations\n\nCategories: Medical Examination, Evidence\n\nYear: 2007",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2007/",
+      "metadata": {
+        "year": "2007",
+        "principle": "Standards for adequate medical examinations",
+        "categories": [
+          "Medical Examination",
+          "Evidence"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-050",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "16 Vet.App. 436 (2002)",
+      "title": "Mauerhan v. Principi - Rating Based on Severity",
+      "content": "VA must assign ratings based on the severity of symptoms and functional impairment, not diagnosis alone.\n\nLegal Principle: Symptom-based rating requirements\n\nCategories: Rating, Functional Impairment\n\nYear: 2002",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2002/",
+      "metadata": {
+        "year": "2002",
+        "principle": "Symptom-based rating requirements",
+        "categories": [
+          "Rating",
+          "Functional Impairment"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-051",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "24 Vet.App. 242 (2011)",
+      "title": "Buie v. Shinseki - Bilateral Factor Application",
+      "content": "Bilateral factor applies when veteran has separate compensable disabilities affecting paired skeletal extremities.\n\nLegal Principle: Proper application of bilateral factor\n\nCategories: Rating, Bilateral Factor\n\nYear: 2011",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2011/",
+      "metadata": {
+        "year": "2011",
+        "principle": "Proper application of bilateral factor",
+        "categories": [
+          "Rating",
+          "Bilateral Factor"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-052",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "6 Vet.App. 532 (1994)",
+      "title": "Beaty v. Brown - TDIU and Age",
+      "content": "Age, education, and work experience must be considered in TDIU determinations.\n\nLegal Principle: Factors in TDIU determinations\n\nCategories: TDIU, Individual Unemployability\n\nYear: 1994",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/1994/",
+      "metadata": {
+        "year": "1994",
+        "principle": "Factors in TDIU determinations",
+        "categories": [
+          "TDIU",
+          "Individual Unemployability"
+        ],
+        "from_search": true
+      }
+    },
+    {
+      "id": "bva-precedential-053",
+      "source": "Board of Veterans' Appeals - Precedential Decision",
+      "citation": "708 F.3d 1331 (Fed. Cir. 2013)",
+      "title": "Walker v. Shinseki - Presumptive Service Connection Time Limits",
+      "content": "Clarified time limits for presumptive service connection for chronic diseases.\n\nLegal Principle: Time limits for presumptive conditions\n\nCategories: Presumptive Service Connection, Chronic Diseases\n\nYear: 2013",
+      "category": "BVA Precedential",
+      "hierarchy_level": 2,
+      "color_code": "#EAB308",
+      "url": "https://www.va.gov/vetapp/2013/",
+      "metadata": {
+        "year": "2013",
+        "principle": "Time limits for presumptive conditions",
+        "categories": [
+          "Presumptive Service Connection",
+          "Chronic Diseases"
+        ],
+        "from_search": true
+      }
+    }
+  ]
+}

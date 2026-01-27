@@ -1,417 +1,515 @@
 #!/usr/bin/env python3
 """
-🔍 REAL BVA Decision Scraper
-============================
-Scrapes ACTUAL BVA decisions from the official VA BVA search database.
-NO FAKE DATA - Only real citations and real decision text.
+BVA Decision Scraper for Diamond Knowledge Base
+================================================
+Scrapes Board of Veterans Appeals decisions from VA.gov sitemaps.
 
-Sources:
-- https://www.index.va.gov/search/va/bva.jsp (BVA Search)
-- https://www.bva.va.gov/ (Board of Veterans Appeals)
+Data Source: https://www.va.gov/vetapp/sitemap.xml
+Referenced by: https://catalog.data.gov/dataset/board-of-veterans-appeals
+
+Author: VetRate Diamond Team
+Created: 2026-01-27
 """
 
-import json
-import asyncio
-import aiohttp
-import logging
+import os
 import re
-import ssl
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Any, Optional
-from urllib.parse import urlencode, quote_plus
+import json
 import time
+import logging
+import hashlib
+import requests
+from datetime import datetime
+from pathlib import Path
+from typing import Optional, Dict, List, Any
+from xml.etree import ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Configure logging
-log_dir = Path(__file__).parent.parent.parent / "logs"
-log_dir.mkdir(exist_ok=True)
-log_file = log_dir / f"bva_scraper_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-
+# Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+# Constants
+BASE_DIR = Path(__file__).parent.parent.parent / "knowledge-base" / "bva"
+OUTPUT_DIR = BASE_DIR / "decisions"
+# The main sitemap index - note: sometimes returns 404, use direct year URLs as backup
+SITEMAP_INDEX_URL = "https://www.bva.va.gov/sitemap.xml"
 
-class RealBVAScraper:
-    """Scrape REAL BVA decisions from official VA sources"""
+# Direct yearly sitemap URLs (more reliable)
+YEARLY_SITEMAPS = {
+    "25": "https://www.va.gov/vetapp25/sitemap.xml",
+    "24": "https://www.va.gov/vetapp24/sitemap.xml",
+    "23": "https://www.va.gov/vetapp23/sitemap.xml",
+    "22": "https://www.va.gov/vetapp22/sitemap.xml",
+    "21": "https://www.va.gov/vetapp21/sitemap.xml",
+    "20": "https://www.va.gov/vetapp20/sitemap.xml",
+}
+
+# Priority conditions to focus on (these are most useful for veterans)
+PRIORITY_CONDITIONS = [
+    "ptsd", "post-traumatic stress", "posttraumatic stress",
+    "sleep apnea", "obstructive sleep apnea",
+    "tinnitus",
+    "depression", "major depressive disorder", "mdd",
+    "anxiety", "generalized anxiety",
+    "tbi", "traumatic brain injury",
+    "back", "lumbar", "spine", "degenerative disc",
+    "knee", "patellofemoral",
+    "migraine", "headache",
+    "gerd", "gastroesophageal reflux",
+    "diabetes", "diabetic",
+    "hypertension", "high blood pressure",
+    "hearing loss", "bilateral hearing",
+    "radiculopathy", "sciatic",
+    "shoulder", "rotator cuff",
+    "neck", "cervical",
+    "hip",
+    "erectile dysfunction", "ed",
+    "agent orange", "presumptive",
+    "burn pit", "pact act",
+    "gulf war", "southwest asia",
+    "secondary", "aggravated by"
+]
+
+# CFR patterns to extract
+CFR_PATTERN = re.compile(r'38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d\.]+(?:\s*,\s*[\d\.]+)*)', re.IGNORECASE)
+USC_PATTERN = re.compile(r'38\s*U\.?S\.?C\.?\s*§?\s*([\d]+(?:\s*,\s*[\d]+)*)', re.IGNORECASE)
+
+
+class BVAScraper:
+    """Scrapes BVA decisions from VA.gov"""
     
-    def __init__(self):
-        self.output_dir = Path(__file__).parent.parent.parent / "knowledge-base" / "bva"
+    def __init__(self, output_dir: Path = OUTPUT_DIR):
+        self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        self.decisions = []
+        self.session = requests.Session()
+        # Use browser-like headers to avoid 406 errors
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0',
+        })
         self.stats = {
-            "searched": 0,
-            "found": 0,
-            "scraped": 0,
-            "errors": 0
+            "sitemaps_processed": 0,
+            "decisions_found": 0,
+            "decisions_downloaded": 0,
+            "decisions_parsed": 0,
+            "grants": 0,
+            "denials": 0,
+            "remands": 0,
+            "errors": 0,
+            "priority_conditions": 0
         }
-        
-        # Key search terms for VA disability claims
-        self.search_topics = [
-            # High-value conditions
-            "PTSD service connection",
-            "PTSD combat veteran",
-            "PTSD military sexual trauma",
-            "sleep apnea secondary",
-            "sleep apnea CPAP",
-            "sleep apnea PTSD",
-            "tinnitus service connection",
-            "hearing loss service connection",
-            "lumbar spine service connection",
-            "cervical spine service connection",
-            "knee service connection",
-            "knee secondary bilateral",
-            "TBI traumatic brain injury",
-            "migraine headaches",
-            "GERD secondary",
-            "hypertension secondary PTSD",
-            "diabetes type 2 agent orange",
-            "peripheral neuropathy secondary diabetes",
-            "ischemic heart disease agent orange",
-            "TDIU unemployability",
-            "TDIU extraschedular",
-            "effective date service connection",
-            "CUE clear unmistakable error",
-            "Gulf War undiagnosed illness",
-            "burn pit respiratory",
-            "PACT Act presumptive",
-            "aid attendance SMC",
-            "housebound SMC",
-            "depression secondary",
-            "anxiety service connection",
-            "radiculopathy secondary spine",
-            "erectile dysfunction secondary",
-            "fibromyalgia Gulf War",
-            "chronic fatigue syndrome",
-            "irritable bowel syndrome",
-            "sinusitis service connection",
-            "asthma service connection",
-            "skin condition eczema",
-            "scars painful",
-            "rating increase",
-            "DeLuca functional loss"
-        ]
     
-    async def search_bva_decisions(self, session: aiohttp.ClientSession, query: str, max_results: int = 10) -> List[Dict]:
-        """Search BVA decisions using the VA search API"""
-        
-        results = []
-        
-        # VA BVA Search endpoint
-        # The search uses a specific format
-        search_url = "https://www.index.va.gov/search/va/bva_search.jsp"
-        
-        params = {
-            'QT': query,
-            'sort': 'date:D:S:d1',
-            'num': str(max_results),
-            'start': '0'
-        }
+    def fetch_sitemap_index(self) -> List[str]:
+        """Fetch the main sitemap index and extract yearly sitemap URLs"""
+        logger.info(f"Fetching sitemap index: {SITEMAP_INDEX_URL}")
         
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive',
-                'Referer': 'https://www.index.va.gov/search/va/bva.jsp'
+            resp = self.session.get(SITEMAP_INDEX_URL, timeout=30)
+            resp.raise_for_status()
+            
+            # Parse XML
+            root = ET.fromstring(resp.content)
+            ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+            
+            sitemap_urls = []
+            for sitemap in root.findall('.//sm:sitemap', ns):
+                loc = sitemap.find('sm:loc', ns)
+                if loc is not None:
+                    sitemap_urls.append(loc.text)
+            
+            # If namespace parsing fails, try without
+            if not sitemap_urls:
+                for loc in root.iter():
+                    if 'loc' in loc.tag.lower() and loc.text:
+                        if 'sitemap.xml' in loc.text:
+                            sitemap_urls.append(loc.text)
+            
+            logger.info(f"Found {len(sitemap_urls)} yearly sitemaps")
+            return sitemap_urls
+            
+        except Exception as e:
+            logger.error(f"Error fetching sitemap index: {e}")
+            return []
+    
+    def fetch_decision_urls_from_sitemap(self, sitemap_url: str, limit: int = None) -> List[str]:
+        """Fetch individual decision URLs from a yearly sitemap"""
+        logger.info(f"Fetching sitemap: {sitemap_url}")
+        
+        try:
+            resp = self.session.get(sitemap_url, timeout=60)
+            resp.raise_for_status()
+            
+            # Parse XML
+            root = ET.fromstring(resp.content)
+            ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+            
+            decision_urls = []
+            for url_elem in root.findall('.//sm:url', ns):
+                loc = url_elem.find('sm:loc', ns)
+                if loc is not None and loc.text and '.txt' in loc.text:
+                    decision_urls.append(loc.text)
+            
+            # If namespace parsing fails, try regex
+            if not decision_urls:
+                urls = re.findall(r'https://www\.va\.gov/vetapp\d+/Files\d*/\d+\.txt', resp.text)
+                decision_urls = list(set(urls))
+            
+            self.stats["sitemaps_processed"] += 1
+            self.stats["decisions_found"] += len(decision_urls)
+            
+            if limit:
+                decision_urls = decision_urls[:limit]
+            
+            logger.info(f"Found {len(decision_urls)} decisions in {sitemap_url}")
+            return decision_urls
+            
+        except Exception as e:
+            logger.error(f"Error fetching sitemap {sitemap_url}: {e}")
+            self.stats["errors"] += 1
+            return []
+    
+    def download_decision(self, url: str) -> Optional[str]:
+        """Download a single BVA decision text file"""
+        try:
+            resp = self.session.get(url, timeout=30)
+            resp.raise_for_status()
+            self.stats["decisions_downloaded"] += 1
+            return resp.text
+        except Exception as e:
+            logger.debug(f"Error downloading {url}: {e}")
+            self.stats["errors"] += 1
+            return None
+    
+    def parse_decision(self, text: str, url: str) -> Optional[Dict[str, Any]]:
+        """Parse a BVA decision text into structured data"""
+        if not text:
+            return None
+        
+        try:
+            decision = {
+                "source": "BVA",
+                "source_url": url,
+                "hierarchy_level": 3,  # Administrative
+                "color_code": "GREEN",
+                "scraped_at": datetime.now().isoformat(),
             }
             
-            async with session.get(search_url, params=params, headers=headers, timeout=30) as response:
-                if response.status == 200:
-                    html = await response.text()
-                    results = self._parse_bva_search_results(html, query)
-                    self.stats["searched"] += 1
-                    self.stats["found"] += len(results)
-                    logger.info(f"Found {len(results)} results for: {query}")
+            # Extract Citation Number
+            citation_match = re.search(r'Citation\s*N[ro]\.?:?\s*(\d+)', text, re.IGNORECASE)
+            if citation_match:
+                decision["citation"] = f"BVA-{citation_match.group(1)}"
+            else:
+                # Use filename as citation
+                filename = url.split('/')[-1].replace('.txt', '')
+                decision["citation"] = f"BVA-{filename}"
+            
+            # Extract Decision Date
+            date_match = re.search(r'Decision\s*Date:?\s*(\d{1,2}/\d{1,2}/\d{2,4})', text, re.IGNORECASE)
+            if date_match:
+                decision["decision_date"] = date_match.group(1)
+            
+            # Extract Docket Number
+            docket_match = re.search(r'DOCKET\s*N[Oo]\.?\s*([\d\-\s]+)', text, re.IGNORECASE)
+            if docket_match:
+                decision["docket_number"] = docket_match.group(1).strip()
+            
+            # Extract ORDER (the outcome)
+            order_match = re.search(r'ORDER\s*\n+(.*?)(?=\n\s*\n|\nFINDING|\nREASON)', text, re.IGNORECASE | re.DOTALL)
+            if order_match:
+                order_text = order_match.group(1).strip()
+                decision["order"] = order_text[:500]  # Limit length
+                
+                # Determine outcome
+                order_lower = order_text.lower()
+                if any(word in order_lower for word in ['granted', 'allowed', 'service connection for', 'is warranted']):
+                    if 'denied' not in order_lower and 'not warranted' not in order_lower:
+                        decision["outcome"] = "GRANTED"
+                        self.stats["grants"] += 1
+                    else:
+                        decision["outcome"] = "DENIED"
+                        self.stats["denials"] += 1
+                elif any(word in order_lower for word in ['denied', 'not warranted', 'not met']):
+                    decision["outcome"] = "DENIED"
+                    self.stats["denials"] += 1
+                elif any(word in order_lower for word in ['remand', 'vacated']):
+                    decision["outcome"] = "REMANDED"
+                    self.stats["remands"] += 1
                 else:
-                    logger.warning(f"BVA search returned status {response.status} for: {query}")
-                    self.stats["errors"] += 1
-                    
-        except asyncio.TimeoutError:
-            logger.warning(f"Timeout searching BVA for: {query}")
-            self.stats["errors"] += 1
+                    decision["outcome"] = "UNKNOWN"
+            
+            # Extract FINDING OF FACT
+            fact_match = re.search(r'FINDING[S]?\s*OF\s*FACT\s*\n+(.*?)(?=\nCONCLUSION|\nREASON|\nORDER)', text, re.IGNORECASE | re.DOTALL)
+            if fact_match:
+                decision["finding_of_fact"] = fact_match.group(1).strip()[:1000]
+            
+            # Extract CONCLUSION OF LAW
+            conclusion_match = re.search(r'CONCLUSION[S]?\s*OF\s*LAW\s*\n+(.*?)(?=\nREASON|\nFINDING|\nORDER|$)', text, re.IGNORECASE | re.DOTALL)
+            if conclusion_match:
+                decision["conclusion_of_law"] = conclusion_match.group(1).strip()[:1000]
+            
+            # Extract CFR and USC citations
+            cfr_matches = CFR_PATTERN.findall(text)
+            usc_matches = USC_PATTERN.findall(text)
+            decision["cfr_citations"] = list(set([f"38 CFR § {m}" for m in cfr_matches]))[:10]
+            decision["usc_citations"] = list(set([f"38 U.S.C. § {m}" for m in usc_matches]))[:10]
+            
+            # Detect condition type
+            text_lower = text.lower()
+            conditions_found = []
+            for condition in PRIORITY_CONDITIONS:
+                if condition in text_lower:
+                    conditions_found.append(condition)
+            
+            if conditions_found:
+                decision["conditions"] = list(set(conditions_found))[:5]
+                decision["is_priority"] = True
+                self.stats["priority_conditions"] += 1
+            else:
+                decision["conditions"] = []
+                decision["is_priority"] = False
+            
+            # Create title
+            condition_str = ", ".join(decision.get("conditions", [])[:2]) or "General"
+            outcome_str = decision.get("outcome", "Decision")
+            decision["title"] = f"BVA {outcome_str} - {condition_str.title()}"
+            
+            # Create content summary
+            decision["content"] = self._create_content_summary(decision, text)
+            
+            # Generate unique ID
+            decision["id"] = hashlib.md5(decision["citation"].encode()).hexdigest()[:12]
+            
+            self.stats["decisions_parsed"] += 1
+            return decision
+            
         except Exception as e:
-            logger.error(f"Error searching BVA for '{query}': {e}")
+            logger.error(f"Error parsing decision {url}: {e}")
             self.stats["errors"] += 1
-        
-        return results
-    
-    def _parse_bva_search_results(self, html: str, query: str) -> List[Dict]:
-        """Parse BVA search results HTML"""
-        results = []
-        
-        # Look for decision links and citation patterns
-        # BVA decisions typically have citation format like "Citation Nr: XXXXXXX"
-        citation_pattern = r'Citation\s*Nr[:\s]+(\d{7,})'
-        citations = re.findall(citation_pattern, html, re.IGNORECASE)
-        
-        # Also look for decision dates
-        date_pattern = r'Decision\s*Date[:\s]+(\d{2}/\d{2}/\d{4})'
-        dates = re.findall(date_pattern, html, re.IGNORECASE)
-        
-        # Look for links to actual decisions
-        link_pattern = r'href=["\']([^"\']*bva[^"\']*\.txt)["\']'
-        links = re.findall(link_pattern, html, re.IGNORECASE)
-        
-        # Also try to find decision summaries/snippets
-        snippet_pattern = r'<div[^>]*class=["\'][^"\']*result[^"\']*["\'][^>]*>(.*?)</div>'
-        snippets = re.findall(snippet_pattern, html, re.IGNORECASE | re.DOTALL)
-        
-        for i, citation in enumerate(citations[:10]):  # Limit to 10 per search
-            result = {
-                "citation": f"Citation Nr: {citation}",
-                "query": query,
-                "date": dates[i] if i < len(dates) else "Unknown",
-                "link": links[i] if i < len(links) else None,
-                "snippet": self._clean_html(snippets[i]) if i < len(snippets) else ""
-            }
-            results.append(result)
-        
-        return results
-    
-    def _clean_html(self, html: str) -> str:
-        """Remove HTML tags and clean text"""
-        text = re.sub(r'<[^>]+>', ' ', html)
-        text = re.sub(r'\s+', ' ', text)
-        return text.strip()[:500]  # Limit snippet length
-    
-    async def fetch_full_decision(self, session: aiohttp.ClientSession, decision: Dict) -> Optional[Dict]:
-        """Fetch the full text of a BVA decision"""
-        
-        if not decision.get("link"):
             return None
+    
+    def _create_content_summary(self, decision: Dict, full_text: str) -> str:
+        """Create a concise content summary for the knowledge base"""
+        parts = []
         
-        try:
-            link = decision["link"]
-            if not link.startswith("http"):
-                link = f"https://www.index.va.gov{link}"
-            
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-            
-            async with session.get(link, headers=headers, timeout=30) as response:
-                if response.status == 200:
-                    text = await response.text()
+        if decision.get("order"):
+            parts.append(f"ORDER: {decision['order']}")
+        
+        if decision.get("finding_of_fact"):
+            parts.append(f"FINDING: {decision['finding_of_fact'][:300]}...")
+        
+        if decision.get("conclusion_of_law"):
+            parts.append(f"CONCLUSION: {decision['conclusion_of_law'][:300]}...")
+        
+        if decision.get("cfr_citations"):
+            parts.append(f"CFR: {', '.join(decision['cfr_citations'][:3])}")
+        
+        return " | ".join(parts) or full_text[:500]
+    
+    def is_priority_decision(self, text: str) -> bool:
+        """Check if decision covers a priority condition"""
+        text_lower = text.lower()
+        return any(cond in text_lower for cond in PRIORITY_CONDITIONS)
+    
+    def scrape_recent_decisions(self, years: List[str] = None, max_per_year: int = 500,
+                                priority_only: bool = True) -> List[Dict]:
+        """
+        Scrape recent BVA decisions
+        
+        Args:
+            years: List of years to scrape (e.g., ['25', '24', '23'])
+            max_per_year: Maximum decisions to download per year
+            priority_only: Only keep decisions about priority conditions
+        
+        Returns:
+            List of parsed decision dictionaries
+        """
+        if years is None:
+            years = ['25', '24']  # 2025 and 2024 by default
+        
+        all_decisions = []
+        
+        # Use direct yearly sitemap URLs (more reliable than sitemap index)
+        for year in years:
+            if year in YEARLY_SITEMAPS:
+                sitemap_url = YEARLY_SITEMAPS[year]
+                logger.info(f"Processing year 20{year} from {sitemap_url}")
+                
+                decision_urls = self.fetch_decision_urls_from_sitemap(sitemap_url, limit=max_per_year * 3)
+                
+                # Download and parse decisions
+                parsed_count = 0
+                for url in decision_urls:
+                    if parsed_count >= max_per_year:
+                        break
                     
-                    # Parse the decision text
-                    parsed = self._parse_decision_text(text, decision)
-                    if parsed:
-                        self.stats["scraped"] += 1
-                        return parsed
+                    # Rate limiting
+                    time.sleep(0.2)
+                    
+                    text = self.download_decision(url)
+                    if not text:
+                        continue
+                    
+                    # Skip non-priority if filtering
+                    if priority_only and not self.is_priority_decision(text):
+                        continue
+                    
+                    decision = self.parse_decision(text, url)
+                    if decision:
+                        all_decisions.append(decision)
+                        parsed_count += 1
                         
-        except Exception as e:
-            logger.error(f"Error fetching decision {decision.get('citation')}: {e}")
-            self.stats["errors"] += 1
+                        if parsed_count % 50 == 0:
+                            logger.info(f"Parsed {parsed_count} decisions from year 20{year}")
+            else:
+                logger.warning(f"No sitemap URL configured for year {year}")
         
-        return None
+        return all_decisions
     
-    def _parse_decision_text(self, text: str, decision: Dict) -> Optional[Dict]:
-        """Parse a full BVA decision text"""
+    def scrape_by_search(self, search_terms: List[str], max_results: int = 100) -> List[Dict]:
+        """
+        Scrape decisions by searching for specific terms
+        This uses the search.usa.gov interface indirectly
         
-        # Extract key components from BVA decision
+        For now, we scrape from sitemaps and filter by terms
+        """
+        logger.info(f"Searching for: {search_terms}")
         
-        # Docket number
-        docket_match = re.search(r'Docket\s*No[.:\s]+(\d{2}-\d{2}\s*\d{3}[A-Z]?)', text, re.IGNORECASE)
-        docket = docket_match.group(1) if docket_match else "Unknown"
+        all_decisions = []
+        sitemap_urls = self.fetch_sitemap_index()
         
-        # Decision date
-        date_match = re.search(r'Date[:\s]+([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})', text)
-        date = date_match.group(1) if date_match else decision.get("date", "Unknown")
+        # Focus on recent years
+        recent_sitemaps = [url for url in sitemap_urls if any(y in url for y in ['25', '24', '23'])]
         
-        # Issues on appeal
-        issues_match = re.search(r'ISSUES?\s*\n(.*?)(?=REPRESENTATION|ATTORNEY|WITNESS|INTRODUCTION)', text, re.DOTALL | re.IGNORECASE)
-        issues = issues_match.group(1).strip() if issues_match else ""
-        
-        # Findings of fact
-        findings_match = re.search(r'FINDINGS?\s*OF\s*FACT\s*\n(.*?)(?=CONCLUSION|REASONS)', text, re.DOTALL | re.IGNORECASE)
-        findings = findings_match.group(1).strip()[:2000] if findings_match else ""
-        
-        # Conclusions of law
-        conclusions_match = re.search(r'CONCLUSIONS?\s*OF\s*LAW\s*\n(.*?)(?=REASONS|ORDER)', text, re.DOTALL | re.IGNORECASE)
-        conclusions = conclusions_match.group(1).strip()[:2000] if conclusions_match else ""
-        
-        # Order/Decision
-        order_match = re.search(r'ORDER\s*\n(.*?)(?=$|\n\n\n)', text, re.DOTALL | re.IGNORECASE)
-        order = order_match.group(1).strip()[:1000] if order_match else ""
-        
-        # Determine outcome
-        outcome = "Unknown"
-        if re.search(r'is\s+granted|are\s+granted|service\s+connection.*granted|appeal.*granted', text, re.IGNORECASE):
-            outcome = "Granted"
-        elif re.search(r'is\s+denied|are\s+denied|appeal.*denied', text, re.IGNORECASE):
-            outcome = "Denied"
-        elif re.search(r'is\s+remanded|are\s+remanded|appeal.*remanded', text, re.IGNORECASE):
-            outcome = "Remanded"
-        
-        if not issues and not findings and not conclusions:
-            return None
-        
-        return {
-            "citation": decision.get("citation", "Unknown"),
-            "docket": docket,
-            "date": date,
-            "query_topic": decision.get("query", ""),
-            "issues": self._clean_text(issues),
-            "findings": self._clean_text(findings),
-            "conclusions": self._clean_text(conclusions),
-            "order": self._clean_text(order),
-            "outcome": outcome,
-            "source_url": decision.get("link", "")
-        }
-    
-    def _clean_text(self, text: str) -> str:
-        """Clean and normalize text"""
-        # Remove excessive whitespace
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        text = re.sub(r' {2,}', ' ', text)
-        text = re.sub(r'\t+', ' ', text)
-        return text.strip()
-    
-    async def scrape_all(self):
-        """Scrape BVA decisions for all topics"""
-        
-        logger.info("="*70)
-        logger.info("🔍 REAL BVA DECISION SCRAPER")
-        logger.info("="*70)
-        logger.info(f"Topics to search: {len(self.search_topics)}")
-        logger.info("")
-        
-        # Create SSL context that handles certificate issues
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        
-        connector = aiohttp.TCPConnector(ssl=ssl_context, limit=5)
-        timeout = aiohttp.ClientTimeout(total=60)
-        
-        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+        for sitemap_url in recent_sitemaps[:3]:  # Last 3 years
+            decision_urls = self.fetch_decision_urls_from_sitemap(sitemap_url, limit=1000)
             
-            # Search for each topic
-            for i, topic in enumerate(self.search_topics):
-                logger.info(f"[{i+1}/{len(self.search_topics)}] Searching: {topic}")
+            found = 0
+            for url in decision_urls:
+                if found >= max_results:
+                    break
                 
-                results = await self.search_bva_decisions(session, topic, max_results=5)
+                time.sleep(0.2)
+                text = self.download_decision(url)
+                if not text:
+                    continue
                 
-                # Fetch full decisions for results
-                for result in results:
-                    full_decision = await self.fetch_full_decision(session, result)
-                    if full_decision:
-                        self.decisions.append(full_decision)
-                        logger.info(f"  ✅ Scraped: {full_decision['citation']}")
-                
-                # Rate limiting
-                await asyncio.sleep(1)
+                # Check if any search term matches
+                text_lower = text.lower()
+                if any(term.lower() in text_lower for term in search_terms):
+                    decision = self.parse_decision(text, url)
+                    if decision:
+                        all_decisions.append(decision)
+                        found += 1
         
-        # Save results
-        self._save_results()
-        
-        return self.stats
+        return all_decisions
     
-    def _save_results(self):
-        """Save scraped decisions"""
+    def convert_to_dkb_format(self, decisions: List[Dict]) -> List[Dict]:
+        """Convert decisions to Diamond Knowledge Base format"""
+        dkb_entries = []
         
-        # Save raw decisions
-        decisions_file = self.output_dir / "bva_decisions_raw.json"
-        with open(decisions_file, 'w', encoding='utf-8') as f:
-            json.dump({
+        for d in decisions:
+            entry = {
+                "source": "BVA_DECISIONS",
+                "citation": d.get("citation", ""),
+                "title": d.get("title", ""),
+                "content": d.get("content", ""),
+                "hierarchy_level": 3,
+                "color_code": "GREEN",
+                "effective_date": d.get("decision_date"),
+                "superseded_by": None,
+                "related_codes": d.get("cfr_citations", []),
+                "url": d.get("source_url", ""),
                 "metadata": {
-                    "scraped": datetime.now().isoformat(),
-                    "total_decisions": len(self.decisions),
-                    "stats": self.stats
-                },
-                "decisions": self.decisions
-            }, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"✅ Saved {len(self.decisions)} decisions to {decisions_file}")
-        
-        # Convert to training format
-        training_examples = []
-        for decision in self.decisions:
-            # Create training example
-            example = {
-                "instruction": f"What did the BVA decide in {decision['citation']} regarding {decision['query_topic']}?",
-                "input": "",
-                "output": self._format_decision_output(decision),
-                "metadata": {
-                    "source": "BVA",
-                    "type": "precedent_decision",
-                    "citation": decision["citation"],
-                    "docket": decision["docket"],
-                    "date": decision["date"],
-                    "topic": decision["query_topic"],
-                    "outcome": decision["outcome"],
-                    "source_url": decision["source_url"]
+                    "docket_number": d.get("docket_number"),
+                    "outcome": d.get("outcome"),
+                    "conditions": d.get("conditions", []),
+                    "usc_citations": d.get("usc_citations", []),
+                    "scraped_at": d.get("scraped_at"),
+                    "is_priority": d.get("is_priority", False)
                 }
             }
-            training_examples.append(example)
+            dkb_entries.append(entry)
         
-        # Save training examples
-        training_file = self.output_dir / "bva_training_examples.json"
-        with open(training_file, 'w', encoding='utf-8') as f:
-            json.dump(training_examples, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"✅ Saved {len(training_examples)} training examples to {training_file}")
+        return dkb_entries
     
-    def _format_decision_output(self, decision: Dict) -> str:
-        """Format a decision as training output"""
+    def save_results(self, decisions: List[Dict], filename: str = None) -> str:
+        """Save scraped decisions to JSON"""
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"bva_decisions_{timestamp}.json"
         
-        parts = [
-            f"**BVA Decision: {decision['citation']}** [REAL BVA DECISION]",
-            f"",
-            f"**Docket:** {decision['docket']}",
-            f"**Date:** {decision['date']}",
-            f"**Outcome:** {decision['outcome']}",
-            f"",
-        ]
+        output_path = self.output_dir / filename
         
-        if decision['issues']:
-            parts.append("**Issues on Appeal:**")
-            parts.append(decision['issues'][:500])
-            parts.append("")
+        # Convert to DKB format
+        dkb_entries = self.convert_to_dkb_format(decisions)
         
-        if decision['findings']:
-            parts.append("**Key Findings:**")
-            parts.append(decision['findings'][:800])
-            parts.append("")
+        output = {
+            "metadata": {
+                "scraped_at": datetime.now().isoformat(),
+                "source": "VA Board of Veterans Appeals",
+                "source_url": "https://www.va.gov/vetapp/",
+                "reference": "https://catalog.data.gov/dataset/board-of-veterans-appeals",
+                "total_decisions": len(dkb_entries),
+                "stats": self.stats
+            },
+            "entries": dkb_entries
+        }
         
-        if decision['conclusions']:
-            parts.append("**Conclusions of Law:**")
-            parts.append(decision['conclusions'][:800])
-            parts.append("")
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(output, f, indent=2, ensure_ascii=False)
         
-        if decision['order']:
-            parts.append("**Order:**")
-            parts.append(decision['order'][:300])
-        
-        parts.append("")
-        parts.append(f"Source: {decision['source_url']}")
-        
-        return "\n".join(parts)
+        logger.info(f"Saved {len(dkb_entries)} decisions to {output_path}")
+        return str(output_path)
+    
+    def print_stats(self):
+        """Print scraping statistics"""
+        print("\n" + "="*60)
+        print("BVA SCRAPER STATISTICS")
+        print("="*60)
+        for key, value in self.stats.items():
+            print(f"  {key.replace('_', ' ').title()}: {value}")
+        print("="*60 + "\n")
 
 
-async def main():
-    scraper = RealBVAScraper()
-    stats = await scraper.scrape_all()
+def main():
+    """Main entry point for BVA scraper"""
+    import argparse
     
-    print("\n" + "="*50)
-    print("🔍 BVA SCRAPING COMPLETE")
-    print("="*50)
-    print(f"Topics searched: {stats['searched']}")
-    print(f"Results found: {stats['found']}")
-    print(f"Decisions scraped: {stats['scraped']}")
-    print(f"Errors: {stats['errors']}")
-    print("="*50)
+    parser = argparse.ArgumentParser(description='Scrape BVA decisions for Diamond Knowledge Base')
+    parser.add_argument('--years', nargs='+', default=['25', '24'], help='Years to scrape (25=2025)')
+    parser.add_argument('--max-per-year', type=int, default=200, help='Max decisions per year')
+    parser.add_argument('--priority-only', action='store_true', default=True, help='Only priority conditions')
+    parser.add_argument('--search', nargs='+', help='Search for specific terms')
+    parser.add_argument('--output', help='Output filename')
+    
+    args = parser.parse_args()
+    
+    scraper = BVAScraper()
+    
+    if args.search:
+        decisions = scraper.scrape_by_search(args.search, max_results=args.max_per_year)
+    else:
+        decisions = scraper.scrape_recent_decisions(
+            years=args.years,
+            max_per_year=args.max_per_year,
+            priority_only=args.priority_only
+        )
+    
+    if decisions:
+        output_path = scraper.save_results(decisions, args.output)
+        print(f"\n[SUCCESS] Saved {len(decisions)} BVA decisions to: {output_path}")
+    else:
+        print("\n[WARNING] No decisions were scraped")
+    
+    scraper.print_stats()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

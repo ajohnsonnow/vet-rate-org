@@ -375,8 +375,10 @@ const AISettingsModal = ({ onClose, onOpenLocalAI, onReportBug }) => {
                     Enhanced with Diamond Knowledge Base
                   </p>
                   <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                    Gemini is trained on 1,600+ VA regulations, BVA decisions, and 38 CFR citations 
-                    for accurate, veteran-specific answers.
+                    Gemini uses <strong>8,000 web-optimized</strong> entries from our DKB (38 CFR, BVA, CAVC).
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                    ⚡ <strong>Note:</strong> Full database has 130K+ entries. Load Local AI (above) for complete access.
                   </p>
                 </div>
               </div>

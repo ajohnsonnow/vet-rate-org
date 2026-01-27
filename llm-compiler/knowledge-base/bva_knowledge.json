@@ -1,38 +1,1632 @@
 [
   {
-    "source": "BVA",
-    "citation": "BVA-PTSD-Sample-001",
-    "title": "BVA Decision - PTSD Service Connection",
-    "content": "The Board finds that service connection for PTSD is warranted. The veteran has a current diagnosis of PTSD from a VA examiner. There is evidence of an in-service stressor event during combat operations in Iraq. The VA examiner provided a medical nexus opinion stating the PTSD is at least as likely as not related to the in-service stressor. 38 CFR §3.304(f) requirements are met.",
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-19167246",
+    "title": "BVA DENIED - Ed, Obstructive Sleep Apnea",
+    "content": "ORDER: An effective date earlier than March 2, 2012 for the award of service connection for coronary artery disease (CAD) is denied. | FINDING: 1. March 2, 2012 is the first date that entitlement to service connection for CAD factually arose under all theories of entitlement raised by the Veteran or reasonably raised by the record.  It was on this date that the evidence, in the form of an echocardiogram, first confirmed the presence of obje... | CONCLUSION: 1. The criteria for an effective date earlier than March 2, 2012, for the award of service connection for CAD, have not been met.  38 U.S.C. §§ 5107, 5110; 38 C.F.R. §§ 3.102, 3.400.\r\n\r\n2. The criteria for an initial disability rating in excess of 30 percent for service-connected CAD have not been m... | CFR: 38 CFR § 3.105, 38 CFR § 3.400., 38 CFR § 3.307",
     "hierarchy_level": 3,
     "color_code": "GREEN",
-    "effective_date": null,
+    "effective_date": "01/28/25",
     "superseded_by": null,
-    "related_codes": [],
-    "url": "https://www.va.gov/vetapp/"
+    "related_codes": [
+      "38 CFR § 3.105",
+      "38 CFR § 3.400.",
+      "38 CFR § 3.307",
+      "38 CFR § 4.104.",
+      "38 CFR § 4.104",
+      "38 CFR § 3.102",
+      "38 CFR § 4.115",
+      "38 CFR § 20.1303.",
+      "38 CFR § 20.1305",
+      "38 CFR § 3.310"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/19167246.txt",
+    "metadata": {
+      "docket_number": "12-31 116",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed",
+        "obstructive sleep apnea",
+        "secondary",
+        "aggravated by",
+        "back"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 1168",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:05.376870",
+      "is_priority": true
+    }
   },
   {
-    "source": "BVA",
-    "citation": "BVA-Knee-Secondary-Sample-002",
-    "title": "BVA Decision - Knee Secondary to Service-Connected Back",
-    "content": "The Board grants service connection for the right knee condition as secondary to the veteran's service-connected lumbar spine disability. Medical evidence shows the veteran developed a gait disturbance due to the back condition, which caused abnormal stress on the right knee. The nexus opinion establishes the knee condition is proximately due to or aggravated by the service-connected back disability per 38 CFR §3.310.",
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000001",
+    "title": "BVA DENIED - Ed, Obstructive Sleep Apnea",
+    "content": "ORDER: Service connection for sleep apnea is denied. | FINDING: The Veteran's sleep apnea did not have its onset during service and is not causally or etiologically related to any disease, injury, or incident during service.... | CONCLUSION: The criteria for service connection for sleep apnea are not met.  38 U.S.C. §§ 1131, 5107; 38 C.F.R. § 3.102, 3.303.... | CFR: 38 CFR § 20.1303., 38 CFR § 3.102, 3.303., 38 CFR § 3.303.",
     "hierarchy_level": 3,
     "color_code": "GREEN",
-    "effective_date": null,
+    "effective_date": "01/01/25",
     "superseded_by": null,
-    "related_codes": [],
-    "url": "https://www.va.gov/vetapp/"
+    "related_codes": [
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.102, 3.303.",
+      "38 CFR § 3.303.",
+      "38 CFR § 3.102."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000001.txt",
+    "metadata": {
+      "docket_number": "16-36 738",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed",
+        "obstructive sleep apnea",
+        "aggravated by",
+        "back",
+        "sleep apnea"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1131",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:06.056414",
+      "is_priority": true
+    }
   },
   {
-    "source": "BVA",
-    "citation": "BVA-Sleep-Apnea-Sample-003",
-    "title": "BVA Decision - Sleep Apnea Secondary to PTSD",
-    "content": "Service connection for obstructive sleep apnea as secondary to service-connected PTSD is granted. The medical evidence includes a nexus opinion from the veteran's private physician stating the sleep apnea is caused or aggravated by PTSD-related symptoms including hypervigilance and nightmares. The Board finds the secondary service connection requirements of 38 CFR §3.310 are satisfied.",
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000002",
+    "title": "BVA Decision - Diabetes, Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
     "hierarchy_level": 3,
     "color_code": "GREEN",
-    "effective_date": null,
+    "effective_date": "01/02/25",
     "superseded_by": null,
-    "related_codes": [],
-    "url": "https://www.va.gov/vetapp/"
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000002.txt",
+    "metadata": {
+      "docket_number": "17-27 479",
+      "outcome": null,
+      "conditions": [
+        "diabetes",
+        "ed",
+        "headache",
+        "presumptive"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:06.460585",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000003",
+    "title": "BVA GRANTED - Ed, Secondary",
+    "content": "ORDER: Entitlement to a separate 10 percent disability rating for service-connected left knee disability based on the presence of arthritis is granted, effective August 10, 2011, through March 22, 2018, subject to the laws and regulations governing the payment of monetary benefits. | FINDING: 1. Prior to March 23, 2018, the Veteran's service-connected left knee disability was manifested by dislocated semilunar cartilage with frequent episodes of locking, pain, and effusion into the joint; mild instability; and arthritis with limited motion.  Nevertheless, it was not manifested by incapac... | CONCLUSION: 1. Resolving all reasonable doubt in the Veteran's favor, the criteria for a 10 percent disability rating for his service-connected left knee disability based X-ray evidence of arthritis in a major joint is granted, effective August 10, 2011, through March 22, 2018. 38 U.S.C. §§ 1155, 5107; 38 C.F.R... | CFR: 38 CFR § 4.6., 38 CFR § 4.1., 38 CFR § 4.59.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.6.",
+      "38 CFR § 4.1.",
+      "38 CFR § 4.59.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.71",
+      "38 CFR § 4.1",
+      "38 CFR § 4.45",
+      "38 CFR § 4.40.",
+      "38 CFR § 4.59",
+      "38 CFR § 4.14."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000003.txt",
+    "metadata": {
+      "docket_number": "16-01 951",
+      "outcome": "GRANTED",
+      "conditions": [
+        "ed",
+        "secondary",
+        "back",
+        "rotator cuff",
+        "radiculopathy"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 7104"
+      ],
+      "scraped_at": "2026-01-26T19:58:06.970020",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000004",
+    "title": "BVA GRANTED - Post-Traumatic Stress, Ed",
+    "content": "ORDER: Entitlement to an earlier effective date of November 10, 2003, for the claim of service connection for post-traumatic stress disorder (PTSD) is granted. | FINDING: On November 10, 2003 the Veteran submitted a claim for service connection for PTSD that was not finally adjudicated until January 5, 2015, which the Veteran timely appealed.... | CONCLUSION: The criteria for an earlier effective date of November 10, 2003, for the grant of service connection for PTSD, have been met. 38 U.S.C. § 5100; 38 C.F.R. § 3.400.... | CFR: 38 CFR § 3.1, 38 CFR § 3.400., 38 CFR § 3.155",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.1",
+      "38 CFR § 3.400.",
+      "38 CFR § 3.155",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.103",
+      "38 CFR § 20.902",
+      "38 CFR § 3.400"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000004.txt",
+    "metadata": {
+      "docket_number": "17-16 766",
+      "outcome": "GRANTED",
+      "conditions": [
+        "post-traumatic stress",
+        "ed",
+        "ptsd"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 5100"
+      ],
+      "scraped_at": "2026-01-26T19:58:07.390774",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000005",
+    "title": "BVA GRANTED - Anxiety, Ed",
+    "content": "ORDER: Special monthly compensation based on the need for aid and attendance is granted, subject to the rules and regulations governing the payment of VA monetary benefits. | FINDING: The Veteran is shown to be in need of regular aid and attendance by reason of service-connected disability.... | CONCLUSION: The criteria for special monthly compensation based on the need for regular aid and attendance of another person are met.  38 U.S.C. §§ 1114, 1502, 5107; 38 C.F.R. §§ 3.102, 3.350, 3.352.... | CFR: 38 CFR § 4.130, 38 CFR § 3.352, 38 CFR § 3.102",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.130",
+      "38 CFR § 3.352",
+      "38 CFR § 3.102",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.352.",
+      "38 CFR § .",
+      "38 CFR § 20.1304",
+      "38 CFR § 3.350"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000005.txt",
+    "metadata": {
+      "docket_number": "16-49 436",
+      "outcome": "GRANTED",
+      "conditions": [
+        "anxiety",
+        "ed",
+        "secondary",
+        "depression",
+        "ptsd"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1114"
+      ],
+      "scraped_at": "2026-01-26T19:58:07.788654",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000006",
+    "title": "BVA UNKNOWN - Ed",
+    "content": "ORDER: The legacy appeal is dismissed. | FINDING: In April 2024, the Veteran died while this appeal was pending before the Board of Veterans' Appeals (Board).... | CONCLUSION: Due to the death of the Veteran, the criteria for the dismissal of this appeal have been met. 38 U.S.C. § 7104; 38 C.F.R. § 20.1302.... | CFR: 38 CFR § 20.6, 38 CFR § 20.1303., 38 CFR § 20.1302.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.6",
+      "38 CFR § 20.1303.",
+      "38 CFR § 20.1302.",
+      "38 CFR § .",
+      "38 CFR § 3.1010",
+      "38 CFR § 20.1302"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000006.txt",
+    "metadata": {
+      "docket_number": "15-41 160",
+      "outcome": "UNKNOWN",
+      "conditions": [
+        "ed"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7104"
+      ],
+      "scraped_at": "2026-01-26T19:58:08.193638",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000007",
+    "title": "BVA GRANTED - Ed, Presumptive",
+    "content": "ORDER: Entitlement to service connection for gastroesophageal reflux disease (GERD) is granted. | FINDING: 1. The Veteran's GERD is due to service.\r\n\r\n2. Gastroenteritis is not shown to be causally or etiologically related to any disease, injury, or incident during service.... | CONCLUSION: 1. The criteria for entitlement to service connection for GERD have been met.  38 U.S.C. §§ 1101, 1110, 1112, 1113, 1116, 1137, 5107; 38 C.F.R. §§ 3.102, 3.303, 3.304, 3.310. \r\n\r\n2. The criteria for service connection for gastroenteritis have not been met.  38 U.S.C. §§ 1101, 1110, 1137, 5107; 38 C.... | CFR: 38 CFR § 3.317., 38 CFR § 3.317, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.317.",
+      "38 CFR § 3.317",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.309",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000007.txt",
+    "metadata": {
+      "docket_number": "19-22 400",
+      "outcome": "GRANTED",
+      "conditions": [
+        "ed",
+        "presumptive",
+        "back",
+        "gulf war",
+        "southwest asia"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1117",
+        "38 U.S.C. § 1116"
+      ],
+      "scraped_at": "2026-01-26T19:58:08.594478",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000008",
+    "title": "BVA Decision - Aggravated By, Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000008.txt",
+    "metadata": {
+      "docket_number": "18-04 499",
+      "outcome": null,
+      "conditions": [
+        "aggravated by",
+        "ed",
+        "pact act",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1168"
+      ],
+      "scraped_at": "2026-01-26T19:58:09.013671",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000009",
+    "title": "BVA Decision - Diabetes, Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000009.txt",
+    "metadata": {
+      "docket_number": "18-13 806",
+      "outcome": null,
+      "conditions": [
+        "diabetes",
+        "ed",
+        "diabetic",
+        "ptsd",
+        "post-traumatic stress"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:09.415271",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000010",
+    "title": "BVA GRANTED - Ed, Back",
+    "content": "ORDER: 1. Entitlement to an increased disability rating of 20 percent, but no higher, for left knee instability effective May 3, 2011, is granted. | FINDING: 1. The overall evidentiary record shows that the severity of the Veteran's left knee instability was moderate throughout the period on appeal until February 10, 2020; after February 10, 2020, the Veteran's left knee instability was severe. \r\n\r\n2. The overall evidentiary record shows that the severit... | CONCLUSION: 1. The criteria for an increased rating for left knee instability have been met. 38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 4.1-4.14, 4.21, 4.40, 4.45, 4.46, 4.59, 4.71a, Diagnostic Codes 5256-5262.\r\n\r\n2. The criteria for an increased rating for left knee strain have not been met. 38 U.S.C. §§ 1155, 5107... | CFR: 38 CFR § 4.7., 38 CFR § 4.1., 38 CFR § 3.102",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.7.",
+      "38 CFR § 4.1.",
+      "38 CFR § 3.102",
+      "38 CFR § 4.40",
+      "38 CFR § 4.45",
+      "38 CFR § 4.71",
+      "38 CFR § 4.16",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.59",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000010.txt",
+    "metadata": {
+      "docket_number": "15-00 118",
+      "outcome": "GRANTED",
+      "conditions": [
+        "ed",
+        "back",
+        "knee"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:09.911250",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000011",
+    "title": "BVA DENIED - Anxiety, Ed",
+    "content": "ORDER: Entitlement to an effective date prior to June 16, 2014 for the grant of service connection for posttraumatic stress disorder (PTSD) is denied. | FINDING: 1. An unappealed March 1971 rating decision denied service connection for a nervous condition, finding that the diagnosed emotionally unstable personality was a congenital abnormality not eligible for service connection.\r\n\r\n2. In April 1971, new and material evidence, specifically, a VA medical trea... | CONCLUSION: The criteria for assignment of an effective date prior to June 16, 2014 for the grant of service connection for PTSD are not met.  38 U.S.C. §§ 5107, 5110; 38 C.F.R. §§ 3.102, 3.400.... | CFR: 38 CFR § 3.1, 38 CFR § 3.303, 38 CFR § 3.105",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.1",
+      "38 CFR § 3.303",
+      "38 CFR § 3.105",
+      "38 CFR § 3.400.",
+      "38 CFR § 3.156",
+      "38 CFR § 3.155",
+      "38 CFR § 3.102",
+      "38 CFR § 20.1303.",
+      "38 CFR § .",
+      "38 CFR § 3.400"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000011.txt",
+    "metadata": {
+      "docket_number": "18-16 083",
+      "outcome": "DENIED",
+      "conditions": [
+        "anxiety",
+        "ed",
+        "back",
+        "posttraumatic stress",
+        "depression"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 5107",
+        "38 U.S.C. § 7105"
+      ],
+      "scraped_at": "2026-01-26T19:58:10.324364",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000012",
+    "title": "BVA Decision - Migraine, Ed",
+    "content": "CFR: 38 CFR § 4.124, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.124",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000012.txt",
+    "metadata": {
+      "docket_number": "15-35 788",
+      "outcome": null,
+      "conditions": [
+        "migraine",
+        "ed",
+        "headache"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:10.734501",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000013",
+    "title": "BVA Decision - Posttraumatic Stress, Ed",
+    "content": "CFR: 38 CFR § 20.900, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.900",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000013.txt",
+    "metadata": {
+      "docket_number": "19-21 972",
+      "outcome": null,
+      "conditions": [
+        "posttraumatic stress",
+        "ed",
+        "ptsd",
+        "presumptive"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7107"
+      ],
+      "scraped_at": "2026-01-26T19:58:11.140190",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000014",
+    "title": "BVA DENIED - Anxiety, Ed",
+    "content": "ORDER: Entitlement to an initial rating in excess of 50 percent for service-connected posttraumatic stress disorder (PTSD) is denied. | FINDING: 1. The Veteran's PTSD initially manifested as occupational and social impairment with reduced reliability and productivity.\r\n\r\n2. After January 1, 2018, resolving reasonable doubt in favor of the Veteran, his PTSD manifested in occupational and social impairment, with deficiencies in most areas.... | CONCLUSION: 1. The criteria for an initial rating in excess of 50 percent for service-connected PTSD have not been met. 38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 3.102, 4.3, 4.7, 4.130, Diagnostic Code (DC) 9411.\r\n\r\n2. The criteria for an increased rating of 70 percent for service-connected PTSD have been met, effe... | CFR: 38 CFR § ., 38 CFR § 4.130., 38 CFR § 4.126.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 4.130.",
+      "38 CFR § 4.126.",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000014.txt",
+    "metadata": {
+      "docket_number": "17-45 391",
+      "outcome": "DENIED",
+      "conditions": [
+        "anxiety",
+        "ed",
+        "major depressive disorder",
+        "back",
+        "posttraumatic stress"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7104"
+      ],
+      "scraped_at": "2026-01-26T19:58:11.638725",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000015",
+    "title": "BVA Decision - Tbi, Ed",
+    "content": "CFR: 38 CFR § 3.304, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.304",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000015.txt",
+    "metadata": {
+      "docket_number": "18-14 040",
+      "outcome": null,
+      "conditions": [
+        "tbi",
+        "ed"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1154"
+      ],
+      "scraped_at": "2026-01-26T19:58:12.042970",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000016",
+    "title": "BVA DENIED - Ed, Neck",
+    "content": "ORDER: Entitlement to an initial rating in excess of 20 percent for right upper extremity radiculopathy associated with cervical spine disability is denied. | FINDING: Since June 20, 2023, the Veteran's radiculopathy of the right upper extremity was manifested by no more than mild incomplete paralysis.... | CONCLUSION: The criteria for a disability rating in excess of 20 percent for right upper extremity radiculopathy from June 20, 2023, have not been met. 38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 4.1, 4.3, 4.7, 4.10, 4.123, 4.124, 4.124a, Diagnostic Code (DC) 8513.... | CFR: 38 CFR § 4.6., 38 CFR § 4.7, 4.124, 38 CFR § 4.7.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.6.",
+      "38 CFR § 4.7, 4.124",
+      "38 CFR § 4.7.",
+      "38 CFR § 4.1.",
+      "38 CFR § 4.123.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 20.900",
+      "38 CFR § 4.3.",
+      "38 CFR § 4.123",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000016.txt",
+    "metadata": {
+      "docket_number": "20-10 726",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed",
+        "neck",
+        "radiculopathy",
+        "spine",
+        "sciatic"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 7107"
+      ],
+      "scraped_at": "2026-01-26T19:58:12.445677",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000017",
+    "title": "BVA DENIED - Rotator Cuff, Shoulder",
+    "content": "ORDER: Entitlement to a disability rating in excess of 20 percent for a left shoulder disability is denied. | FINDING: The Veteran's left shoulder disability has not been manifested by flexion and/or abduction limited to 25 degrees from one side, ankylosis, its equivalent during flare-ups, impairment of the humerus, clavicle, or scapula or additional functional loss.... | CONCLUSION: The criteria for a disability rating in excess of 20 percent for the Veteran's left shoulder disability have not been met.  38?U.S.C. §§?1155, 5107; 38?C.F.R. §§?4.1, 4.3, 4.40, 4.45, 4.59, 4.7, 4.71a, Diagnostic Code 5201.... | CFR: 38 CFR § ., 38 CFR § 4.59., 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 4.59.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.40.",
+      "38 CFR § 4.71",
+      "38 CFR § 4.45."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000017.txt",
+    "metadata": {
+      "docket_number": "20-11 749",
+      "outcome": "DENIED",
+      "conditions": [
+        "rotator cuff",
+        "shoulder",
+        "ed",
+        "back"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:12.940075",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000018",
+    "title": "BVA Decision - Ed, Obstructive Sleep Apnea",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000018.txt",
+    "metadata": {
+      "docket_number": "15-16 419",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "obstructive sleep apnea",
+        "sleep apnea"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:13.610833",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000019",
+    "title": "BVA Decision - Hip, Hypertension",
+    "content": "CFR: 38 CFR § 3.159, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.159",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000019.txt",
+    "metadata": {
+      "docket_number": "16-09 731",
+      "outcome": null,
+      "conditions": [
+        "hip",
+        "hypertension",
+        "lumbar",
+        "ed",
+        "secondary"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:14.029534",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000020",
+    "title": "BVA GRANTED - Anxiety, Hypertension",
+    "content": "ORDER: Service connection for hypertension on a basis other than as pursuant to the Sergeant First Class Heath Robinson Honoring our Promise to Address Comprehensive Toxins Act of 2022 (PACT Act) is granted. | FINDING: 1. It is at least as likely as not that the Veteran's in-service exposure to herbicide agents caused hypertension.\r\n\r\n2. The evidence is in approximate balance as to whether the Veteran's PTSD more closely approximates occupational and social impairment with deficiencies in most areas.\r\n\r\n3. The evi... | CONCLUSION: 1. The criteria for service connection for hypertension on a basis other than as pursuant to the PACT Act have been met. 38 U.S.C. §§ 1110, 5107; 38 C.F.R. §§ 3.102, 3.303.\r\n\r\n2. Resolving reasonable doubt in the Veteran's favor, the criteria for an initial rating of 70 percent, but no higher, for P... | CFR: 38 CFR § 4.7., 38 CFR § 20.1303., 38 CFR § 4.126.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.7.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.126.",
+      "38 CFR § 3.303.",
+      "38 CFR § .",
+      "38 CFR § 4.130.",
+      "38 CFR § 3.350"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000020.txt",
+    "metadata": {
+      "docket_number": "20-10 594",
+      "outcome": "GRANTED",
+      "conditions": [
+        "anxiety",
+        "hypertension",
+        "ed",
+        "aggravated by",
+        "posttraumatic stress"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1114",
+        "38 U.S.C. § 1110"
+      ],
+      "scraped_at": "2026-01-26T19:58:14.426739",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000021",
+    "title": "BVA DENIED - Ed, Headache",
+    "content": "ORDER: Entitlement to special monthly compensation (SMC) based on the loss of use of both legs is denied. | FINDING: 1. The evidence persuasively weighs against finding that the Veteran's loss of use of both lower extremities is at a level, or with complications, preventing natural knee action with prosthesis in place.\r\n\r\n2. The evidence persuasively weighs against finding that the Veteran is so helpless as a resu... | CONCLUSION: 1. The criteria are not met to establish entitlement to SMC based on the loss of use of both legs.  38 U.S.C. §§ 1114, 5107; 38 C.F.R. §§ 3.102, 3.350.\r\n\r\n2. The criteria are not met to establish SMC based on the Veteran's need for aid and attendance.  38 U.S.C. §§ 1114, 5107; 38 C.F.R. §§ 3.350, 3.... | CFR: 38 CFR § 3.352, 38 CFR § 20.1303., 38 CFR § 3.159.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.352",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.159.",
+      "38 CFR § 3.350.",
+      "38 CFR § .",
+      "38 CFR § 3.350"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000021.txt",
+    "metadata": {
+      "docket_number": "18-31 854",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed",
+        "headache",
+        "back",
+        "neck",
+        "depression"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1114"
+      ],
+      "scraped_at": "2026-01-26T19:58:14.833381",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000022",
+    "title": "BVA Decision - Ed, Lumbar",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000022.txt",
+    "metadata": {
+      "docket_number": "16-61 919",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "lumbar",
+        "secondary",
+        "aggravated by",
+        "back"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:15.242207",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000023",
+    "title": "BVA Decision - Ed, Back",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000023.txt",
+    "metadata": {
+      "docket_number": "16-58 224",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "back"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:15.643336",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000024",
+    "title": "BVA Decision - Ed, Degenerative Disc",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000024.txt",
+    "metadata": {
+      "docket_number": "16-01 650",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "degenerative disc",
+        "back",
+        "radiculopathy",
+        "knee"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:16.052050",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000025",
+    "title": "BVA DENIED - Hip, Ed",
+    "content": "ORDER: 1. Entitlement to service connection for a lumbar spine disability, to include as secondary to service-connected bilateral knee disability, is denied. | FINDING: 1. A lumbar spine disability did not have its onset in service, was not manifested within one year of service discharge, and is not otherwise related to service. The Veteran's lumbar spine disability is not caused or aggravated by the service-connected bilateral knee disability. \r\n\r\n2. Prior to Nove... | CONCLUSION: 1. The criteria for service connection for a lumbar spine disability, to include as secondary to service-connected bilateral knee disability, have not been met. 38 U.S.C. §§ 1101, 1110, 1112, 1113, 1131, 1137, 5107(b); 38 C.F.R. §§ 3.102, 3.303, 3.307, 3.309(a), 3.310. \r\n\r\n2. The criteria for an inc... | CFR: 38 CFR § 3.303, 38 CFR § 4.6., 38 CFR § 4.1.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 4.6.",
+      "38 CFR § 4.1.",
+      "38 CFR § 3.159",
+      "38 CFR § 4.59.",
+      "38 CFR § 4.14",
+      "38 CFR § 4.71",
+      "38 CFR § 4.30",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.40."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000025.txt",
+    "metadata": {
+      "docket_number": "15-27 281",
+      "outcome": "DENIED",
+      "conditions": [
+        "hip",
+        "ed",
+        "lumbar",
+        "presumptive",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 4"
+      ],
+      "scraped_at": "2026-01-26T19:58:16.560118",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000026",
+    "title": "BVA Decision - Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000026.txt",
+    "metadata": {
+      "docket_number": "23-00 119",
+      "outcome": null,
+      "conditions": [
+        "ed"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1728",
+        "38 U.S.C. § 1725"
+      ],
+      "scraped_at": "2026-01-26T19:58:16.976190",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000027",
+    "title": "BVA GRANTED - Ed, Secondary",
+    "content": "ORDER: Entitlement to service connection for a skin disability, to include dermatitis, other than carbuncles, is granted. | FINDING: The Veteran's service-connected carbuncles have caused his skin disability, including dermatitis.... | CONCLUSION: The criteria for service connection for a skin disability to include dermatitis as secondary to service-connected carbuncles are met.  38 U.S.C. §§ 1110, 1131, 5107; 38 C.F.R. §§ 3.102, 3.310.... | CFR: 38 CFR § ., 38 CFR § 20.1303., 38 CFR § 3.303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.303.",
+      "38 CFR § 4.71"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000027.txt",
+    "metadata": {
+      "docket_number": "17-64 336",
+      "outcome": "GRANTED",
+      "conditions": [
+        "ed",
+        "secondary",
+        "aggravated by",
+        "back",
+        "knee"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:17.460962",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000028",
+    "title": "BVA Decision - Posttraumatic Stress, Ed",
+    "content": "CFR: 38 CFR § 3.159, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.159",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000028.txt",
+    "metadata": {
+      "docket_number": "14-43 373",
+      "outcome": null,
+      "conditions": [
+        "posttraumatic stress",
+        "ed",
+        "ptsd"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:17.870461",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000029",
+    "title": "BVA GRANTED - Diabetes, Ed",
+    "content": "ORDER: Entitlement to service connection for obstructive sleep apnea (\"OSA\"), secondary to chronic obstructive pulmonary disease (\"COPD\"), is granted. | FINDING: Resolving reasonable doubt in the Veteran's favor, his diagnosed OSA was proximately caused, or aggravated, by his service-connected COPD.... | CONCLUSION: The criteria for entitlement to service connection for OSA, secondary to service-connected COPD, have been met. 38 U.S.C. §§ 1110, 5107(b); 38 C.F.R. §§ 3.102, 3.303, 3.304, 3.310.... | CFR: 38 CFR § 3.303, 38 CFR § 3.102, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 3.102",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.309",
+      "38 CFR § 3.303.",
+      "38 CFR § 3.310",
+      "38 CFR § .",
+      "38 CFR § 3.310.",
+      "38 CFR § 20.902",
+      "38 CFR § 3.304"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000029.txt",
+    "metadata": {
+      "docket_number": "14-17 901",
+      "outcome": "GRANTED",
+      "conditions": [
+        "diabetes",
+        "ed",
+        "presumptive",
+        "obstructive sleep apnea",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7107",
+        "38 U.S.C. § 5107",
+        "38 U.S.C. § 1154"
+      ],
+      "scraped_at": "2026-01-26T19:58:18.551875",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000030",
+    "title": "BVA DENIED - Ed",
+    "content": "ORDER: Entitlement to an evaluation in excess of 20 percent for vascular malformation of left scrotum, buttock, and thigh, to include impairment to muscle group XIII and XVII, prior to November 13, 2023, is denied. | FINDING: 1. Prior to November 13, 2023, the Veteran's vascular malformation of left scrotum, buttock, and thigh, to include impairment to muscle group XIII and XVII  was not productive of persistent edema and stasis pigmentation or eczema, with or without intermittent ulceration.\r\n\r\n2. On or after November 1... | CONCLUSION: 1. Prior to November 13, 2023, the criteria for an evaluation in excess of 20 percent for vascular malformation of left scrotum, buttock, and thigh, to include impairment to muscle group XIII and XVII have not been met. 38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 4.1, 4.3, 4.7, 4.104, Diagnostic Code 7121... | CFR: 38 CFR § 4.7., 38 CFR § 4.2, 38 CFR § 4.1.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.7.",
+      "38 CFR § 4.2",
+      "38 CFR § 4.1.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.14.",
+      "38 CFR § 4.3.",
+      "38 CFR § 4.104",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000030.txt",
+    "metadata": {
+      "docket_number": "20-19 446",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:18.952754",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000031",
+    "title": "BVA GRANTED - Tinnitus, Ed",
+    "content": "ORDER: A total disability rating based on individual unemployability (TDIU) is granted. | FINDING: The Veteran's service-connected disabilities prevent her from obtaining and maintaining substantial gainful employment.... | CONCLUSION: The criteria for a TDIU have been met.  38 U.S.C. §§ 1155, 5107; 38 C.F.R. § 4.16.... | CFR: 38 CFR § ., 38 CFR § 4.16, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 4.16",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.16."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000031.txt",
+    "metadata": {
+      "docket_number": "20-21 239",
+      "outcome": "GRANTED",
+      "conditions": [
+        "tinnitus",
+        "ed",
+        "lumbar",
+        "degenerative disc",
+        "back"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7105"
+      ],
+      "scraped_at": "2026-01-26T19:58:19.359024",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000032",
+    "title": "BVA Decision - Hip, Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000032.txt",
+    "metadata": {
+      "docket_number": "08-30 588",
+      "outcome": null,
+      "conditions": [
+        "hip",
+        "ed",
+        "secondary",
+        "aggravated by",
+        "back"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:19.766740",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000033",
+    "title": "BVA GRANTED - Aggravated By, Ed",
+    "content": "ORDER: Service connection for paroxysmal nocturnal hemoglobinuria (PNH) is granted. | FINDING: Resolving reasonable doubt in the appellant's favor, PNH was at least as likely as not due to service-connected aplastic anemia.... | CONCLUSION: The criteria for service connection for PNH have been met.  38 U.S.C. §§ 1110, 1131, 5107; 38 C.F.R. §§ 3.102, 3.303, 3.310.... | CFR: 38 CFR § ., 38 CFR § 3.102., 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 3.102.",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000033.txt",
+    "metadata": {
+      "docket_number": "15-12 852",
+      "outcome": "GRANTED",
+      "conditions": [
+        "aggravated by",
+        "ed",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:20.177547",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000034",
+    "title": "BVA GRANTED - Diabetes, Anxiety",
+    "content": "ORDER: Entitlement to an effective date of February 26, 2017, but not earlier, for the assignment of a 10 percent rating for a painful left knee scar is granted. | FINDING: Resolving doubt in the Veteran's favor, on February 26, 2017, it was factually ascertainable that the Veteran's service-connected left knee scar was manifested by pain on February 26, 2017, one year prior to the AOJ's receipt of the Veteran's February 2018 increased rating claim for his bilateral kn... | CONCLUSION: The criteria for entitlement to an effective date of February 26, 2017, for the assignment of a 10 percent rating for a painful left knee scar have been met.  38 U.S.C. §§ 5107, 5110; 38 C.F.R. §§ 3.400.... | CFR: 38 CFR § 3.1, 38 CFR § 3.400., 38 CFR § 3.156",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.1",
+      "38 CFR § 3.400.",
+      "38 CFR § 3.156",
+      "38 CFR § 3.155",
+      "38 CFR § 20.1303.",
+      "38 CFR § .",
+      "38 CFR § 3.400"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000034.txt",
+    "metadata": {
+      "docket_number": "20-11 347",
+      "outcome": "GRANTED",
+      "conditions": [
+        "diabetes",
+        "anxiety",
+        "hypertension",
+        "ed",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110"
+      ],
+      "scraped_at": "2026-01-26T19:58:20.587939",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000035",
+    "title": "BVA DENIED - Anxiety, Hypertension",
+    "content": "ORDER: An effective date prior to August 10, 2016, for the grant of a 30 percent rating for tension headaches is denied. | FINDING: 1. The Veteran served on active duty from September 1980 to April 1996. \r\n\r\n2. The Veteran was diagnosed with chronic tension headaches in August 1995. In May 1996, the agency of original jurisdiction (AOJ) denied service connection for chronic headaches; the Veteran did not appeal and the May 1996 ... | CONCLUSION: 1. The May 1996 rating decision denying service connection for headaches is final.  38 U.S.C. §§ 7103, 7105 (2012); 38 C.F.R. § 20.1103 (2024).\r\n\r\n2. The criteria for an effective date prior to August 10, 2016, for the grant of a 30 percent rating for tension headaches have not been met.  38 U.S.C. ... | CFR: 38 CFR § 3.400., 38 CFR § 20.1103, 38 CFR § 4.1.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.400.",
+      "38 CFR § 20.1103",
+      "38 CFR § 4.1.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.350",
+      "38 CFR § 4.16",
+      "38 CFR § 4.126.",
+      "38 CFR § .",
+      "38 CFR § 4.124",
+      "38 CFR § 3.400"
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000035.txt",
+    "metadata": {
+      "docket_number": "19-31 766",
+      "outcome": "DENIED",
+      "conditions": [
+        "anxiety",
+        "hypertension",
+        "ed",
+        "generalized anxiety",
+        "headache"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1114"
+      ],
+      "scraped_at": "2026-01-26T19:58:21.185079",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000036",
+    "title": "BVA DENIED - Ed, Presumptive",
+    "content": "ORDER: Entitlement to service connection for a right knee disorder is denied. | FINDING: The weight of the persuasive evidence is against finding that the Veteran's current right knee disorder began during or is otherwise related to active service or events therein; and there is no evidence of right knee arthritis manifested to a compensable degree within one year following discharge fr... | CONCLUSION: The criteria for service connection for a right knee disorder have not been met. 38 U.S.C. §§ 1110, 1154(b), 5107; 38 C.F.R. §§ 3.303, 3.307, 3.309.... | CFR: 38 CFR § ., 38 CFR § 3.303., 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § .",
+      "38 CFR § 3.303.",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000036.txt",
+    "metadata": {
+      "docket_number": "20-30 288",
+      "outcome": "DENIED",
+      "conditions": [
+        "ed",
+        "presumptive",
+        "aggravated by",
+        "knee",
+        "hip"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1168",
+        "38 U.S.C. § 5107",
+        "38 U.S.C. § 1154"
+      ],
+      "scraped_at": "2026-01-26T19:58:21.586089",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000037",
+    "title": "BVA Decision - Ed, Lumbar",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000037.txt",
+    "metadata": {
+      "docket_number": "18-45 002",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "lumbar",
+        "back",
+        "spine",
+        "sciatic"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:21.991155",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000038",
+    "title": "BVA Decision - Ed, Presumptive",
+    "content": "CFR: 38 CFR § 3.307, 38 CFR § 3.155, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.307",
+      "38 CFR § 3.155",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.310",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000038.txt",
+    "metadata": {
+      "docket_number": "17-49 554",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "presumptive",
+        "secondary",
+        "aggravated by",
+        "neck"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:22.423519",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000039",
+    "title": "BVA Decision - Diabetes, Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000039.txt",
+    "metadata": {
+      "docket_number": "14-04 563",
+      "outcome": null,
+      "conditions": [
+        "diabetes",
+        "ed"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:23.086091",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000040",
+    "title": "BVA GRANTED - Diabetes, Ed",
+    "content": "ORDER: For the appellate period prior to April 12, 2024, entitlement to an initial disability rating of 10 percent, but no higher, for right Achilles tendonitis is granted. | FINDING: 1. The evidence is in relative equipoise as to whether the Veteran's right Achilles tendonitis was manifested by painful motion of the right ankle for the appellate period prior to April 12, 2024; marked limitation of the motion of the right ankle is not shown during this period.\r\n\r\n2. The evidence ... | CONCLUSION: 1. Resolving all reasonable doubt in the Veteran's favor, the criteria for an initial disability rating of 10 percent, but no higher, for right Achilles tendonitis are met for the appellate period prior to April 12, 2024.  38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 3.102, 4.3, 4.7, 4.40, 4.45, 4.71a, Dia... | CFR: 38 CFR § 4.7., 38 CFR § 3.155, 38 CFR § 4.59.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.7.",
+      "38 CFR § 3.155",
+      "38 CFR § 4.59.",
+      "38 CFR § 4.40",
+      "38 CFR § 4.45",
+      "38 CFR § 4.1",
+      "38 CFR § 4.71",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.3.",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000040.txt",
+    "metadata": {
+      "docket_number": "17-54 677",
+      "outcome": "GRANTED",
+      "conditions": [
+        "diabetes",
+        "ed",
+        "diabetic",
+        "secondary",
+        "aggravated by"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5110",
+        "38 U.S.C. § 1155",
+        "38 U.S.C. § 7107",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:23.575446",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000041",
+    "title": "BVA DENIED - Tinnitus, Anxiety",
+    "content": "ORDER: An initial rating higher than 50 percent for posttraumatic stress disorder (PTSD) prior to September 25, 2017, and higher than 70 percent, thereafter, is denied. | FINDING: 1. Prior to September 25, 2017, PTSD was manifested by difficulty adapting to stressful circumstances with no other symptoms consistent with the 70 percent rating criteria; from that date, PTSD was not manifested by any of the symptoms consistent with the 100 percent rating criteria, or other sympto... | CONCLUSION: 1. The criteria for an initial rating higher than 50 percent for PTSD prior to September 25, 2017, and higher than 70 percent, thereafter, have not been met.  38 U.S.C. §§ 1155, 5107; 38 C.F.R. §§ 4.1, 4.3, 4.7, 4.126, 4.130, Diagnostic Code (DC) 9411.\r\n\r\n2. The criteria for a TDIU have not been met... | CFR: 38 CFR § 4.130, 38 CFR § 4.1., 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 4.130",
+      "38 CFR § 4.1.",
+      "38 CFR § 20.1303.",
+      "38 CFR § 4.16",
+      "38 CFR § .",
+      "38 CFR § 4.130."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000041.txt",
+    "metadata": {
+      "docket_number": "17-62 146",
+      "outcome": "DENIED",
+      "conditions": [
+        "tinnitus",
+        "anxiety",
+        "ed",
+        "back",
+        "posttraumatic stress"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:23.980104",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000042",
+    "title": "BVA Decision - Ed, Hypertension",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000042.txt",
+    "metadata": {
+      "docket_number": "18-03 586",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "hypertension",
+        "secondary",
+        "aggravated by",
+        "sleep apnea"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:24.384378",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000043",
+    "title": "BVA Decision - Aggravated By, Ed",
+    "content": "CFR: 38 CFR § 3.303, 38 CFR § 3.159, 38 CFR § 3.310",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 3.159",
+      "38 CFR § 3.310",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000043.txt",
+    "metadata": {
+      "docket_number": "19-07 576",
+      "outcome": null,
+      "conditions": [
+        "aggravated by",
+        "ed",
+        "headache",
+        "secondary"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1113"
+      ],
+      "scraped_at": "2026-01-26T19:58:24.795510",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000044",
+    "title": "BVA GRANTED - Ed, Presumptive",
+    "content": "ORDER: Entitlement to service connection for Parkinson's disease, to include as due to exposure to herbicides in service (for accrued benefits purposes) is granted, subject to the laws and regulations governing the payment of monetary benefits. | FINDING: 1. The evidence is in approximate balance regarding whether the Veteran was exposed to herbicides while stationed in Okinawa, Japan during the Vietnam War.\r\n\r\n2. Parkinson's disease is presumptively associated with herbicide exposure.\r\n\r\n3. Myocardial infarction is presumptively associated with herb... | CONCLUSION: 1. The criteria for entitlement to service connection for Parkinson's disease, as due to exposure to herbicide agents (for accrued benefits purposes) have been met. 38 U.S.C. §§ 1110, 1116, 5107; 38 C.F.R. §§ 3.102, 3.303, 3.307, 3.309.\r\n\r\n2. The criteria for entitlement to service connection for my... | CFR: 38 CFR § 3.303, 38 CFR § 3.307, 38 CFR § 3.159",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 3.307",
+      "38 CFR § 3.159",
+      "38 CFR § 3.304",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.309",
+      "38 CFR § .",
+      "38 CFR § 3.102."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000044.txt",
+    "metadata": {
+      "docket_number": "17-30 654",
+      "outcome": "GRANTED",
+      "conditions": [
+        "ed",
+        "presumptive",
+        "aggravated by",
+        "back",
+        "pact act"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1111",
+        "38 U.S.C. § 1116",
+        "38 U.S.C. § 5107",
+        "38 U.S.C. § 1154"
+      ],
+      "scraped_at": "2026-01-26T19:58:25.197223",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000045",
+    "title": "BVA GRANTED - Tinnitus, Ed",
+    "content": "ORDER: Entitlement to service connection for tinnitus is granted. | FINDING: The Veteran's tinnitus is etiologically related to his active-duty service.... | CONCLUSION: The criteria for service connection for tinnitus have been met.  38 U.S.C. §§ 1110, 5107; 38 C.F.R. §§ 3.102, 3.303, 3.304.... | CFR: 38 CFR § 3.303, 38 CFR § 20.1303., 38 CFR § 3.309",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 20.1303.",
+      "38 CFR § 3.309",
+      "38 CFR § 3.303.",
+      "38 CFR § ."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000045.txt",
+    "metadata": {
+      "docket_number": "20-04 730",
+      "outcome": "GRANTED",
+      "conditions": [
+        "tinnitus",
+        "ed",
+        "bilateral hearing",
+        "aggravated by",
+        "back"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 1110",
+        "38 U.S.C. § 5107"
+      ],
+      "scraped_at": "2026-01-26T19:58:25.617618",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000046",
+    "title": "BVA DENIED - Diabetes, Anxiety",
+    "content": "ORDER: Entitlement to service connection for obstructive sleep apnea (OSA), to include as secondary to posttraumatic stress disorder (PTSD) and/or a left knee disability, is denied. | FINDING: The evidence of record does not indicate that the Veteran's OSA is directly related to his service or due to or caused by a service-connected disability.... | CONCLUSION: The criteria for service connection for obstructive sleep apnea (OSA), to include as secondary to posttraumatic stress disorder (PTSD) and/or a left knee disability, have not been met. 38 U.S.C. §§ 1110, 1131, 5107; 38 C.F.R. §§ 3.102, 3.303, 3.310.... | CFR: 38 CFR § 3.303, 38 CFR § 3.102, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.303",
+      "38 CFR § 3.102",
+      "38 CFR § 20.1303.",
+      "38 CFR § .",
+      "38 CFR § 3.310."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000046.txt",
+    "metadata": {
+      "docket_number": "19-18 378",
+      "outcome": "DENIED",
+      "conditions": [
+        "diabetes",
+        "anxiety",
+        "hypertension",
+        "obstructive sleep apnea",
+        "major depressive disorder"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 5107",
+        "38 U.S.C. § 1110, 1131"
+      ],
+      "scraped_at": "2026-01-26T19:58:26.110860",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000047",
+    "title": "BVA Decision - Ed, Hip",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000047.txt",
+    "metadata": {
+      "docket_number": "13-19 068",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "hip"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:26.517776",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000048",
+    "title": "BVA Decision - Ed, Hip",
+    "content": "CFR: 38 CFR § 3.159, 38 CFR § 20.902, 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 3.159",
+      "38 CFR § 20.902",
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000048.txt",
+    "metadata": {
+      "docket_number": "19-14 982",
+      "outcome": null,
+      "conditions": [
+        "ed",
+        "hip"
+      ],
+      "usc_citations": [
+        "38 U.S.C. § 7107",
+        "38 U.S.C. § 5103"
+      ],
+      "scraped_at": "2026-01-26T19:58:26.943622",
+      "is_priority": true
+    }
+  },
+  {
+    "source": "BVA_DECISIONS",
+    "citation": "BVA-25000049",
+    "title": "BVA Decision - Ed",
+    "content": "CFR: 38 CFR § 20.1303.",
+    "hierarchy_level": 3,
+    "color_code": "GREEN",
+    "effective_date": "01/02/25",
+    "superseded_by": null,
+    "related_codes": [
+      "38 CFR § 20.1303."
+    ],
+    "url": "https://www.va.gov/vetapp25/Files1/25000049.txt",
+    "metadata": {
+      "docket_number": "19-21 337",
+      "outcome": null,
+      "conditions": [
+        "ed"
+      ],
+      "usc_citations": [],
+      "scraped_at": "2026-01-26T19:58:27.356887",
+      "is_priority": true
+    }
   }
 ]

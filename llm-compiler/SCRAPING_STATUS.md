@@ -1,8 +1,8 @@
 # 🔍 Diamond Standard - Scraping Status Report
 
-**Date**: January 22, 2026, 1:02 AM  
+**Date**: January 26, 2026, 4:05 PM  
 **Phase**: Knowledge Base Scraping (Active)  
-**Status**: 🟡 Partial Success - Federal Register Complete, Other Sources Need URL Updates
+**Status**: 🟡 Partial Success - Federal Register Complete, CAVC Manual Process Required
 
 ---
 
@@ -24,7 +24,25 @@
 
 ## ⚠️ **Encountered Issues**
 
-### 1. 38 CFR (eCFR.gov)
+### 1. CAVC Decisions (uscourts.cavc.gov) - **NEW**
+**Issue**: Government-grade SSL/TLS prevents automated scraping  
+**URL**: https://www.uscourts.cavc.gov/recent_decisions.php  
+**Root Cause**: CAVC website requires TLS 1.2+ with specific cipher suites that Python's `requests` library cannot negotiate
+
+**Status**: ✅ **Manual integration workflow created**  
+**Solution**: Created comprehensive guide at `llm-compiler/knowledge-base/cavc/CAVC_INTEGRATION_GUIDE.md`
+
+**Manual Process**:
+1. Access website in browser (browsers handle government SSL correctly)
+2. Download precedential decisions (PDFs)
+3. Extract text and create JSON entries
+4. Merge into DKB using `kb_merger.py`
+
+**Priority**: HIGH - CAVC decisions are binding judicial precedent (Hierarchy Level 2)
+
+---
+
+### 2. 38 CFR (eCFR.gov)
 **Issue**: HTML structure changed - no sections found  
 **URL Attempted**: https://www.ecfr.gov/current/title-38/chapter-I/part-3  
 **Root Cause**: eCFR website redesign changed CSS classes and DOM structure

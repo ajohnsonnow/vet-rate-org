@@ -279,19 +279,20 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
   };
 
   /**
-   * Process dropped in or selected files - Just stores them without OCR
-   * OCR is now triggered explicitly via "Run OCR" button
+   * Process dropped in or selected files - NOW AUTO-RUNS OCR
+   * FIX for BUG-MKUBD41U: Users were confused by the two-step process
+   * Now automatically starts OCR when files are uploaded
    */
   const processFiles = async (files) => {
     console.log('📁 processFiles called with:', files.map(f => f.name));
     if (files.length === 0) return;
 
     setError(null);
-    setDroppedFiles(prev => {
-      const newFiles = [...prev, ...files];
-      console.log('📁 droppedFiles now:', newFiles.map(f => f.name));
-      return newFiles;
-    });
+    
+    // Store files in state
+    const newDroppedFiles = [...droppedFiles, ...files];
+    setDroppedFiles(newDroppedFiles);
+    console.log('📁 droppedFiles now:', newDroppedFiles.map(f => f.name));
     
     // Keep original PDF files for vision model analysis
     const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
@@ -303,33 +304,47 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
+    // AUTO-RUN OCR immediately after files are added
+    // This eliminates the confusing two-step "upload then click Run OCR" process
+    console.log('🔄 Auto-starting OCR for uploaded files...');
+    
+    // Small delay to ensure state is updated and UI shows the files
+    setTimeout(async () => {
+      await runOCROnFilesInternal(files);
+    }, 100);
   };
-
+  
   /**
-   * Run OCR on all loaded files that haven't been processed yet
+   * Internal OCR runner that accepts files directly
+   * Used by both auto-OCR on upload and manual "Run OCR" button
    */
-  const runOCROnFiles = async () => {
-    // Use droppedFiles if available, fall back to originalPDFFiles
-    const filesToProcess = droppedFiles.length > 0 ? droppedFiles : originalPDFFiles;
+  const runOCROnFilesInternal = async (filesToProcess) => {
+    if (!filesToProcess || filesToProcess.length === 0) {
+      console.log('📁 No files to process');
+      return;
+    }
+    
+    // Filter to only process files that haven't been processed yet
     const unprocessedFiles = filesToProcess.filter(
       file => !extractedTexts.some(et => et.filename === file.name)
     );
     
     if (unprocessedFiles.length === 0) {
-      setError(t('dd214Analyzer', 'allFilesProcessed'));
+      console.log('📁 All files already processed');
       return;
     }
 
+    setIsProcessing(true);
     setError(null);
     
     try {
       for (const file of unprocessedFiles) {
         if (!isFileSupported(file)) {
-          setError(`${file.name} is not a supported format. Use PDF, DOCX, TXT, or RTF.`);
+          console.warn(`⚠️ ${file.name} is not a supported format`);
           continue;
         }
 
-        setIsProcessing(true);
         setOcrProgress({
           state: OCR_STATES.LOADING,
           progress: 0,
@@ -337,9 +352,9 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         });
 
         try {
-          console.log(`🔍 Starting analysis of ${file.name}...`);
+          console.log(`🔍 Starting OCR analysis of ${file.name}...`);
           const result = await analyzeDocument(file, setOcrProgress);
-          console.log(`✅ Analysis complete for ${file.name}`);
+          console.log(`✅ OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`);
           
           setExtractedTexts(prev => [...prev, {
             filename: file.name,
@@ -353,7 +368,6 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         } catch (err) {
           console.error('File processing error:', err);
           setError(`Failed to process ${file.name}: ${err.message}`);
-          // Continue to next file instead of stopping entire batch
         }
       }
     } catch (err) {
@@ -363,6 +377,32 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
       setIsProcessing(false);
       setOcrProgress(null);
     }
+  };
+
+  /**
+   * Run OCR on all loaded files that haven't been processed yet
+   * Called by the manual "Run OCR" button
+   */
+  const runOCROnFiles = async () => {
+    // Use droppedFiles if available, fall back to originalPDFFiles
+    const filesToProcess = droppedFiles.length > 0 ? droppedFiles : originalPDFFiles;
+    
+    if (filesToProcess.length === 0) {
+      setError(t('dd214Analyzer', 'pasteOrDropFirst'));
+      return;
+    }
+    
+    const unprocessedFiles = filesToProcess.filter(
+      file => !extractedTexts.some(et => et.filename === file.name)
+    );
+    
+    if (unprocessedFiles.length === 0) {
+      setError(t('dd214Analyzer', 'allFilesProcessed'));
+      return;
+    }
+
+    // Use the internal OCR runner
+    await runOCROnFilesInternal(unprocessedFiles);
   };
 
   /**
@@ -1171,11 +1211,21 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
                 );
               })}
               
-              {/* OCR Tip - shown when files are loaded but not processed */}
-              {(droppedFiles.length > 0 || originalPDFFiles.length > 0) && !extractedTexts.length && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                  <p className="text-sm text-amber-700 dark:text-amber-300">
-                    <span className="font-semibold">📄 {t('dd214Analyzer', 'filesLoadedTip')}</span>
+              {/* OCR Status - shown when files are loaded */}
+              {(droppedFiles.length > 0 || originalPDFFiles.length > 0) && !extractedTexts.length && !isProcessing && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <span className="font-semibold">🔄 OCR will start automatically...</span>
+                  </p>
+                </div>
+              )}
+              
+              {/* Processing indicator */}
+              {isProcessing && (
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                  <p className="text-sm text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-semibold">📄 Processing your document... Please wait.</span>
                   </p>
                 </div>
               )}

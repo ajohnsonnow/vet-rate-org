@@ -641,11 +641,26 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   
   /**
    * Parse AI response JSON
+   * FIX for BUG-MKUA99RE: generateAI returns {text, mode} object, not a string
    */
   const parseAIResponse = (aiResponse) => {
     try {
+      // Handle both string responses and {text, mode} objects from generateAI
+      let responseText;
+      if (typeof aiResponse === 'string') {
+        responseText = aiResponse;
+      } else if (aiResponse && typeof aiResponse === 'object') {
+        // generateAI returns {text: string, mode: string, ...}
+        responseText = aiResponse.text;
+        if (typeof responseText !== 'string') {
+          throw new Error('AI response object missing text property');
+        }
+      } else {
+        throw new Error(`Invalid AI response type: ${typeof aiResponse}`);
+      }
+      
       // Clean up potential markdown formatting
-      let cleanResponse = aiResponse.trim();
+      let cleanResponse = responseText.trim();
       if (cleanResponse.startsWith('```json')) {
         cleanResponse = cleanResponse.slice(7);
       }
@@ -666,7 +681,11 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       return parsed;
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      console.error('Raw response:', aiResponse.substring(0, 500));
+      // Safely log raw response
+      const rawForLog = typeof aiResponse === 'string' 
+        ? aiResponse.substring(0, 500) 
+        : JSON.stringify(aiResponse).substring(0, 500);
+      console.error('Raw response:', rawForLog);
       throw new Error('AI returned invalid format. Please try again.');
     }
   };

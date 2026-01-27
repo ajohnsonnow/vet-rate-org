@@ -1,6 +1,6 @@
 # CAVC Decision Scrape Report
 
-**Generated:** 2026-01-22 10:21:32
+**Generated:** 2026-01-26 17:13:56
 
 **Source:** U.S. Court of Appeals for Veterans Claims
 
@@ -15,7 +15,7 @@
 
 | Case Number | Title | Source |
 |------------|-------|--------|
-| REFERENCE | CAVC decisions must be retrieved manuall... | CAVC |
+| MANUAL_REVIEW_REQUIRED | CAVC decisions require manual review fro... | CAVC |
 
 ## Data Authenticity
 

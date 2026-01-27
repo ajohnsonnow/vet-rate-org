@@ -24,16 +24,16 @@ BASE_URL = "https://www.va.gov/ogc"
 MAIN_PAGE = f"{BASE_URL}/precedentopinions.asp"
 
 # Years with opinions (from the VA website)
+# Resuming from 2004 (2019-2005 already collected)
 OPINION_YEARS = [
-    2019, 2018, 2017, 2015, 2014, 2012, 2011, 2010, 2009,
-    2008, 2007, 2006, 2005, 2004, 2003, 2002, 2001, 2000, 1999,
+    2004, 2003, 2002, 2001, 2000, 1999,
     1998, 1997, 1996, 1995, 1994, 1993, 1992, 1991, 1990, 1989, 1987
 ]
 
 # Output paths
 WORKSPACE_ROOT = Path("E:/VS_Studio/vet-rate-org-official")
 OUTPUT_DIR = WORKSPACE_ROOT / "llm-compiler" / "knowledge-base" / "ogc"
-OUTPUT_FILE = OUTPUT_DIR / "ogc_all_opinions.json"
+OUTPUT_FILE = OUTPUT_DIR / "ogc_opinions_2004_1987.json"  # Resume file
 
 # Headers for requests
 HEADERS = {
@@ -42,15 +42,22 @@ HEADERS = {
 }
 
 
-def fetch_page(url: str) -> Optional[str]:
-    """Fetch a webpage with error handling."""
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=30)
-        response.raise_for_status()
-        return response.text
-    except Exception as e:
-        print(f"   ❌ Error fetching {url}: {e}")
-        return None
+def fetch_page(url: str, retries: int = 3) -> Optional[str]:
+    """Fetch a webpage with error handling and retries."""
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=30)
+            response.raise_for_status()
+            return response.text
+        except KeyboardInterrupt:
+            raise  # Don't catch keyboard interrupts
+        except Exception as e:
+            if attempt < retries - 1:
+                time.sleep(2)  # Wait before retry
+                continue
+            print(f"   ❌ Error fetching {url}: {e}")
+            return None
+    return None
 
 
 def parse_year_page(html: str, year: int) -> List[Dict]:
@@ -198,9 +205,9 @@ def create_knowledge_entry(opinion: Dict, content: Optional[Dict]) -> Dict:
 
 def main():
     print("=" * 70)
-    print("💎 DIAMOND OGC Precedent Opinions Scraper")
+    print("💎 DIAMOND OGC Precedent Opinions Scraper (RESUME 2004-1987)")
     print("=" * 70)
-    print(f"Target: {len(OPINION_YEARS)} years of opinions (1987-2019)")
+    print(f"Target: {len(OPINION_YEARS)} remaining years of opinions (2004-1987)")
     print(f"Output: {OUTPUT_FILE}")
     print("=" * 70)
     
@@ -220,32 +227,30 @@ def main():
     for year in OPINION_YEARS:
         print(f"\n📅 Processing year {year}...")
         
-        # Construct year URL (pattern varies)
-        year_url = f"{BASE_URL}/precedentopinions{year}.asp"
+        # Try multiple URL patterns (VA's site structure varies by year)
+        url_patterns = [
+            f"https://www.va.gov/OGC/opinions/{year}PrecedentOpinions.asp",
+            f"https://www.va.gov/ogc/opinions/{year}PrecedentOpinions.asp",
+            f"https://www.va.gov/ogc/opinions/{year}precedentopinions.asp",
+            f"{BASE_URL}/precedentopinions{year}.asp",
+            f"{BASE_URL}/PrecedentOpinions{year}.asp",
+        ]
         
-        html = fetch_page(year_url)
+        html = None
+        for url_pattern in url_patterns:
+            html = fetch_page(url_pattern)
+            if html:
+                print(f"   ✅ Found: {url_pattern.split('/')[-1]}")
+                break
+        
         if not html:
-            print(f"   ⚠️ Could not fetch year {year}")
+            print(f"   ⚠️  Could not fetch year {year}")
             stats["errors"] += 1
             continue
         
         # Parse opinions from year page
         year_opinions = parse_year_page(html, year)
         print(f"   Found {len(year_opinions)} opinions")
-        
-        if not year_opinions:
-            # Try alternate URL patterns
-            alt_urls = [
-                f"{BASE_URL}/PrecedentOpinions{year}.asp",
-                f"{BASE_URL}/opinions{year}.asp",
-            ]
-            for alt_url in alt_urls:
-                html = fetch_page(alt_url)
-                if html:
-                    year_opinions = parse_year_page(html, year)
-                    if year_opinions:
-                        print(f"   Found {len(year_opinions)} opinions (alt URL)")
-                        break
         
         stats["years_processed"] += 1
         

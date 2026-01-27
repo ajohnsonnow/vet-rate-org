@@ -47,23 +47,27 @@ const VetRateAIAssistant = ({ isOpen, onClose }) => {
     if (isReady && messages.length === 0) {
       setMessages([{
         type: 'assistant',
-        content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** with ${knowledgeCount.toLocaleString()} official entries.
+        content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** loaded.
+
+**Current Mode:** Web-Optimized (${knowledgeCount.toLocaleString()} high-priority entries)
+**Full Database:** 130,508 entries (available with Local LLM)
 
 **Official Sources Include:**
-• 🔴 **38 CFR Part 4** - Rating Schedule (1,070 entries)
-• 🟣 **OGC Precedent Opinions** - Binding legal interpretations (49 entries)
-• 🟢 **PACT Act** - Presumptive conditions (28 entries)
-• 🔵 **Secondary Conditions Matrix** - 234 nexus relationships
-• 🟠 **Federal Register** - Recent VA rules (15 entries)
-• 📘 **M21-1 Manual** - VA procedures
+• 🔴 **38 CFR Part 4** - Rating Schedule & Regulations
+• 🏛️ **CAVC Decisions** - Court precedent (6,400+ cases)
+• 📋 **BVA Decisions** - Board appeals (116K+ decisions)
+• 🟣 **OGC Precedent Opinions** - Binding interpretations
+• 📘 **M21-1 Manual** - VA procedures (1,370+ entries)
+• 🟢 **PACT Act** - Presumptive conditions
+• 🔵 **Secondary Conditions** - Nexus relationships
 
-⚠️ **Note:** Community Knowledge (CKB) is maintained separately and is not used for AI responses.
+⚡ **Web Mode:** Fast loading with 8K highest-value entries.
+🧠 **Local LLM:** Load Diamond Swarm for complete 130K+ entry access.
 
 **Ask me about:**
 • Diagnostic codes (e.g., "What is DC 9411?")
 • Secondary connections (e.g., "sleep apnea secondary to PTSD")
-• OGC opinions (e.g., "OGC precedent on TDIU")
-• PACT Act presumptives (e.g., "hypertension PACT Act")
+• BVA decisions (e.g., "BVA decision on PTSD claims")
 • Rating criteria (e.g., "rating criteria for tinnitus")
 
 How can I help you today?`,
