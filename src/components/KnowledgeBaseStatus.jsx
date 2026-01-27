@@ -103,6 +103,14 @@ const SOURCE_METADATA = {
     icon: '📊',
     color: 'green'
   },
+  'FEDERAL_CIRCUIT': {
+    displayName: 'Federal Circuit',
+    description: 'U.S. Court of Appeals for the Federal Circuit - Highest VA precedent',
+    lastUpdated: '2026-01-26',
+    authorityLevel: 2,
+    icon: '🏛️',
+    color: 'green'
+  },
   // Level 4 - Policy Guidance
   'FEDERAL_REGISTER_OFFICIAL': {
     displayName: 'Federal Register',
@@ -119,6 +127,14 @@ const SOURCE_METADATA = {
     authorityLevel: 4,
     icon: '⚡',
     color: 'orange'
+  },
+  'PRESUMPTIVE_CONDITIONS': {
+    displayName: 'Presumptive Conditions',
+    description: 'Service-connected presumptive conditions list - PACT Act & legacy',
+    lastUpdated: '2026-01-22',
+    authorityLevel: 4,
+    icon: '✅',
+    color: 'green'
   },
   'VA_OFFICIAL': {
     displayName: 'VA Official',
@@ -207,9 +223,22 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     // Full database count (available with Local LLM)
     fullDatabaseCount: 130508, // Full DKB entries
     isWebOptimized: true, // True when using web version (truncated)
+    localAIReady: false, // Whether Local AI is loaded
     // Combined for display
     totalEntries: 0,
     sources: {},
+    // Full DKB source counts (shown when Local AI loaded)
+    fullSources: {
+      'BVA_DECISIONS': 116209,
+      'CAVC': 6422,
+      'eCFR_OFFICIAL': 4256,  // 38_CFR + ECFR combined
+      'M21-1_OFFICIAL': 1371,
+      'OGC_PRECEDENT_OPINION': 891,
+      'SECONDARY_CONDITIONS_MATRIX': 774,
+      'FEDERAL_CIRCUIT': 293,
+      'PRESUMPTIVE_CONDITIONS': 277,
+      'FEDERAL_REGISTER_OFFICIAL': 15
+    },
     ecfrCurrent: true,
     ecfrDate: '2026-01-27',
     loading: true
@@ -231,6 +260,40 @@ export default function KnowledgeBaseStatus({ compact = false }) {
       };
     }
   }, [showDetails]);
+
+  // Listen for Local AI status changes
+  useEffect(() => {
+    const handleLocalAIStatusChange = (event) => {
+      const { ready, fullDKBAvailable } = event.detail || {};
+      console.log('[DKB Status] Local AI status changed:', { ready, fullDKBAvailable });
+      
+      if (ready && fullDKBAvailable) {
+        // Local AI loaded - show full DKB stats
+        setKbStatus(prev => ({
+          ...prev,
+          localAIReady: true,
+          isWebOptimized: false,
+          dkbEntries: prev.fullDatabaseCount,
+          totalEntries: prev.fullDatabaseCount,
+          // Use full source counts
+          dkbSources: prev.fullSources,
+          sources: prev.fullSources
+        }));
+      } else {
+        // Local AI unloaded - revert to web-optimized
+        setKbStatus(prev => ({
+          ...prev,
+          localAIReady: false,
+          isWebOptimized: prev.totalEntries < prev.fullDatabaseCount
+        }));
+      }
+    };
+
+    window.addEventListener('local-ai-status-change', handleLocalAIStatusChange);
+    return () => {
+      window.removeEventListener('local-ai-status-change', handleLocalAIStatusChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Load Diamond Knowledge Base (DKB) - Official sources only
@@ -378,6 +441,9 @@ export default function KnowledgeBaseStatus({ compact = false }) {
           {kbStatus.isWebOptimized && !kbStatus.loading && (
             <span className="text-amber-500 dark:text-amber-400 ml-1" title={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}>*</span>
           )}
+          {kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading && (
+            <span className="text-emerald-500 dark:text-emerald-400 ml-1" title="Full DKB active with Local AI">🧠</span>
+          )}
         </span>
         {kbStatus.ecfrCurrent && (
           <span className="text-green-500 dark:text-green-400" title="Diamond Certified - Official VA Sources">💎</span>
@@ -422,6 +488,24 @@ export default function KnowledgeBaseStatus({ compact = false }) {
                       <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
                         <span>🧠</span>
                         <span>Load <strong>Local LLM</strong> (Diamond Swarm) for complete knowledge access.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Full DKB Active Notice */}
+              {kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading && (
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-500 text-lg">🧠</span>
+                    <div>
+                      <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                        Full Knowledge Base Active
+                      </div>
+                      <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                        Local AI loaded with complete <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong> DKB entries.
+                        All official sources available for comprehensive analysis.
                       </div>
                     </div>
                   </div>
