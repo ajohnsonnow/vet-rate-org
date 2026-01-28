@@ -300,6 +300,29 @@ export const getCacheSize = async () => {
 };
 
 /**
+ * Get source counts from cached DKB
+ * 
+ * @returns {Promise<Object>} Source counts object
+ */
+export const getCachedSourceCounts = async () => {
+  try {
+    const entries = await loadCachedDKB();
+    const sourceCounts = {};
+    
+    entries.forEach(entry => {
+      const source = entry.metadata?.source || entry.source || 'Unknown';
+      sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+    });
+    
+    console.log('[DKB] Calculated source counts from cache:', sourceCounts);
+    return sourceCounts;
+  } catch (err) {
+    console.error('[DKB] Failed to calculate source counts:', err);
+    return {};
+  }
+};
+
+/**
  * Smart DKB loader - auto-loads on desktop, waits for user action on mobile
  * 
  * @param {function} onProgress - Progress callback
@@ -344,6 +367,7 @@ export default {
   isMobileDevice,
   isFullDKBCached,
   getCachedEntryCount,
+  getCachedSourceCounts,
   downloadFullDKB,
   loadCachedDKB,
   clearDKBCache,
