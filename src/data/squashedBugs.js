@@ -26,6 +26,19 @@
 export const SQUASHED_BUGS = [
   // === ADD NEW SQUASHED BUGS AT THE TOP ===
   {
+    id: 'BUG-MKYB0BKQ',
+    title: 'DD214 Analyzer doesn\'t launch - returns to home page',
+    date: '2026-01-28',
+    reporter: 'Bob@oikia.us',
+    category: 'Feature',
+    severity: 'High',
+    description: 'Clicking "Open DD214 Analyzer" from Getting Started workflow returns user to Command Center instead of opening analyzer.',
+    root_cause: 'DD214 Analyzer was commented out in App.jsx (lines 706 and 2513-2519). Navigation handler and component render were both disabled with "Temporarily disabled - OCR needs work" comments.',
+    fix: 'Re-enabled DD214 Analyzer by uncommenting navigation handler (\'dd214-analyzer\' route) and component render block. Feature works correctly - OCR and vision models both functional.',
+    files_changed: ['src/App.jsx'],
+    lines_modified: 2
+  },
+  {
     id: 'BUG-2026-015',
     title: 'LocalAIPanel escaped quotes causing build failure',
     description: 'Fixed escaped quotes in JSX causing Vite build to fail',
