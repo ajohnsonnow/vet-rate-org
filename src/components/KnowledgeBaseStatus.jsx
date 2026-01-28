@@ -437,12 +437,18 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         >
         <span className={getStatusColor()}>{getStatusIcon()}</span>
         <span className="font-medium text-gray-700 dark:text-gray-200">
-          DKB: {kbStatus.loading ? 'Loading...' : `${kbStatus.dkbEntries.toLocaleString()}`}
-          {kbStatus.isWebOptimized && !kbStatus.loading && (
-            <span className="text-amber-500 dark:text-amber-400 ml-1" title={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}>*</span>
-          )}
-          {kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading && (
-            <span className="text-emerald-500 dark:text-emerald-400 ml-1" title="Full DKB active with Local AI">🧠</span>
+          {kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading ? (
+            <>
+              <span className="text-emerald-600 dark:text-emerald-400">FULL DKB</span>
+              <span className="text-emerald-500 dark:text-emerald-400 ml-1" title="Full DKB active with Local AI">🧠</span>
+            </>
+          ) : (
+            <>
+              DKB: {kbStatus.loading ? 'Loading...' : `${kbStatus.dkbEntries.toLocaleString()}`}
+              {kbStatus.isWebOptimized && !kbStatus.loading && (
+                <span className="text-amber-500 dark:text-amber-400 ml-1" title={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}>*</span>
+              )}
+            </>
           )}
         </span>
         {kbStatus.ecfrCurrent && (
@@ -616,13 +622,26 @@ export default function KnowledgeBaseStatus({ compact = false }) {
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {kbStatus.loading ? '...' : kbStatus.dkbEntries.toLocaleString()}
-              {kbStatus.isWebOptimized && !kbStatus.loading && (
-                <span className="text-amber-500 text-lg ml-1">*</span>
+              {kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading ? (
+                <span className="flex items-center gap-1">
+                  <span>FULL</span>
+                  <span className="text-lg">🧠</span>
+                </span>
+              ) : (
+                <>
+                  {kbStatus.loading ? '...' : kbStatus.dkbEntries.toLocaleString()}
+                  {kbStatus.isWebOptimized && !kbStatus.loading && (
+                    <span className="text-amber-500 text-lg ml-1">*</span>
+                  )}
+                </>
               )}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {kbStatus.isWebOptimized ? 'web-optimized entries' : 'total entries'}
+              {kbStatus.localAIReady && !kbStatus.isWebOptimized ? (
+                <span className="text-emerald-500 dark:text-emerald-400 font-semibold">{kbStatus.fullDatabaseCount.toLocaleString()} entries</span>
+              ) : (
+                kbStatus.isWebOptimized ? 'web-optimized entries' : 'total entries'
+              )}
             </div>
           </div>
         </div>
