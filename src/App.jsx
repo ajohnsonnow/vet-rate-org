@@ -138,6 +138,7 @@ import { APP_VERSION, LAST_SEEN_VERSION_KEY } from './utils/version';
 import { needsMigration, migrateFromLocalStorage } from './utils/storage';
 import { initPersistentStorage } from './utils/persistentStorage';
 import { generateWhatsNewChangelog } from './utils/changelogGenerator';
+import { initAutoBackup } from './utils/autoBackup';
 import disabilityData from './data/disabilityData.json';
 import changelogData from './data/changelog.json';
 import { PROJECT_STATS } from './data/projectStats';
@@ -480,6 +481,14 @@ function App() {
         }
       } catch (error) {
         console.error('⚠️ Persistent Storage: Initialization failed, continuing anyway', error);
+      }
+      
+      // Initialize auto-backup system ("Zero Data Loss Protocol")
+      try {
+        await initAutoBackup();
+        console.log('💾 Auto-Backup: System initialized - all data will be backed up after every action');
+      } catch (error) {
+        console.error('⚠️ Auto-Backup: Initialization failed, continuing anyway', error);
       }
       
       // Step 1: Migrate user data if needed (CRITICAL - runs after IndexedDB migration)
