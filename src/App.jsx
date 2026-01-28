@@ -2516,6 +2516,10 @@ function App() {
           onClose={() => setShowDD214Analyzer(false)}
           onReportBug={() => { setShowDD214Analyzer(false); setShowBugSquasher(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
+          onOpenMusterCall={() => {
+            setShowDD214Analyzer(false);
+            setShowMusterCall(true);
+          }}
         />
       )}
       

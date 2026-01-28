@@ -212,7 +212,7 @@ const OCRProgressBar = ({ progress }) => {
 /**
  * Main DD214 Analyzer Component
  */
-const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }) => {
+const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, onOpenMusterCall }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
 
@@ -979,6 +979,31 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           
+          {/* Workflow Guidance Banner */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💡</span>
+              <div className="flex-1">
+                <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Quick Guide</h3>
+                <div className="text-sm text-purple-800 dark:text-purple-200 space-y-2">
+                  <p><strong>Use this tool for:</strong> Single DD214 deep analysis with AI extraction</p>
+                  <p><strong>Need to process many documents at once?</strong></p>
+                  {onOpenMusterCall && (
+                    <button
+                      onClick={onOpenMusterCall}
+                      className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors text-sm shadow-md flex items-center gap-2"
+                    >
+                      🎯 Open Muster Call (Batch Processing)
+                    </button>
+                  )}
+                  {!onOpenMusterCall && (
+                    <p className="text-xs italic">Look for "Muster Call" in the Missions menu for batch document processing</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Privacy Notice */}
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -1010,37 +1035,46 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults }
           )}
 
           {/* Input Method Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setInputMethod('paste')}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
-                inputMethod === 'paste'
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-              }`}
-            >
-              📋 {t('dd214Analyzer', 'pasteText')}
-            </button>
-            <button
-              onClick={() => setInputMethod('upload')}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
-                inputMethod === 'upload'
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-              }`}
-            >
-              📄 {t('dd214Analyzer', 'dropInPdf')} {extractedTexts.length > 0 && `(${extractedTexts.length})`}
-            </button>
-            <button
-              onClick={() => setInputMethod('manual')}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
-                inputMethod === 'manual'
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
-              }`}
-            >
-              ✏️ {t('dd214Analyzer', 'manualEntry')}
-            </button>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Choose Input Method:</h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Select how you want to provide your DD214 data</span>
+            </div>
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setInputMethod('paste')}
+                className={`px-6 py-3 font-medium text-sm transition-colors ${
+                  inputMethod === 'paste'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
+                title="Copy text from a digital DD214 and paste it here"
+              >
+                📋 {t('dd214Analyzer', 'pasteText')}
+              </button>
+              <button
+                onClick={() => setInputMethod('upload')}
+                className={`px-6 py-3 font-medium text-sm transition-colors ${
+                  inputMethod === 'upload'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
+                title="Upload PDF or image files - we'll extract the text for you"
+              >
+                📄 {t('dd214Analyzer', 'dropInPdf')} {extractedTexts.length > 0 && `(${extractedTexts.length})`}
+              </button>
+              <button
+                onClick={() => setInputMethod('manual')}
+                className={`px-6 py-3 font-medium text-sm transition-colors ${
+                  inputMethod === 'manual'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
+                title="Fill out a guided form if you don't have a digital copy"
+              >
+                ✏️ {t('dd214Analyzer', 'manualEntry')}
+              </button>
+            </div>
           </div>
 
           {/* Paste Input */}

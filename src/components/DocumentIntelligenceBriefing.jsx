@@ -708,9 +708,9 @@ export default function DocumentIntelligenceBriefing({
                 <button
                   onClick={onOpenDD214Analyzer}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
-                  title="Open this DD214 in the specialized DD214 Analyzer for advanced analysis"
+                  title="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
                 >
-                  🔍 View in DD214 Analyzer
+                  🔍 Analyze with AI
                 </button>
               )}
             </div>
