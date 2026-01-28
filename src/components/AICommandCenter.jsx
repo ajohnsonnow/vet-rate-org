@@ -25,32 +25,73 @@ import { gpuManager } from '../utils/WebGPUManager';
 
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
-// Model configurations - simplified list for infantry
+// VetRate Warrant Council - Custom Fine-Tuned Models
+// These are our specialized models trained on VA regulations, procedures, and claims data
 const MODELS = [
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FULL MODELS (7B) - Desktop/High-End Devices
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    id: 'smollm2-360m-instruct-q4f16_1-MLC',
-    name: '⚡ Quick & Light',
-    description: 'Fastest responses, works on most devices',
-    size: '230 MB',
-    vramRequired: '0.5 GB',
+    id: 'vetrate-auditor-7b-v2',
+    name: 'CWO3 Auditor',
+    description: 'Reviews claims for accuracy, compliance & completeness',
+    size: '4.4 GB',
+    vramRequired: '6 GB',
     recommended: true,
-    bestFor: 'Fast responses',
+    bestFor: 'Claim review & compliance',
+    tier: 'full',
   },
   {
-    id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
-    name: '🎯 Balanced',
-    description: 'Good quality + reasonable speed',
-    size: '1.0 GB',
+    id: 'vetrate-writer-7b-v2',
+    name: 'CWO4 Writer',
+    description: 'Generates personal statements & nexus letters',
+    size: '4.4 GB',
+    vramRequired: '6 GB',
+    bestFor: 'Document generation',
+    tier: 'full',
+  },
+  {
+    id: 'vetrate-rater-7b-v2',
+    name: 'CWO5 Rater',
+    description: 'Expert VA rating calculations & analysis',
+    size: '4.4 GB',
+    vramRequired: '6 GB',
+    bestFor: 'Rating analysis',
+    tier: 'full',
+  },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MOBILE MODELS (1.7B) - Phones/Tablets/Low VRAM Devices
+  // Knowledge-distilled from 7B models for same capability at smaller size
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'vetrate-auditor-1.7b-mobile-v1',
+    name: '📱 CWO3 Auditor (Mobile)',
+    description: 'Distilled from 7B - Same knowledge, mobile-friendly',
+    size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Most veterans',
+    bestFor: 'Mobile claim review',
+    tier: 'mobile',
+    mobileOptimized: true,
   },
   {
-    id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
-    name: '🧠 High Quality',
-    description: 'Best responses, needs more power',
-    size: '2.0 GB',
-    vramRequired: '4 GB',
-    bestFor: 'Complex analysis',
+    id: 'vetrate-writer-1.7b-mobile-v1',
+    name: '📱 CWO4 Writer (Mobile)',
+    description: 'Distilled from 7B - Personal statement generation',
+    size: '0.8 GB',
+    vramRequired: '2 GB',
+    bestFor: 'Mobile document drafts',
+    tier: 'mobile',
+    mobileOptimized: true,
+  },
+  {
+    id: 'vetrate-rater-1.7b-mobile-v1',
+    name: '📱 CWO5 Rater (Mobile)',
+    description: 'Distilled from 7B - Rating calculations on-the-go',
+    size: '0.8 GB',
+    vramRequired: '2 GB',
+    bestFor: 'Mobile rating analysis',
+    tier: 'mobile',
+    mobileOptimized: true,
   },
 ];
 

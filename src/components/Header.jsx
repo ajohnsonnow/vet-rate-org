@@ -67,8 +67,9 @@ function Header({
   onAISettingsClick,
   // Onboarding & Guides
   onWorkflowGuideClick,
-  // Feature Request
-  onFeatureRequestClick
+  // Feature Request & Roadmap
+  onFeatureRequestClick,
+  onCommunityRoadmapClick
 }) {
   const { isDark, toggleTheme } = useTheme();
   const { isHelperMode } = useHelperMode();
@@ -970,6 +971,19 @@ function Header({
           {/* Accessibility Menu */}
           <AccessibilityMenu />
 
+          {/* Community Roadmap Button */}
+          <button
+            onClick={onCommunityRoadmapClick}
+            className="inline-flex items-center justify-center gap-1 bg-indigo-500 hover:bg-indigo-600 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
+            title="View community roadmap and vote on features"
+            aria-label="Community Roadmap"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+            <span>Roadmap</span>
+          </button>
+
           {/* Feature Request Button */}
           <button
             onClick={onFeatureRequestClick}
@@ -1150,6 +1164,15 @@ function Header({
 
                 {/* Action Buttons */}
                 <div className="pt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => { setShowMobileMenu(false); onCommunityRoadmapClick?.(); }}
+                    className="w-full px-4 py-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-md flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    Roadmap
+                  </button>
                   <button
                     onClick={() => { setShowMobileMenu(false); onFeatureRequestClick?.(); }}
                     className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-semibold shadow-md flex items-center justify-center gap-2 min-h-[44px]"

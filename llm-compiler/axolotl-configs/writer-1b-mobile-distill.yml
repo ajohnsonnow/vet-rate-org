@@ -1,0 +1,85 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  📱 MOBILE EDITION: VetRate-Writer 1B (Knowledge Distillation)               ║
+# ║══════════════════════════════════════════════════════════════════════════════║
+# ║  Target: Mobile browsers & low-VRAM devices                                  ║
+# ║  Base Model: HuggingFaceTB/SmolLM2-1.7B-Instruct                            ║
+# ║  Teacher: VetRate-Writer-7B-v2 (our fine-tuned 7B model)                    ║
+# ║  Size: ~800 MB quantized (vs 4.4 GB for 7B)                                 ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+base_model: HuggingFaceTB/SmolLM2-1.7B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+load_in_8bit: false
+load_in_4bit: true
+adapter: qlora
+
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+
+datasets:
+  - path: ../training-data-v2/train_writer.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+  - path: ../training-data-v2/distill_writer_7b_complete.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+val_set_size: 0.05
+
+flash_attention: true
+sample_packing: true
+eval_sample_packing: false
+pad_to_sequence_len: true
+bf16: true
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+sequence_len: 2048
+max_packed_sequence_len: 2048
+
+micro_batch_size: 8
+gradient_accumulation_steps: 4
+eval_batch_size: 4
+
+num_epochs: 5
+learning_rate: 2e-4
+lr_scheduler: cosine
+warmup_ratio: 0.1
+optimizer: adamw_torch_fused
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+lora_target_linear: true
+
+output_dir: ../models/mobile/vetrate-writer-1.7b-mobile-v1
+hub_model_id: VetRate/vetrate-writer-1.7b-mobile-v1
+push_to_hub: true
+hub_strategy: checkpoint
+
+logging_steps: 10
+save_strategy: steps
+save_steps: 100
+eval_steps: 50
+merge_lora: true
