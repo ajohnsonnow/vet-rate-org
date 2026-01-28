@@ -258,8 +258,14 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
       // Initialize with selected model
       await initializeSwarm({
         modelId: selectedModel.id,
-        onProgress: (progress, text) => {
-          setLoadProgress({ progress: Math.round(progress * 100), text });
+        onProgress: (report) => {
+          // diamondSwarm passes { stage, message, progress } object
+          const progressValue = typeof report === 'object' ? (report.progress || 0) : (report || 0);
+          const textValue = typeof report === 'object' ? (report.message || 'Loading...') : 'Loading...';
+          setLoadProgress({ 
+            progress: Math.round(progressValue), 
+            text: textValue 
+          });
         },
       });
       
