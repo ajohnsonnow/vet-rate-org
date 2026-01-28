@@ -2524,6 +2524,10 @@ function App() {
         <MusterCall
           isOpen={showMusterCall}
           onClose={() => setShowMusterCall(false)}
+          onOpenDD214Analyzer={() => {
+            setShowMusterCall(false);
+            setShowDD214Analyzer(true);
+          }}
           onProcessComplete={(extractedData) => {
             setBriefingData(extractedData);
             setShowIntelligenceBriefing(true);
