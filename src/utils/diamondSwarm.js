@@ -281,9 +281,40 @@ const clearCorruptedCache = async () => {
 /**
  * Initialize Warrant Council with WebLLM model loading
  * Uses a real WebLLM model with Warrant Council specialized prompts
+ * 
+ * @param {string|object} agentIdOrConfig - Either agent ID string ('auditor', 'writer', 'rater') 
+ *                                          OR config object {modelId, onProgress, onComplete, onError}
+ * @param {object} callbacks - Callbacks for progress/complete/error (ignored if first param is object)
  */
-export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
-  const { onProgress, onComplete, onError } = callbacks;
+export const initializeSwarm = async (agentIdOrConfig = 'auditor', callbacks = {}) => {
+  // Handle both calling conventions:
+  // 1. initializeSwarm('auditor', { onProgress, onComplete, onError })
+  // 2. initializeSwarm({ modelId: 'vetrate-auditor-7b-v2', onProgress })
+  let agentId;
+  let onProgress, onComplete, onError;
+  
+  if (typeof agentIdOrConfig === 'object' && agentIdOrConfig !== null) {
+    // Object form - extract modelId and derive agentId
+    const { modelId, onProgress: _onProgress, onComplete: _onComplete, onError: _onError } = agentIdOrConfig;
+    onProgress = _onProgress;
+    onComplete = _onComplete;
+    onError = _onError;
+    
+    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer')
+    if (modelId) {
+      if (modelId.includes('writer')) agentId = 'writer';
+      else if (modelId.includes('rater')) agentId = 'rater';
+      else agentId = 'auditor'; // default
+    } else {
+      agentId = 'auditor';
+    }
+  } else {
+    // String form - use directly
+    agentId = String(agentIdOrConfig || 'auditor');
+    onProgress = callbacks.onProgress;
+    onComplete = callbacks.onComplete;
+    onError = callbacks.onError;
+  }
   
   try {
     swarmInitializing = true;
@@ -298,7 +329,7 @@ export const initializeSwarm = async (agentId = 'auditor', callbacks = {}) => {
       throw new Error('No compatible GPU found for Warrant Council.');
     }
     
-    const agentInfo = SWARM_AGENTS[agentId.toUpperCase()];
+    const agentInfo = SWARM_AGENTS[agentId?.toUpperCase?.()] || SWARM_AGENTS['AUDITOR'];
     onProgress?.({ stage: 'init', message: `Initializing ${agentInfo?.name || 'Diamond Agent'}...`, progress: 0 });
     
     console.log(`🎖️ Initializing Warrant Council agent: ${agentId}`);
