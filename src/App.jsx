@@ -96,8 +96,8 @@ import VKBTimeline from './components/VKBTimeline';
 // ExamPrepRoom functionality merged into CAPSimulator - see "Exam Prep" button
 import RecordSearch from './components/RecordSearch';
 import MultiCloudManager from './components/MultiCloudManager';
-import AISettingsModal from './components/AISettingsModal';
-import LocalAIPanel, { LocalAIProvider } from './components/LocalAIPanel';
+import AICommandCenter from './components/AICommandCenter';
+import { LocalAIProvider } from './components/LocalAIPanel';
 import VisionSimulatorPanel from './components/VisionSimulatorPanel';
 import DD214Analyzer from './components/DD214Analyzer';
 import BootCampTour from './components/BootCampTour';
@@ -218,8 +218,7 @@ function App() {
   // FORCE MULTIPLIER FEATURES
   const [showRecordSearch, setShowRecordSearch] = useState(false);
   const [showCloudSyncManager, setShowCloudSyncManager] = useState(false);
-  const [showAISettings, setShowAISettings] = useState(false);
-  const [showLocalAIPanel, setShowLocalAIPanel] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false); // Now opens AICommandCenter (unified Faraday Cage)
   const [showVisionSimulator, setShowVisionSimulator] = useState(false);
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
   
@@ -317,12 +316,12 @@ function App() {
     return () => window.removeEventListener('tosAccepted', handleTosAccepted);
   }, []);
 
-  // Listen for Vision Simulator open event (triggered from LocalAIPanel when vision model fails)
+  // Listen for Vision Simulator open event (triggered from AICommandCenter when vision model fails)
   useEffect(() => {
     const handleOpenVisionSimulator = () => {
       setShowVisionSimulator(true);
-      // Close the local AI panel if open
-      setShowLocalAIPanel(false);
+      // Close the AI Command Center if open
+      setShowAISettings(false);
     };
     
     window.addEventListener('openVisionSimulator', handleOpenVisionSimulator);
@@ -833,9 +832,8 @@ function App() {
     showBackupManager,
     showCloudSyncManager,
     
-    // AI & Settings
+    // AI & Settings (unified in AICommandCenter)
     showAISettings,
-    showLocalAIPanel,
     
     // Modals
     showPrivacyPolicy,
@@ -889,8 +887,7 @@ function App() {
       if (showVAResources) return 'VA Resources Hub';
       if (showBackupManager) return 'Backup Manager';
       if (showCloudSyncManager) return 'Cloud Sync Manager';
-      if (showAISettings) return 'AI Settings';
-      if (showLocalAIPanel) return 'Local AI Panel';
+      if (showAISettings) return 'AI Command Center';
       if (showPrivacyPolicy) return 'Privacy Policy Modal';
       if (showAboutUs) return 'About Us Modal';
       if (showContactUs) return 'Contact Us Modal';
@@ -920,8 +917,8 @@ function App() {
     showVSOFinder, showVAAITransparency,
     // Data Management
     showBackupManager, showCloudSyncManager,
-    // AI & Settings
-    showAISettings, showLocalAIPanel,
+    // AI & Settings (unified in AICommandCenter)
+    showAISettings,
     // Modals
     showPrivacyPolicy, showAboutUs, showContactUs, showTermsOfService
   ]);
@@ -3084,27 +3081,12 @@ function App() {
         />
       )}
       
-      {/* AI Settings Modal - Global AI configuration */}
+      {/* AI Command Center - Unified Faraday Cage Protocol + AI Settings */}
       {showAISettings && (
-        <AISettingsModal
+        <AICommandCenter
           onClose={() => setShowAISettings(false)}
-          onOpenLocalAI={() => {
-            setShowAISettings(false);
-            setShowLocalAIPanel(true);
-          }}
           onReportBug={() => {
             setShowAISettings(false);
-            setShowBugSquasher(true);
-          }}
-        />
-      )}
-      
-      {/* Local AI Panel - WebGPU-based local AI setup */}
-      {showLocalAIPanel && (
-        <LocalAIPanel
-          onClose={() => setShowLocalAIPanel(false)}
-          onReportBug={() => {
-            setShowLocalAIPanel(false);
             setShowBugSquasher(true);
           }}
         />
