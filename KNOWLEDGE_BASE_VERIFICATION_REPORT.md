@@ -52,7 +52,9 @@ The Vet-Rate knowledge base has been upgraded to **DIAMOND** status with 2,161 v
 ## 🏆 Diamond Features
 
 ### OGC Precedent Opinions (49 entries)
+
 Binding legal interpretations from VA Office of General Counsel covering:
+
 - Secondary service connection (VAOPGCPREC 3-97)
 - Clear and unmistakable error (VAOPGCPREC 12-99)
 - TDIU eligibility (VAOPGCPREC 5-2005)
@@ -61,14 +63,18 @@ Binding legal interpretations from VA Office of General Counsel covering:
 - Special monthly compensation
 
 ### Secondary Conditions Matrix (234 entries)
+
 Comprehensive nexus relationship database:
+
 - 25 primary conditions (PTSD, diabetes, back pain, etc.)
 - 208 secondary condition relationships
 - Medical rationale for each connection
 - Nexus letter guidance based on 38 CFR 3.310
 
 ### Presumptive Conditions (134 entries)
+
 Complete presumptive database covering:
+
 - PACT Act burn pit conditions
 - Agent Orange exposure
 - Gulf War undiagnosed illness
@@ -84,6 +90,7 @@ Complete presumptive database covering:
 **Status:** Awaiting API token from data.va.gov
 
 Once API access is granted, we will integrate:
+
 - Full BVA decision database
 - Searchable precedential decisions
 - Citation tracking and cross-references
@@ -267,6 +274,7 @@ Rating criteria for Sleep Apnea Syndrome (DC 6847) under 38 CFR § 4.97:
 ### BVA Precedent Decisions (45 Topics)
 
 Topics covered include:
+
 - PTSD (stressor verification, MST, rating criteria)
 - Sleep Apnea (direct, secondary, chain conditions)
 - Knee/Back/Spine conditions
@@ -283,6 +291,7 @@ Topics covered include:
 ### M21-1 Manual Procedures (25 Topics)
 
 Topics covered include:
+
 - Filing claims and evidence requirements
 - Direct, secondary, and presumptive service connection
 - PTSD stressor development
@@ -310,6 +319,7 @@ Topics covered include:
 ### Federal Register (48 Live Entries)
 
 Topics include:
+
 - Reproductive Health Services
 - Telehealth Expansion
 - Survivors Benefits
@@ -337,6 +347,7 @@ Topics include:
 ### Encoding Fix Applied
 
 The following character encoding issues were corrected:
+
 - `Â§` → `§` (section symbol)
 - `â€¢` → `•` (bullet point)
 - `â€"` → `—` (em dash)

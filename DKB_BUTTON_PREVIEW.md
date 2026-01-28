@@ -2,12 +2,14 @@
 
 ## Header Button (Compact View)
 
-### Before:
+### Before
+
 ```
 [✅] KB: 2025-12-04 ⚖️
 ```
 
-### After:
+### After
+
 ```
 [✅] DKB: 2,161 entries 💎
 ```
@@ -16,7 +18,8 @@
 
 ## Dropdown Details Panel
 
-### Before:
+### Before
+
 ```
 📚 Knowledge Base Status
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -30,7 +33,8 @@ Days Since Update: 49
 As of Date: 2026-01-15
 ```
 
-### After:
+### After
+
 ```
 💎 Diamond Knowledge Base (DKB)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -68,26 +72,31 @@ BVA decisions, and community expertise.
 ## Key Changes
 
 ### 1. **Dynamic Entry Count**
+
 - Button shows live count from JSON file
 - Updates automatically when DKB is updated
 - No manual intervention needed
 
 ### 2. **Diamond Icon 💎**
+
 - Replaces law scales ⚖️
 - Represents Diamond Standard
 - More distinctive and recognizable
 
 ### 3. **Source Transparency**
+
 - Complete breakdown of all 11 sources
 - Shows exact entry count per source
 - Highlights official vs community sources
 
 ### 4. **Professional Branding**
+
 - "Diamond Knowledge Base (DKB)" title
 - "Diamond Standard" description
 - Emphasizes quality and validation
 
 ### 5. **Real-Time Stats**
+
 - Pulls from `/data/vet_rate_knowledge.json`
 - No hardcoded values
 - Always accurate and current

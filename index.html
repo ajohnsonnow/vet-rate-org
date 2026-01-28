@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <!-- THE SHIELD - Content Security Policy -->
     <!-- Strict CSP to prevent XSS, code injection, and prompt injection attacks -->
@@ -29,6 +29,8 @@
       name="description"
       content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans."
     />
+    <!-- Progressive enhancement: Android/Chrome/Safari/Edge only, gracefully ignored by Firefox -->
+    <!-- htmlhint meta[name=theme-color]:false -->
     <meta name="theme-color" content="#003f87" />
     
     <!-- Favicon -->
@@ -50,6 +52,6 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <script data-goatcounter="https://vet-rate-org.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+        async src="https://gc.zgo.at/count.js"></script>
   </body>
 </html>

@@ -15,6 +15,7 @@ npm install @mlc-ai/web-llm
 ### Step 2: TypeScript Configuration
 
 Add to `tsconfig.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -27,6 +28,7 @@ Add to `tsconfig.json`:
 ### Step 3: Vite Configuration (if using Vite)
 
 Add to `vite.config.js`:
+
 ```javascript
 export default {
   server: {
@@ -42,6 +44,7 @@ export default {
 ```
 
 **Why COOP/COEP headers?**
+
 - Required for `SharedArrayBuffer` support
 - Enables multi-threading in WebAssembly
 - Improves inference performance 2-3x
@@ -160,6 +163,7 @@ Returns an object with the following properties:
 #### Action Functions
 
 **`initEngine(swarmMember?: SwarmMember): Promise<void>`**
+
 - Initialize WebLLM engine with specified swarm
 - Default: 'auditor'
 - Downloads model (~2GB) on first load
@@ -174,6 +178,7 @@ await initEngine('rater');       // Start with rater
 ```
 
 **`switchSwarm(swarmMember: SwarmMember): Promise<void>`**
+
 - Hot-swap to different swarm member
 - Unloads current model and loads new one
 - Preserves conversation history (optional)
@@ -185,6 +190,7 @@ await switchSwarm('writer');
 ```
 
 **`sendMessage(message: string, config?: GenerationConfig): Promise<string>`**
+
 - Send message and get complete response
 - Blocking (waits for full response)
 - Returns complete AI response text
@@ -205,6 +211,7 @@ console.log(response);  // "The bilateral factor calculation..."
 ```
 
 **`sendMessageStream(message: string, onChunk: (chunk: string) => void, config?: GenerationConfig): Promise<void>`**
+
 - Send message with streaming response
 - Non-blocking (yields tokens as generated)
 - Better UX for long responses
@@ -225,6 +232,7 @@ console.log('Complete:', fullResponse);
 ```
 
 **`clearHistory(): void`**
+
 - Clear conversation history
 - Keeps system prompt
 - Useful for "new conversation"
@@ -234,6 +242,7 @@ clearHistory();
 ```
 
 **`resetEngine(): Promise<void>`**
+
 - Unload and reinitialize engine
 - Useful for error recovery
 - Clears all state
@@ -245,6 +254,7 @@ await resetEngine();
 #### Utility Functions
 
 **`getSwarmConfig(swarmMember: SwarmMember): SwarmConfig`**
+
 - Get configuration for any swarm
 - Returns model URL, system prompt, expertise, etc.
 
@@ -256,6 +266,7 @@ console.log(config.systemPrompt);    // "You are VetRate Auditor..."
 ```
 
 **`isWebGPUSupported(): boolean`**
+
 - Check if browser supports WebGPU
 - Call before initialization
 
@@ -382,16 +393,19 @@ const SWARM_CONFIGS: Record<SwarmMember, SwarmConfig> = {
 **Deployment Options:**
 
 1. **Local (development):**
+
    ```
    public/models/  → http://localhost:5173/models/
    ```
 
 2. **CDN (production):**
+
    ```typescript
    modelUrl: 'https://cdn.vet-rate.org/models/vetrate-auditor-web/'
    ```
 
 3. **Same-origin (Render):**
+
    ```
    /public/models/  → https://vet-rate.org/models/
    ```
@@ -534,11 +548,13 @@ useEffect(() => {
 ### Caching Strategy
 
 Models are automatically cached by the browser:
+
 - First load: 3-10 seconds (2GB download)
 - Subsequent loads: 1-3 seconds (cache hit)
 - Cache persists across page reloads
 
 **Clear cache:**
+
 ```javascript
 // Chrome DevTools → Application → Storage → Clear Site Data
 // Or programmatically:
@@ -627,6 +643,7 @@ Edge: `edge://gpu`
 DevTools → Network → Filter: `.bin` or `.wasm`
 
 Should see:
+
 - `params_shard_0.bin` (~500 MB)
 - `params_shard_1.bin` (~500 MB)
 - `VetRate-Auditor-3B-webgpu.wasm` (~50 MB)
@@ -663,6 +680,7 @@ cp -r llm-compiler/dist/vetrate-writer-web public/models/
 ### Step 3: Update Configuration
 
 Verify paths in `useVetRateSwarm.ts`:
+
 ```typescript
 modelUrl: '/models/vetrate-auditor-web/'  // Must match public folder
 ```
@@ -683,6 +701,7 @@ npm run preview  # Vite preview server
 ### Step 6: Deploy
 
 **Render:**
+
 ```yaml
 # render.yaml
 services:
@@ -701,6 +720,7 @@ services:
 ```
 
 **Vercel:**
+
 ```json
 // vercel.json
 {
@@ -723,23 +743,27 @@ services:
 ### Typical Timings
 
 **First Load (no cache):**
+
 - Model download: 5-15 seconds (2GB over network)
 - WebGPU compilation: 2-5 seconds
 - Initialization: 1-2 seconds
 - **Total: 8-22 seconds**
 
 **Subsequent Loads (cached):**
+
 - Cache retrieval: 0.5-1 seconds
 - WebGPU compilation: 0.5-1 seconds
 - Initialization: 0.5-1 seconds
 - **Total: 1.5-3 seconds**
 
 **Inference Speed:**
+
 - Prefill: 50-100 tokens/sec
 - Decode: 20-40 tokens/sec
 - Latency: ~200ms first token
 
 **Swarm Switching:**
+
 - Unload current: 0.5 seconds
 - Load new (cached): 2-5 seconds
 - **Total: 3-6 seconds**
@@ -747,18 +771,21 @@ services:
 ### Browser Requirements
 
 **Minimum:**
+
 - Chrome 113+ or Edge 113+
 - 8 GB RAM
 - Integrated GPU (Intel UHD, AMD Vega)
 - 4 GB disk space (for cache)
 
 **Recommended:**
+
 - Chrome 120+ or Edge 120+
 - 16 GB RAM
 - Dedicated GPU (NVIDIA, AMD, Intel Arc)
 - 10 GB disk space
 
 **Performance by GPU:**
+
 | GPU | Prefill | Decode | Load Time |
 |-----|---------|--------|-----------|
 | Integrated (UHD 630) | 20 tok/s | 8 tok/s | 15s |

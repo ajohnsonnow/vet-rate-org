@@ -10,6 +10,7 @@
 ## 📊 EXECUTION SUMMARY
 
 ### Data Pipeline Results
+
 ```
 Total Sources Loaded: 6
 ├─ Diamond KB: 1,560 examples
@@ -25,6 +26,7 @@ Rejected: 193 examples
 ```
 
 ### Validation & Quality Control
+
 - ✅ Removed placeholder text (`[PLACEHOLDER]`, `TODO`, `FIXME`)
 - ✅ Enforced minimum lengths (instruction: 10 chars, output: 50 chars)
 - ✅ Enforced maximum output length (4,096 tokens for context window)
@@ -33,6 +35,7 @@ Rejected: 193 examples
 - ✅ Sanitized line endings (Unix format)
 
 ### Rejection Breakdown
+
 ```
 Placeholder patterns:    166 examples
 Missing fields:          26 examples
@@ -44,12 +47,15 @@ Output too long:         1 example
 ## 🐝 SWARM ASSIGNMENTS
 
 ### 1️⃣ VetRate-Auditor (Regulatory Expert)
+
 **Purpose:** Strict citation of 38 CFR, BVA, OGC, Federal Register  
 **Training Data:**
+
 - Train: `train_auditor.jsonl` (1,338 examples, 1.15 MB)
 - Validation: `val_auditor.jsonl` (71 examples, 0.07 MB)
 
 **System Prompt:**
+
 ```
 You are VetRate-Auditor, a VA regulations expert. You strictly cite 38 CFR 
 regulations, BVA precedents, OGC opinions, and Federal Register rules. You 
@@ -59,6 +65,7 @@ you say so explicitly.
 ```
 
 **Data Sources:**
+
 - 38 CFR diagnostic codes & rating schedules
 - BVA precedent decisions
 - OGC General Counsel opinions
@@ -68,18 +75,21 @@ you say so explicitly.
 
 **Example Output:**
 > "Rating criteria for Soft tissue injury of the mouth (DC 7200) under 38 CFR § 4.114:
-> 
+>
 > • 10%: Loss of 5 to 10 teeth or removal of one-half of mandible or maxilla"
 
 ---
 
 ### 2️⃣ VetRate-Writer (Advocacy Specialist)
+
 **Purpose:** Persuasive, empathetic veteran communication  
 **Training Data:**
+
 - Train: `train_writer.jsonl` (588 examples, 0.99 MB)
 - Validation: `val_writer.jsonl` (31 examples, 0.05 MB)
 
 **System Prompt:**
+
 ```
 You are VetRate-Writer, a veteran advocacy communication specialist. You write 
 in a persuasive, empathetic, veteran-centric tone. You help veterans articulate 
@@ -89,6 +99,7 @@ for veteran rights.
 ```
 
 **Data Sources:**
+
 - Community-provided guidance (Veterans Benefits KB)
 - Secondary nexus theories
 - Claim statement templates
@@ -96,17 +107,19 @@ for veteran rights.
 
 **Example Output:**
 > "⚠️ COMMUNITY GUIDANCE (Not Official VA Regulations):
-> 
-> When you got everything ready to go in terms of evidence for your claim. This 
+>
+> When you got everything ready to go in terms of evidence for your claim. This
 > does NOT include needing to go to a C&P exam. [...]"
 
 ---
 
 ### 3️⃣ VetRate-Rater (Calculator Specialist)
+
 **Status:** ⚠️ NO TRAINING DATA YET  
 **Action Required:** Generate synthetic calculation examples
 
 **Recommended Data:**
+
 - Combined rating calculations (bilateral factor, VA math formula)
 - Diagnostic code assessment examples
 - Rating schedule lookups
@@ -126,6 +139,7 @@ val_writer.jsonl       0.05 MB    31 examples
 ```
 
 **Format:** Alpaca-style JSONL (Axolotl-compatible)
+
 ```json
 {
   "system": "Role-specific system prompt...",
@@ -141,6 +155,7 @@ val_writer.jsonl       0.05 MB    31 examples
 ## 🎯 DATA QUALITY METRICS
 
 ### Cleansing Rules Applied
+
 1. **Unicode Normalization:** All text normalized to NFC form
 2. **Unsafe Character Removal:** Null bytes, control chars, zero-width spaces
 3. **Whitespace Normalization:** Max 2 consecutive newlines, single spaces
@@ -149,6 +164,7 @@ val_writer.jsonl       0.05 MB    31 examples
 6. **Placeholder Detection:** Regex patterns for `[...]`, `{...}`, `TODO`, etc.
 
 ### Source Distribution (Post-Validation)
+
 ```
 Auditor Swarm:
 ├─ 38 CFR regulations:    ~85%
@@ -165,6 +181,7 @@ Writer Swarm:
 ## ⏭️ NEXT STEPS
 
 ### Phase 3: Axolotl Configuration
+
 1. Create `auditor_config.yaml`
 2. Create `writer_config.yaml`
 3. Configure LoRA hyperparameters:
@@ -176,12 +193,14 @@ Writer Swarm:
 5. Configure batch size (optimize for RTX 4080 Super)
 
 ### Phase 4: LoRA Training
+
 - Base model: `meta-llama/Llama-3.2-3B-Instruct`
 - Training time estimate: 2-4 hours per adapter (RTX 4080 Super)
 - Expected adapter size: 10-100 MB each
 - Checkpointing: Save every 100 steps
 
 ### Phase 5: MLC Compilation
+
 - Convert trained adapters to WebGPU format
 - Quantize to q4f16 or q4f32
 - Package for WebLLM deployment
@@ -192,17 +211,20 @@ Writer Swarm:
 ## 🔒 HARDWARE CONSTRAINTS SATISFIED
 
 ✅ **16GB VRAM (RTX 4080 Super)**
+
 - Base model: ~6GB at fp16
 - LoRA adapters: <500MB during training
 - Flash Attention 2: Enabled for memory efficiency
 - Gradient checkpointing: Available if needed
 
 ✅ **Local Training**
+
 - All data remains on local machine
 - No cloud dependencies
 - HIPAA/PII privacy maintained
 
 ✅ **Client-Side Deployment**
+
 - Base model + adapter: <500MB total per swarm member
 - WebGPU-optimized
 - Hot-swappable adapters in browser
@@ -220,18 +242,21 @@ Writer Swarm:
 ## 🎓 ARCHITECTURAL NOTES
 
 ### Why LoRA Swarm?
+
 1. **Specialization:** Each adapter focuses on specific domain (legal, writing, math)
 2. **Efficiency:** Share base model weights (~6GB), swap adapters (~10-50MB)
 3. **Privacy:** Everything runs client-side, zero external API calls
 4. **Flexibility:** Add new swarm members without retraining base
 
 ### Why Llama-3.2-3B?
+
 1. **Size:** Fits in WebGPU memory budget
 2. **Quality:** Strong instruction-following
 3. **Speed:** Fast inference on consumer hardware
 4. **License:** Commercial-friendly
 
 ### Why Axolotl?
+
 1. **LoRA First-Class:** Purpose-built for adapter training
 2. **Flash Attention:** Automatic optimization
 3. **Robustness:** Production-grade error handling

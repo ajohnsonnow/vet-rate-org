@@ -4,9 +4,10 @@ Complete instructions for deploying Vet-Rate.org to various hosting platforms.
 
 ## Pre-Deployment Checklist (v1.3.2)
 
-### ⚠️ PRE-DEPLOYMENT CHECK - DO NOT PUSH TO GITHUB UNTIL COMPLETE!
+### ⚠️ PRE-DEPLOYMENT CHECK - DO NOT PUSH TO GITHUB UNTIL COMPLETE
 
 **Run automated validation:**
+
 ```bash
 npm run pre-deploy
 ```
@@ -16,6 +17,7 @@ npm run pre-deploy
 ---
 
 #### 🖥️ VISUAL REVIEW
+
 1. `npm run dev` - Visual review in browser
 2. Mobile responsive check (Chrome DevTools - iPhone, iPad, Android)
 3. Dark mode toggle works correctly
@@ -24,106 +26,117 @@ npm run pre-deploy
 ---
 
 #### 🔍 CORE FEATURES - Research & Discovery
-5. **Search** - conditions, diagnostic codes, synonyms all return results
-6. **Secondary Scout** - finds medically-connected conditions with probability ratings
-7. **C&P Exam Simulator** - exam flow works, DBQ questions display
-8. **Pathfinder** - AI roadmap generates strategic recommendations
-9. **MOS Hazard Matcher** - links occupations to exposures
-10. **PACT Act Navigator** - identifies presumptive conditions
-11. **Web of Conditions** - force-directed graph visualization renders
+
+1. **Search** - conditions, diagnostic codes, synonyms all return results
+2. **Secondary Scout** - finds medically-connected conditions with probability ratings
+3. **C&P Exam Simulator** - exam flow works, DBQ questions display
+4. **Pathfinder** - AI roadmap generates strategic recommendations
+5. **MOS Hazard Matcher** - links occupations to exposures
+6. **PACT Act Navigator** - identifies presumptive conditions
+7. **Web of Conditions** - force-directed graph visualization renders
 
 ---
 
 #### 📊 CALCULATORS & ANALYTICS
-12. **Tactical Calculator** - VA math with bilateral factors, 2026 pay rates
-13. **Million Dollar Dashboard** - lifetime benefit projections calculate
-14. **What-If Sandbox** - drag-and-drop scenario planning works
-15. **Retro Pay Hunter** - backpay calculations from CUE claims
-16. **Time Machine** - Intent to File countdown timer functions
+
+1. **Tactical Calculator** - VA math with bilateral factors, 2026 pay rates
+2. **Million Dollar Dashboard** - lifetime benefit projections calculate
+3. **What-If Sandbox** - drag-and-drop scenario planning works
+4. **Retro Pay Hunter** - backpay calculations from CUE claims
+5. **Time Machine** - Intent to File countdown timer functions
 
 ---
 
 #### 📋 EVIDENCE BUILDING TOOLS
-17. **C-File AI Analyzer** - PDF upload parses and finds evidence
-18. **Blue Button X-Ray** - VA health records parse correctly
-19. **PDF Evidence Finder** - keyword search in STRs works ("The Needle")
-20. **Nexus Builder** - generates nexus statements (check AI mode)
-21. **Witness Bench** - buddy statement generator with interview flow
-22. **Forms Helper** - all 16+ VA forms load with Auto-Scribe PDF filling
-23. **Symptom Logger** - daily symptom tracking with body map
-24. **Pain Painter / Somatic Target** - body map clicks translate to medical terms
-25. **Evidence Timeline** - visual tracker shows gaps correctly
-26. **FOIA Keysmith** - generates FOIA request templates
+
+1. **C-File AI Analyzer** - PDF upload parses and finds evidence
+2. **Blue Button X-Ray** - VA health records parse correctly
+3. **PDF Evidence Finder** - keyword search in STRs works ("The Needle")
+4. **Nexus Builder** - generates nexus statements (check AI mode)
+5. **Witness Bench** - buddy statement generator with interview flow
+6. **Forms Helper** - all 16+ VA forms load with Auto-Scribe PDF filling
+7. **Symptom Logger** - daily symptom tracking with body map
+8. **Pain Painter / Somatic Target** - body map clicks translate to medical terms
+9. **Evidence Timeline** - visual tracker shows gaps correctly
+10. **FOIA Keysmith** - generates FOIA request templates
 
 ---
 
 #### ✅ QUALITY CONTROL TOOLS
-27. **Red Team** - AI devil's advocate finds weak language
-28. **The War Game (Claim Stress Test)** - adversarial review stress-tests claims
-29. **Decision Decoder** - translates VA letters to plain English
-30. **Denial Decoder** - OCR scan + AI analysis of denial letters
-31. **Consistency Engine** - detects contradictions in statements
-32. **Evidence Gap Finder** - shows missing evidence for target rating
-33. **Shark Radar** - predatory service detection working
-34. **Risk Assessment** - "Poke the Bear" calculator shows protections
+
+1. **Red Team** - AI devil's advocate finds weak language
+2. **The War Game (Claim Stress Test)** - adversarial review stress-tests claims
+3. **Decision Decoder** - translates VA letters to plain English
+4. **Denial Decoder** - OCR scan + AI analysis of denial letters
+5. **Consistency Engine** - detects contradictions in statements
+6. **Evidence Gap Finder** - shows missing evidence for target rating
+7. **Shark Radar** - predatory service detection working
+8. **Risk Assessment** - "Poke the Bear" calculator shows protections
 
 ---
 
 #### 💰 MAXIMIZE & STRATEGY
-35. **TDIU Builder** - unemployability calculator with forms guidance
-36. **State Benefit Hunter** - all 50 states + DC benefits load
-37. **The Tribunal** - voice-interactive mock BVA hearing works
-38. **Legislative Watchdog** - Federal Register tracking functional
+
+1. **TDIU Builder** - unemployability calculator with forms guidance
+2. **State Benefit Hunter** - all 50 states + DC benefits load
+3. **The Tribunal** - voice-interactive mock BVA hearing works
+4. **Legislative Watchdog** - Federal Register tracking functional
 
 ---
 
 #### 🤖 AI FEATURES (Faraday Cage Protocol)
-39. **Local AI** - WebLLM model loads without `ModelNotLoadedError`
-40. **Cloud AI (Gemini)** - generates statements with proper API key
-41. **Device-aware UI** - legacy devices see Cloud AI recommendation
-42. **AI Mode Selector** - toggles between Local/Cloud/Hybrid
-43. **AI Settings Modal** - configuration saves properly
-44. **Error handling** - graceful failures with user-friendly messages
+
+1. **Local AI** - WebLLM model loads without `ModelNotLoadedError`
+2. **Cloud AI (Gemini)** - generates statements with proper API key
+3. **Device-aware UI** - legacy devices see Cloud AI recommendation
+4. **AI Mode Selector** - toggles between Local/Cloud/Hybrid
+5. **AI Settings Modal** - configuration saves properly
+6. **Error handling** - graceful failures with user-friendly messages
 
 ---
 
 #### 🤝 SUPPORT & DATA MANAGEMENT
-45. **VSO Finder** - locates accredited Veterans Service Officers
-46. **The Bunker** - export/import all data works (JSON backup)
-47. **Cloud Sync** - Google Drive backup connects and syncs
-48. **VA.gov Integration** - demo mode shows claims/service history
-49. **My Packet** - saves and retrieves evidence items
-50. **VA Resources Hub** - all external links work
-51. **User Manual** - comprehensive docs accessible
+
+1. **VSO Finder** - locates accredited Veterans Service Officers
+2. **The Bunker** - export/import all data works (JSON backup)
+3. **Cloud Sync** - Google Drive backup connects and syncs
+4. **VA.gov Integration** - demo mode shows claims/service history
+5. **My Packet** - saves and retrieves evidence items
+6. **VA Resources Hub** - all external links work
+7. **User Manual** - comprehensive docs accessible
 
 ---
 
 #### 📱 CROSS-DEVICE TESTING
-52. Test on Android (if available) - especially Android 10/11
-53. iOS Safari works correctly (WebGPU fallback)
-54. WebGPU detection shows correct status per device
-55. PWA install prompt appears on mobile
+
+1. Test on Android (if available) - especially Android 10/11
+2. iOS Safari works correctly (WebGPU fallback)
+3. WebGPU detection shows correct status per device
+4. PWA install prompt appears on mobile
 
 ---
 
 #### 💰 INTEGRATIONS & MODALS
-56. Review **What's New** modal content matches deployed features
-57. Verify **BuyMeCoffee** messaging is on-brand
-58. **VA API connections** work (if enabled in .env.local)
-59. **Ribbon Rack** - military ribbons render correctly
-60. **DD214 Analyzer** - document parsing functional (PDF/Word/Text/RTF support)
-61. **PDF Import Confirmation** - DD214 analyzer shows review modal before saving to profile
+
+1. Review **What's New** modal content matches deployed features
+2. Verify **BuyMeCoffee** messaging is on-brand
+3. **VA API connections** work (if enabled in .env.local)
+4. **Ribbon Rack** - military ribbons render correctly
+5. **DD214 Analyzer** - document parsing functional (PDF/Word/Text/RTF support)
+6. **PDF Import Confirmation** - DD214 analyzer shows review modal before saving to profile
 
 ---
 
 #### 🐛 BUG & CRISIS SYSTEMS
-62. **Bug Report Button** - reports generate properly
-63. **Crisis Modal** - 988 hotline triggers on crisis keywords
-64. **Squashed Bugs counter** - displays in footer
+
+1. **Bug Report Button** - reports generate properly
+2. **Crisis Modal** - 988 hotline triggers on crisis keywords
+3. **Squashed Bugs counter** - displays in footer
 
 ---
 
 ### 🎨 COLOR SCHEMA COMPLIANCE
+
 Tool cards and modals must match their category color scheme:
 
 | Category | Color | Tools |
@@ -136,6 +149,7 @@ Tool cards and modals must match their category color scheme:
 | Support & Resources | **Sky** | VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, VA Resources, User Manual |
 
 **Check each tool:**
+
 - Card border/accent matches category color
 - Modal header gradient uses category color
 - Icons use category-appropriate color tones
@@ -144,6 +158,7 @@ Tool cards and modals must match their category color scheme:
 ---
 
 ### 📝 Text & Code Quality Rules
+
 - No em-dash (—) or en-dash (–), only hyphens (-)
 - All stats must use dynamic imports (`getTotalToolCount`, `PROJECT_STATS`)
 - Version numbers synced across all files (package.json, version.json)
@@ -153,17 +168,21 @@ Tool cards and modals must match their category color scheme:
 ---
 
 ### 🔧 Quick Re-check
+
 If issues found, fix and re-run:
+
 ```bash
 npm run pre-deploy:quick
 ```
 
 ### 🏗️ Final Clean Build
+
 ```bash
 npm run build
 ```
 
 ### 🖥️ Start Dev Server for Visual Review
+
 ```powershell
 taskkill /F /IM node.exe 2>$null; Remove-Item -Path "node_modules\.vite" -Recurse -Force -ErrorAction SilentlyContinue; npm run dev
 ```
@@ -195,6 +214,7 @@ npm run push-prep:quick
 ## 1. Vercel (Recommended - Easiest)
 
 ### Setup
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -207,6 +227,7 @@ vercel
 ```
 
 ### Configuration (vercel.json)
+
 ```json
 {
   "buildCommand": "npm run build",
@@ -218,6 +239,7 @@ vercel
 ```
 
 ### Features
+
 - ✅ Automatic HTTPS
 - ✅ Global CDN
 - ✅ Zero-config deployments
@@ -225,6 +247,7 @@ vercel
 - ✅ Free tier available
 
 ### Post-Deploy
+
 ```bash
 # Verify deployment
 vercel --prod
@@ -238,6 +261,7 @@ vercel logs
 ## 2. Netlify
 
 ### Setup via CLI
+
 ```bash
 # Install Netlify CLI
 npm i -g netlify-cli
@@ -250,6 +274,7 @@ netlify deploy --prod
 ```
 
 ### Setup via GitHub
+
 1. Push code to GitHub
 2. Connect repository in Netlify dashboard
 3. Set build command: `npm run build`
@@ -257,6 +282,7 @@ netlify deploy --prod
 5. Deploy
 
 ### netlify.toml Configuration
+
 ```toml
 [build]
   command = "npm run build"
@@ -276,6 +302,7 @@ netlify deploy --prod
 ```
 
 ### Features
+
 - ✅ Easy GitHub integration
 - ✅ Automatic deployments on push
 - ✅ Built-in HTTPS
@@ -286,6 +313,7 @@ netlify deploy --prod
 ## 3. GitHub Pages
 
 ### Setup
+
 ```bash
 # 1. Update vite.config.js for GitHub Pages
 # Set base: '/vet-disability-search/' (replace with your repo name)
@@ -304,6 +332,7 @@ npm run deploy
 ```
 
 ### vite.config.js Update
+
 ```javascript
 export default defineConfig({
   base: '/vet-disability-search/', // Your repo name
@@ -313,11 +342,13 @@ export default defineConfig({
 ```
 
 ### Features
+
 - ✅ Free hosting
 - ✅ GitHub integrated
 - ✅ No build server needed
 
 ### Limitations
+
 - ⚠️ Username-based pages only (org.github.io)
 - ⚠️ No serverless functions
 - ⚠️ Limited analytics
@@ -329,6 +360,7 @@ export default defineConfig({
 ### Docker Configuration
 
 Create `Dockerfile`:
+
 ```dockerfile
 # Build stage
 FROM node:18-alpine AS builder
@@ -365,6 +397,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 Create `nginx.conf`:
+
 ```nginx
 server {
     listen 80;
@@ -387,6 +420,7 @@ server {
 ```
 
 Create `.dockerignore`:
+
 ```
 node_modules
 npm-debug.log
@@ -399,6 +433,7 @@ README.md
 ```
 
 ### Build and Run
+
 ```bash
 # Build image
 docker build -t vet-disability-search:latest .
@@ -420,6 +455,7 @@ docker rm vet-search
 ```
 
 ### Docker Compose
+
 ```yaml
 version: '3.8'
 
@@ -441,6 +477,7 @@ networks:
 ```
 
 Run with Compose:
+
 ```bash
 docker-compose up -d
 docker-compose logs -f
@@ -452,6 +489,7 @@ docker-compose down
 ## 5. Self-Hosted (VPS)
 
 ### Prerequisites
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -468,6 +506,7 @@ sudo apt install -y certbot python3-certbot-nginx
 ```
 
 ### Setup Application
+
 ```bash
 # Clone repository
 cd /var/www
@@ -485,6 +524,7 @@ sudo chown -R www-data:www-data /var/www/vet-disability-search
 ```
 
 ### Nginx Configuration
+
 ```bash
 # Create nginx config
 sudo nano /etc/nginx/sites-available/vet-search
@@ -501,6 +541,7 @@ sudo systemctl restart nginx
 ```
 
 ### Nginx Config File
+
 ```nginx
 server {
     listen 80;
@@ -527,6 +568,7 @@ server {
 ```
 
 ### Setup HTTPS
+
 ```bash
 # Generate SSL certificate
 sudo certbot certbot --nginx -d yourdomain.com -d www.yourdomain.com
@@ -540,6 +582,7 @@ sudo certbot renew --dry-run
 ```
 
 ### Monitoring and Logs
+
 ```bash
 # View nginx logs
 sudo tail -f /var/log/nginx/access.log
@@ -557,6 +600,7 @@ sudo journalctl -u nginx -n 50
 ## 6. AWS S3 + CloudFront
 
 ### Setup S3 Bucket
+
 ```bash
 # Create bucket
 aws s3 mb s3://vet-disability-search
@@ -571,6 +615,7 @@ aws s3 sync dist/ s3://vet-disability-search --delete
 ```
 
 ### Upload Script
+
 ```bash
 #!/bin/bash
 # deploy.sh
@@ -598,6 +643,7 @@ aws cloudfront create-invalidation \
 ## Post-Deployment Verification
 
 ### Health Checks
+
 ```bash
 # 1. Test homepage loads
 curl -I https://yourdomain.com
@@ -620,6 +666,7 @@ curl -I https://yourdomain.com
 ```
 
 ### Security Verification
+
 ```bash
 # Test SSL/TLS
 ssl-test-verify https://yourdomain.com
@@ -634,6 +681,7 @@ curl -I https://yourdomain.com | grep "Content-Security-Policy"
 ### Monitoring Setup
 
 #### Sentry (Error Tracking)
+
 ```javascript
 import * as Sentry from "@sentry/react";
 
@@ -644,6 +692,7 @@ Sentry.init({
 ```
 
 #### Analytics (Privacy-Preserving)
+
 ```javascript
 // Example: Plausible Analytics
 <script defer data-domain="yourdomain.com" src="https://plausible.io/js/script.js"></script>
@@ -654,6 +703,7 @@ Sentry.init({
 ## Continuous Deployment (GitHub Actions)
 
 ### GitHub Actions Workflow
+
 ```yaml
 name: Deploy to Vercel
 
@@ -690,27 +740,32 @@ jobs:
 ## Troubleshooting
 
 ### "Cannot GET /"
+
 - Ensure `dist` folder exists: `npm run build`
 - Check web server is serving `dist` directory
 - Verify nginx/apache configuration for SPA routing
 
 ### PDFs not generating
+
 - Check browser console for errors
 - Verify jsPDF is installed: `npm list jspdf`
 - Check browser storage permissions
 
 ### Search not working
+
 - Open DevTools (F12) → Console
 - Check for JavaScript errors
 - Verify `disabilityData.json` is in `dist` folder
 
 ### Slow load times
+
 - Run `npm run build` and check bundle size
 - Enable gzip compression on server
 - Use CDN for static assets
 - Enable browser caching
 
 ### HTTPS not working
+
 - Verify SSL certificate is installed
 - Check certificate expiration: `openssl s_client -connect yourdomain.com:443`
 - Redirect HTTP to HTTPS in nginx
@@ -720,14 +775,17 @@ jobs:
 ## Rollback Procedures
 
 ### Vercel
+
 ```bash
 vercel rollback
 ```
 
 ### Netlify
+
 - Dashboard → Deploys → Click previous deployment
 
 ### Manual Rollback
+
 ```bash
 # Keep previous build backup
 cp -r dist dist.backup
@@ -742,6 +800,7 @@ npm run deploy
 ## Performance Optimization
 
 ### Build Size Optimization
+
 ```bash
 # Analyze bundle
 npm install -g webpack-bundle-analyzer
@@ -751,6 +810,7 @@ npm run build -- --analyze
 ```
 
 ### Caching Strategy
+
 ```nginx
 # Static assets - 1 year
 location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
@@ -769,6 +829,7 @@ location ~* \.html?$ {
 ## Support & Troubleshooting
 
 For deployment issues:
+
 1. Check logs: `docker logs` or `npm run preview`
 2. Review SECURITY.md for security headers
 3. Verify all environment variables are set

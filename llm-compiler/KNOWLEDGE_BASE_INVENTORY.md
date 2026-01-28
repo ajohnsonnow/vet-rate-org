@@ -51,11 +51,13 @@
 | 9000-9999 | Mental Disorders | ~50+ codes |
 
 ### Sample Entry Types
+
 - **"What is DC XXXX?"** - Diagnostic code explanations with aliases
 - **"Rating criteria for..."** - Complete rating schedules with percentages
 - **"Secondary conditions for..."** - Related secondary conditions per DC
 
 ### Key Conditions Covered
+
 - ✅ PTSD (DC 9411) - Full rating criteria + secondaries
 - ✅ Sleep Apnea (DC 6847) - Full rating criteria + secondaries
 - ✅ Lumbar/Cervical Spine (DC 5235-5243) - Full ranges
@@ -85,7 +87,9 @@
 | **Chronic Pain** | Various | 10+ | Mental Health, Sleep Disorders |
 
 ### Nexus Theory Components
+
 Each entry includes:
+
 - ✅ Primary condition + DC code
 - ✅ Secondary condition + DC code
 - ✅ Connection mechanism (Direct/Medication/Aggravation)
@@ -129,6 +133,7 @@ Each entry includes:
 | Other | 3 | Fibromyalgia, CFS |
 
 ### Decision Outcomes
+
 - **Granted**: 40 decisions (88.9%)
 - **Denied/Remanded**: 5 decisions (11.1%)
 
@@ -201,6 +206,7 @@ Each entry includes:
 ## 🟠 Federal Register (48 entries - LIVE)
 
 ### Recent VA Rules Scraped
+
 - ✅ Loan Guaranty procedures
 - ✅ STEM Scholarship rules
 - ✅ Reproductive Health Services
@@ -301,12 +307,14 @@ Each entry includes:
 ## 🔧 Technical Integration
 
 ### Files Generated
+
 ```
 public/data/vet_rate_knowledge.json (1,000 KB)
 llm-compiler/knowledge-base/diamond_knowledge_base.json (backup)
 ```
 
 ### Entry Format
+
 ```json
 {
   "instruction": "What is Diagnostic Code 9411?",
@@ -321,6 +329,7 @@ llm-compiler/knowledge-base/diamond_knowledge_base.json (backup)
 ```
 
 ### React Integration
+
 ```javascript
 import { useVetRateAI } from '../hooks/useVetRateAI';
 
@@ -339,6 +348,7 @@ const result = await ask("What is DC 9411?");
 | **v2.0 Diamond** | **1,560** | **1,000 KB** | **45** | **25** | **25** | **✅ 100%** |
 
 ### Improvements in Diamond v2.0
+
 - **+64** total training examples
 - **+146 KB** additional content
 - **+42** BVA precedent decisions (3 → 45)

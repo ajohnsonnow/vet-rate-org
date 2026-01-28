@@ -27,6 +27,7 @@ This document details the economic analysis of the Vet-Rate.org platform, compar
 To calculate the market value of this software, we applied the **Constructive Cost Model II (COCOMO II)** and 2025 industry standard salary data for US-based software engineers.
 
 ### A. Team Composition (Standard Commercial Team)
+
 Building a regulated, high-compliance web application typically requires a balanced team to ensure code quality, security, and UI/UX standards.
 
 | Role | Count | Avg. Salary (2025) | Loaded Cost (+30% Overhead) |
@@ -40,14 +41,16 @@ Building a regulated, high-compliance web application typically requires a balan
 | **Annual Burn Rate** | **9** | **-** | **$1,690,000 / year** |
 
 ### B. Timeline Estimation
+
 * **Total Lines of Code (LOC)**: 128,477
 * **Industry Avg Output**: 15-20 tested LOC per developer/day.
 * **Calculation**:
-    * 128,477 LOC ÷ 20 lines/day = 6,423 developer-days.
-    * 6,423 ÷ 5 developers = 1,284 days (3.5 years linear).
-    * *Adjusted for parallelism*: **18 months (1.5 years)** is a realistic aggressive timeline for a 9-person team.
+  * 128,477 LOC ÷ 20 lines/day = 6,423 developer-days.
+  * 6,423 ÷ 5 developers = 1,284 days (3.5 years linear).
+  * *Adjusted for parallelism*: **18 months (1.5 years)** is a realistic aggressive timeline for a 9-person team.
 
 ### C. Total "Replacement Value"
+
 * **1.5 Years x $1.69M Burn Rate = $2,535,000**
 * *Plus infrastructure, legal, and compliance costs*: **~$2.59 Million**
 
@@ -58,18 +61,22 @@ Building a regulated, high-compliance web application typically requires a balan
 The development of Vet-Rate.org utilized a "Human-in-the-Loop" AI architecture, where the human acted as the Architect/Reviewer and AI agents acted as the implementation team.
 
 ### A. Production Stats
+
 * **Development Window**: Jan 15, 2026 – Jan 19, 2026 (4.5 Days)
 * **Total Active Hours**: 55 Hours
 * **Code Generated**: ~128,000 Lines (Source) + ~15,000 Lines (Data/JSON)
 * **Effective Rate**: **2,336 Lines of Code per Hour**
 
 ### B. Cost Breakdown
+
 * **Human Labor**: 55 Hours @ $135/hr (Senior Consultant Rate) = **$7,425**
 * **AI Compute Costs**: ~$45 (API usage, Pro subscriptions)
 * **Total Project Cost: $7,470**
 
 ### C. The Multiplier Effect
+
 The pivotal metric is **Effective Output per Hour**.
+
 * **Senior Human**: ~10-15 LOC/hr (net, including thinking/testing).
 * **AI-Augmented Human**: ~2,336 LOC/hr.
 * **Multiplier**: **155x - 233x faster implementation.**
@@ -96,6 +103,7 @@ The following table estimates the standalone market value of individual tools wi
 ## 5. Quality Assurance Note
 
 Critics often argue AI code is "buggy." To mitigate this, we employed an adversarial AI workflow:
+
 1. **Agent A (Coder)**: Writes the component (e.g., "TacticalCalculator.jsx").
 2. **Agent B (Reviewer)**: Scans code for logic errors, edge cases, and VA regulation compliance.
 3. **Agent C (Tester)**: Generates unit tests to verify the math against known VA pay tables.
@@ -110,6 +118,7 @@ This "AI Red Teaming" resulted in a logic error rate comparable to or lower than
 Vet-Rate.org demonstrates that the barrier to entry for creating professional-grade, high-utility public service software has collapsed.
 
 By leveraging AI, we have:
+
 1. **Eliminated the funding requirement**: No VCs or grants needed.
 2. **Removed the profit motive**: Low cost means the tool can remain free forever.
 3. **Democratized access**: Tools previously reserved for expensive law firms are now free for every veteran.

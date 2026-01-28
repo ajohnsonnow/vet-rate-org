@@ -9,22 +9,26 @@ Three major enhancements have been implemented for power users and veterans with
 ## 1. 🎮 Advanced GPU Selector for Faraday Cage (Multi-GPU Systems)
 
 ### Overview
+
 The Faraday Cage now features a detailed GPU selection interface for users with multiple graphics cards (desktop users, gaming rigs, workstations).
 
 ### What Changed
 
 #### Enhanced GPU Detection
+
 - **Detailed Hardware Info**: Shows vendor, architecture, estimated VRAM, texture limits
 - **WebGPU Features**: Displays supported WebGPU features count
 - **Technical Details**: Collapsible "Nerd Mode" panel with buffer sizes, workgroup limits
 - **Multiple GPUs**: Detects and lists all available GPUs (integrated + discrete)
 
 #### New UI Features
+
 - **🤖 Auto Mode**: Browser chooses best GPU based on power state (default)
 - **🚀 High Performance**: Forces use of discrete GPU (4080 Super, 4070ti, etc.)
 - **🔋 Power Saver**: Forces use of integrated GPU (Ryzen 7950x3D onboard graphics)
 
-#### For Your System (Ryzen 9 7950x3D + 4080 Super + 4070ti Super):
+#### For Your System (Ryzen 9 7950x3D + 4080 Super + 4070ti Super)
+
 ```
 GPU #1: RTX 4080 Super OC
 ├─ Vendor: NVIDIA
@@ -46,13 +50,16 @@ GPU #3: Ryzen 7950x3D iGPU
 ```
 
 #### Technical Details Panel (🤓 Show Technical Details)
+
 For the nerds, shows:
+
 - Max buffer size (MB)
 - Max compute workgroup size
 - Max workgroups per dimension
 - Full list of WebGPU features
 
 ### User Experience
+
 1. Open Faraday Cage
 2. If multiple GPUs detected, see "Advanced GPU Selection" card
 3. Click on a GPU to select it
@@ -60,6 +67,7 @@ For the nerds, shows:
 5. If model is loaded, warned to reload to use new GPU
 
 ### Files Modified
+
 - `src/components/LocalAIPanel.jsx`
   - Added `getDetailedAdapterInfo()` function
   - Enhanced `enumerateGPUs()` with detailed specs
@@ -70,12 +78,15 @@ For the nerds, shows:
 ## 2. 🎖️ Multiple Service Periods Support
 
 ### Overview
+
 Veterans can now track multiple enlistments, National Guard tours, Reserve periods, and re-ups separately. No more overwriting old service data when processing new DD214s.
 
 ### What Changed
 
 #### New Data Structure
+
 **Before:**
+
 ```javascript
 {
   branch: "Army",
@@ -85,6 +96,7 @@ Veterans can now track multiple enlistments, National Guard tours, Reserve perio
 ```
 
 **After:**
+
 ```javascript
 {
   servicePeriods: [
@@ -111,6 +123,7 @@ Veterans can now track multiple enlistments, National Guard tours, Reserve perio
 ```
 
 #### New My Packet Profile Tab UI
+
 - **"Add Service Period" Button**: Add unlimited service periods
 - **Component Selector**: Active Duty | National Guard | Reserve
 - **Form Type Dropdown**: DD214 | NGB 22 | DD256 | DD257 | Other
@@ -118,6 +131,7 @@ Veterans can now track multiple enlistments, National Guard tours, Reserve perio
 - **Notes Field**: Optional field for deployment info, unit, etc.
 
 #### New Utility Functions (`veteranProfile.js`)
+
 ```javascript
 // Get all service periods
 getServicePeriods() → Array
@@ -141,6 +155,7 @@ migrateToServicePeriods() → boolean
 ### User Experience
 
 #### Example Scenario: Multiple Enlistments
+
 ```
 Veteran: John Doe
 - Enlisted Army 2001-2005 (DD214 #1)
@@ -151,12 +166,14 @@ Veteran: John Doe
 **Old System:** Only the last DD214 was saved, losing history ❌
 
 **New System:**  
+
 1. Process DD214 #1 → Adds Period #1 to array ✅
 2. Process DD214 #2 → Adds Period #2 to array ✅
 3. Process DD256 → Adds Period #3 to array ✅
 4. All service history preserved! ✅
 
 #### Manual Entry
+
 1. Go to My Packet → Profile tab
 2. Click "+ Add Service Period"
 3. Fill in: Branch, Component, Dates, Discharge Type, Form Type, Notes
@@ -165,6 +182,7 @@ Veteran: John Doe
 6. Total service time calculated automatically
 
 ### Files Modified
+
 - `src/utils/veteranProfile.js`
   - Added `servicePeriods` to valid fields
   - Added service period management functions
@@ -181,11 +199,13 @@ Veteran: John Doe
 ## 3. 📋 NGB 22 & Reserve Document Support
 
 ### Overview
+
 DD214 Analyzer now recognizes and processes National Guard (NGB 22) and Reserve (DD256/DD257) discharge documents in addition to standard DD214s.
 
 ### What Changed
 
 #### Supported Documents
+
 | Form | Name | Component | Purpose |
 |------|------|-----------|---------|
 | **DD214** | Certificate of Release or Discharge | Active Duty | Standard discharge from active duty |
@@ -195,7 +215,9 @@ DD214 Analyzer now recognizes and processes National Guard (NGB 22) and Reserve 
 | **DD2586** | AGR Verification | Active Guard/Reserve | AGR service verification |
 
 #### Enhanced AI System Prompt
+
 The DD214 Analyzer AI now:
+
 - **Detects form type**: "DD FORM 214", "NGB FORM 22", "DD FORM 256", etc.
 - **Understands components**: Active Duty vs Guard vs Reserve
 - **Knows the difference**:
@@ -205,6 +227,7 @@ The DD214 Analyzer AI now:
 - **Prevents confusion**: Reserve "Good Years" (50 points) ≠ Active Duty time
 
 #### National Guard Specifics
+
 ```
 Example: Army National Guard Soldier
 ├─ NGB 22: Shows 10 years of weekend drill + annual training
@@ -213,6 +236,7 @@ Example: Army National Guard Soldier
 ```
 
 #### Reserve Specifics
+
 ```
 Example: Navy Reserve Sailor
 ├─ DD256: Shows 15 years of drilling reserve service
@@ -221,6 +245,7 @@ Example: Navy Reserve Sailor
 ```
 
 #### Output Format
+
 ```json
 {
   "documentCount": 2,
@@ -243,18 +268,21 @@ Example: Navy Reserve Sailor
 
 ### User Experience
 
-#### Before:
+#### Before
+
 - Upload NGB 22 → "Can't find separation date" error ❌
 - Upload DD256 → "Invalid DD214 format" error ❌
 - Reserve points confused with active duty time ❌
 
-#### After:
+#### After
+
 - Upload NGB 22 → ✅ Recognized as National Guard discharge
 - Upload DD256 → ✅ Recognized as Reserve discharge  
 - Upload multiple documents → ✅ All processed, no duplicates
 - Awards deduplicated → ✅ Purple Heart on DD214 + NGB 22 = COUNT ONCE
 
 ### Files Modified
+
 - `src/components/DD214Analyzer.jsx`
   - Updated system prompt with NGB 22 + Reserve document support
   - Added component detection (Active/Guard/Reserve/AGR)
@@ -265,12 +293,14 @@ Example: Navy Reserve Sailor
 ## Testing Recommendations
 
 ### GPU Selector (Desktop Only)
+
 1. **Multi-GPU Systems**: Open Faraday Cage → Should see all GPUs listed with specs
 2. **Single GPU**: Should NOT see selector (only shows on multi-GPU)
 3. **No WebGPU**: Should show "WebGPU Not Available" error
 4. **Switch GPU**: Select different GPU → Load model → Verify using new GPU
 
 ### Service Periods
+
 1. **Add Multiple Periods**: Add 3+ service periods with different components
 2. **Edit Period**: Change dates/branch on existing period
 3. **Delete Period**: Remove a period → Verify others remain
@@ -278,6 +308,7 @@ Example: Navy Reserve Sailor
 5. **Save & Reload**: Save profile → Close My Packet → Reopen → Verify periods persist
 
 ### NGB 22 / Reserve Documents
+
 1. **Upload DD214**: Should work as before
 2. **Upload NGB 22**: Should recognize as National Guard form
 3. **Upload DD256**: Should recognize as Reserve form
@@ -289,15 +320,18 @@ Example: Navy Reserve Sailor
 ## Deployment Notes
 
 ### Database Migration
+
 - **No migration needed**: servicePeriods array is additive
 - **Legacy profiles**: Single service fields still work (migration is optional)
 - **Automatic conversion**: First save to Profile tab will migrate to array format
 
 ### Breaking Changes
+
 - **None**: All changes are backward compatible
 - **Old profiles**: Will work but show empty service periods until first save
 
 ### Performance Impact
+
 - **Minimal**: GPU detection runs once on Faraday Cage open
 - **No overhead**: Service periods stored as simple JSON array
 
@@ -306,16 +340,19 @@ Example: Navy Reserve Sailor
 ## Future Enhancements
 
 ### GPU Selector
+
 - [ ] Show real-time VRAM usage during model load
 - [ ] Benchmark button to test each GPU
 - [ ] Temperature monitoring (if browser supports)
 
 ### Service Periods
+
 - [ ] Visual timeline showing all service periods
 - [ ] Deployment badges for combat tours
 - [ ] Automatic period detection from DD214 dates
 
 ### Document Support
+
 - [ ] Add DD220 (correction to DD214) support
 - [ ] Add DA Form 4856 (counseling statement) support
 - [ ] Add VA Form 21-4142 (authorization to disclose) support
@@ -325,13 +362,16 @@ Example: Navy Reserve Sailor
 ## Known Issues
 
 ### GPU Selector
+
 - **Chrome on Windows**: "powerPreference ignored" warning (cosmetic, doesn't affect functionality)
 - **Safari/iOS**: No WebGPU support yet (WebLLM provides fallback)
 
 ### Service Periods
+
 - **Migration**: Old single-period profiles require manual save to convert
 
 ### Document Detection
+
 - **OCR Quality**: Poor scans may not detect form type correctly
 - **Handwritten**: Handwritten forms may not parse well
 
@@ -340,6 +380,7 @@ Example: Navy Reserve Sailor
 ## Support
 
 For issues or questions:
+
 1. Check DEPLOYMENT.md pre-deployment checklist
 2. Test in `npm run dev` before deploying
 3. Run `npm run pre-deploy` to catch errors

@@ -44,12 +44,14 @@ This document provides transparent visibility into the true development cost of 
 ### Key Insight: The Junior Developer Paradox
 
 **Junior Developer True Cost:**
+
 - Hourly Rate: $60/hr (seems cheaper)
 - Net Output: 17.5 LOC/day
 - Senior Oversight: 2 hrs/day @ $135/hr = $270/day
 - **Total Cost per Line: $27.43**
 
 **Senior Developer True Cost:**
+
 - Hourly Rate: $135/hr (seems expensive)
 - Net Output: 100 LOC/day
 - No oversight needed
@@ -166,16 +168,19 @@ Reality: 280x productivity multiplier over traditional solo development
 ### Component-Level Examples
 
 **C-File Analyzer (9,200 lines):**
+
 - Traditional: 920 hours (23 weeks)
 - AI-Assisted: 3 hours
 - **Multiplier: 307x**
 
 **Tactical Calculator (8,500 lines):**
+
 - Traditional: 850 hours (21 weeks)
 - AI-Assisted: 2 hours
 - **Multiplier: 425x**
 
 **Forms Helper (6,800 lines):**
+
 - Traditional: 680 hours (17 weeks)
 - AI-Assisted: 2.5 hours
 - **Multiplier: 272x**
@@ -183,6 +188,7 @@ Reality: 280x productivity multiplier over traditional solo development
 ### Why the Multiplier Is Sustainable
 
 **AI Handles:**
+
 - ✅ Boilerplate code generation
 - ✅ Pattern recognition and replication
 - ✅ Real-time bug detection
@@ -191,6 +197,7 @@ Reality: 280x productivity multiplier over traditional solo development
 - ✅ Test case suggestions
 
 **Human Developer Handles:**
+
 - 🧠 Architecture decisions
 - 🧠 Business logic
 - 🧠 User experience design
@@ -205,6 +212,7 @@ Reality: 280x productivity multiplier over traditional solo development
 ## What This Means for Veterans
 
 ### Commercial Platform Costs
+
 If Vet-Rate.org were built as a commercial platform:
 
 **Development Cost**: $2,089,580 - $2,592,745  
@@ -213,6 +221,7 @@ If Vet-Rate.org were built as a commercial platform:
 **Required Revenue**: $5-8M to break even in 3 years
 
 **Typical Business Model:**
+
 - $500-1,500 per C-File analysis
 - $1,500-2,000 per nexus letter
 - 30% of backpay ($10K-50K average)
@@ -238,11 +247,13 @@ If Vet-Rate.org were built as a commercial platform:
 ### How We Stay Free
 
 **Development Efficiency:**
+
 - AI tools reduced $2.5M development cost to $7.5K
 - No ongoing development team payroll
 - Maintenance through AI-assisted updates (minimal cost)
 
 **Infrastructure Costs:**
+
 - Static hosting: ~$0/month (Vercel free tier)
 - Domain: $12/year
 - No backend servers
@@ -251,6 +262,7 @@ If Vet-Rate.org were built as a commercial platform:
 **Total Annual Operating Cost**: ~$500
 
 **Community Support:**
+
 - Optional donations cover operating costs
 - No advertising revenue needed
 - No data sales required
@@ -265,17 +277,20 @@ If Vet-Rate.org were built as a commercial platform:
 ### Quantitative Software Management (QSM) Benchmarks
 
 **COCOMO II Parameters:**
+
 - Junior Developer Productivity Factor: 0.85
 - Mid-Level Developer Productivity Factor: 1.00
 - Senior Developer Productivity Factor: 1.30
 - Principal Developer Productivity Factor: 1.50
 
 **Defect Insertion Rates:**
+
 - Junior: 30-50 defects per 1,000 LOC
 - Mid-Level: 15-20 defects per 1,000 LOC
 - Senior: 5-10 defects per 1,000 LOC
 
 **Rework Burden:**
+
 - Junior: 40-60% time spent on rework
 - Mid-Level: 20-30% time spent on rework
 - Senior: 10-15% time spent on rework
@@ -283,12 +298,14 @@ If Vet-Rate.org were built as a commercial platform:
 ### 2025 Engineering Effectiveness Reports
 
 **Average Developer Salaries (2025):**
+
 - Junior: $50K-90K annually ($45-75/hr contract)
 - Mid-Level: $90K-140K annually ($75-115/hr contract)
 - Senior: $140K-200K annually ($115-160/hr contract)
 - Principal: $200K-280K annually ($160-225/hr contract)
 
 **Team Velocity (Agile Points per Sprint):**
+
 - Junior: 8-12 points
 - Mid-Level: 13-20 points
 - Senior: 21-30 points
@@ -298,18 +315,21 @@ If Vet-Rate.org were built as a commercial platform:
 ## Conclusion: The AI Revolution in Action
 
 **Traditional Software Development** (1985-2023):
+
 - High cost ($2.5M for this scope)
 - Long timelines (12-24 months)
 - Large teams (8+ developers)
 - Veteran services priced accordingly ($500+ per use)
 
 **AI-Assisted Development** (2024+):
+
 - Low cost ($7,425 for this scope)
 - Short timelines (4.5 days)
 - Small teams (1 developer + AI)
 - Veteran services can be free
 
 **Vet-Rate.org Proves:**
+
 - Professional-grade platforms no longer require millions in VC funding
 - Complex tools can be built and maintained by solo developers with AI
 - Veterans don't need to pay $15K-50K in service fees

@@ -1,4 +1,5 @@
 # Social Media Posts - Veteran Service Fee Focus
+
 *Platform-specific posts highlighting the $15K-$50K savings per veteran*
 
 ---
@@ -10,6 +11,7 @@
 **Title:** I built a free platform that does what commercial claim services charge $15K-$50K for
 
 **Body:**
+
 ```
 Hey everyone,
 
@@ -56,6 +58,7 @@ Questions? Fire away. I'm here to help.
 **Title:** Free alternative to expensive VA claim services ($15K-$50K savings)
 
 **Body:**
+
 ```
 Quick heads up for anyone filing VA claims:
 
@@ -87,6 +90,7 @@ If you're filing or appealing, check it out. Could save you $15K-$50K.
 **Title:** Built a free tool that saves veterans $15K-$50K on VA claims
 
 **Body:**
+
 ```
 Saw too many veterans paying huge fees to claim companies (20-30% of backpay, often $15K-$50K).
 
@@ -338,18 +342,21 @@ That's the power of AI-assisted civic tech.
 ## Usage Tips by Platform
 
 ### Reddit
+
 - **Best times:** 6-8 AM, 12-2 PM, 6-10 PM EST
 - **Strategy:** Lead with value, be authentic, answer every comment
 - **Avoid:** Overly promotional language, asking for upvotes
 - **Engage:** Respond to questions within first hour for max visibility
 
 ### Facebook  
+
 - **Best times:** 1-3 PM weekdays, 12-1 PM weekends
 - **Strategy:** Use emojis, tag veteran groups, encourage shares
 - **Engage:** Respond to comments/shares quickly, use reactions
 - **Visual:** Add screenshot of the platform for higher engagement
 
 ### LinkedIn
+
 - **Best times:** Tuesday-Thursday, 8-10 AM and 5-6 PM EST
 - **Strategy:** Lead with data, professional tone, ask questions
 - **Hashtags:** 3-5 relevant tags (don't overdo it)
@@ -360,21 +367,25 @@ That's the power of AI-assisted civic tech.
 ## Recommended Posting Schedule
 
 **Week 1:**
+
 - Reddit: Post to r/VeteransBenefits (Tuesday morning)
 - Facebook: Personal impact story (Wednesday afternoon)
 - LinkedIn: Professional impact post (Thursday morning)
 
 **Week 2:**
+
 - Reddit: Post to r/Veterans (Monday evening)
 - Facebook: Community impact post (Wednesday)
 - LinkedIn: Developer perspective (Thursday)
 
 **Week 3:**
+
 - Reddit: Post to r/Military (Tuesday)
 - Facebook: Simple & direct post (Friday)
 - LinkedIn: Short impact statement (any day)
 
 **Ongoing:**
+
 - Engage with comments daily
 - Share user testimonials when received
 - Cross-post success stories
@@ -385,6 +396,7 @@ That's the power of AI-assisted civic tech.
 ## Key Messaging Points
 
 **Always emphasize:**
+
 1. ✅ **$15K-$50K typical cost** of commercial services
 2. ✅ **100% free forever** - no catch, no fees, no subscriptions
 3. ✅ **Privacy-first** - local AI, data stays in browser
@@ -392,6 +404,7 @@ That's the power of AI-assisted civic tech.
 5. ✅ **Community impact** - $1.5B saved if 50K veterans use it
 
 **Never:**
+
 - ❌ Bash specific companies by name (general criticism OK)
 - ❌ Make medical/legal claims (we're a tool, not advice)
 - ❌ Promise specific ratings outcomes

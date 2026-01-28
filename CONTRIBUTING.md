@@ -9,7 +9,9 @@ Provide veterans with accurate, accessible information about disability ratings 
 ## �- Ways to Contribute
 
 ### 1. Report Bugs
+
 Found an issue? Open a GitHub issue with:
+
 - Clear title
 - Step-by-step reproduction
 - Expected vs actual behavior
@@ -17,30 +19,36 @@ Found an issue? Open a GitHub issue with:
 - Browser/OS information
 
 ### 2. Suggest Enhancements
+
 Have an idea? Open an issue with:
+
 - Feature title
 - Use case/benefit
 - Proposed implementation (optional)
 - Related issues/PRs
 
 ### 3. Write Code
+
 - Bug fixes
 - New features
 - Performance improvements
 - Code refactoring
 
 ### 4. Improve Documentation
+
 - Fix typos
 - Clarify instructions
 - Add examples
 - Update outdated content
 
 ### 5. Add Disabilities to Database
-Help expand our database of disabilities. See [Database Contributions](#database-contributions).
+
+Help expand our database of disabilities. See the Database Contributions section below.
 
 ## 🚀 Getting Started
 
 ### Fork & Clone
+
 ```bash
 # Fork on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/vet-rate-org.git
@@ -49,6 +57,7 @@ git remote add upstream https://github.com/ajohnsonnow/vet-rate-org.git
 ```
 
 ### Setup Development Environment
+
 ```bash
 # Install dependencies
 npm install
@@ -63,6 +72,7 @@ npm run dev
 ## 📝 Code Style & Standards
 
 ### Naming Conventions
+
 ```javascript
 // Variables and functions: camelCase
 const searchTerm = 'PTSD';
@@ -82,6 +92,7 @@ const SEARCH_PATTERN = /^[a-zA-Z0-9\s\-\/]*$/;
 ```
 
 ### Code Formatting
+
 ```bash
 # Format code
 npm run format
@@ -94,6 +105,7 @@ npm run lint -- --fix
 ```
 
 ### React Best Practices
+
 ```javascript
 // Use functional components
 function MyComponent() {
@@ -123,6 +135,7 @@ function CardComponent({ title, description, onClick }) {
 ```
 
 ### Comments
+
 ```javascript
 // Single line comments for explanations
 const SEARCH_DEBOUNCE = 300; // milliseconds
@@ -143,6 +156,7 @@ function performFuzzyMatch(query, data) {
 ## 🧪 Testing
 
 ### Manual Testing Checklist
+
 - [ ] Search by condition name works
 - [ ] Search by diagnostic code works
 - [ ] Search by synonym works
@@ -155,6 +169,7 @@ function performFuzzyMatch(query, data) {
 - [ ] No broken links
 
 ### Test Different Scenarios
+
 ```javascript
 // Test exact match
 Search: "PTSD" → Should find code 9411
@@ -207,6 +222,7 @@ Edit `src/data/disabilityData.json`:
 ```
 
 ### Requirements for New Entries
+
 - [ ] Valid 4-digit diagnostic code from 38 CFR Part 4
 - [ ] Accurate condition name from official sources
 - [ ] At least 2 aliases or search terms
@@ -217,13 +233,15 @@ Edit `src/data/disabilityData.json`:
 - [ ] Entry added to end of array with sequential ID
 
 ### Where to Find Information
-- **eCFR**: https://www.ecfr.gov/current/title-38/chapter-I/part-4
-- **VA Ratings**: https://www.va.gov/disability/
+
+- **eCFR**: <https://www.ecfr.gov/current/title-38/chapter-I/part-4>
+- **VA Ratings**: <https://www.va.gov/disability/>
 - **Rating Schedule**: Appendix A of 38 CFR Part 4
 
 ## 🔄 Pull Request Process
 
 ### Before Submitting
+
 ```bash
 # Update from upstream
 git fetch upstream
@@ -243,6 +261,7 @@ npm run preview
 ```
 
 ### Commit Messages
+
 ```bash
 # Follow conventional commits
 git commit -m "feat: add new search filter"
@@ -256,6 +275,7 @@ git commit -m "refactor: improve component structure"
 ```
 
 ### Create Pull Request
+
 1. Push to your fork: `git push origin feature/your-feature`
 2. Open GitHub PR with:
    - Clear title
@@ -265,6 +285,7 @@ git commit -m "refactor: improve component structure"
    - Testing steps
 
 ### PR Template
+
 ```markdown
 ## Description
 Brief description of changes
@@ -317,23 +338,27 @@ Steps to test:
 
 ## 📚 Documentation Guidelines
 
-### Update README.md for:
+### Update README.md for
+
 - New features
 - API changes
 - Configuration updates
 - Breaking changes
 
-### Update DEPLOYMENT.md for:
+### Update DEPLOYMENT.md for
+
 - New deployment platforms
 - Configuration changes
 - Environment variables
 
-### Update SECURITY.md for:
+### Update SECURITY.md for
+
 - Security improvements
 - New vulnerabilities fixed
 - Security best practices
 
 ### Code Comments
+
 ```javascript
 /**
  * Searches for disabilities matching user query
@@ -350,9 +375,10 @@ function searchDisabilityData(query, data) {
 
 **Do NOT open public issues for security vulnerabilities.**
 
-Email security concerns to: security@example.com
+Email security concerns to: <security@example.com>
 
 Include:
+
 - Vulnerability description
 - Steps to reproduce
 - Potential impact
@@ -363,6 +389,7 @@ Response time: 24-48 hours
 ## ⭐ Code Review Process
 
 Maintainers will review your PR for:
+
 - ✅ Code quality
 - ✅ Style consistency
 - ✅ Security
@@ -371,6 +398,7 @@ Maintainers will review your PR for:
 - ✅ Performance
 
 ### Tips for Faster Review
+
 - Small, focused PRs
 - Clear commit messages
 - Updated documentation
@@ -388,12 +416,13 @@ Maintainers will review your PR for:
 ## 💬 Questions or Need Help?
 
 - Ask in [GitHub Discussions](https://github.com/yourusername/vet-disability-search/discussions)
-- Email: support@example.com
+- Email: <support@example.com>
 - Check existing issues for answers
 
 ## 🎉 Recognition
 
 Contributors will be:
+
 - Listed in README
 - Thanked in release notes
 - Credited in commit history
@@ -403,11 +432,11 @@ Contributors will be:
 This project wouldn't be what it is without invaluable feedback from our veteran community testers:
 
 **Reddit r/VAClaims**  
-https://www.reddit.com/r/VAClaims/  
+<https://www.reddit.com/r/VAClaims/>  
 The veterans and advocates here have provided crucial real-world testing, bug reports, and feature suggestions that shaped many of our tools.
 
 **Facebook: Veteran Claims Assistance Group**  
-https://www.facebook.com/groups/709883279032790/  
+<https://www.facebook.com/groups/709883279032790/>  
 Huge thanks for the detailed feedback on usability, mobile experience, and edge cases we never would have caught ourselves.
 
 Your dedication to helping fellow veterans navigate the claims process inspires everything we build. 🇺🇸
@@ -420,11 +449,12 @@ This project is dedicated to providing a welcoming and inclusive environment:
 - Welcome diverse perspectives
 - Focus on the code, not the person
 - Provide constructive feedback
-- Report violations to: conduct@example.com
+- Report violations to: <conduct@example.com>
 
 ## 📋 Contributor Checklist
 
 Before submitting PR:
+
 - [ ] Followed coding standards
 - [ ] Tested thoroughly
 - [ ] Updated documentation

@@ -3,6 +3,7 @@
 ## 🎯 What Changed
 
 **Phi 3.5 Vision Model Disabled**
+
 - Temporarily disabled the prebuilt Phi 3.5 Vision model
 - Reason: Requires experimental Chrome features not stable yet (`chromium-experimental-subgroup-matrix`)
 - Users were getting shader compilation errors on stable Chrome
@@ -13,14 +14,16 @@
 
 We're not just using AI - we're **building our own**!
 
-### Why This is Amazing:
+### Why This is Amazing
+
 - ✅ **Custom-compiled** specifically for veteran documents
 - ✅ **Optimized for DD214s** and medical records
 - ✅ **Works in stable Chrome** - no experimental features needed
 - ✅ **100% private** - runs locally, data never leaves device
 - ✅ **Branded** - "Built by veterans, for veterans"
 
-### Hardware We're Using:
+### Hardware We're Using
+
 - AMD Ryzen 9 7950X3D (16-core)
 - 128GB DDR5 RAM
 - Dual RTX 4080 SUPER + RTX 4070 Ti SUPER GPUs
@@ -29,6 +32,7 @@ We're not just using AI - we're **building our own**!
 ## 🎨 UI Changes
 
 **Model Selection:**
+
 - Phi 3.5 Vision shows **"[DISABLED]"** tag
 - Greyed out with red badge
 - Clear messaging about upcoming custom model
@@ -36,6 +40,7 @@ We're not just using AI - we're **building our own**!
 
 **Error Message:**
 If user tries to load disabled model:
+
 ```
 🚫 This Model is Currently Disabled
 
@@ -55,7 +60,8 @@ Check back soon for updates!
 
 ## 📊 Marketing Points
 
-### Social Media:
+### Social Media
+
 ```
 🚀 Big News: We're Building Our Own AI!
 
@@ -70,7 +76,8 @@ Introducing "Vet-Rate Vision Phi" - custom-compiled specifically for veterans:
 Because we can. 💪🇺🇸
 ```
 
-### Website Announcement:
+### Website Announcement
+
 ```
 🔨 Building Something Special
 
@@ -85,6 +92,7 @@ Built with powerful hardware, veteran expertise, and zero compromises on privacy
 ## 🔧 Technical Details
 
 **Files Changed:**
+
 - `src/components/LocalAIPanel.jsx`
   - Added `disabled: true` property to Phi model
   - Updated UI to show disabled state
@@ -98,6 +106,7 @@ Built with powerful hardware, veteran expertise, and zero compromises on privacy
   - Added entry for 1.4.2.7
 
 **New Documentation:**
+
 - `docs/COMPILE_CUSTOM_VISION_MODEL.md` - Complete compilation guide
 - `docs/WEBGPU_EXPERIMENTAL_SETUP.md` - Chrome flag setup guide
 
@@ -111,6 +120,7 @@ Built with powerful hardware, veteran expertise, and zero compromises on privacy
 ## 💡 Competitive Advantage
 
 **No other veteran platform has this:**
+
 - Custom AI specifically for veteran documents
 - Privacy-first (100% local processing)
 - Branded technology ("Vet-Rate Vision Phi")

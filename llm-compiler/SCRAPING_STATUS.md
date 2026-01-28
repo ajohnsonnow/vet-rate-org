@@ -9,6 +9,7 @@
 ## ✅ **Completed Successfully**
 
 ### Federal Register (14 Documents Scraped)
+
 - ✅ Loan Guaranty procedures
 - ✅ STEM Scholarship rules
 - ✅ Reproductive Health Services
@@ -18,21 +19,23 @@
 - ✅ Family Caregivers eligibility
 - ✅ Privacy Act implementations
 
-**Source**: https://www.federalregister.gov/api/v1/documents.json
+**Source**: <https://www.federalregister.gov/api/v1/documents.json>
 
 ---
 
 ## ⚠️ **Encountered Issues**
 
 ### 1. CAVC Decisions (uscourts.cavc.gov) - **NEW**
+
 **Issue**: Government-grade SSL/TLS prevents automated scraping  
-**URL**: https://www.uscourts.cavc.gov/recent_decisions.php  
+**URL**: <https://www.uscourts.cavc.gov/recent_decisions.php>  
 **Root Cause**: CAVC website requires TLS 1.2+ with specific cipher suites that Python's `requests` library cannot negotiate
 
 **Status**: ✅ **Manual integration workflow created**  
 **Solution**: Created comprehensive guide at `llm-compiler/knowledge-base/cavc/CAVC_INTEGRATION_GUIDE.md`
 
 **Manual Process**:
+
 1. Access website in browser (browsers handle government SSL correctly)
 2. Download precedential decisions (PDFs)
 3. Extract text and create JSON entries
@@ -43,11 +46,13 @@
 ---
 
 ### 2. 38 CFR (eCFR.gov)
+
 **Issue**: HTML structure changed - no sections found  
-**URL Attempted**: https://www.ecfr.gov/current/title-38/chapter-I/part-3  
+**URL Attempted**: <https://www.ecfr.gov/current/title-38/chapter-I/part-3>  
 **Root Cause**: eCFR website redesign changed CSS classes and DOM structure
 
 **Fix Required**:
+
 ```python
 # Update scraper to use new eCFR API endpoint
 api_url = "https://www.ecfr.gov/api/versioner/v1/full/2024-01-01/title-38.xml"
@@ -55,11 +60,13 @@ api_url = "https://www.ecfr.gov/api/versioner/v1/full/2024-01-01/title-38.xml"
 ```
 
 ### 2. BVA Decisions (index.va.gov)
+
 **Issue**: SSL Certificate Verification Failed  
 **Error**: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed`  
-**URL Attempted**: https://www.index.va.gov/search/va/bva.jsp
+**URL Attempted**: <https://www.index.va.gov/search/va/bva.jsp>
 
 **Fix Required**:
+
 ```python
 # Add SSL verification bypass for government sites
 ssl_context = ssl.create_default_context()
@@ -72,20 +79,24 @@ response = requests.get(url, verify=False)
 ```
 
 ### 3. M21-1 Manual (KnowVA)
+
 **Issue**: JavaScript-heavy portal requires authentication  
-**URL Attempted**: https://www.knowva.ebenefits.va.gov/
+**URL Attempted**: <https://www.knowva.ebenefits.va.gov/>
 
 **Alternative Approaches**:
+
 - Use VA.gov public M21-1 pages
 - Download PDF version and extract text
 - Use archived versions from archive.org
 - Request API access from VA
 
 ### 4. OGC Precedent Opinions
+
 **Issue**: No opinions found (page structure may have changed)  
-**URL Pattern**: https://www.va.gov/ogc/precedentopinions{year}.asp
+**URL Pattern**: <https://www.va.gov/ogc/precedentopinions{year}.asp>
 
 **Fix Required**:
+
 - Verify current URL structure
 - Check if opinions moved to different portal
 - May need to parse PDF files instead of HTML
@@ -95,6 +106,7 @@ response = requests.get(url, verify=False)
 ## 📊 **Current Knowledge Base**
 
 ### Scraped Data
+
 - **Federal Register**: 14 documents ✅
 - **38 CFR**: 0 sections ⚠️
 - **BVA Decisions**: 0 cases ⚠️
@@ -109,9 +121,11 @@ response = requests.get(url, verify=False)
 ## 🔧 **Immediate Fixes Needed**
 
 ### Priority 1: 38 CFR (Critical)
+
 This is the primary legal source. Without it, models cannot learn rating criteria.
 
 **Quick Fix**:
+
 ```bash
 # Use VA.gov's public CFR pages instead
 # They have better structured HTML
@@ -119,11 +133,12 @@ curl "https://www.benefits.va.gov/warms/pam26_7.asp" > 38cfr_backup.html
 ```
 
 ### Priority 2: Alternative Knowledge Sources
+
 Since direct scraping is challenging, use these reliable sources:
 
 1. **VA.gov Resources**
-   - https://www.va.gov/disability/eligibility/
-   - https://www.va.gov/disability/how-to-file-claim/
+   - <https://www.va.gov/disability/eligibility/>
+   - <https://www.va.gov/disability/how-to-file-claim/>
    - Rating tables and calculators
 
 2. **Public Domain VA Documents**
@@ -141,20 +156,25 @@ Since direct scraping is challenging, use these reliable sources:
 ## 🚀 **Recommended Next Steps**
 
 ### Option A: Fix Scraper URLs (2-4 hours development)
+
 Update `va_knowledge_scraper.py` with:
+
 - New eCFR API endpoint
 - SSL certificate handling
 - Alternative BVA sources
 - Public M21-1 pages from VA.gov
 
 ### Option B: Use Existing Datasets (Immediate)
+
 Leverage pre-curated VA knowledge:
+
 - VA Open Data Portal
 - Veterans Affairs GitHub repos
 - Academic VA research datasets
 - Published legal databases (Justia, etc.)
 
 ### Option C: Hybrid Approach (Recommended)
+
 1. ✅ Keep Federal Register data (already working)
 2. 🔧 Fix 38 CFR scraper (critical priority)
 3. 📚 Use public VA.gov content for M21-1
@@ -217,6 +237,7 @@ Since scraping is encountering issues, we can create a **demo knowledge base** w
 ```
 
 This would allow:
+
 - ✅ Immediate model training testing
 - ✅ Frontend integration development
 - ✅ Citation rendering validation
@@ -229,18 +250,21 @@ This would allow:
 **Choose your path:**
 
 ### Path 1: Fix Scraper (Recommended for Production)
+
 - **Time**: 4-8 hours development
 - **Output**: Comprehensive real knowledge base
 - **Quality**: Production-ready
 - **Use**: Real veteran assistance
 
 ### Path 2: Demo/Test Dataset (Recommended for Development)
+
 - **Time**: 1-2 hours curation
 - **Output**: Representative samples
 - **Quality**: Development/testing
 - **Use**: Proof of concept, frontend development
 
 ### Path 3: Hybrid (Best of Both)
+
 - **Time**: 2-4 hours initial, ongoing updates
 - **Output**: Start with samples, gradually replace with scraped data
 - **Quality**: Incremental improvement
@@ -251,16 +275,19 @@ This would allow:
 ## 📞 **Support Resources**
 
 ### VA Developer Resources
-- VA Lighthouse API: https://developer.va.gov/
-- VA Open Data: https://www.va.gov/data/
-- VA GitHub: https://github.com/department-of-veterans-affairs
+
+- VA Lighthouse API: <https://developer.va.gov/>
+- VA Open Data: <https://www.va.gov/data/>
+- VA GitHub: <https://github.com/department-of-veterans-affairs>
 
 ### Legal Databases
-- Justia VA Regulations: https://law.justia.com/codes/us/title-38/
-- Cornell LII: https://www.law.cornell.edu/cfr/text/38
-- GovInfo: https://www.govinfo.gov/app/collection/cfr
+
+- Justia VA Regulations: <https://law.justia.com/codes/us/title-38/>
+- Cornell LII: <https://www.law.cornell.edu/cfr/text/38>
+- GovInfo: <https://www.govinfo.gov/app/collection/cfr>
 
 ### Community
+
 - r/VeteransBenefits (Reddit)
 - Hadit.com (Veterans forum)
 - VSO published guides

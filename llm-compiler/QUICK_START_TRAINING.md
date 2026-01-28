@@ -44,19 +44,22 @@ fp16: false               # DO NOT enable
 
 ## 🔧 SAFE TUNING KNOBS
 
-### If OOM (Out of Memory):
+### If OOM (Out of Memory)
+
 ```yaml
 micro_batch_size: 2       # Was 4
 gradient_accumulation_steps: 8  # Was 4 (keeps effective=16)
 ```
 
-### If Underfitting (Loss not decreasing):
+### If Underfitting (Loss not decreasing)
+
 ```yaml
 num_epochs: 5             # Was 3
 learning_rate: 0.0003     # Was 0.0002
 ```
 
-### If Overfitting (Eval loss >> Train loss):
+### If Overfitting (Eval loss >> Train loss)
+
 ```yaml
 num_epochs: 2             # Was 3
 lora_dropout: 0.1         # Was 0.05
@@ -67,6 +70,7 @@ lora_dropout: 0.1         # Was 0.05
 ## 📊 WHAT TO WATCH
 
 ### GPU Monitor (separate terminal)
+
 ```bash
 nvidia-smi -l 5  # Update every 5 seconds
 
@@ -78,6 +82,7 @@ Target Metrics:
 ```
 
 ### Training Logs
+
 ```
 Look for:
 ✅ Loss decreasing over time
@@ -104,6 +109,7 @@ Look for:
 After training completes:
 
 1. **Files exist:**
+
    ```bash
    ls models/lora-adapters/vetrate-auditor-3b/
    # adapter_config.json
@@ -111,18 +117,21 @@ After training completes:
    ```
 
 2. **Size is reasonable:**
+
    ```bash
    du -sh models/lora-adapters/vetrate-auditor-3b/
    # 20-50 MB (NOT gigabytes!)
    ```
 
 3. **Final loss is low:**
+
    ```
    Train loss: <1.0
    Eval loss: <1.2
    ```
 
 4. **Quick inference test:**
+
    ```bash
    axolotl inference auditor-3b-qlora.yml \
      --lora_model_dir ./models/lora-adapters/vetrate-auditor-3b
@@ -136,6 +145,7 @@ After training completes:
 ## 🆘 EMERGENCY COMMANDS
 
 ### Training Stuck / Frozen
+
 ```bash
 # Check if process alive
 nvidia-smi
@@ -148,6 +158,7 @@ axolotl train auditor-3b-qlora.yml  # Auto-resumes
 ```
 
 ### CUDA Out of Memory
+
 ```bash
 # Free GPU memory
 pkill -9 python
@@ -158,6 +169,7 @@ micro_batch_size: 2  # Edit YAML, then retry
 ```
 
 ### Disk Full
+
 ```bash
 # Clean old checkpoints
 rm -rf models/lora-adapters/*/checkpoint-*

@@ -1,4 +1,5 @@
 # Veteran Service Fee Analysis
+
 ## Understanding the $15K-50K Per Claim Estimate
 
 ### What This Number Represents
@@ -28,6 +29,7 @@ This is NOT the development cost—it's the **end-user service fee** charged by 
 **Typical Structure:** 20-30% of retroactive pay (backpay)
 
 **Average Backpay Scenarios:**
+
 - **Modest Claim** (30% from 2 years ago): $30K backpay → **$9K fee** (30%)
 - **Average Claim** (50% from 3 years ago): $50K backpay → **$15K fee** (30%)
 - **Strong Claim** (70% from 5 years ago): $100K backpay → **$30K fee** (30%)
@@ -88,27 +90,33 @@ This is NOT the development cost—it's the **end-user service fee** charged by 
 ### Documented Commercial Rates
 
 **VA Claims Insider** (now closed):
+
 - Lifetime membership: $1,497
 - Per-claim coaching: $500-2,000
 - Source: Internet Archive, veteran forums
 
 **Hill & Ponton**:
+
 - Contingency fee: 20-33% of backpay
 - Source: Attorney fee agreements (public record)
 
 **Woods & Woods**:
+
 - Contingency fee: 20-33% of past-due benefits
 - Source: Attorney fee agreements
 
 **VA Claims Academy**:
+
 - Exam prep courses: $297-$497 per condition
 - Source: Their published pricing (as of 2023)
 
 **Nexus Letter Doctor / DBQ Depot**:
+
 - Nexus letters: $1,500-$2,500 per condition
 - Source: Their websites (archived)
 
 **Independent VA Claims Consultants**:
+
 - Hourly rates: $150-$300/hour
 - Typical claim: 20-40 hours = $3,000-$12,000
 - Source: LinkedIn profiles, consultant websites
@@ -120,6 +128,7 @@ This is NOT the development cost—it's the **end-user service fee** charged by 
 ### Legitimate Business Costs
 
 Commercial claim services have real costs:
+
 - **Office overhead**: Rent, staff, insurance
 - **Expert staff**: Attorneys, nurses, medical reviewers
 - **Research time**: Reviewing regulations, case law
@@ -139,17 +148,20 @@ Commercial claim services have real costs:
 **Our Development Cost:** $7,425 (AI-assisted, 55 hours)
 
 **Operating Costs:**
+
 - Static hosting: ~$0/month (Vercel free tier)
 - Domain: $12/year
 - **Total annual: ~$500**
 
 **No Office Overhead:**
+
 - No rent
 - No staff payroll
 - No customer acquisition costs
 - No investor ROI pressure
 
 **Technology Leverage:**
+
 - AI reduced development cost by 99.6%
 - Static architecture = near-zero hosting
 - Open-source sustainability model
@@ -163,6 +175,7 @@ Commercial claim services have real costs:
 ### Conservative Lower Bound ($15K)
 
 **Minimum services for successful claim:**
+
 - C-File analysis: $500
 - 2 Nexus letters: $3,000
 - C&P prep: $600
@@ -179,6 +192,7 @@ Most veterans using commercial services pay **AT LEAST** $15,000.
 ### Realistic Upper Bound ($50K)
 
 **Complex claims with multiple appeals:**
+
 - Full service package: $15,000-25,000 à la carte
 - **OR** 30% contingency on $150K+ backpay = **$45,000-$50,000**
 
@@ -191,10 +205,12 @@ Veterans with high ratings and long retroactive periods routinely pay **$40K-$50
 ### What Vet-Rate.org Saves Veterans
 
 **If 50,000 veterans use our platform:**
+
 - Average savings per veteran: $30,000 (midpoint of $15K-$50K)
 - **Total community savings: $1.5 BILLION**
 
 **Conservative estimate (only 25% would have used paid services):**
+
 - 12,500 veterans × $30,000 = **$375 MILLION saved**
 
 **This is why it matters.**

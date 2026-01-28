@@ -14,10 +14,7 @@ while being 5-10x smaller and faster on mobile devices.
 """
 
 import json
-import os
 from pathlib import Path
-from datetime import datetime
-from tqdm import tqdm
 
 # Distillation prompts - scenarios the mobile model needs to handle well
 DISTILLATION_SCENARIOS = {

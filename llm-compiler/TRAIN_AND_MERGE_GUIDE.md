@@ -10,6 +10,7 @@
 ## 🎯 CRITICAL CONCEPT: WHY MERGING IS REQUIRED
 
 ### The WebLLM Problem
+
 ```
 ❌ WebLLM Cannot Use:
    Base Model (3B) + LoRA Adapter (separate files)
@@ -19,6 +20,7 @@
 ```
 
 ### The Solution
+
 ```python
 # Training produces:
 models/lora-adapters/vetrate-auditor-3b/
@@ -42,6 +44,7 @@ The merged model directory (single unified model)
 ## 📋 QUICK START
 
 ### Basic Usage
+
 ```powershell
 # Train and merge Auditor (2-4 hours)
 .\train_and_merge.ps1 -SwarmMember auditor
@@ -54,6 +57,7 @@ The merged model directory (single unified model)
 ```
 
 ### Advanced Options
+
 ```powershell
 # Dry run (test without executing)
 .\train_and_merge.ps1 -SwarmMember auditor -DryRun
@@ -70,6 +74,7 @@ The merged model directory (single unified model)
 ## 🔍 WHAT THE SCRIPT DOES
 
 ### Phase 1: Prerequisites Check (30 seconds)
+
 ```
 ✅ Python installed and accessible
 ✅ NVIDIA drivers working (nvidia-smi)
@@ -80,6 +85,7 @@ The merged model directory (single unified model)
 ```
 
 ### Phase 2: GPU Monitoring (Background)
+
 ```
 Starts background job logging every 10 seconds:
 - GPU utilization %
@@ -91,6 +97,7 @@ Saved to: logs/gpu_monitor_YYYYMMDD_HHMMSS.csv
 ```
 
 ### Phase 3: LoRA Training (2-4 hours)
+
 ```powershell
 # Sets environment
 $env:CUDA_VISIBLE_DEVICES = "0"  # Force RTX 4080 Super
@@ -108,6 +115,7 @@ Watch for:
 ```
 
 ### Phase 4: Adapter Merging (5-10 minutes)
+
 ```powershell
 # Executes
 python -m axolotl.cli.merge_lora \
@@ -120,6 +128,7 @@ Single unified model with adapter weights integrated
 ```
 
 ### Phase 5: Validation (1 minute)
+
 ```
 Checks merged model:
 ✅ config.json exists
@@ -133,6 +142,7 @@ Checks merged model:
 ## 📊 MONITORING TRAINING
 
 ### In Real-Time (Console Output)
+
 ```
 Look for these patterns:
 
@@ -160,6 +170,7 @@ Look for these patterns:
 ```
 
 ### Separate Terminal (GPU Monitor)
+
 ```powershell
 # Watch GPU in real-time
 nvidia-smi -l 5
@@ -172,6 +183,7 @@ Target Metrics:
 ```
 
 ### Post-Training (Log Analysis)
+
 ```powershell
 # GPU monitor log
 Get-Content logs/gpu_monitor_*.csv | Select-Object -Last 20
@@ -185,6 +197,7 @@ Get-Content logs/gpu_monitor_*.csv | Select-Object -Last 20
 ## 🛑 TROUBLESHOOTING
 
 ### Out of Memory (OOM)
+
 ```
 Error: CUDA out of memory
 
@@ -202,6 +215,7 @@ Solution 3: Kill other GPU processes
 ```
 
 ### Training Diverges (NaN Loss)
+
 ```
 Error: loss = NaN after few steps
 
@@ -212,6 +226,7 @@ Edit axolotl-configs/auditor-3b-qlora.yml:
 ```
 
 ### Merge Fails
+
 ```
 Error: Cannot find adapter_model.safetensors
 
@@ -226,6 +241,7 @@ If missing: Training didn't complete - check logs
 ```
 
 ### Slow Training
+
 ```
 Issue: Steps taking 60+ seconds each
 
@@ -246,6 +262,7 @@ Check 3: Other processes competing?
 ## ⏱️ EXPECTED TIMELINE
 
 ### VetRate-Auditor
+
 ```
 Phase                Duration      Output
 ─────────────────────────────────────────────────────────────
@@ -262,6 +279,7 @@ TOTAL                2-4 hours     VetRate-Auditor-3B-v1/
 ```
 
 ### VetRate-Writer
+
 ```
 Phase                Duration      Output
 ─────────────────────────────────────────────────────────────
@@ -279,6 +297,7 @@ TOTAL                1.5-3 hours   VetRate-Writer-3B-v1/
 ```
 
 ### Both (Sequential)
+
 ```
 Auditor:   2-4 hours
 Writer:    1.5-3 hours
@@ -290,6 +309,7 @@ TOTAL:     3.5-7 hours
 ## ✅ SUCCESS CRITERIA
 
 ### After Training
+
 ```powershell
 # Check adapter exists
 dir models\lora-adapters\vetrate-auditor-3b\adapter_model.safetensors
@@ -299,6 +319,7 @@ dir models\lora-adapters\vetrate-auditor-3b\adapter_model.safetensors
 ```
 
 ### After Merging
+
 ```powershell
 # Check merged model
 dir models\merged-models\VetRate-Auditor-3B-v1\
@@ -315,6 +336,7 @@ Total size: 6-7 GB
 ```
 
 ### Final Validation
+
 ```powershell
 # Test merged model loads
 python -c "
@@ -362,6 +384,7 @@ llm-compiler/
 After successful merge, you'll have standalone models ready for:
 
 ### MLC-LLM Compilation
+
 ```bash
 # Convert to MLC format
 mlc_llm convert_weight \
@@ -377,6 +400,7 @@ mlc_llm compile \
 ```
 
 ### WebLLM Deployment
+
 ```javascript
 // Browser-side inference
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
@@ -405,6 +429,7 @@ await engine.reload("VetRate-Writer-3B");
 | `-DryRun` | Switch | Test without executing |
 
 ### Examples
+
 ```powershell
 # Standard execution
 .\train_and_merge.ps1 -SwarmMember auditor
@@ -424,6 +449,7 @@ await engine.reload("VetRate-Writer-3B");
 ## 💎 DIAMOND QUALITY CHECKLIST
 
 Before you start:
+
 - [ ] RTX 4080 Super visible (`nvidia-smi`)
 - [ ] Axolotl installed (`axolotl version`)
 - [ ] 10+ GB disk space available
@@ -432,6 +458,7 @@ Before you start:
 - [ ] Training data present (`dir training-data\*.jsonl`)
 
 During training:
+
 - [ ] GPU utilization 90-100%
 - [ ] VRAM usage 11-12 GB
 - [ ] Loss decreasing
@@ -439,6 +466,7 @@ During training:
 - [ ] Temperature <85°C
 
 After completion:
+
 - [ ] Adapter files exist (20-50 MB)
 - [ ] Merged model created (6-7 GB)
 - [ ] Validation passed

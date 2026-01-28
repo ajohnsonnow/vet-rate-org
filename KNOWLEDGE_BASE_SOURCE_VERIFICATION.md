@@ -76,6 +76,7 @@ This knowledge base was **completely rebuilt from scratch** using:
 ## 🔗 OFFICIAL SOURCE LINKS
 
 ### Primary Source: eCFR
+
 ```
 https://www.ecfr.gov/current/title-38/chapter-I/part-4
 ```
@@ -84,21 +85,21 @@ https://www.ecfr.gov/current/title-38/chapter-I/part-4
 
 | Section | Body System | eCFR Link |
 |---------|-------------|-----------|
-| § 4.71a | Musculoskeletal | https://www.ecfr.gov/current/title-38/part-4/section-4.71a |
-| § 4.73 | Muscle Injuries | https://www.ecfr.gov/current/title-38/part-4/section-4.73 |
-| § 4.79 | Eye | https://www.ecfr.gov/current/title-38/part-4/section-4.79 |
-| § 4.85-4.87 | Ear | https://www.ecfr.gov/current/title-38/part-4/section-4.85 |
-| § 4.88a-c | Infectious/Immune | https://www.ecfr.gov/current/title-38/part-4/section-4.88a |
-| § 4.97 | Respiratory | https://www.ecfr.gov/current/title-38/part-4/section-4.97 |
-| § 4.104 | Cardiovascular | https://www.ecfr.gov/current/title-38/part-4/section-4.104 |
-| § 4.114 | Digestive | https://www.ecfr.gov/current/title-38/part-4/section-4.114 |
-| § 4.115-4.116 | Genitourinary | https://www.ecfr.gov/current/title-38/part-4/section-4.115a |
-| § 4.117 | Hemic/Lymphatic | https://www.ecfr.gov/current/title-38/part-4/section-4.117 |
-| § 4.118 | Skin | https://www.ecfr.gov/current/title-38/part-4/section-4.118 |
-| § 4.119 | Endocrine | https://www.ecfr.gov/current/title-38/part-4/section-4.119 |
-| § 4.124a | Neurological | https://www.ecfr.gov/current/title-38/part-4/section-4.124a |
-| § 4.130 | Mental Disorders | https://www.ecfr.gov/current/title-38/part-4/section-4.130 |
-| § 4.150 | Dental/Oral | https://www.ecfr.gov/current/title-38/part-4/section-4.150 |
+| § 4.71a | Musculoskeletal | <https://www.ecfr.gov/current/title-38/part-4/section-4.71a> |
+| § 4.73 | Muscle Injuries | <https://www.ecfr.gov/current/title-38/part-4/section-4.73> |
+| § 4.79 | Eye | <https://www.ecfr.gov/current/title-38/part-4/section-4.79> |
+| § 4.85-4.87 | Ear | <https://www.ecfr.gov/current/title-38/part-4/section-4.85> |
+| § 4.88a-c | Infectious/Immune | <https://www.ecfr.gov/current/title-38/part-4/section-4.88a> |
+| § 4.97 | Respiratory | <https://www.ecfr.gov/current/title-38/part-4/section-4.97> |
+| § 4.104 | Cardiovascular | <https://www.ecfr.gov/current/title-38/part-4/section-4.104> |
+| § 4.114 | Digestive | <https://www.ecfr.gov/current/title-38/part-4/section-4.114> |
+| § 4.115-4.116 | Genitourinary | <https://www.ecfr.gov/current/title-38/part-4/section-4.115a> |
+| § 4.117 | Hemic/Lymphatic | <https://www.ecfr.gov/current/title-38/part-4/section-4.117> |
+| § 4.118 | Skin | <https://www.ecfr.gov/current/title-38/part-4/section-4.118> |
+| § 4.119 | Endocrine | <https://www.ecfr.gov/current/title-38/part-4/section-4.119> |
+| § 4.124a | Neurological | <https://www.ecfr.gov/current/title-38/part-4/section-4.124a> |
+| § 4.130 | Mental Disorders | <https://www.ecfr.gov/current/title-38/part-4/section-4.130> |
+| § 4.150 | Dental/Oral | <https://www.ecfr.gov/current/title-38/part-4/section-4.150> |
 
 ---
 
@@ -142,11 +143,13 @@ https://www.ecfr.gov/current/title-38/chapter-I/part-4
 ### Special Rating Methods
 
 **DC 6100 - Hearing Loss:**
+
 - Rated using audiometric tables (Tables VI, VIA, VII)
 - Not a fixed percentage - depends on measured hearing levels
 - Requires audiological examination by licensed audiologist
 
 **Muscle Injuries (DC 5301-5323):**
+
 - Rated by muscle group function
 - Separate ratings for dominant vs non-dominant side
 - Severity levels: Slight, Moderate, Moderately Severe, Severe
@@ -174,9 +177,9 @@ python ecfr_merger.py          # Merge all sources
 
 | Resource | URL |
 |----------|-----|
-| eCFR (Rating Schedule) | https://www.ecfr.gov/current/title-38 |
-| VA Schedule for Rating | https://www.benefits.va.gov/warms/bookc.asp |
-| M21-1 Manual | https://www.knowva.ebenefits.va.gov |
+| eCFR (Rating Schedule) | <https://www.ecfr.gov/current/title-38> |
+| VA Schedule for Rating | <https://www.benefits.va.gov/warms/bookc.asp> |
+| M21-1 Manual | <https://www.knowva.ebenefits.va.gov> |
 
 ---
 

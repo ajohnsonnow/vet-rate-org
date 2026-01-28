@@ -21,7 +21,7 @@ import { useIDDQD, useGamepadBridge, useDoomPerformance } from '../utils/easterE
 const DoomFrame = lazy(() => Promise.resolve({
   default: ({ onClose }) => (
     <iframe
-      src="https://dos.zone/player/?bundleUrl=https%3A%2F%2Fcdn.dos.zone%2Foriginal%2F2X%2F9%2F9ed7eb9c2c441f56f4c975571a8b2808db54556f.jsdos&anonymous=1"
+      src="https://archive.org/embed/msdos_DOOM_1993"
       title="DOOM - Stress Relief Division"
       className="w-full h-full border-0"
       allow="autoplay; fullscreen; gamepad"

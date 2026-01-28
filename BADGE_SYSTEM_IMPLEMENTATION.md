@@ -7,9 +7,11 @@ This update adds comprehensive military badge, tab, and uniform accoutrement dis
 ## New Files Created
 
 ### 1. `src/data/badgeData.js`
+
 Comprehensive badge database with 80+ badges across all services:
 
 **Badge Categories:**
+
 - **Combat Badges**: CIB, CAB, CMB (Army), SEAL Trident (Navy), CCT/PJ (Air Force)
 - **Special Skill Badges**: Parachutist (Master/Senior/Basic), Air Assault, Pathfinder, Divers
 - **Marksmanship Badges**: Expert/Sharpshooter/Marksman with weapon bars
@@ -18,6 +20,7 @@ Comprehensive badge database with 80+ badges across all services:
 - **Identification Badges**: Driver, Mechanic, etc.
 
 **Tabs Included:**
+
 - Ranger Tab (black/gold)
 - Special Forces Tab (jungle green)
 - Sapper Tab (black/gold)
@@ -25,13 +28,16 @@ Comprehensive badge database with 80+ badges across all services:
 - Mountain Tab (white/black)
 
 **Sleeve Elements:**
+
 - Overseas Service Bars (1 per 6 months overseas)
 - Service Stripes/Hashmarks (per branch regulations)
 
 ### 2. `src/components/BadgeDisplay.jsx`
+
 React component for rendering badges with proper placement:
 
 **Components:**
+
 - `Badge` - Single badge with tooltip and combat indicator
 - `Tab` - Shoulder tab display (Ranger, SF, Sapper, etc.)
 - `OverseasBars` - Sleeve overseas service bars
@@ -41,7 +47,9 @@ React component for rendering badges with proper placement:
 - `CombatIndicatorSummary` - Highlights combat service for VA claims
 
 ### 3. `scripts/test-badge-parser.mjs`
+
 Test script validating badge detection against Johnson's DD214 data:
+
 - Tests Combat Action Badge detection
 - Tests tab detection (Ranger, SF)
 - Tests marksmanship badge detection
@@ -50,7 +58,9 @@ Test script validating badge detection against Johnson's DD214 data:
 ## Integration Points
 
 ### DocumentIntelligenceBriefing.jsx
+
 Updated to automatically:
+
 1. Parse awards text for badges using `parseDD214Badges()`
 2. Display combat indicator alerts when CAB/CIB/CMB detected
 3. Show badges above the ribbon rack (per AR 670-1)
@@ -83,7 +93,9 @@ Updated to automatically:
 ## Key Functions
 
 ### `parseDD214Badges(rawText, branch)`
+
 Parses DD214 awards text and returns:
+
 ```javascript
 {
   badges: [/* Badge objects */],
@@ -93,14 +105,17 @@ Parses DD214 awards text and returns:
 ```
 
 ### `calculateOverseasBars(foreignServiceMonths, isWartime)`
+
 Returns overseas bar count and placement (wartime = right sleeve)
 
 ### `calculateServiceStripes(totalYearsService, branch)`
+
 Returns service stripe count per branch regulations
 
 ## Combat Indicators for VA Claims
 
 When combat badges are detected, the system:
+
 1. Displays a red alert box highlighting combat service
 2. Lists specific combat indicators (CAB, CIB, campaign medals, etc.)
 3. Notes that combat service may qualify for presumptive conditions

@@ -39,10 +39,10 @@ input[type="submit"] {
   }
 }
 
-/* Improve mobile scrolling momentum */
+/* Smooth scrolling handled by scroll-behavior: smooth */
 @media (max-width: 767px) {
   * {
-    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 }
 
@@ -1342,20 +1342,17 @@ body.modal-open-with-position {
 
 /* Modal backdrop - scrollable container */
 .modal-backdrop {
-  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
   overscroll-behavior: contain; /* Prevent scroll chaining to body */
   touch-action: pan-y; /* Allow vertical scrolling only */
 }
 
 /* Modal content - prevent nested scroll issues */
 .modal-content {
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
 /* Modal content body - scrollable area inside modal */
 .modal-content > div[class*="overflow-y-auto"] {
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
@@ -1373,25 +1370,15 @@ body.modal-open-with-position {
 
 /* Fix for iOS momentum scrolling issues */
 @supports (-webkit-touch-callout: none) {
-  .modal-backdrop {
-    -webkit-overflow-scrolling: touch;
-  }
-  
   /* Prevent rubber-banding on iOS when at scroll boundaries */
   body.modal-open {
     position: fixed;
     overflow: hidden;
   }
-  
-  /* Better iOS scroll behavior in modals */
-  .modal-content > div[class*="overflow-y-auto"] {
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 /* Utility class for scroll containers inside modals */
 .scroll-container {
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
@@ -1811,7 +1798,6 @@ a {
   
   /* Better scrolling on touch devices */
   .overflow-auto, .overflow-y-auto, .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
   }
   
@@ -1834,9 +1820,9 @@ a {
       padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
     
-    /* Better scroll momentum on iPad */
+    /* Better scroll momentum handled by modern iOS */
     .modal-content, .sidebar, .overflow-auto {
-      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
   }
 }
@@ -1893,7 +1879,7 @@ a {
   table {
     display: block;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 }
 
@@ -1935,7 +1921,6 @@ a {
 
 /* Smooth Scrolling for Mobile */
 html {
-  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
 
@@ -2031,6 +2016,7 @@ body {
     top: 0;
     z-index: 10;
     background: inherit;
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
   }
 }
@@ -2052,7 +2038,8 @@ body {
 /* Hide scrollbars while maintaining functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;
-  scrollbar-width: none;
+  /* stylelint-disable-next-line property-no-unknown */
+  scrollbar-width: none; /* Modern browsers (Chrome 121+, Firefox 64+) - gracefully degrades */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -2071,7 +2058,6 @@ body {
   
   /* Tab containers should scroll smoothly */
   nav {
-    -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
   }
   
@@ -2298,8 +2284,7 @@ body {
   
   /* Avoid breaking elements across pages */
   p, blockquote, ul, ol {
-    orphans: 3 !important;
-    widows: 3 !important;
+    page-break-inside: avoid !important;
   }
   
   /* Keep critical sections together */

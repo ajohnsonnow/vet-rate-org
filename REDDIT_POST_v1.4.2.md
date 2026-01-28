@@ -10,8 +10,8 @@ A **free, open-source VA disability claims toolkit** with 40 professional-grade 
 
 **100% client-side** = your data never leaves your browser. No accounts, no tracking, no server backend.
 
-🌐 **Live:** https://vet-rate.org  
-📂 **GitHub:** https://github.com/ajohnsonnow/vet-rate-org
+🌐 **Live:** <https://vet-rate.org>  
+📂 **GitHub:** <https://github.com/ajohnsonnow/vet-rate-org>
 
 ---
 
@@ -22,12 +22,14 @@ A **free, open-source VA disability claims toolkit** with 40 professional-grade 
 The biggest update: You can now run AI analysis entirely on your PC using WebGPU. Your data literally never leaves your device - even if you unplug the internet, it still works.
 
 **How it works:**
+
 - Uses WebLLM (open-source) to run models like Llama 3.2 and Phi 3.5 in your browser
 - Requires WebGPU-compatible GPU (NVIDIA RTX 20/30/40, AMD RDNA2+, Intel Arc, M1/M2/M3 Macs)
 - 2-8GB VRAM for most models
 - First load takes 5-10 min (downloads model, then cached forever)
 
 **What you can do:**
+
 - Analyze C-Files without cloud uploads
 - Generate nexus statements completely offline  
 - Red Team adversarial review with zero data leakage
@@ -42,11 +44,13 @@ The biggest update: You can now run AI analysis entirely on your PC using WebGPU
 If you have multiple GPUs (desktop with discrete + integrated, or multiple discrete GPUs), you can now choose which one runs the AI.
 
 **Options:**
+
 - **Auto Mode**: Browser picks best GPU (default)
 - **High Performance**: Force discrete GPU (RTX 4080, RX 7900 XTX)
 - **Power Saver**: Force integrated GPU
 
 **GPU details shown:**
+
 - Vendor (NVIDIA, AMD, Intel)
 - Estimated VRAM
 - Max texture size
@@ -62,12 +66,14 @@ Perfect for controlling performance vs power consumption.
 Back up your claims data to YOUR Google Drive (not our servers - we don't have servers).
 
 **How it works:**
+
 - Data encrypted with AES-256 before upload
 - Decryption key stored only in your browser
 - Manual sync (you control when/what uploads)
 - Restore on any device where you're signed into Google
 
 **What gets backed up:**
+
 - Veteran profile
 - All saved conditions and ratings
 - C&P exam answers
@@ -86,11 +92,13 @@ Track all your service separately (re-enlistments, Guard, Reserve, breaks in ser
 **Now:** Track unlimited periods as separate entries
 
 **Example:**
+
 - Period 1: Army Active Duty 2001-2005 (DD214)
 - Period 2: Army Reserve 2006-2010 (DD256)  
 - Period 3: Army National Guard 2011-2020 (NGB 22)
 
 **Supported forms:**
+
 - DD214 (Active Duty)
 - NGB 22 (National Guard)
 - DD256/DD257 (Reserve)
@@ -105,11 +113,13 @@ Auto-calculates total service time across all periods.
 Now processes Guard and Reserve discharge documents (not just DD214s).
 
 **Supports:**
+
 - DD214 (Active Duty)
 - NGB 22 (National Guard)
 - DD256/DD257 (Reserve)
 
 **Improvements:**
+
 - Handles multiple enlistments
 - Extracts MOS/AFSC/Rate from all formats
 - Identifies component (Active/Guard/Reserve)
@@ -120,12 +130,14 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 ### 6. 🧹 **Quality-of-Life Updates**
 
 **The Navigator (AI Assistant):**
+
 - Draggable and resizable
 - Minimizes to floating button
 - Context-aware (knows what tool you're using)
 - Remembers position
 
 **Behind the Scenes:**
+
 - 13 automated pre-deployment checks
 - Legal pages auto-sync
 - Dynamic stats (no hardcoded numbers)
@@ -183,9 +195,10 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 
 ## 🚀 Try It Now
 
-**Live:** https://vet-rate.org
+**Live:** <https://vet-rate.org>
 
 **Quick start:**
+
 1. Visit the site (no account needed)
 2. Try Search - look up a condition (e.g., "tinnitus")
 3. Run Tactical Calculator - see your combined rating
@@ -193,6 +206,7 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 5. Optional: sync to your Google Drive
 
 **Local AI setup:**
+
 1. Click "Faraday Cage Protocol" in Support section
 2. Check WebGPU availability (green = ready)
 3. Select a model (Llama-3.2-3B needs 2GB VRAM)
@@ -206,6 +220,7 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 **Works on mobile:** All core tools (search, calculators, exam prep)
 
 **Local AI:** Limited on mobile
+
 - **Works:** M1/M2/M3 iPads and MacBooks
 - **Experimental:** Android 12+ with Snapdragon 8 Gen 2+
 - **Most phones:** Use cloud AI (Gemini with YOUR key)
@@ -223,6 +238,7 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 ## 🎯 Roadmap
 
 **Coming soon:**
+
 - DBQ Library (offline access to all VA questionnaires)
 - Claim Navigator (step-by-step wizard)
 - More Local Models (Llama-3.3-70B for high-VRAM users)
@@ -230,6 +246,7 @@ Now processes Guard and Reserve discharge documents (not just DD214s).
 - Ribbon Rack (visualize awards from DD214)
 
 **Under consideration:**
+
 - Veteran mentorship (encrypted peer support)
 - VSO integration (direct referrals)
 - VA.gov API (live claims status)
@@ -253,6 +270,7 @@ If Vet-Rate.org helped you, share it with a veteran who needs it.
 To r/VeteransBenefits: Your feedback shaped this. Every bug report and feature request matters.
 
 **Thanks to:**
+
 - Veterans who beta-tested Faraday Cage
 - Everyone who reported GPU issues
 - Those who pushed for Guard/Reserve support
@@ -262,11 +280,11 @@ You made v1.4.2 possible. 🇺🇸
 
 ---
 
-**Ready?** → https://vet-rate.org
+**Ready?** → <https://vet-rate.org>
 
 **Questions?** Ask below.
 
-**Bugs?** → https://github.com/ajohnsonnow/vet-rate-org/issues
+**Bugs?** → <https://github.com/ajohnsonnow/vet-rate-org/issues>
 
 **Contribute?** PRs welcome!
 

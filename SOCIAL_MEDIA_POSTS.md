@@ -3,6 +3,7 @@
 ## Twitter/X (280 characters)
 
 ### Version 1 - The Numbers
+
 ```
 🚨 We just analyzed Vet-Rate.org's true development cost:
 
@@ -19,6 +20,7 @@ This is why AI changes everything. 🇺🇸
 ```
 
 ### Version 2 - Veteran Impact
+
 ```
 What would cost veterans $15K-50K per claim is now FREE.
 
@@ -33,6 +35,7 @@ https://vet-rate.org
 ```
 
 ### Version 3 - Technical Angle
+
 ```
 Real numbers from Vet-Rate.org:
 
@@ -52,6 +55,7 @@ The future is here. And it's free for veterans. 🎯
 ## LinkedIn (Long Form)
 
 ### Professional Analysis Post
+
 ```
 𝗧𝗵𝗲 𝗔𝗜 𝗥𝗲𝘃𝗼𝗹𝘂𝘁𝗶𝗼𝗻 𝗶𝗻 𝗔𝗰𝘁𝗶𝗼𝗻: 𝗩𝗲𝘁-𝗥𝗮𝘁𝗲.𝗼𝗿𝗴 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗺𝗲𝗻𝘁 𝗖𝗼𝘀𝘁 𝗔𝗻𝗮𝗹𝘆𝘀𝗶𝘀
 
@@ -124,6 +128,7 @@ The future of software development is here. And it's 280x faster.
 ## Reddit (r/programming, r/veterans)
 
 ### Technical Deep-Dive Post
+
 ```
 Title: AI-Assisted Development: Real Numbers from a Production Platform
 
@@ -294,10 +299,12 @@ Link in bio → vet-rate.org
 ### Cost Per Line of Code
 
 ```
+
 Junior Developer:    $27.43 per line
 Mid-Level Developer: $16.67 per line
 Senior Developer:    $10.80 per line
 AI-Assisted Senior:  $0.058 per line ← 186x cheaper
+
 ```
 
 ### The Impact
@@ -394,7 +401,7 @@ vet-rate.org
 
 ---
 
-## Choose Your Platform:
+## Choose Your Platform
 
 - **Twitter/X**: Use Version 1, 2, or 3 depending on your audience
 - **LinkedIn**: Use the Professional Analysis (great for dev community engagement)
