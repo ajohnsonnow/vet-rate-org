@@ -42,7 +42,7 @@ const MODELS = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-7b-v2',
-    name: '🎖️ CWO3 "HAWKEYE" — 350F All Source Intel',
+    name: '🎖️ CWO3 "HAWKEYE" - 350F All Source Intel',
     description: 'Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent',
     size: '4.4 GB',
     vramRequired: '6 GB',
@@ -54,7 +54,7 @@ const MODELS = [
   },
   {
     id: 'vetrate-writer-7b-v2',
-    name: '🎖️ CWO4 "PHANTOM" — 270A Legal Admin',
+    name: '🎖️ CWO4 "PHANTOM" - 270A Legal Admin',
     description: 'JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs',
     size: '4.4 GB',
     vramRequired: '6 GB',
@@ -65,7 +65,7 @@ const MODELS = [
   },
   {
     id: 'vetrate-rater-7b-v2',
-    name: '🎖️ CWO5 "ORACLE" — 352N SIGINT Analyst',
+    name: '🎖️ CWO5 "ORACLE" - 352N SIGINT Analyst',
     description: 'Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds',
     size: '4.4 GB',
     vramRequired: '6 GB',
@@ -80,7 +80,7 @@ const MODELS = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-1.7b-mobile-v1',
-    name: '📱 WO1 "SCOUT" — 350F Field Intel',
+    name: '📱 WO1 "SCOUT" - 350F Field Intel',
     description: 'Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis',
     size: '0.8 GB',
     vramRequired: '2 GB',
@@ -92,7 +92,7 @@ const MODELS = [
   },
   {
     id: 'vetrate-writer-1.7b-mobile-v1',
-    name: '📱 CWO2 "SCRIBE" — 270A Field Admin',
+    name: '📱 CWO2 "SCRIBE" - 270A Field Admin',
     description: 'Rapid field documentation: captures testimony, outlines statements, secures the narrative',
     size: '0.8 GB',
     vramRequired: '2 GB',
@@ -104,7 +104,7 @@ const MODELS = [
   },
   {
     id: 'vetrate-rater-1.7b-mobile-v1',
-    name: '📱 CWO2 "CIPHER" — 352N Field SIGINT',
+    name: '📱 CWO2 "CIPHER" - 352N Field SIGINT',
     description: 'Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move',
     size: '0.8 GB',
     vramRequired: '2 GB',
