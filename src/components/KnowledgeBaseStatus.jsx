@@ -12,6 +12,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import disabilityDataJson from '../data/disabilityData.json';
 import { useColorSchemas } from '../hooks/useColorSchemas';
+import { 
+  isMobileDevice, 
+  isFullDKBCached, 
+  downloadFullDKB, 
+  getCachedEntryCount,
+  smartLoadDKB,
+  FULL_DATABASE_COUNT,
+  WEB_DATABASE_COUNT 
+} from '../utils/dkbIndexedDB';
 
 const disabilityData = disabilityDataJson.disabilities || [];
 
@@ -214,20 +223,24 @@ export default function KnowledgeBaseStatus({ compact = false }) {
   const dropdownClasses = getDropdownClasses();
   
   const [showDetails, setShowDetails] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isFullCached, setIsFullCached] = useState(false);
   const [kbStatus, setKbStatus] = useState({
     lastUpdated: null,
     totalConditions: 0,
     // DKB (Diamond Knowledge Base) - Official sources
     dkbEntries: 0,
     dkbSources: {},
-    // Full database count (available with Local LLM)
-    fullDatabaseCount: 130508, // Full DKB entries
+    // Full database count (available with Local LLM or IndexedDB)
+    fullDatabaseCount: FULL_DATABASE_COUNT, // Full DKB entries
     isWebOptimized: true, // True when using web version (truncated)
     localAIReady: false, // Whether Local AI is loaded
     // Combined for display
     totalEntries: 0,
     sources: {},
-    // Full DKB source counts (shown when Local AI loaded)
+    // Full DKB source counts (shown when Local AI loaded or full cached)
     fullSources: {
       'BVA_DECISIONS': 116209,
       'CAVC': 6422,
@@ -244,6 +257,51 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     loading: true
   });
   const dropdownRef = useRef(null);
+
+  // Check device type and cache status on mount
+  useEffect(() => {
+    const checkDeviceAndCache = async () => {
+      const mobile = isMobileDevice();
+      setIsMobile(mobile);
+      
+      const cached = await isFullDKBCached();
+      setIsFullCached(cached);
+      
+      console.log(`[DKB] Device check: mobile=${mobile}, cached=${cached}`);
+      
+      // On desktop, auto-download full database if not cached
+      if (!mobile && !cached) {
+        console.log('[DKB] Desktop detected - auto-downloading full database...');
+        setIsDownloading(true);
+        const result = await downloadFullDKB((progress) => setDownloadProgress(progress));
+        setIsDownloading(false);
+        if (result.success) {
+          setIsFullCached(true);
+          // Reload stats with full data
+          window.location.reload(); // Simple reload to get fresh data
+        }
+      }
+    };
+    
+    checkDeviceAndCache();
+    
+    // Listen for cache updates
+    const handleCacheUpdate = (event) => {
+      const { entryCount, fullDatabase } = event.detail || {};
+      if (fullDatabase) {
+        setIsFullCached(true);
+        setKbStatus(prev => ({
+          ...prev,
+          isWebOptimized: false,
+          dkbEntries: entryCount,
+          totalEntries: entryCount
+        }));
+      }
+    };
+    
+    window.addEventListener('dkb-cache-updated', handleCacheUpdate);
+    return () => window.removeEventListener('dkb-cache-updated', handleCacheUpdate);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -355,6 +413,35 @@ export default function KnowledgeBaseStatus({ compact = false }) {
 
     loadKnowledgeBaseStats();
   }, []);
+
+  // Handle manual download of full DKB (for mobile users)
+  const handleDownloadFullDKB = async () => {
+    if (isDownloading) return;
+    
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    
+    try {
+      const result = await downloadFullDKB((progress) => setDownloadProgress(progress));
+      
+      if (result.success) {
+        setIsFullCached(true);
+        setKbStatus(prev => ({
+          ...prev,
+          isWebOptimized: !result.isFullDB,
+          dkbEntries: result.entryCount,
+          totalEntries: result.entryCount
+        }));
+        console.log(`[DKB] Successfully cached ${result.entryCount} entries`);
+      } else {
+        console.error('[DKB] Download failed:', result.error);
+      }
+    } catch (err) {
+      console.error('[DKB] Download error:', err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const getDaysSinceUpdate = () => {
     if (!kbStatus.lastUpdated) return null;
@@ -479,11 +566,11 @@ export default function KnowledgeBaseStatus({ compact = false }) {
               </div>
               
               {/* Web Optimization Notice */}
-              {kbStatus.isWebOptimized && !kbStatus.loading && (
+              {kbStatus.isWebOptimized && !kbStatus.loading && !isFullCached && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                   <div className="flex items-start gap-2">
                     <span className="text-amber-500 text-lg">⚡</span>
-                    <div>
+                    <div className="flex-1">
                       <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
                         Web-Optimized Mode
                       </div>
@@ -491,9 +578,57 @@ export default function KnowledgeBaseStatus({ compact = false }) {
                         Showing <strong>{kbStatus.dkbEntries.toLocaleString()}</strong> high-priority entries for fast loading.
                         Full database has <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong> entries.
                       </div>
-                      <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
-                        <span>🧠</span>
-                        <span>Load <strong>Local LLM</strong> (Diamond Swarm) for complete knowledge access.</span>
+                      
+                      {/* Download Button for Mobile */}
+                      {isMobile && !isDownloading && (
+                        <button
+                          onClick={handleDownloadFullDKB}
+                          className="mt-3 w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <span>📥</span>
+                          <span>Download Full Database (~8 MB)</span>
+                        </button>
+                      )}
+                      
+                      {/* Download Progress */}
+                      {isDownloading && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 mb-1">
+                            <span>Downloading full database...</span>
+                            <span>{downloadProgress}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-amber-200 dark:bg-amber-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-emerald-500 transition-all duration-300"
+                              style={{ width: `${downloadProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Desktop notice */}
+                      {!isMobile && !isDownloading && (
+                        <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+                          <span>🧠</span>
+                          <span>Load <strong>Local LLM</strong> (Diamond Swarm) for complete knowledge access.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Full DKB Cached Notice */}
+              {isFullCached && !kbStatus.localAIReady && !kbStatus.loading && (
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-500 text-lg">💾</span>
+                    <div>
+                      <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                        Full Database Cached
+                      </div>
+                      <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                        <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong> entries saved locally for offline access.
                       </div>
                     </div>
                   </div>
