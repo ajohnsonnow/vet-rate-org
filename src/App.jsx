@@ -115,6 +115,8 @@ import VaSandboxTest from './components/VaSandboxTest';
 import DemoDashboard from './components/DemoDashboard';
 import { VaApiStatusBanner } from './components/VaApiStatus';
 import { MobileSaveReminder } from './components/PacketPersistence';
+// 🎮 Easter Egg: Stress Relief Division (Type IDDQD anywhere to activate)
+import StressReliefDivision from './components/StressReliefDivision';
 // AAAAA Diamond Standard Components
 import GlobalCommandSearch from './components/GlobalCommandSearch';
 import MobileBottomNav, { MobileNavSpacer } from './components/MobileBottomNav';
@@ -970,6 +972,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-emerald-950 flex flex-col transition-colors duration-200">
+      {/* 🎮 Stress Relief Division Easter Egg - Type IDDQD anywhere */}
+      <StressReliefDivision />
+      
       {/* Toast Notification System */}
       <ToastContainer toasts={toasts} onClose={onClose} onAction={onAction} />
       

@@ -774,6 +774,7 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 /**
  * Generate text using Warrant Council (Primary AI Engine)
  * Routes to the appropriate specialized agent based on task type
+ * 💎 Now enhanced with DKB context injection
  */
 const generateWithWarrantCouncil = async (prompt, options = {}) => {
   const {
@@ -782,6 +783,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
+    useDKB = true, // Enable DKB by default
   } = options;
 
   // PII Scrubbing (Client-Side Privacy Firewall)
@@ -796,6 +798,24 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
       });
       scrubbedPrompt = scrubbedText;
       console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
+    }
+  }
+
+  // 💎 Inject DKB context for Warrant Council (makes specialized agents VA-smart!)
+  let enhancedPrompt = scrubbedPrompt;
+  if (useDKB) {
+    try {
+      const { buildDKBContext } = await getAISystemPrompts();
+      const dkbContext = await buildDKBContext(scrubbedPrompt, {
+        maxEntries: options.maxDKBEntries || 6, // Smaller for fine-tuned models (they know more already)
+        maxChars: options.maxDKBChars || 4000,
+      });
+      if (dkbContext) {
+        enhancedPrompt = scrubbedPrompt + dkbContext;
+        console.log('[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access');
+      }
+    } catch (dkbError) {
+      console.warn('[WarrantCouncil] DKB context injection failed:', dkbError.message);
     }
   }
 
@@ -827,7 +847,8 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
   try {
     swarmGenerating = true;
     
-    const result = await generateWithSwarm(scrubbedPrompt, {
+    // 💎 Use enhanced prompt with DKB context
+    const result = await generateWithSwarm(enhancedPrompt, {
       agentId,
       toolId,
       maxTokens,
@@ -844,6 +865,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
 
 /**
  * 🌐 Generate text using Wllama (Browser WASM inference)
+ * 💎 Now enhanced with DKB context injection
  */
 const generateWithWllama = async (prompt, options = {}) => {
   const {
@@ -852,6 +874,7 @@ const generateWithWllama = async (prompt, options = {}) => {
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
+    useDKB = true,
   } = options;
 
   // PII Scrubbing
@@ -869,10 +892,28 @@ const generateWithWllama = async (prompt, options = {}) => {
     }
   }
 
+  // 💎 Inject DKB context for Wllama
+  let enhancedPrompt = scrubbedPrompt;
+  if (useDKB) {
+    try {
+      const { buildDKBContext } = await getAISystemPrompts();
+      const dkbContext = await buildDKBContext(scrubbedPrompt, {
+        maxEntries: options.maxDKBEntries || 6,
+        maxChars: options.maxDKBChars || 4000,
+      });
+      if (dkbContext) {
+        enhancedPrompt = scrubbedPrompt + dkbContext;
+        console.log('[Wllama] 💎 DKB context injected');
+      }
+    } catch (dkbError) {
+      console.warn('[Wllama] DKB context injection failed:', dkbError.message);
+    }
+  }
+
   try {
     console.log(`🌐 Wllama: Generating with ${wllamaCurrentModel || 'auditor'} model...`);
     
-    const result = await wllamaService.chatCompletion(scrubbedPrompt, {
+    const result = await wllamaService.chatCompletion(enhancedPrompt, {
       maxTokens,
       temperature,
       onToken: onStream ? (token) => onStream(token) : null,
@@ -890,6 +931,7 @@ const generateWithWllama = async (prompt, options = {}) => {
 
 /**
  * 🖥️ Generate text using Local Server (llama.cpp API)
+ * 💎 Now enhanced with DKB context injection
  */
 const generateWithLocalServer = async (prompt, options = {}) => {
   const {
@@ -898,6 +940,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
+    useDKB = true,
   } = options;
 
   // PII Scrubbing
@@ -915,10 +958,28 @@ const generateWithLocalServer = async (prompt, options = {}) => {
     }
   }
 
+  // 💎 Inject DKB context for Local Server
+  let enhancedPrompt = scrubbedPrompt;
+  if (useDKB) {
+    try {
+      const { buildDKBContext } = await getAISystemPrompts();
+      const dkbContext = await buildDKBContext(scrubbedPrompt, {
+        maxEntries: options.maxDKBEntries || 8,
+        maxChars: options.maxDKBChars || 6000,
+      });
+      if (dkbContext) {
+        enhancedPrompt = scrubbedPrompt + dkbContext;
+        console.log('[LocalServer] 💎 DKB context injected');
+      }
+    } catch (dkbError) {
+      console.warn('[LocalServer] DKB context injection failed:', dkbError.message);
+    }
+  }
+
   try {
     console.log('🖥️ Local Server: Generating via llama.cpp API...');
     
-    const result = await localServerClient.chatCompletion(scrubbedPrompt, {
+    const result = await localServerClient.chatCompletion(enhancedPrompt, {
       maxTokens,
       temperature,
       stream: !!onStream,
@@ -968,14 +1029,32 @@ const generateWithLocalAI = async (prompt, options = {}) => {
   }
 
   // Build comprehensive system prompt if not provided (lazy load)
-  const { buildSystemPrompt } = await getAISystemPrompts();
-  const defaultSystemPrompt = buildSystemPrompt({
+  // 💎 Now also injects DKB context for enhanced VA knowledge (same as cloud AI)
+  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
+  let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || 'general',
     toolContext: options.toolContext,
     includeAppContext: true,
     includeRegulations: true,
     includeVeteranData: true,
   });
+  
+  // 💎 Inject DKB context for Local AI (makes local models VA-smart!)
+  const useDKB = options.useDKB !== false; // Enabled by default
+  if (useDKB) {
+    try {
+      const dkbContext = await buildDKBContext(prompt, {
+        maxEntries: options.maxDKBEntries || 8, // Slightly less than cloud due to context limits
+        maxChars: options.maxDKBChars || 6000, // Smaller context for local models
+      });
+      if (dkbContext) {
+        defaultSystemPrompt += dkbContext;
+        console.log('[LocalAI] 💎 DKB context injected - local model now has VA knowledge base access');
+      }
+    } catch (dkbError) {
+      console.warn('[LocalAI] DKB context injection failed, continuing without:', dkbError.message);
+    }
+  }
 
   const {
     systemPrompt = defaultSystemPrompt,

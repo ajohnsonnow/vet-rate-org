@@ -949,6 +949,155 @@ export const UNCERTAINTY_REQUIRED_PHRASES = [
 ];
 
 /**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 🔒 "NO DOCUMENT, NO STRATEGY" GATEKEEPER
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * This gatekeeper prevents the AI from providing individualized claim strategy
+ * unless the veteran has provided their actual "Reasons for Decision" text.
+ * 
+ * Why: Community feedback identified that providing strategy without reading
+ * the actual denial rationale leads to "confident guessing" which harms veterans.
+ * 
+ * Implementation: Added January 2026 based on r/VAClaims feedback.
+ */
+
+export const STRATEGY_GATEKEEPER_PROMPT = `
+═══════════════════════════════════════════════════════════════════════════════
+🔒 SECURITY PROTOCOL: "NO DOCUMENT, NO STRATEGY"
+═══════════════════════════════════════════════════════════════════════════════
+
+CRITICAL RULE: You are STRICTLY FORBIDDEN from providing specific claim strategies, 
+nexus arguments, appeal recommendations, or probability assessments UNLESS the user 
+has provided the actual text from the "REASONS FOR DECISION" section of their 
+VA Rating Decision Letter.
+
+---
+
+PHASE 1: INPUT AUDIT
+Before generating strategy, scan the user's input for ANY of these indicators:
+- Direct quotes from a VA decision letter
+- Keywords: "Reasons for Decision", "Service connection is denied", "Favorable findings"
+- Keywords: "The evidence shows", "The evidence does not show", "rating decision"
+- Keywords: "DBQ findings", "C&P exam found", "examiner's opinion"
+
+[ ] FOUND DECISION TEXT → Proceed to PHASE 2 (Strategy Mode)
+[ ] NO DECISION TEXT → Trigger REFUSAL MODE
+
+---
+
+PHASE 2: STRATEGY MODE (Only if decision text is present)
+If the veteran HAS provided specific denial language or decision text:
+1. QUOTE the exact sentence in their text that caused the denial
+2. IDENTIFY the missing element (Diagnosis, In-Service Event, or Nexus)
+3. EXPLAIN the medical/legal mechanism of the denial
+4. RECOMMEND specific evidence to cure that specific defect
+5. CITE the relevant 38 CFR section
+
+---
+
+REFUSAL MODE (Triggered if decision text is missing)
+If the veteran asks for strategy ("How do I win?", "Why was I denied?", "What evidence 
+do I need?") but has NOT provided the decision text, you MUST respond with:
+
+"⚠️ **MISSING DECISION DATA**
+
+To give you safe and accurate advice, I need to see the specific 'Reasons for Decision' 
+from your VA rating decision letter.
+
+**Without this, I would be guessing** — and confident guesses about your claim can cause 
+you to file incorrect evidence, miss deadlines, or pursue the wrong appeal path.
+
+**Please paste or upload the text from your decision letter**, specifically:
+- The paragraph(s) under 'REASONS FOR DECISION'
+- Any 'Favorable Findings' section
+- The evidence the VA said was missing or insufficient
+
+Once I can see exactly WHY the VA denied you, I can identify the specific missing 
+element (Nexus vs. Diagnosis vs. In-Service Event) and recommend targeted evidence 
+to fix it."
+
+DO NOT:
+- Guess the denial reason based on symptoms
+- Provide generic "boilerplate" advice
+- Suggest evidence without knowing the specific deficiency
+- Make strategy recommendations based on incomplete information
+
+═══════════════════════════════════════════════════════════════════════════════
+`;
+
+/**
+ * Keywords that indicate a user has provided actual decision text
+ */
+export const DECISION_TEXT_INDICATORS = [
+  'reasons for decision',
+  'service connection is denied',
+  'service connection for',
+  'favorable findings',
+  'the evidence shows',
+  'the evidence does not show',
+  'rating decision',
+  'dbq findings',
+  'c&p exam found',
+  'examiner\'s opinion',
+  'medical opinion',
+  'nexus opinion',
+  'at least as likely as not',
+  'less likely than not',
+  'clearly and unmistakably',
+  'preponderance of the evidence',
+];
+
+/**
+ * Check if user input contains actual decision document text
+ * @param {string} userInput - The user's message
+ * @returns {Object} { hasDecisionText: boolean, indicators: string[] }
+ */
+export function detectDecisionText(userInput) {
+  if (!userInput || typeof userInput !== 'string') {
+    return { hasDecisionText: false, indicators: [] };
+  }
+  
+  const inputLower = userInput.toLowerCase();
+  const foundIndicators = DECISION_TEXT_INDICATORS.filter(indicator => 
+    inputLower.includes(indicator)
+  );
+  
+  // Also check for quoted text (often indicates pasted content)
+  const hasQuotedText = userInput.includes('"') || userInput.includes('"') || 
+                        userInput.length > 500; // Long input likely contains pasted text
+  
+  return {
+    hasDecisionText: foundIndicators.length >= 2 || (foundIndicators.length >= 1 && hasQuotedText),
+    indicators: foundIndicators,
+    inputLength: userInput.length,
+    likelyPastedContent: hasQuotedText
+  };
+}
+
+/**
+ * Construct a safe prompt that enforces the gatekeeper
+ * @param {string} userQuery - The veteran's input text
+ * @param {Object} options - Additional options
+ * @returns {string} The enhanced prompt with safety context
+ */
+export function constructSafePrompt(userQuery, options = {}) {
+  const detection = detectDecisionText(userQuery);
+  
+  // Inject the status into the prompt context for the AI
+  const contextHeader = detection.hasDecisionText 
+    ? `[SYSTEM NOTICE: User appears to have provided decision text (indicators: ${detection.indicators.join(', ')}). VERIFY content authenticity, then proceed to STRATEGY MODE.]`
+    : `[SYSTEM NOTICE: User input does NOT appear to contain a decision letter. If they are asking for strategy, TRIGGER REFUSAL MODE. Do not guess or provide boilerplate advice.]`;
+
+  return `${STRATEGY_GATEKEEPER_PROMPT}
+
+${contextHeader}
+
+USER INPUT:
+"${userQuery}"`;
+}
+
+/**
  * Anti-Hallucination Validation Prompts
  * These are appended to user prompts to reinforce accuracy
  */
@@ -1247,6 +1396,7 @@ export default {
   REGULATION_GROUNDING_PROMPT,
   RATING_CRITERIA_SYSTEM_PROMPT,
   DD214_MULTI_DOCUMENT_SYSTEM_PROMPT,
+  STRATEGY_GATEKEEPER_PROMPT,
   ANTI_HALLUCINATION_SUFFIX,
   buildSystemPrompt,
   buildSystemPromptWithDKB,
@@ -1254,4 +1404,7 @@ export default {
   searchDKB,
   gatherVeteranContext,
   validateAIResponse,
+  detectDecisionText,
+  constructSafePrompt,
+  DECISION_TEXT_INDICATORS,
 };
