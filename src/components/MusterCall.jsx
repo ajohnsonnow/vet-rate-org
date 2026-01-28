@@ -48,7 +48,7 @@ import ReactMarkdown from 'react-markdown';
 /**
  * Muster Call - Mass Document Processor
  */
-export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
+export default function MusterCall({ isOpen, onClose, onProcessComplete, onOpenDD214Analyzer }) {
   const { t } = useLanguage();
   const toast = useToast();
   useBodyScrollLock(isOpen);
@@ -869,6 +869,7 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete }) {
               onVerify={handleVerifyAndSave}
               onSkip={handleSkipDocument}
               onClose={() => setShowIntelBriefing(false)}
+              onOpenDD214Analyzer={onOpenDD214Analyzer}
             />
           )}
 
