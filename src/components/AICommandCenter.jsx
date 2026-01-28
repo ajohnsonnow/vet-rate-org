@@ -28,81 +28,91 @@ const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
 // ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Ranks reflect MODEL POWER (CWO5 = most powerful, WO1 = lightest)           ║
-// ║  Desktop 7B = Senior Warrants (CWO3-CWO5) - Full firepower                  ║
-// ║  Mobile 1.7B = Junior Warrants (WO1-CWO2) - Field-portable                  ║
+// ║  Each model maps to a REAL Army Warrant Officer MOS specialty:              ║
+// ║  • 350F - All Source Intelligence Technician (analyzes everything)          ║
+// ║  • 270A - Legal Administrator (documents & regulations)                      ║
+// ║  • 352N - SIGINT Analysis Technician (deciphers signals & patterns)         ║
+// ║══════════════════════════════════════════════════════════════════════════════║
+// ║  Desktop 7B = Senior Warrants (CWO3-CWO5) - Full SCIF-level analysis        ║
+// ║  Mobile 1.7B = Junior Warrants (WO1-CWO2) - Field-deployable ops            ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 const MODELS = [
   // ═══════════════════════════════════════════════════════════════════════════
-  // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - Maximum Firepower
+  // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - SCIF-Level Analysis
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-7b-v2',
-    name: '🎖️ CWO3 "HAWKEYE" — Senior Auditor',
-    description: 'Deep-dive compliance expert: catches every 38 CFR violation, pyramiding issue, and missing evidence',
+    name: '🎖️ CWO3 "HAWKEYE" — 350F All Source Intel',
+    description: 'Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent',
     size: '4.4 GB',
     vramRequired: '6 GB',
     recommended: true,
-    bestFor: 'Thorough claim audits, BVA appeal prep, complex multi-issue reviews',
+    bestFor: 'Deep claim audits, evidence correlation, multi-source analysis',
     tier: 'full',
     callSign: 'HAWKEYE',
+    mos: '350F',
   },
   {
     id: 'vetrate-writer-7b-v2',
-    name: '🎖️ CWO4 "PHANTOM" — Senior Writer',
-    description: 'Master wordsmith: crafts compelling personal statements, nexus letters, and NODs that get results',
+    name: '🎖️ CWO4 "PHANTOM" — 270A Legal Admin',
+    description: 'JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Full-length statements, medical nexus drafts, appeal briefs',
+    bestFor: 'Legal documents, NODs, HLR scripts, formal correspondence',
     tier: 'full',
     callSign: 'PHANTOM',
+    mos: '270A',
   },
   {
     id: 'vetrate-rater-7b-v2',
-    name: '🎖️ CWO5 "ORACLE" — Master Rater',
-    description: 'The highest authority on VA math: bilateral factors, SMC, TDIU strategy, and combined ratings',
+    name: '🎖️ CWO5 "ORACLE" — 352N SIGINT Analyst',
+    description: 'Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Complex rating calculations, TDIU analysis, SMC pathways',
+    bestFor: 'Complex calculations, pattern analysis, SMC/TDIU strategy',
     tier: 'full',
     callSign: 'ORACLE',
+    mos: '352N',
   },
   // ═══════════════════════════════════════════════════════════════════════════
-  // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Fast & Portable
-  // Knowledge-distilled from Senior Warrants for field deployment
+  // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Field Ops
+  // Knowledge-distilled from Senior Warrants for tactical deployment
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-1.7b-mobile-v1',
-    name: '📱 WO1 "SCOUT" — Field Auditor',
-    description: 'Quick claim recon: spots obvious issues and flags what needs Senior review',
+    name: '📱 WO1 "SCOUT" — 350F Field Intel',
+    description: 'Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Fast claim checks, initial reviews, mobile triage',
+    bestFor: 'Fast claim triage, evidence spotting, mobile recon',
     tier: 'mobile',
     mobileOptimized: true,
     callSign: 'SCOUT',
+    mos: '350F',
   },
   {
     id: 'vetrate-writer-1.7b-mobile-v1',
-    name: '📱 CWO2 "DASH" — Field Writer',
-    description: 'Rapid draft generator: outlines statements and captures key points on-the-go',
+    name: '📱 CWO2 "SCRIBE" — 270A Field Admin',
+    description: 'Rapid field documentation: captures testimony, outlines statements, secures the narrative',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Quick statement outlines, bullet points, draft starts',
+    bestFor: 'Quick statement drafts, bullet capture, field notes',
     tier: 'mobile',
     mobileOptimized: true,
-    callSign: 'DASH',
+    callSign: 'SCRIBE',
+    mos: '270A',
   },
   {
     id: 'vetrate-rater-1.7b-mobile-v1',
-    name: '📱 CWO2 "COMPASS" — Field Rater',
-    description: 'Quick calculation assist: basic combined ratings and direction on next steps',
+    name: '📱 CWO2 "CIPHER" — 352N Field SIGINT',
+    description: 'Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Fast rating estimates, simple calculations, quick checks',
+    bestFor: 'Fast rating estimates, quick math checks, field calculations',
     tier: 'mobile',
     mobileOptimized: true,
-    callSign: 'COMPASS',
+    callSign: 'CIPHER',
+    mos: '352N',
   },
 ];
 
