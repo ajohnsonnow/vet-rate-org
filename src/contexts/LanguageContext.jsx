@@ -3948,24 +3948,35 @@ export const LanguageProvider = ({ children }) => {
   }, []);
 
   // Get translation for a key
-  const t = useCallback((section, key) => {
+  // Supports both t('section', 'key') and t('section.key') formats
+  const t = useCallback((sectionOrPath, key) => {
+    let section = sectionOrPath;
+    let actualKey = key;
+    
+    // Handle dot-notation format: t('section.key')
+    if (!key && typeof sectionOrPath === 'string' && sectionOrPath.includes('.')) {
+      const parts = sectionOrPath.split('.');
+      section = parts[0];
+      actualKey = parts.slice(1).join('.'); // Support nested keys like 'section.sub.key'
+    }
+    
     // Handle empty or invalid keys silently
-    if (!section || !key || key.trim() === '') {
-      return key || '';
+    if (!section || !actualKey || (typeof actualKey === 'string' && actualKey.trim() === '')) {
+      return actualKey || sectionOrPath || '';
     }
     
     const sectionData = APP_TRANSLATIONS[section];
     if (!sectionData) {
       console.warn(`Translation section not found: ${section}`);
-      return key;
+      return actualKey;
     }
-    const keyData = sectionData[key];
+    const keyData = sectionData[actualKey];
     if (!keyData) {
-      console.warn(`Translation key not found: ${section}.${key}`);
-      return key;
+      console.warn(`Translation key not found: ${section}.${actualKey}`);
+      return actualKey;
     }
     // Return translation for current language, fallback to English
-    return keyData[language] || keyData.en || key;
+    return keyData[language] || keyData.en || actualKey;
   }, [language]);
 
   // Get all translations for a section
