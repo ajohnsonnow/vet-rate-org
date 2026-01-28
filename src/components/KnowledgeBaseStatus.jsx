@@ -289,8 +289,14 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         setIsDownloading(false);
         if (result.success) {
           setIsFullCached(true);
-          // Reload stats with full data
-          window.location.reload(); // Simple reload to get fresh data
+          // Update state instead of reloading - smoother UX
+          setKbStatus(prev => ({
+            ...prev,
+            isWebOptimized: false,
+            dkbEntries: result.entryCount,
+            totalEntries: result.entryCount
+          }));
+          console.log(`[DKB] ✅ Full database cached (${result.entryCount} entries) - updated display`);
         }
       }
     };
