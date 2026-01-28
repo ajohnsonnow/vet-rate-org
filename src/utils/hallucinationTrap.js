@@ -1,12 +1,20 @@
 /**
  * Hallucination Trap - AI Output Validator
- * Prevents fake diagnostic codes from being displayed to users
+ * Prevents fake diagnostic codes AND fake VA forms from being displayed to users
  * 
- * This validator cross-references AI-generated diagnostic codes
- * against the official 38 CFR Part 4 database to ensure accuracy
+ * This validator cross-references AI-generated outputs against:
+ * - Official 38 CFR Part 4 diagnostic codes database
+ * - Official VA Forms allowlist (added Jan 2026 per community feedback)
+ * 
+ * Why: Community feedback on r/VAClaims identified that AI can "hallucinate"
+ * fake form numbers (like "27-0820" used incorrectly) leading to procedural errors.
  */
 
 import disabilityDataJson from '../data/disabilityData.json';
+import { validateVAForms, safeFormResponse } from './formValidator';
+
+// Re-export form validation for convenience
+export { validateVAForms, safeFormResponse };
 
 // Extract the disabilities array from the JSON structure
 const disabilityData = disabilityDataJson.disabilities || [];
@@ -364,5 +372,7 @@ export default {
   validateAIResponse,
   getDatabaseStats,
   searchConditions,
+  validateVAForms,
+  safeFormResponse,
   VALID_CODES
 };

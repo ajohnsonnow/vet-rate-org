@@ -64,6 +64,31 @@ The goal shifted from "make AI seem authoritative" to "make AI transparently edu
 
 ---
 
-Implementation details: docs/AI_SAFETY_GUARDRAILS.md
-Code: src/utils/aiSystemPrompts.js (FORBIDDEN_PHRASES, validateAIResponse)
-UI: src/components/AIDisclaimerBanner.jsx
+## January 2026 Update: Additional Fixes Based on r/VAClaims Feedback
+
+Following a critical technical audit by the community, we implemented additional engineering controls:
+
+### 6. Form Validator (Anti-Hallucination)
+**Problem:** AI could invent fake form numbers (like using "27-0820" incorrectly).
+**Fix:** Hard-coded allowlist of 90+ official VA forms. If the AI cites a form NOT in `src/data/validVAForms.json`, the response is **programmatically blocked**.
+
+### 7. "No Document, No Strategy" Gatekeeper  
+**Problem:** AI was providing "individualized" strategy without reading the actual denial letter.
+**Fix:** The AI now detects whether the user has provided actual "Reasons for Decision" text. If they ask for strategy without the document, the AI **refuses and asks for the denial text**.
+
+### New Files Created
+- `src/data/validVAForms.json` - Official VA forms allowlist
+- `src/utils/formValidator.js` - Form validation logic
+- `SECURITY_UPDATE.md` - Full transparency report
+
+### Updated Files
+- `src/utils/aiSystemPrompts.js` - Added Strategy Gatekeeper + detection logic
+- `src/utils/hallucinationTrap.js` - Now includes form validation
+
+---
+
+Implementation details: `docs/AI_SAFETY_GUARDRAILS.md`, `SECURITY_UPDATE.md`
+Code: `src/utils/aiSystemPrompts.js` (FORBIDDEN_PHRASES, validateAIResponse, STRATEGY_GATEKEEPER_PROMPT)
+Form Validation: `src/utils/formValidator.js`, `src/data/validVAForms.json`
+UI: `src/components/AIDisclaimerBanner.jsx`
+
