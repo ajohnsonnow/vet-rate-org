@@ -25,16 +25,19 @@ The VetRate Warrant Council mobile models are **1.7B parameter** versions of our
 ## Technical Details
 
 ### Base Model
+
 - **SmolLM2-1.7B-Instruct** from HuggingFace
 - Chosen for efficiency and strong instruction-following
 
 ### Training Method
+
 1. **Teacher Inference**: Run 7B models on diverse VA claims scenarios
 2. **Data Collection**: Save high-quality outputs as training data
 3. **Student Training**: Fine-tune 1.7B model to produce same outputs
 4. **QLoRA**: 4-bit quantization during training for efficiency
 
 ### Context Length
+
 - 7B models: 4096 tokens
 - Mobile models: 2048 tokens (sufficient for most tasks)
 
@@ -67,6 +70,7 @@ python -m llama_cpp.convert --outtype q4_k_m model_dir
 ```
 
 Or run the complete pipeline:
+
 ```bash
 ./train_mobile_models.sh
 ```

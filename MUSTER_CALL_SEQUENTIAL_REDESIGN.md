@@ -1,4 +1,5 @@
 # Muster Call Sequential Processing Redesign
+
 ## "Formation-Based Document Processing" - Military Workflow Analysis
 
 **Date:** January 25, 2026  
@@ -11,6 +12,7 @@
 
 **Current Problem:**
 Muster Call processes ALL files at once in parallel, then dumps results into Intelligence Briefing. This creates:
+
 - ❌ No user visibility into what's happening per document
 - ❌ No chance to verify/correct extracted data before saving
 - ❌ Duplicate/conflicting data from multiple documents
@@ -25,6 +27,7 @@ Sequential "Formation" processing where files line up, get called one at a time 
 ## 🎖️ Military-Themed Workflow
 
 ### **Current: "Cattle Call"** (Batch Processing)
+
 ```
 [All Files] → [Parallel OCR] → [Parallel Analysis] → [Dump Results] → [Done]
     ❌ Chaotic
@@ -33,6 +36,7 @@ Sequential "Formation" processing where files line up, get called one at a time 
 ```
 
 ### **Proposed: "Formation & Inspection"** (Sequential Processing)
+
 ```
 [Formation Line-Up] → [Call to Inspection] → [Platoon Sergeant Review (OCR)] 
     → [SecOps Intelligence Brief] → [Data Verification] → [VKB Storage] 
@@ -48,6 +52,7 @@ Sequential "Formation" processing where files line up, get called one at a time 
 ## 🔍 Current Implementation Analysis
 
 ### **Files Involved:**
+
 1. **`src/components/MusterCall.jsx`** (701 lines)
    - UI component for file selection and processing
    - Uses `processMusterCallBatch()` for parallel processing
@@ -70,6 +75,7 @@ Sequential "Formation" processing where files line up, get called one at a time 
    - No per-document review capability
 
 ### **Current Processing Pipeline:**
+
 ```javascript
 // Step 1: Validate all files
 validateFilesBatch(files)
@@ -88,6 +94,7 @@ const merged = files.reduce((acc, result) => {
 ```
 
 **Problems Identified:**
+
 1. **Data Conflicts:** Multiple DD214s or Rating Decisions overwrite each other
 2. **No Priority:** Can't process high-value docs (DD214, Rating Decision) first
 3. **No Verification:** User sees final result, can't correct per-document
@@ -99,6 +106,7 @@ const merged = files.reduce((acc, result) => {
 ## 🎯 Proposed Sequential Architecture
 
 ### **Phase 1: Formation Line-Up**
+
 ```javascript
 // User drops files → System organizes them by priority
 
@@ -113,6 +121,7 @@ const formationQueue = prioritizeDocuments(files);
 ```
 
 **UI:** Show files in formation order with drag-to-reorder capability
+
 ```jsx
 <FormationLineup 
   files={formationQueue}
@@ -122,6 +131,7 @@ const formationQueue = prioritizeDocuments(files);
 ```
 
 ### **Phase 2: Call to Inspection** (One at a Time)
+
 ```javascript
 const processNextInFormation = async () => {
   const currentFile = formationQueue[currentIndex];
@@ -151,6 +161,7 @@ const processNextInFormation = async () => {
 ```
 
 ### **Phase 3: Platoon Sergeant Review (OCR)**
+
 ```javascript
 const analyzeCWithPlatoonSergeant = async (file) => {
   return {
@@ -166,6 +177,7 @@ const analyzeCWithPlatoonSergeant = async (file) => {
 ```
 
 **UI:** Real-time OCR progress with quality indicators
+
 ```jsx
 <PlatoonSergeantReview 
   file={currentFile}
@@ -175,6 +187,7 @@ const analyzeCWithPlatoonSergeant = async (file) => {
 ```
 
 ### **Phase 4: SecOps Intelligence Brief**
+
 ```javascript
 const generateSecOpsIntelligenceBrief = async (extractedText) => {
   // Step 1: Classify document
@@ -204,6 +217,7 @@ const generateSecOpsIntelligenceBrief = async (extractedText) => {
 ```
 
 **UI:** Intelligence briefing modal with verification checkboxes
+
 ```jsx
 <IntelligenceBriefingModal 
   data={intelligenceBrief}
@@ -311,6 +325,7 @@ const detectConflicts = (newData, existingData) => {
 ```
 
 **UI:** Conflict resolution dialog
+
 ```jsx
 <ConflictResolutionModal 
   conflicts={detectedConflicts}
@@ -323,59 +338,71 @@ const detectConflicts = (newData, existingData) => {
 ## 🏗️ Implementation Plan
 
 ### **Sprint 1: Foundation (Week 1)**
+
 - [ ] Create `FormationQueue` state manager
 - [ ] Implement document prioritization algorithm
 - [ ] Build Formation Lineup UI component
 - [ ] Add drag-and-drop reordering
 
 **Files to Create:**
+
 - `src/utils/formationQueue.js` - Queue management logic
 - `src/components/FormationLineup.jsx` - Visual queue display
 - `src/hooks/useFormationQueue.js` - React hook for queue state
 
 ### **Sprint 2: Sequential Processing (Week 2)**
+
 - [ ] Refactor `processSingleDocument()` to be truly sequential
 - [ ] Add pause/resume capability
 - [ ] Implement per-document progress tracking
 - [ ] Create `PlatoonSergeantReview` component
 
 **Files to Modify:**
+
 - `src/utils/musterCallProcessor.js` - Add sequential mode
 - `src/components/MusterCall.jsx` - Switch to sequential UI
 
 **Files to Create:**
+
 - `src/components/PlatoonSergeantReview.jsx` - OCR progress display
 
 ### **Sprint 3: Intelligence Briefing Modal (Week 3)**
+
 - [ ] Create per-document Intelligence Briefing modal
 - [ ] Implement field verification checkboxes
 - [ ] Add inline editing for extracted data
 - [ ] Build conflict detection system
 
 **Files to Create:**
+
 - `src/components/DocumentIntelligenceBriefing.jsx` - Per-doc review modal
 - `src/utils/conflictDetector.js` - Conflict detection logic
 
 ### **Sprint 4: Smart Collection Rules (Week 4)**
+
 - [ ] Define collection rules for all 16 document types
 - [ ] Implement smart field filtering
 - [ ] Add "Why is this needed?" tooltips
 - [ ] Create collection strategy docs
 
 **Files to Create:**
+
 - `src/utils/collectionRules.js` - Field collection logic
 - `src/utils/dataCollectionStrategies.js` - Per-type strategies
 
 ### **Sprint 5: VKB Integration (Week 5)**
+
 - [ ] Modify VKB to handle sequential additions
 - [ ] Add document versioning (multiple DD214s, etc.)
 - [ ] Implement timeline view of documents
 - [ ] Add document comparison tool
 
 **Files to Modify:**
+
 - `src/utils/veteranKnowledgeBase.js` - Sequential storage
 
 **Files to Create:**
+
 - `src/components/VKBTimeline.jsx` - Document timeline viewer
 - `src/utils/documentComparison.js` - Side-by-side comparison
 
@@ -384,6 +411,7 @@ const detectConflicts = (newData, existingData) => {
 ## 🎨 UI/UX Mockups
 
 ### **Formation Lineup Screen:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 🚩 MUSTER CALL - FORMATION LINEUP                          │
@@ -411,6 +439,7 @@ const detectConflicts = (newData, existingData) => {
 ```
 
 ### **Platoon Sergeant Review Screen:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 🎖️ PLATOON SERGEANT REVIEW                                 │
@@ -435,6 +464,7 @@ const detectConflicts = (newData, existingData) => {
 ```
 
 ### **Intelligence Briefing Modal:**
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ 🛡️ SECOPS INTELLIGENCE BRIEFING                                │
@@ -481,6 +511,7 @@ const detectConflicts = (newData, existingData) => {
 ## 📊 Benefits Analysis
 
 ### **Current System Problems:**
+
 | Problem | Impact | Frequency |
 |---------|--------|-----------|
 | Duplicate data from multiple docs | Data conflicts, wrong info saved | High |
@@ -490,6 +521,7 @@ const detectConflicts = (newData, existingData) => {
 | No prioritization | Important docs processed last | Always |
 
 ### **Sequential System Benefits:**
+
 | Benefit | Impact | Value |
 |---------|--------|-------|
 | Per-document verification | User controls data accuracy | Critical |
@@ -503,12 +535,14 @@ const detectConflicts = (newData, existingData) => {
 ## 🚀 Technical Considerations
 
 ### **Performance:**
+
 - **Sequential = Slower?** Yes, but more accurate
 - **Mitigation:** OCR/AI processing still runs in background
 - **User Control:** User can skip low-priority docs
 - **Resume:** Don't lose progress on errors
 
 ### **State Management:**
+
 ```javascript
 const formationState = {
   queue: [], // Array of file objects with priority
@@ -521,6 +555,7 @@ const formationState = {
 ```
 
 ### **LocalStorage Persistence:**
+
 ```javascript
 // Save state after each document
 localStorage.setItem('musterCall_formation_state', JSON.stringify(formationState));
@@ -541,6 +576,7 @@ const resumeFormation = () => {
 ## 🎓 User Education
 
 ### **Formation Lineup Tutorial:**
+
 ```
 "Welcome to Muster Call! Think of this like a military formation - each 
 document lines up, gets inspected one at a time, and we verify the intel 
@@ -556,6 +592,7 @@ any errors before they're saved."
 ```
 
 ### **Why This Matters:**
+
 - ✅ You control what gets saved to your file
 - ✅ Fix conflicts between multiple documents
 - ✅ Learn what information each document contains
@@ -574,6 +611,7 @@ any errors before they're saved."
 ---
 
 ## 🔗 Related Documents
+
 - Current: `src/components/MusterCall.jsx`
 - Current: `src/utils/musterCallProcessor.js`
 - Related: `src/components/IntelligenceBriefing.jsx`
@@ -584,6 +622,7 @@ any errors before they're saved."
 **Decision Required:** Approve sequential redesign and allocate 5 sprints for implementation?
 
 **Estimated Impact:**
+
 - Development Time: 5 weeks (5 sprints)
 - User Value: 🔥 Critical - Solves major data accuracy issues
 - Technical Debt: Reduces (better architecture)

@@ -35,17 +35,20 @@ Your **Diamond Standard VA Claims LLM Compiler** is running headlessly in the ba
 ## 📊 Monitoring
 
 ### Real-Time Progress Monitor
+
 ```bash
 cd llm-compiler
 python monitor.py
 ```
 
 ### Check Current Phase
+
 ```bash
 cat llm-compiler/logs/orchestration_status.json
 ```
 
 ### View Live Logs
+
 ```bash
 # Orchestrator logs
 Get-Content llm-compiler/logs/orchestrator_*.log -Tail 20 -Wait
@@ -59,6 +62,7 @@ Get-Content llm-compiler/knowledge-base/scraper.log -Tail 20 -Wait
 ## 📁 Output Locations
 
 ### Knowledge Base
+
 ```
 llm-compiler/knowledge-base/
 ├── va_complete_knowledge_base.json    # All scraped citations
@@ -71,6 +75,7 @@ llm-compiler/knowledge-base/
 ```
 
 ### Trained Models
+
 ```
 llm-compiler/axolotl-configs/outputs/
 ├── va-auditor-model/
@@ -79,6 +84,7 @@ llm-compiler/axolotl-configs/outputs/
 ```
 
 ### WebGPU Artifacts
+
 ```
 llm-compiler/mlc-scripts/webgpu-artifacts/
 ├── va-auditor-model-q3f16_1-webgpu/
@@ -107,11 +113,13 @@ llm-compiler/mlc-scripts/webgpu-artifacts/
 ## 🎨 Frontend Integration (After Completion)
 
 ### Install WebLLM
+
 ```bash
 npm install @mlc-ai/web-llm
 ```
 
 ### Initialize Model Swarm
+
 ```typescript
 import * as webllm from '@mlc-ai/web-llm';
 
@@ -127,6 +135,7 @@ await rater.reload('Vet-Rate-org/va-rater-model-q4f16_1');
 ```
 
 ### Query with Citations
+
 ```typescript
 const response = await auditor.chat.completions.create({
   messages: [{
@@ -144,9 +153,10 @@ const response = await auditor.chat.completions.create({
 
 ## 🔍 Quality Assurance
 
-### After Completion, Verify:
+### After Completion, Verify
 
 1. **Knowledge Base Completeness**
+
    ```bash
    python -c "
    import json
@@ -158,13 +168,14 @@ const response = await auditor.chat.completions.create({
    ```
 
 2. **Model Artifacts**
+
    ```bash
    # Should see 6 compiled models (3 models × 2 quantizations)
    ls llm-compiler/mlc-scripts/webgpu-artifacts/ | findstr /C:"webgpu"
    ```
 
 3. **HuggingFace Deployment**
-   - Visit: https://huggingface.co/Vet-Rate-org
+   - Visit: <https://huggingface.co/Vet-Rate-org>
    - Verify 6 model repositories published
    - Check model cards include usage instructions
 
@@ -173,6 +184,7 @@ const response = await auditor.chat.completions.create({
 ## 🛠️ Troubleshooting
 
 ### If Compilation Stops
+
 ```bash
 # Check for errors
 cat llm-compiler/logs/orchestration_status.json | findstr errors
@@ -183,6 +195,7 @@ python diamond_orchestrator.py
 ```
 
 ### Low Memory Issues
+
 ```bash
 # Edit Axolotl configs to reduce batch size
 # In axolotl-configs/*.yaml:
@@ -191,6 +204,7 @@ gradient_accumulation_steps: 8  # Increase from 4
 ```
 
 ### Scraper Failures
+
 ```bash
 # Re-run just the scraper
 cd llm-compiler/scrapers

@@ -11,6 +11,7 @@
 **Environment:** Sandbox (you'll be using VA test accounts)
 
 **APIs to Demo:**
+
 - ✅ 3 Open Data APIs (Facilities, Forms, Benefits Reference)
 - ✅ 2 OAuth APIs (Service History, Claims)
 - ⏳ 2 Future Scope (Appeals Status, Appealable Issues)
@@ -40,6 +41,7 @@ Before the meeting:
 > "Thanks for taking the time, Nathan. I've built a System Status Dashboard specifically for this demo. Let me show you our current integration status."
 
 **Do:**
+
 1. Open your app at `http://localhost:5173`
 2. Navigate to the Demo Dashboard (find button in your tools menu or access directly)
 3. Point out the **Status Summary bar** at the top:
@@ -53,6 +55,7 @@ Before the meeting:
 > "First, let me show you the three Open Data APIs that use API Key authentication. These don't require user login."
 
 **Do:**
+
 1. Click **"Run All Tests"** button
 2. Watch the Facilities, Forms, and Benefits Reference cards turn green
 3. Point to each one:
@@ -64,6 +67,7 @@ Before the meeting:
 > "These are all returning live data from the sandbox. Let me prove it..."
 
 **Do:**
+
 1. Click **"Show Raw JSON"** under any green card
 2. Point to the JSON response:
    > "This is the actual response from `sandbox-api.va.gov`. You can see the data structure matches your API documentation."
@@ -76,6 +80,7 @@ Before the meeting:
 > "Now for the OAuth-protected APIs. Let me walk you through the full authentication flow."
 
 **Do:**
+
 1. Click **"Connect VA Account"** button
 2. You'll be redirected to VA.gov sandbox login
 3. **Say while redirecting:**
@@ -94,6 +99,7 @@ Before the meeting:
 > "Now that we're authenticated, let me show you the user-specific data."
 
 **Do:**
+
 1. Watch Service History and Claims cards turn green automatically
 2. Point to the **"VA.gov OAuth Connected"** status bar
 3. Click **"Show Raw JSON"** on Service History:
@@ -109,6 +115,7 @@ Before the meeting:
 > "Let me address security and our roadmap."
 
 **Do:**
+
 1. Scroll to the **Privacy & Security** notice:
    > "All data is processed client-side only. No veteran data is stored on our servers. OAuth tokens are in browser session storage and cleared on logout."
 
@@ -128,18 +135,23 @@ Before the meeting:
 ## 🛡️ Anticipated Questions & Answers
 
 ### Q: "Where is veteran data stored?"
+
 **A:** "Only in browser memory. We use sessionStorage for OAuth tokens which is automatically cleared when the tab closes. No database, no server-side storage."
 
 ### Q: "Do you store the client secret?"
+
 **A:** "No. We use PKCE (Proof Key for Code Exchange) which is designed for public clients. No client secret is used or stored anywhere in our code."
 
 ### Q: "Why are Appeals APIs grayed out?"
+
 **A:** "We intentionally scoped Phase 1 to Service History and Claims. Appeals are in our Phase 2 roadmap once we have Production Access for the initial APIs."
 
 ### Q: "Can you show me the code?"
+
 **A:** "Absolutely. [Show `src/hooks/useVaAuth.js` and `src/api/va.js` if asked]"
 
 ### Q: "What happens if the token expires?"
+
 **A:** "We request `offline_access` scope to get refresh tokens. The `useVaAuth` hook automatically detects expired tokens and refreshes them before making API calls."
 
 ---

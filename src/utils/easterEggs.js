@@ -45,11 +45,21 @@ export const useIDDQD = () => {
             setIsActive(true);
             setActivationCount(c => c + 1);
             
-            // Play activation sound if available
+            // Play simple activation beep (no external file needed)
             try {
-              const audio = new Audio('/assets/sounds/secret.mp3');
-              audio.volume = 0.3;
-              audio.play().catch(() => {}); // Ignore if no audio
+              const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              const oscillator = audioContext.createOscillator();
+              const gainNode = audioContext.createGain();
+              
+              oscillator.connect(gainNode);
+              gainNode.connect(audioContext.destination);
+              
+              oscillator.frequency.value = 800; // 800Hz beep
+              gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+              
+              oscillator.start(audioContext.currentTime);
+              oscillator.stop(audioContext.currentTime + 0.2);
             } catch (e) {
               // No sound, no problem
             }

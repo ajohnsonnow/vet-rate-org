@@ -39,19 +39,23 @@ I've thoroughly tested our combined rating calculation against official VA sourc
 We use two implementations (both produce identical results):
 
 1. **`vaCalculator.js`** (primary, used by Tactical Calculator):
+
    ```javascript
    combineTwoRatings(a, b) = a + b * (1 - a/100)
    ```
+
    - Rounds to 1 decimal place at each step
    - Final result rounded to nearest 10
    - JavaScript's Math.round() correctly rounds 0.5 up
 
 2. **`ratingCalculator.js`** (legacy):
+
    ```javascript
    efficiency = 100 - combined
    addition = Math.round(rating * efficiency / 100)
    combined += addition
    ```
+
    - Rounds whole numbers at each step
    - Final result rounded to nearest 10
 
@@ -60,6 +64,7 @@ We use two implementations (both produce identical results):
 Per regulation: "10 percent of this value will be **added** (i.e., not combined)"
 
 Our implementation:
+
 ```javascript
 // Step 1: Combine bilateral ratings
 const combinedBilateral = combineMultipleRatings(bilateralRatings);
@@ -77,18 +82,21 @@ allRatings.push(bilateralGroupRating);
 Please help us identify the specific discrepancy:
 
 ### Step 1: Test on VA.gov Calculator
-1. Go to https://www.va.gov/disability/about-disability-ratings/
+
+1. Go to <https://www.va.gov/disability/about-disability-ratings/>
 2. Enter: 50%, 30%
 3. **Expected Result:** 70%
 4. **Our Calculator Result:** 70%
 
 ### Step 2: Test on Hill & Ponton Calculator
-1. Go to https://www.hillandponton.com/va-disability-calculator/
+
+1. Go to <https://www.hillandponton.com/va-disability-calculator/>
 2. Enter: 50%, 30%
 3. **Expected Result:** 70%
 4. **Our Calculator Result:** 70%
 
 ### Step 3: Test Complex Example
+
 1. Enter: 70% PTSD, 30% Left Knee, 30% Right Knee
 2. **Expected Result:** 90%
 3. **Our Calculator Calculation:**
@@ -102,19 +110,23 @@ Please help us identify the specific discrepancy:
 If you're seeing different results, it could be due to:
 
 ### 1. **Bilateral Factor Not Applied**
+
 - Some calculators don't automatically detect bilateral conditions
 - **Fix:** Make sure to mark conditions as "Left" or "Right" in our calculator
 
 ### 2. **Rounding Edge Cases**
+
 - Values exactly at 0.5 (e.g., 64.5, 74.5, 84.5)
 - Our calculator correctly rounds 0.5 **UP** per VA policy
 - Some calculators may incorrectly round 0.5 down
 
 ### 3. **Incorrect Input**
+
 - Make sure ratings are entered as whole numbers (10, 20, 30, etc.)
 - Make sure body part selection is correct for bilateral detection
 
 ### 4. **Old Compensation Rates**
+
 - Our pay rates are updated for 2026 (effective Dec 1, 2025)
 - Old calculators may show different dollar amounts
 - **The combined rating percentage should still match**
@@ -124,6 +136,7 @@ If you're seeing different results, it could be due to:
 **Please provide the exact ratings you entered where you saw a discrepancy:**
 
 Example format:
+
 ```
 Input:
 - PTSD: 70%
@@ -139,6 +152,7 @@ Which calculator: VA.gov / DAV / H&P
 ## Technical Verification
 
 The calculation has been verified against:
+
 - ✅ 38 CFR § 4.25 (Combined Ratings Table)
 - ✅ 38 CFR § 4.26 (Bilateral Factor)
 - ✅ VA.gov official examples
@@ -162,6 +176,7 @@ Based on extensive testing, **our calculator is mathematically correct** and mat
 ---
 
 **Next Steps:**
+
 1. User provides specific example with discrepancy
 2. We'll test that exact scenario
 3. If issue found, we'll patch immediately

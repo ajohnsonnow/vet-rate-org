@@ -7,22 +7,26 @@ Autonomous headless system for compiling specialized VA Claims LLMs with 100% cl
 ## 🏗️ Architecture
 
 ### Model Swarm (3 Specialists)
+
 1. **Auditor** - 38 CFR Law [RED citations]
 2. **Writer** - Medical/Nexus [GREEN citations]  
 3. **Rater** - Procedures [BLUE citations]
 
 ### Knowledge Hierarchy
+
 ```
 38 CFR (LAW) → M21-1 (MANUAL) → BVA (PRECEDENT) → OGC (COUNSEL) → FREG (UPDATES)
 ```
 
 ### Optimization Targets
+
 - **Mobile**: q3f16_1 quantization (<4GB RAM)
 - **Desktop**: q4f16_1 quantization (<8GB RAM)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 # Python 3.10+
 python --version
@@ -32,6 +36,7 @@ pip install aiohttp beautifulsoup4 lxml requests anthropic huggingface-hub
 ```
 
 ### Autonomous Execution
+
 ```bash
 # Navigate to compiler directory
 cd llm-compiler
@@ -64,6 +69,7 @@ llm-compiler/
 ## 🔄 Execution Phases
 
 ### Phase 1: Knowledge Scraping (~2-4 hours)
+
 - 38 CFR Parts 3 & 4 (full text)
 - OGC Precedent Opinions (1989-2019)
 - BVA Decisions (precedential cases)
@@ -73,6 +79,7 @@ llm-compiler/
 **Output**: `va_complete_knowledge_base.json` (~500MB)
 
 ### Phase 2: Model Training (~4-8 hours per model)
+
 - Axolotl LoRA fine-tuning
 - 3 specialized models trained in parallel
 - Llama 3.2 3B base model
@@ -81,6 +88,7 @@ llm-compiler/
 **Output**: 3 trained models in `axolotl-configs/outputs/`
 
 ### Phase 3: WebGPU Compilation (~2-3 hours)
+
 - MLC LLM compilation pipeline
 - Dual quantization (q3f16_1 + q4f16_1)
 - WebGPU/Metal/Vulkan backend support
@@ -89,6 +97,7 @@ llm-compiler/
 **Output**: WebGPU artifacts in `mlc-scripts/webgpu-artifacts/`
 
 ### Phase 4: HuggingFace Upload (~1-2 hours)
+
 - Automatic upload to Vet-Rate-org org
 - Model cards with usage instructions
 - Version tagging and metadata
@@ -98,11 +107,13 @@ llm-compiler/
 ## 📊 Resource Requirements
 
 ### Minimum (CPU-only training)
+
 - 32GB RAM
 - 100GB disk space
 - 12-16 hour runtime
 
 ### Recommended (GPU-accelerated)
+
 - NVIDIA GPU with 16GB+ VRAM
 - 64GB RAM
 - 200GB disk space
@@ -111,16 +122,19 @@ llm-compiler/
 ## 🔍 Monitoring
 
 ### Real-time Logs
+
 ```bash
 tail -f logs/orchestrator_*.log
 ```
 
 ### Status Check
+
 ```bash
 cat logs/orchestration_status.json
 ```
 
 ### Knowledge Base Stats
+
 ```bash
 python -c "
 import json
@@ -134,6 +148,7 @@ with open('knowledge-base/va_complete_knowledge_base.json') as f:
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```bash
 # HuggingFace token (for auto-upload)
 export HF_TOKEN="hf_your_token_here"
@@ -143,7 +158,9 @@ export ANTHROPIC_API_KEY="sk-ant-your-key"
 ```
 
 ### Custom Knowledge Sources
+
 Edit `scrapers/va_knowledge_scraper.py`:
+
 ```python
 # Add custom URLs to scraping pipeline
 custom_urls = [
@@ -152,7 +169,9 @@ custom_urls = [
 ```
 
 ### Model Configuration
+
 Edit Axolotl configs in `axolotl-configs/`:
+
 - `lora_r`: LoRA rank (higher = more parameters)
 - `num_epochs`: Training epochs (more = better but slower)
 - `sequence_len`: Context window (longer = more memory)
@@ -160,6 +179,7 @@ Edit Axolotl configs in `axolotl-configs/`:
 ## 🎨 Frontend Integration
 
 ### WebGPU Engine Setup
+
 ```typescript
 import * as tvmjs from '@mlc-ai/web-llm';
 
@@ -178,6 +198,7 @@ const response = await auditor.chat.completions.create({
 ```
 
 ### Citation Rendering
+
 ```typescript
 // Parse color-coded citations
 const citations = response.choices[0].message.content.match(/\[(RED|BLUE|GREEN|PURPLE|ORANGE)\]/g);
@@ -195,16 +216,20 @@ const colorMap = {
 ## 📝 Notes
 
 ### Privacy & Security
+
 - All inference happens client-side in browser
 - No veteran data transmitted to servers
 - Models bundled with citations metadata
 - HIPAA-friendly architecture
 
 ### Legal Disclaimer
+
 Models provide legal information, not legal advice. Veterans should consult accredited representatives for official claims assistance.
 
 ### Updates
+
 Re-run scraper monthly to capture:
+
 - New Federal Register rules
 - Recent BVA decisions
 - Updated OGC opinions
@@ -213,6 +238,7 @@ Re-run scraper monthly to capture:
 ## 🤝 Contributing
 
 See `CONTRIBUTING.md` for:
+
 - Knowledge source additions
 - Model architecture improvements
 - Frontend integration enhancements

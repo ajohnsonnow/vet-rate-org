@@ -28,16 +28,19 @@ DEPLOY:  100% client-side browser inference
 ### Why q4f16_1?
 
 **The Sweet Spot:**
+
 - **q4:** 4-bit quantization (75% size reduction)
 - **f16:** FP16 activations (maintains quality)
 - **_1:** Group size 128 (balance speed/accuracy)
 
 **Alternatives:**
+
 - `q4f16_0`: Faster but less accurate (group size 32)
 - `q4f32_1`: Higher quality but larger & slower
 - `q0f16`: No quantization (6 GB, too large for browser)
 
 **Benchmark (3B model):**
+
 | Quantization | Size | Speed | Quality | Browser? |
 |--------------|------|-------|---------|----------|
 | q0f16 | 6 GB | Baseline | 100% | ❌ Too large |
@@ -92,12 +95,14 @@ python -m mlc_llm convert_weight \
 ```
 
 **What this does:**
+
 - Loads 6 GB FP16 PyTorch weights
 - Quantizes to 4-bit using group quantization
 - Stores as MLC params format (params_shard_*.bin)
 - Uses RTX 4080 Super CUDA cores (10x faster than CPU)
 
 **Output:**
+
 ```
 dist/vetrate-auditor-web/
 └── params/
@@ -122,12 +127,14 @@ python -m mlc_llm compile \
 ```
 
 **What this does:**
+
 - Generates WebGPU compute shaders (WGSL)
 - Compiles to WebAssembly (WASM)
 - Optimizes for browser execution
 - Parallel compilation (8 threads)
 
 **Output:**
+
 ```
 dist/vetrate-auditor-web/
 ├── VetRate-Auditor-3B-webgpu.wasm      (Model library ~50MB)
@@ -142,12 +149,14 @@ dist/vetrate-auditor-web/
 ### Check Params Shards
 
 **Critical Files:**
+
 ```powershell
 # List all params shards
 Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin"
 ```
 
 **Expected Output:**
+
 ```
 params_shard_0.bin    500-600 MB
 params_shard_1.bin    500-600 MB
@@ -160,18 +169,21 @@ params_shard_3.bin    500-600 MB
 ### Verification Checklist
 
 ✅ **Params Directory:**
+
 ```powershell
 Test-Path "dist\vetrate-auditor-web\params"
 # Should return: True
 ```
 
 ✅ **Shard Count:**
+
 ```powershell
 (Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin").Count
 # Should return: 3-5 shards
 ```
 
 ✅ **Shard Sizes:**
+
 ```powershell
 Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin" | ForEach-Object {
     $size = $_.Length / 1MB
@@ -181,12 +193,14 @@ Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin" | ForEach-Obj
 ```
 
 ✅ **Metadata File:**
+
 ```powershell
 Test-Path "dist\vetrate-auditor-web\params\ndarray-cache.json"
 # Should return: True
 ```
 
 ✅ **WASM Library:**
+
 ```powershell
 Get-ChildItem "dist\vetrate-auditor-web\*.wasm"
 # Should find: VetRate-Auditor-3B-webgpu.wasm (~30-70 MB)
@@ -277,12 +291,14 @@ Similar timeline: 7-20 minutes
 ### Performance Factors
 
 **Fast (7-10 min):**
+
 - RTX 4080 Super with CUDA
 - NVMe SSD storage
 - 32+ GB RAM
 - No background GPU tasks
 
 **Slow (15-20 min):**
+
 - CPU fallback (if CUDA fails)
 - HDD storage
 - 16 GB RAM (swapping)
@@ -295,6 +311,7 @@ Similar timeline: 7-20 minutes
 ### "ModuleNotFoundError: No module named 'mlc_llm'"
 
 **Solution:**
+
 ```bash
 pip install mlc-llm mlc-ai-nightly
 ```
@@ -302,6 +319,7 @@ pip install mlc-llm mlc-ai-nightly
 ### "CUDA out of memory" During Conversion
 
 **Solution 1: Free GPU memory**
+
 ```powershell
 # Kill other GPU processes
 taskkill /F /IM python.exe
@@ -309,6 +327,7 @@ taskkill /F /IM chrome.exe  # If running GPU-accelerated browser
 ```
 
 **Solution 2: Use CPU (slower)**
+
 ```bash
 # Remove --device cuda:0 from command
 python -m mlc_llm convert_weight ... --device cpu
@@ -317,17 +336,20 @@ python -m mlc_llm convert_weight ... --device cpu
 ### Empty or Missing Params Shards
 
 **Check:**
+
 ```powershell
 # Did weight conversion complete?
 Get-Content logs\mlc_conversion_*.log | Select-String "error"
 ```
 
 **Likely causes:**
+
 - Conversion interrupted (Ctrl+C pressed)
 - Out of disk space
 - Merged model corrupted
 
 **Solution: Re-run conversion**
+
 ```powershell
 .\compile_to_webgpu.ps1 -SwarmMember auditor -CleanBuild
 ```
@@ -335,23 +357,27 @@ Get-Content logs\mlc_conversion_*.log | Select-String "error"
 ### WASM Library Not Generated
 
 **Check compilation logs:**
+
 ```powershell
 Get-Content logs\mlc_compile_*.log | Select-String "error"
 ```
 
 **Common issues:**
+
 - WebGPU target not supported (try `--target metal` on Mac)
 - TVM compilation errors (update MLC-LLM: `pip install --upgrade mlc-llm`)
 
 ### Compilation Very Slow (>30 min)
 
 **Check GPU is being used:**
+
 ```powershell
 nvidia-smi
 # Should show python process using GPU
 ```
 
 **If GPU not used:**
+
 ```bash
 # Force CUDA device
 set CUDA_VISIBLE_DEVICES=0
@@ -361,6 +387,7 @@ set CUDA_VISIBLE_DEVICES=0
 ### Model Won't Load in Browser
 
 **Check browser compatibility:**
+
 ```javascript
 // Browser console
 if (!navigator.gpu) {
@@ -370,6 +397,7 @@ if (!navigator.gpu) {
 ```
 
 **Check CORS headers:**
+
 ```javascript
 // vite.config.js or server config
 headers: {
@@ -487,6 +515,7 @@ await engine.reload(SWARM_MODELS.writer.model_id);
 ## 💎 DIAMOND QUALITY CHECKLIST
 
 Before you start:
+
 - [ ] Step 4 training completed (merged models exist)
 - [ ] MLC-LLM installed (`pip list | grep mlc`)
 - [ ] CUDA available (`nvidia-smi`)
@@ -494,12 +523,14 @@ Before you start:
 - [ ] No other GPU processes running
 
 During compilation:
+
 - [ ] GPU utilization 60-90% (watch nvidia-smi)
 - [ ] No errors in console output
 - [ ] Progress indicators advancing
 - [ ] Temp files being created in dist/
 
 After compilation:
+
 - [ ] Params shards exist (3-5 files)
 - [ ] Total params size 1.5-2.5 GB
 - [ ] WASM library generated (~50 MB)
@@ -513,6 +544,7 @@ After compilation:
 ### Quantization Mathematics
 
 **q4f16_1 Encoding:**
+
 ```
 Original Weight (FP16):     16 bits per parameter
 Quantized Weight (4-bit):   4 bits per parameter
@@ -553,10 +585,12 @@ fn matmul(@builtin(global_invocation_id) gid: vec3<u32>) {
 ### Why CUDA Acceleration Matters
 
 **CPU Quantization:**
+
 - Single-threaded weight processing
 - ~30-60 minutes per model
 
 **CUDA Quantization (RTX 4080 Super):**
+
 - 10,240 CUDA cores parallel processing
 - Tensor Core acceleration (FP16→INT4 conversion)
 - ~2-5 minutes per model
@@ -595,6 +629,7 @@ After running `.\compile_to_webgpu.ps1`, you should see:
 ```
 
 **Verify with:**
+
 ```powershell
 # Quick verification
 Get-ChildItem dist\vetrate-auditor-web\params\params_shard_*.bin

@@ -9,9 +9,11 @@
 ## 📦 WHAT WAS DELIVERED
 
 ### 1. WebGPU Compilation Script
+
 **File:** `compile_to_webgpu.ps1` (700+ lines)
 
 **Features:**
+
 - ✅ Automated weight conversion (FP16 → q4f16_1)
 - ✅ CUDA acceleration (--device cuda:0 for RTX 4080 Super)
 - ✅ WebGPU model compilation with O3 optimization
@@ -22,6 +24,7 @@
 - ✅ Clean build option (remove existing output)
 
 **Usage:**
+
 ```powershell
 .\compile_to_webgpu.ps1 -SwarmMember auditor   # 7-20 minutes
 .\compile_to_webgpu.ps1 -SwarmMember writer    # 7-20 minutes
@@ -29,9 +32,11 @@
 ```
 
 ### 2. Comprehensive Compilation Guide
+
 **File:** `MLC_COMPILATION_GUIDE.md` (800+ lines)
 
 **Sections:**
+
 - Quick start commands
 - Manual command reference (for script failures)
 - Detailed verification procedures
@@ -102,12 +107,14 @@ python -m mlc_llm convert_weight \
 ```
 
 **Explanation:**
+
 - **Source:** `VetRate-Auditor-3B-v1/` (merged model from Step 4)
 - **Quantization:** `q4f16_1` (4-bit weights, FP16 activations, group size 128)
 - **Output:** `dist/vetrate-auditor-web/params/` directory
 - **Device:** `cuda:0` (Forces RTX 4080 Super - 12x faster than CPU)
 
 **What Happens:**
+
 1. Loads 6 GB FP16 PyTorch weights into GPU memory
 2. Applies group quantization (128 params per scale factor)
 3. Converts 16-bit → 4-bit per weight (75% compression)
@@ -130,6 +137,7 @@ python -m mlc_llm compile \
 ```
 
 **Explanation:**
+
 - **Source:** `params/` directory from Phase 1
 - **Target:** `webgpu` (generates WGSL compute shaders)
 - **Optimization:** `O3` (aggressive optimization for speed)
@@ -138,6 +146,7 @@ python -m mlc_llm compile \
 - **Parallel:** `-j 8` (8 parallel compilation threads)
 
 **What Happens:**
+
 1. Generates WebGPU compute kernels (WGSL)
 2. Compiles TVM relay IR → WebAssembly
 3. Optimizes tensor operations for browser execution
@@ -152,6 +161,7 @@ python -m mlc_llm compile \
 ### Why Params Shards Matter
 
 **The Critical Files:**
+
 ```
 params_shard_0.bin
 params_shard_1.bin
@@ -170,6 +180,7 @@ Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin"
 ```
 
 **Expected Output:**
+
 ```
 params_shard_0.bin
 params_shard_1.bin
@@ -189,6 +200,7 @@ Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin" | ForEach-Obj
 ```
 
 **Expected Output:**
+
 ```
 params_shard_0.bin: 512.3 MB
 params_shard_1.bin: 498.7 MB
@@ -197,6 +209,7 @@ params_shard_3.bin: 487.8 MB
 ```
 
 **Requirements:**
+
 - ✅ Each shard: 300-700 MB (non-zero!)
 - ✅ Total: 1.5-2.5 GB for q4f16_1 3B model
 - ❌ 0 bytes = conversion failed/interrupted
@@ -210,6 +223,7 @@ Test-Path "dist\vetrate-auditor-web\params\ndarray-cache.json"
 ```
 
 **Contents Sample:**
+
 ```json
 {
   "records": [
@@ -275,11 +289,13 @@ Test-ParamsShards -ParamsDir "dist\vetrate-auditor-web\params"
 ### Quantization: q4f16_1
 
 **Format Breakdown:**
+
 - **q4:** 4-bit integer quantization (values 0-15)
 - **f16:** FP16 activations during inference
 - **_1:** Group size 128 (one scale factor per 128 weights)
 
 **Mathematical Formula:**
+
 ```python
 # Original weight (FP16)
 w_fp16 = 0.00234
@@ -294,6 +310,7 @@ w_reconstructed = w_4bit * group_scale
 ```
 
 **Size Calculation:**
+
 ```
 3B model:
   Original FP16:    3,000,000,000 params × 2 bytes = 6 GB
@@ -312,6 +329,7 @@ w_reconstructed = w_4bit * group_scale
 **Optimization:** O3 (aggressive loop unrolling, fusion, vectorization)
 
 **Generated Artifacts:**
+
 1. **VetRate-Auditor-3B-webgpu.wasm** (~50 MB)
    - Compiled TVM operators
    - Quantized matmul kernels
@@ -335,17 +353,20 @@ w_reconstructed = w_4bit * group_scale
 ### Issue 1: Empty Params Shards (0 bytes)
 
 **Symptoms:**
+
 ```powershell
 Get-ChildItem "dist\vetrate-auditor-web\params\params_shard_*.bin"
 # Shows 0 bytes for all files
 ```
 
 **Causes:**
+
 - Conversion interrupted (Ctrl+C)
 - Out of disk space during quantization
 - CUDA out of memory error
 
 **Solutions:**
+
 ```powershell
 # 1. Check disk space
 Get-PSDrive E | Select-Object Used,Free
@@ -363,17 +384,20 @@ Get-Content logs\mlc_conversion_*.log | Select-String "error"
 ### Issue 2: No WASM Library Generated
 
 **Symptoms:**
+
 ```powershell
 Get-ChildItem "dist\vetrate-auditor-web\*.wasm"
 # No files found
 ```
 
 **Causes:**
+
 - TVM compilation errors
 - WebGPU target not supported on platform
 - MLC-LLM version too old
 
 **Solutions:**
+
 ```bash
 # 1. Check TVM errors
 Get-Content logs\mlc_compile_*.log | Select-String "error"
@@ -388,11 +412,13 @@ pip install --upgrade mlc-llm mlc-ai-nightly
 ### Issue 3: Compilation Extremely Slow (>1 hour)
 
 **Causes:**
+
 - CUDA not being used (CPU fallback)
 - GPU occupied by other processes
 - Insufficient parallel threads
 
 **Solutions:**
+
 ```powershell
 # 1. Verify GPU is being used
 nvidia-smi
@@ -412,17 +438,20 @@ taskkill /F /IM chrome.exe  # If GPU-accelerated
 ### Issue 4: Model Won't Load in Browser
 
 **Symptoms:**
+
 ```javascript
 // Browser console
 Failed to load model: Could not fetch params
 ```
 
 **Causes:**
+
 - CORS policy blocking model files
 - Params shards in wrong location
 - WebGPU not supported
 
 **Solutions:**
+
 ```javascript
 // 1. Check WebGPU support
 if (!navigator.gpu) {
@@ -565,10 +594,12 @@ Total Size: ~4 GB (both models)
 | `STEP5_COMPLETE.md` | This file | Completion report |
 
 **Dependencies (From Previous Steps):**
+
 - `models/merged-models/VetRate-Auditor-3B-v1/` (Step 4)
 - `models/merged-models/VetRate-Writer-3B-v1/` (Step 4)
 
 **New Dependencies:**
+
 - MLC-LLM Python package
 - CUDA Toolkit (for acceleration)
 - TVM runtime libraries
@@ -580,12 +611,14 @@ Total Size: ~4 GB (both models)
 ### Why WebGPU?
 
 **Traditional LLM Inference:**
+
 ```
 User Request → API Server (Cloud GPU) → Response
 Problems: Privacy concerns, API costs, latency
 ```
 
 **WebGPU LLM Inference:**
+
 ```
 User Request → Local Browser (User GPU) → Response
 Benefits: 100% private, zero API cost, low latency
@@ -594,12 +627,14 @@ Benefits: 100% private, zero API cost, low latency
 ### Why Quantization?
 
 **Without Quantization:**
+
 - 3B model = 6 GB FP16
 - Too large for browser
 - Slow to download
 - High VRAM usage
 
 **With q4f16_1:**
+
 - 3B model = 2 GB
 - Fits in browser cache
 - 3-5 sec initial load
@@ -656,6 +691,7 @@ cd llm-compiler
 ### Post-Compilation (Step 6)
 
 **WebLLM Integration:**
+
 1. Install `@mlc-ai/web-llm` package
 2. Copy compiled models to `public/models/`
 3. Configure model URLs in application
@@ -664,6 +700,7 @@ cd llm-compiler
 6. Deploy to production
 
 **Estimated Timeline:**
+
 - Compilation: 7-20 min (auditor) + 7-20 min (writer)
 - Integration: 2-4 hours (WebLLM setup)
 - Testing: 1-2 hours (browser validation)

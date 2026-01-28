@@ -127,16 +127,19 @@ cd /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler
 ## Monitoring Training
 
 ### Terminal 1: Training Output
+
 ```bash
 ./train_and_merge.sh full auditor
 ```
 
 ### Terminal 2: GPU Monitoring
+
 ```bash
 watch -n 1 nvidia-smi
 ```
 
 ### Terminal 3: Log Tailing
+
 ```bash
 tail -f logs/vetrate-auditor_train_*.log
 ```
@@ -146,12 +149,14 @@ tail -f logs/vetrate-auditor_train_*.log
 ## Expected Output
 
 ### Successful Training
+
 ```
 [INFO] Training completed for vetrate-auditor
 [INFO] Final training loss: 0.45
 ```
 
 ### Successful Merge
+
 ```
 [INFO] Verifying merged model...
 [INFO] Model weights (safetensors): 5.6G
@@ -160,6 +165,7 @@ tail -f logs/vetrate-auditor_train_*.log
 ```
 
 ### Merged Model Structure
+
 ```
 models/merged/vetrate-auditor-merged/
 ├── config.json              # Model architecture config
@@ -177,7 +183,7 @@ models/merged/vetrate-auditor-merged/
 
 ## How to Know if Merge Succeeded vs Failed
 
-### ✅ Merge SUCCEEDED if:
+### ✅ Merge SUCCEEDED if
 
 1. **Exit code is 0** - Script completes without error
 2. **Model weights exist** - `model*.safetensors` files present
@@ -189,11 +195,12 @@ models/merged/vetrate-auditor-merged/
    - `tokenizer_config.json`
 
 5. **Verification passes**:
+
    ```
    [SUCCESS] Merge verification passed ✓
    ```
 
-### ❌ Merge FAILED if:
+### ❌ Merge FAILED if
 
 1. **Error message** - "Merge command failed" or Python traceback
 2. **Missing weights** - No `model*.safetensors` files
@@ -217,6 +224,7 @@ du -sh models/merged/vetrate-auditor-merged/
 ## Troubleshooting
 
 ### CUDA Out of Memory
+
 ```bash
 # Reduce batch size in YAML config
 micro_batch_size: 2  # Reduce from 4
@@ -226,6 +234,7 @@ python -c "import torch; torch.cuda.empty_cache()"
 ```
 
 ### Flash Attention Not Found
+
 ```bash
 # Reinstall with CUDA support
 pip uninstall flash-attn -y
@@ -233,11 +242,13 @@ pip install flash-attn --no-build-isolation
 ```
 
 ### Permission Denied
+
 ```bash
 chmod +x train_and_merge.sh
 ```
 
 ### WSL2 Can't See GPU
+
 ```powershell
 # In Windows PowerShell (admin)
 wsl --shutdown

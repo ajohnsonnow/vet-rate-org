@@ -9,9 +9,11 @@
 ## 📦 WHAT WAS DELIVERED
 
 ### 1. Training Automation Script
+
 **File:** `train_and_merge.ps1` (600+ lines)
 
 **Features:**
+
 - ✅ GPU forcing (CUDA_VISIBLE_DEVICES=0)
 - ✅ Prerequisite validation (Python, CUDA, Axolotl, PyTorch)
 - ✅ Background GPU monitoring (10s interval logging)
@@ -22,6 +24,7 @@
 - ✅ Parameter flexibility (auditor/writer/both)
 
 **Usage:**
+
 ```powershell
 .\train_and_merge.ps1 -SwarmMember auditor   # 2-4 hours
 .\train_and_merge.ps1 -SwarmMember writer    # 1.5-3 hours
@@ -29,9 +32,11 @@
 ```
 
 ### 2. Comprehensive Guide
+
 **File:** `TRAIN_AND_MERGE_GUIDE.md`
 
 **Sections:**
+
 - Quick start commands
 - Phase-by-phase execution breakdown
 - Real-time monitoring instructions
@@ -47,6 +52,7 @@
 ### Why Merging is Non-Negotiable
 
 **WebLLM Constraint:**
+
 ```
 ❌ Cannot Use:
    meta-llama/Llama-3.2-3B-Instruct (base)
@@ -57,6 +63,7 @@
 ```
 
 **Implementation:**
+
 ```powershell
 function Merge-LoRAAdapter {
     param([string]$ConfigFile, [string]$SwarmName)
@@ -72,6 +79,7 @@ function Merge-LoRAAdapter {
 ```
 
 **Output:**
+
 ```
 models/merged-models/VetRate-Auditor-3B-v1/
 ├── config.json
@@ -85,6 +93,7 @@ models/merged-models/VetRate-Auditor-3B-v1/
 ## 📊 TECHNICAL SPECIFICATIONS
 
 ### Script Architecture
+
 ```
 Invoke-TrainingPipeline
 ├── Test-Prerequisites          (30s)
@@ -108,6 +117,7 @@ Invoke-TrainingPipeline
 ```
 
 ### Hardware Profile
+
 ```yaml
 GPU: NVIDIA RTX 4080 Super
 VRAM: 16 GB GDDR6X
@@ -122,6 +132,7 @@ Duration per Swarm:
 ## 🔍 VALIDATION RESULTS
 
 ### Prerequisites (Pre-Execution)
+
 ```
 Checklist Status:
 ✅ train_and_merge.ps1 created (600+ lines)
@@ -134,6 +145,7 @@ Checklist Status:
 ```
 
 ### Expected Training Metrics
+
 ```
 Auditor Training (1,338 examples):
   Initial Loss: ~2.5
@@ -151,6 +163,7 @@ Writer Training (588 examples):
 ```
 
 ### Expected Outputs
+
 ```
 LoRA Adapters:
   models/lora-adapters/vetrate-auditor-3b/adapter_model.safetensors (~30 MB)
@@ -166,6 +179,7 @@ Merged Models (WebLLM-Ready):
 ## 🚀 NEXT ACTIONS
 
 ### Immediate (User)
+
 ```powershell
 # 1. Confirm prerequisites
 nvidia-smi                                    # GPU visible
@@ -183,6 +197,7 @@ cd e:\VS_Studio\vet-rate-org-official\llm-compiler
 ```
 
 ### Post-Training (Step 5)
+
 ```bash
 # MLC-LLM compilation to WebGPU format
 mlc_llm convert_weight models/merged-models/VetRate-Auditor-3B-v1/
@@ -210,6 +225,7 @@ Pipeline Status: Step 4/7 Complete
 ## 💎 DIAMOND QUALITY ASSURANCE
 
 ### Code Quality
+
 - ✅ No placeholders or TODOs
 - ✅ Comprehensive error handling
 - ✅ Robust parameter validation
@@ -218,12 +234,14 @@ Pipeline Status: Step 4/7 Complete
 - ✅ Graceful failure handling
 
 ### WebLLM Compatibility
+
 - ✅ Merge step included (non-optional)
 - ✅ Standalone models produced
 - ✅ Compatible with MLC-LLM pipeline
 - ✅ No separate adapter dependency
 
 ### User Experience
+
 - ✅ Clear console output
 - ✅ Progress indicators
 - ✅ Time estimates provided
@@ -236,18 +254,23 @@ Pipeline Status: Step 4/7 Complete
 ## 📝 KEY DECISIONS
 
 ### 1. PowerShell over Bash
+
 **Rationale:** User on Windows, PowerShell native, better GPU tooling on Windows
 
 ### 2. Sequential Training (Not Parallel)
+
 **Rationale:** Single GPU (RTX 4080 Super), full VRAM needed per training run
 
 ### 3. Merge Integrated (Not Separate)
+
 **Rationale:** WebLLM requirement, prevents forgotten step, ensures pipeline completeness
 
 ### 4. Background GPU Monitoring
+
 **Rationale:** Non-intrusive, CSV logging for post-analysis, doesn't block training
 
 ### 5. Flexible Parameters
+
 **Rationale:** Allows testing (DryRun), selective execution (SkipValidation), experimentation (SkipMerge)
 
 ---
@@ -261,6 +284,7 @@ Pipeline Status: Step 4/7 Complete
 | `STEP4_COMPLETE.md` | This file | Completion report |
 
 **Dependencies (From Previous Steps):**
+
 - `auditor-3b-qlora.yml` (Step 3)
 - `writer-3b-qlora.yml` (Step 3)
 - `train_auditor.jsonl` (Step 2)
@@ -273,18 +297,22 @@ Pipeline Status: Step 4/7 Complete
 ## 🎓 LESSONS EMBEDDED
 
 ### From Step 1
+
 - 16GB VRAM constraint respected (11.2 GB usage)
 - MLC-compatible binary requirement addressed via merging
 
 ### From Step 2
+
 - Dynamic system prompts prepared in training data
 - Diamond quality maintained (91.3% acceptance)
 
 ### From Step 3
+
 - Hardware optimizations confirmed (Flash Attention 2, BFloat16, QLoRA)
 - VRAM validation passed (70% utilization)
 
 ### New in Step 4
+
 - **Merge step is critical for WebLLM** (cannot be skipped)
 - GPU monitoring prevents thermal issues
 - Flexible parameters enable experimentation

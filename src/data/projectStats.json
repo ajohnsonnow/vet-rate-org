@@ -1,6 +1,6 @@
 {
   "total_files": "1,613",
-  "loc_count": "182,655",
+  "loc_count": "182,650",
   "component_count": "183",
   "major_tools": "41",
   "utility_count": "97",
@@ -31,7 +31,7 @@
   },
   "days_dev": "13",
   "productivity_multiplier": "161",
-  "total_commits": "199",
+  "total_commits": "200",
   "ai_tools": {
     "planning": "Gemini 3",
     "coding": [
@@ -51,7 +51,7 @@
   "version": "20260128",
   "total_hours_numeric": 22572,
   "coding_hours_numeric": 18695,
-  "loc_count_numeric": 182655,
+  "loc_count_numeric": 182650,
   "validation_count_numeric": 748,
   "traditional_cost_numeric": 3047220,
   "actual_cost_numeric": 18900,
@@ -61,7 +61,7 @@
   "component_hours_numeric": 11380,
   "live": {
     "totalFiles": 1613,
-    "linesOfCode": 182655,
+    "linesOfCode": 182650,
     "componentCount": 183,
     "toolCount": 41,
     "supportingComponents": 142,
@@ -73,6 +73,6 @@
     "vaFormsCount": 94,
     "localAIModels": 3,
     "appSizeMB": 351.64,
-    "calculatedAt": "2026-01-28T10:01:02.116Z"
+    "calculatedAt": "2026-01-28T11:06:41.578Z"
   }
 }

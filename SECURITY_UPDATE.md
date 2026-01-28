@@ -19,19 +19,24 @@ Following a critical technical audit by the r/VAClaims community, we have implem
 **The Fix:** We have moved from "prompt engineering" to **deterministic code validation**.
 
 ### Mechanism
+
 A new strict allowlist ([src/data/validVAForms.json](src/data/validVAForms.json)) now governs all AI outputs.
 
 ### Logic
+
 1. The system scans every AI response using Regex patterns for VA form syntax (e.g., `\d{2}-\d{3,5}`)
 2. It cross-references matches against our validated database of 90+ official VA forms (sourced from [VA.gov/find-forms](https://www.va.gov/find-forms/))
 3. **Outcome:** If the AI attempts to cite a form NOT in the allowlist, the response is programmatically blocked before it reaches the UI
 
 ### Result
+
 It is now **technically impossible** for the tool to recommend a non-existent form. The validation code is at:
+
 - **Validator Logic:** [src/utils/formValidator.js](src/utils/formValidator.js)
 - **Allowlist Data:** [src/data/validVAForms.json](src/data/validVAForms.json)
 
 ### Verified Form Categories
+
 | Category | Example Forms | Count |
 |----------|---------------|-------|
 | Claims & Appeals | 21-526EZ, 20-0995, 20-0996, 10182 | 10 |
@@ -50,9 +55,11 @@ It is now **technically impossible** for the tool to recommend a non-existent fo
 **The Fix:** We implemented a **"Refusal Mode"** in the system prompt.
 
 ### Mechanism
+
 The AI Context Window now scans user input for the specific text of a VA Denial Letter (keywords: "Reasons for Decision," "Favorable Findings," "Service connection is denied," etc.).
 
 ### Logic
+
 ```
 IF the user asks for strategy ("How do I win?", "Why was I denied?")
 AND the specific denial text is MISSING...
@@ -60,12 +67,15 @@ THEN the AI is hard-coded to REFUSE the request.
 ```
 
 ### New Output When Text is Missing
+>
 > ⚠️ **MISSING DECISION DATA**
-> 
+>
 > To give you safe advice, I need to see the specific "Reasons for Decision" from your denial letter. Without this, I cannot identify the missing element (Nexus vs. Diagnosis vs. In-Service Event). Please paste that text.
 
 ### Result
+
 The AI can no longer provide "confident guesses" about why you were denied. It must see the actual denial rationale first. The gatekeeper code is at:
+
 - **Gatekeeper Prompt:** [src/utils/aiSystemPrompts.js](src/utils/aiSystemPrompts.js) (search: `STRATEGY_GATEKEEPER_PROMPT`)
 - **Detection Logic:** `detectDecisionText()` function in the same file
 
@@ -76,22 +86,29 @@ The AI can no longer provide "confident guesses" about why you were denied. It m
 Addressing valid concerns regarding operational transparency:
 
 ### Legal Entity
+
 The application is currently deployed under **Firearm Safety Team LLC**, an existing entity used solely for billing and API provisioning. This was done to avoid 6+ month incorporation delays for API access.
 
 ### Data Isolation
+
 This legal entity **cannot see your data**. The application architecture is **"Local-First"**:
+
 - Your claims data exists in your browser's `localStorage`
 - It is **never transmitted** to our billing backend
 - All AI inference happens either locally (Wllama/WebGPU) or via direct user API keys (Gemini)
 
 ### Verification
+
 You can verify this by:
+
 1. Opening Browser DevTools (F12) → Network tab
 2. Using the app and watching for outbound requests
-3. You will see requests to Google (if using Gemini) but **no data payloads** sent to firearmsafetyteam.* or vetrate.* servers
+3. You will see requests to Google (if using Gemini) but **no data payloads** sent to firearmsafetyteam.*or vetrate.* servers
 
 ### BVA Data Status
+
 We previously stated the tool "scrapes BVA." To be precise:
+
 - The tool was trained on a **static snapshot** of public BVA decisions (2018-2025)
 - Live BVA API integration is currently **offline/pending** due to VA API availability
 - This has been updated in our documentation
@@ -103,13 +120,16 @@ We previously stated the tool "scrapes BVA." To be precise:
 In addition to form validation, we have always validated diagnostic codes:
 
 ### Mechanism
+
 Every AI-generated diagnostic code is checked against our validated database of 748+ conditions from 38 CFR Part 4.
 
 ### Location
+
 - **Validator:** [src/utils/hallucinationTrap.js](src/utils/hallucinationTrap.js)
 - **Database:** [src/data/disabilityData.json](src/data/disabilityData.json)
 
 ### Result
+
 If the AI invents a diagnostic code (e.g., "DC 9999" that doesn't exist), the response is flagged and the code is rejected with suggestions for similar valid codes.
 
 ---
@@ -117,6 +137,7 @@ If the AI invents a diagnostic code (e.g., "DC 9999" that doesn't exist), the re
 ## Verification & Audit
 
 ### You Can Verify These Changes
+
 | Control | File Location | How to Verify |
 |---------|---------------|---------------|
 | Form Validator | `src/utils/formValidator.js` | Search for `validateVAForms` function |
@@ -126,7 +147,9 @@ If the AI invents a diagnostic code (e.g., "DC 9999" that doesn't exist), the re
 | DC Validator | `src/utils/hallucinationTrap.js` | Search for `validateDiagnosticCode` |
 
 ### Open Source Commitment
+
 This entire codebase is open source. You can:
+
 1. Clone the repo and audit any file
 2. Submit issues if you find problems
 3. Propose PRs if you have improvements
@@ -157,6 +180,7 @@ This entire codebase is open source. You can:
 ## Contact & Reporting
 
 If you find the AI generating incorrect information:
+
 1. Screenshot the error
 2. Open an issue on GitHub with the reproduction steps
 3. We will patch and credit you

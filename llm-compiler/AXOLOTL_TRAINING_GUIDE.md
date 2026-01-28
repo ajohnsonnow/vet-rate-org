@@ -26,6 +26,7 @@
 ## 🎯 CRITICAL RTX 4080 SUPER OPTIMIZATIONS
 
 ### ✅ Hardware Acceleration
+
 ```yaml
 flash_attention: true          # Native 40-series support
 bf16: true                     # BFloat16 (superior to fp16 on Ada)
@@ -34,6 +35,7 @@ load_in_4bit: true            # QLoRA saves ~10GB VRAM
 ```
 
 ### ✅ Memory Management
+
 ```yaml
 micro_batch_size: 4            # Conservative for 16GB
 gradient_accumulation_steps: 4 # Effective batch = 16
@@ -42,6 +44,7 @@ sequence_len: 4096            # Full context in 4-bit mode
 ```
 
 ### ✅ LoRA Configuration
+
 ```yaml
 lora_r: 32                    # Rank (quality vs size balance)
 lora_alpha: 64                # 2x rank (standard scaling)
@@ -56,6 +59,7 @@ lora_target_modules:          # 7 modules for comprehensive adaptation
 ## 🔧 INSTALLATION & SETUP
 
 ### Prerequisites
+
 ```powershell
 # Install Axolotl (in WSL Ubuntu or Anaconda)
 conda create -n axolotl python=3.10
@@ -74,6 +78,7 @@ axolotl version
 ```
 
 ### Verify CUDA & GPU
+
 ```powershell
 # Check CUDA version (should be 12.x)
 nvidia-smi
@@ -90,6 +95,7 @@ python -c "import flash_attn; print(f'Flash Attention: {flash_attn.__version__}'
 ## 🏃 TRAINING EXECUTION
 
 ### Option 1: Train VetRate-Auditor
+
 ```bash
 cd llm-compiler/axolotl-configs
 axolotl train auditor-3b-qlora.yml
@@ -102,6 +108,7 @@ axolotl train auditor-3b-qlora.yml
 ```
 
 ### Option 2: Train VetRate-Writer
+
 ```bash
 cd llm-compiler/axolotl-configs
 axolotl train writer-3b-qlora.yml
@@ -114,6 +121,7 @@ axolotl train writer-3b-qlora.yml
 ```
 
 ### Option 3: Train Both (Sequential)
+
 ```bash
 # Train Auditor first (longer training)
 axolotl train auditor-3b-qlora.yml
@@ -129,6 +137,7 @@ axolotl train writer-3b-qlora.yml
 ## 📊 MONITORING TRAINING
 
 ### Real-Time Logs
+
 ```bash
 # Axolotl logs to console automatically
 # Watch for:
@@ -139,6 +148,7 @@ axolotl train writer-3b-qlora.yml
 ```
 
 ### NVIDIA System Monitor
+
 ```powershell
 # Watch GPU in real-time (separate terminal)
 nvidia-smi -l 5  # Update every 5 seconds
@@ -151,6 +161,7 @@ nvidia-smi -l 5  # Update every 5 seconds
 ```
 
 ### Weights & Biases (Optional)
+
 ```bash
 # If using W&B for tracking
 wandb login
@@ -167,6 +178,7 @@ wandb login
 ## 🛑 TROUBLESHOOTING
 
 ### Out of Memory (OOM)
+
 ```yaml
 # Reduce micro_batch_size in config
 micro_batch_size: 2  # Was 4
@@ -177,6 +189,7 @@ sequence_len: 2048  # Was 4096
 ```
 
 ### Slow Training
+
 ```yaml
 # Increase batch size if VRAM allows
 micro_batch_size: 6  # Was 4
@@ -189,6 +202,7 @@ load_in_4bit: true  # Should stay on GPU
 ```
 
 ### Loss Not Decreasing
+
 ```yaml
 # Increase learning rate
 learning_rate: 0.0003  # Was 0.0002
@@ -202,6 +216,7 @@ lora_alpha: 128  # Was 64
 ```
 
 ### NaN Loss / Training Divergence
+
 ```yaml
 # Reduce learning rate
 learning_rate: 0.0001  # Was 0.0002
@@ -218,6 +233,7 @@ max_grad_norm: 0.5  # Was 1.0
 ## 🔄 RESUMING TRAINING
 
 ### From Last Checkpoint
+
 ```bash
 # Axolotl auto-resumes if training interrupted
 axolotl train auditor-3b-qlora.yml
@@ -234,24 +250,28 @@ axolotl train auditor-3b-qlora.yml \
 After training completes, verify:
 
 1. **Adapter Files Created**
+
    ```bash
    ls -lh models/lora-adapters/vetrate-auditor-3b/
    # Should see: adapter_config.json, adapter_model.safetensors
    ```
 
 2. **Adapter Size Reasonable**
+
    ```bash
    # Should be 20-100 MB (not GB!)
    du -sh models/lora-adapters/vetrate-auditor-3b/
    ```
 
 3. **Training Logs Show Convergence**
+
    ```
    # Final loss should be < 1.0 for good training
    # Eval loss should be close to train loss (no overfit)
    ```
 
 4. **Test Inference (Quick Check)**
+
    ```bash
    # Use Axolotl inference mode
    axolotl inference auditor-3b-qlora.yml \
@@ -266,6 +286,7 @@ After training completes, verify:
 ## 📈 EXPECTED TRAINING CURVES
 
 ### Healthy Training
+
 ```
 Epoch 1:
   Train Loss: 2.5 → 1.2
@@ -283,6 +304,7 @@ Epoch 3:
 ```
 
 ### Overfitting (Bad)
+
 ```
 Epoch 3:
   Train Loss: 0.3  ← Very low
@@ -293,6 +315,7 @@ Epoch 3:
 ```
 
 ### Underfitting (Bad)
+
 ```
 Epoch 3:
   Train Loss: 2.0  ← Still high
