@@ -26,6 +26,22 @@
 export const SQUASHED_BUGS = [
   // === ADD NEW SQUASHED BUGS AT THE TOP ===
   {
+    id: 'BUG-NAN-PROGRESS',
+    title: 'AI Command Center shows "NaN%" during model loading',
+    reportedBy: 'User via chat',
+    reportedDate: '2026-01-28',
+    severity: 'Medium',
+    category: 'UI',
+    description: 'When loading an LLM in AI Command Center\'s quick setup, the progress bar displayed "NaN%" instead of the actual loading percentage (0-100%).',
+    rootCause: 'Callback signature mismatch: diamondSwarm passes { stage, message, progress } object, but AICommandCenter expected (progress, text) parameters. This caused the entire object to be treated as a number, resulting in NaN.',
+    fix: 'Updated onProgress callback to handle object parameter correctly: extract progress and message properties, provide fallback values (0 and "Loading..."), and properly format the display.',
+    filesChanged: ['src/components/AICommandCenter.jsx'],
+    squashedDate: '2026-01-28',
+    squashedBy: 'Diamond Agent',
+    verified: true,
+    testCase: 'Open AI Command Center > Quick Setup > Click to load any LLM > Progress bar shows 0-100% with status message',
+  },
+  {
     id: 'BUG-MKYB0BKQ',
     title: 'DD214 Analyzer doesn\'t launch - returns to home page',
     date: '2026-01-28',
