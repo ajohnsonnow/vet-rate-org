@@ -133,6 +133,15 @@ export default function PlatoonSergeantReview({
   const isComplete = overallProgress >= 100;
   const hasWarnings = warnings.length > 0;
   
+  // Detect if OCR is active (can be from method or ocrState message)
+  const isOCRActive = method === 'ocr' || 
+                      method === 'advanced_ocr' ||
+                      (ocrState && (
+                        ocrState.toLowerCase().includes('ocr') || 
+                        ocrState.toLowerCase().includes('preparing') ||
+                        ocrState.toLowerCase().includes('enhancing')
+                      ));
+  
   // Debug: Log what we're receiving
   React.useEffect(() => {
     if (progress) {
@@ -226,6 +235,27 @@ export default function PlatoonSergeantReview({
         )}
       </div>
       
+      {/* OCR Processing Warning */}
+      {isOCRActive && !isComplete && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 mb-4">
+          <div className="flex items-start gap-2">
+            <span className="text-xl">⏱️</span>
+            <div className="flex-1">
+              <h5 className="font-semibold text-amber-800 dark:text-amber-300 mb-1">
+                Advanced OCR In Progress
+              </h5>
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                Scanned or low-quality documents require character recognition which can take <strong>1-3 minutes per page</strong>. 
+                This is processing locally on your device for privacy.
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-2 italic">
+                💡 Tip: High-quality scans (300+ DPI) and text-based PDFs process much faster.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Page Status List */}
       {pages.length > 0 && (
         <div className="space-y-2 mb-4">
@@ -266,16 +296,38 @@ export default function PlatoonSergeantReview({
       
       {/* Completion Message */}
       {isComplete && (
-        <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4">
+        <div className={`border-l-4 p-4 ${
+          confidence && confidence < 60 
+            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500' 
+            : 'bg-green-50 dark:bg-green-900/20 border-green-500'
+        }`}>
           <div className="flex items-start gap-2">
-            <span className="text-xl">✅</span>
+            <span className="text-xl">{confidence && confidence < 60 ? '⚠️' : '✅'}</span>
             <div className="flex-1">
-              <h5 className="font-semibold text-green-800 dark:text-green-300 mb-1">
-                Extraction Complete
+              <h5 className={`font-semibold mb-1 ${
+                confidence && confidence < 60 
+                  ? 'text-amber-800 dark:text-amber-300' 
+                  : 'text-green-800 dark:text-green-300'
+              }`}>
+                Extraction Complete {confidence && `(${confidence}% confidence)`}
               </h5>
-              <p className="text-sm text-green-700 dark:text-green-400">
-                Document successfully inspected. Proceeding to SigInt Intelligence Briefing...
-              </p>
+              {confidence && confidence < 60 ? (
+                <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2">
+                  <p>
+                    <strong>Low OCR confidence detected.</strong> The document may be difficult to read (faded, creased, or poor scan quality).
+                  </p>
+                  <p>
+                    Field extraction may have errors. Please verify all data in the SigInt Briefing carefully.
+                  </p>
+                  <p className="text-xs italic">
+                    💡 For better results, try re-scanning at 300+ DPI with good lighting.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  Document successfully inspected. Proceeding to SigInt Intelligence Briefing...
+                </p>
+              )}
             </div>
           </div>
         </div>
