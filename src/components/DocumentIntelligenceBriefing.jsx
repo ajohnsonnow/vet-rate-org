@@ -420,7 +420,8 @@ export default function DocumentIntelligenceBriefing({
   conflicts: providedConflicts = [],
   onVerify,
   onSkip,
-  onClose
+  onClose,
+  onOpenDD214Analyzer
 }) {
   const {
     filename,

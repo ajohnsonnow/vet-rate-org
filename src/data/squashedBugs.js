@@ -26,6 +26,22 @@
 export const SQUASHED_BUGS = [
   // === ADD NEW SQUASHED BUGS AT THE TOP ===
   {
+    id: 'BUG-UNDEFINED-DD214',
+    title: 'ReferenceError: onOpenDD214Analyzer is not defined',
+    reportedBy: 'User via console logs',
+    reportedDate: '2026-01-28',
+    severity: 'High',
+    category: 'Feature',
+    description: 'After processing documents in Muster Call, DocumentIntelligenceBriefing crashed with "ReferenceError: onOpenDD214Analyzer is not defined" when displaying DD214 analysis button.',
+    rootCause: 'Missing prop in function signature. The onOpenDD214Analyzer prop was passed from MusterCall but not declared in DocumentIntelligenceBriefing\'s parameter list, causing undefined reference when button render attempted.',
+    fix: 'Added onOpenDD214Analyzer to DocumentIntelligenceBriefing function parameters alongside existing props (document, extractionResult, conflicts, onVerify, onSkip, onClose).',
+    filesChanged: ['src/components/DocumentIntelligenceBriefing.jsx'],
+    squashedDate: '2026-01-28',
+    squashedBy: 'Diamond Agent',
+    verified: true,
+    testCase: 'Upload DD214 to Muster Call > Process document > DocumentIntelligenceBriefing opens without error > "Analyze with AI" button visible and clickable',
+  },
+  {
     id: 'BUG-NAN-PROGRESS',
     title: 'AI Command Center shows "NaN%" during model loading',
     reportedBy: 'User via chat',
