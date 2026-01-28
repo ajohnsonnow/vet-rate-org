@@ -25,73 +25,84 @@ import { gpuManager } from '../utils/WebGPUManager';
 
 const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 
-// VetRate Warrant Council - Custom Fine-Tuned Models
-// These are our specialized models trained on VA regulations, procedures, and claims data
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
+// ║══════════════════════════════════════════════════════════════════════════════║
+// ║  Each Warrant Officer has a call sign that reflects their expertise.        ║
+// ║  Desktop models = Heavy Armor (full 7B power)                               ║
+// ║  Mobile models = Field Ready (distilled 1.7B for phones/tablets)            ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
 const MODELS = [
   // ═══════════════════════════════════════════════════════════════════════════
-  // FULL MODELS (7B) - Desktop/High-End Devices
+  // 🖥️ DESKTOP EDITIONS (7B) - "Heavy Armor" - Full Power for Serious Work
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-7b-v2',
-    name: 'CWO3 Auditor',
-    description: 'Reviews claims for accuracy, compliance & completeness',
+    name: '🎖️ CWO3 "HAWKEYE" — The Auditor',
+    description: 'Nothing escapes this eagle-eyed 38 CFR compliance expert',
     size: '4.4 GB',
     vramRequired: '6 GB',
     recommended: true,
-    bestFor: 'Claim review & compliance',
+    bestFor: 'Deep claim review & regulation compliance',
     tier: 'full',
+    callSign: 'HAWKEYE',
   },
   {
     id: 'vetrate-writer-7b-v2',
-    name: 'CWO4 Writer',
-    description: 'Generates personal statements & nexus letters',
+    name: '🎖️ CWO4 "PHANTOM" — The Writer',
+    description: 'Ghostwrites flawless personal statements & nexus letters',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Document generation',
+    bestFor: 'Full document generation & appeals',
     tier: 'full',
+    callSign: 'PHANTOM',
   },
   {
     id: 'vetrate-rater-7b-v2',
-    name: 'CWO5 Rater',
-    description: 'Expert VA rating calculations & analysis',
+    name: '🎖️ CWO5 "ORACLE" — The Rater',
+    description: 'Master of VA math who sees your true combined rating',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Rating analysis',
+    bestFor: 'Complex rating analysis & TDIU strategy',
     tier: 'full',
+    callSign: 'ORACLE',
   },
   // ═══════════════════════════════════════════════════════════════════════════
-  // MOBILE MODELS (1.7B) - Phones/Tablets/Low VRAM Devices
-  // Knowledge-distilled from 7B models for same capability at smaller size
+  // 📱 MOBILE EDITIONS (1.7B) - "Field Ready" - Same Expertise, Lighter Footprint
+  // Knowledge-distilled from the 7B Heavy Armor for on-the-go veterans
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-1.7b-mobile-v1',
-    name: '📱 CWO3 Auditor (Mobile)',
-    description: 'Distilled from 7B - Same knowledge, mobile-friendly',
+    name: '📱 CWO3 "SCOUT" — Field Auditor',
+    description: 'Quick recon on claims - catches issues before they grow',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Mobile claim review',
+    bestFor: 'Fast mobile claim checks',
     tier: 'mobile',
     mobileOptimized: true,
+    callSign: 'SCOUT',
   },
   {
     id: 'vetrate-writer-1.7b-mobile-v1',
-    name: '📱 CWO4 Writer (Mobile)',
-    description: 'Distilled from 7B - Personal statement generation',
+    name: '📱 CWO4 "DASH" — Field Writer',
+    description: 'Rapid-fire document drafts when inspiration strikes',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Mobile document drafts',
+    bestFor: 'Quick statement drafts on-the-go',
     tier: 'mobile',
     mobileOptimized: true,
+    callSign: 'DASH',
   },
   {
     id: 'vetrate-rater-1.7b-mobile-v1',
-    name: '📱 CWO5 Rater (Mobile)',
-    description: 'Distilled from 7B - Rating calculations on-the-go',
+    name: '📱 CWO5 "COMPASS" — Field Rater',
+    description: 'Points you in the right direction with quick calculations',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Mobile rating analysis',
+    bestFor: 'Fast rating estimates anywhere',
     tier: 'mobile',
     mobileOptimized: true,
+    callSign: 'COMPASS',
   },
 ];
 
