@@ -703,7 +703,7 @@ function App() {
       'statement-analyzer': () => setShowStatementAnalyzer(true),
       'mos-hazard': () => setShowMOSHazardMatcher(true),
       'timeline-wizard': () => setShowTimelineWizard(true),
-      // 'dd214-analyzer': () => setShowDD214Analyzer(true), // Temporarily disabled - OCR needs work
+      'dd214-analyzer': () => setShowDD214Analyzer(true),
       'web-of-conditions': () => setShowWebOfConditions(true),
       'cap-simulator': () => setShowCAPSimulator(true),
       'pain-painter': () => setShowPainPainter(true),
@@ -2510,14 +2510,14 @@ function App() {
         />
       )}
       
-      {/* DD214 Analyzer - Temporarily disabled, OCR needs work */}
-      {/* {showDD214Analyzer && (
+      {/* DD214 Analyzer */}
+      {showDD214Analyzer && (
         <DD214Analyzer
           onClose={() => setShowDD214Analyzer(false)}
           onReportBug={() => { setShowDD214Analyzer(false); setShowBugSquasher(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
         />
-      )} */}
+      )}
       
       {/* Muster Call - Mass Document Processor */}
       {showMusterCall && (
