@@ -269,6 +269,18 @@ export default function KnowledgeBaseStatus({ compact = false }) {
       
       console.log(`[DKB] Device check: mobile=${mobile}, cached=${cached}`);
       
+      // If full DKB is cached, update the display immediately
+      if (cached) {
+        const entryCount = await getCachedEntryCount();
+        console.log(`[DKB] Full database cached with ${entryCount} entries - updating display`);
+        setKbStatus(prev => ({
+          ...prev,
+          isWebOptimized: false,
+          dkbEntries: entryCount || FULL_DATABASE_COUNT,
+          totalEntries: entryCount || FULL_DATABASE_COUNT
+        }));
+      }
+      
       // On desktop, auto-download full database if not cached
       if (!mobile && !cached) {
         console.log('[DKB] Desktop detected - auto-downloading full database...');
