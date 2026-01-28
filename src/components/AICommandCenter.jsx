@@ -28,78 +28,78 @@ const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
 // ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Each Warrant Officer has a call sign that reflects their expertise.        ║
-// ║  Desktop models = Heavy Armor (full 7B power)                               ║
-// ║  Mobile models = Field Ready (distilled 1.7B for phones/tablets)            ║
+// ║  Ranks reflect MODEL POWER (CWO5 = most powerful, WO1 = lightest)           ║
+// ║  Desktop 7B = Senior Warrants (CWO3-CWO5) - Full firepower                  ║
+// ║  Mobile 1.7B = Junior Warrants (WO1-CWO2) - Field-portable                  ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 const MODELS = [
   // ═══════════════════════════════════════════════════════════════════════════
-  // 🖥️ DESKTOP EDITIONS (7B) - "Heavy Armor" - Full Power for Serious Work
+  // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - Maximum Firepower
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-7b-v2',
-    name: '🎖️ CWO3 "HAWKEYE" — The Auditor',
-    description: 'Nothing escapes this eagle-eyed 38 CFR compliance expert',
+    name: '🎖️ CWO3 "HAWKEYE" — Senior Auditor',
+    description: 'Deep-dive compliance expert: catches every 38 CFR violation, pyramiding issue, and missing evidence',
     size: '4.4 GB',
     vramRequired: '6 GB',
     recommended: true,
-    bestFor: 'Deep claim review & regulation compliance',
+    bestFor: 'Thorough claim audits, BVA appeal prep, complex multi-issue reviews',
     tier: 'full',
     callSign: 'HAWKEYE',
   },
   {
     id: 'vetrate-writer-7b-v2',
-    name: '🎖️ CWO4 "PHANTOM" — The Writer',
-    description: 'Ghostwrites flawless personal statements & nexus letters',
+    name: '🎖️ CWO4 "PHANTOM" — Senior Writer',
+    description: 'Master wordsmith: crafts compelling personal statements, nexus letters, and NODs that get results',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Full document generation & appeals',
+    bestFor: 'Full-length statements, medical nexus drafts, appeal briefs',
     tier: 'full',
     callSign: 'PHANTOM',
   },
   {
     id: 'vetrate-rater-7b-v2',
-    name: '🎖️ CWO5 "ORACLE" — The Rater',
-    description: 'Master of VA math who sees your true combined rating',
+    name: '🎖️ CWO5 "ORACLE" — Master Rater',
+    description: 'The highest authority on VA math: bilateral factors, SMC, TDIU strategy, and combined ratings',
     size: '4.4 GB',
     vramRequired: '6 GB',
-    bestFor: 'Complex rating analysis & TDIU strategy',
+    bestFor: 'Complex rating calculations, TDIU analysis, SMC pathways',
     tier: 'full',
     callSign: 'ORACLE',
   },
   // ═══════════════════════════════════════════════════════════════════════════
-  // 📱 MOBILE EDITIONS (1.7B) - "Field Ready" - Same Expertise, Lighter Footprint
-  // Knowledge-distilled from the 7B Heavy Armor for on-the-go veterans
+  // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Fast & Portable
+  // Knowledge-distilled from Senior Warrants for field deployment
   // ═══════════════════════════════════════════════════════════════════════════
   {
     id: 'vetrate-auditor-1.7b-mobile-v1',
-    name: '📱 CWO3 "SCOUT" — Field Auditor',
-    description: 'Quick recon on claims - catches issues before they grow',
+    name: '📱 WO1 "SCOUT" — Field Auditor',
+    description: 'Quick claim recon: spots obvious issues and flags what needs Senior review',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Fast mobile claim checks',
+    bestFor: 'Fast claim checks, initial reviews, mobile triage',
     tier: 'mobile',
     mobileOptimized: true,
     callSign: 'SCOUT',
   },
   {
     id: 'vetrate-writer-1.7b-mobile-v1',
-    name: '📱 CWO4 "DASH" — Field Writer',
-    description: 'Rapid-fire document drafts when inspiration strikes',
+    name: '📱 CWO2 "DASH" — Field Writer',
+    description: 'Rapid draft generator: outlines statements and captures key points on-the-go',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Quick statement drafts on-the-go',
+    bestFor: 'Quick statement outlines, bullet points, draft starts',
     tier: 'mobile',
     mobileOptimized: true,
     callSign: 'DASH',
   },
   {
     id: 'vetrate-rater-1.7b-mobile-v1',
-    name: '📱 CWO5 "COMPASS" — Field Rater',
-    description: 'Points you in the right direction with quick calculations',
+    name: '📱 CWO2 "COMPASS" — Field Rater',
+    description: 'Quick calculation assist: basic combined ratings and direction on next steps',
     size: '0.8 GB',
     vramRequired: '2 GB',
-    bestFor: 'Fast rating estimates anywhere',
+    bestFor: 'Fast rating estimates, simple calculations, quick checks',
     tier: 'mobile',
     mobileOptimized: true,
     callSign: 'COMPASS',
