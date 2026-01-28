@@ -615,6 +615,100 @@ const parseServiceRecord = async (text) => {
     
     let cleanedText = text;
     
+    // ============================================================
+    // OCR ERROR CORRECTION
+    // Common character substitutions from low-quality scans:
+    // - 0 → O (zeros mistaken for letter O)
+    // - 1 → I or L (ones mistaken for I or L)  
+    // - 5 → S (fives mistaken for S)
+    // - 8 → B (eights mistaken for B)
+    // - $ → S (dollar sign mistaken for S)
+    // Only apply to specific DD214 field labels, not numeric data!
+    // ============================================================
+    
+    // Fix common OCR substitutions in DD214 field labels and keywords
+    const ocrFixPatterns = [
+      // "CAUTI0N" → "CAUTION"
+      [/CAUTI0N/g, 'CAUTION'],
+      [/N0T\s+T0\s+BE/g, 'NOT TO BE'],
+      [/IMP0RTANT/g, 'IMPORTANT'],
+      // "CERT1FICATE" → "CERTIFICATE"
+      [/CERT1F1CATE/gi, 'CERTIFICATE'],
+      [/CERT1FICATE/gi, 'CERTIFICATE'],
+      [/CERTIF1CATE/gi, 'CERTIFICATE'],
+      // "DISCH4RGE" → "DISCHARGE"
+      [/D1SCHARGE/gi, 'DISCHARGE'],
+      [/DISCH4RGE/gi, 'DISCHARGE'],
+      [/DISCHARG3/gi, 'DISCHARGE'],
+      // "ACT1VE" → "ACTIVE"
+      [/ACT1VE/gi, 'ACTIVE'],
+      [/ACTIV3/gi, 'ACTIVE'],
+      // "REL3ASE" → "RELEASE"
+      [/REL3ASE/gi, 'RELEASE'],
+      [/RELEAS3/gi, 'RELEASE'],
+      // "D4TE" → "DATE"
+      [/D4TE/gi, 'DATE'],
+      [/DAT3/gi, 'DATE'],
+      // "SER1AL" / "SERI4L" → "SERIAL"
+      [/SER1AL/gi, 'SERIAL'],
+      [/SERI4L/gi, 'SERIAL'],
+      // "S0CIAL" → "SOCIAL"
+      [/S0CIAL/gi, 'SOCIAL'],
+      [/SOCI4L/gi, 'SOCIAL'],
+      // "SECUR1TY" → "SECURITY"
+      [/SECUR1TY/gi, 'SECURITY'],
+      [/S3CURITY/gi, 'SECURITY'],
+      // "SEPARAT10N" → "SEPARATION"
+      [/SEPARAT10N/gi, 'SEPARATION'],
+      [/S3PARATION/gi, 'SEPARATION'],
+      // "GR4DE" → "GRADE"
+      [/GR4DE/gi, 'GRADE'],
+      [/GRAD3/gi, 'GRADE'],
+      // "N4ME" / "NAM3" → "NAME"
+      [/N4ME/gi, 'NAME'],
+      [/NAM3/gi, 'NAME'],
+      // "BR4NCH" → "BRANCH"
+      [/BR4NCH/gi, 'BRANCH'],
+      [/8RANCH/gi, 'BRANCH'],
+      // "SERV1CE" → "SERVICE"
+      [/SERV1CE/gi, 'SERVICE'],
+      [/S3RVICE/gi, 'SERVICE'],
+      [/SERVIC3/gi, 'SERVICE'],
+      // "AUTH0RITY" → "AUTHORITY"
+      [/AUTH0RITY/gi, 'AUTHORITY'],
+      [/AUTHORIT¥/gi, 'AUTHORITY'],
+      // "DECORAT10NS" → "DECORATIONS"
+      [/DECORAT10NS/gi, 'DECORATIONS'],
+      [/DEC0RATIONS/gi, 'DECORATIONS'],
+      // "HONORAB1E" → "HONORABLE"
+      [/HONORAB1E/gi, 'HONORABLE'],
+      [/H0NORABLE/gi, 'HONORABLE'],
+      // General patterns - but be careful with context
+      // Only fix 0→O in words (not numbers)
+      [/\b([A-Z]+)0([A-Z]+)\b/g, '$1O$2'],
+      [/\b0([A-Z]{2,})\b/g, 'O$1'],
+      [/\b([A-Z]{2,})0\b/g, '$1O'],
+      // Fix 1→I in words (not numbers)
+      [/\b([A-Z]+)1([A-Z]+)\b/g, '$1I$2'],
+      [/\b1([A-Z]{2,})\b/g, 'I$1'],
+      [/\b([A-Z]{2,})1\b/g, '$1I'],
+      // Fix 3→E in words  
+      [/\b([A-Z]+)3([A-Z]+)\b/g, '$1E$2'],
+      [/\b([A-Z])3\b/g, '$1E'],
+      // Fix 4→A in words
+      [/\b([A-Z]+)4([A-Z]+)\b/g, '$1A$2'],
+      // Fix 5→S at word boundaries
+      [/\b5([A-Z]{2,})\b/g, 'S$1'],
+      // Fix 8→B at word boundaries (but not inside MOS codes)
+      [/\b8([A-Z]{2,})\b/g, 'B$1'],
+    ];
+    
+    for (const [pattern, replacement] of ocrFixPatterns) {
+      cleanedText = cleanedText.replace(pattern, replacement);
+    }
+    
+    console.log('🔧 OCR normalization applied to DD214 text');
+    
     // STEP 1: Remove ALL parenthetical content (instructions/examples)
     // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
     cleanedText = cleanedText.replace(/\([^)]*\)/g, ' ');
