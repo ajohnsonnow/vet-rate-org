@@ -207,11 +207,9 @@ export async function migrateFromLocalStorage() {
 
     console.log(`✨ Migration complete! Migrated ${migrationResults.migratedKeys.length} keys (${(migrationResults.totalSize / 1024).toFixed(2)} KB)`);
 
-    // Clear localStorage after successful migration
-    if (migrationResults.success) {
-      localStorage.clear();
-      console.log('🧹 Cleared localStorage after successful migration');
-    }
+    // DO NOT clear localStorage - app still reads from it
+    // Data is now in both places (IndexedDB for backup, localStorage for live access)
+    console.log('✅ Data successfully backed up to IndexedDB (localStorage preserved)');
 
     return migrationResults;
   } catch (error) {
