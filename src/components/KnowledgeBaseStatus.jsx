@@ -17,6 +17,7 @@ import {
   isFullDKBCached, 
   downloadFullDKB, 
   getCachedEntryCount,
+  getCachedSourceCounts,
   smartLoadDKB,
   FULL_DATABASE_COUNT,
   WEB_DATABASE_COUNT 
@@ -240,18 +241,8 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     // Combined for display
     totalEntries: 0,
     sources: {},
-    // Full DKB source counts (shown when Local AI loaded or full cached)
-    fullSources: {
-      'BVA_DECISIONS': 116209,
-      'CAVC': 6422,
-      'eCFR_OFFICIAL': 4256,  // 38_CFR + ECFR combined
-      'M21-1_OFFICIAL': 1371,
-      'OGC_PRECEDENT_OPINION': 891,
-      'SECONDARY_CONDITIONS_MATRIX': 774,
-      'FEDERAL_CIRCUIT': 293,
-      'PRESUMPTIVE_CONDITIONS': 277,
-      'FEDERAL_REGISTER_OFFICIAL': 15
-    },
+    // Full DKB source counts (calculated dynamically from cached data)
+    fullSources: {},
     ecfrCurrent: true,
     ecfrDate: '2026-01-27',
     loading: true
@@ -272,12 +263,16 @@ export default function KnowledgeBaseStatus({ compact = false }) {
       // If full DKB is cached, update the display immediately
       if (cached) {
         const entryCount = await getCachedEntryCount();
+        const sourceCounts = await getCachedSourceCounts();
         console.log(`[DKB] Full database cached with ${entryCount} entries - updating display`);
         setKbStatus(prev => ({
           ...prev,
           isWebOptimized: false,
           dkbEntries: entryCount || FULL_DATABASE_COUNT,
-          totalEntries: entryCount || FULL_DATABASE_COUNT
+          totalEntries: entryCount || FULL_DATABASE_COUNT,
+          fullSources: sourceCounts,
+          dkbSources: sourceCounts,
+          sources: sourceCounts
         }));
       }
       
@@ -289,12 +284,17 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         setIsDownloading(false);
         if (result.success) {
           setIsFullCached(true);
+          // Get actual source counts from the downloaded data
+          const sourceCounts = await getCachedSourceCounts();
           // Update state instead of reloading - smoother UX
           setKbStatus(prev => ({
             ...prev,
             isWebOptimized: false,
             dkbEntries: result.entryCount,
-            totalEntries: result.entryCount
+            totalEntries: result.entryCount,
+            fullSources: sourceCounts,
+            dkbSources: sourceCounts,
+            sources: sourceCounts
           }));
           console.log(`[DKB] ✅ Full database cached (${result.entryCount} entries) - updated display`);
         }
