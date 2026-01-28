@@ -45,6 +45,7 @@ import BugSquasher from './components/BugSquasher';
 import FloatingBugButton from './components/FloatingBugButton';
 import ReportBugLink from './components/ReportBugLink';
 import FeatureRequest from './components/FeatureRequest';
+import CommunityRoadmap from './components/CommunityRoadmap';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
@@ -181,6 +182,7 @@ function App() {
   const [showClaimNavigator, setShowClaimNavigator] = useState(false);
   const [showBugSquasher, setShowBugSquasher] = useState(false);
   const [showFeatureRequest, setShowFeatureRequest] = useState(false);
+  const [showCommunityRoadmap, setShowCommunityRoadmap] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showStateBenefitHunter, setShowStateBenefitHunter] = useState(false);
   const [showVSOFinder, setShowVSOFinder] = useState(false);
@@ -1125,8 +1127,9 @@ function App() {
         onAISettingsClick={() => setShowAISettings(true)}
         // Onboarding & Guides
         onWorkflowGuideClick={() => setShowWorkflowGuide(true)}
-        // Feature Request
+        // Feature Request & Community Roadmap
         onFeatureRequestClick={() => setShowFeatureRequest(true)}
+        onCommunityRoadmapClick={() => setShowCommunityRoadmap(true)}
       />
       <BuyMeCoffee 
         show={hasSearched && results.length > 0} 
@@ -2667,6 +2670,7 @@ function App() {
         <BugSquasher
           onClose={() => setShowBugSquasher(false)}
           appState={getCurrentAppState()}
+          onOpenRoadmap={() => setShowCommunityRoadmap(true)}
         />
       )}
 
@@ -2675,6 +2679,14 @@ function App() {
         <FeatureRequest
           onClose={() => setShowFeatureRequest(false)}
           appState={getCurrentAppState()}
+          onOpenRoadmap={() => setShowCommunityRoadmap(true)}
+        />
+      )}
+
+      {/* Community Roadmap */}
+      {showCommunityRoadmap && (
+        <CommunityRoadmap
+          onClose={() => setShowCommunityRoadmap(false)}
         />
       )}
 

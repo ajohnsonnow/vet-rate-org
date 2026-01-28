@@ -68,7 +68,7 @@ const APP_MODULE_KEYS = [
   'OTHER'
 ];
 
-function FeatureRequest({ onClose, appState = {} }) {
+function FeatureRequest({ onClose, appState = {}, onOpenRoadmap }) {
   const { t } = useLanguage();
   
   // Lock body scroll when modal is open
@@ -632,6 +632,24 @@ ${t('featureRequest', 'thankYouMessage')}
                       <p className="text-xs text-green-600 dark:text-green-400 mt-2 italic">
                         {t('featureRequest', 'savedToTicketsNote')}
                       </p>
+                    )}
+                    
+                    {/* Roadmap CTA */}
+                    {onOpenRoadmap && (
+                      <div className="mt-6 pt-4 border-t border-green-200 dark:border-green-700">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                          🗺️ Your idea may appear here! See what's being built & vote:
+                        </p>
+                        <button
+                          onClick={() => { onClose(); onOpenRoadmap(); }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                          </svg>
+                          View Community Roadmap
+                        </button>
+                      </div>
                     )}
                   </div>
                 ) : (

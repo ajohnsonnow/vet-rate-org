@@ -92,8 +92,8 @@ const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName 
           {/* Boot sequence */}
           <div className="text-green-400 text-sm space-y-1 mb-6">
             {bootText.map((line, i) => (
-              <div key={i} className={line.includes('READY') ? 'text-green-300 font-bold' : ''}>
-                {line}
+              <div key={i} className={line?.includes?.('READY') ? 'text-green-300 font-bold' : ''}>
+                {line || ''}
               </div>
             ))}
             {isBooting && <span className="animate-pulse">▌</span>}

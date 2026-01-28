@@ -1,0 +1,115 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  📱 MOBILE EDITION: VetRate-Auditor 1B (Knowledge Distillation)              ║
+# ║══════════════════════════════════════════════════════════════════════════════║
+# ║  Target: Mobile browsers & low-VRAM devices                                  ║
+# ║  Base Model: HuggingFaceTB/SmolLM2-1.7B-Instruct                            ║
+# ║  Teacher: VetRate-Auditor-7B-v2 (our fine-tuned 7B model)                   ║
+# ║  Size: ~800 MB quantized (vs 4.4 GB for 7B)                                 ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# ==============================================================================
+# BASE MODEL - SmolLM2 1.7B (Optimized for mobile/edge)
+# ==============================================================================
+base_model: HuggingFaceTB/SmolLM2-1.7B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA configuration
+load_in_8bit: false
+load_in_4bit: true
+adapter: qlora
+
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+
+# ==============================================================================
+# KNOWLEDGE DISTILLATION DATASET
+# Uses outputs from our 7B teacher model as training targets
+# ==============================================================================
+datasets:
+  # Original training data
+  - path: ../training-data-v2/train_auditor.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+  
+  # Teacher-generated synthetic data (knowledge distillation)
+  - path: ../training-data-v2/distill_auditor_7b.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+val_set_size: 0.05
+dataset_prepared_path: null
+
+# ==============================================================================
+# MOBILE-OPTIMIZED TRAINING
+# ==============================================================================
+flash_attention: true
+sample_packing: true
+eval_sample_packing: false
+pad_to_sequence_len: true
+
+bf16: true
+fp16: false
+tf32: false
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+# Shorter context for mobile (saves memory, faster inference)
+sequence_len: 2048
+max_packed_sequence_len: 2048
+
+# Training params
+micro_batch_size: 8
+gradient_accumulation_steps: 4
+eval_batch_size: 4
+
+num_epochs: 5
+learning_rate: 2e-4
+lr_scheduler: cosine
+warmup_ratio: 0.1
+
+optimizer: adamw_torch_fused
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# ==============================================================================
+# LoRA CONFIGURATION (Efficient fine-tuning)
+# ==============================================================================
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+lora_target_linear: true
+
+# ==============================================================================
+# OUTPUT
+# ==============================================================================
+output_dir: ../models/mobile/vetrate-auditor-1.7b-mobile-v1
+hub_model_id: VetRate/vetrate-auditor-1.7b-mobile-v1
+push_to_hub: true
+hub_strategy: checkpoint
+
+logging_steps: 10
+save_strategy: steps
+save_steps: 100
+eval_steps: 50
+
+# Merge LoRA into base for deployment
+merge_lora: true

@@ -49,6 +49,12 @@ export default defineConfig({
       host: '127.0.0.1',
       port: 5173
     },
+    // Headers for SharedArrayBuffer (required for DOOM easter egg)
+    // Using 'credentialless' instead of 'require-corp' to allow cross-origin resources
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'credentialless'
+    },
     // Proxy VA Sandbox API calls to bypass CORS
     proxy: {
       '/va-api': {
