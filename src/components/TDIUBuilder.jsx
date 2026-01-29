@@ -26,7 +26,7 @@ import { isAIAvailable } from '../utils/aiStatementHelper';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import ShareButton from './ShareButton';
 import VoiceInputButton from './VoiceInput';
 
@@ -986,16 +986,14 @@ export default function TDIUBuilder({ onClose, onReportBug, onOpenAISettings }) 
               <span className={step === 3 ? 'font-bold text-green-600' : ''}>Results</span>
             </div>
 
-            {/* AI Model Quick Load */}
+            {/* Smart AI Load Button */}
             {!isAnyAIAvailable() && (
               <div className="mb-6">
-                <AIModelQuickLoad 
+                <SmartAILoadButton 
                   toolId="tdiu-builder"
-                  onLoadComplete={(agent) => {
-                    console.log('AI loaded for TDIU Builder:', agent.name);
+                  onLoadComplete={(model) => {
+                    console.log('Smart AI loaded for TDIU Builder:', model?.name);
                   }}
-                  compact={false}
-                  showFullDropdown={true}
                 />
               </div>
             )}

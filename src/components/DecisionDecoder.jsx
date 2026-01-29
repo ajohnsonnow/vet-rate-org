@@ -8,7 +8,7 @@ import { decodeDecision, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import { useVaBenefitsRef, CLAIM_PHASES } from '../hooks/useVaBenefitsRef';
 import { analyzePDF, analyzeImage, OCR_STATES, formatFileSize, isImageFile, isPDFFile } from '../utils/ocr';
 
@@ -388,14 +388,12 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
               </div>
             </div>
 
-            {/* AI Model Quick Load */}
+            {/* Smart AI Load Button */}
             {!isAnyAIAvailable() && (
               <div className="mb-6">
-                <AIModelQuickLoad 
+                <SmartAILoadButton 
                   toolId="decision-decoder"
-                  onLoadComplete={(agent) => console.log('AI loaded for Decision Decoder:', agent.name)}
-                  compact={false}
-                  showFullDropdown={true}
+                  onLoadComplete={(model) => console.log('Smart AI loaded for Decision Decoder:', model?.name)}
                 />
               </div>
             )}

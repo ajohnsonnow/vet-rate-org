@@ -15,7 +15,7 @@ import { analyzeCFile, getCFilePrivacyDisclosure, estimateChunks, getContextWind
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
 
 // Sub-components for the dashboard
@@ -318,14 +318,12 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         </div>
       )}
       
-      {/* AI Model Quick Load */}
+      {/* Smart AI Load Button */}
       {!isAnyAIAvailable() && (
         <div className="mt-6">
-          <AIModelQuickLoad 
+          <SmartAILoadButton 
             toolId="cfile-analyzer"
-            onLoadComplete={(agent) => console.log('AI loaded for C-File Analyzer:', agent.name)}
-            compact={false}
-            showFullDropdown={true}
+            onLoadComplete={(model) => console.log('Smart AI loaded for C-File Analyzer:', model?.name)}
           />
         </div>
       )}
