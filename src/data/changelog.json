@@ -1,8 +1,56 @@
 {
-  "version": "1.16.3",
+  "version": "1.18.0",
   "lastUpdated": "2026-01-29",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.18.0",
+      "date": "2026-01-29",
+      "isFirstRelease": false,
+      "releaseTitle": "BVA Intelligence Suite - Appeals Powered by Real Data",
+      "changelog": [
+        {
+          "type": "feature",
+          "category": "Appeals Intelligence",
+          "title": "Nexus Quality Analyzer",
+          "description": "Score your nexus letter like a BVA judge - based on analysis of 18,609 real BVA decisions. Private IMOs win 81.3% vs VA exams at 31.2%",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Appeals Intelligence",
+          "title": "Remand Risk Checker",
+          "description": "Pre-submission gap finder with 8-point evidence checklist - catch what the VA will catch BEFORE you file",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Appeals Intelligence",
+          "title": "Appeals Lane Advisor",
+          "description": "Interactive decision tree: Supplemental vs HLR vs Board. Real timeline data (46 vs 89 vs 547 days) helps you pick the right path",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Data Pipeline",
+          "title": "VA Data Collection Pipeline",
+          "description": "New Python scrapers pull directly from BVA decision database, VA workload reports, and VA Open Data Portal - no more relying on third parties",
+          "isNew": true
+        },
+        {
+          "type": "improvement",
+          "category": "Build System",
+          "title": "Push-Prep VA Data Integration",
+          "description": "VA data pipeline now runs automatically during push-prep - frontend data stays fresh with latest BVA statistics"
+        },
+        {
+          "type": "improvement",
+          "category": "AI",
+          "title": "Florence-2 Vision AI for DD214",
+          "description": "Vision AI now the PRIMARY extraction method for DD214s - falls back to OCR only when needed. 3x more accurate on poor scans"
+        }
+      ]
+    },
     {
       "version": "1.16.3",
       "date": "2026-01-29",
