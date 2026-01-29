@@ -56,6 +56,8 @@ const MISSION_STAGES = [
     color: 'rose',
     tools: [
       { id: 'cap-simulator', name: 'C&P Exam Simulator', desc: 'Practice exam scenarios', icon: '🎯' },
+      { id: 'nexus-analyzer', name: 'Nexus Quality Analyzer', desc: 'Score nexus letter strength (BVA data)', icon: '📊', badge: 'NEW' },
+      { id: 'remand-checker', name: 'Remand Risk Checker', desc: 'Pre-submission gap finder', icon: '🔍', badge: 'NEW' },
       { id: 'red-team', name: 'The War Game', desc: 'VA rater perspective stress test', icon: '♟️' },
       { id: 'consistency-engine', name: 'Consistency Engine', desc: 'Check statement consistency', icon: '⚖️' },
       { id: 'evidence-gaps', name: 'Evidence Gap Finder', desc: 'Identify missing evidence', icon: '🔎' },
@@ -118,6 +120,13 @@ const ToolCard = ({ tool, onSelect, isLocal }) => {
         <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full border border-green-200 dark:border-green-700">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" aria-hidden="true" />
           100% Local
+        </span>
+      )}
+      
+      {/* NEW Badge for recently added tools */}
+      {tool.badge === 'NEW' && !tool.local && (
+        <span className="absolute top-2 right-2 text-[10px] font-bold uppercase tracking-widest text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-1 rounded-full border border-indigo-200 dark:border-indigo-700 animate-pulse">
+          NEW
         </span>
       )}
       

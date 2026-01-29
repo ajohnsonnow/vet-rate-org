@@ -118,6 +118,9 @@ import { VaApiStatusBanner } from './components/VaApiStatus';
 import { MobileSaveReminder } from './components/PacketPersistence';
 // 🎮 Easter Egg: Stress Relief Division (Type IDDQD anywhere to activate)
 import StressReliefDivision from './components/StressReliefDivision';
+// 📊 BVA Success Tools (powered by 18,609 decision analysis)
+import NexusQualityAnalyzer from './components/NexusQualityAnalyzer';
+import RemandRiskChecker from './components/RemandRiskChecker';
 // AAAAA Diamond Standard Components
 import GlobalCommandSearch from './components/GlobalCommandSearch';
 import MobileBottomNav, { MobileNavSpacer } from './components/MobileBottomNav';
@@ -238,6 +241,10 @@ function App() {
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
   const [showVKBTimeline, setShowVKBTimeline] = useState(false);
+  
+  // BVA SUCCESS TOOLS (powered by 18,609 decision analysis)
+  const [showNexusQualityAnalyzer, setShowNexusQualityAnalyzer] = useState(false);
+  const [showRemandRiskChecker, setShowRemandRiskChecker] = useState(false);
   
   // AAAAA DIAMOND STANDARD: Command Search & Privacy
   const [showCommandSearch, setShowCommandSearch] = useState(false);
@@ -718,7 +725,9 @@ function App() {
       'witness-bench': () => setShowWitnessBench(true),
       'claim-navigator': () => setShowClaimNavigator(true),
       'va-resources': () => setShowVAResources(true),
-      'user-manual': () => setShowUserManual(true)
+      'user-manual': () => setShowUserManual(true),
+      'nexus-analyzer': () => setShowNexusQualityAnalyzer(true),
+      'remand-checker': () => setShowRemandRiskChecker(true)
     };
     
     // Execute the tool opener if it exists
@@ -2991,6 +3000,18 @@ function App() {
       {showConsistencyEngine && (
         <ConsistencyEngine
           onClose={() => setShowConsistencyEngine(false)}
+        />
+      )}
+      
+      {/* BVA SUCCESS TOOLS (powered by 18,609 decision analysis) */}
+      {showNexusQualityAnalyzer && (
+        <NexusQualityAnalyzer
+          onClose={() => setShowNexusQualityAnalyzer(false)}
+        />
+      )}
+      {showRemandRiskChecker && (
+        <RemandRiskChecker
+          onClose={() => setShowRemandRiskChecker(false)}
         />
       )}
       
