@@ -308,16 +308,27 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
     if (!testPrompt.trim()) return;
     
     setIsTesting(true);
-    setTestResponse('');
+    setTestResponse(''); // Clear previous response
     
     try {
       const { generateWithSwarm } = await import('../utils/diamondSwarm');
+      
+      // Show response box immediately
+      setTestResponse('⏳ Generating...');
+      
       const result = await generateWithSwarm(testPrompt, {
         temperature: 0.7,
         max_tokens: 200,
+        onStream: (delta, fullText) => {
+          // Update response in real-time as AI generates
+          setTestResponse(fullText || '');
+        }
       });
       
-      setTestResponse(result?.text || result || 'No response received');
+      // Final response (in case streaming didn't capture everything)
+      if (result?.text || result) {
+        setTestResponse(result?.text || result);
+      }
     } catch (err) {
       console.error('Test failed:', err);
       setTestResponse(`❌ Error: ${err.message}`);
@@ -601,10 +612,15 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                                 )}
                               </button>
                               
-                              {testResponse && (
+                              {(testResponse || isTesting) && (
                                 <div className="p-3 bg-gray-900/70 border border-gray-600 rounded-lg">
-                                  <p className="text-xs text-gray-400 mb-1">Response:</p>
-                                  <p className="text-white text-sm whitespace-pre-wrap">{testResponse}</p>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <p className="text-xs text-gray-400 font-medium">Response:</p>
+                                    {isTesting && testResponse && testResponse !== '⏳ Generating...' && (
+                                      <span className="text-xs text-cyan-400 animate-pulse">● Generating...</span>
+                                    )}
+                                  </div>
+                                  <p className="text-white text-sm whitespace-pre-wrap">{testResponse || '⏳ Generating...'}</p>
                                 </div>
                               )}
                             </div>
