@@ -749,7 +749,18 @@ export const getModelForVRAM = (toolId, availableVRAM) => {
     'Qwen2.5-7B-Instruct-q4f32_1-MLC': 8,
   };
   
-  // Check primary first
+  // Check primary first (with null safety)
+  if (!tool?.primary?.modelId) {
+    // Tool doesn't have proper primary config, return minimal fallback
+    return {
+      modelId: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
+      modelName: 'SmolLM2 360M',
+      reason: 'Default model (tool config missing)',
+      fits: true,
+      isMinimal: true,
+    };
+  }
+  
   const primaryVRAM = vramMap[tool.primary.modelId] || 4;
   if (availableVRAM >= primaryVRAM) {
     return { ...tool.primary, fits: true };
@@ -782,6 +793,11 @@ export const getModelForVRAM = (toolId, availableVRAM) => {
 export const analyzeCurrentModel = (toolId, currentModelId) => {
   const tool = TOOL_LLM_RECOMMENDATIONS[toolId];
   if (!tool || !currentModelId) {
+    return { isOptimal: true, suggestion: null };
+  }
+  
+  // Null safety: ensure tool.primary exists
+  if (!tool.primary || !tool.primary.modelId) {
     return { isOptimal: true, suggestion: null };
   }
   
@@ -828,8 +844,15 @@ export const getLLMStats = () => {
   const uniqueModels = new Set();
   
   Object.values(TOOL_LLM_RECOMMENDATIONS).forEach(tool => {
-    uniqueModels.add(tool.primary.modelId);
-    tool.alternatives.forEach(alt => uniqueModels.add(alt.modelId));
+    // Null safety checks
+    if (tool?.primary?.modelId) {
+      uniqueModels.add(tool.primary.modelId);
+    }
+    if (tool?.alternatives) {
+      tool.alternatives.forEach(alt => {
+        if (alt?.modelId) uniqueModels.add(alt.modelId);
+      });
+    }
   });
   
   return {

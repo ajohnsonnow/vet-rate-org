@@ -31,6 +31,7 @@ import {
   processFormationDocument,
   autoPopulateProfile,
   generateMusterCallReport,
+  analyzeEvidenceGaps,  // NEW: Evidence gap analysis (v1.16.0)
   validateFilesBatch,
   extractIntelligenceBriefingData,
   PROCESSING_STATES,
@@ -337,6 +338,19 @@ export default function MusterCall({ isOpen, onClose, onProcessComplete, onOpenD
             }
           } else {
             console.warn('⚠️ No AI service available for report generation');
+          }
+
+          // NEW: Evidence Gap Analysis (v1.16.0)
+          console.log('🔍 Running Evidence Gap Analysis...');
+          const gapAnalysis = analyzeEvidenceGaps(completeData.results);
+          if (gapAnalysis.success && gapAnalysis.totalGaps > 0) {
+            console.log(`⚠️ Found ${gapAnalysis.totalGaps} potential evidence gaps!`);
+            // Store gap analysis results for display in UI
+            if (completeData.results) {
+              completeData.evidenceGaps = gapAnalysis;
+            }
+          } else {
+            console.log('✅ No significant evidence gaps detected');
           }
 
           setProcessingState(PROCESSING_STATES.COMPLETE);

@@ -35,29 +35,31 @@ export const getRecommendedModelForDevice = (toolId) => {
     };
   }
 
-  // Mobile: Always use smallest/fastest model
-  if (deviceType === 'mobile') {
+  // Use primary recommendation (structure is toolRec.primary, not mobile/desktop)
+  const primaryModel = toolRec.primary;
+  if (!primaryModel || !primaryModel.modelId) {
+    // Fallback if primary doesn't have modelId
     return {
-      id: toolRec.mobile.modelId,
-      name: toolRec.mobile.agentName,
-      reason: `Optimized for mobile: ${toolRec.mobile.why}`
+      id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
+      name: 'CWO3 HAWKEYE (3B)',
+      reason: 'Balanced performance for general tasks'
     };
   }
 
-  // Tablet: Use mobile model (conservative approach)
-  if (deviceType === 'tablet') {
+  // Mobile/Tablet: Still use the primary model but note the device context
+  if (deviceType === 'mobile' || deviceType === 'tablet') {
     return {
-      id: toolRec.mobile.modelId,
-      name: toolRec.mobile.agentName,
-      reason: `Optimized for tablet: ${toolRec.mobile.why}`
+      id: primaryModel.modelId,
+      name: primaryModel.modelName || primaryModel.modelId,
+      reason: `Optimized for ${toolRec.name}: ${primaryModel.reason || 'Recommended model'}`
     };
   }
 
-  // Desktop: Use most powerful model
+  // Desktop: Use primary model
   return {
-    id: toolRec.desktop.modelId,
-    name: toolRec.desktop.agentName,
-    reason: `Desktop powerhouse: ${toolRec.desktop.why}`
+    id: primaryModel.modelId,
+    name: primaryModel.modelName || primaryModel.modelId,
+    reason: `Recommended for ${toolRec.name}: ${primaryModel.reason || 'Best match'}`
   };
 };
 
@@ -125,8 +127,8 @@ export const smartLoadAI = async (toolId, onProgress = null) => {
     if (check.action === 'switch') {
       onProgress?.(10, 'Unloading current model...');
       
-      const { unloadLocalAI } = await import('./diamondSwarm');
-      await unloadLocalAI();
+      const { unloadSwarm } = await import('./diamondSwarm');
+      await unloadSwarm();
       
       // Wait a moment for cleanup
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -135,8 +137,9 @@ export const smartLoadAI = async (toolId, onProgress = null) => {
     // Load recommended model
     onProgress?.(20, `Loading ${recommended.name}...`);
     
-    const { initializeSwarm, registerLocalAIEngine, generateWithSwarm, isSwarmReady, getSwarmStatus } = 
+    const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } = 
       await import('./diamondSwarm');
+    const { registerLocalAIEngine } = await import('./unifiedAIService');
     
     await initializeSwarm({
       modelId: recommended.id,

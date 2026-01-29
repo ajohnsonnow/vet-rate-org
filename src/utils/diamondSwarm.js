@@ -446,19 +446,22 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   const estimatedSystemTokens = Math.ceil(finalSystemPrompt.length / 4);
   const estimatedPromptTokens = Math.ceil(prompt.length / 4);
   const estimatedTotalTokens = estimatedSystemTokens + estimatedPromptTokens;
-  const contextLimit = 8192; // Match our configured context window size
+  const contextLimit = 4096; // Qwen2.5-3B actual context window
+  const reservedForOutput = Math.min(maxTokens, 1024); // Reserve 1024 tokens for complete JSON output
+  const availableForInput = contextLimit - reservedForOutput;
   
-  // Warn if prompt is too large
-  if (estimatedTotalTokens > contextLimit - maxTokens) {
-    console.warn(`💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${contextLimit - maxTokens})`);
+  // Warn and truncate if prompt is too large
+  if (estimatedTotalTokens > availableForInput) {
+    console.warn(`💎 Prompt may be too large: ~${estimatedTotalTokens} tokens (limit: ${availableForInput})`);
     
-    // Truncate prompt if needed (keep last N characters which are usually most relevant)
-    if (estimatedTotalTokens > contextLimit - maxTokens) {
-      const maxPromptChars = (contextLimit - maxTokens - estimatedSystemTokens) * 4;
-      if (prompt.length > maxPromptChars) {
-        console.log(`💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`);
-        prompt = '...\n' + prompt.slice(-maxPromptChars);
-      }
+    // Calculate max chars for prompt (keep system prompt, truncate user prompt)
+    const maxPromptChars = Math.max(1000, (availableForInput - estimatedSystemTokens) * 4);
+    if (prompt.length > maxPromptChars) {
+      console.log(`💎 Truncating prompt from ${prompt.length} to ${maxPromptChars} chars`);
+      // Keep beginning (context) and end (question) of prompt
+      const keepStart = Math.floor(maxPromptChars * 0.3);
+      const keepEnd = maxPromptChars - keepStart;
+      prompt = prompt.slice(0, keepStart) + '\n\n[... middle content truncated for context window ...]\n\n' + prompt.slice(-keepEnd);
     }
   }
   
