@@ -173,7 +173,7 @@ function bumpVersion(currentVersion, bumpType) {
 
 async function main() {
   const args = parseArgs();
-  const totalSteps = args.noBump ? 7 : 8; // Added changelog sync step
+  const totalSteps = args.noBump ? 8 : 9; // Added VA data pipeline step
   let currentStep = 0;
   
   console.log('\n' + '═'.repeat(65));
@@ -294,7 +294,31 @@ async function main() {
   logSuccess('Project stats updated');
   
   // ─────────────────────────────────────────────────────────────────────────────
-  // Step 5.5: Sync changelog with current version
+  // Step 5.5: Update VA Data Pipeline (BVA decisions, workload reports)
+  // ─────────────────────────────────────────────────────────────────────────────
+  logStep(++currentStep, totalSteps, 'Running VA data pipeline update...');
+  
+  try {
+    // Check if Python and dependencies are available
+    const pythonPath = path.join(rootDir, '.venv', 'Scripts', 'python.exe');
+    const pipelineScript = path.join(rootDir, 'scripts', 'scrapers', 'va_data_pipeline.py');
+    
+    if (fs.existsSync(pythonPath) && fs.existsSync(pipelineScript)) {
+      // Run with --generate-frontend to update JS from existing data (fast)
+      // Use --full-update for comprehensive scrape (slow, optional)
+      exec(`"${pythonPath}" "${pipelineScript}" --generate-frontend`, { silent: false });
+      logSuccess('VA data pipeline updated');
+    } else {
+      logWarning('VA data pipeline not available (missing Python venv or script)');
+      log('   Run: pip install -r scripts/scrapers/requirements.txt', 'cyan');
+    }
+  } catch (error) {
+    logWarning('VA data pipeline failed: ' + error.message);
+    logWarning('Continuing without VA data update...');
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Step 5.6: Sync changelog with current version
   // ─────────────────────────────────────────────────────────────────────────────
   logStep(++currentStep, totalSteps, 'Syncing changelog with current version...');
   
