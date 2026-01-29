@@ -231,13 +231,29 @@ export async function processDocument(file, options = {}) {
       if (status === 'complete') {
         worker.removeEventListener('message', messageHandler);
         
-        // Extract text from result
-        const extractedText = typeof text === 'string' ? text : JSON.stringify(text);
+        // Debug: Log raw Florence output to understand format
+        console.log('🔍 [FlorenceOCR] Raw worker response:', e.data);
+        console.log('🔍 [FlorenceOCR] Text type:', typeof text);
+        console.log('🔍 [FlorenceOCR] Text content:', text);
+        
+        // Extract text from result - handle various Florence output formats
+        let extractedText;
+        if (typeof text === 'string') {
+          extractedText = text;
+        } else if (text && typeof text === 'object') {
+          // Florence may return { '<OCR>': 'text' } or similar
+          extractedText = text['<OCR>'] || text.text || text.ocr || JSON.stringify(text);
+        } else {
+          extractedText = String(text || '');
+        }
+        
+        console.log('🔍 [FlorenceOCR] Extracted text (first 500 chars):', extractedText?.substring(0, 500));
         
         // Parse as DD214 if requested
         let parsedData = null;
         if (shouldParse) {
           parsedData = parseDD214Text(extractedText);
+          console.log('🔍 [FlorenceOCR] Parsed DD214 data:', parsedData?.fields ? Object.keys(parsedData.fields).filter(k => parsedData.fields[k]) : 'no fields');
         }
 
         resolve({ text: extractedText, parsedData });
@@ -251,6 +267,9 @@ export async function processDocument(file, options = {}) {
 
     worker.addEventListener('message', messageHandler);
     worker.postMessage({ type: 'ANALYZE', payload: { imageBlob } });
+
+    // Debug logging
+    console.log('🔍 [FlorenceOCR] Sent image to worker for analysis...');
   });
 }
 

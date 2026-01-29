@@ -251,13 +251,29 @@ const processSingleDocument = async (file, onProgress) => {
 
           if (visionResult.combinedText && visionResult.combinedText.trim().length > 100) {
             console.log(`✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`);
+            
+            // Log the parsed data from vision
+            if (visionResult.parsedData?.fields) {
+              const fields = visionResult.parsedData.fields;
+              console.log('🔍 Vision parsed fields:', {
+                name: fields.name,
+                branch: fields.branch,
+                rank: fields.rank,
+                mos: fields.mos,
+                awards: fields.awardCount,
+                confidence: fields.overallConfidence
+              });
+            }
+            
             extractionResult = {
               text: visionResult.combinedText,
               pageCount: visionResult.totalPages,
               method: 'vision_florence',
               confidence: 90, // Florence vision is highly accurate
               ocrUsed: false,
-              visionUsed: true
+              visionUsed: true,
+              // Pass through the parsed data from vision!
+              visionParsedData: visionResult.parsedData
             };
             result.visionUsed = true;
             result.confidence = 90;
@@ -408,7 +424,8 @@ const processSingleDocument = async (file, onProgress) => {
     result.extractedData = await parseDocumentByType(
       result.text,
       result.classification.type,
-      file.name
+      file.name,
+      extractionResult.visionParsedData // Pass vision-parsed data if available
     );
 
     // Step 4: Store document in VKB (keeps data separate per document)
@@ -651,8 +668,12 @@ const selectBestDD214Segment = (segments, filename) => {
 
 /**
  * Parse document based on its classified type
+ * @param {string} text - Raw extracted text
+ * @param {string} docType - Document classification type
+ * @param {string} filename - Original filename
+ * @param {Object} visionParsedData - Pre-parsed data from Florence Vision (optional)
  */
-const parseDocumentByType = async (text, docType, filename) => {
+const parseDocumentByType = async (text, docType, filename, visionParsedData = null) => {
   const strategy = getProcessingStrategy(docType);
   
   switch (docType) {
@@ -660,6 +681,66 @@ const parseDocumentByType = async (text, docType, filename) => {
     case DOCUMENT_TYPES.NGB22:
     case DOCUMENT_TYPES.DD256:
     case DOCUMENT_TYPES.DD257:
+      // ============================================================
+      // VISION-FIRST PARSING (v1.16.4)
+      // If Florence-2 Vision already parsed this DD214, use that data!
+      // This avoids re-parsing with regex which may fail on vision output.
+      // ============================================================
+      if (visionParsedData?.fields) {
+        console.log('👁️ Using pre-parsed Vision data for DD214');
+        const vf = visionParsedData.fields;
+        
+        // Convert vision parser format to parseServiceRecord format
+        const visionData = {
+          type: 'service_record',
+          // Name
+          veteranName: vf.name || `${vf.lastName || ''}, ${vf.firstName || ''} ${vf.middleName || ''}`.replace(/,\s*$/, '').trim() || null,
+          lastName: vf.lastName || null,
+          firstName: vf.firstName || null,
+          middleName: vf.middleName || null,
+          // Branch
+          branch: vf.branch || null,
+          component: vf.component || null,
+          // Rank/Grade
+          rank: vf.rank || null,
+          payGrade: vf.payGrade || null,
+          // MOS
+          mos: vf.mos || null,
+          mosTitle: vf.mosTitle || null,
+          // Dates
+          serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
+          serviceEndDate: vf.separationDateFormatted || vf.separationDate || null,
+          dateOfBirth: vf.dateOfBirth || null,
+          // Awards
+          awards: vf.awards || [],
+          // Discharge info
+          dischargeType: vf.characterOfService || null,
+          separationCode: vf.separationCode || null,
+          spdCode: vf.separationCode || null,
+          reentryCode: vf.reentryCode || null,
+          narrativeReason: vf.narrativeReason || null,
+          // Combat indicators
+          combatService: vf.combatService || null,
+          foreignService: vf.foreignService || null,
+          foreignServiceLocations: vf.foreignServiceLocations || [],
+          // Metadata
+          method: 'vision_florence',
+          visionConfidence: vf.overallConfidence || 0,
+          raw: text.substring(0, 1000)
+        };
+        
+        console.log(`✅ Vision-parsed DD214:`, {
+          name: visionData.veteranName,
+          branch: visionData.branch,
+          rank: visionData.rank,
+          mos: visionData.mos,
+          awards: visionData.awards?.length || 0
+        });
+        
+        return visionData;
+      }
+      
+      // Standard path: regex-based parsing
       // Check for multiple DD214s in the document
       const dd214Segments = splitMultipleDD214s(text);
       
