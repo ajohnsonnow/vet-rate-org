@@ -3,8 +3,8 @@
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
  * 
- * Data derived from analysis of 18,609 BVA decisions (2023-2025)
- * Source: Claim Raven BVA Decision Analysis
+ * Data derived from analysis of 18,609+ BVA decisions (2023-2025)
+ * Sources: Claim Raven BVA Decision Analysis, VA Monday Morning Workload Reports
  * 
  * DISCLAIMER: These are aggregate patterns from cases that made it to BVA.
  * Individual case outcomes depend on specific evidence and circumstances.
@@ -21,6 +21,265 @@ export const BVA_OVERALL_OUTCOMES = {
   favorableRate: 72, // Grant + Remand (veteran wins or gets another chance)
   sampleSize: 14600,
   note: 'These are cases that made it to BVA - many veterans win at RO level and never appear here.'
+};
+
+// ============================================================
+// APPEALS LANE COMPARISON (AMA - Appeals Modernization Act)
+// Data from 2025 analysis - choose your lane wisely
+// ============================================================
+export const APPEALS_LANE_DATA = {
+  supplementalClaim: {
+    label: 'Supplemental Claim',
+    requirement: 'NEW evidence (nexus letter, medical records, buddy statements)',
+    officialTimeline: '3-6 months',
+    actualTimeline: '64-93 days (as of Nov 2025)',
+    favorableRate: 55, // 50-60% range
+    bestFor: 'When you have new evidence to submit',
+    tip: 'Fastest lane - VA crushed the backlog from 467K to 283K in 2025',
+    warning: 'Must have NEW evidence dated after your denial',
+    effectiveDateRule: 'File within 1 year of denial to preserve original effective date'
+  },
+  higherLevelReview: {
+    label: 'Higher Level Review (HLR)',
+    requirement: 'VA made clear ERROR with evidence already in file',
+    officialTimeline: '4-5 months',
+    actualTimeline: '135-140 days average',
+    favorableRate: 19, // 18-20% range
+    bestFor: 'When rater ignored evidence or made calculation error',
+    tip: 'Quick but low success - only works for clear rater mistakes',
+    warning: 'CANNOT add new evidence - adding evidence kicks you out',
+    effectiveDateRule: 'Preserves effective date if filed within 1 year'
+  },
+  boardAppeal: {
+    label: 'Board of Veterans Appeals',
+    requirement: 'Other lanes failed or complex legal issues',
+    officialTimeline: '12-18 months',
+    actualTimeline: '35.5 months average (real data from 100 cases)',
+    actualTimelineRemanded: '62.5 months if remanded',
+    favorableRate: 35, // 30-40% range
+    remandRate: 28, // 28% get sent back
+    bestFor: 'Complex cases, need hearing, or multiple prior denials',
+    tip: 'Last resort but highest scrutiny - judges review everything',
+    warning: 'Real timeline is 2-3x longer than VA advertises'
+  }
+};
+
+// ============================================================
+// REAL VS ADVERTISED TIMELINES (from 100 BVA case analysis)
+// The VA timeline estimates are NOT accurate
+// ============================================================
+export const REAL_TIMELINE_DATA = {
+  directReview: {
+    label: 'Direct Review Docket',
+    officialTimeline: '12-18 months',
+    realAverage: 32.3, // months
+    realMedian: 29,
+    fastest25Percent: 17,
+    slowest25Percent: 42,
+    discrepancy: '+14-20 months longer than advertised'
+  },
+  evidenceSubmission: {
+    label: 'Evidence Submission Docket',
+    officialTimeline: '16-20 months',
+    realAverage: 39.9, // months
+    discrepancy: '+19-24 months longer than advertised'
+  },
+  remandImpact: {
+    label: 'Remand Impact',
+    nonRemandedAverage: 28.8, // months
+    remandedAverage: 62.5, // months (5.2 years!)
+    additionalTime: 33.8, // months added by remand
+    note: 'Getting remanded essentially DOUBLES your wait time'
+  },
+  whyOfficialIsWrong: [
+    'VA measures from "docket date" - excludes 4-7 months of pre-docket processing',
+    'VA doesn\'t count remand cycles in their estimates',
+    'Remand adds: Appeal (12-18mo) + RO return (6-12mo) + Development (2-4mo) + BVA again (12-18mo)'
+  ]
+};
+
+// ============================================================
+// EVIDENCE TYPE GRANT RATES (from sleep apnea 50-case study)
+// What evidence actually wins cases
+// ============================================================
+export const EVIDENCE_TYPE_OUTCOMES = {
+  privateMedicalRecords: {
+    label: 'Private Medical Records',
+    grantRate: 83,
+    description: 'Treatment records from your own doctors',
+    tip: 'Your private doctors\' records carry significant weight at BVA'
+  },
+  privateMedicalOpinion: {
+    label: 'Private Medical Opinion/Nexus',
+    grantRate: 69,
+    description: 'Independent medical opinion you obtained',
+    tip: 'Worth the investment - nearly 70% grant rate'
+  },
+  vaExamination: {
+    label: 'VA C&P Examination',
+    grantRate: 55, // 50-60% range
+    description: 'Standard VA Compensation & Pension exam',
+    tip: 'Don\'t rely solely on this - supplement with private opinion'
+  },
+  serviceTreatmentRecords: {
+    label: 'Service Treatment Records (STRs)',
+    grantRate: 35,
+    description: 'Your military medical records',
+    tip: 'Important but not sufficient alone - need nexus to connect to present'
+  }
+};
+
+// ============================================================
+// SLEEP APNEA SPECIFIC DATA (50 BVA decisions analyzed)
+// One of the most commonly claimed conditions
+// ============================================================
+export const SLEEP_APNEA_DATA = {
+  overallOutcomes: {
+    grantRate: 60,
+    denialRate: 20,
+    remandRate: 20,
+    favorableRate: 80, // Grant + Remand
+    sampleSize: 50,
+    note: 'These are cases that made it to BVA after RO denial - 80% get favorable outcome'
+  },
+  winningStrategies: {
+    secondary: {
+      label: 'Secondary to PTSD/Mental Health',
+      effectiveness: 'HIGH',
+      description: 'PTSD → sleep disruption → sleep apnea pathway',
+      winCount: 7, // out of 50 cases
+      tip: 'Solid medical literature on PTSD fragmenting sleep and causing hypervigilance',
+      judgeReasoning: 'Judges find this convincing because the medical pathway is well-documented'
+    },
+    intermediateStep: {
+      label: 'Intermediate Step (Weight Gain)',
+      effectiveness: 'HIGH',
+      description: 'Service-connected condition → weight gain (meds/reduced activity) → sleep apnea',
+      tip: 'Document each step: condition → why weight gain → how that caused OSA',
+      requirements: [
+        'Medical evidence showing weight gain from service-connected condition',
+        'Connection between weight gain and sleep apnea development',
+        'Timeline showing progression'
+      ]
+    },
+    direct: {
+      label: 'Direct Service Connection',
+      effectiveness: 'LOWER',
+      description: 'Proving you had sleep apnea symptoms in service',
+      tip: 'Harder to prove - most veterans develop OSA after service',
+      warning: 'Check your post-deployment health assessments for contradictions'
+    }
+  },
+  commonFailures: [
+    {
+      reason: 'Self-contradiction',
+      description: 'Claimed sleep problems in service but marked "no" on post-deployment health assessment',
+      fix: 'Pull complete military records BEFORE filing. Explain any contradictions upfront.'
+    },
+    {
+      reason: 'Toxic exposure without evidence',
+      description: 'Arguing toxic exposure caused OSA without medical evidence',
+      fix: 'Get medical opinion specifically addressing toxic exposure → OSA pathway'
+    },
+    {
+      reason: 'Late diagnosis gap',
+      description: 'Diagnosed years after service with no explanation',
+      fix: 'Lay statements about snoring/symptoms since service, continuity evidence'
+    },
+    {
+      reason: 'Weak C&P exam performance',
+      description: 'Generic or unprepared answers at VA exam',
+      fix: 'Prepare specific symptom history, bring timeline, know what examiner needs'
+    }
+  ],
+  vaExaminerErrors: [
+    'Failed to address secondary service connection theory',
+    'Only looked at direct connection, ignored PTSD contribution',
+    'Did not evaluate aggravation pathway',
+    'Generic opinion without addressing veteran\'s specific history'
+  ],
+  secondaryPathways: [
+    { from: 'PTSD', pathway: 'Sleep disruption, hypervigilance → OSA', strength: 'STRONG' },
+    { from: 'Obesity (from SC condition)', pathway: 'Weight gain → airway obstruction → OSA', strength: 'STRONG' },
+    { from: 'Medication side effects', pathway: 'Weight gain from psych meds → OSA', strength: 'MODERATE' },
+    { from: 'Limited mobility', pathway: 'Can\'t exercise → weight gain → OSA', strength: 'MODERATE' },
+    { from: 'Hypertension', pathway: 'Bidirectional relationship with OSA', strength: 'MODERATE' }
+  ]
+};
+
+// ============================================================
+// 2025 VA CLAIMS PROCESSING DATA
+// The VA actually improved significantly in 2025
+// ============================================================
+export const VA_PROCESSING_2025 = {
+  claimsCompleted: 3000000, // 3M+ claims
+  previousYearCompleted: 2500000, // 2024 was 2.5M
+  improvement: '20% more claims than 2024',
+  processingTime: {
+    january2025: 141.5, // days
+    december2025: 120, // days
+    improvement: 21.5, // days faster
+    target: 125, // VA\'s goal - they beat it
+    note: 'First time VA beat their own target in years'
+  },
+  backlog: {
+    january2024Peak: 417000,
+    january2025: 265000,
+    december2025: 105000,
+    reduction: '60% reduction in 2025',
+    note: 'Lowest backlog in 6 years'
+  },
+  bestSingleDay: {
+    date: 'May 29, 2025',
+    claims: 15364,
+    previousRecord: 10997, // Feb 2024
+    improvement: '40% more than previous record'
+  },
+  supplementalClaims: {
+    january2025Pending: 467000,
+    december2025Pending: 283000,
+    reduction: '39.5% reduction',
+    currentProcessingTime: 64, // days as of Nov 2025
+    note: 'File supplementals NOW - fastest processing ever'
+  },
+  filingStrategy: {
+    bestTime: 'January-February (backlog at annual low)',
+    avoidTime: 'March-May (tax season surge)',
+    tip: 'File Intent to File NOW to lock effective date even if not ready'
+  }
+};
+
+// ============================================================
+// EFFECTIVE DATE RULES (Critical for back pay)
+// ============================================================
+export const EFFECTIVE_DATE_RULES = {
+  withinOneYear: {
+    scenario: 'Supplemental filed within 1 year of denial',
+    result: 'Effective date goes back to ORIGINAL filing date',
+    example: {
+      originalFiled: 'Jan 1, 2024',
+      denied: 'June 1, 2024',
+      supplementalFiled: 'Nov 1, 2024 (within 1 year)',
+      approved: 'March 1, 2025',
+      effectiveDate: 'Jan 1, 2024 (full back pay)'
+    }
+  },
+  afterOneYear: {
+    scenario: 'Supplemental filed AFTER 1 year of denial',
+    result: 'Effective date is when you filed the supplemental',
+    example: {
+      originalFiled: 'Jan 1, 2024',
+      denied: 'June 1, 2024',
+      supplementalFiled: 'July 1, 2025 (after 1 year)',
+      effectiveDate: 'July 1, 2025 (NO back pay for gap)'
+    },
+    warning: 'Every month you wait = lost back pay'
+  },
+  intentToFile: {
+    description: 'Locks your effective date for 1 year',
+    tip: 'File ITF immediately even if you\'re not ready to submit claim',
+    benefit: 'Gives you 1 year to gather evidence while protecting your date'
+  }
 };
 
 // ============================================================
@@ -436,6 +695,14 @@ export default {
   TOP_REMAND_REASONS,
   CONDITION_OUTCOMES,
   BVA_JUDGE_QUOTES,
+  // NEW: Claim Raven data integration
+  APPEALS_LANE_DATA,
+  REAL_TIMELINE_DATA,
+  EVIDENCE_TYPE_OUTCOMES,
+  SLEEP_APNEA_DATA,
+  VA_PROCESSING_2025,
+  EFFECTIVE_DATE_RULES,
+  // Helper functions
   getSuccessBadge,
   scoreNexusQuality,
   getPersistenceMessage
