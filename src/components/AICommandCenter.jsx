@@ -142,6 +142,11 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   const [loadedModelId, setLoadedModelId] = useState(null);
   const [installedModels, setInstalledModels] = useState(new Set());
   
+  // Test box state
+  const [testPrompt, setTestPrompt] = useState('');
+  const [testResponse, setTestResponse] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
+  
   // Preset
   const [selectedPreset, setSelectedPreset] = useState('BALANCED');
   
@@ -296,6 +301,29 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   const handlePresetChange = (presetName) => {
     setSelectedPreset(presetName);
     localStorage.setItem('vetrate_ai_preset', presetName);
+  };
+
+  // Handle test AI
+  const handleTestAI = async () => {
+    if (!testPrompt.trim()) return;
+    
+    setIsTesting(true);
+    setTestResponse('');
+    
+    try {
+      const { generateWithSwarm } = await import('../utils/diamondSwarm');
+      const result = await generateWithSwarm(testPrompt, {
+        temperature: 0.7,
+        max_tokens: 200,
+      });
+      
+      setTestResponse(result?.text || result || 'No response received');
+    } catch (err) {
+      console.error('Test failed:', err);
+      setTestResponse(`❌ Error: ${err.message}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   return (
@@ -486,18 +514,81 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                       
                       {/* Active State */}
                       {isReady && (
-                        <div className="mt-4 flex gap-2">
-                          <span className="flex-1 py-2 px-4 bg-green-500/20 text-green-300 font-medium rounded-lg text-center text-sm">
-                            ✅ AI Active & Private
-                          </span>
-                          <button
-                            onClick={handleUnloadLocalAI}
-                            disabled={isUnloading}
-                            className="py-2 px-4 bg-red-500/20 text-red-400 font-medium rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
-                          >
-                            {isUnloading ? '⏳' : '⏹️ Unload'}
-                          </button>
-                        </div>
+                        <>
+                          <div className="mt-4 flex gap-2">
+                            <span className="flex-1 py-2 px-4 bg-green-500/20 text-green-300 font-medium rounded-lg text-center text-sm">
+                              ✅ AI Active & Private
+                            </span>
+                            <button
+                              onClick={handleUnloadLocalAI}
+                              disabled={isUnloading}
+                              className="py-2 px-4 bg-red-500/20 text-red-400 font-medium rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
+                            >
+                              {isUnloading ? '⏳' : '⏹️ Unload'}
+                            </button>
+                          </div>
+                          
+                          {/* Test Box */}
+                          <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-cyan-400">🧪</span>
+                              <h4 className="text-white font-semibold text-sm">Test Your AI</h4>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <textarea
+                                value={testPrompt}
+                                onChange={(e) => setTestPrompt(e.target.value)}
+                                placeholder="Try: What is the VA disability rating for tinnitus?"
+                                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
+                                rows={2}
+                                disabled={isTesting}
+                              />
+                              
+                              <button
+                                onClick={handleTestAI}
+                                disabled={isTesting || !testPrompt.trim()}
+                                className="w-full py-2 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                              >
+                                {isTesting ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <span className="animate-spin">⏳</span> Testing...
+                                  </span>
+                                ) : (
+                                  '🚀 Send Test Prompt'
+                                )}
+                              </button>
+                              
+                              {testResponse && (
+                                <div className="p-3 bg-gray-900/70 border border-gray-600 rounded-lg">
+                                  <p className="text-xs text-gray-400 mb-1">Response:</p>
+                                  <p className="text-white text-sm whitespace-pre-wrap">{testResponse}</p>
+                                </div>
+                              )}
+                              
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => setTestPrompt('What is the VA disability rating for tinnitus?')}
+                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                                >
+                                  Example 1
+                                </button>
+                                <button
+                                  onClick={() => setTestPrompt('Explain PTSD secondary conditions')}
+                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                                >
+                                  Example 2
+                                </button>
+                                <button
+                                  onClick={() => setTestPrompt('How does bilateral factor work?')}
+                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                                >
+                                  Example 3
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
