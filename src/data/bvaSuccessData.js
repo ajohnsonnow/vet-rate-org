@@ -4,7 +4,7 @@
  * All Rights Reserved.
  * 
  * Data derived from analysis of 18,609+ BVA decisions (2023-2025)
- * Sources: Claim Raven BVA Decision Analysis, VA Monday Morning Workload Reports
+ * Sources: BVA Decision Analysis, VA Monday Morning Workload Reports
  * 
  * DISCLAIMER: These are aggregate patterns from cases that made it to BVA.
  * Individual case outcomes depend on specific evidence and circumstances.
@@ -695,7 +695,7 @@ export default {
   TOP_REMAND_REASONS,
   CONDITION_OUTCOMES,
   BVA_JUDGE_QUOTES,
-  // NEW: Claim Raven data integration
+  // Appeals & timeline data
   APPEALS_LANE_DATA,
   REAL_TIMELINE_DATA,
   EVIDENCE_TYPE_OUTCOMES,
