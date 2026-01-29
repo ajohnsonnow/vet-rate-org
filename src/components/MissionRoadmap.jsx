@@ -58,6 +58,7 @@ const MISSION_STAGES = [
       { id: 'cap-simulator', name: 'C&P Exam Simulator', desc: 'Practice exam scenarios', icon: '🎯' },
       { id: 'nexus-analyzer', name: 'Nexus Quality Analyzer', desc: 'Score nexus letter strength (BVA data)', icon: '📊', badge: 'NEW' },
       { id: 'remand-checker', name: 'Remand Risk Checker', desc: 'Pre-submission gap finder', icon: '🔍', badge: 'NEW' },
+      { id: 'appeals-advisor', name: 'Appeals Lane Advisor', desc: 'Choose the right appeal path', icon: '🛤️', badge: 'NEW' },
       { id: 'red-team', name: 'The War Game', desc: 'VA rater perspective stress test', icon: '♟️' },
       { id: 'consistency-engine', name: 'Consistency Engine', desc: 'Check statement consistency', icon: '⚖️' },
       { id: 'evidence-gaps', name: 'Evidence Gap Finder', desc: 'Identify missing evidence', icon: '🔎' },
