@@ -31,12 +31,25 @@ import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
 import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
 // ============================================================
+// FLORENCE-2 VISION AI SERVICE (v1.16.2)
+// Fallback for poor OCR quality on scanned/aged documents
+// ============================================================
+import { 
+  florenceOCRService, 
+  isWebGPUSupported 
+} from './florenceOCRService';
+// ============================================================
 // NEW DOCUMENT INTELLIGENCE PARSERS (v1.16.0)
 // Enhanced VA document understanding with "Header-First Extraction"
 // ============================================================
 import { parseVADocument, parseDecisionLetter, parseDBQReport, parseCodeSheet, extractBigThree } from './vaDocumentParser';
 import { segmentCFile, quickScanCFile, buildDocumentInventory, extractDBQs, extractDecisions } from './cFileSegmentation';
 import { findEvidenceGaps, quickGapCheck, EVIDENCE_TYPES, DTA_VIOLATIONS } from './evidenceGapFinder';
+
+// Vision AI confidence threshold - below this, try vision fallback
+const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
+let visionInitialized = false;
+let visionInitializing = false;
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -126,7 +139,7 @@ export const validateFilesBatch = (files) => {
 
 /**
  * Process a single document: extract text, classify, parse
- * Enhanced for sequential formation processing
+ * Enhanced for sequential formation processing with VISION AI FALLBACK
  */
 const processSingleDocument = async (file, onProgress) => {
   const result = {
@@ -141,6 +154,7 @@ const processSingleDocument = async (file, onProgress) => {
     pageCount: 0,
     method: null,
     ocrUsed: false,
+    visionUsed: false, // NEW: Track if Florence vision was used
     quality: null,
     confidence: null
   };
@@ -156,12 +170,12 @@ const processSingleDocument = async (file, onProgress) => {
       stage: 'platoon_sergeant'
     });
 
-    const extractionResult = await analyzeDocument(file, (state) => {
+    let extractionResult = await analyzeDocument(file, (state) => {
       // Enhanced progress callback with detailed OCR state
       onProgress?.({
         filename: file.name,
         state: PROCESSING_STATES.EXTRACTING,
-        progress: 25 + (state.progress || 0) * 0.5, // 25-75%
+        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
         ocrState: state.message || state.state,
         currentPage: state.currentPage,
         totalPages: state.totalPages,
@@ -170,6 +184,89 @@ const processSingleDocument = async (file, onProgress) => {
         stage: 'platoon_sergeant'
       });
     });
+
+    // Store OCR confidence for fallback decision
+    const ocrConfidence = extractionResult.confidence || 0;
+    result.confidence = ocrConfidence;
+
+    // ============================================================
+    // VISION AI FALLBACK (v1.16.2)
+    // If OCR confidence is below threshold, try Florence-2 Vision
+    // ============================================================
+    const isPDF = file.name.toLowerCase().endsWith('.pdf');
+    const shouldTryVision = isPDF && 
+                            ocrConfidence < VISION_FALLBACK_THRESHOLD && 
+                            isWebGPUSupported() &&
+                            extractionResult.ocrUsed; // Only if OCR was needed
+
+    if (shouldTryVision) {
+      console.log(`👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`);
+      
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 65,
+        stage: 'vision_fallback',
+        message: '🔬 Low OCR quality detected - engaging Vision AI...'
+      });
+
+      try {
+        // Initialize Florence if needed (only once)
+        if (!visionInitialized && !visionInitializing) {
+          visionInitializing = true;
+          onProgress?.({
+            filename: file.name,
+            state: PROCESSING_STATES.EXTRACTING,
+            progress: 68,
+            stage: 'vision_init',
+            message: '⚡ Loading Florence-2 Vision engine (first time only)...'
+          });
+          
+          const initSuccess = await florenceOCRService.initialize();
+          visionInitialized = initSuccess;
+          visionInitializing = false;
+          
+          if (!initSuccess) {
+            console.warn('⚠️ Florence Vision initialization failed, using OCR result');
+          }
+        }
+
+        // If vision is available, process document
+        if (visionInitialized) {
+          onProgress?.({
+            filename: file.name,
+            state: PROCESSING_STATES.EXTRACTING,
+            progress: 72,
+            stage: 'vision_process',
+            message: '👁️ Vision AI analyzing document...'
+          });
+
+          // Process first page (DD214s are typically 1-2 pages)
+          const visionResult = await florenceOCRService.processDocument(file, {
+            pageNumber: 1,
+            parseDD214: false // We'll parse ourselves
+          });
+
+          if (visionResult.text && visionResult.text.trim().length > extractionResult.text.trim().length * 0.5) {
+            // Vision extracted meaningful text - use it
+            console.log(`✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`);
+            extractionResult = {
+              ...extractionResult,
+              text: visionResult.text,
+              method: 'vision_florence',
+              confidence: 85, // Florence typically high confidence
+              visionUsed: true
+            };
+            result.visionUsed = true;
+          } else {
+            console.log('⚠️ Vision result not better than OCR, keeping OCR text');
+          }
+        }
+      } catch (visionError) {
+        console.warn('⚠️ Vision fallback failed:', visionError.message);
+        // Continue with original OCR result
+      }
+    }
 
     // analyzeDocument throws on error, no need to check .success
     if (!extractionResult.text || extractionResult.text.trim().length === 0) {
