@@ -18,7 +18,7 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
@@ -869,14 +869,12 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
               </div>
             </div>
             
-            {/* AI Model Quick Load */}
+            {/* Smart AI Load Button */}
             {!isAnyAIAvailable() && (
               <div className="mb-6">
-                <AIModelQuickLoad 
+                <SmartAILoadButton 
                   toolId="bluebutton-xray"
-                  onLoadComplete={(agent) => console.log('AI loaded for BlueButton XRay:', agent.name)}
-                  compact={false}
-                  showFullDropdown={true}
+                  onLoadComplete={(model) => console.log('Smart AI loaded for BlueButton XRay:', model?.name)}
                 />
               </div>
             )}

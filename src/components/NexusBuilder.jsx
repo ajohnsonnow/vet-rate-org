@@ -19,6 +19,7 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import { getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
 import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 
 /**
  * NexusBuilder Component
@@ -465,16 +466,14 @@ Sincerely,
                 </span>
               </div>
             )}
-            {/* AI Model Quick Load */}
+            {/* Smart AI Loader - One Click, Perfect Model */}
             {!isAnyAIAvailable() && (
               <div className="mb-4">
-                <AIModelQuickLoad 
+                <SmartAILoadButton 
                   toolId="nexus-builder"
-                  onLoadComplete={(agent) => {
-                    console.log('AI loaded for Nexus Builder:', agent.name);
+                  onLoadComplete={(model) => {
+                    console.log('Smart AI loaded for Nexus Builder:', model?.name);
                   }}
-                  compact={false}
-                  showFullDropdown={true}
                 />
               </div>
             )}

@@ -17,7 +17,7 @@ import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import { generateAI, generateAIWithImage, getAIStatus, isAnyAIAvailable, isLocalAIReady, isLocalAIVisionModel } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
 import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFileSupported, getFileTypeLabel, getAcceptString, renderPDFToImages } from '../utils/documentAnalyzer';
 import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVeteranProfile } from '../utils/veteranProfile';
@@ -1019,17 +1019,15 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
             </div>
           </div>
 
-          {/* AI Model Quick Load */}
+          {/* Smart AI Load Button */}
           {!aiStatus.anyAvailable && (
             <div className="mb-4">
-              <AIModelQuickLoad 
+              <SmartAILoadButton 
                 toolId="dd214-analyzer"
-                onLoadComplete={(agent) => {
-                  console.log('AI loaded for DD214 Analyzer:', agent.name);
+                onLoadComplete={(model) => {
+                  console.log('Smart AI loaded for DD214 Analyzer:', model?.name);
                   setAIStatus(getAIStatus());
                 }}
-                compact={false}
-                showFullDropdown={true}
               />
             </div>
           )}

@@ -19,7 +19,7 @@ import { saveClaim, generateId } from '../utils/claimsStorage';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
-import AIModelQuickLoad from './AIModelQuickLoad';
+import SmartAILoadButton from './SmartAILoadButton';
 import ShareButton from './ShareButton';
 import ReportBugLink from './ReportBugLink';
 import VoiceInputButton from './VoiceInput';
@@ -1063,16 +1063,14 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               </div>
             </div>
             
-            {/* AI Model Quick Load */}
+            {/* Smart AI Load Button */}
             {!isAnyAIAvailable() && (
               <div className="mb-6">
-                <AIModelQuickLoad 
+                <SmartAILoadButton 
                   toolId="witness-bench"
-                  onLoadComplete={(agent) => {
-                    console.log('AI loaded for Witness Bench:', agent.name);
+                  onLoadComplete={(model) => {
+                    console.log('Smart AI loaded for Witness Bench:', model?.name);
                   }}
-                  compact={false}
-                  showFullDropdown={true}
                 />
               </div>
             )}
