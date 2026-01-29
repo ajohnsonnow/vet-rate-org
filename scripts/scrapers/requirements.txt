@@ -1,0 +1,23 @@
+# VA Data Pipeline
+# Requirements for scraping and analyzing VA public data
+
+# Core HTTP/Parsing
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+
+# Data Processing
+pandas>=1.5.0
+openpyxl>=3.0.0  # For Excel files
+
+# Optional: Better HTML parsing
+html5lib>=1.1
+
+# Optional: Rate limiting
+ratelimit>=2.2.0
+
+# Optional: Caching
+requests-cache>=0.9.0
+
+# For development
+python-dotenv>=0.19.0
