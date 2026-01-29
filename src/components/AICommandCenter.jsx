@@ -536,10 +536,52 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                             </div>
                             
                             <div className="space-y-3">
+                              {/* Quick Test Examples */}
+                              <div className="space-y-2">
+                                <p className="text-xs text-gray-400 font-medium">Quick Test Questions:</p>
+                                <div className="grid gap-2">
+                                  <button
+                                    onClick={() => setTestPrompt('What is the VA disability rating for tinnitus?')}
+                                    className="text-left px-3 py-2 bg-cyan-900/30 hover:bg-cyan-900/50 border border-cyan-700/50 hover:border-cyan-600 text-cyan-100 rounded-lg transition-all text-sm group"
+                                  >
+                                    <span className="font-medium">💰 Rating Question:</span>
+                                    <span className="block text-xs text-cyan-300 mt-0.5 group-hover:text-cyan-200">What is the VA disability rating for tinnitus?</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setTestPrompt('Explain PTSD secondary conditions')}
+                                    className="text-left px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 hover:border-purple-600 text-purple-100 rounded-lg transition-all text-sm group"
+                                  >
+                                    <span className="font-medium">🔗 Secondary Conditions:</span>
+                                    <span className="block text-xs text-purple-300 mt-0.5 group-hover:text-purple-200">Explain PTSD secondary conditions</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setTestPrompt('How does bilateral factor work?')}
+                                    className="text-left px-3 py-2 bg-blue-900/30 hover:bg-blue-900/50 border border-blue-700/50 hover:border-blue-600 text-blue-100 rounded-lg transition-all text-sm group"
+                                  >
+                                    <span className="font-medium">🧮 Math Calculation:</span>
+                                    <span className="block text-xs text-blue-300 mt-0.5 group-hover:text-blue-200">How does bilateral factor work?</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <hr className="flex-1 border-gray-600" />
+                                <span className="text-xs text-gray-500">or ask your own</span>
+                                <hr className="flex-1 border-gray-600" />
+                              </div>
+                              
                               <textarea
                                 value={testPrompt}
                                 onChange={(e) => setTestPrompt(e.target.value)}
-                                placeholder="Try: What is the VA disability rating for tinnitus?"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (testPrompt.trim() && !isTesting) {
+                                      handleTestAI();
+                                    }
+                                  }
+                                }}
+                                placeholder="Type your question here... (Press Enter to send, Shift+Enter for new line)"
                                 className="w-full px-3 py-2 bg-gray-900/50 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
                                 rows={2}
                                 disabled={isTesting}
@@ -565,27 +607,6 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                                   <p className="text-white text-sm whitespace-pre-wrap">{testResponse}</p>
                                 </div>
                               )}
-                              
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => setTestPrompt('What is the VA disability rating for tinnitus?')}
-                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
-                                >
-                                  Example 1
-                                </button>
-                                <button
-                                  onClick={() => setTestPrompt('Explain PTSD secondary conditions')}
-                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
-                                >
-                                  Example 2
-                                </button>
-                                <button
-                                  onClick={() => setTestPrompt('How does bilateral factor work?')}
-                                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
-                                >
-                                  Example 3
-                                </button>
-                              </div>
                             </div>
                           </div>
                         </>
