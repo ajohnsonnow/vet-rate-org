@@ -41,7 +41,10 @@
     "push-prep:quick": "node scripts/push-prep.js --skip-checks -y",
     "update-forms": "node scripts/fetch-dbqs.js",
     "fetch-dbqs": "node scripts/fetch-dbqs.js",
-    "check-vision": "node scripts/check-vision-model-fix.js"
+    "check-vision": "node scripts/check-vision-model-fix.js",
+    "va-data": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --generate-frontend",
+    "va-data:full": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --full-update",
+    "va-data:bva": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --condition"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
