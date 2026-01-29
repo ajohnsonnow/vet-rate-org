@@ -24,7 +24,7 @@ export const LLMRecommendationBadge = ({ toolId, className = '' }) => {
   }, []);
   
   const recommendation = getToolRecommendation(toolId);
-  if (!recommendation) return null;
+  if (!recommendation || !recommendation.primary) return null;
   
   const currentModelId = localStorage.getItem('vet_rate_local_ai_model');
   const analysis = analyzeCurrentModel(toolId, currentModelId);
@@ -122,7 +122,7 @@ export const LLMRecommendationBadge = ({ toolId, className = '' }) => {
  */
 export const LLMRecommendationPanel = ({ toolId, onModelSelect, className = '' }) => {
   const recommendation = getToolRecommendation(toolId);
-  if (!recommendation) return null;
+  if (!recommendation || !recommendation.primary) return null;
   
   const currentModelId = localStorage.getItem('vet_rate_local_ai_model');
   const analysis = analyzeCurrentModel(toolId, currentModelId);
@@ -243,7 +243,7 @@ export const LLMRecommendationPanel = ({ toolId, onModelSelect, className = '' }
  */
 export const LLMHint = ({ toolId, className = '' }) => {
   const recommendation = getToolRecommendation(toolId);
-  if (!recommendation) return null;
+  if (!recommendation || !recommendation.primary) return null;
   
   const aiStatus = getAIStatus();
   if (!aiStatus.effectiveMode) return null;
@@ -252,7 +252,7 @@ export const LLMHint = ({ toolId, className = '' }) => {
     <div className={`text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 ${className}`}>
       <span>💡</span>
       <span>
-        Best with <strong className="text-indigo-600 dark:text-indigo-400">{recommendation.primary.modelName}</strong>
+        Best with <strong className="text-indigo-600 dark:text-indigo-400">{recommendation.primary?.modelName || 'Local AI'}</strong>
       </span>
     </div>
   );

@@ -20,6 +20,7 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
+import { addDocumentToVKB } from '../utils/veteranKnowledgeBase';
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -28,51 +29,24 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
  * AI System Prompt for extracting diagnoses from Blue Button reports
  * Designed to identify ACTUAL medical conditions, not provider names or admin data
  */
-const BLUE_BUTTON_AI_PROMPT = `You are a medical records analyst specializing in VA Blue Button health reports. Your task is to extract ONLY actual medical diagnoses/conditions from the provided text.
+const BLUE_BUTTON_AI_PROMPT_HEADER = `Extract medical conditions from this VA Blue Button report.
 
-CRITICAL RULES:
-1. Extract ONLY actual medical conditions, diagnoses, and health problems
-2. DO NOT include:
-   - Provider/doctor names (e.g., "Dr. Smith", "Johnson, MD")
-   - Facility names (e.g., "VA Medical Center", "Clinic")
-   - Administrative entries (e.g., "Referral", "Follow-up", "Screening")
-   - Lab tests or procedures (e.g., "CBC", "X-Ray", "MRI")
-   - Medications (extract conditions, not drug names)
-   - Dates alone without conditions
-   - Vital signs (BP, weight, height)
-   - Vaccination records
-3. Standardize condition names when possible (e.g., "HTN" → "Hypertension")
-4. Include the diagnosis date if available
-5. Flag conditions commonly claimed for VA disability
+INCLUDE: Diagnoses, health conditions, medical problems
+EXCLUDE: Doctor names, facilities, lab tests, medications, vitals, vaccines
 
-VA-CLAIMABLE CONDITIONS (flag these as high priority):
-- Mental Health: PTSD, Depression, Anxiety, Bipolar, Insomnia, Sleep Apnea
-- Musculoskeletal: Tinnitus, Hearing Loss, Back conditions (lumbar/cervical), Arthritis, Radiculopathy, Carpal Tunnel
-- Cardiovascular: Hypertension, Heart Disease, Peripheral Artery Disease
-- Respiratory: Asthma, COPD, Sinusitis, Sleep Apnea
-- Gastrointestinal: GERD, IBS, Hiatal Hernia
-- Endocrine: Diabetes, Thyroid conditions
-- Neurological: Migraines, Neuropathy, TBI
-- Skin: Eczema, Psoriasis
-- Other: Erectile Dysfunction, Chronic Fatigue, Gulf War Syndrome
+HIGH PRIORITY (VA-claimable): PTSD, Depression, Anxiety, Sleep Apnea, Tinnitus, Hearing Loss, Back/Knee/Shoulder pain, Arthritis, Migraines, Hypertension, Diabetes, GERD, Neuropathy
 
-OUTPUT FORMAT (JSON only, no markdown):
-{
-  "conditions": [
-    {
-      "name": "Standardized condition name",
-      "rawText": "Original text from record",
-      "dateFound": "Date if mentioned (or null)",
-      "isClaimable": true/false,
-      "category": "Mental Health|Musculoskeletal|Cardiovascular|Respiratory|GI|Endocrine|Neurological|Skin|Other"
-    }
-  ],
-  "summary": "Brief 1-2 sentence summary of the veteran's major health issues"
-}
+DOCUMENT:
+`;
 
-IMPORTANT: Return ONLY valid JSON. No explanations or markdown formatting.
+// This goes AFTER the document text to ensure JSON format is always at the end
+const BLUE_BUTTON_AI_PROMPT_FOOTER = `
 
-Now analyze this Blue Button report text:`;
+RESPOND IN JSON ONLY:
+{"conditions":[{"name":"ConditionName","dateFound":"Date","isClaimable":true,"category":"Category"}],"summary":"Brief summary"}`;
+
+// Legacy constant for backward compatibility
+const BLUE_BUTTON_AI_PROMPT = BLUE_BUTTON_AI_PROMPT_HEADER + `[DOCUMENT TEXT HERE]` + BLUE_BUTTON_AI_PROMPT_FOOTER;
 
 /**
  * Regex patterns to find the Problem List / Active Problems section in Blue Button reports
@@ -247,6 +221,57 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   const [extractedConditions, setExtractedConditions] = useState([]);
   const [rawText, setRawText] = useState('');
   const [showRawText, setShowRawText] = useState(false);
+  const [savedToVKB, setSavedToVKB] = useState(false);
+  const [savingToVKB, setSavingToVKB] = useState(false);
+  
+  /**
+   * Save the Blue Button document to VKB (My Packet) for future AI queries
+   * This stores the raw text so AI can reference it later
+   * Can be called before OR after AI analysis
+   */
+  const handleSaveToVKB = async () => {
+    if (!file) {
+      setError('No document to save. Please upload a file first.');
+      return;
+    }
+    
+    setSavingToVKB(true);
+    try {
+      // If we don't have rawText yet, read the file now
+      let textToSave = rawText;
+      if (!textToSave) {
+        setProcessingStage('Reading file...');
+        if (file.type === 'application/pdf') {
+          textToSave = await extractTextFromPDF(file);
+        } else {
+          textToSave = await readTextFile(file);
+        }
+        setRawText(textToSave); // Save for later use
+      }
+      
+      await addDocumentToVKB({
+        fileName: file.name,
+        classification: 'blue_button',
+        rawText: textToSave,
+        extractedData: {
+          conditions: extractedConditions.length > 0 ? extractedConditions : [],
+          processingDate: new Date().toISOString(),
+          source: 'BlueButtonXRay'
+        },
+        documentDate: new Date().toISOString(),
+        sourceFile: file.name
+      });
+      
+      setSavedToVKB(true);
+      console.log('✅ Blue Button saved to VKB (My Packet)');
+    } catch (err) {
+      console.error('Failed to save to VKB:', err);
+      setError('Failed to save to My Packet: ' + err.message);
+    } finally {
+      setSavingToVKB(false);
+      setProcessingStage('');
+    }
+  };
   
   // Handle file drop
   const handleDrop = useCallback((e) => {
@@ -558,7 +583,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
     }
     
     // Calculate prompt overhead (the AI prompt itself takes tokens)
-    const promptTokens = estimateTokens(BLUE_BUTTON_AI_PROMPT);
+    const promptTokens = estimateTokens(BLUE_BUTTON_AI_PROMPT_HEADER) + estimateTokens(BLUE_BUTTON_AI_PROMPT_FOOTER);
     const maxInputTokens = 2800; // Conservative limit for 4096 context window (leaving room for output)
     const maxTextTokens = maxInputTokens - promptTokens;
     const textTokens = estimateTokens(text);
@@ -568,12 +593,17 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
     
     if (!needsChunking) {
       // Text fits in one request - process normally
-      const fullPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + text;
+      // Structure: HEADER + document + FOOTER (JSON instructions at END)
+      const fullPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + text + BLUE_BUTTON_AI_PROMPT_FOOTER;
       
       const aiResponse = await generateAI(fullPrompt, {
         temperature: 0.2,
-        maxTokens: 4000,
-        expectJSON: true
+        maxTokens: 2000,
+        expectJSON: true,
+        skipHallucinationCheck: true, // Blue Button finds conditions, doesn't validate VA codes yet
+        skipCrisisCheck: true, // Medical records contain terms that trigger false positives
+        useDKB: false, // Skip DKB - we're just extracting medical terms, not citing VA regulations
+        systemPrompt: '' // Skip system prompt - the prompt already has all context needed
       });
       
       const parsed = parseAIResponse(aiResponse);
@@ -594,12 +624,17 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       for (let i = 0; i < chunks.length; i++) {
         setProcessingStage(`Processing section ${i + 1} of ${chunks.length}...`);
         
-        const chunkPrompt = BLUE_BUTTON_AI_PROMPT + '\n\n' + chunks[i];
+        // Structure: HEADER + chunk + FOOTER (JSON instructions at END)
+        const chunkPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + chunks[i] + BLUE_BUTTON_AI_PROMPT_FOOTER;
         
         const aiResponse = await generateAI(chunkPrompt, {
           temperature: 0.2,
-          maxTokens: 4000,
-          expectJSON: true
+          maxTokens: 2000,
+          expectJSON: true,
+          skipHallucinationCheck: true, // Blue Button finds conditions, doesn't validate VA codes yet
+          skipCrisisCheck: true, // Medical records contain terms that trigger false positives
+          useDKB: false, // Skip DKB - we're just extracting medical terms, not citing VA regulations
+          systemPrompt: '' // Skip system prompt - the prompt already has all context needed
         });
         
         const parsed = parseAIResponse(aiResponse);
@@ -672,7 +707,63 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       }
       cleanResponse = cleanResponse.trim();
       
-      const parsed = JSON.parse(cleanResponse);
+      // Try to repair truncated JSON (AI ran out of output tokens mid-response)
+      let parsed;
+      try {
+        parsed = JSON.parse(cleanResponse);
+      } catch (jsonErr) {
+        // Attempt to repair truncated JSON
+        console.log('💡 Attempting to repair truncated JSON...');
+        let repaired = cleanResponse;
+        
+        // First, handle truncated strings (very common with token limits)
+        // Find if we're in the middle of a string
+        const quoteCount = (repaired.match(/"/g) || []).length;
+        if (quoteCount % 2 !== 0) {
+          // Odd number of quotes - we're mid-string
+          // Truncate back to the last complete property
+          const lastGoodPoint = Math.max(
+            repaired.lastIndexOf('"},'),      // After complete object
+            repaired.lastIndexOf('"true'),    // After boolean
+            repaired.lastIndexOf('"false'),   // After boolean
+            repaired.lastIndexOf('"null'),    // After null
+            repaired.lastIndexOf('": "'),     // At start of string value - not good, go back more
+          );
+          
+          // Find the last complete object ending with }
+          const lastCompleteObjWithComma = repaired.lastIndexOf('},');
+          const lastCompleteObj = repaired.lastIndexOf('}');
+          
+          if (lastCompleteObjWithComma > 0) {
+            repaired = repaired.substring(0, lastCompleteObjWithComma + 1);
+          } else if (lastCompleteObj > 100) { // Make sure we have substantial content
+            repaired = repaired.substring(0, lastCompleteObj + 1);
+          }
+        }
+        
+        // Count open brackets/braces
+        const openBraces = (repaired.match(/{/g) || []).length;
+        const closeBraces = (repaired.match(/}/g) || []).length;
+        const openBrackets = (repaired.match(/\[/g) || []).length;
+        const closeBrackets = (repaired.match(/\]/g) || []).length;
+        
+        // Close any open arrays/objects
+        if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
+          for (let i = 0; i < openBrackets - closeBrackets; i++) {
+            repaired += ']';
+          }
+        }
+        for (let i = 0; i < openBraces - (repaired.match(/}/g) || []).length; i++) {
+          repaired += '}';
+        }
+        
+        try {
+          parsed = JSON.parse(repaired);
+          console.log('✅ Repaired truncated JSON successfully');
+        } catch {
+          throw jsonErr; // Rethrow original error if repair failed
+        }
+      }
       
       if (!parsed.conditions || !Array.isArray(parsed.conditions)) {
         throw new Error('AI response missing conditions array.');
@@ -686,8 +777,86 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
         ? aiResponse.substring(0, 500) 
         : JSON.stringify(aiResponse).substring(0, 500);
       console.error('Raw response:', rawForLog);
+      
+      // Check for specific error messages that indicate recoverable situations
+      const rawText = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.text || '');
+      if (rawText.includes('model is still loading') || rawText.includes('still loading')) {
+        throw new Error('AI model is still loading. Please wait a moment and try again.');
+      }
+      if (rawText.includes('context window') || rawText.includes('ContextWindowSizeExceeded')) {
+        throw new Error('Document is too large for local AI. Try using Cloud AI or upload a smaller file.');
+      }
+      if (rawText.includes('[Warrant Council') || rawText.includes('CW5 Auditor')) {
+        // AI returned a helpful message but not JSON - extract and return as error
+        const msgMatch = rawText.match(/will help with[:\s]*(.+?)(?:Your question|$)/s);
+        if (msgMatch) {
+          throw new Error('AI is initializing. ' + msgMatch[1].trim().split('\n')[0]);
+        }
+      }
+      
+      // FALLBACK: Try to extract conditions from plain text response
+      // The AI may have returned useful info in a non-JSON format
+      if (rawText.length > 50 && !rawText.includes('error') && !rawText.includes('Error')) {
+        console.log('💡 Attempting text fallback extraction...');
+        const extractedConditions = extractConditionsFromText(rawText);
+        if (extractedConditions.length > 0) {
+          console.log(`✅ Fallback extracted ${extractedConditions.length} conditions from text`);
+          return {
+            conditions: extractedConditions,
+            summary: 'Extracted from AI text response (non-JSON fallback)',
+            wasFallback: true
+          };
+        }
+      }
+      
       throw new Error('AI returned invalid format. Please try again.');
     }
+  };
+  
+  /**
+   * Fallback: Extract conditions from plain text when AI doesn't return JSON
+   * Looks for common medical condition patterns in the response
+   */
+  const extractConditionsFromText = (text) => {
+    const conditions = [];
+    const seen = new Set();
+    
+    // Common VA-claimable conditions to look for
+    const knownConditions = [
+      { pattern: /PTSD|post[- ]?traumatic stress/gi, name: 'PTSD', category: 'Mental Health', claimable: true },
+      { pattern: /depress(?:ion|ive)/gi, name: 'Depression', category: 'Mental Health', claimable: true },
+      { pattern: /anxiety/gi, name: 'Anxiety', category: 'Mental Health', claimable: true },
+      { pattern: /tinnitus/gi, name: 'Tinnitus', category: 'Musculoskeletal', claimable: true },
+      { pattern: /hearing loss/gi, name: 'Hearing Loss', category: 'Musculoskeletal', claimable: true },
+      { pattern: /sleep apnea/gi, name: 'Sleep Apnea', category: 'Respiratory', claimable: true },
+      { pattern: /hypertension|high blood pressure/gi, name: 'Hypertension', category: 'Cardiovascular', claimable: true },
+      { pattern: /diabetes|diabetic/gi, name: 'Diabetes', category: 'Endocrine', claimable: true },
+      { pattern: /GERD|gastroesophageal reflux/gi, name: 'GERD', category: 'GI', claimable: true },
+      { pattern: /migraine/gi, name: 'Migraines', category: 'Neurological', claimable: true },
+      { pattern: /lumbar|lower back|lumbosacral/gi, name: 'Lumbar Spine Condition', category: 'Musculoskeletal', claimable: true },
+      { pattern: /cervical|neck pain|cervicalgia/gi, name: 'Cervical Spine Condition', category: 'Musculoskeletal', claimable: true },
+      { pattern: /radiculopathy/gi, name: 'Radiculopathy', category: 'Neurological', claimable: true },
+      { pattern: /neuropathy/gi, name: 'Peripheral Neuropathy', category: 'Neurological', claimable: true },
+      { pattern: /insomnia|sleep disorder/gi, name: 'Insomnia', category: 'Mental Health', claimable: true },
+      { pattern: /TBI|traumatic brain injury/gi, name: 'TBI', category: 'Neurological', claimable: true },
+      { pattern: /erectile dysfunction|ED\b/gi, name: 'Erectile Dysfunction', category: 'Other', claimable: true },
+      { pattern: /arthritis/gi, name: 'Arthritis', category: 'Musculoskeletal', claimable: true },
+    ];
+    
+    for (const { pattern, name, category, claimable } of knownConditions) {
+      if (pattern.test(text) && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        conditions.push({
+          name,
+          rawText: name,
+          dateFound: null,
+          isClaimable: claimable,
+          category
+        });
+      }
+    }
+    
+    return conditions;
   };
   
   /**
@@ -720,6 +889,7 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
   
   /**
    * Process the dropped in file using AI
+   * Auto-saves to VKB first so the document is available to other tools
    */
   const handleProcessFile = async () => {
     if (!file) {
@@ -752,6 +922,30 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       
       if (text.length < 100) {
         throw new Error('File appears to be empty or too short. Please drop in a valid Blue Button report.');
+      }
+      
+      // Auto-save to VKB before AI analysis (if not already saved)
+      if (!savedToVKB) {
+        setProcessingStage('Saving to My Packet...');
+        try {
+          await addDocumentToVKB({
+            fileName: file.name,
+            classification: 'blue_button',
+            rawText: text,
+            extractedData: {
+              conditions: [], // Will be updated after AI analysis
+              processingDate: new Date().toISOString(),
+              source: 'BlueButtonXRay'
+            },
+            documentDate: new Date().toISOString(),
+            sourceFile: file.name
+          });
+          setSavedToVKB(true);
+          console.log('✅ Auto-saved Blue Button to VKB before AI analysis');
+        } catch (vkbErr) {
+          console.warn('⚠️ Could not save to VKB, continuing with AI analysis:', vkbErr.message);
+          // Don't block AI analysis if VKB save fails
+        }
       }
       
       setProcessingStage('AI analyzing diagnoses (this may take 30-60 seconds)...');
@@ -799,6 +993,8 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
     setRawText('');
     setError(null);
     setShowRawText(false);
+    setSavedToVKB(false);
+    setSavingToVKB(false);
   };
   
   /**
@@ -950,32 +1146,58 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                 
                 {/* Process Button */}
                 {file && (
-                  <button
-                    onClick={handleProcessFile}
-                    disabled={isProcessing || !isAnyAIAvailable()}
-                    className={`w-full mt-4 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
-                      isProcessing || !isAnyAIAvailable()
-                        ? 'bg-gray-400 cursor-not-allowed text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                        <span>{processingStage}</span>
-                      </>
-                    ) : !isAnyAIAvailable() ? (
-                      <>
-                        <span>⚠️</span>
-                        <span>Configure AI First</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>🤖</span>
-                        <span>AI Scan for Diagnoses</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                    {/* Save to VKB Button - Available immediately after upload */}
+                    <button
+                      onClick={handleSaveToVKB}
+                      disabled={savingToVKB || savedToVKB}
+                      className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+                        savedToVKB
+                          ? 'bg-green-600 text-white cursor-default'
+                          : savingToVKB
+                            ? 'bg-gray-400 text-white cursor-wait'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                      }`}
+                    >
+                      <span>{savedToVKB ? '✓' : savingToVKB ? '⏳' : '📦'}</span>
+                      <span>{savedToVKB ? 'Saved to My Packet!' : savingToVKB ? 'Saving...' : 'Save to My Packet'}</span>
+                    </button>
+                    
+                    {/* AI Scan Button */}
+                    <button
+                      onClick={handleProcessFile}
+                      disabled={isProcessing || !isAnyAIAvailable()}
+                      className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
+                        isProcessing || !isAnyAIAvailable()
+                          ? 'bg-gray-400 cursor-not-allowed text-white'
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          <span>{processingStage}</span>
+                        </>
+                      ) : !isAnyAIAvailable() ? (
+                        <>
+                          <span>⚠️</span>
+                          <span>Configure AI First</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🤖</span>
+                          <span>AI Scan for Diagnoses</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+                
+                {/* Explanation of options */}
+                {file && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                    💡 <strong>Save to My Packet</strong> stores the document now. <strong>AI Scan</strong> auto-saves first, then extracts diagnoses.
+                  </p>
                 )}
                 
                 {/* How to Download Blue Button */}
@@ -1031,6 +1253,20 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
                     className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
                   >
                     <span>✅</span> Select All Claimable
+                  </button>
+                  <button
+                    onClick={handleSaveToVKB}
+                    disabled={savingToVKB || savedToVKB}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                      savedToVKB
+                        ? 'bg-green-600 text-white cursor-default'
+                        : savingToVKB
+                          ? 'bg-gray-400 text-white cursor-wait'
+                          : 'bg-purple-600 text-white hover:bg-purple-700'
+                    }`}
+                  >
+                    <span>{savedToVKB ? '✓' : savingToVKB ? '⏳' : '📦'}</span>
+                    {savedToVKB ? 'Saved to My Packet!' : savingToVKB ? 'Saving...' : 'Save to My Packet'}
                   </button>
                   <button
                     onClick={handleReset}

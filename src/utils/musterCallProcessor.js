@@ -30,6 +30,13 @@ import { parseDD214Text } from './ribbonRackData';
 import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
 import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
+// ============================================================
+// NEW DOCUMENT INTELLIGENCE PARSERS (v1.16.0)
+// Enhanced VA document understanding with "Header-First Extraction"
+// ============================================================
+import { parseVADocument, parseDecisionLetter, parseDBQReport, parseCodeSheet, extractBigThree } from './vaDocumentParser';
+import { segmentCFile, quickScanCFile, buildDocumentInventory, extractDBQs, extractDecisions } from './cFileSegmentation';
+import { findEvidenceGaps, quickGapCheck, EVIDENCE_TYPES, DTA_VIOLATIONS } from './evidenceGapFinder';
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
@@ -488,15 +495,85 @@ const parseDocumentByType = async (text, docType, filename) => {
       return await parseServiceRecord(dd214Segments[0]?.text || text);
       
     case DOCUMENT_TYPES.RATING_DECISION:
+      // Enhanced: Use new VA Document Parser for Decision Letters
+      console.log('📋 Using enhanced VA Document Parser for Rating Decision...');
+      const decisionData = parseDecisionLetter(text);
+      
+      // If new parser found data, use it; otherwise fall back to legacy parser
+      if (decisionData.success && (decisionData.conditions.length > 0 || decisionData.combinedRating)) {
+        console.log(`✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || 'N/A'}% combined`);
+        
+        // Also extract the "Big Three" for each condition
+        const bigThree = extractBigThree(text);
+        
+        return {
+          type: 'rating_decision',
+          ...decisionData,
+          bigThree,
+          parserVersion: 'v1.16.0-enhanced',
+        };
+      }
+      console.log('⚠️ Enhanced parser found limited data, using legacy parser');
       return await parseRatingDecision(text);
       
     case DOCUMENT_TYPES.CLAIM_LETTER:
       return await parseClaimLetter(text);
       
     case DOCUMENT_TYPES.DBQ:
+      // Enhanced: Use new VA Document Parser for DBQs
+      console.log('🩺 Using enhanced VA Document Parser for DBQ...');
+      const dbqData = parseDBQReport(text);
+      
+      if (dbqData.success && dbqData.diagnosis) {
+        console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
+        return {
+          type: 'dbq',
+          ...dbqData,
+          parserVersion: 'v1.16.0-enhanced',
+        };
+      }
+      console.log('⚠️ Enhanced parser found limited data, using legacy parser');
       return await parseDBQ(text);
       
     case DOCUMENT_TYPES.C_FILE_MEDICAL:
+      // Enhanced: Use C-File Segmentation for large claim files
+      console.log('📚 Using enhanced C-File Segmentation...');
+      
+      // Quick scan to determine file structure
+      const cFileSummary = quickScanCFile(text);
+      console.log(`📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(', ')}`);
+      
+      // Check if this is actually a large C-File (multi-document)
+      if (cFileSummary.estimatedDocCount > 5) {
+        // Full segmentation for large files
+        const segments = segmentCFile(text, { maxSegments: 100 });
+        console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
+        
+        // Build inventory for the user
+        const inventory = buildDocumentInventory(text);
+        
+        // Extract Code Sheet (at END) for current ratings
+        const codeSheet = parseCodeSheet(text);
+        
+        return {
+          type: 'c_file',
+          summary: cFileSummary,
+          segments: segments.segments.map(s => ({
+            type: s.type,
+            startPage: s.startPage,
+            endPage: s.endPage,
+            confidence: s.confidence,
+            snippet: s.text.substring(0, 200),
+          })),
+          inventory,
+          codeSheet: codeSheet.success ? codeSheet : null,
+          parserVersion: 'v1.16.0-enhanced',
+        };
+      }
+      
+      // Small file - parse as regular medical record
+      return await parseMedicalRecord(text);
+      
     case DOCUMENT_TYPES.MEDICAL_RECORD:
       return await parseMedicalRecord(text);
       
@@ -1965,6 +2042,113 @@ export const extractIntelligenceBriefingData = (processedResults) => {
 
   console.log('✅ Intelligence Briefing data extracted:', briefingData);
   return briefingData;
+};
+
+/**
+ * Analyze processed documents for Evidence Gaps and DTA Violations
+ * (NEW in v1.16.0)
+ * 
+ * This runs automatically if we have both a Decision Letter and medical evidence
+ * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
+ */
+export const analyzeEvidenceGaps = (processedResults) => {
+  console.log('🔍 Analyzing evidence gaps across processed documents...');
+  
+  // Find decision letters
+  const decisionLetters = processedResults.filter(r => 
+    r.classification?.type === DOCUMENT_TYPES.RATING_DECISION && 
+    r.status === 'complete' &&
+    r.text
+  );
+  
+  // Find all medical/service evidence
+  const evidenceDocs = processedResults.filter(r => 
+    r.status === 'complete' &&
+    r.text &&
+    r.classification?.category !== 'correspondence'
+  );
+  
+  if (decisionLetters.length === 0) {
+    console.log('ℹ️ No Decision Letters found - skipping gap analysis');
+    return {
+      success: false,
+      reason: 'No Decision Letters found in processed documents',
+      gapsFound: [],
+    };
+  }
+  
+  if (evidenceDocs.length < 2) {
+    console.log('ℹ️ Insufficient evidence documents for gap analysis');
+    return {
+      success: false,
+      reason: 'Need at least 2 documents for meaningful gap analysis',
+      gapsFound: [],
+    };
+  }
+  
+  const allGaps = [];
+  
+  // For each decision letter, check against all other evidence
+  for (const decision of decisionLetters) {
+    console.log(`📋 Analyzing Decision: ${decision.filename}`);
+    
+    // Combine all non-decision text as the "C-File equivalent"
+    const combinedEvidence = evidenceDocs
+      .filter(d => d.filename !== decision.filename)
+      .map(d => d.text)
+      .join('\n\n--- DOCUMENT BREAK ---\n\n');
+    
+    try {
+      // Use quickGapCheck for faster analysis
+      const quickGaps = quickGapCheck(decision.text, { 
+        documentTypes: evidenceDocs.map(d => d.classification?.type),
+        estimatedDocCount: evidenceDocs.length,
+      });
+      
+      if (quickGaps.gaps && quickGaps.gaps.length > 0) {
+        allGaps.push({
+          decisionLetter: decision.filename,
+          gaps: quickGaps.gaps,
+          severity: quickGaps.overallSeverity,
+          recommendations: quickGaps.recommendations,
+        });
+      }
+      
+      // If we have substantial evidence, do full gap analysis
+      if (combinedEvidence.length > 5000 && combinedEvidence.length < 500000) {
+        const fullAnalysis = findEvidenceGaps(decision.text, combinedEvidence);
+        
+        if (fullAnalysis.gapsFound && fullAnalysis.gapsFound.length > 0) {
+          // Merge with quick check results
+          const existingEntry = allGaps.find(g => g.decisionLetter === decision.filename);
+          if (existingEntry) {
+            existingEntry.fullAnalysis = fullAnalysis;
+            existingEntry.dtaViolations = fullAnalysis.dtaViolations;
+          } else {
+            allGaps.push({
+              decisionLetter: decision.filename,
+              fullAnalysis,
+              dtaViolations: fullAnalysis.dtaViolations,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`⚠️ Gap analysis error for ${decision.filename}:`, err.message);
+    }
+  }
+  
+  const result = {
+    success: true,
+    gapsFound: allGaps,
+    totalGaps: allGaps.reduce((sum, g) => sum + (g.gaps?.length || 0), 0),
+    hasDTAViolations: allGaps.some(g => g.dtaViolations && g.dtaViolations.length > 0),
+    analyzedAt: new Date().toISOString(),
+    parserVersion: 'v1.16.0',
+  };
+  
+  console.log(`🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`);
+  return result;
 };
 
 /**
