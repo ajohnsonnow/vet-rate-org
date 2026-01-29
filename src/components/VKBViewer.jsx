@@ -27,18 +27,25 @@ const VKBViewer = ({ isOpen, onClose }) => {
   const [activeSection, setActiveSection] = useState('personal');
   const [showLLMContext, setShowLLMContext] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
-      const loaded = loadVKB();
-      setVkb(loaded);
+      setLoading(true);
+      loadVKB().then((loaded) => {
+        setVkb(loaded);
+        setLoading(false);
+      }).catch((err) => {
+        console.error('Failed to load VKB:', err);
+        setLoading(false);
+      });
     }
   }, [isOpen]);
   
-  if (!isOpen || !vkb) return null;
+  if (!isOpen) return null;
   
-  const handleSave = () => {
-    const result = saveVKB(vkb);
+  const handleSave = async () => {
+    const result = await saveVKB(vkb);
     if (result.success) {
       setEditMode(false);
     }
@@ -48,9 +55,9 @@ const VKBViewer = ({ isOpen, onClose }) => {
     exportVKB();
   };
   
-  const handleClear = () => {
+  const handleClear = async () => {
     if (confirm('⚠️ This will delete your entire Knowledge Base. Are you sure?')) {
-      const newVKB = clearVKB();
+      const newVKB = await clearVKB();
       setVkb(newVKB);
     }
   };
@@ -436,6 +443,16 @@ const VKBViewer = ({ isOpen, onClose }) => {
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+        {loading || !vkb ? (
+          // Loading state
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading your Knowledge Base...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
@@ -552,6 +569,8 @@ const VKBViewer = ({ isOpen, onClose }) => {
               </pre>
             </div>
           </div>
+        )}
+        </>
         )}
       </div>
     </div>,

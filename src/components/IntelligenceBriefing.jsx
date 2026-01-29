@@ -132,7 +132,7 @@ export default function IntelligenceBriefing({
   /**
    * Confirm and commit to My Packet
    */
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (discrepancies.length > 0) {
       const proceed = window.confirm(
         `⚠️ You have ${discrepancies.length} unresolved discrepancy(ies). Proceed anyway?`
@@ -142,9 +142,9 @@ export default function IntelligenceBriefing({
 
     // Build Veteran Knowledge Base from extracted data
     try {
-      let vkb = loadVKB();
+      let vkb = await loadVKB();
       vkb = mergeMusterCallIntoVKB(vkb, editableData);
-      saveVKB(vkb);
+      await saveVKB(vkb);
       console.log('✅ VKB updated with Muster Call data');
     } catch (err) {
       console.error('Error updating VKB:', err);
