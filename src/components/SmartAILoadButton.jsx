@@ -44,6 +44,24 @@ const SmartAILoadButton = ({ toolId, compact = false, onLoadComplete = null }) =
 
   if (!check) return null;
 
+  // Safety check: ensure recommendedModel exists
+  if (!check.recommendedModel || !check.recommendedModel.name) {
+    console.error('❌ SmartAILoadButton: Invalid recommendedModel for tool:', toolId, check);
+    return (
+      <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <h4 className="text-red-300 font-semibold text-sm">Configuration Error</h4>
+            <p className="text-red-400 text-xs mt-1">
+              Tool ID "{toolId}" not configured. Using default AI.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Already loaded and correct
   if (check.isCorrect && !isLoading) {
     if (compact) {
