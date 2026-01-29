@@ -429,7 +429,9 @@ export default function DocumentIntelligenceBriefing({
     classification,
     extractedData,
     pageCount,
-    method
+    method,
+    visionUsed,  // Florence-2 Vision AI fallback flag
+    confidence   // OCR/Vision confidence
   } = extractionResult || {};
   
   // Handle multiple DD214s in one file
@@ -685,7 +687,30 @@ export default function DocumentIntelligenceBriefing({
             <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
               <span>💾 {formatFileSize(size)}</span>
               <span>📑 {pageCount} page{pageCount !== 1 ? 's' : ''}</span>
-              <span>🔍 {method === 'ocr' ? 'OCR Extracted' : method === 'advanced_ocr' ? 'Advanced OCR' : 'Native Text'}</span>
+              {/* Show extraction method with Vision AI indicator */}
+              <span className={visionUsed ? 'text-purple-600 dark:text-purple-400 font-medium' : ''}>
+                {visionUsed 
+                  ? '👁️ Vision AI (Florence-2)' 
+                  : method === 'ocr' 
+                    ? '🔍 OCR Extracted' 
+                    : method === 'advanced_ocr' 
+                      ? '🔍 Advanced OCR' 
+                      : method === 'vision_florence'
+                        ? '👁️ Vision AI'
+                        : '📖 Native Text'}
+              </span>
+              {/* Show confidence if available */}
+              {confidence && (
+                <span className={`${
+                  confidence >= 80 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : confidence >= 60 
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {confidence}% confidence
+                </span>
+              )}
               {currentData?.sourcePages && <span>📋 Source: Pages {currentData.sourcePages}</span>}
             </div>
           </div>
