@@ -1,10 +1,10 @@
 {
-  "version": "1.16.2",
+  "version": "1.16.3",
   "lastUpdated": "2026-01-29",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
-      "version": "1.16.2",
+      "version": "1.16.3",
       "date": "2026-01-29",
       "isFirstRelease": false,
       "releaseTitle": "Document Intelligence Suite - VA Claim Automation",

@@ -139,7 +139,7 @@ export const validateFilesBatch = (files) => {
 
 /**
  * Process a single document: extract text, classify, parse
- * Enhanced for sequential formation processing with VISION AI FALLBACK
+ * Enhanced for sequential formation processing with VISION AI PRIMARY for DD214s
  */
 const processSingleDocument = async (file, onProgress) => {
   const result = {
@@ -154,7 +154,7 @@ const processSingleDocument = async (file, onProgress) => {
     pageCount: 0,
     method: null,
     ocrUsed: false,
-    visionUsed: false, // NEW: Track if Florence vision was used
+    visionUsed: false, // Track if Florence vision was used
     quality: null,
     confidence: null
   };
@@ -162,52 +162,29 @@ const processSingleDocument = async (file, onProgress) => {
   const startTime = Date.now();
 
   try {
-    // Step 1: Extract text (Platoon Sergeant Review)
-    onProgress?.({
-      filename: file.name,
-      state: PROCESSING_STATES.EXTRACTING,
-      progress: 25,
-      stage: 'platoon_sergeant'
-    });
-
-    let extractionResult = await analyzeDocument(file, (state) => {
-      // Enhanced progress callback with detailed OCR state
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
-        ocrState: state.message || state.state,
-        currentPage: state.currentPage,
-        totalPages: state.totalPages,
-        quality: state.quality,
-        confidence: state.confidence,
-        stage: 'platoon_sergeant'
-      });
-    });
-
-    // Store OCR confidence for fallback decision
-    const ocrConfidence = extractionResult.confidence || 0;
-    result.confidence = ocrConfidence;
-
     // ============================================================
-    // VISION AI FALLBACK (v1.16.2)
-    // If OCR confidence is below threshold, try Florence-2 Vision
+    // DD214 VISION-FIRST STRATEGY (v1.16.3)
+    // For DD214s: Use Florence-2 Vision AI as PRIMARY extraction
+    // For other docs: Use OCR with vision fallback
     // ============================================================
     const isPDF = file.name.toLowerCase().endsWith('.pdf');
-    const shouldTryVision = isPDF && 
-                            ocrConfidence < VISION_FALLBACK_THRESHOLD && 
-                            isWebGPUSupported() &&
-                            extractionResult.ocrUsed; // Only if OCR was needed
+    const looksLikeDD214 = /dd[-_]?214|service.?record|discharge|dd256|dd257|ngb22/i.test(file.name);
+    const useVisionPrimary = isPDF && looksLikeDD214 && isWebGPUSupported();
 
-    if (shouldTryVision) {
-      console.log(`👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`);
+    let extractionResult;
+
+    if (useVisionPrimary) {
+      // ============================================================
+      // VISION-FIRST PATH: DD214s get Florence-2 treatment
+      // ============================================================
+      console.log(`👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`);
       
       onProgress?.({
         filename: file.name,
         state: PROCESSING_STATES.EXTRACTING,
-        progress: 65,
-        stage: 'vision_fallback',
-        message: '🔬 Low OCR quality detected - engaging Vision AI...'
+        progress: 25,
+        stage: 'vision_primary',
+        message: '👁️ DD214 detected - engaging Vision AI...'
       });
 
       try {
@@ -217,7 +194,7 @@ const processSingleDocument = async (file, onProgress) => {
           onProgress?.({
             filename: file.name,
             state: PROCESSING_STATES.EXTRACTING,
-            progress: 68,
+            progress: 30,
             stage: 'vision_init',
             message: '⚡ Loading Florence-2 Vision engine (first time only)...'
           });
@@ -227,44 +204,174 @@ const processSingleDocument = async (file, onProgress) => {
           visionInitializing = false;
           
           if (!initSuccess) {
-            console.warn('⚠️ Florence Vision initialization failed, using OCR result');
+            console.warn('⚠️ Florence Vision initialization failed, falling back to OCR');
           }
         }
 
-        // If vision is available, process document
+        // Wait for vision to be ready if still initializing
+        if (visionInitializing) {
+          onProgress?.({
+            filename: file.name,
+            state: PROCESSING_STATES.EXTRACTING,
+            progress: 35,
+            stage: 'vision_wait',
+            message: '⏳ Waiting for Vision engine to load...'
+          });
+          // Wait for initialization to complete
+          while (visionInitializing) {
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+
         if (visionInitialized) {
           onProgress?.({
             filename: file.name,
             state: PROCESSING_STATES.EXTRACTING,
-            progress: 72,
+            progress: 40,
             stage: 'vision_process',
-            message: '👁️ Vision AI analyzing document...'
+            message: '👁️ Florence-2 Vision analyzing DD214...'
           });
 
-          // Process first page (DD214s are typically 1-2 pages)
-          const visionResult = await florenceOCRService.processDocument(file, {
-            pageNumber: 1,
-            parseDD214: false // We'll parse ourselves
+          // Process all pages for multi-page DD214s
+          const visionResult = await florenceOCRService.processMultiplePages(file, {
+            maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
+            onPageComplete: (pageNum, total, pageResult) => {
+              const progress = 40 + (pageNum / total) * 30; // 40-70%
+              onProgress?.({
+                filename: file.name,
+                state: PROCESSING_STATES.EXTRACTING,
+                progress: Math.round(progress),
+                stage: 'vision_page',
+                message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
+                currentPage: pageNum,
+                totalPages: total
+              });
+            }
           });
 
-          if (visionResult.text && visionResult.text.trim().length > extractionResult.text.trim().length * 0.5) {
-            // Vision extracted meaningful text - use it
-            console.log(`✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`);
+          if (visionResult.combinedText && visionResult.combinedText.trim().length > 100) {
+            console.log(`✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`);
             extractionResult = {
-              ...extractionResult,
-              text: visionResult.text,
+              text: visionResult.combinedText,
+              pageCount: visionResult.totalPages,
               method: 'vision_florence',
-              confidence: 85, // Florence typically high confidence
+              confidence: 90, // Florence vision is highly accurate
+              ocrUsed: false,
               visionUsed: true
             };
             result.visionUsed = true;
+            result.confidence = 90;
           } else {
-            console.log('⚠️ Vision result not better than OCR, keeping OCR text');
+            console.warn('⚠️ Vision extraction returned minimal text, falling back to OCR');
+            extractionResult = null; // Will trigger OCR fallback
           }
         }
       } catch (visionError) {
-        console.warn('⚠️ Vision fallback failed:', visionError.message);
-        // Continue with original OCR result
+        console.warn('⚠️ Vision primary extraction failed:', visionError.message);
+        extractionResult = null; // Will trigger OCR fallback
+      }
+
+      // Fall back to OCR if vision failed
+      if (!extractionResult) {
+        console.log('📷 Falling back to OCR extraction...');
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 45,
+          stage: 'ocr_fallback',
+          message: '📷 Vision unavailable - using OCR...'
+        });
+        
+        extractionResult = await analyzeDocument(file, (state) => {
+          onProgress?.({
+            filename: file.name,
+            state: PROCESSING_STATES.EXTRACTING,
+            progress: 45 + (state.progress || 0) * 0.25, // 45-70%
+            ocrState: state.message || state.state,
+            currentPage: state.currentPage,
+            totalPages: state.totalPages,
+            quality: state.quality,
+            confidence: state.confidence,
+            stage: 'platoon_sergeant'
+          });
+        });
+      }
+    } else {
+      // ============================================================
+      // STANDARD PATH: OCR extraction for non-DD214 documents
+      // ============================================================
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25,
+        stage: 'platoon_sergeant'
+      });
+
+      extractionResult = await analyzeDocument(file, (state) => {
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+          ocrState: state.message || state.state,
+          currentPage: state.currentPage,
+          totalPages: state.totalPages,
+          quality: state.quality,
+          confidence: state.confidence,
+          stage: 'platoon_sergeant'
+        });
+      });
+
+      // Store OCR confidence for fallback decision
+      const ocrConfidence = extractionResult.confidence || 0;
+      result.confidence = ocrConfidence;
+
+      // Vision fallback for poor OCR quality on any PDF
+      const shouldTryVisionFallback = isPDF && 
+                                      ocrConfidence < VISION_FALLBACK_THRESHOLD && 
+                                      isWebGPUSupported() &&
+                                      extractionResult.ocrUsed;
+
+      if (shouldTryVisionFallback) {
+        console.log(`👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`);
+        
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 65,
+          stage: 'vision_fallback',
+          message: '🔬 Low OCR quality detected - engaging Vision AI...'
+        });
+
+        try {
+          // Initialize Florence if needed
+          if (!visionInitialized && !visionInitializing) {
+            visionInitializing = true;
+            const initSuccess = await florenceOCRService.initialize();
+            visionInitialized = initSuccess;
+            visionInitializing = false;
+          }
+
+          if (visionInitialized) {
+            const visionResult = await florenceOCRService.processDocument(file, {
+              pageNumber: 1,
+              parseDD214: false
+            });
+
+            if (visionResult.text && visionResult.text.trim().length > extractionResult.text.trim().length * 0.5) {
+              console.log(`✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`);
+              extractionResult = {
+                ...extractionResult,
+                text: visionResult.text,
+                method: 'vision_florence',
+                confidence: 85,
+                visionUsed: true
+              };
+              result.visionUsed = true;
+            }
+          }
+        } catch (visionError) {
+          console.warn('⚠️ Vision fallback failed:', visionError.message);
+        }
       }
     }
 
