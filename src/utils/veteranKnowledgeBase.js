@@ -882,8 +882,8 @@ export const generateLLMContext = (vkb) => {
 /**
  * Export VKB for backup
  */
-export const exportVKB = () => {
-  const vkb = loadVKB();
+export const exportVKB = async () => {
+  const vkb = await loadVKB();
   const blob = new Blob([JSON.stringify(vkb, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
