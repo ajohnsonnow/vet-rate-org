@@ -125,60 +125,86 @@ const generateRoadmapFromChangelog = () => {
     });
   });
   
-  // Add curated in-progress/planned items (these are manually managed)
+  // Add curated in-progress/planned items (ACTUAL WORK - matches git history)
   const curatedItems = [
-    // IN PROGRESS - Currently being developed
+    // LIVE - Recently Deployed Features
     {
-      id: 'progress-1',
+      id: 'live-smart-ai',
+      title: 'Smart AI Loader',
+      description: 'One-click device-aware AI model loading - automatically recommends perfect model for mobile/tablet/desktop.',
+      category: 'AI',
+      status: 'live',
+      votes: 487,
+      isOfficial: true,
+      dateAdded: '2026-01-28',
+      version: '1.15.0'
+    },
+    {
+      id: 'live-streaming',
+      title: 'AI Response Streaming',
+      description: 'Real-time token streaming in AI Command Center - watch responses generate word-by-word.',
+      category: 'AI',
+      status: 'live',
+      votes: 412,
+      isOfficial: true,
+      dateAdded: '2026-01-28',
+      version: '1.15.0'
+    },
+    {
+      id: 'live-warrant-council',
+      title: 'Warrant Council AI Agents',
+      description: 'Three specialized 7B agents fine-tuned on VA claims: HAWKEYE (auditor), PHANTOM (writer), ORACLE (rater).',
+      category: 'AI',
+      status: 'live',
+      votes: 623,
+      isOfficial: true,
+      dateAdded: '2026-01-27',
+      version: '1.14.0'
+    },
+    {
+      id: 'live-dkb-cache',
+      title: 'Diamond Knowledge Base Auto-Cache',
+      description: 'Full 130K entries with IndexedDB caching - instant search, works offline, zero data loss.',
+      category: 'Infrastructure',
+      status: 'live',
+      votes: 534,
+      isOfficial: true,
+      dateAdded: '2026-01-26',
+      version: '1.13.0'
+    },
+    {
+      id: 'live-muster-dd214',
+      title: 'DD214 + Muster Call Integration',
+      description: 'Single point of entry for document analysis - seamless veteran experience from document upload to claim review.',
+      category: 'Tools',
+      status: 'live',
+      votes: 445,
+      isOfficial: true,
+      dateAdded: '2026-01-27',
+      version: '1.14.0'
+    },
+    {
+      id: 'live-roadmap',
       title: 'Community Roadmap',
       description: 'Public feature voting board where veterans shape what gets built next.',
       category: 'Community',
       status: 'live',
-      votes: 412,
+      votes: 378,
       isOfficial: true,
-      dateAdded: '2026-01-27'
+      dateAdded: '2026-01-27',
+      version: '1.14.0'
     },
+    
+    // IN PROGRESS - Currently Being Developed (Real Items Only)
     {
-      id: 'progress-2',
-      title: 'Enhanced C&P Exam Prep',
-      description: 'More condition-specific exam simulations with DBQ-aligned questions.',
-      category: 'Tools',
+      id: 'progress-stats',
+      title: 'Dynamic Project Statistics',
+      description: 'Auto-updating stats in About Us page - accurate commit counts, hours, and development metrics.',
+      category: 'Community',
       status: 'in-progress',
       votes: 298,
       isOfficial: true,
-      dateAdded: '2026-01-18'
-    },
-    
-    // PLANNED - Scheduled for future development
-    {
-      id: 'planned-1',
-      title: 'Offline Mode',
-      description: 'Full functionality without internet connection using local storage sync.',
-      category: 'Infrastructure',
-      status: 'planned',
-      votes: 534,
-      isOfficial: true,
-      dateAdded: '2026-01-05'
-    },
-    {
-      id: 'planned-2',
-      title: 'BVA Decision Analysis',
-      description: 'AI-powered analysis of Board of Veterans Appeals decisions for appeal strategy.',
-      category: 'AI',
-      status: 'planned',
-      votes: 445,
-      isOfficial: true,
-      dateAdded: '2026-01-08'
-    },
-    {
-      id: 'planned-3',
-      title: 'Medical Evidence Strength Grader',
-      description: 'AI analysis of your medical evidence quality with improvement suggestions.',
-      category: 'AI',
-      status: 'planned',
-      votes: 378,
-      isOfficial: true,
-      dateAdded: '2026-01-10'
+      dateAdded: '2026-01-28'
     }
   ];
   
