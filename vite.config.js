@@ -41,6 +41,15 @@ function brandingPlugin() {
 
 export default defineConfig({
   plugins: [react(), brandingPlugin()],
+  
+  // === WEBGPU / TRANSFORMERS.JS SUPPORT ===
+  // Required for Florence-2 Vision LLM
+  // - esnext target enables top-level await
+  // - ES module workers for transformers.js
+  worker: {
+    format: 'es',
+  },
+  
   server: {
     port: 5173,
     host: '127.0.0.1', // Required for VA OAuth redirect URI
@@ -81,6 +90,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'terser',
+    target: 'esnext',  // Required for top-level await in WebGPU models
     chunkSizeWarningLimit: 600, // Increase limit slightly for ML/AI libs
     rollupOptions: {
       output: {
@@ -95,6 +105,7 @@ export default defineConfig({
           'ai-webllm': ['@mlc-ai/web-llm'],
           // Note: @wllama/wllama is excluded from manual chunks due to ESM/Node.js worker code issues
           // It's loaded dynamically via wllamaService.js
+          // Note: @huggingface/transformers excluded - loaded dynamically in worker
           
           // OCR processing
           'ocr': ['tesseract.js'],
@@ -111,6 +122,10 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'jspdf', 'html2canvas'],
     // Exclude wllama from pre-bundling as it contains WASM workers with Node.js code strings
-    exclude: ['@wllama/wllama']
+    // Exclude transformers from pre-bundling - loaded dynamically with WebGPU
+    exclude: ['@wllama/wllama', '@huggingface/transformers'],
+    esbuildOptions: {
+      target: 'esnext',  // Required for WebGPU modules
+    }
   }
 })

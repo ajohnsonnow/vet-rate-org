@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
@@ -44,6 +44,7 @@
     "check-vision": "node scripts/check-vision-model-fix.js"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "@mlc-ai/web-llm": "^0.2.80",
     "@wllama/wllama": "^2.3.7",
     "diff-match-patch": "^1.0.5",
@@ -58,6 +59,7 @@
     "pdfjs-dist": "^5.4.530",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
     "react-markdown": "^10.1.0",
     "tesseract.js": "^7.0.0"
   },

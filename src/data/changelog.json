@@ -1,46 +1,80 @@
 {
-  "version": "1.14.0",
-  "lastUpdated": "2026-01-28",
+  "version": "1.16.0",
+  "lastUpdated": "2026-01-29",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.16.0",
+      "date": "2026-01-29",
+      "isFirstRelease": false,
+      "releaseTitle": "Document Intelligence Suite - VA Claim Automation",
+      "changelog": [
+        {
+          "type": "feature",
+          "category": "Document Processing",
+          "title": "VA Document Parser",
+          "description": "Intelligent extraction from Decision Letters, C&P Exams, Code Sheets, BVA Decisions, and SOCs - finds conditions, ratings, and denial reasons automatically",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Document Processing",
+          "title": "C-File Segmentation",
+          "description": "Burst your monster C-File into usable segments - backwards search finds Code Sheet first, then bursts into individual documents for targeted analysis",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Appeals",
+          "title": "Evidence Gap Finder",
+          "description": "Compares Decision Letter evidence vs C-File contents - flags Duty to Assist errors with legal citations (38 CFR § 3.159)",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Appeals",
+          "title": "Adversarial Drafting",
+          "description": "Auto-generates NOD/HLR arguments from evidence gaps - ready-to-use legal templates with case law citations (McLendon, Barr, Gabrielson)",
+          "isNew": true
+        },
+        {
+          "type": "feature",
+          "category": "Data Integration",
+          "title": "VKB Document Integration",
+          "description": "All extracted data flows into Evidence Timeline, Conditions Map, and Veteran Profile - builds your complete claim intelligence picture",
+          "isNew": true
+        },
+        {
+          "type": "improvement",
+          "category": "UI/UX",
+          "title": "Military-Style DROP ZONE",
+          "description": "Muster Call drop zone now features targeting markers, amber styling, and clear privacy messaging - 100% on your device"
+        },
+        {
+          "type": "improvement",
+          "category": "Privacy",
+          "title": "Enhanced Privacy Messaging",
+          "description": "DROP ZONE now prominently displays that documents never leave your device - all processing is 100% client-side"
+        }
+      ]
+    },
     {
       "version": "1.14.0",
       "date": "2026-01-28",
       "isFirstRelease": false,
-      "releaseTitle": "Warrant Council - Elite AI Squadron - v1.6.1",
+      "releaseTitle": "Warrant Council - Elite AI Squadron",
       "changelog": [
         {
           "type": "feature",
           "category": "AI & Privacy",
           "title": "Warrant Council Integration",
-          "description": "Three specialized AI agents fine-tuned on VA claims: Auditor (legal analysis), Writer (statement generation), and Rater (disability assessment) - all running 100% locally",
-          "isNew": true
+          "description": "Three specialized AI agents fine-tuned on VA claims: Auditor (legal analysis), Writer (statement generation), and Rater (disability assessment)"
         },
         {
           "type": "feature",
           "category": "AI & Privacy",
-          "title": "Wllama Browser Engine",
-          "description": "New WASM-based AI backend runs entirely in your browser - no server required, works offline, maximum privacy",
-          "isNew": true
-        },
-        {
-          "type": "feature",
-          "category": "AI & Privacy",
-          "title": "Local Server Support",
-          "description": "Connect to llama.cpp, Ollama, or any OpenAI-compatible local server - bring your own hardware for maximum power",
-          "isNew": true
-        },
-        {
-          "type": "improvement",
-          "category": "Local AI",
-          "title": "Streamlined Model Selection",
-          "description": "Removed 16 generic models to focus exclusively on Warrant Council agents - purpose-built for veteran claims, not generic chat"
-        },
-        {
-          "type": "improvement",
-          "category": "Performance",
-          "title": "Optimized Bundle Size",
-          "description": "Cleaned up legacy WebLLM model configurations - faster load times and reduced memory footprint"
+          "title": "Smart AI Loader",
+          "description": "One-click device-aware model loading - automatically selects best model for your hardware"
         }
       ]
     },
