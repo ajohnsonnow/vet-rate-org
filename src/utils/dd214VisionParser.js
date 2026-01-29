@@ -40,6 +40,10 @@ export function parseDD214Text(rawText) {
 
   // Normalize text (handle OCR quirks)
   const text = normalizeOcrText(rawText);
+  
+  // Debug: Log first 1000 chars of normalized text
+  console.log('🔍 [DD214Parser] Input text length:', rawText.length);
+  console.log('🔍 [DD214Parser] Normalized text (first 1000 chars):', text.substring(0, 1000));
 
   const fields = {};
   const confidence = {};
@@ -190,18 +194,33 @@ function normalizeOcrText(text) {
  * Extract name from DD214 text
  */
 function extractName(text) {
+  // Debug: log what we're searching
+  console.log('🔍 [DD214Parser:Name] Searching for name patterns...');
+  
   // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
+  // Also handle Florence-2 output which may have different formatting
   const patterns = [
+    // Standard DD214 format
     /name\s*\(?last[,\s]*first[,\s]*middle\)?[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
+    // Numbered block format
     /1\.\s*name[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
+    // Name followed by SSN or digits
     /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*\d|\s*ssn|\s*social)/i,
+    // Florence-2 may output: "JOHNSON JOHN WILLIAM" or "LAST: JOHNSON FIRST: JOHN"
+    /last\s*name?\s*[:\-]?\s*([A-Z][A-Za-z\-']+)\s+first\s*name?\s*[:\-]?\s*([A-Za-z\-']+)/i,
+    // Just look for LASTNAME, FIRSTNAME pattern anywhere
+    /\b([A-Z][A-Z]+),\s*([A-Z][A-Za-z]+)(?:\s+([A-Z][A-Za-z]*))?(?=\s|$|\d|,)/,
+    // Veterans name format - flexible
+    /(?:member|veteran|service\s*member)['']?s?\s*name[:\s]+([A-Z][A-Za-z\-']+),?\s*([A-Za-z\-']+)/i,
   ];
 
-  for (const pattern of patterns) {
+  for (let i = 0; i < patterns.length; i++) {
+    const pattern = patterns[i];
     const match = text.match(pattern);
     if (match) {
+      console.log(`🔍 [DD214Parser:Name] Pattern ${i} matched:`, match[0].substring(0, 100));
       return {
-        value: match[0].replace(/name[^:]*:\s*/i, '').trim(),
+        value: match[0].replace(/name[^:]*:\s*/i, '').replace(/^(last|first|member|veteran)[\s:]+/i, '').trim(),
         lastName: match[1]?.trim() || null,
         firstName: match[2]?.trim() || null,
         middleName: match[3]?.trim() || null,
@@ -210,6 +229,7 @@ function extractName(text) {
     }
   }
 
+  console.log('🔍 [DD214Parser:Name] No patterns matched');
   return { value: null, lastName: null, firstName: null, middleName: null, confidence: 0 };
 }
 
@@ -272,7 +292,37 @@ function extractBranch(text) {
     'SPACE FORCE': { name: 'Space Force', components: ['Active Space Force'] },
   };
 
+  // Also check for abbreviated/variations
+  const branchAliases = {
+    'US ARMY': 'ARMY',
+    'U.S. ARMY': 'ARMY',
+    'UNITED STATES ARMY': 'ARMY',
+    'USMC': 'MARINE',
+    'US MARINE': 'MARINE',
+    'USAF': 'AIR FORCE',
+    'US AIR FORCE': 'AIR FORCE',
+    'USN': 'NAVY',
+    'US NAVY': 'NAVY',
+    'USCG': 'COAST GUARD',
+    'USSF': 'SPACE FORCE',
+  };
+
   const textUpper = text.toUpperCase();
+  
+  // Check aliases first
+  for (const [alias, branchKey] of Object.entries(branchAliases)) {
+    if (textUpper.includes(alias)) {
+      const value = branches[branchKey];
+      let component = 'Active';
+      if (textUpper.includes('RESERVE') || textUpper.includes('USAR') || textUpper.includes('USNR')) {
+        component = 'Reserve';
+      } else if (textUpper.includes('NATIONAL GUARD') || textUpper.includes('ARNG') || textUpper.includes('ANG')) {
+        component = 'National Guard';
+      }
+      console.log(`🔍 [DD214Parser:Branch] Found via alias "${alias}":`, value.name);
+      return { value: value.name, component, confidence: 90 };
+    }
+  }
   
   for (const [key, value] of Object.entries(branches)) {
     if (textUpper.includes(key)) {
@@ -284,6 +334,7 @@ function extractBranch(text) {
         component = 'National Guard';
       }
 
+      console.log(`🔍 [DD214Parser:Branch] Found:`, value.name);
       return {
         value: value.name,
         component,
@@ -292,6 +343,7 @@ function extractBranch(text) {
     }
   }
 
+  console.log('🔍 [DD214Parser:Branch] No branch found');
   return { value: null, component: null, confidence: 0 };
 }
 
