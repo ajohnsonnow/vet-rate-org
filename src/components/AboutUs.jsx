@@ -534,7 +534,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
                             </p>
                             <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours for ${formatNumber(PROJECT_STATS.actualCost)} using GitHub Copilot, Claude 3.5, ChatGPT-4, Gemini 1.5, and Roo Code - enabling us to offer everything FREE to veterans forever.
+                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours @ ${PROJECT_STATS.hourlyRate}/hour = ${formatNumber(PROJECT_STATS.actualCost)} total investment using GitHub Copilot, Claude 3.5, ChatGPT-4, Gemini 1.5, and Roo Code - enabling us to offer everything FREE to veterans forever.
                             </p>
                           </div>
                         </div>
