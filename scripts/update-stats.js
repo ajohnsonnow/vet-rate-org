@@ -113,9 +113,10 @@ console.log(`   ✅ Updated ${readmeUpdates} values in README.md`);
 
 console.log('\n⏱️  CALCULATING DEVELOPMENT METRICS...');
 
-// Constants for calculation
-const BLENDED_LOC_PER_HOUR = 9.77;  // Blended team rate
-const HOURLY_RATE = 135;             // Senior developer rate
+// Constants for calculation (industry-verified benchmarks)
+const BLENDED_LOC_PER_HOUR = 9.77;  // Blended team rate (from COST_ANALYSIS.md)
+const TRADITIONAL_SENIOR_RATE = 135; // Traditional senior developer market rate
+const ACTUAL_HOURLY_RATE = 420;     // Your actual content engineering rate (senior full-stack + DevOps + domain expertise)
 const TESTING_PERCENT = 0.15;        // Testing is 15% of coding time
 
 // Get actual git stats FIRST (needed for actual hours calculation)
@@ -133,6 +134,10 @@ try {
 // Estimate actual hours: ~8-12 hours per active day (conservative estimate)
 const HOURS_PER_DAY = 10; // Average focused coding hours per day
 const actualHoursEstimate = actualCodingDays * HOURS_PER_DAY;
+
+// Override: Use confirmed 150 hours if available (user-verified actual time)
+const CONFIRMED_ACTUAL_HOURS = 150;
+const actualHours = CONFIRMED_ACTUAL_HOURS || actualHoursEstimate;
 
 // Calculate coding hours from actual LOC
 const codingHours = Math.round(liveStats.linesOfCode / BLENDED_LOC_PER_HOUR);
@@ -152,11 +157,10 @@ const deploymentHours = 73;       // Deployment
 
 // Calculate totals
 const totalTraditionalHours = codingHours + validationHours + testingHours + uiuxHours + documentationHours + researchHours + deploymentHours;
-const traditionalCost = totalTraditionalHours * HOURLY_RATE;
+const traditionalCost = totalTraditionalHours * TRADITIONAL_SENIOR_RATE;  // What a traditional team would cost
 
-// Actual development metrics (now dynamically calculated)
-const actualHours = actualHoursEstimate;
-const actualCost = actualHours * HOURLY_RATE;
+// Actual development metrics (dynamically calculated with user-confirmed hours)
+const actualCost = actualHours * ACTUAL_HOURLY_RATE;  // What it actually cost at your rate
 const costSavings = traditionalCost - actualCost;
 const savingsPercent = ((1 - (actualCost / traditionalCost)) * 100).toFixed(1);
 const productivityMultiplier = Math.round(totalTraditionalHours / actualHours);
@@ -215,7 +219,7 @@ const stats = {
   actual_cost: formatNumber(actualCost),
   cost_savings: `$${formatNumber(costSavings)}`,
   savings_percent: savingsPercent,
-  hourly_rate: String(HOURLY_RATE),
+  hourly_rate: String(ACTUAL_HOURLY_RATE),  // Your actual rate
   
   // Component breakdown from README table
   component_hours_total: formatNumber(componentHoursTotal),
@@ -308,8 +312,8 @@ console.log(`   • Deployment: ${formatNumber(deploymentHours)} hrs`);
 console.log(`   ─────────────────────────────`);
 console.log(`   • TOTAL: ${formatNumber(totalTraditionalHours)} hrs (${yearsEquivalent} years FTE)`);
 console.log('\n💰 Cost Analysis:');
-console.log(`   • Traditional: $${formatNumber(traditionalCost)} (${formatNumber(totalTraditionalHours)} hrs × $${HOURLY_RATE}/hr)`);
-console.log(`   • Actual: $${formatNumber(actualCost)} (${actualHours} hrs AI-assisted)`);
+console.log(`   • Traditional: $${formatNumber(traditionalCost)} (${formatNumber(totalTraditionalHours)} hrs × $${TRADITIONAL_SENIOR_RATE}/hr)`);
+console.log(`   • Actual: $${formatNumber(actualCost)} (${actualHours} hrs × $${ACTUAL_HOURLY_RATE}/hr AI-assisted)`);
 console.log(`   • Savings: $${formatNumber(costSavings)} (${savingsPercent}%)`);
 console.log(`   • Productivity: ${productivityMultiplier}x multiplier`);
 console.log(`\n📅 Last Updated: ${stats.last_updated}`);
