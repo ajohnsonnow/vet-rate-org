@@ -22,9 +22,11 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAI
 // ============================================================================
 
 // Conservative token limits (leaving room for system prompt + response)
+// System prompt is ~900 tokens, need ~1500 tokens for JSON response
+// 4096 context - 900 system - 1500 output = ~1700 for document
 const TOKEN_LIMITS = {
   GEMINI: 800000,      // 800K tokens (conservative for 1M context)
-  LOCAL: 600,          // 600 tokens for 4K context (prompt ~1500 + doc 600 + output 500 + buffer 1500)
+  LOCAL: 400,          // 400 tokens (~1600 chars) for document in 4K context
 };
 
 // Approximate chars per token (English text averages ~4 chars/token)
@@ -148,6 +150,131 @@ Pages in this chunk: {startPage} to {endPage}.
 Focus on extracting findings from THIS chunk only. Findings will be merged with other chunks.
 
 `;
+
+// ============================================================================
+// JSON REPAIR UTILITIES
+// ============================================================================
+
+/**
+ * Attempt to repair truncated JSON from AI response
+ * Handles cases where output was cut off mid-response
+ * @param {string} jsonStr - Potentially truncated JSON string
+ * @returns {Object|null} - Parsed object or null if repair failed
+ */
+function attemptJSONRepair(jsonStr) {
+  if (!jsonStr || typeof jsonStr !== 'string') return null;
+  
+  let content = jsonStr.trim();
+  
+  // Remove any trailing incomplete values
+  // Find the last complete property-value pair
+  const strategies = [
+    // Strategy 1: Close all open brackets/braces
+    () => {
+      let repaired = content;
+      // Count open brackets
+      const openBraces = (repaired.match(/{/g) || []).length;
+      const closeBraces = (repaired.match(/}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length;
+      const closeBrackets = (repaired.match(/]/g) || []).length;
+      
+      // Remove any trailing incomplete string/value
+      repaired = repaired.replace(/,\s*"[^"]*$/, ''); // Incomplete key
+      repaired = repaired.replace(/:\s*"[^"]*$/, ': ""'); // Incomplete string value
+      repaired = repaired.replace(/,\s*$/, ''); // Trailing comma
+      repaired = repaired.replace(/:\s*$/, ': null'); // Trailing colon
+      
+      // Close arrays and objects
+      for (let i = 0; i < openBrackets - closeBrackets; i++) {
+        repaired += ']';
+      }
+      for (let i = 0; i < openBraces - closeBraces; i++) {
+        repaired += '}';
+      }
+      
+      return JSON.parse(repaired);
+    },
+    // Strategy 2: Find last complete object at top level
+    () => {
+      let depth = 0;
+      let lastCompleteIndex = -1;
+      let inString = false;
+      let escapeNext = false;
+      
+      for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\' && inString) {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+        
+        if (!inString) {
+          if (char === '{' || char === '[') depth++;
+          if (char === '}' || char === ']') {
+            depth--;
+            if (depth === 0) lastCompleteIndex = i;
+          }
+        }
+      }
+      
+      if (lastCompleteIndex > 0) {
+        return JSON.parse(content.substring(0, lastCompleteIndex + 1));
+      }
+      return null;
+    },
+    // Strategy 3: Extract just the core fields we need
+    () => {
+      // Try to find and extract key fields
+      const result = {
+        summary: '',
+        servicePeriod: {},
+        timeline: [],
+        potential_claims: [],
+        exposures: [],
+        combatIndicators: [],
+        redFlags: [],
+        actionItems: [],
+        mentalHealth: { diagnoses: [], indicators: [], stressors: [], pages: [] }
+      };
+      
+      // Extract summary if present
+      const summaryMatch = content.match(/"summary"\s*:\s*"([^"]+)"/);
+      if (summaryMatch) result.summary = summaryMatch[1];
+      
+      // If we got at least a summary, return partial result
+      if (result.summary) {
+        console.log('📝 Extracted partial data from truncated response');
+        return result;
+      }
+      return null;
+    }
+  ];
+  
+  for (const strategy of strategies) {
+    try {
+      const result = strategy();
+      if (result && typeof result === 'object') {
+        return result;
+      }
+    } catch (e) {
+      // Strategy failed, try next
+      continue;
+    }
+  }
+  
+  return null;
+}
 
 // ============================================================================
 // CHUNKING UTILITIES
@@ -747,30 +874,52 @@ export async function analyzeCFile(apiKey, fullText, onProgress = () => {}, abor
   };
 }
 
+// Simplified prompt for local AI (smaller context window)
+const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File text and extract claims evidence.
+
+OUTPUT FORMAT: Valid JSON only, no markdown. Structure:
+{
+  "summary": "2-sentence overview",
+  "servicePeriod": {"branch":"","entryDate":"","separationDate":"","mos":""},
+  "timeline": [{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}],
+  "potential_claims": [{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],
+  "exposures": [{"type":"","location":"","timeframe":""}],
+  "combatIndicators": [{"indicator":"","page_number":0}],
+  "mentalHealth": {"indicators":[],"diagnoses":[]},
+  "redFlags": [{"issue":"","suggestion":""}],
+  "actionItems": [""]
+}
+
+RULES: Only include findings present in text. Track "--- PAGE X ---" markers for page numbers. Focus on medical evidence.`;
+
 /**
  * Analyze a single chunk of text
  */
 async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
-  // Build prompt with chunk context
-  let prompt = CFILE_SYSTEM_PROMPT;
+  // Detect if we're using local AI (smaller context)
+  const status = getAIStatus();
+  const isLocalAI = status.mode === AI_MODES.LOCAL || status.mode === AI_MODES.SWARM || 
+                    status.mode === AI_MODES.WLLAMA || status.mode === AI_MODES.LOCAL_SERVER;
+  
+  // Use compact prompt for local AI to maximize document space
+  let systemPrompt = isLocalAI ? CFILE_SYSTEM_PROMPT_COMPACT : CFILE_SYSTEM_PROMPT;
   
   if (totalChunks > 1) {
-    prompt = CHUNK_PROMPT_PREFIX
-      .replace('{chunkNum}', chunkNum.toString())
-      .replace('{totalChunks}', totalChunks.toString())
-      .replace('{startPage}', chunk.startPage.toString())
-      .replace('{endPage}', chunk.endPage.toString()) + prompt;
+    const chunkPrefix = `CHUNK ${chunkNum}/${totalChunks} (Pages ${chunk.startPage}-${chunk.endPage}). Extract findings from THIS chunk only.\n\n`;
+    systemPrompt = chunkPrefix + systemPrompt;
   }
   
-  const userPrompt = `${prompt}\n\n--- BEGIN C-FILE TEXT ---\n\n${chunk.text}\n\n--- END C-FILE TEXT ---\n\nAnalyze this C-File and return ONLY the JSON object as specified. No additional text or formatting.`;
+  // User prompt is just the document text - system prompt is passed separately
+  const userPrompt = `--- BEGIN C-FILE TEXT ---\n\n${chunk.text}\n\n--- END C-FILE TEXT ---\n\nAnalyze and return ONLY the JSON object.`;
   
   const response = await generateAI(userPrompt, {
     temperature: 0.2,
-    maxTokens: 32768,
+    maxTokens: isLocalAI ? 2048 : 32768, // Limit output tokens for local AI
     expectJSON: true,
     skipCrisisCheck: true, // C-Files contain clinical records
     skipHallucinationCheck: true, // C-File analysis has different JSON structure (potential_claims), trap expects conditions array
-    toolContext: 'C-File Analyzer'
+    toolContext: 'C-File Analyzer',
+    systemPrompt: systemPrompt // Pass custom system prompt to avoid double prompting
   });
   
   const content = response?.text || response;
@@ -805,7 +954,15 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
   } catch (parseError) {
     console.error('JSON Parse Error:', parseError);
     console.error('Content to parse:', cleanContent.substring(0, 500));
-    throw new Error(`Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`);
+    
+    // Attempt to repair truncated JSON
+    const repaired = attemptJSONRepair(cleanContent);
+    if (repaired) {
+      console.log('✅ Successfully repaired truncated JSON response');
+      analysisResult = repaired;
+    } else {
+      throw new Error(`Failed to parse AI response as JSON. The AI may have returned an invalid response. Please try again. Error: ${parseError.message}`);
+    }
   }
   
   // Sanitize result
