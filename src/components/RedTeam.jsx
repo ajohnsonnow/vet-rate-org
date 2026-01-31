@@ -3,11 +3,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useAutoInitAI from '../hooks/useAutoInitAI';
 import { stressTestStatement, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import SmartAILoadButton from './SmartAILoadButton';
 import { analyzePDF, OCR_STATES, formatFileSize } from '../utils/ocr';
 import VoiceInputButton from './VoiceInput';
 
@@ -25,8 +25,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
   
-  // Auto-initialize AI when component mounts
-  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('red-team', 'auditor');
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
   
   const [draftStatement, setDraftStatement] = useState('');
   const [results, setResults] = useState(null);
@@ -132,7 +131,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
 
     if (!isAIAvailable()) {
-      setError('AI features are not available. Please add your Gemini API key in Settings to use the Red Team.');
+      setError('AI features are not available. Please load the Warrant Council AI using the button above, or configure your API key in Settings.');
       return;
     }
 
@@ -266,19 +265,13 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
               </div>
             </div>
 
-            {/* AI Required Warning */}
+            {/* Smart AI Load Button - shown when no AI is available */}
             {!isAnyAIAvailable() && (
-              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 rounded-r-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h3 className="font-bold text-amber-800 dark:text-amber-200">AI Required for Analysis</h3>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                      Click the <strong>AI Status button</strong> in the header above to load your secure Local AI 
-                      (100% private) or enter your Gemini API key.
-                    </p>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <SmartAILoadButton 
+                  toolId="red-team"
+                  onLoadComplete={(model) => console.log('Smart AI loaded for Red Team:', model?.name)}
+                />
               </div>
             )}
 

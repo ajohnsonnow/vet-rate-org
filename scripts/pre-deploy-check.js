@@ -559,16 +559,50 @@ function checkArchiveCandidates() {
   
   // Check for .md files in root that might need archiving
   const rootFiles = fs.readdirSync(rootDir);
-  const mdFiles = rootFiles.filter(f => f.endsWith('.md') && !['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE', 'DEPLOYMENT.md'].includes(f));
+  
+  // Whitelist of files that should NEVER be archived
+  const keepFiles = [
+    'README.md', 
+    'CONTRIBUTING.md', 
+    'SECURITY.md', 
+    'LICENSE', 
+    'DEPLOYMENT.md',
+    'DEMO_SCRIPT.md',              // Needed for demonstrations
+    'VERIFIED_STATISTICS.md',      // Active statistics reference
+    'diamond-swarm-readme.md'      // AI model documentation
+  ];
+  
+  const mdFiles = rootFiles.filter(f => f.endsWith('.md') && !keepFiles.includes(f));
   
   const archiveFolder = path.join(rootDir, 'archive');
   
   // Check if there are old/unused MD files
   const potentialArchive = mdFiles.filter(f => {
     const content = readFile(f);
-    // Files with "COMPLETE", "DONE", "OLD", "DEPRECATED", "AUDIT" in name or content
-    return /complete|done|old|deprecated|audit|checklist.*complete/i.test(f) || 
-           /^#.*complete|status.*complete/im.test(content || '');
+    const lowerName = f.toLowerCase();
+    
+    // Skip files marked as "Design Phase", "In Progress", "Active"
+    if (/status.*design phase|status.*in progress|status.*active/im.test(content || '')) {
+      return false;
+    }
+    
+    // Archive patterns:
+    // 1. Name contains: complete, done, old, deprecated, audit, summary, report, fix, update, implementation
+    const namePatterns = /complete|done|old|deprecated|audit|summary|report|fix|update|implementation|checklist|hotfix|verification|confirmation|response|post_v|_v\d/i;
+    
+    // 2. Version-specific files (e.g., VERSION_1.4.2.7_SUMMARY.md, REDDIT_POST_v1.4.2.md)
+    const versionPattern = /v\d+\.\d+|_v\d+|version_?\d/i;
+    
+    // 3. Content indicators: heading with "complete", "status: complete", "## Summary", dated completion
+    const contentPatterns = /^#.*complete|status.*complete|implementation complete|task complete/im;
+    
+    // 4. One-time documentation (Reddit posts, social media, analysis docs)
+    const oneTimePatterns = /reddit|social_media|analysis|preview|penetration/i;
+    
+    return namePatterns.test(lowerName) || 
+           versionPattern.test(f) || 
+           contentPatterns.test(content || '') ||
+           oneTimePatterns.test(lowerName);
   });
   
   if (potentialArchive.length > 0) {

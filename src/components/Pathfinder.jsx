@@ -10,7 +10,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useAutoInitAI from '../hooks/useAutoInitAI';
 import { 
   analyzeStrategy, 
   getProbabilityColors, 
@@ -22,6 +21,7 @@ import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
 import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import SmartAILoadButton from './SmartAILoadButton';
 import VAGovRatingPaster from './VAGovRatingPaster';
 import { analyzeDocument, OCR_STATES, isFileSupported, getFileTypeLabel, getAcceptString } from '../utils/documentAnalyzer';
 
@@ -255,8 +255,7 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
   
-  // Auto-initialize AI when component mounts
-  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('pathfinder', 'auditor');
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
   
   const [ratings, setRatings] = useState([{ condition: '', rating: '' }]);
   const [additionalContext, setAdditionalContext] = useState('');
@@ -546,18 +545,13 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
         </div>
       ) : (
         <>
-          {/* AI Setup Message */}
+          {/* Smart AI Load Button - shown when no AI is available */}
           {!isAnyAIAvailable() ? (
-            <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <span className="text-xl">💡</span>
-                <div className="text-sm text-amber-900 dark:text-amber-100">
-                  <p className="font-semibold mb-1">{t('pathfinder', 'aiRequiredTitle')}</p>
-                  <p className="text-amber-800 dark:text-amber-200">
-                    {t('pathfinder', 'aiRequiredDesc')}
-                  </p>
-                </div>
-              </div>
+            <div className="mb-6">
+              <SmartAILoadButton 
+                toolId="pathfinder"
+                onLoadComplete={(model) => console.log('Smart AI loaded for Pathfinder:', model?.name)}
+              />
             </div>
           ) : (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">

@@ -55,8 +55,12 @@ export const VA_SECTION_HEADERS = {
   BVA_DECISION: /(?:^|\n)\s*(?:BOARD\s*OF\s*VETERANS['']?\s*APPEALS|BVA\s*DECISION)/im,
   FINDINGS_OF_FACT: /(?:^|\n)\s*(?:FINDING(?:S)?\s*OF\s*FACT)/im,
   CONCLUSIONS_OF_LAW: /(?:^|\n)\s*(?:CONCLUSION(?:S)?\s*OF\s*LAW)/im,
-  ORDER: /(?:^|\n)\s*(?:ORDER|ORDERED)/im,
-};
+  ORDER: /(?:^|\n)\s*(?:ORDER|ORDERED)/im,  
+  // Higher Level Review (HLR) sections
+  HLR_HEADER: /(?:^|\n)\s*(?:HIGHER[\s-]*LEVEL\s*REVIEW|HLR)/im,
+  INFORMAL_CONFERENCE: /(?:^|\n)\s*(?:INFORMAL\s*CONFERENCE|CONFERENCE\s*NOTES?)/im,
+  DUTY_TO_ASSIST: /(?:^|\n)\s*(?:DUTY\s*TO\s*ASSIST|DTA\s*ERROR)/im,
+  CLEAR_UNMISTAKABLE_ERROR: /(?:^|\n)\s*(?:CLEAR\s*(?:AND\s*)?UNMISTAKABLE\s*ERROR|CUE)/im,};
 
 /**
  * Rating decision condition patterns
@@ -429,6 +433,11 @@ export function parseVADocument(text) {
   if (textSample.match(/statement\s*of\s*the\s*case|soc|issues?\s*on\s*appeal/i)) {
     return parseSOC(text);
   }
+  
+  // Higher Level Review (HLR)
+  if (textSample.match(/higher[\s-]*level\s*review|hlr\s*decision|informal\s*conference|duty\s*to\s*assist\s*error/i)) {
+    return parseHLR(text);
+  }
 
   // Generic VA letter
   return {
@@ -596,6 +605,108 @@ export function parseSOC(text) {
 }
 
 /**
+ * Parse Higher Level Review (HLR) Decision
+ * HLRs are a decision review lane where a senior reviewer examines the claim
+ */
+export function parseHLR(text) {
+  const result = {
+    documentType: 'HIGHER_LEVEL_REVIEW',
+    success: true,
+    extractedAt: new Date().toISOString(),
+    
+    // HLR-specific fields
+    issuesReviewed: [],
+    informalConference: {
+      held: false,
+      date: null,
+      notes: null,
+    },
+    outcome: null, // AFFIRMED, CHANGED, REMANDED
+    newRating: null,
+    dutToAssistErrors: [],
+    clearUnmistakableErrors: [],
+    
+    // Common fields
+    effectiveDate: null,
+    legalCitations: [],
+    
+    confidence: 0,
+  };
+
+  try {
+    // Detect if informal conference was held
+    const conferenceMatch = text.match(/informal\s*conference\s*(?:was\s*)?(?:held|conducted|requested)/i);
+    if (conferenceMatch) {
+      result.informalConference.held = true;
+      
+      // Try to extract conference date
+      const confDateMatch = text.match(/(?:conference|meeting)\s*(?:held\s*)?(?:on\s*)?(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+      if (confDateMatch) {
+        result.informalConference.date = confDateMatch[1];
+      }
+    }
+    
+    // Extract issues reviewed
+    const issuePattern = /(?:issue(?:s)?|claim(?:s)?)\s*(?:on\s*)?(?:review|reviewed|being\s*reviewed)[:\s]*([^.]+)/gi;
+    const issueMatches = text.matchAll(issuePattern);
+    for (const match of issueMatches) {
+      const issues = match[1].split(/[,;]/).map(i => i.trim()).filter(i => i.length > 3);
+      result.issuesReviewed.push(...issues);
+    }
+    
+    // Detect outcome
+    if (text.match(/(?:decision\s*is\s*)?(?:affirmed|maintained|upheld)/i)) {
+      result.outcome = 'AFFIRMED';
+    } else if (text.match(/(?:decision\s*is\s*)?(?:changed|modified|revised|increased)/i)) {
+      result.outcome = 'CHANGED';
+    } else if (text.match(/(?:remand|returned\s*for|duty\s*to\s*assist\s*error)/i)) {
+      result.outcome = 'REMANDED';
+    }
+    
+    // Extract Duty to Assist errors
+    const dtaMatch = text.match(/duty\s*to\s*assist\s*(?:error|deficiency)[^.]*\.?/gi);
+    if (dtaMatch) {
+      result.dutToAssistErrors.push(...dtaMatch.map(m => m.trim()));
+    }
+    
+    // Extract CUE claims
+    const cueMatch = text.match(/clear\s*(?:and\s*)?unmistakable\s*error[^.]*\.?/gi);
+    if (cueMatch) {
+      result.clearUnmistakableErrors.push(...cueMatch.map(m => m.trim()));
+    }
+    
+    // Extract effective date
+    const effectiveDateMatch = text.match(/effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
+    if (effectiveDateMatch) {
+      result.effectiveDate = effectiveDateMatch[1];
+    }
+    
+    // Extract new rating if changed
+    const ratingMatch = text.match(/(?:increased|changed|revised)\s*(?:to\s*)?(\d{1,3})\s*percent/i);
+    if (ratingMatch) {
+      result.newRating = parseInt(ratingMatch[1]);
+    }
+    
+    // Extract CFR citations
+    const cfrMatches = text.matchAll(/38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d.]+)/g);
+    for (const match of cfrMatches) {
+      if (!result.legalCitations.includes(match[1])) {
+        result.legalCitations.push(`38 CFR § ${match[1]}`);
+      }
+    }
+
+    // Calculate confidence
+    result.confidence = result.outcome ? 75 : (result.informalConference.held ? 60 : 35);
+
+  } catch (err) {
+    result.success = false;
+    result.error = err.message;
+  }
+
+  return result;
+}
+
+/**
  * Extract the "Big Three" from any VA document
  * Condition, Percentage, Effective Date
  */
@@ -624,6 +735,7 @@ export default {
   parseCodeSheet,
   parseBVADecision,
   parseSOC,
+  parseHLR,
   extractBigThree,
   VA_SECTION_HEADERS,
 };

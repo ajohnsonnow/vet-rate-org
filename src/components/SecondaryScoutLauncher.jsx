@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ReportBugLink from './ReportBugLink';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useAutoInitAI from '../hooks/useAutoInitAI';
 import disabilityData from '../data/disabilityData.json';
 import { getMyRatings, hasMyRatings, addRating } from '../utils/veteranProfile';
 import VAGovRatingPaster from './VAGovRatingPaster';
@@ -18,8 +17,7 @@ const SecondaryScoutLauncher = ({ onLaunch, onClose, onReportBug }) => {
   useBodyScrollLock(true);
   const { t } = useLanguage();
   
-  // Auto-initialize AI when component mounts
-  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('secondary-scout', 'writer');
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown when needed
 
   const [inputMethod, setInputMethod] = useState('manual'); // 'manual', 'checkbox', 'examples', 'myratings', 'paste', or 'pdf'
   const [manualInput, setManualInput] = useState('');
