@@ -210,7 +210,7 @@ Sincerely,
   // Inline AI field helper
   const handleFieldHelp = async (fieldName) => {
     if (!isAIAvailable()) {
-      setAiError('No API key configured. Add your Gemini API key in Settings to use AI assistance.');
+      setAiError('No API key configured. Load the Warrant Council AI or add your API key in Settings to use AI assistance.');
       return;
     }
     

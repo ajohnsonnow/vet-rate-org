@@ -3,7 +3,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ReportBugLink from './ReportBugLink';
 import BuyMeCoffee from './BuyMeCoffee';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useAutoInitAI from '../hooks/useAutoInitAI';
 import { decodeDecision, isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
@@ -30,8 +29,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
   
-  // Auto-initialize AI when component mounts
-  const { aiReady, aiInitializing, initProgress, initMessage } = useAutoInitAI('decision-decoder', 'auditor');
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
   
   const [denialText, setDenialText] = useState('');
   const [results, setResults] = useState(null);
@@ -253,7 +251,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     }
 
     if (!isAIAvailable()) {
-      setError('AI features are not available. Please add your Gemini API key in Settings to use the Decision Decoder.');
+      setError('AI features are not available. Please load the Warrant Council AI using the button above, or configure your API key in Settings.');
       return;
     }
 
