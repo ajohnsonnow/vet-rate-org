@@ -91,30 +91,147 @@ export default defineConfig({
     sourcemap: false,
     minify: 'terser',
     target: 'esnext',  // Required for top-level await in WebGPU models
-    chunkSizeWarningLimit: 600, // Increase limit slightly for ML/AI libs
+    chunkSizeWarningLimit: 1000, // Increased for WebLLM models (can't be split further)
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Core React vendor chunk
-          'vendor': ['react', 'react-dom'],
+        manualChunks(id) {
+          // === AGGRESSIVE CODE SPLITTING STRATEGY ===
+          // Goal: Keep each chunk under 1MB for optimal loading
           
-          // PDF processing (heavy)
-          'pdf': ['jspdf', 'html2canvas', 'pdfjs-dist', 'pdf-lib'],
+          // 1. Core React framework (tiny, needed everywhere)
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor';
+          }
           
-          // AI/ML libraries (very heavy, lazy load)
-          'ai-webllm': ['@mlc-ai/web-llm'],
-          // Note: @wllama/wllama is excluded from manual chunks due to ESM/Node.js worker code issues
-          // It's loaded dynamically via wllamaService.js
-          // Note: @huggingface/transformers excluded - loaded dynamically in worker
+          // 2. Router and core routing (if using react-router)
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor';
+          }
           
-          // OCR processing
-          'ocr': ['tesseract.js'],
+          // 3. UI Libraries (medium size, frequently used)
+          if (id.includes('node_modules/lucide-react') || 
+              id.includes('node_modules/@headlessui') ||
+              id.includes('node_modules/framer-motion')) {
+            return 'ui-libs';
+          }
           
-          // Document processing
-          'docs': ['docx', 'mammoth'],
+          // 4. PDF.js (very heavy, separate chunk)
+          if (id.includes('node_modules/pdfjs-dist')) {
+            return 'pdfjs';
+          }
           
-          // Storage utilities
-          'storage': ['idb-keyval']
+          // 5. PDF generation (jspdf, html2canvas, pdf-lib)
+          if (id.includes('node_modules/jspdf') || 
+              id.includes('node_modules/html2canvas') ||
+              id.includes('node_modules/pdf-lib')) {
+            return 'pdf';
+          }
+          
+          // 6. AI/ML WebLLM (extremely heavy - 5MB+, lazy loaded)
+          if (id.includes('node_modules/@mlc-ai/web-llm')) {
+            return 'ai-webllm';
+          }
+          
+          // 7. OCR - Tesseract ONLY (transformers goes elsewhere)
+          if (id.includes('node_modules/tesseract.js')) {
+            return 'ocr';
+          }
+          
+          // 8. Transformers/Vision models (separate from OCR)
+          if (id.includes('node_modules/@huggingface/transformers')) {
+            return 'vision';
+          }
+          
+          // 9. Document processing - keep together to avoid circular deps
+          if (id.includes('node_modules/docx') || 
+              id.includes('node_modules/mammoth') ||
+              id.includes('node_modules/jszip')) {
+            return 'docs';
+          }
+          
+          // 10. Storage utilities (tiny)
+          if (id.includes('node_modules/idb-keyval')) {
+            return 'storage';
+          }
+          
+          // 11. Utility libraries (lodash, date-fns, etc)
+          if (id.includes('node_modules/lodash') ||
+              id.includes('node_modules/date-fns') ||
+              id.includes('node_modules/clsx')) {
+            return 'utils';
+          }
+          
+          // 12. Markdown/Rich Text
+          if (id.includes('node_modules/marked') ||
+              id.includes('node_modules/dompurify')) {
+            return 'markdown';
+          }
+          
+          // 13. Large data files - medical
+          if (id.includes('src/data/diagnosticCodes') ||
+              id.includes('src/data/mosDatabase') ||
+              id.includes('src/data/secondaryConditions')) {
+            return 'data-medical';
+          }
+          
+          // 14. Large data files - resources
+          if (id.includes('src/data/stateBenefits') ||
+              id.includes('src/data/vsoDirectory')) {
+            return 'data-resources';
+          }
+          
+          // 15. Large data files - legal/forms
+          if (id.includes('src/data/vaForms') ||
+              id.includes('src/data/legalDocuments')) {
+            return 'data-legal';
+          }
+          
+          // 16. AI utilities (separate from WebLLM engine)
+          if (id.includes('src/utils/unifiedAIService') ||
+              id.includes('src/utils/aiStatementHelper') ||
+              id.includes('src/utils/diamondSwarm')) {
+            return 'ai-utils';
+          }
+          
+          // 17. Heavy analysis tools
+          if (id.includes('src/utils/cfileAnalyzer') ||
+              id.includes('src/utils/documentAnalyzer') ||
+              id.includes('src/utils/advancedOCR')) {
+            return 'analysis-tools';
+          }
+          
+          // 18. VA calculations and core logic
+          if (id.includes('src/utils/vaCalculations') ||
+              id.includes('src/utils/secondaryFinder') ||
+              id.includes('src/utils/nexusLogic')) {
+            return 'va-core';
+          }
+          
+          // 19. Heavy UI components - Calculator, AI tools, etc
+          if (id.includes('src/components/Calculator') ||
+              id.includes('src/components/TacticalCalculator') ||
+              id.includes('src/components/WhatIfSandbox')) {
+            return 'calculators';
+          }
+          
+          if (id.includes('src/components/DecisionDecoder') ||
+              id.includes('src/components/DenialDecoder') ||
+              id.includes('src/components/CFileAnalyzer')) {
+            return 'ai-tools';
+          }
+          
+          if (id.includes('src/components/NexusBuilder') ||
+              id.includes('src/components/WitnessBench') ||
+              id.includes('src/components/StatementAnalyzer')) {
+            return 'statement-tools';
+          }
+          
+          // 20. All other node_modules (catch-all for remaining deps)
+          if (id.includes('node_modules')) {
+            return 'vendor-misc';
+          }
+          
+          // Default: let Vite decide (remaining app code goes in index chunk)
         }
       }
     }
