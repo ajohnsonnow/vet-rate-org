@@ -31,6 +31,11 @@ import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
 import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
 // ============================================================
+// C-FILE ANALYZER INTEGRATION (v1.18.3)
+// Import JSON repair utility for handling truncated AI responses
+// ============================================================
+import { attemptJSONRepair } from './cfileAnalyzer';
+// ============================================================
 // FLORENCE-2 VISION AI SERVICE (v1.16.2)
 // Fallback for poor OCR quality on scanned/aged documents
 // ============================================================
@@ -53,6 +58,89 @@ let visionInitializing = false;
 
 // Re-export formatFileSize for convenience
 export { formatFileSize };
+
+// ============================================================
+// C-FILE AI ANALYSIS HELPER (v1.18.3)
+// Uses AI to extract potential claims from C-File text
+// Includes JSON repair for truncated responses
+// ============================================================
+
+/**
+ * Analyze C-File text with AI to extract potential claims
+ * Uses compact prompt and JSON repair for Local AI compatibility
+ * @param {string} text - C-File text (max 50K chars recommended)
+ * @returns {Object|null} Analysis results or null if failed
+ */
+const analyzeCFileWithAI = async (text) => {
+  if (!isAnyAIAvailable()) {
+    console.log('⚠️ No AI available for C-File analysis');
+    return null;
+  }
+  
+  console.log('🤖 Starting AI-enhanced C-File analysis...');
+  
+  // Compact prompt for local AI compatibility
+  const systemPrompt = `You are a VA Claims Auditor. Analyze C-File text and extract claims evidence.
+
+OUTPUT FORMAT: Valid JSON only. Structure:
+{
+  "potential_claims": [{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","missing_element":""}],
+  "exposures": [{"type":"","timeframe":""}],
+  "mentalHealth": {"indicators":[],"diagnoses":[]},
+  "actionItems": [""]
+}
+
+RULES: Only include findings present in text. Be concise.`;
+
+  const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${text.substring(0, 15000)}`;
+  
+  try {
+    const response = await generateAI(userPrompt, {
+      systemPrompt,
+      temperature: 0.2,
+      maxTokens: 2048,
+      expectJSON: true,
+      skipCrisisCheck: true,
+      skipHallucinationCheck: true,
+      toolContext: 'Muster Call C-File Analysis'
+    });
+    
+    const content = response?.text || response;
+    if (!content) return null;
+    
+    // Parse JSON response
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
+    if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
+    if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
+    cleanContent = cleanContent.trim();
+    
+    let result;
+    try {
+      result = JSON.parse(cleanContent);
+    } catch (parseErr) {
+      console.warn('⚠️ JSON parse failed, attempting repair...');
+      result = attemptJSONRepair(cleanContent);
+      if (result) {
+        console.log('✅ Successfully repaired truncated AI response');
+      }
+    }
+    
+    if (result) {
+      console.log(`✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`);
+      return {
+        ...result,
+        analyzedAt: new Date().toISOString(),
+        aiPowered: true
+      };
+    }
+    
+    return null;
+  } catch (err) {
+    console.error('❌ AI C-File analysis error:', err);
+    return null;
+  }
+};
 
 /**
  * Processing states for UI feedback
@@ -840,6 +928,16 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
         // Extract Code Sheet (at END) for current ratings
         const codeSheet = parseCodeSheet(text);
         
+        // Attempt AI-enhanced analysis for potential claims (if AI available)
+        let aiAnalysis = null;
+        if (isAnyAIAvailable()) {
+          try {
+            aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
+          } catch (aiErr) {
+            console.warn('⚠️ AI C-File analysis failed, continuing with basic parsing:', aiErr.message);
+          }
+        }
+        
         return {
           type: 'c_file',
           summary: cFileSummary,
@@ -852,7 +950,8 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
           })),
           inventory,
           codeSheet: codeSheet.success ? codeSheet : null,
-          parserVersion: 'v1.16.0-enhanced',
+          aiAnalysis, // Include AI-enhanced analysis if available
+          parserVersion: 'v1.18.3-enhanced',
         };
       }
       
