@@ -25,6 +25,7 @@ import {
 } from '../utils/claimsStorage';
 import { exportPacketData, importPacketData, downloadPacketBackup, exportCompletePacket, importCompletePacket } from '../utils/packetBackup';
 import { getSavedForms, deleteSavedForm, getVeteranProfile, getMyRatings, removeRating, updateRating, clearMyRatings, addRating, getServiceHistory, addDeployment, removeDeployment, addAward, removeAward, saveDD214Data, clearDD214Data, getTimelineEvents, saveTimelineEvents, clearTimelineEvents, getPainMaps, deletePainMap, clearPainMaps } from '../utils/veteranProfile';
+import { loadVARecords, clearVARecords } from '../utils/vaDataPersistence';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import BuyMeCoffee from './BuyMeCoffee';
 import ReportBugLink from './ReportBugLink';
@@ -79,6 +80,9 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
   // Pain Maps state
   const [painMaps, setPainMaps] = useState([]);
   const [viewingPainMap, setViewingPainMap] = useState(null);
+  
+  // VA Records state
+  const [vaRecords, setVaRecords] = useState(null);
 
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
@@ -91,6 +95,7 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
     loadTimelineEvents();
     loadPainMaps();
     loadVeteranProfile();
+    loadVARecordsData();
     checkAIStatus();
   }, []);
   
@@ -181,6 +186,19 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
     });
     loadMyRatings();
     setShowVAGovPaster(false);
+  };
+
+  // VA Records handlers
+  const loadVARecordsData = () => {
+    const records = loadVARecords();
+    setVaRecords(records);
+  };
+
+  const handleClearVARecords = () => {
+    if (window.confirm('Clear all imported VA records? This cannot be undone.')) {
+      clearVARecords();
+      loadVARecordsData();
+    }
   };
   
   // Service History handlers
@@ -931,6 +949,22 @@ Return ONLY the JSON object, no explanation.`,
                 📄 <span className="hidden sm:inline">{t('myPacketSection.forms')}</span>
                 <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs px-1.5 py-0.5 rounded-full">{savedForms.length}</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('varecords')}
+                className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'varecords'
+                    ? 'border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                }`}
+              >
+                🏛️ <span className="hidden sm:inline">VA Records</span>
+                {vaRecords && (
+                  <span className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs px-1.5 py-0.5 rounded-full">
+                    {[vaRecords.claims?.length || 0, vaRecords.appeals?.length || 0].reduce((a, b) => a + b, 0)}
+                  </span>
+                )}
+              </button>
             </nav>
           </div>
 
@@ -1514,6 +1548,203 @@ Return ONLY the JSON object, no explanation.`,
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* VA RECORDS TAB */}
+            {activeTab === 'varecords' && (
+              <>
+                {!vaRecords || (!vaRecords.claims?.length && !vaRecords.serviceHistory && !vaRecords.appeals?.length && !vaRecords.appealableIssues?.length) ? (
+                  <div className="text-center py-12">
+                    <svg className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">🏛️ No VA Records Imported</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Import your data from VA.gov to see your claims, appeals, and service history here.
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      💡 Use the <strong>VA.gov Sandbox</strong> tool to connect and import your records.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Header with Clear Button */}
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Imported VA Records</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Data imported from VA.gov • Stored locally on your device
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleClearVARecords}
+                        className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                      >
+                        🗑️ Clear All VA Records
+                      </button>
+                    </div>
+
+                    {/* Claims Section */}
+                    {vaRecords.claims && vaRecords.claims.length > 0 && (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5 border border-blue-200 dark:border-blue-800">
+                        <h4 className="text-lg font-bold text-blue-800 dark:text-blue-200 mb-4 flex items-center gap-2">
+                          📋 Claims ({vaRecords.claims.length})
+                        </h4>
+                        <div className="space-y-3">
+                          {vaRecords.claims.map((claim, idx) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                    Claim #{claim.id || claim.claimId || 'Unknown'}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Type: {claim.type || claim.claimType || 'N/A'}
+                                  </div>
+                                </div>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  claim.status?.toLowerCase().includes('complete') || claim.status?.toLowerCase().includes('closed')
+                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                                    : claim.status?.toLowerCase().includes('pending')
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                }`}>
+                                  {claim.status || 'Unknown'}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Date Filed: {claim.dateFiled ? new Date(claim.dateFiled).toLocaleDateString() : 'N/A'}
+                              </div>
+                              {claim.claimDate && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Claim Date: {new Date(claim.claimDate).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Service History Section */}
+                    {vaRecords.serviceHistory && (
+                      <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5 border border-indigo-200 dark:border-indigo-800">
+                        <h4 className="text-lg font-bold text-indigo-800 dark:text-indigo-200 mb-4 flex items-center gap-2">
+                          🎖️ Service History
+                        </h4>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {vaRecords.serviceHistory.branch && (
+                              <div>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">Branch:</span>{' '}
+                                <span className="text-gray-900 dark:text-gray-100">{vaRecords.serviceHistory.branch}</span>
+                              </div>
+                            )}
+                            {vaRecords.serviceHistory.branchOfService && (
+                              <div>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">Branch of Service:</span>{' '}
+                                <span className="text-gray-900 dark:text-gray-100">{vaRecords.serviceHistory.branchOfService}</span>
+                              </div>
+                            )}
+                            {vaRecords.serviceHistory.startDate && (
+                              <div>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">Start Date:</span>{' '}
+                                <span className="text-gray-900 dark:text-gray-100">{new Date(vaRecords.serviceHistory.startDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {vaRecords.serviceHistory.endDate && (
+                              <div>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">End Date:</span>{' '}
+                                <span className="text-gray-900 dark:text-gray-100">{new Date(vaRecords.serviceHistory.endDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {vaRecords.serviceHistory.characterOfDischarge && (
+                              <div>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">Character of Discharge:</span>{' '}
+                                <span className="text-gray-900 dark:text-gray-100">{vaRecords.serviceHistory.characterOfDischarge}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Appeals Section */}
+                    {vaRecords.appeals && vaRecords.appeals.length > 0 && (
+                      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-5 border border-purple-200 dark:border-purple-800">
+                        <h4 className="text-lg font-bold text-purple-800 dark:text-purple-200 mb-4 flex items-center gap-2">
+                          ⚖️ Appeals ({vaRecords.appeals.length})
+                        </h4>
+                        <div className="space-y-3">
+                          {vaRecords.appeals.map((appeal, idx) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                                    Appeal #{appeal.id || appeal.appealId || 'Unknown'}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Type: {appeal.type || 'N/A'}
+                                  </div>
+                                </div>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  appeal.status?.toLowerCase().includes('complete') || appeal.status?.toLowerCase().includes('closed')
+                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                                    : appeal.status?.toLowerCase().includes('active') || appeal.status?.toLowerCase().includes('pending')
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                }`}>
+                                  {appeal.status || 'Unknown'}
+                                </span>
+                              </div>
+                              {appeal.updated && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Updated: {new Date(appeal.updated).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Appealable Issues Section */}
+                    {vaRecords.appealableIssues && vaRecords.appealableIssues.length > 0 && (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-5 border border-amber-200 dark:border-amber-800">
+                        <h4 className="text-lg font-bold text-amber-800 dark:text-amber-200 mb-4 flex items-center gap-2">
+                          📑 Appealable Issues ({vaRecords.appealableIssues.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {vaRecords.appealableIssues.map((issue, idx) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                              <div className="font-medium text-gray-900 dark:text-gray-100">
+                                {issue.ratingIssueSubjectText || issue.type || 'Issue'}
+                              </div>
+                              {issue.description && (
+                                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  {issue.description}
+                                </div>
+                              )}
+                              {issue.decisionDate && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  Decision Date: {new Date(issue.decisionDate).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Privacy Notice */}
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        🔒 <strong>Privacy Guaranteed:</strong> All VA records are stored locally on your device only. VetRate never sends this data to any server.
+                      </p>
+                    </div>
                   </div>
                 )}
               </>

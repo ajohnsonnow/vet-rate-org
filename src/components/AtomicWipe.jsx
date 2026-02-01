@@ -33,55 +33,101 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       console.log('🔥 Clearing sessionStorage...');
       sessionStorage.clear();
       
-      // 3. Clear IndexedDB (Vector Store, AI Models, etc.)
+      // 3. Clear cookies
+      console.log('🔥 Clearing cookies...');
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      
+      // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
       console.log('🔥 Clearing IndexedDB...');
-      if (window.indexedDB && window.indexedDB.databases) {
+      if (window.indexedDB) {
         try {
-          const databases = await window.indexedDB.databases();
-          for (const db of databases) {
-            if (db.name) {
-              console.log(`  Deleting database: ${db.name}`);
-              window.indexedDB.deleteDatabase(db.name);
-            }
+          // Try modern API first
+          if (window.indexedDB.databases) {
+            const databases = await window.indexedDB.databases();
+            const deletePromises = databases.map(db => {
+              if (db.name) {
+                console.log(`  Deleting database: ${db.name}`);
+                return new Promise((resolve) => {
+                  const req = window.indexedDB.deleteDatabase(db.name);
+                  req.onsuccess = () => resolve();
+                  req.onerror = () => resolve();
+                  req.onblocked = () => {
+                    console.log(`  Database ${db.name} blocked, forcing...`);
+                    setTimeout(resolve, 100);
+                  };
+                });
+              }
+            });
+            await Promise.all(deletePromises);
+          } else {
+            // Fallback: delete known database names
+            console.log('  Using fallback database deletion...');
+            const knownDbs = [
+              'vetrate-storage',
+              'vetrate-ai-models',
+              'vetrate-vectors',
+              'voy-vectors',
+              'transformers-cache',
+              'onnx-models',
+              'webllm-cache',
+              'vet-rate-cache',
+              'keyval-store',
+            ];
+            const deletePromises = knownDbs.map(dbName => {
+              return new Promise((resolve) => {
+                try {
+                  const req = window.indexedDB.deleteDatabase(dbName);
+                  req.onsuccess = () => {
+                    console.log(`  Deleted: ${dbName}`);
+                    resolve();
+                  };
+                  req.onerror = () => resolve();
+                  req.onblocked = () => {
+                    setTimeout(resolve, 100);
+                  };
+                } catch (err) {
+                  resolve();
+                }
+              });
+            });
+            await Promise.all(deletePromises);
           }
         } catch (e) {
-          console.log('  Note: indexedDB.databases() not supported, using fallback');
-          // Fallback: delete known database names
-          const knownDbs = [
-            'vetrate-storage',
-            'vetrate-ai-models',
-            'vetrate-vectors',
-            'voy-vectors',
-            'transformers-cache',
-            'onnx-models',
-          ];
-          for (const dbName of knownDbs) {
-            try {
-              window.indexedDB.deleteDatabase(dbName);
-            } catch (err) {
-              // Ignore errors for non-existent databases
-            }
-          }
+          console.error('  IndexedDB cleanup error:', e);
         }
       }
       
-      // 4. Clear Cache Storage (PWA caches)
+      // 5. Clear Cache Storage (PWA caches)
       console.log('🔥 Clearing Cache Storage...');
       if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        for (const cacheName of cacheNames) {
-          console.log(`  Deleting cache: ${cacheName}`);
-          await caches.delete(cacheName);
+        try {
+          const cacheNames = await caches.keys();
+          const deletePromises = cacheNames.map(cacheName => {
+            console.log(`  Deleting cache: ${cacheName}`);
+            return caches.delete(cacheName);
+          });
+          await Promise.all(deletePromises);
+        } catch (e) {
+          console.error('  Cache cleanup error:', e);
         }
       }
       
-      // 5. Unregister Service Workers
+      // 6. Unregister Service Workers
       console.log('🔥 Unregistering Service Workers...');
       if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          console.log('  Unregistering service worker');
-          await registration.unregister();
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          const unregisterPromises = registrations.map(registration => {
+            console.log('  Unregistering service worker');
+            return registration.unregister();
+          });
+          await Promise.all(unregisterPromises);
+        } catch (e) {
+          console.error('  Service worker cleanup error:', e);
         }
       }
       
@@ -92,15 +138,15 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
         onWipeComplete();
       }
       
-      // Hard reload to clean state
+      // Force hard reload with cache bypass
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = window.location.href.split('#')[0] + '?nocache=' + Date.now();
       }, 500);
       
     } catch (error) {
       console.error('Error during atomic wipe:', error);
-      // Still try to reload
-      window.location.reload();
+      // Still try to reload with cache bypass
+      window.location.href = window.location.href.split('#')[0] + '?nocache=' + Date.now();
     }
   };
   
