@@ -117,7 +117,7 @@ const generateRoadmapFromChangelog = () => {
         description: feature.description,
         category: categoryMap[feature.category] || 'Tools',
         status: 'live',
-        votes: Math.floor(Math.random() * 500) + 300, // Simulated votes
+        votes: 0,
         isOfficial: true,
         dateAdded: update.date,
         version: update.version
@@ -127,74 +127,6 @@ const generateRoadmapFromChangelog = () => {
   
   // Add curated in-progress/planned items (ACTUAL WORK - matches git history)
   const curatedItems = [
-    // LIVE - Recently Deployed Features
-    {
-      id: 'live-smart-ai',
-      title: 'Smart AI Loader',
-      description: 'One-click device-aware AI model loading - automatically recommends perfect model for mobile/tablet/desktop.',
-      category: 'AI',
-      status: 'live',
-      votes: 487,
-      isOfficial: true,
-      dateAdded: '2026-01-28',
-      version: '1.15.0'
-    },
-    {
-      id: 'live-streaming',
-      title: 'AI Response Streaming',
-      description: 'Real-time token streaming in AI Command Center - watch responses generate word-by-word.',
-      category: 'AI',
-      status: 'live',
-      votes: 412,
-      isOfficial: true,
-      dateAdded: '2026-01-28',
-      version: '1.15.0'
-    },
-    {
-      id: 'live-warrant-council',
-      title: 'Warrant Council AI Agents',
-      description: 'Three specialized 7B agents fine-tuned on VA claims: HAWKEYE (auditor), PHANTOM (writer), ORACLE (rater).',
-      category: 'AI',
-      status: 'live',
-      votes: 623,
-      isOfficial: true,
-      dateAdded: '2026-01-27',
-      version: '1.14.0'
-    },
-    {
-      id: 'live-dkb-cache',
-      title: 'Diamond Knowledge Base Auto-Cache',
-      description: 'Full 130K entries with IndexedDB caching - instant search, works offline, zero data loss.',
-      category: 'Infrastructure',
-      status: 'live',
-      votes: 534,
-      isOfficial: true,
-      dateAdded: '2026-01-26',
-      version: '1.13.0'
-    },
-    {
-      id: 'live-muster-dd214',
-      title: 'DD214 + Muster Call Integration',
-      description: 'Single point of entry for document analysis - seamless veteran experience from document upload to claim review.',
-      category: 'Tools',
-      status: 'live',
-      votes: 445,
-      isOfficial: true,
-      dateAdded: '2026-01-27',
-      version: '1.14.0'
-    },
-    {
-      id: 'live-roadmap',
-      title: 'Community Roadmap',
-      description: 'Public feature voting board where veterans shape what gets built next.',
-      category: 'Community',
-      status: 'live',
-      votes: 378,
-      isOfficial: true,
-      dateAdded: '2026-01-27',
-      version: '1.14.0'
-    },
-    
     // IN PROGRESS - Currently Being Developed (Real Items Only)
     {
       id: 'progress-stats',
@@ -202,7 +134,7 @@ const generateRoadmapFromChangelog = () => {
       description: 'Auto-updating stats in About Us page - accurate commit counts, hours, and development metrics.',
       category: 'Community',
       status: 'in-progress',
-      votes: 298,
+      votes: 0,
       isOfficial: true,
       dateAdded: '2026-01-28'
     }
@@ -687,8 +619,8 @@ function CommunityRoadmap({ onClose }) {
                         </p>
                       </div>
                       
-                      {/* Column Items */}
-                      <div className="flex-1 overflow-y-auto p-3 space-y-0">
+                      {/* Column Items - Scrollable */}
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
                         {items.length === 0 ? (
                           <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
                             {column.id === 'requested' ? (

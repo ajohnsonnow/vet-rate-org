@@ -42,6 +42,8 @@ import { VA_FACILITIES_API_KEY } from '../config/vaAuth';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import DbqFinder from './DbqFinder';
 import ClaimEvidenceUpload from './ClaimEvidenceUpload';
+import VaDataConsentPrompt from './VaDataConsentPrompt';
+import { saveVADataWithConsent } from '../utils/vaDataPersistence';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Icons
@@ -88,6 +90,10 @@ const VaSandboxTest = ({ onClose }) => {
   const [showDbqFinder, setShowDbqFinder] = useState(false);
   const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
   const [selectedClaimForUpload, setSelectedClaimForUpload] = useState(null);
+  
+  // Consent & Save States
+  const [showConsentPrompt, setShowConsentPrompt] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState(null);
   
   const { 
     isAuthenticated, 
@@ -179,6 +185,18 @@ const VaSandboxTest = ({ onClose }) => {
       fetchAllUserData();
     }
   }, [isAuthenticated, accessToken, fetchAllUserData]);
+  
+  // Show consent prompt after data is successfully loaded
+  useEffect(() => {
+    if (isAuthenticated && (serviceHistory || claims || appealableIssues || appealsStatus)) {
+      // Check if user has already seen consent for this session
+      const hasSeenConsent = sessionStorage.getItem('va_consent_shown');
+      if (!hasSeenConsent) {
+        setShowConsentPrompt(true);
+        sessionStorage.setItem('va_consent_shown', 'true');
+      }
+    }
+  }, [isAuthenticated, serviceHistory, claims, appealableIssues, appealsStatus]);
 
   // === USER DATA FETCHERS ===
 
@@ -374,6 +392,55 @@ const VaSandboxTest = ({ onClose }) => {
       )}
     </div>
   );
+
+  // =========================================================================
+  // CONSENT HANDLER
+  // =========================================================================
+  
+  const handleConsent = async (consent) => {
+    try {
+      const vaData = {
+        claims,
+        serviceHistory,
+        appeals: appealsStatus,
+        appealableIssues,
+        rawClaims,
+        rawServiceHistory,
+        rawAppeals: rawAppealsStatus,
+        rawAppealableIssues
+      };
+      
+      const results = await saveVADataWithConsent(vaData, consent);
+      
+      setShowConsentPrompt(false);
+      
+      // Show success message
+      if (results.packet.saved || results.vkb.saved) {
+        let message = 'Data saved successfully! ';
+        if (results.packet.count > 0) {
+          message += `${results.packet.count} item${results.packet.count > 1 ? 's' : ''} saved to My Packet. `;
+        }
+        if (results.vkb.saved) {
+          message += 'Service history saved to Knowledge Base.';
+        }
+        setSaveSuccessMessage(message);
+        setTimeout(() => setSaveSuccessMessage(null), 5000);
+      }
+      
+      if (results.errors.length > 0) {
+        console.error('Save errors:', results.errors);
+      }
+    } catch (error) {
+      console.error('Error saving VA data:', error);
+      alert('Error saving data. Please try again.');
+    }
+  };
+  
+  const handleSkipConsent = () => {
+    setShowConsentPrompt(false);
+    setSaveSuccessMessage('Data not saved - available only during this session.');
+    setTimeout(() => setSaveSuccessMessage(null), 3000);
+  };
 
   // =========================================================================
   // RENDER
@@ -857,6 +924,33 @@ const VaSandboxTest = ({ onClose }) => {
             setSelectedClaimForUpload(null);
           }}
         />
+      )}
+      
+      {/* Consent Prompt */}
+      {showConsentPrompt && (
+        <VaDataConsentPrompt
+          onConsent={handleConsent}
+          onSkip={handleSkipConsent}
+          vaData={{
+            claims,
+            serviceHistory,
+            appeals: appealsStatus,
+            appealableIssues,
+          }}
+        />
+      )}
+      
+      {/* Success Message Toast */}
+      {saveSuccessMessage && (
+        <div className="fixed top-4 right-4 z-[10000] max-w-md">
+          <div className="bg-green-600 text-white rounded-lg shadow-2xl p-4 flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Success!</p>
+              <p className="text-sm text-green-100">{saveSuccessMessage}</p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
