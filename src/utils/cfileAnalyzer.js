@@ -989,6 +989,12 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
 // ============================================================================
 
 /**
+ * Export JSON repair function for use in other modules (e.g., Muster Call)
+ * Attempts to fix truncated JSON responses from AI
+ */
+export { attemptJSONRepair };
+
+/**
  * Validate a Gemini API key by making a simple test request
  * @param {string} apiKey - The API key to validate
  * @returns {Promise<{valid: boolean, error?: string}>}

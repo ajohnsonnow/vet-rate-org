@@ -1487,10 +1487,12 @@ export const decodeDecision = async (decisionText) => {
   try {
     // Use unified AI service with minimal system prompt
     // The decision decoder prompt already includes all necessary context
+    // Set a 90-second timeout to match UI expectations
     const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 1500, // Reduced from 2048 to leave room for context
       expectJSON: true,
+      timeout: 90000, // 90 seconds - match UI timeout
       // Tell generateAI to use a minimal/empty system prompt since our prompt is self-contained
       systemPrompt: 'You are a VA claims expert. Respond only with valid JSON.',
       taskType: 'legal', // Use legal preset for accuracy

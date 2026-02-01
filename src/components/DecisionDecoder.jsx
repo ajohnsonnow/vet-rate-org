@@ -259,10 +259,13 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
     setError(null);
     setResults(null);
 
-    // Create a timeout promise to prevent infinite loading
+    // Create a robust timeout that WILL reject even if promise hangs
     const TIMEOUT_MS = 90000; // 90 seconds
+    let timeoutId;
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS);
+      timeoutId = setTimeout(() => {
+        reject(new Error('TIMEOUT: AI request exceeded 90 second limit'));
+      }, TIMEOUT_MS);
     });
 
     try {
@@ -273,6 +276,9 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
         decodeDecision(denialText),
         timeoutPromise
       ]);
+      
+      // Clear timeout if we got a response
+      clearTimeout(timeoutId);
       
       console.log('[DecisionDecoder] AI response:', response);
       
@@ -296,11 +302,30 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
         }
       }
     } catch (err) {
-      console.error('[DecisionDecoder] Decode error:', err);
-      if (err.message === 'TIMEOUT') {
-        setError('The AI request timed out after 90 seconds. This can happen if the AI is overloaded. Please try again, or try with a shorter excerpt of your decision letter.');
+      // Clear timeout on any error
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      // Better error logging - serialize the full error properly
+      const errorDetails = {
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+        ...(err.response && { response: err.response })
+      };
+      console.error('[DecisionDecoder] Decode error:', errorDetails);
+      
+      if (err.message && err.message.includes('TIMEOUT')) {
+        setError(
+          '⏱️ The AI request timed out after 90 seconds. This usually means:\n\n' +
+          '• The AI model is still loading (wait a few more seconds and try again)\n' +
+          '• Your document is too large (try pasting only the "Reasons for Decision" section)\n' +
+          '• Network connection issues (check your internet connection)\n\n' +
+          'Please try again with a shorter excerpt, or wait for the AI model to fully load.'
+        );
+      } else if (err.message && (err.message.includes('warming up') || err.message.includes('loading'))) {
+        setError('🔄 AI model is still loading. Please wait for it to fully initialize (check the badge above) and try again.');
       } else {
-        setError('An error occurred during decoding: ' + (err.message || 'Please try again.'));
+        setError('❌ An error occurred during decoding: ' + (err.message || 'Unknown error. Please try again.'));
       }
     } finally {
       setIsLoading(false);

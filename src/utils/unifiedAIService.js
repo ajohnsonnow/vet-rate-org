@@ -1440,9 +1440,51 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
  * @param {boolean} options.skipValidation - Skip AI response validation
  * @param {boolean} options.skipHallucinationCheck - Skip diagnostic code validation
  * @param {boolean} options.skipFeatureCheck - Skip feature flag check
+ * @param {number} options.timeout - Timeout in milliseconds (default: 120000 = 2 minutes)
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
 export const generateAI = async (prompt, options = {}) => {
+  // Apply timeout wrapper to prevent indefinite hangs
+  const TIMEOUT_MS = options.timeout || 120000; // 2 minutes default
+  let timeoutId;
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`AI_TIMEOUT: Request exceeded ${TIMEOUT_MS / 1000} second limit`));
+    }, TIMEOUT_MS);
+  });
+  
+  try {
+    // Race between actual generation and timeout
+    const result = await Promise.race([
+      generateAIInternal(prompt, options),
+      timeoutPromise
+    ]);
+    
+    // Clear timeout on success
+    clearTimeout(timeoutId);
+    return result;
+  } catch (err) {
+    // Clear timeout on error
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    // Enhance timeout errors with helpful message
+    if (err.message && err.message.includes('AI_TIMEOUT')) {
+      throw new Error(
+        `AI request timed out after ${TIMEOUT_MS / 1000} seconds. ` +
+        `This usually means the AI model is still loading, your document is too large, or there are network issues. ` +
+        `Please wait for the AI to fully load, try with a shorter input, or check your connection.`
+      );
+    }
+    
+    throw err;
+  }
+};
+
+/**
+ * Internal generateAI implementation (wrapped by timeout in public API)
+ */
+const generateAIInternal = async (prompt, options = {}) => {
   // Feature flag check (unless explicitly skipped)
   if (!options.skipFeatureCheck) {
     const aiEnabled = await isFeatureEnabled('ai_enabled');
