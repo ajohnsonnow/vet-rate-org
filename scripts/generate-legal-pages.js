@@ -22,7 +22,7 @@ const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 
 // Source React components
 const TOS_COMPONENT = path.join(COMPONENTS_DIR, 'TermsOfServicePage.jsx');
-const PRIVACY_COMPONENT = path.join(COMPONENTS_DIR, 'PrivacyPolicy.jsx');
+const PRIVACY_COMPONENT = path.join(COMPONENTS_DIR, 'PrivacyPolicyPage.jsx');
 
 // Output HTML files
 const TOS_HTML = path.join(PUBLIC_DIR, 'terms-of-service.html');

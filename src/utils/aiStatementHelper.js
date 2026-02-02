@@ -1425,22 +1425,30 @@ ${decisionText}
 
 YOUR GOAL:
 1. Translate this into plain English a non-lawyer can understand
-2. Identify what evidence the VA says is MISSING
-3. Provide a clear ACTION PLAN to fix this
+2. Identify FAVORABLE FINDINGS first (what the VA already conceded/accepted)
+3. Identify what evidence the VA says is STILL MISSING (only things NOT already conceded)
+4. Provide a clear ACTION PLAN that does NOT contradict favorable findings
+
+⚠️ CRITICAL: If the VA conceded something (e.g., "stressor is conceded", "service connection is established"), 
+DO NOT list that as missing or tell the veteran to prove it again. Focus ONLY on what's actually missing.
 
 OUTPUT FORMAT:
 Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
 {
   "decision_type": "Full Denial | Partial Denial | Reduction | Deferred | Granted",
+  "favorable_findings": [
+    "List things the VA already accepted/conceded (e.g., 'Stressor conceded', 'Service connection established')",
+    "These are wins - do NOT contradict these in missing_elements or action_plan"
+  ],
   "plain_english": "In simple terms, the VA is saying... (1-2 sentences)",
   "va_reasoning": "The VA made this decision because... (explain their logic)",
   "missing_elements": [
-    "First thing missing from the claim",
+    "First thing ACTUALLY missing (not already conceded)",
     "Second thing missing (if any)",
     "Third thing missing (if any)"
   ],
   "action_plan": [
-    "Step 1: Specific action to take",
+    "Step 1: Specific action to take (focused on what's actually missing)",
     "Step 2: Next specific action",
     "Step 3: Additional steps if needed"
   ],
@@ -1450,10 +1458,15 @@ Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JS
 
 KEY DENIAL REASONS TO WATCH FOR:
 - "No nexus" = Need a doctor's letter connecting condition to service
-- "No current diagnosis" = Need a current diagnosis from a doctor
+- "No current diagnosis" = Need a current diagnosis from a qualified provider (psychiatrist/psychologist for mental health)
 - "Not incurred in service" = Need service records or buddy statements
 - "Less likely than not" = C&P examiner gave negative opinion, may need IMO
 - "No aggravation shown" = For secondary claims, need evidence showing the primary condition made it worse
+
+PTSD-SPECIFIC NOTES:
+- If "stressor is conceded" appears in favorable findings, do NOT tell veteran to prove stressor
+- LICSW (Licensed Clinical Social Worker) diagnoses may not be accepted - must be psychiatrist/psychologist
+- Vet Center counselors are often LICSWs - diagnosis may need to come from VA or private psychiatrist
 
 Be empathetic but professional. This veteran is confused and possibly upset. Help them understand and take action.`;
 };

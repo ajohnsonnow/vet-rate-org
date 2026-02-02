@@ -474,7 +474,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">🤖 Local AI Arsenal</p>
                             <p><strong>Engine:</strong> WebLLM (WebGPU)</p>
                             <p><strong>Local Models:</strong> {PROJECT_STATS.localAIModels} Warrant Council agents</p>
-                            <p><strong>Model Families:</strong> Qwen 2.5, Llama 3.2, Mistral, Gemma, DeepSeek, SmolLM, Hermes</p>
+                            <p><strong>Base Models:</strong> Qwen 2.5 (fine-tuned for VA claims)</p>
                             <p><strong>Privacy:</strong> 100% in-browser, zero data leaves device</p>
                           </div>
                           {/* Warrant Council Architecture */}
@@ -534,7 +534,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                               🚀 {FORMATTED_STATS.multiplier} productivity multiplier (AI-assisted development)
                             </p>
                             <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours @ ${PROJECT_STATS.hourlyRate}/hour = ${formatNumber(PROJECT_STATS.actualCost)} total investment using GitHub Copilot, Claude 3.5, ChatGPT-4, Gemini 1.5, and Roo Code - enabling us to offer everything FREE to veterans forever.
+                              <strong>Traditional Cost:</strong> The {formatNumber(PROJECT_STATS.traditionalHours)}-hour estimate would cost ${(PROJECT_STATS.professionalTeamCostMin/1000000).toFixed(1)}M-${(PROJECT_STATS.professionalTeamCostMax/1000000).toFixed(1)}M with a professional team (12-24 months). <strong>AI-Assisted Reality:</strong> Built in {PROJECT_STATS.actualHours} hours @ ${PROJECT_STATS.hourlyRate}/hour = ${formatNumber(PROJECT_STATS.actualCost)} total investment using Visual Studio Code with Claude 4.5 (Opus &amp; Sonnet), Gemini 3 for planning &amp; prompt generation, and Roo Code - enabling us to offer everything FREE to veterans forever.
                             </p>
                           </div>
                         </div>
@@ -604,11 +604,11 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 mt-1">🛠️</span>
-                  <span><strong>{t('about', 'developmentEnvironment')}</strong> Visual Studio Code with GitHub Copilot integration</span>
+                  <span><strong>{t('about', 'developmentEnvironment')}</strong> Visual Studio Code with Claude 4.5 integration</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600 mt-1">🤖</span>
-                  <span><strong>{t('about', 'aiAssistedDevelopment')}</strong> GitHub Copilot, Anthropic's Claude 3.5 Sonnet, ChatGPT-4, Google Gemini 1.5, Roo Code</span>
+                  <span><strong>{t('about', 'aiAssistedDevelopment')}</strong> Claude 4.5 (Opus &amp; Sonnet), Gemini 3 (planning &amp; prompt generation), Roo Code</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-violet-600 mt-1">⚡</span>
@@ -633,61 +633,6 @@ const AboutUs = ({ onClose, onReportBug }) => {
                 <strong>💼 {t('about', 'notAffiliatedWithVA')}</strong> {t('about', 'notAffiliatedWithVADesc')}
               </p>
             </div>
-          </section>
-
-          <section className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">💚 {t('about', 'howProjectFunded')}</h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', 'fundingIntro')}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <a
-                href="https://buymeacoffee.com/vetrate"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-yellow-400 hover:bg-yellow-500 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">☕</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-900">{t('about', 'buyMeACoffee')}</span>
-                <span className="text-xs font-medium text-yellow-900 dark:text-yellow-900">vet-rate.org</span>
-              </a>
-              <a
-                href="https://paypal.me/ajohnsonnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">💳</span>
-                <span className="text-sm font-bold text-white dark:text-white">PayPal</span>
-                <span className="text-xs font-medium text-blue-100 dark:text-blue-100">ajohnsonnow</span>
-              </a>
-              <a
-                href="https://cash.app/$ajnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-green-600 hover:bg-green-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">💵</span>
-                <span className="text-sm font-bold text-white dark:text-white">Cash App</span>
-                <span className="text-xs font-medium text-green-100 dark:text-green-100">$ajnow</span>
-              </a>
-              <a
-                href="https://venmo.com/ajnow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center p-3 bg-sky-600 hover:bg-sky-700 rounded-lg transition-all hover:scale-105 shadow-sm"
-              >
-                <span className="text-2xl mb-1">📱</span>
-                <span className="text-sm font-bold text-white dark:text-white">Venmo</span>
-                <span className="text-xs font-medium text-sky-100 dark:text-sky-100">@ajnow</span>
-              </a>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-3">
-              {t('about', 'supportHelpsKeepFree')}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-              {t('about', 'allContributionsGo')}
-            </p>
           </section>
 
           <section className="mb-6">
