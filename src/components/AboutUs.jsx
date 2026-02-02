@@ -415,7 +415,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
                       <p><strong>Memory:</strong> Corsair Vengeance 128 GB (4 x 32 GB) DDR5-5600 CL40</p>
                       <p><strong>Primary SSD:</strong> MSI SPATIUM M570 HS 2 TB PCIe 5.0 X4 NVMe</p>
                       <p><strong>Storage:</strong> 2 x Silicon Power UD90 4 TB PCIe 4.0 X4 NVMe</p>
-                      <p><strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB</p>
+                      <p><strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB; Asus Dual GeForce RTX 5060 Ti OC 16GB</p>
                       <p><strong>Case:</strong> Asus ProArt PA602 ATX Mid Tower</p>
                       <p><strong>PSU:</strong> be quiet! Dark Power Pro 13 1300W 80+ Titanium</p>
                       <p><strong>Displays:</strong> Asus ProArt PA329CV 32" 4K + PA279CRV 27" 4K</p>
