@@ -94,9 +94,10 @@ const ProfileImportConfirmModal = ({
 
   // Field labels for display
   const fieldLabels = {
-    // Personal Information
+    // Personal Information (Blocks 1-7)
     firstName: 'First Name',
     middleInitial: 'Middle Initial',
+    middleName: 'Middle Name',
     lastName: 'Last Name',
     fullName: 'Full Name',
     dob: 'Date of Birth',
@@ -108,26 +109,58 @@ const ProfileImportConfirmModal = ({
     placeOfBirth: 'Place of Birth',
     homeOfRecord: 'Home of Record',
     
-    // Service Information
+    // Service Information (Blocks 2, 4a-4c, 17)
     branch: 'Branch of Service',
+    component: 'Component',
+    componentFull: 'Component (Full Name)',
+    rank: 'Rank',
+    payGrade: 'Pay Grade',
+    dateOfRank: 'Date of Rank',
+    
+    // MOS & Assignments (Blocks 4b, 8, 9, 11)
     mos: 'MOS/Rating',
     mosTitle: 'MOS Title',
-    rank: 'Rank at Discharge',
-    payGrade: 'Pay Grade',
     primarySpecialty: 'Primary Specialty',
+    lastDutyAssignment: 'Last Duty Assignment',
+    commandTransferredTo: 'Command Transferred To',
+    
+    // Service Dates (Blocks 12a-12e)
     serviceStartDate: 'Service Start Date',
     entryDate: 'Entry Date',
     serviceEndDate: 'Separation Date',
     separationDate: 'Separation Date',
+    netActiveService: 'Net Active Service',
+    totalPriorActiveService: 'Total Prior Active Service',
+    totalPriorInactiveService: 'Total Prior Inactive Service',
     yearsService: 'Years of Service',
     monthsService: 'Months of Service',
+    daysService: 'Days of Service',
     totalActiveDutyDays: 'Total Active Duty Days',
-    separationType: 'Separation Type',
-    characterOfService: 'Character of Service',
-    reenlisted: 'Re-enlisted',
-    foreignService: 'Foreign Service',
     
-    // Contact Information (if included)
+    // Benefits & Obligations (Blocks 10, 26-29)
+    sglCoverage: 'SGLI Coverage',
+    giBlStatus: 'Post-9/11 GI Bill Status',
+    reserveObligationDate: 'Reserve Obligation End Date',
+    daysLost: 'Days Lost',
+    foreignService: 'Foreign Service',
+    foreignServiceDetails: 'Foreign Service Details',
+    seaService: 'Sea Service',
+    
+    // Separation Info (Blocks 19-25)
+    separationAuthority: 'Separation Authority',
+    separationCode: 'Separation Code (SPD/SPN)',
+    reentryCode: 'Reentry Code (RE)',
+    separationProgramDesignator: 'Separation Program Designator',
+    separationType: 'Type of Separation',
+    characterOfService: 'Character of Service',
+    narrativeReason: 'Narrative Reason for Separation',
+    
+    // Education & Training (Blocks 14, 15)
+    militaryEducation: 'Military Education',
+    memberRequests: 'Member Requests',
+    
+    // Contact (Block 30)
+    homeAddress: 'Home Address at Separation',
     email: 'Email',
     phone: 'Phone',
     alternatePhone: 'Alternate Phone',
@@ -135,6 +168,13 @@ const ProfileImportConfirmModal = ({
     city: 'City',
     state: 'State',
     zip: 'ZIP Code',
+    
+    // Combat & Qualifications
+    specialQualifications: 'Special Qualifications',
+    securityClearance: 'Security Clearance',
+    
+    // Legacy
+    reenlisted: 'Re-enlisted',
   };
 
   /**
@@ -150,6 +190,20 @@ const ProfileImportConfirmModal = ({
   const formatValue = (field, value) => {
     if (value === null || value === undefined || value === '') return '(empty)';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    
+    // Handle service time objects
+    if (typeof value === 'object' && value.years !== undefined) {
+      const years = value.years || 0;
+      const months = value.months || 0;
+      const days = value.days || 0;
+      return `${years}y ${months}m ${days}d`;
+    }
+    
+    // Handle arrays (like militaryEducation)
+    if (Array.isArray(value)) {
+      return value.length > 0 ? value.join(', ') : '(none)';
+    }
+    
     return String(value);
   };
 
@@ -164,9 +218,25 @@ const ProfileImportConfirmModal = ({
       other: []
     };
 
-    const personalFields = ['firstName', 'middleInitial', 'lastName', 'fullName', 'dob', 'dateOfBirth', 'ssnLast4', 'ssnFull', 'serviceNumber', 'vaFileNumber', 'placeOfBirth', 'homeOfRecord'];
-    const serviceFields = ['branch', 'mos', 'mosTitle', 'rank', 'payGrade', 'primarySpecialty', 'serviceStartDate', 'entryDate', 'serviceEndDate', 'separationDate', 'yearsService', 'monthsService', 'totalActiveDutyDays', 'separationType', 'characterOfService', 'reenlisted', 'foreignService'];
-    const contactFields = ['email', 'phone', 'alternatePhone', 'street', 'city', 'state', 'zip'];
+    const personalFields = [
+      'firstName', 'middleInitial', 'middleName', 'lastName', 'fullName', 
+      'dob', 'dateOfBirth', 'ssnLast4', 'ssnFull', 'serviceNumber', 'vaFileNumber', 
+      'placeOfBirth', 'homeOfRecord'
+    ];
+    const serviceFields = [
+      'branch', 'component', 'componentFull', 'rank', 'payGrade', 'dateOfRank',
+      'mos', 'mosTitle', 'primarySpecialty', 'lastDutyAssignment', 'commandTransferredTo',
+      'serviceStartDate', 'entryDate', 'serviceEndDate', 'separationDate',
+      'netActiveService', 'totalPriorActiveService', 'totalPriorInactiveService',
+      'yearsService', 'monthsService', 'daysService', 'totalActiveDutyDays',
+      'sglCoverage', 'giBlStatus', 'reserveObligationDate', 'daysLost', 
+      'foreignService', 'foreignServiceDetails', 'seaService',
+      'separationAuthority', 'separationCode', 'reentryCode', 
+      'separationProgramDesignator', 'separationType', 'characterOfService', 'narrativeReason',
+      'militaryEducation', 'memberRequests',
+      'specialQualifications', 'securityClearance', 'reenlisted'
+    ];
+    const contactFields = ['homeAddress', 'email', 'phone', 'alternatePhone', 'street', 'city', 'state', 'zip'];
 
     Object.keys(editableData).forEach(field => {
       if (personalFields.includes(field)) {

@@ -249,7 +249,7 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam, t }) => {
 /**
  * Main Pathfinder Component
  */
-export default function Pathfinder({ onNavigate, onOpenAISettings }) {
+export default function Pathfinder({ onNavigate, onOpenAISettings, initialConditions = null }) {
   const { t } = useLanguage();
   
   // Lock background scroll when modal is open
@@ -294,6 +294,19 @@ export default function Pathfinder({ onNavigate, onOpenAISettings }) {
     
     return () => clearInterval(interval);
   }, []);
+  
+  // Load initial conditions from BlueButtonXRay if provided
+  useEffect(() => {
+    if (initialConditions && Array.isArray(initialConditions) && initialConditions.length > 0) {
+      console.log('Pathfinder: Loading', initialConditions.length, 'conditions from BlueButton');
+      const formattedConditions = initialConditions.map(c => ({
+        condition: c.standardizedName || c.name || c.condition || '',
+        rating: '' // Leave rating empty for user to fill
+      }));
+      setRatings(formattedConditions);
+      setLoadedFromPacket(true); // Show indicator that conditions were loaded
+    }
+  }, [initialConditions]);
   
   const handleSaveKey = (key) => {
     localStorage.setItem('vetrate_gemini_key', key);

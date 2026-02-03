@@ -933,6 +933,9 @@ export const saveDD214Data = (dd214Data) => {
     history.dd214Data = {
       // === Personal Identification (SENSITIVE) ===
       fullName: sanitizeString(dd214Data.fullName || '', 200),
+      lastName: sanitizeString(dd214Data.lastName || '', 100),
+      firstName: sanitizeString(dd214Data.firstName || '', 100),
+      middleName: sanitizeString(dd214Data.middleName || '', 100),
       ssnLast4: sanitizeString(dd214Data.ssnLast4 || '', 4), // Only last 4 digits
       ssnFull: sanitizeString(dd214Data.ssnFull || '', 11), // Full SSN if user opts in
       serviceNumber: sanitizeString(dd214Data.serviceNumber || '', 50),
@@ -942,25 +945,64 @@ export const saveDD214Data = (dd214Data) => {
       
       // === Service Information ===
       branch: sanitizeString(dd214Data.branch || '', 100),
-      mos: sanitizeString(dd214Data.mos || '', 200),
-      mosTitle: sanitizeString(dd214Data.mosTitle || '', 200),
-      entryDate: dd214Data.entryDate || null,
-      separationDate: dd214Data.separationDate || null,
-      yearsService: dd214Data.yearsService || null,
-      monthsService: dd214Data.monthsService || null,
-      separationType: sanitizeString(dd214Data.separationType || '', 100),
-      characterOfService: sanitizeString(dd214Data.characterOfService || '', 100),
-      reenlisted: !!dd214Data.reenlisted,
-      foreignService: !!dd214Data.foreignService,
-      
-      // === Additional Fields for Forms ===
+      component: sanitizeString(dd214Data.component || '', 50),
+      componentFull: sanitizeString(dd214Data.componentFull || '', 100),
       rank: sanitizeString(dd214Data.rank || '', 100),
       payGrade: sanitizeString(dd214Data.payGrade || '', 10),
+      dateOfRank: dd214Data.dateOfRank || null,
+      mos: sanitizeString(dd214Data.mos || '', 200),
+      mosTitle: sanitizeString(dd214Data.mosTitle || '', 200),
       primarySpecialty: sanitizeString(dd214Data.primarySpecialty || '', 200),
+      lastDutyAssignment: sanitizeString(dd214Data.lastDutyAssignment || '', 500),
+      commandTransferredTo: sanitizeString(dd214Data.commandTransferredTo || '', 500),
+      
+      // === Dates and Service Time ===
+      entryDate: dd214Data.entryDate || null,
+      separationDate: dd214Data.separationDate || null,
+      netActiveService: dd214Data.netActiveService || null,
+      totalPriorActiveService: dd214Data.totalPriorActiveService || null,
+      totalPriorInactiveService: dd214Data.totalPriorInactiveService || null,
+      yearsService: dd214Data.yearsService || null,
+      monthsService: dd214Data.monthsService || null,
+      daysService: dd214Data.daysService || null,
       totalActiveDutyDays: dd214Data.totalActiveDutyDays || null,
+      
+      // === Benefits & Obligations ===
+      sglCoverage: sanitizeString(dd214Data.sglCoverage || '', 100),
+      giBlStatus: sanitizeString(dd214Data.giBlStatus || '', 100),
+      reserveObligationDate: dd214Data.reserveObligationDate || null,
+      daysLost: dd214Data.daysLost || null,
+      foreignService: !!dd214Data.foreignService,
+      foreignServiceDetails: sanitizeString(dd214Data.foreignServiceDetails || '', 500),
+      seaService: dd214Data.seaService || null,
+      
+      // === Separation Info ===
+      separationAuthority: sanitizeString(dd214Data.separationAuthority || '', 200),
+      separationCode: sanitizeString(dd214Data.separationCode || '', 50),
+      reentryCode: sanitizeString(dd214Data.reentryCode || '', 50),
+      separationProgramDesignator: sanitizeString(dd214Data.separationProgramDesignator || '', 50),
+      separationType: sanitizeString(dd214Data.separationType || '', 100),
+      characterOfService: sanitizeString(dd214Data.characterOfService || '', 100),
+      narrativeReason: sanitizeString(dd214Data.narrativeReason || '', 500),
+      
+      // === Education & Training ===
+      militaryEducation: Array.isArray(dd214Data.militaryEducation) ? dd214Data.militaryEducation : [],
+      memberRequests: sanitizeString(dd214Data.memberRequests || '', 500),
+      
+      // === Contact ===
+      homeAddress: sanitizeString(dd214Data.homeAddress || '', 500),
+      
+      // === Combat & Qualifications ===
+      combatService: dd214Data.combatService || null,
+      specialQualifications: Array.isArray(dd214Data.specialQualifications) ? dd214Data.specialQualifications : [],
+      securityClearance: sanitizeString(dd214Data.securityClearance || '', 100),
+      
+      // === Legacy ===
+      reenlisted: !!dd214Data.reenlisted,
       
       // === Metadata ===
       extractedText: sanitizeString(dd214Data.extractedText || '', 10000),
+      dd214Count: dd214Data.dd214Count || 1,
       dateProcessed: new Date().toISOString(),
       sensitiveDataStored: !!(dd214Data.ssnFull || dd214Data.serviceNumber) // Flag if PII present
     };
