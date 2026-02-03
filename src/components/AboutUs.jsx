@@ -166,13 +166,8 @@ const AboutUs = ({ onClose, onReportBug }) => {
   
   const handleZonk = () => {
     setShowZonkMessage(true);
-    // Play sound if available (optional)
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjKM0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+mdvyzHotBSZ6yPHhlUQLFlm16+unVBELSKXh8bllHAU2kdXz0oQ0Bxx0w/DijUgNCk+r5vCxXxgIPJXa88x9LgUke8fy4JRDC0ZRr+Hxs2AYCDqT1vPSgjQGHHTD8OKMSAwJT6vm8LFeFwtDl9rx0H8wBSZ7yPLgk0ULEl6259+yfyYPRaHg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRNC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQtLXrLl37B/KA9HoeDxsWAWCTmP1/LRhDUHIXbE8OKKRw0PU6zm7rNeGQk8ldryzH0vBSV7yfHhlE0LS16y5d+wfygPR6Hg8bFgFgk5j9fy0YQ1ByF2xPDiikgND1Os5u6zXhkJPJXa8sx9LwUle8nx4ZRMC0tesuXfsH8oD0eh4PGxYBYJOY/X8tGENQchdsTw4opIDQ9TrObus14ZCTyV2vLMfS8FJXvJ8eGUTQs=');
-      audio.play().catch(() => {});
-    } catch (e) {
-      // Silent fail if audio doesn't work
-    }
+    // Note: Audio removed due to CSP restrictions (data URIs not allowed in media-src)
+    // Easter egg message shows visual feedback instead
     setTimeout(() => setShowZonkMessage(false), 3000);
   };
 
@@ -198,7 +193,7 @@ const AboutUs = ({ onClose, onReportBug }) => {
           </div>
         </div>
         
-        <div className="overflow-y-auto px-6 py-6" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+        <div className="overflow-y-auto overflow-x-hidden px-6 py-6" style={{ maxHeight: 'calc(100vh - 240px)' }}>
           
           {/* THE VET-RATE PROMISE - Trust Beacon */}
           <section className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-950 rounded-xl p-6 border-2 border-va-gold/30">

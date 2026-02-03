@@ -32,25 +32,60 @@ import DD214FormBuilder from './DD214FormBuilder';
  */
 /**
  * Condensed System Prompt for Local Models (4K context)
- * Focus on essential JSON extraction - ~800 tokens
+ * Focus on essential JSON extraction - comprehensive DD214 coverage
  */
 const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
 
-FIELD LOCATIONS ON DD214:
-- Block 4b/5: MOS code (like 92Y, 11B, 0311, etc)
-- Block 4a: Pay Grade (E-4, O-3, etc)
-- Block 11: Primary Specialty
-- Block 12a/12b: Entry Date, Separation Date
-- Block 13: Awards and Decorations
-- Block 18: Remarks (award overflow)
-- Block 24: Character of Service
-- Block 25: Separation Authority/Type
+COMPLETE DD214 FIELD LOCATIONS:
+Block 1: Name (Last, First, Middle)
+Block 2: Department/Component/Branch
+Block 3: SSN/Service Number
+Block 4a: Pay Grade (E-1 through E-9, W-1 through W-5, O-1 through O-10)
+Block 4b: MOS/AFSC/Rating/Primary Specialty Code
+Block 4c: Grade/Rank (PV1, PFC, SGT, SSG, CPT, MAJ, etc)
+Block 5: Date of Birth
+Block 6: Place of Birth (City, State, Country)
+Block 7: Home of Record (City, County, State)
+Block 8: Last Duty Assignment and Major Command
+Block 9: Command to Which Transferred
+Block 10: SGL Coverage Amount
+Block 11: Primary Specialty (expanded MOS title)
+Block 12a: Date Entered Active Duty THIS PERIOD (YYYYMMDD)
+Block 12b: Separation Date THIS PERIOD (YYYYMMDD)
+Block 12c: Net Active Service THIS PERIOD (YYYYMMDD format)
+Block 12d: Total Prior Active Service (YYYYMMDD)
+Block 12e: Total Prior Inactive Service (YYYYMMDD)
+Block 13: Decorations, Medals, Badges, Citations, Campaign Ribbons
+Block 14: Military Education (formal service schools)
+Block 15: Member Requests and Options Selected
+Block 17: Effective Date of Pay Grade (YYYYMMDD)
+Block 18: Remarks (CRITICAL: overflow for awards, qualifications, deployment info)
+Block 19: Separation Authority (regulatory authority)
+Block 20: Separation Code (SPD/SPN)
+Block 21: Reentry Code (RE-1, RE-3, RE-4, etc)
+Block 22: Separation Program Designator (SPD)
+Block 23: Type of Separation
+Block 24: Character of Service (Honorable, General, etc)
+Block 25: Narrative Reason for Separation
+Block 26: Post-9/11 GI Bill Status
+Block 27: Reserve Obligation Termination Date (YYYYMMDD)
+Block 28: Days Lost (AWOL, confinement, etc)
+Block 29: Foreign Service Credit
+Block 30: Home Address at Time of Separation
 
-RULES:
-- Latest separation date = Master Record
-- Extract MOS from Block 4b, 5, or 11
-- Check Block 18/Remarks for award overflow
-- If field not found, use null (not empty string)
+CRITICAL EXTRACTION RULES:
+1. Block 18 (Remarks) often contains:
+   - Award continuation from Block 13
+   - Combat deployment details
+   - Special qualifications (Airborne, Ranger, Special Forces, etc)
+   - Overseas service dates
+   - Purple Heart/combat injury details
+   - Security clearance info
+   - Mobilization/deployment orders
+
+2. Convert ALL dates to YYYY-MM-DD format
+3. Service time: YYYYMMDD means Years/Months/Days (e.g., "00000429" = 0y 4m 29d)
+4. If field not found or not applicable, use null
 
 OUTPUT JSON:
 {
@@ -58,25 +93,56 @@ OUTPUT JSON:
   "documentTypes": ["DD214","NGB22","DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214",
-  "component": "Active|Guard|Reserve|AGR",
+  "fullName": "Last, First Middle",
+  "lastName": "string",
+  "firstName": "string", 
+  "middleName": "string",
+  "ssnLast4": "string (last 4 only)",
+  "serviceNumber": "string (if applicable)",
+  "dateOfBirth": "YYYY-MM-DD",
+  "placeOfBirth": "City, State, Country",
+  "homeOfRecord": "City, County, State",
+  "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
+  "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
   "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force",
-  "mos": "MOS/Rating code from Block 4b/5/11",
-  "mosTitle": "Job title/specialty name",
-  "entryDate": "YYYY-MM-DD",
-  "separationDate": "YYYY-MM-DD",
+  "rank": "PV1|SGT|CPT|etc (Block 4c)",
+  "payGrade": "E-1|E-4|O-3|etc (Block 4a)",
+  "dateOfRank": "YYYY-MM-DD (Block 17)",
+  "mos": "MOS code",
+  "mosTitle": "Job title",
+  "lastDutyAssignment": "Unit and major command",
+  "commandTransferredTo": "Next assignment/separation",
+  "sglCoverage": "SGLI amount",
+  "entryDate": "YYYY-MM-DD (Block 12a)",
+  "separationDate": "YYYY-MM-DD (Block 12b)",
+  "netActiveService": {"years":0,"months":0,"days":0},
+  "totalPriorActiveService": {"years":0,"months":0,"days":0},
+  "totalPriorInactiveService": {"years":0,"months":0,"days":0},
   "yearsService": number,
   "monthsService": number,
-  "separationType": "Retirement|ETS|Medical|etc",
-  "characterOfService": "Honorable|General|Other Than Honorable|etc",
-  "reenlisted": boolean,
+  "daysService": number,
+  "reserveObligationDate": "YYYY-MM-DD (Block 27)",
+  "daysLost": number,
   "foreignService": boolean,
-  "awards": [{"name":"name","abbreviation":"abbr","devices":[],"deviceCount":0,"isCombat":boolean,"sourceDocument":"source"}],
-  "combatService": {"hasVerifiedCombat":boolean,"indicators":[]},
-  "specialQualifications": [],
-  "extractionNotes": ["notes about extraction"]
+  "seaService": {"years":0,"months":0,"days":0},
+  "militaryEducation": ["course names"],
+  "separationAuthority": "regulation reference",
+  "separationCode": "SPD/SPN code",
+  "reentryCode": "RE-1|RE-2|RE-3|RE-4",
+  "separationType": "Honorable Discharge|ETS|Retirement|Medical|etc",
+  "characterOfService": "Honorable|General|OTH|etc",
+  "narrativeReason": "narrative reason text",
+  "giBlStatus": "eligible|transferred|etc",
+  "memberRequests": "requests made by member",
+  "homeAddress": "address at separation",
+  "awards": [{"name":"name","abbreviation":"abbr","devices":[],"deviceCount":0,"isCombat":boolean}],
+  "combatService": {"hasVerifiedCombat":boolean,"indicators":[],"deployments":[]},
+  "specialQualifications": ["Airborne","Ranger","SF","etc"],
+  "securityClearance": "level if mentioned",
+  "extractionNotes": ["important details"]
 }
 
-CRITICAL: Return ONLY valid JSON. No comments, no markdown, no explanations. JSON does not support // or /* comments.`;
+CRITICAL: Return ONLY valid JSON. No comments, markdown, or explanations.`;
 
 /**
  * Full System Prompt for Cloud AI (larger context)
@@ -140,24 +206,74 @@ When you receive text from multiple discharge documents (DD214s, NGB 22s, DD256/
    - This is where combat badges, campaign stars, and V devices are often listed
 
 OUTPUT FORMAT:
-Return a JSON object with this EXACT structure:
+Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
 {
   "documentCount": number,
   "documentTypes": ["DD214", "NGB22", "DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214|NGB22|DD256|DD257",
-  "component": "Active|Guard|Reserve|AGR",
-  "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force|Army National Guard|Air National Guard",
-  "mos": "Primary MOS/Rating code",
-  "mosTitle": "Job title",
-  "entryDate": "YYYY-MM-DD or null",
-  "separationDate": "YYYY-MM-DD (from Master Record)",
+  
+  // PERSONAL IDENTIFICATION (Blocks 1-7)
+  "fullName": "Last, First Middle",
+  "lastName": "string",
+  "firstName": "string",
+  "middleName": "string",
+  "ssnLast4": "last 4 digits only",
+  "serviceNumber": "service number if applicable",
+  "dateOfBirth": "YYYY-MM-DD (Block 5)",
+  "placeOfBirth": "City, State, Country (Block 6)",
+  "homeOfRecord": "City, County, State (Block 7)",
+  
+  // COMPONENT & RANK (Blocks 2, 4a-4c, 17)
+  "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
+  "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
+  "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force",
+  "rank": "PV1|PFC|SGT|CPT|etc (Block 4c)",
+  "payGrade": "E-1 through E-9|W-1 through W-5|O-1 through O-10 (Block 4a)",
+  "dateOfRank": "YYYY-MM-DD (Block 17)",
+  
+  // MOS & ASSIGNMENTS (Blocks 4b, 8, 9, 11)
+  "mos": "Primary MOS/AFSC/Rating code (Block 4b)",
+  "mosTitle": "Job title (Block 11)",
+  "lastDutyAssignment": "Unit and major command (Block 8)",
+  "commandTransferredTo": "Next assignment or separation location (Block 9)",
+  
+  // DATES & SERVICE TIME (Blocks 12a-12e)
+  "entryDate": "YYYY-MM-DD (Block 12a - Date Entered Active Duty THIS PERIOD)",
+  "separationDate": "YYYY-MM-DD (Block 12b)",
+  "netActiveService": {"years":number,"months":number,"days":number},
+  "totalPriorActiveService": {"years":number,"months":number,"days":number},
+  "totalPriorInactiveService": {"years":number,"months":number,"days":number},
   "yearsService": number,
   "monthsService": number,
-  "separationType": "Retirement|ETS|Medical|etc",
-  "characterOfService": "Honorable|General|etc",
-  "reenlisted": true/false,
-  "foreignService": true/false,
+  "daysService": number,
+  
+  // BENEFITS & OBLIGATIONS (Blocks 10, 26, 27, 28, 29)
+  "sglCoverage": "SGLI coverage amount (Block 10)",
+  "giBlStatus": "Post-9/11 GI Bill status (Block 26)",
+  "reserveObligationDate": "YYYY-MM-DD (Block 27)",
+  "daysLost": "number of days lost to AWOL/confinement (Block 28)",
+  "foreignService": boolean,
+  "foreignServiceDetails": "details from Block 29 or remarks",
+  "seaService": {"years":number,"months":number,"days":number},
+  
+  // SEPARATION INFO (Blocks 19-25)
+  "separationAuthority": "Regulatory authority (Block 19)",
+  "separationCode": "SPD/SPN code (Block 20)",
+  "reentryCode": "RE-1|RE-2|RE-3|RE-4 (Block 21)",
+  "separationProgramDesignator": "SPD code (Block 22)",
+  "separationType": "Type of separation (Block 23)",
+  "characterOfService": "Honorable|General|OTH|etc (Block 24)",
+  "narrativeReason": "Narrative reason for separation (Block 25)",
+  
+  // EDUCATION & TRAINING (Blocks 14, 15, 18)
+  "militaryEducation": ["Course names from Block 14 or Block 18 overflow"],
+  "memberRequests": "Member requests and options selected (Block 15)",
+  
+  // CONTACT (Block 30)
+  "homeAddress": "Home address at time of separation (Block 30)",
+  
+  // AWARDS & DECORATIONS (Blocks 13, 18)
   "awards": [
     {
       "name": "Full award name",
@@ -165,15 +281,24 @@ Return a JSON object with this EXACT structure:
       "devices": ["Oak Leaf Cluster", "V Device", "Bronze Service Star"],
       "deviceCount": number,
       "isCombat": true/false,
-      "sourceDocument": "Master Record|DD214 #1|NGB 22|DD256|etc"
+      "sourceDocument": "Master Record|DD214 #1|NGB 22|etc"
     }
   ],
+  
+  // COMBAT SERVICE & QUALIFICATIONS (from Block 13, 18)
   "combatService": {
     "hasVerifiedCombat": true/false,
-    "indicators": ["Combat Action Badge", "Purple Heart", "Iraq Campaign Medal", etc]
+    "indicators": ["Combat Action Badge", "Purple Heart", "Iraq Campaign Medal"],
+    "deployments": ["Iraq 2003-2004", "Afghanistan 2010-2011"]
   },
-  "specialQualifications": ["Airborne", "Ranger", "etc"],
-  "extractionNotes": ["Any issues or ambiguities found"]
+  "specialQualifications": ["Airborne", "Ranger", "Special Forces", "Air Assault"],
+  "securityClearance": "Secret|Top Secret|TS/SCI if mentioned in remarks",
+  
+  // LEGACY FIELDS (for backwards compatibility)
+  "reenlisted": true/false,
+  
+  // METADATA
+  "extractionNotes": ["Any issues, ambiguities, or important details"]
 }
 
 RETURN ONLY THE JSON. No explanations, no markdown.`;
@@ -771,17 +896,72 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
       // Note: Use EITHER serviceStartDate OR entryDate, not both (they're duplicates)
       // Same for serviceEndDate/separationDate
       const rawProfileData = {
+        // Personal Identification
+        fullName: result.fullName,
+        lastName: result.lastName,
+        firstName: result.firstName,
+        middleName: result.middleName,
+        ssnLast4: result.ssnLast4,
+        serviceNumber: result.serviceNumber,
+        dateOfBirth: validateDate(result.dateOfBirth),
+        placeOfBirth: result.placeOfBirth,
+        homeOfRecord: result.homeOfRecord,
+        
+        // Component & Rank
         branch: result.branch,
+        component: result.component,
+        componentFull: result.componentFull,
+        rank: result.rank,
+        payGrade: result.payGrade,
+        dateOfRank: validateDate(result.dateOfRank),
+        
+        // MOS & Assignments
         mos: result.mos,
         mosTitle: result.mosTitle,
+        lastDutyAssignment: result.lastDutyAssignment,
+        commandTransferredTo: result.commandTransferredTo,
+        
+        // Dates & Service Time
         entryDate: validatedEntryDate,
         separationDate: validatedSeparationDate,
-        separationType: result.separationType,
-        characterOfService: result.characterOfService,
-        reenlisted: result.reenlisted,
-        foreignService: result.foreignService,
+        netActiveService: result.netActiveService,
+        totalPriorActiveService: result.totalPriorActiveService,
+        totalPriorInactiveService: result.totalPriorInactiveService,
         yearsService: result.yearsService,
         monthsService: result.monthsService,
+        daysService: result.daysService,
+        
+        // Benefits & Obligations
+        sglCoverage: result.sglCoverage,
+        giBlStatus: result.giBlStatus,
+        reserveObligationDate: validateDate(result.reserveObligationDate),
+        daysLost: result.daysLost,
+        foreignService: result.foreignService,
+        foreignServiceDetails: result.foreignServiceDetails,
+        seaService: result.seaService,
+        
+        // Separation Info
+        separationAuthority: result.separationAuthority,
+        separationCode: result.separationCode,
+        reentryCode: result.reentryCode,
+        separationProgramDesignator: result.separationProgramDesignator,
+        separationType: result.separationType,
+        characterOfService: result.characterOfService,
+        narrativeReason: result.narrativeReason,
+        
+        // Education & Training
+        militaryEducation: result.militaryEducation,
+        memberRequests: result.memberRequests,
+        
+        // Contact
+        homeAddress: result.homeAddress,
+        
+        // Combat & Qualifications
+        specialQualifications: result.specialQualifications,
+        securityClearance: result.securityClearance,
+        
+        // Legacy
+        reenlisted: result.reenlisted,
       };
 
       // Filter out undefined/null values but keep empty strings for user to fill
@@ -869,12 +1049,23 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
       // Save DD214 data to service history (includes all fields)
       saveDD214Data({
         branch: analysisResult.branch,
+        component: analysisResult.component,
+        componentFull: analysisResult.componentFull,
+        rank: analysisResult.rank,
+        payGrade: analysisResult.payGrade,
+        dateOfRank: analysisResult.dateOfRank,
         mos: analysisResult.mos,
         mosTitle: analysisResult.mosTitle,
         entryDate: analysisResult.entryDate,
         separationDate: analysisResult.separationDate,
+        netActiveService: analysisResult.netActiveService,
+        totalPriorActiveService: analysisResult.totalPriorActiveService,
+        totalPriorInactiveService: analysisResult.totalPriorInactiveService,
         yearsService: analysisResult.yearsService,
         monthsService: analysisResult.monthsService,
+        daysService: analysisResult.daysService,
+        reserveObligationDate: analysisResult.reserveObligationDate,
+        militaryEducation: analysisResult.militaryEducation,
         separationType: analysisResult.separationType,
         characterOfService: analysisResult.characterOfService,
         reenlisted: analysisResult.reenlisted,
@@ -1292,11 +1483,52 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
               </div>
 
               {/* Service Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {/* Personal Identification */}
+                {analysisResult.fullName && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.fullName}</p>
+                  </div>
+                )}
+                {analysisResult.dateOfBirth && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.dateOfBirth}</p>
+                  </div>
+                )}
+                {analysisResult.placeOfBirth && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Place of Birth</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.placeOfBirth}</p>
+                  </div>
+                )}
+                {analysisResult.homeOfRecord && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Home of Record</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.homeOfRecord}</p>
+                  </div>
+                )}
+                
+                {/* Branch & Component */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'branch')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.branch || t('dd214Analyzer', 'na')}</p>
                 </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Component</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.componentFull || analysisResult.component || t('dd214Analyzer', 'na')}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Rank</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.rank || t('dd214Analyzer', 'na')}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Pay Grade</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.payGrade || t('dd214Analyzer', 'na')}</p>
+                </div>
+                
+                {/* MOS & Assignments */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'mos')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">
@@ -1304,18 +1536,167 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
                       ? (analysisResult.mos?.code || JSON.stringify(analysisResult.mos)) 
                       : (analysisResult.mos || t('dd214Analyzer', 'na'))}
                   </p>
+                  {analysisResult.mosTitle && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{analysisResult.mosTitle}</p>
+                  )}
                 </div>
+                {analysisResult.lastDutyAssignment && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Last Duty Assignment</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.lastDutyAssignment}</p>
+                  </div>
+                )}
+                {analysisResult.commandTransferredTo && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Command Transferred To</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.commandTransferredTo}</p>
+                  </div>
+                )}
+                
+                {/* Service Dates */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'timeInService')}</p>
-                  <p className="font-bold text-gray-900 dark:text-gray-100">
-                    {analysisResult.yearsService ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m` : t('dd214Analyzer', 'na')}
-                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Entry Date</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.entryDate || t('dd214Analyzer', 'na')}</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('dd214Analyzer', 'separation')}</p>
                   <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationDate || t('dd214Analyzer', 'na')}</p>
                 </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Net Active Service</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">
+                    {analysisResult.netActiveService 
+                      ? `${analysisResult.netActiveService.years || 0}y ${analysisResult.netActiveService.months || 0}m ${analysisResult.netActiveService.days || 0}d`
+                      : (analysisResult.yearsService ? `${analysisResult.yearsService}y ${analysisResult.monthsService || 0}m ${analysisResult.daysService || 0}d` : t('dd214Analyzer', 'na'))}
+                  </p>
+                </div>
+                {analysisResult.totalPriorActiveService && (analysisResult.totalPriorActiveService.years > 0 || analysisResult.totalPriorActiveService.months > 0 || analysisResult.totalPriorActiveService.days > 0) && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Prior Active Service</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">
+                      {`${analysisResult.totalPriorActiveService.years || 0}y ${analysisResult.totalPriorActiveService.months || 0}m ${analysisResult.totalPriorActiveService.days || 0}d`}
+                    </p>
+                  </div>
+                )}
+                {analysisResult.totalPriorInactiveService && (analysisResult.totalPriorInactiveService.years > 0 || analysisResult.totalPriorInactiveService.months > 0 || analysisResult.totalPriorInactiveService.days > 0) && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Prior Inactive Service</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">
+                      {`${analysisResult.totalPriorInactiveService.years || 0}y ${analysisResult.totalPriorInactiveService.months || 0}m ${analysisResult.totalPriorInactiveService.days || 0}d`}
+                    </p>
+                  </div>
+                )}
+                {analysisResult.seaService && (analysisResult.seaService.years > 0 || analysisResult.seaService.months > 0 || analysisResult.seaService.days > 0) && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Sea Service</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">
+                      {`${analysisResult.seaService.years || 0}y ${analysisResult.seaService.months || 0}m ${analysisResult.seaService.days || 0}d`}
+                    </p>
+                  </div>
+                )}
+                {analysisResult.dateOfRank && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Date of Rank</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.dateOfRank}</p>
+                  </div>
+                )}
+                
+                {/* Benefits & Obligations */}
+                {analysisResult.sglCoverage && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">SGLI Coverage</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.sglCoverage}</p>
+                  </div>
+                )}
+                {analysisResult.giBlStatus && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">GI Bill Status</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.giBlStatus}</p>
+                  </div>
+                )}
+                {analysisResult.reserveObligationDate && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Reserve Obligation End</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.reserveObligationDate}</p>
+                  </div>
+                )}
+                {analysisResult.daysLost && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Days Lost</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.daysLost}</p>
+                  </div>
+                )}
+                
+                {/* Separation Info */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Character of Service</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.characterOfService || t('dd214Analyzer', 'na')}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Separation Type</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationType || t('dd214Analyzer', 'na')}</p>
+                </div>
+                {analysisResult.separationCode && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Separation Code</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.separationCode}</p>
+                  </div>
+                )}
+                {analysisResult.reentryCode && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Reentry Code</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.reentryCode}</p>
+                  </div>
+                )}
+                {analysisResult.narrativeReason && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Narrative Reason</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.narrativeReason}</p>
+                  </div>
+                )}
+                {analysisResult.separationAuthority && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Separation Authority</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.separationAuthority}</p>
+                  </div>
+                )}
+                
+                {/* Contact */}
+                {analysisResult.homeAddress && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Home Address at Separation</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.homeAddress}</p>
+                  </div>
+                )}
+                
+                {/* Qualifications */}
+                {analysisResult.securityClearance && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Security Clearance</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{analysisResult.securityClearance}</p>
+                  </div>
+                )}
+                {analysisResult.specialQualifications && analysisResult.specialQualifications.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Special Qualifications</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{analysisResult.specialQualifications.join(', ')}</p>
+                  </div>
+                )}
               </div>
+
+              {/* Military Education */}
+              {analysisResult.militaryEducation && analysisResult.militaryEducation.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+                    🎓 Military Education ({analysisResult.militaryEducation.length})
+                  </h4>
+                  <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300\">
+                    {analysisResult.militaryEducation.map((course, idx) => (
+                      <li key={idx}>• {course}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Combat Service */}
               {analysisResult.combatService?.hasVerifiedCombat && (

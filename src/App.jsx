@@ -252,6 +252,9 @@ function App() {
   const [showCommandSearch, setShowCommandSearch] = useState(false);
   const [showAtomicWipe, setShowAtomicWipe] = useState(false);
   
+  // BlueButton -> Pathfinder transfer state
+  const [pathfinderInitialConditions, setPathfinderInitialConditions] = useState(null);
+  
   // MOBILE: Small screen warning
   const [dismissedSmallScreenWarning, setDismissedSmallScreenWarning] = useState(
     sessionStorage.getItem('vetrate-small-screen-dismissed') === 'true'
@@ -2459,7 +2462,11 @@ function App() {
           onResume={handleResumeFromPacket}
           onClose={() => setShowMyPacket(false)}
           onReportBug={() => setShowBugSquasher(true)}
-          onAnalyzeStrategy={() => { setShowMyPacket(false); setShowPathfinder(true); }}
+          onAnalyzeStrategy={() => { 
+            setPathfinderInitialConditions(null); // Clear any stale conditions
+            setShowMyPacket(false); 
+            setShowPathfinder(true); 
+          }}
           onOpenGoogleDriveSync={() => { setShowMyPacket(false); setShowCloudSync(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
           onOpenDD214Analyzer={() => { setShowMyPacket(false); setShowDD214Analyzer(true); }}
@@ -2643,7 +2650,10 @@ function App() {
       {showPathfinder && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
-          onClick={() => setShowPathfinder(false)}
+          onClick={() => {
+            setPathfinderInitialConditions(null); // Clear conditions when closing
+            setShowPathfinder(false);
+          }}
         >
           <div 
             className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
@@ -2666,7 +2676,10 @@ function App() {
                 <div className="flex items-center gap-2">
                   <ReportBugLink onClick={() => { setShowPathfinder(false); setShowBugSquasher(true); }} variant="light" moduleName="Pathfinder" />
                   <button
-                    onClick={() => setShowPathfinder(false)}
+                    onClick={() => {
+                      setPathfinderInitialConditions(null); // Clear conditions when closing
+                      setShowPathfinder(false);
+                    }}
                     className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                     aria-label="Close"
                   >
@@ -2681,6 +2694,7 @@ function App() {
               <Pathfinder 
                 onNavigate={handlePathfinderNavigate}
                 onOpenAISettings={() => setShowAISettings(true)}
+                initialConditions={pathfinderInitialConditions}
               />
             </div>
           </div>
@@ -2831,6 +2845,8 @@ function App() {
           onClose={() => setShowBlueButtonXRay(false)}
           onAddToCalculator={(conditions) => {
             // Add conditions to Pathfinder for analysis
+            console.log('BlueButton: Transferring', conditions.length, 'conditions to Pathfinder');
+            setPathfinderInitialConditions(conditions);
             setShowBlueButtonXRay(false);
             setShowPathfinder(true);
           }}
