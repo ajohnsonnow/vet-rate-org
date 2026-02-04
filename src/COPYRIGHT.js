@@ -3,54 +3,51 @@
  * VET-RATE.ORG - COPYRIGHT NOTICE
  * ============================================================================
  * 
- * Copyright (c) 2024-2026 Anthony Johnson (Vet-Rate.org)
- * All Rights Reserved.
+ * Copyright (C) 2024-2026 Anthony Johnson (Vet-Rate.org)
  * 
- * PROPRIETARY SOFTWARE LICENSE
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License (AGPL v3.0)
+ * as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  * 
- * This software and its source code are the exclusive property of Anthony 
- * Johnson and Vet-Rate.org. Unauthorized copying, modification, distribution, 
- * or use of this software, in whole or in part, is strictly prohibited.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  * 
- * LICENSE RESTRICTIONS:
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  * 
- * 1. NO UNAUTHORIZED USE: This code may not be used, copied, modified, merged,
- *    published, distributed, sublicensed, and/or sold without explicit written 
- *    permission from the copyright holder.
+ * ============================================================================
+ * WHY AGPL v3.0?
+ * ============================================================================
  * 
- * 2. NO COMMERCIAL USE: This software may not be used for commercial purposes 
- *    by any party other than the copyright holder without a commercial license.
+ * Vet-Rate.org is built to protect veterans, not profit from them.
+ * The AGPL v3.0 license ensures that:
  * 
- * 3. NO DERIVATIVE WORKS: Creation of derivative works based on this software
- *    is prohibited without explicit written permission.
+ * 1. TRANSPARENCY: Anyone can audit the code to verify privacy claims.
  * 
- * 4. NO CLAIM SHARK USE: Use of this software or its concepts by any entity
- *    that charges veterans for claims assistance, "coaching," or similar 
- *    services is expressly prohibited.
+ * 2. COMMUNITY FIRST: If anyone takes this code to run a public service
+ *    (like a claims website), they MUST release their source code under
+ *    this same license. This prevents predatory companies from taking this
+ *    free tool, modifying it, and charging veterans for access without
+ *    giving back to the community.
  * 
- * 5. ATTRIBUTION REQUIRED: If permission is granted for any use, proper 
- *    attribution to Vet-Rate.org and the original author must be maintained.
+ * 3. NETWORK USE = DISTRIBUTION: The AGPL's special provision means that
+ *    even if someone runs a modified version as a web service, they must
+ *    provide the source code to users. This is crucial for protecting
+ *    veterans from hidden exploitative modifications.
  * 
- * LEGAL NOTICE:
+ * 4. COPYLEFT PROTECTION: Any derivative works must also be licensed under
+ *    AGPL v3.0, ensuring the veteran community always has access to
+ *    improvements and modifications.
  * 
- * Violation of this license may result in legal action including but not 
- * limited to:
- * - Injunctive relief
- * - Actual damages
- * - Statutory damages under applicable copyright law
- * - Attorney's fees and costs
+ * ============================================================================
+ * CONTACT
+ * ============================================================================
  * 
- * This software contains proprietary algorithms, data structures, and 
- * methodologies developed specifically for assisting veterans with VA 
- * disability claims. These constitute trade secrets protected under 
- * applicable law.
- * 
- * DIGITAL MILLENNIUM COPYRIGHT ACT (DMCA) NOTICE:
- * Circumvention of any technological measures used to protect this software
- * is prohibited under 17 U.S.C. § 1201.
- * 
- * CONTACT:
- * For licensing inquiries: https://vet-rate.org/contact
+ * Website: https://vet-rate.org
+ * License: https://www.gnu.org/licenses/agpl-3.0.html
  * 
  * Built with love by a fellow service-disabled veteran.
  * "Serving those who served."
@@ -62,16 +59,17 @@ export const COPYRIGHT = {
   owner: 'Anthony Johnson (Vet-Rate.org)',
   years: '2024-2026',
   website: 'https://vet-rate.org',
-  notice: 'All Rights Reserved. Unauthorized use prohibited.',
+  license: 'GNU Affero General Public License v3.0 (AGPL-3.0)',
+  licenseUrl: 'https://www.gnu.org/licenses/agpl-3.0.html',
+  notice: 'Licensed under AGPL-3.0. See LICENSE file for details.',
   version: '1.0.0'
 };
 
 export const COPYRIGHT_HEADER = `
 /**
- * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
- * All Rights Reserved. Proprietary and Confidential.
- * Unauthorized copying, use, or distribution is strictly prohibited.
- * See COPYRIGHT.js for full license terms.
+ * Vet-Rate.org - Copyright (C) 2024-2026 Anthony Johnson
+ * Licensed under GNU Affero General Public License v3.0 (AGPL-3.0)
+ * See LICENSE file or https://www.gnu.org/licenses/agpl-3.0.html
  */
 `;
 
