@@ -51,6 +51,8 @@ const BRANDS = {
     // Legal
     copyright: '© 2024-2026 Anthony Johnson (Vet-Rate.org)',
     copyrightHolder: 'Anthony Johnson',
+    license: 'AGPL-3.0',
+    licenseUrl: 'https://www.gnu.org/licenses/agpl-3.0.html',
     
     // Social/Support
     supportEmail: 'support@vet-rate.org',
@@ -92,6 +94,8 @@ const BRANDS = {
     // Legal
     copyright: '© 2024-2026 Anthony Johnson (Supply Locker)',
     copyrightHolder: 'Anthony Johnson',
+    license: 'AGPL-3.0',
+    licenseUrl: 'https://www.gnu.org/licenses/agpl-3.0.html',
     
     // Social/Support
     supportEmail: 'support@supplylocker.vet',
