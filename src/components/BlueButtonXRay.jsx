@@ -620,38 +620,91 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       const allConditions = [];
       const summaries = [];
       
-      // Process each chunk
-      for (let i = 0; i < chunks.length; i++) {
-        setProcessingStage(`Processing section ${i + 1} of ${chunks.length}...`);
+      /**
+       * Process a single chunk with retry logic and multiple fallback strategies
+       * NO FAILED SECTIONS ALLOWED - we try everything possible
+       */
+      const processChunkWithRetry = async (chunkText, chunkIndex) => {
+        const MAX_RETRIES = 3;
+        const strategies = [
+          { maxTokens: 2000, temp: 0.2, name: 'Standard' },
+          { maxTokens: 3000, temp: 0.1, name: 'Extended+Precise' },
+          { maxTokens: 4000, temp: 0.0, name: 'Maximum+Deterministic' }
+        ];
         
-        try {
-          // Structure: HEADER + chunk + FOOTER (JSON instructions at END)
-          const chunkPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + chunks[i] + BLUE_BUTTON_AI_PROMPT_FOOTER;
-          
-          const aiResponse = await generateAI(chunkPrompt, {
-            temperature: 0.2,
-            maxTokens: 2000,
-            expectJSON: true,
-            skipHallucinationCheck: true, // Blue Button finds conditions, doesn't validate VA codes yet
-            skipCrisisCheck: true, // Medical records contain terms that trigger false positives
-            useDKB: false, // Skip DKB - we're just extracting medical terms, not citing VA regulations
-            systemPrompt: '' // Skip system prompt - the prompt already has all context needed
-          });
-          
-          const parsed = parseAIResponse(aiResponse);
-          
-          if (parsed && parsed.conditions && Array.isArray(parsed.conditions) && parsed.conditions.length > 0) {
-            allConditions.push(...parsed.conditions);
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          try {
+            const strategy = strategies[attempt];
+            setProcessingStage(`Processing section ${chunkIndex + 1} of ${chunks.length}... (${strategy.name})`);
+            
+            const chunkPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
+            
+            const aiResponse = await generateAI(chunkPrompt, {
+              temperature: strategy.temp,
+              maxTokens: strategy.maxTokens,
+              expectJSON: true,
+              skipHallucinationCheck: true,
+              skipCrisisCheck: true,
+              useDKB: false,
+              systemPrompt: ''
+            });
+            
+            const parsed = parseAIResponse(aiResponse);
+            
+            // Success! Return results
+            if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
+              console.log(`✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`);
+              return parsed;
+            }
+            
+          } catch (error) {
+            console.warn(`⚠️ Section ${chunkIndex + 1} attempt ${attempt + 1}/${MAX_RETRIES} failed:`, error.message);
+            
+            // If this was the last attempt, try regex fallback
+            if (attempt === MAX_RETRIES - 1) {
+              console.log(`🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`);
+              const fallbackConditions = extractConditionsFromText(chunkText);
+              
+              if (fallbackConditions.length > 0) {
+                console.log(`✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`);
+                return {
+                  conditions: fallbackConditions,
+                  summary: `Extracted via fallback (section ${chunkIndex + 1})`,
+                  wasFallback: true
+                };
+              }
+            }
+            
+            // Wait before retry (exponential backoff)
+            if (attempt < MAX_RETRIES - 1) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            }
           }
-          
-          if (parsed && parsed.summary) {
-            summaries.push(parsed.summary);
-          }
-        } catch (chunkError) {
-          // Log but don't fail - continue processing remaining chunks
-          console.warn(`⚠️ Failed to process section ${i + 1}:`, chunkError.message);
-          // Add a note to summaries about the failed section
-          summaries.push(`Note: Section ${i + 1} could not be processed due to parsing error.`);
+        }
+        
+        // ABSOLUTE LAST RESORT: Return empty but don't crash
+        console.error(`❌ Section ${chunkIndex + 1} FAILED after all strategies - returning empty results`);
+        return {
+          conditions: [],
+          summary: `Section ${chunkIndex + 1}: Could not extract conditions after ${MAX_RETRIES} attempts + fallback`,
+          failed: true
+        };
+      };
+      
+      // Process each chunk with bulletproof retry logic
+      for (let i = 0; i < chunks.length; i++) {
+        const result = await processChunkWithRetry(chunks[i], i);
+        
+        if (result.conditions && result.conditions.length > 0) {
+          allConditions.push(...result.conditions);
+        }
+        
+        if (result.summary) {
+          summaries.push(result.summary);
+        }
+        
+        if (result.failed) {
+          console.warn(`⚠️ Section ${i + 1} marked as failed but processing continues`);
         }
         
         // Small delay between chunks to avoid rate limiting
@@ -719,56 +772,112 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       try {
         parsed = JSON.parse(cleanResponse);
       } catch (jsonErr) {
-        // Attempt to repair truncated JSON
-        console.log('💡 Attempting to repair truncated JSON...');
+        // AGGRESSIVE JSON REPAIR - we need this to work!
+        console.log('💡 Attempting advanced JSON repair...');
         let repaired = cleanResponse;
         
-        // First, handle truncated strings (very common with token limits)
-        // Find if we're in the middle of a string
-        const quoteCount = (repaired.match(/"/g) || []).length;
-        if (quoteCount % 2 !== 0) {
-          // Odd number of quotes - we're mid-string
-          // Truncate back to the last complete property
-          const lastGoodPoint = Math.max(
-            repaired.lastIndexOf('"},'),      // After complete object
-            repaired.lastIndexOf('"true'),    // After boolean
-            repaired.lastIndexOf('"false'),   // After boolean
-            repaired.lastIndexOf('"null'),    // After null
-            repaired.lastIndexOf('": "'),     // At start of string value - not good, go back more
-          );
+        // Strategy 1: Remove trailing garbage after last complete structure
+        const lastCloseBrace = repaired.lastIndexOf('}');
+        const lastCloseBracket = repaired.lastIndexOf(']');
+        
+        if (lastCloseBrace > 0 || lastCloseBracket > 0) {
+          // Find the outermost closing position
+          const lastValidPos = Math.max(lastCloseBrace, lastCloseBracket);
           
-          // Find the last complete object ending with }
-          const lastCompleteObjWithComma = repaired.lastIndexOf('},');
-          const lastCompleteObj = repaired.lastIndexOf('}');
-          
-          if (lastCompleteObjWithComma > 0) {
-            repaired = repaired.substring(0, lastCompleteObjWithComma + 1);
-          } else if (lastCompleteObj > 100) { // Make sure we have substantial content
-            repaired = repaired.substring(0, lastCompleteObj + 1);
+          // Check if there's garbage after this position
+          const afterLast = repaired.substring(lastValidPos + 1).trim();
+          if (afterLast.length > 0 && !afterLast.match(/^[}\]]*$/)) {
+            // Truncate to last valid JSON structure
+            repaired = repaired.substring(0, lastValidPos + 1);
+            console.log('🔧 Removed trailing garbage');
           }
         }
         
-        // Count open brackets/braces
+        // Strategy 2: Handle truncated strings (very common with token limits)
+        const quoteCount = (repaired.match(/"/g) || []).length;
+        if (quoteCount % 2 !== 0) {
+          console.log('🔧 Detected unmatched quotes - finding last complete object');
+          
+          // Find last complete object (ends with },)
+          const patterns = [
+            /},\s*{[^}]*$/,          // Last incomplete object after comma
+            /"[^"]*$/,                // Incomplete string at end
+            /:\s*"[^"]*$/,            // Incomplete property value
+          ];
+          
+          for (const pattern of patterns) {
+            const match = repaired.match(pattern);
+            if (match) {
+              const cutPosition = match.index;
+              repaired = repaired.substring(0, cutPosition);
+              console.log(`🔧 Cut at position ${cutPosition} to remove incomplete content`);
+              break;
+            }
+          }
+        }
+        
+        // Strategy 3: Balance brackets and braces
         const openBraces = (repaired.match(/{/g) || []).length;
         const closeBraces = (repaired.match(/}/g) || []).length;
         const openBrackets = (repaired.match(/\[/g) || []).length;
         const closeBrackets = (repaired.match(/\]/g) || []).length;
         
-        // Close any open arrays/objects
+        console.log(`🔧 Brackets: ${openBrackets} open, ${closeBrackets} close | Braces: ${openBraces} open, ${closeBraces} close`);
+        
+        // Close arrays first (conditions array)
         if (repaired.includes('"conditions"') && openBrackets > closeBrackets) {
-          for (let i = 0; i < openBrackets - closeBrackets; i++) {
+          const missing = openBrackets - closeBrackets;
+          console.log(`🔧 Adding ${missing} closing brackets`);
+          for (let i = 0; i < missing; i++) {
             repaired += ']';
           }
         }
-        for (let i = 0; i < openBraces - (repaired.match(/}/g) || []).length; i++) {
-          repaired += '}';
+        
+        // Close objects
+        const currentCloseBraces = (repaired.match(/}/g) || []).length;
+        const neededBraces = openBraces - currentCloseBraces;
+        if (neededBraces > 0) {
+          console.log(`🔧 Adding ${neededBraces} closing braces`);
+          for (let i = 0; i < neededBraces; i++) {
+            repaired += '}';
+          }
         }
         
+        // Strategy 4: If still failing, try to extract just the conditions array
         try {
           parsed = JSON.parse(repaired);
-          console.log('✅ Repaired truncated JSON successfully');
-        } catch {
-          throw jsonErr; // Rethrow original error if repair failed
+          console.log('✅ Repaired JSON successfully');
+        } catch (stillFailing) {
+          console.log('🔧 Standard repair failed, trying to extract conditions array directly...');
+          
+          // Try to find and extract just the conditions array
+          const conditionsMatch = repaired.match(/"conditions"\s*:\s*\[([\s\S]*?)(?:\]|$)/);
+          if (conditionsMatch) {
+            let conditionsContent = conditionsMatch[1];
+            
+            // Try to complete the last object if it's incomplete
+            const lastOpenBrace = conditionsContent.lastIndexOf('{');
+            const lastCloseBrace = conditionsContent.lastIndexOf('}');
+            
+            if (lastOpenBrace > lastCloseBrace) {
+              // Incomplete object - remove it
+              conditionsContent = conditionsContent.substring(0, lastOpenBrace);
+            }
+            
+            // Remove trailing comma
+            conditionsContent = conditionsContent.trim().replace(/,\s*$/, '');
+            
+            const reconstructed = `{"conditions":[${conditionsContent}]}`;
+            
+            try {
+              parsed = JSON.parse(reconstructed);
+              console.log('✅ Extracted conditions array successfully');
+            } catch {
+              throw jsonErr; // Give up, rethrow original
+            }
+          } else {
+            throw jsonErr; // No conditions array found
+          }
         }
       }
       
