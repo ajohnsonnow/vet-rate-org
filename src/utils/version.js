@@ -38,7 +38,7 @@ export const APP_VERSION = packageJson.version;
 export const SCHEMA_VERSION = '1.1.0';
 
 // Last update date (for changelog display)
-export const LAST_UPDATE_DATE = '2026-02-02';
+export const LAST_UPDATE_DATE = '2026-02-03';
 
 // Update check interval (milliseconds) - 15 minutes
 export const UPDATE_CHECK_INTERVAL = 15 * 60 * 1000;
