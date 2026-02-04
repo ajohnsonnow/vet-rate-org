@@ -624,27 +624,34 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       for (let i = 0; i < chunks.length; i++) {
         setProcessingStage(`Processing section ${i + 1} of ${chunks.length}...`);
         
-        // Structure: HEADER + chunk + FOOTER (JSON instructions at END)
-        const chunkPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + chunks[i] + BLUE_BUTTON_AI_PROMPT_FOOTER;
-        
-        const aiResponse = await generateAI(chunkPrompt, {
-          temperature: 0.2,
-          maxTokens: 2000,
-          expectJSON: true,
-          skipHallucinationCheck: true, // Blue Button finds conditions, doesn't validate VA codes yet
-          skipCrisisCheck: true, // Medical records contain terms that trigger false positives
-          useDKB: false, // Skip DKB - we're just extracting medical terms, not citing VA regulations
-          systemPrompt: '' // Skip system prompt - the prompt already has all context needed
-        });
-        
-        const parsed = parseAIResponse(aiResponse);
-        
-        if (parsed.conditions && parsed.conditions.length > 0) {
-          allConditions.push(...parsed.conditions);
-        }
-        
-        if (parsed.summary) {
-          summaries.push(parsed.summary);
+        try {
+          // Structure: HEADER + chunk + FOOTER (JSON instructions at END)
+          const chunkPrompt = BLUE_BUTTON_AI_PROMPT_HEADER + chunks[i] + BLUE_BUTTON_AI_PROMPT_FOOTER;
+          
+          const aiResponse = await generateAI(chunkPrompt, {
+            temperature: 0.2,
+            maxTokens: 2000,
+            expectJSON: true,
+            skipHallucinationCheck: true, // Blue Button finds conditions, doesn't validate VA codes yet
+            skipCrisisCheck: true, // Medical records contain terms that trigger false positives
+            useDKB: false, // Skip DKB - we're just extracting medical terms, not citing VA regulations
+            systemPrompt: '' // Skip system prompt - the prompt already has all context needed
+          });
+          
+          const parsed = parseAIResponse(aiResponse);
+          
+          if (parsed && parsed.conditions && Array.isArray(parsed.conditions) && parsed.conditions.length > 0) {
+            allConditions.push(...parsed.conditions);
+          }
+          
+          if (parsed && parsed.summary) {
+            summaries.push(parsed.summary);
+          }
+        } catch (chunkError) {
+          // Log but don't fail - continue processing remaining chunks
+          console.warn(`⚠️ Failed to process section ${i + 1}:`, chunkError.message);
+          // Add a note to summaries about the failed section
+          summaries.push(`Note: Section ${i + 1} could not be processed due to parsing error.`);
         }
         
         // Small delay between chunks to avoid rate limiting
@@ -771,12 +778,18 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       
       return parsed;
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      // Safely log raw response
-      const rawForLog = typeof aiResponse === 'string' 
-        ? aiResponse.substring(0, 500) 
-        : JSON.stringify(aiResponse).substring(0, 500);
-      console.error('Raw response:', rawForLog);
+      console.error('Failed to parse AI response:', parseError.message || parseError);
+      // Safely log raw response (limit to 500 chars for readability)
+      try {
+        const rawForLog = typeof aiResponse === 'string' 
+          ? aiResponse.substring(0, 500) 
+          : (aiResponse && typeof aiResponse === 'object' 
+              ? JSON.stringify({text: aiResponse.text?.substring(0, 400), mode: aiResponse.mode})
+              : String(aiResponse).substring(0, 500));
+        console.error('Raw response:', rawForLog);
+      } catch (logError) {
+        console.error('Could not log raw response:', logError.message);
+      }
       
       // Check for specific error messages that indicate recoverable situations
       const rawText = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.text || '');
