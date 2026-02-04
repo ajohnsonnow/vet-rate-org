@@ -1,14 +1,14 @@
-﻿import React from 'react';
+import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const TermsOfServicePage = ({ onClose }) => {
   const { t } = useLanguage();
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900">
-      <div className="max-w-5xl mx-auto bg-white shadow-2xl min-h-screen">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 dark:bg-gray-950">
+      <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 dark:bg-gray-900 shadow-2xl min-h-screen">
         {/* Header */}
-        <div className="bg-red-700 text-white px-8 py-6 border-b-4 border-red-900 sticky top-0 z-10">
+        <div className="bg-red-700 dark:bg-red-800 text-white px-8 py-6 border-b-4 border-red-900 dark:border-red-950 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -36,29 +36,29 @@ const TermsOfServicePage = ({ onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="px-8 py-8 space-y-8 text-gray-800">
+        <div className="px-8 py-8 space-y-8 text-gray-800 dark:text-gray-200">
           {/* Effective Date */}
-          <div className="text-center py-4 bg-gray-100 rounded-lg">
-            <p className="text-sm text-gray-600">Last Updated: <strong>January 18, 2026</strong></p>
-            <p className="text-xs text-gray-500 mt-1">By using Vet-Rate.org, you accept these terms in full</p>
+          <div className="text-center py-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <p className="text-sm text-gray-600 dark:text-gray-300">Last Updated: <strong>January 18, 2026</strong></p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">By using Vet-Rate.org, you accept these terms in full</p>
           </div>
 
           {/* Introduction */}
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 space-y-3">
-              <p className="leading-relaxed text-gray-800">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Introduction</h2>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-6 space-y-3">
+              <p className="leading-relaxed text-gray-800 dark:text-gray-200">
                 <strong>Vet-Rate.org</strong> is a free, privacy-first educational platform designed to help United 
                 States veterans understand VA disability rating criteria, organize their claim documentation, and 
                 navigate the complex veterans benefits system.
               </p>
-              <p className="leading-relaxed text-gray-800">
+              <p className="leading-relaxed text-gray-800 dark:text-gray-200">
                 This Terms of Service agreement establishes the legal framework governing your use of this platform. 
                 These terms are designed to protect both you (the veteran user) and the operators of this service by 
                 clearly defining what Vet-Rate.org is, what it is not, and the inherent limitations of self-help 
                 legal technology.
               </p>
-              <p className="leading-relaxed font-semibold text-gray-900">
+              <p className="leading-relaxed font-semibold text-gray-900 dark:text-gray-100">
                 Please read these terms carefully. They contain important information about your legal rights, 
                 remedies, and obligations, including mandatory liability waivers and disclaimers.
               </p>
@@ -66,27 +66,27 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Section 1: Non-Accreditation */}
-          <section className="border-l-4 border-blue-500 pl-6">
-            <h2 className="text-2xl font-bold text-blue-900 mb-4">
-              1. Non-Accreditation Clause (38 U.S.C. § 5901)
+          <section className="border-l-4 border-blue-500 dark:border-blue-600 pl-6">
+            <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-4">
+              1. Non-Accreditation Clause (38 U.S.C. � 5901)
             </h2>
             <div className="space-y-4 leading-relaxed">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="font-bold text-lg text-gray-900 mb-2">CRITICAL LEGAL DISCLOSURE:</p>
-                <p className="text-gray-800">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">CRITICAL LEGAL DISCLOSURE:</p>
+                <p className="text-gray-800 dark:text-gray-200">
                   Vet-Rate.org and its operators are <strong>NOT</strong>:
                 </p>
-                <ul className="list-disc list-inside space-y-1 mt-2 ml-4 text-gray-800">
-                  <li>An accredited Veterans Service Organization (VSO) under 38 U.S.C. § 5902</li>
+                <ul className="list-disc list-inside space-y-1 mt-2 ml-4 text-gray-800 dark:text-gray-200">
+                  <li>An accredited Veterans Service Organization (VSO) under 38 U.S.C. � 5902</li>
                   <li>A licensed attorney or law firm</li>
-                  <li>A VA-recognized claims agent under 38 C.F.R. § 14.627</li>
+                  <li>A VA-recognized claims agent under 38 C.F.R. � 14.627</li>
                   <li>A representative authorized to practice before the Department of Veterans Affairs</li>
                   <li>Affiliated with, endorsed by, or operating under the authority of the U.S. Department of Veterans Affairs</li>
                 </ul>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">What Vet-Rate.org Is:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">What Vet-Rate.org Is:</h3>
                 <p>
                   This platform is a <strong>self-help educational tool</strong> that provides:
                 </p>
@@ -100,7 +100,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div className="bg-gray-100 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Your Responsibility:</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Responsibility:</h3>
                 <p>
                   <span className="font-bold underline">You remain solely responsible for</span>: filing your own 
                   claims, verifying the accuracy of all information, making legal decisions, and ensuring compliance 
@@ -109,8 +109,8 @@ const TermsOfServicePage = ({ onClose }) => {
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-300 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   <svg className="inline w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
@@ -133,13 +133,13 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Section 2: Not Medical Advice */}
-          <section className="border-l-4 border-green-500 pl-6">
-            <h2 className="text-2xl font-bold text-green-900 mb-4">
+          <section className="border-l-4 border-green-500 dark:border-green-600 pl-6">
+            <h2 className="text-2xl font-bold text-green-900 dark:text-green-300 mb-4">
               2. Not Medical Advice or Diagnosis
             </h2>
             <div className="space-y-4 leading-relaxed">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="font-bold text-lg text-gray-900 mb-2">MEDICAL DISCLAIMER:</p>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">MEDICAL DISCLAIMER:</p>
                 <p className="text-gray-800">
                   No feature of Vet-Rate.org-including but not limited to the Nexus Letter Builder, Symptom Database, 
                   Secondary Conditions Scout, or any AI-generated content-constitutes medical advice, diagnosis, or 
@@ -148,7 +148,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">What These Tools Do:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">What These Tools Do:</h3>
                 <p className="mb-2">The medical-related features are <strong>organizational and educational tools</strong> that:</p>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Help you articulate symptoms using medically-recognized terminology</li>
@@ -160,7 +160,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">What These Tools Do NOT Do:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">What These Tools Do NOT Do:</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Diagnose medical conditions or diseases</li>
                   <li>Provide medical opinions about causation or etiology</li>
@@ -170,9 +170,9 @@ const TermsOfServicePage = ({ onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-red-50 border-2 border-red-400 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  ⚠️ Medical Evidence Requirements:
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-400 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  ?? Medical Evidence Requirements:
                 </h3>
                 <p className="text-gray-800">
                   <strong>VA claims require medical opinions from licensed healthcare professionals.</strong> You 
@@ -193,14 +193,14 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Section 3: AI Limitations */}
-          <section className="border-l-4 border-purple-500 pl-6">
-            <h2 className="text-2xl font-bold text-purple-900 mb-4">
+          <section className="border-l-4 border-purple-500 dark:border-purple-600 pl-6">
+            <h2 className="text-2xl font-bold text-purple-900 dark:text-purple-300 mb-4">
               3. Artificial Intelligence Limitations & Accuracy Disclaimer
             </h2>
             <div className="space-y-4 leading-relaxed">
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="font-bold text-lg text-gray-900 mb-2">AI-GENERATED CONTENT WARNING:</p>
-                <p className="text-gray-800">
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">AI-GENERATED CONTENT WARNING:</p>
+                <p className="text-gray-800 dark:text-gray-200">
                   Portions of this application utilize Artificial Intelligence (AI) technologies to generate text, 
                   suggest language, organize information, and provide research assistance. <strong>AI systems can 
                   and do make errors.</strong>
@@ -208,34 +208,34 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Known AI Limitations:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Known AI Limitations:</h3>
                 <div className="space-y-2">
-                  <div className="bg-white border-2 border-purple-400 p-3 rounded shadow-sm">
-                    <p className="font-semibold text-gray-900">Legal Citations:</p>
-                    <p className="text-sm text-gray-800">AI may cite case law that is outdated, overturned, misapplied, or 
+                  <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Legal Citations:</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200">AI may cite case law that is outdated, overturned, misapplied, or 
                     completely fabricated. All legal citations must be independently verified through official sources.</p>
                   </div>
                   
-                  <div className="bg-white border-2 border-purple-400 p-3 rounded shadow-sm">
-                    <p className="font-semibold text-gray-900">Medical Terminology:</p>
-                    <p className="text-sm text-gray-800">AI may use medical terms imprecisely, suggest inappropriate diagnostic 
+                  <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Medical Terminology:</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200">AI may use medical terms imprecisely, suggest inappropriate diagnostic 
                     criteria, or misunderstand symptom relationships. Medical content requires healthcare professional 
                     validation.</p>
                   </div>
                   
-                  <div className="bg-white border-2 border-purple-400 p-3 rounded shadow-sm">
-                    <p className="font-semibold text-gray-900">Regulatory Interpretation:</p>
-                    <p className="text-sm text-gray-800">VA regulations and policies change frequently. AI training data may not 
+                  <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Regulatory Interpretation:</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200">VA regulations and policies change frequently. AI training data may not 
                     reflect the most current guidance, policy memos, or regulatory amendments.</p>
                   </div>
                   
-                  <div className="bg-white border-2 border-purple-400 p-3 rounded shadow-sm">
+                  <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
                     <p className="font-semibold text-gray-900">Contextual Misunderstanding:</p>
                     <p className="text-sm text-gray-800">AI may fail to understand the unique context of your situation, leading 
                     to suggestions that are technically correct but practically inapplicable to your specific case.</p>
                   </div>
 
-                  <div className="bg-white border-2 border-purple-400 p-3 rounded shadow-sm">
+                  <div className="bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-600 p-3 rounded shadow-sm">
                     <p className="font-semibold text-gray-900">"Hallucinations":</p>
                     <p className="text-sm text-gray-800">AI can generate plausible-sounding but entirely false information, 
                     including fake statistics, non-existent studies, or fabricated legal precedents.</p>
@@ -243,16 +243,16 @@ const TermsOfServicePage = ({ onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-yellow-50 border-2 border-yellow-500 p-5 rounded-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 p-5 rounded-lg">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                   YOUR CRITICAL RESPONSIBILITY:
                 </h3>
                 <div className="space-y-2 text-gray-800">
-                  <p className="font-semibold">✓ Independently verify all AI-generated content</p>
-                  <p className="font-semibold">✓ Cross-reference legal citations with official sources</p>
-                  <p className="font-semibold">✓ Confirm medical information with healthcare professionals</p>
-                  <p className="font-semibold">✓ Review all VA form submissions for accuracy</p>
-                  <p className="font-semibold">✓ Never submit AI-generated content without thorough human review</p>
+                  <p className="font-semibold">? Independently verify all AI-generated content</p>
+                  <p className="font-semibold">? Cross-reference legal citations with official sources</p>
+                  <p className="font-semibold">? Confirm medical information with healthcare professionals</p>
+                  <p className="font-semibold">? Review all VA form submissions for accuracy</p>
+                  <p className="font-semibold">? Never submit AI-generated content without thorough human review</p>
                 </div>
               </div>
 
@@ -273,7 +273,7 @@ const TermsOfServicePage = ({ onClose }) => {
             </h2>
             <div className="space-y-4 leading-relaxed">
               <div className="bg-orange-50 p-4 rounded-lg">
-                <p className="font-bold text-lg text-gray-900 mb-2">PRIVACY-FIRST ARCHITECTURE:</p>
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">PRIVACY-FIRST ARCHITECTURE:</p>
                 <p className="text-gray-800">
                   Vet-Rate.org is intentionally designed as a <strong>serverless, browser-based application</strong> 
                   to protect your privacy. Vet-Rate.org does not store your data on any servers, in cloud databases, or in any 
@@ -282,7 +282,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">How Your Data Is Stored:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">How Your Data Is Stored:</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>All data is stored in your web browser's <code className="bg-gray-200 px-2 py-1 rounded text-sm">localStorage</code></li>
                   <li>Data remains on your local device only</li>
@@ -292,19 +292,19 @@ const TermsOfServicePage = ({ onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-red-50 border-4 border-red-600 p-6 rounded-lg">
+              <div className="bg-red-50 dark:bg-red-900/20 border-4 border-red-600 p-6 rounded-lg">
                 <div className="flex items-start gap-3">
                   <svg className="w-12 h-12 text-red-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                       CRITICAL DATA LOSS WARNING
                     </h3>
-                    <p className="text-gray-900 mb-3 font-semibold text-lg">
+                    <p className="text-gray-900 dark:text-gray-100 mb-3 font-semibold text-lg">
                       Your data WILL BE PERMANENTLY DELETED if you:
                     </p>
-                    <ul className="list-disc list-inside space-y-2 text-gray-800 ml-4">
+                    <ul className="list-disc list-inside space-y-2 text-gray-800 dark:text-gray-200 ml-4">
                       <li>Clear your browser cache or browsing data</li>
                       <li>Use browser "Clear All History" features</li>
                       <li>Uninstall or reset your web browser</li>
@@ -312,16 +312,16 @@ const TermsOfServicePage = ({ onClose }) => {
                       <li>Use browser cleaning tools or privacy extensions that clear storage</li>
                       <li>Switch to a different browser or device</li>
                     </ul>
-                    <p className="text-gray-900 font-bold text-lg mt-4 underline">
+                    <p className="text-gray-900 dark:text-gray-100 font-bold text-lg mt-4 underline">
                       WE CANNOT RECOVER YOUR DATA. THERE ARE NO SERVER BACKUPS.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-green-50 border-2 border-green-500 p-5 rounded-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  📦 Data Protection Best Practices:
+              <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600 p-5 rounded-lg">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                  ?? Data Protection Best Practices:
                 </h3>
                 <div className="space-y-2 text-gray-800">
                   <p><strong>1. Export Regularly:</strong> Use the built-in export features after each work session</p>
@@ -344,13 +344,13 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Section 5: No Guarantees */}
-          <section className="border-l-4 border-red-500 pl-6">
-            <h2 className="text-2xl font-bold text-red-900 mb-4">
+          <section className="border-l-4 border-red-500 dark:border-red-600 pl-6">
+            <h2 className="text-2xl font-bold text-red-900 dark:text-red-300 mb-4">
               5. No Guarantees of VA Claim Outcomes
             </h2>
             <div className="space-y-4 leading-relaxed">
-              <div className="bg-red-50 p-4 rounded-lg">
-                <p className="font-bold text-lg text-gray-900 mb-2">NO OUTCOME GUARANTEES:</p>
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                <p className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">NO OUTCOME GUARANTEES:</p>
                 <p className="text-gray-800">
                   Use of Vet-Rate.org, completion of any tools or forms, or implementation of any suggestions does 
                   <strong> NOT guarantee, promise, or predict</strong> any specific outcome from the Department of 
@@ -359,7 +359,7 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">What Is NOT Guaranteed:</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">What Is NOT Guaranteed:</h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>Approval of your VA disability claim</li>
                   <li>Grant of service connection for any condition</li>
@@ -374,40 +374,40 @@ const TermsOfServicePage = ({ onClose }) => {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   Factors Beyond This App's Control:
                 </h3>
                 <p className="mb-2">VA claim outcomes depend on numerous factors including:</p>
                 <div className="grid md:grid-cols-2 gap-3">
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">Evidence Quality</p>
                     <p className="text-xs text-gray-600">Strength and completeness of medical evidence, service records, and lay statements</p>
                   </div>
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">C&P Exam Results</p>
                     <p className="text-xs text-gray-600">VA or contractor examination findings and severity ratings</p>
                   </div>
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">Service Connection Nexus</p>
                     <p className="text-xs text-gray-600">Medical opinions establishing causation link to military service</p>
                   </div>
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">Regional Office Practices</p>
                     <p className="text-xs text-gray-600">Variations in how different VA regional offices interpret evidence</p>
                   </div>
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">Current Case Law</p>
                     <p className="text-xs text-gray-600">Evolving legal precedents from Court of Appeals for Veterans Claims</p>
                   </div>
-                  <div className="bg-white border border-gray-300 p-3 rounded">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 p-3 rounded">
                     <p className="font-semibold text-sm">Policy Changes</p>
                     <p className="text-xs text-gray-600">Updates to VA rating schedules and policy guidance</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-300 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">What Vet-Rate.org CAN Help With:</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">What Vet-Rate.org CAN Help With:</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4 text-gray-800">
                   <li>Understanding VA rating criteria and diagnostic codes</li>
                   <li>Organizing your symptoms and evidence systematically</li>
@@ -432,13 +432,13 @@ const TermsOfServicePage = ({ onClose }) => {
 
           {/* Additional Legal Terms */}
           <section className="border-t-4 border-gray-300 pt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Additional Legal Terms</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Additional Legal Terms</h2>
 
             <div className="space-y-6">
               {/* No Warranty */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Warranty</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Warranty</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   THIS SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
                   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
                   PURPOSE, TITLE, AND NON-INFRINGEMENT. THE WEBAPP DOES NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, 
@@ -448,8 +448,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Limitation of Liability */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Limitation of Liability</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Limitation of Liability</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   TO THE MAXIMUM EXTENT PERMITTED BY LAW, VET-RATE.ORG, ITS CREATORS, CONTRIBUTORS, AND OPERATORS 
                   SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR 
                   PUNITIVE DAMAGES (INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF BENEFITS, CLAIM DENIALS, OR 
@@ -460,8 +460,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Indemnification */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Indemnification</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Indemnification</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   You agree to indemnify, defend, and hold harmless Vet-Rate.org and its operators from any claims, 
                   damages, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from your 
                   use of the platform, your violation of these terms, or your violation of any third-party rights.
@@ -470,8 +470,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Severability */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Severability</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Severability</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   If any provision of these Terms of Service is found to be invalid, illegal, or unenforceable by a 
                   court of competent jurisdiction, the remaining provisions shall continue in full force and effect.
                 </p>
@@ -479,8 +479,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Entire Agreement */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Entire Agreement</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Entire Agreement</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   These Terms of Service, together with the Privacy Policy, constitute the entire agreement between 
                   you and Vet-Rate.org regarding use of this platform and supersede all prior agreements and 
                   understandings.
@@ -489,8 +489,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Modifications */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Modifications to Terms</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Modifications to Terms</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   The webapp reserves the right to modify these terms at any time. Material changes will be indicated by 
                   updating the "Last Updated" date at the top of this document. Continued use of Vet-Rate.org after 
                   changes constitutes acceptance of the modified terms.
@@ -499,8 +499,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Governing Law */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Governing Law & Jurisdiction</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Governing Law & Jurisdiction</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   These terms shall be governed by and construed in accordance with the laws of the United States. 
                   Any disputes shall be resolved in accordance with applicable law, without giving effect to any 
                   principles of conflicts of law.
@@ -509,8 +509,8 @@ const TermsOfServicePage = ({ onClose }) => {
 
               {/* Accessibility */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Accessibility Commitment</h3>
-                <p className="text-sm leading-relaxed bg-gray-50 p-4 rounded">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Accessibility Commitment</h3>
+                <p className="text-sm leading-relaxed bg-gray-50 dark:bg-gray-800 p-4 rounded">
                   I strive to make Vet-Rate.org accessible to veterans with disabilities. If you encounter 
                   accessibility barriers, please contact me through the app so I can work to address them.
                 </p>
@@ -519,8 +519,8 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Contact Information */}
-          <section className="bg-blue-50 border-2 border-blue-600 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Questions About These Terms?</h2>
+          <section className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-600 p-6 rounded-lg">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Questions About These Terms?</h2>
             <p className="leading-relaxed mb-3 text-gray-800">
               If you have questions about these Terms of Service, need clarification on any provisions, or wish to 
               report issues with the platform, please use the "Contact Us" feature within the application or visit 
@@ -533,8 +533,8 @@ const TermsOfServicePage = ({ onClose }) => {
           </section>
 
           {/* Acceptance Acknowledgment */}
-          <section className="bg-green-50 border-4 border-green-600 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Acceptance</h2>
+          <section className="bg-green-50 dark:bg-green-900/20 border-4 border-green-600 p-6 rounded-lg">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Your Acceptance</h2>
             <p className="leading-relaxed mb-3 text-gray-800">
               By using Vet-Rate.org, you acknowledge that you have read, understood, and agree to be bound by these 
               Terms of Service. You specifically acknowledge understanding of:
