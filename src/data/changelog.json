@@ -1,11 +1,11 @@
 {
-  "version": "1.18.7",
-  "lastUpdated": "2026-02-03",
+  "version": "1.19.0",
+  "lastUpdated": "2026-02-05",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
-      "version": "1.18.7",
-      "date": "2026-02-03",
+      "version": "1.19.0",
+      "date": "2026-02-05",
       "isFirstRelease": false,
       "releaseTitle": "BVA Intelligence Suite - Appeals Powered by Real Data",
       "changelog": [
