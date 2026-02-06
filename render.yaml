@@ -8,6 +8,20 @@ services:
     envVars:
       - key: VITE_BRAND_MODE
         value: vetrate
+      # VA.gov OAuth Configuration (set values in Render Dashboard)
+      - key: VITE_VA_CLIENT_ID
+        sync: false  # Set in Render Dashboard (sensitive)
+      - key: VITE_VA_REDIRECT_URL
+        value: https://vet-rate.org/callback
+      - key: VITE_VA_API_ENV
+        value: sandbox
+      # VA API Keys (set values in Render Dashboard)
+      - key: VITE_VA_API_KEY
+        sync: false  # Set in Render Dashboard (sensitive)
+      - key: VITE_VA_FORMS_API_KEY
+        sync: false  # Set in Render Dashboard (sensitive)
+      - key: VITE_VA_BENEFITS_REF_API_KEY
+        sync: false  # Set in Render Dashboard (sensitive)
     headers:
       - path: /*
         name: X-Frame-Options

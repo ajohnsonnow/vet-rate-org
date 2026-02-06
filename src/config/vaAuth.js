@@ -68,10 +68,46 @@ export const STORAGE_KEYS = {
   USER_INFO: 'va_user_info',
 };
 
-// Validate configuration
+// Check if VA integration is configured (without logging errors)
+export function isVaIntegrationConfigured() {
+  return !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri);
+}
+
+// Get configuration status for UI display
+export function getVaConfigStatus() {
+  const issues = [];
+  if (!VA_AUTH_CONFIG.clientId) {
+    issues.push('VITE_VA_CLIENT_ID not set');
+  }
+  if (!VA_AUTH_CONFIG.redirectUri) {
+    issues.push('VITE_VA_REDIRECT_URL not set');
+  }
+  if (!VA_FACILITIES_API_KEY) {
+    issues.push('VITE_VA_API_KEY not set (VA Facilities)');
+  }
+  if (!VA_FORMS_API_KEY) {
+    issues.push('VITE_VA_FORMS_API_KEY not set (VA Forms)');
+  }
+  if (!VA_BENEFITS_REF_API_KEY) {
+    issues.push('VITE_VA_BENEFITS_REF_API_KEY not set (Benefits Reference Data)');
+  }
+  return {
+    isConfigured: issues.length === 0,
+    issues,
+    environment: VA_AUTH_CONFIG.environment,
+    hasOAuth: !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+    hasApiKey: !!VA_FACILITIES_API_KEY,
+    hasFormsApiKey: !!VA_FORMS_API_KEY,
+    hasBenefitsApiKey: !!VA_BENEFITS_REF_API_KEY,
+    hasAllApiKeys: !!(VA_FACILITIES_API_KEY && VA_FORMS_API_KEY && VA_BENEFITS_REF_API_KEY),
+  };
+}
+
+// Validate configuration (logs errors - use for login attempts)
 export function validateConfig() {
   if (!VA_AUTH_CONFIG.clientId) {
     console.error('[VA Auth] Missing VITE_VA_CLIENT_ID environment variable');
+    console.error('[VA Auth] Set this in your Render Dashboard or .env.local file');
     return false;
   }
   if (!VA_AUTH_CONFIG.redirectUri) {
