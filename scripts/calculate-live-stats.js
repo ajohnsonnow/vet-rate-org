@@ -150,21 +150,35 @@ export function calculateLiveStats() {
     console.warn('Could not read disability data:', e.message);
   }
   
-  // Get secondary conditions count
-  let secondaryCount = 500; // fallback
+  // Get secondary conditions count from actual data files
+  let secondaryCount = 0;
   try {
-    const secondaryDataPath = path.join(dataDir, 'secondaryConditions.json');
-    if (fs.existsSync(secondaryDataPath)) {
-      const data = JSON.parse(fs.readFileSync(secondaryDataPath, 'utf8'));
-      // Count unique secondary conditions
-      if (data.conditions) {
-        secondaryCount = Object.values(data.conditions).flat().length;
-      } else if (Array.isArray(data)) {
-        secondaryCount = data.length;
+    // Count from secondary_conditions_db.json (detailed nexus entries)
+    const secondaryDbPath = path.join(dataDir, 'secondary_conditions_db.json');
+    if (fs.existsSync(secondaryDbPath)) {
+      const content = fs.readFileSync(secondaryDbPath, 'utf8');
+      const matches = content.match(/"condition":/g);
+      if (matches) {
+        secondaryCount = matches.length;
       }
     }
+    
+    // Also count relatedSecondaryConditions from disabilityData.json
+    const disabilityPath = path.join(dataDir, 'disabilityData.json');
+    if (fs.existsSync(disabilityPath)) {
+      const data = JSON.parse(fs.readFileSync(disabilityPath, 'utf8'));
+      const disabilities = data.disabilities || (Array.isArray(data) ? data : []);
+      for (const item of disabilities) {
+        if (item.relatedSecondaryConditions && Array.isArray(item.relatedSecondaryConditions)) {
+          secondaryCount += item.relatedSecondaryConditions.length;
+        }
+      }
+    }
+    
+    // Fallback if still 0
+    if (secondaryCount === 0) secondaryCount = 65;
   } catch (e) {
-    // Use fallback
+    secondaryCount = 65; // fallback to known minimum
   }
   
   // Get tool count from toolkitData
@@ -183,18 +197,20 @@ export function calculateLiveStats() {
     // Use fallback
   }
   
-  // Get Local AI model count from LocalAIPanel
-  let localAIModels = 3; // fallback (Diamond Swarm)
+  // Get Local AI model count 
+  // Diamond Swarm: 3 Desktop (7B) + 3 Mobile (1.7B distilled) = 6 total
+  let localAIModels = 6; // Diamond Swarm full suite
   try {
     const localAIPath = path.join(componentsDir, 'LocalAIPanel.jsx');
     if (fs.existsSync(localAIPath)) {
       const content = fs.readFileSync(localAIPath, 'utf8');
-      // Count entries in AVAILABLE_MODELS array
+      // Count entries in AVAILABLE_MODELS array (desktop models)
       const modelMatch = content.match(/const AVAILABLE_MODELS = \[([\s\S]*?)\];/);
       if (modelMatch) {
         const modelMatches = modelMatch[1].match(/{\s*id:/g);
         if (modelMatches) {
-          localAIModels = modelMatches.length;
+          // Desktop models + 3 mobile counterparts (auditor, writer, rater mobile distilled)
+          localAIModels = modelMatches.length + 3; // mobile versions
         }
       }
     }

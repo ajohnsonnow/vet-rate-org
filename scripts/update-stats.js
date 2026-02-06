@@ -22,6 +22,11 @@ const __dirname = path.dirname(__filename);
 // Paths
 const README_PATH = path.resolve(__dirname, '../README.md');
 const OUTPUT_PATH = path.resolve(__dirname, '../src/data/projectStats.json');
+const PACKAGE_PATH = path.resolve(__dirname, '../package.json');
+
+// Read package.json for version
+const packageJson = JSON.parse(fs.readFileSync(PACKAGE_PATH, 'utf-8'));
+const currentVersion = packageJson.version;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1: Calculate Live Stats
@@ -51,7 +56,8 @@ console.log('\n📝 UPDATING README.md WITH LIVE VALUES...');
 let readmeContent = fs.readFileSync(README_PATH, 'utf-8');
 let readmeUpdates = 0;
 
-// Define README update patterns
+// NOTE: Dynamic patterns that depend on calculated values are added in PHASE 2B below
+// Define README update patterns (static patterns that can be applied now)
 const readmeReplacements = [
   // Lines of Code
   {
@@ -63,7 +69,11 @@ const readmeReplacements = [
     pattern: /Total Files.*?[\d,]+\s*project files/gi,
     replacement: `Total Files**: ${formatNumber(liveStats.totalFiles)} project files`
   },
-  // App Size (keep existing since it's calculated differently)
+  // App Size - NOW DYNAMIC
+  {
+    pattern: /App Size.*?[\d,.]+\s*MB/gi,
+    replacement: `App Size**: ${liveStats.appSizeMB} MB`
+  },
   // Components count
   {
     pattern: /Components.*?[\d,]+\s*React components\s*\(\d+\s*major tools\s*\+\s*\d+\s*supporting\)/gi,
@@ -104,8 +114,9 @@ for (const { pattern, replacement } of readmeReplacements) {
   }
 }
 
-fs.writeFileSync(README_PATH, readmeContent);
-console.log(`   ✅ Updated ${readmeUpdates} values in README.md`);
+// Don't write yet - we'll add more dynamic patterns after calculations
+// fs.writeFileSync(README_PATH, readmeContent);
+// console.log(`   ✅ Updated ${readmeUpdates} values in README.md`);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 3: Calculate Development Metrics
@@ -171,6 +182,152 @@ console.log(`   Testing hours: ${testingHours} hrs (15% of coding)`);
 console.log(`   Total traditional: ${formatNumber(totalTraditionalHours)} hrs (${yearsEquivalent} years FTE)`);
 console.log(`   Traditional cost: $${formatNumber(traditionalCost)}`);
 console.log(`   Productivity: ${productivityMultiplier}x multiplier`);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 2B: Apply Dynamic Patterns (now that calculations are complete)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n📝 APPLYING DYNAMIC STAT UPDATES TO README.md...');
+
+// Dynamic patterns that require calculated values
+const dynamicPatterns = [
+  // Traditional Solo Development line
+  {
+    pattern: /Traditional Solo Development.*?[\d,]+\s*hours\s*\([\d.]+\s*years full-time\)\s*@\s*\$[\d,]+\/hr\s*=\s*\$[\d,]+/gi,
+    replacement: `Traditional Solo Development**: ${formatNumber(totalTraditionalHours)} hours (${yearsEquivalent} years full-time) @ $${TRADITIONAL_SENIOR_RATE}/hr = $${formatNumber(traditionalCost)}`
+  },
+  // Actual AI-Assisted Development line (flexible patterns)
+  {
+    pattern: /Actual AI-Assisted Development.*?[\d,]+\s*hours.*?=\s*\$[\d,]+/gi,
+    replacement: `Actual AI-Assisted Development**: ${actualHours} hours over ${actualCodingDays} days = $${formatNumber(actualCost)}`
+  },
+  // Productivity Multiplier
+  {
+    pattern: /Productivity Multiplier.*?[\d,]+x/gi,
+    replacement: `Productivity Multiplier**: ${productivityMultiplier}x`
+  },
+  // Option C: Solo Senior Developer cost
+  {
+    pattern: /1 Senior Developer:\s*\$[\d,]+\s*\n-\s*\*\*Total:\s*\$[\d,]+\*\*\s*\|\s*Timeline:\s*[\d.]+\s*years/gi,
+    replacement: `1 Senior Developer: $${formatNumber(traditionalCost)}\n- **Total: $${formatNumber(traditionalCost)}** | Timeline: ${yearsEquivalent} years`
+  },
+  // Option D: AI-Assisted actual cost
+  {
+    pattern: /1 Senior Developer \+ AI Tools:\s*\$[\d,]+/gi,
+    replacement: `1 Senior Developer + AI Tools: $${formatNumber(actualCost)}`
+  },
+  // The 280x line (update to actual multiplier)
+  {
+    pattern: /This\s+[\d,]+x\s+productivity multiplier/gi,
+    replacement: `This ${productivityMultiplier}x productivity multiplier`
+  },
+  // AI-Assisted actual line at bottom
+  {
+    pattern: /Actual AI-Assisted.*?\(2026\):\s*\*\*\$[\d,]+\s*over\s*[\d.]+\s*days\*\*/gi,
+    replacement: `Actual AI-Assisted** (2026): **$${formatNumber(actualCost)} over ${actualCodingDays} days**`
+  },
+  // Total hours in development breakdown
+  {
+    pattern: /Total:\s*[\d,]+\s*hours\*\*\s*\([\d.]+\s*years solo/gi,
+    replacement: `Total: ${formatNumber(totalTraditionalHours)} hours** (${yearsEquivalent} years solo`
+  }
+];
+
+for (const { pattern, replacement } of dynamicPatterns) {
+  const matches = readmeContent.match(pattern);
+  if (matches) {
+    readmeContent = readmeContent.replace(pattern, replacement);
+    readmeUpdates += matches.length;
+  }
+}
+
+// Now write updated README
+fs.writeFileSync(README_PATH, readmeContent);
+console.log(`   ✅ Updated ${readmeUpdates} values in README.md`);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 2C: Update AGENTIC_VALUE_PROPOSITION.md
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const AGENTIC_PATH = path.resolve(__dirname, '../AGENTIC_VALUE_PROPOSITION.md');
+if (fs.existsSync(AGENTIC_PATH)) {
+  console.log('\n📝 UPDATING AGENTIC_VALUE_PROPOSITION.md...');
+  let agenticContent = fs.readFileSync(AGENTIC_PATH, 'utf-8');
+  let agenticUpdates = 0;
+  
+  const agenticPatterns = [
+    // Executive summary timeline
+    { pattern: /Timeline.*?[\d.]+\s*years\s*\(solo\)/gi, replacement: `Timeline** | ${yearsEquivalent} years (solo)` },
+    // Executive summary cost
+    { pattern: /\*\*Cost\*\*\s*\|\s*\$[\d,]+/gi, replacement: `**Cost** | $${formatNumber(traditionalCost)}` },
+    // Agentic cost
+    { pattern: /\$63,000/g, replacement: `$${formatNumber(actualCost)}` },
+    // Lines of code count
+    { pattern: /\*\*Lines of Code\*\*\s*\|\s*[\d,]+/gi, replacement: `**Lines of Code** | ${formatNumber(liveStats.linesOfCode)}` },
+    // Total files
+    { pattern: /\*\*Total Files\*\*\s*\|\s*[\d,]+/gi, replacement: `**Total Files** | ${formatNumber(liveStats.totalFiles)}` },
+    // React Components
+    { pattern: /\*\*React Components\*\*\s*\|\s*[\d,]+/gi, replacement: `**React Components** | ${liveStats.componentCount}` },
+    // Disabilities Database
+    { pattern: /\*\*Disabilities Database\*\*\s*\|\s*[\d,]+/gi, replacement: `**Disabilities Database** | ${liveStats.disabilityCount}` },
+    // Secondary Conditions
+    { pattern: /\*\*Secondary Conditions\*\*\s*\|\s*[\d,]+\+?/gi, replacement: `**Secondary Conditions** | ${liveStats.secondaryCount}` },
+    // VA Forms Supported  
+    { pattern: /\*\*VA Forms Supported\*\*\s*\|\s*[\d,]+/gi, replacement: `**VA Forms Supported** | ${liveStats.vaFormsCount}` },
+    // Local AI Models
+    { pattern: /\*\*Local AI Models\*\*\s*\|\s*[\d,]+/gi, replacement: `**Local AI Models** | ${liveStats.localAIModels}` },
+    // Utility Modules
+    { pattern: /\*\*Utility Modules\*\*\s*\|\s*[\d,]+/gi, replacement: `**Utility Modules** | ${liveStats.utilityCount}` },
+    // Tool count
+    { pattern: /\d+\s*major tools/gi, replacement: `${liveStats.toolCount} major tools` },
+    // Supporting components
+    { pattern: /\d+\s*supporting/gi, replacement: `${liveStats.supportingComponents} supporting` },
+    // Local AI models inline
+    { pattern: /\*\*\d+\s*local AI models\*\*/gi, replacement: `**${liveStats.localAIModels} local AI models**` },
+    // Production tools bullet
+    { pattern: /\*\*\d+\s*production tools\*\*/gi, replacement: `**${liveStats.toolCount} production tools**` },
+    // Validated conditions bullet  
+    { pattern: /\*\*\d+\s*validated conditions\*\*/gi, replacement: `**${liveStats.disabilityCount} validated conditions**` },
+    // Traditional hours
+    { pattern: /23,884/g, replacement: formatNumber(totalTraditionalHours) },
+    // Actual hours
+    { pattern: /150 hours/g, replacement: `${actualHours} hours` },
+    // Productivity multiplier
+    { pattern: /159x/g, replacement: `${productivityMultiplier}x` },
+    // Years equivalent
+    { pattern: /11\.5 years/g, replacement: `${yearsEquivalent} years` },
+    // Traditional cost $3.2M etc
+    { pattern: /\$3,224,340/g, replacement: `$${formatNumber(traditionalCost)}` },
+    { pattern: /\$3\.2 million/gi, replacement: `$${(traditionalCost / 1000000).toFixed(1)} million` },
+    // Days count
+    { pattern: /22 days/g, replacement: `${actualCodingDays} days` },
+    // App size
+    { pattern: /353 MB/g, replacement: `${liveStats.appSizeMB} MB` },
+    // Git commits
+    { pattern: /241 commits/gi, replacement: `${actualCommits} commits` },
+    // LOC per hour
+    { pattern: /1,292 LOC\/hour/gi, replacement: `${formatNumber(Math.round(liveStats.linesOfCode / actualHours))} LOC/hour` },
+    // Cost savings
+    { pattern: /\$3,161,340/g, replacement: `$${formatNumber(costSavings)}` },
+    // Savings percent
+    { pattern: /98%/g, replacement: `${savingsPercent}%` }
+  ];
+
+  for (const { pattern, replacement } of agenticPatterns) {
+    const matches = agenticContent.match(pattern);
+    if (matches) {
+      agenticContent = agenticContent.replace(pattern, replacement);
+      agenticUpdates += matches.length;
+    }
+  }
+  
+  // Update version and date
+  agenticContent = agenticContent.replace(/\*Version:\s*[\d.]+\*/gi, `*Version: ${currentVersion}*`);
+  agenticContent = agenticContent.replace(/\*Document generated:.*?\*/gi, `*Document generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}*`);
+  
+  fs.writeFileSync(AGENTIC_PATH, agenticContent);
+  console.log(`   ✅ Updated ${agenticUpdates} values in AGENTIC_VALUE_PROPOSITION.md`);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 4: Generate projectStats.json
