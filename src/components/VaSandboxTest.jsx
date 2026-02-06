@@ -38,7 +38,7 @@ import {
   formatBenefitsDisabilities,
   formatFacilities,
 } from '../api/va';
-import { VA_FACILITIES_API_KEY } from '../config/vaAuth';
+import { VA_FACILITIES_API_KEY, VA_FORMS_API_KEY, VA_BENEFITS_REF_API_KEY, getVaConfigStatus, isVaIntegrationConfigured } from '../config/vaAuth';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
 import DbqFinder from './DbqFinder';
 import ClaimEvidenceUpload from './ClaimEvidenceUpload';
@@ -163,8 +163,11 @@ const VaSandboxTest = ({ onClose }) => {
   });
   const [testResults, setTestResults] = useState({});
 
-  // API Key availability
-  const isApiKeyConfigured = Boolean(VA_FACILITIES_API_KEY && VA_FACILITIES_API_KEY !== 'your_va_api_key_here');
+  // API Key availability (check each individually)
+  const isFacilitiesApiKeyConfigured = Boolean(VA_FACILITIES_API_KEY && VA_FACILITIES_API_KEY !== 'your_va_api_key_here');
+  const isFormsApiKeyConfigured = Boolean(VA_FORMS_API_KEY && VA_FORMS_API_KEY !== 'your_forms_api_key_here');
+  const isBenefitsApiKeyConfigured = Boolean(VA_BENEFITS_REF_API_KEY && VA_BENEFITS_REF_API_KEY !== 'your_benefits_api_key_here');
+  const isApiKeyConfigured = isFacilitiesApiKeyConfigured; // Backward compatibility
 
   // =========================================================================
   // DATA FETCHING FUNCTIONS
@@ -476,12 +479,38 @@ const VaSandboxTest = ({ onClose }) => {
               </button>
             </div>
 
+            {/* Configuration Status Warning */}
+            {!isVaIntegrationConfigured() && (
+              <div className="mt-4 bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-yellow-100">VA OAuth Not Configured</p>
+                    <p className="text-sm text-yellow-200 mt-1">
+                      Missing environment variables. Set these in your Render Dashboard or .env.local:
+                    </p>
+                    <ul className="text-xs text-yellow-300 mt-2 space-y-1 font-mono">
+                      {!getVaConfigStatus().hasOAuth && (
+                        <>
+                          <li>• VITE_VA_CLIENT_ID (from developer.va.gov)</li>
+                          <li>• VITE_VA_REDIRECT_URL (e.g., https://vet-rate.org/callback)</li>
+                        </>
+                      )}
+                      {!getVaConfigStatus().hasApiKey && (
+                        <li>• VITE_VA_API_KEY (for Facilities API)</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Auth Status */}
             <div className="mt-4 flex items-center justify-between bg-white/10 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`} />
+                <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-400' : isVaIntegrationConfigured() ? 'bg-yellow-400' : 'bg-red-400'} animate-pulse`} />
                 <span className="font-medium">
-                  {authLoading ? 'Checking...' : isAuthenticated ? 'Connected to VA.gov' : 'Not Connected'}
+                  {authLoading ? 'Checking...' : isAuthenticated ? 'Connected to VA.gov' : isVaIntegrationConfigured() ? 'Not Connected' : 'Configuration Required'}
                 </span>
                 {isAuthenticated && userInfo && (
                   <span className="text-green-200 text-sm ml-2">• {userInfo.given_name || 'Veteran'}</span>
@@ -492,7 +521,12 @@ const VaSandboxTest = ({ onClose }) => {
                   <LogOut className="w-4 h-4" /> Disconnect
                 </button>
               ) : (
-                <button onClick={login} disabled={authLoading} className="flex items-center gap-2 bg-white text-green-800 hover:bg-green-50 px-4 py-2 rounded-lg font-semibold disabled:opacity-50">
+                <button 
+                  onClick={login} 
+                  disabled={authLoading || !isVaIntegrationConfigured()} 
+                  className="flex items-center gap-2 bg-white text-green-800 hover:bg-green-50 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!isVaIntegrationConfigured() ? 'Configure environment variables first' : 'Connect to VA.gov'}
+                >
                   <LogIn className="w-4 h-4" /> Connect VA Account
                 </button>
               )}
@@ -518,13 +552,17 @@ const VaSandboxTest = ({ onClose }) => {
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-bold rounded">API KEY</span>
               </div>
               
-              {!isApiKeyConfigured && (
+              {(!isFacilitiesApiKeyConfigured || !isFormsApiKeyConfigured || !isBenefitsApiKeyConfigured) && (
                 <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-yellow-800 dark:text-yellow-200">API Key Required</p>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300">Add <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_VA_API_KEY</code> to your .env.local file</p>
+                      <p className="font-medium text-yellow-800 dark:text-yellow-200">API Key(s) Required</p>
+                      <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
+                        {!isFacilitiesApiKeyConfigured && <li>• <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_VA_API_KEY</code> (VA Facilities)</li>}
+                        {!isFormsApiKeyConfigured && <li>• <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_VA_FORMS_API_KEY</code> (VA Forms)</li>}
+                        {!isBenefitsApiKeyConfigured && <li>• <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">VITE_VA_BENEFITS_REF_API_KEY</code> (Benefits Reference)</li>}
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -543,7 +581,7 @@ const VaSandboxTest = ({ onClose }) => {
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Search ZIP: 97217</p>
                   
-                  <button onClick={testFacilitiesApi} disabled={loading.facilities || !isApiKeyConfigured}
+                  <button onClick={testFacilitiesApi} disabled={loading.facilities || !isFacilitiesApiKeyConfigured}
                     className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading.facilities ? <Loader2 className="w-4 h-4 animate-spin" /> : <Building2 className="w-4 h-4" />}
                     Test Facilities
@@ -572,7 +610,7 @@ const VaSandboxTest = ({ onClose }) => {
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Search: "21-526EZ"</p>
                   
-                  <button onClick={testFormsApi} disabled={loading.forms || !isApiKeyConfigured}
+                  <button onClick={testFormsApi} disabled={loading.forms || !isFormsApiKeyConfigured}
                     className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading.forms ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSearch className="w-4 h-4" />}
                     Test Forms
@@ -605,7 +643,7 @@ const VaSandboxTest = ({ onClose }) => {
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Disabilities List</p>
                   
-                  <button onClick={testDisabilitiesApi} disabled={loading.disabilities || !isApiKeyConfigured}
+                  <button onClick={testDisabilitiesApi} disabled={loading.disabilities || !isBenefitsApiKeyConfigured}
                     className="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading.disabilities ? <Loader2 className="w-4 h-4 animate-spin" /> : <ListChecks className="w-4 h-4" />}
                     Test Reference Data
