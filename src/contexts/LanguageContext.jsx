@@ -1559,6 +1559,13 @@ export const APP_TRANSLATIONS = {
     googleDrive: { en: 'Google Drive', es: 'Google Drive', tl: 'Google Drive', vi: 'Google Drive', ko: 'Google Drive' },
     analyzeStrategy: { en: 'Analyze Strategy', es: 'Analizar Estrategia', tl: 'Suriin ang Strategy', vi: 'Phân Tích Chiến Lược', ko: '전략 분석' },
     cloudBackupTip: { en: 'Use Google Drive for automatic cloud backup', es: 'Usa Google Drive para respaldo automático en la nube', tl: 'Gamitin ang Google Drive para sa automatic cloud backup', vi: 'Sử dụng Google Drive để sao lưu đám mây tự động', ko: '자동 클라우드 백업을 위해 Google Drive 사용' },
+    // Ground Guide - Data Protection Guidance
+    backupGuideTitle: { en: 'Ground Guide: Secure Your Claim Data!', es: 'Guía de Tierra: ¡Asegura Tus Datos!', tl: 'Ground Guide: I-secure ang Iyong Data!', vi: 'Hướng Dẫn: Bảo Mật Dữ Liệu!', ko: '그라운드 가이드: 데이터 보호!' },
+    backupGuideMessage: { en: 'Your claims are stored in your browser. If you clear your browser data or use a different device, you could lose everything. Download a backup file to your device or enable Google Drive sync for automatic protection.', es: 'Tus reclamos están almacenados en tu navegador. Si borras los datos del navegador o usas otro dispositivo, podrías perder todo. Descarga un archivo de respaldo o habilita la sincronización de Google Drive para protección automática.', tl: 'Ang mga claim mo ay nakaimbak sa browser mo. Kung i-clear mo ang browser data o gumamit ng ibang device, maaari mong mawala ang lahat. Mag-download ng backup file o i-enable ang Google Drive sync para sa automatic protection.', vi: 'Dữ liệu yêu cầu được lưu trong trình duyệt. Nếu bạn xóa dữ liệu trình duyệt hoặc sử dụng thiết bị khác, bạn có thể mất tất cả. Tải xuống tệp sao lưu hoặc bật đồng bộ Google Drive để bảo vệ tự động.', ko: '청구 데이터가 브라우저에 저장됩니다. 브라우저 데이터를 지우거나 다른 기기를 사용하면 모든 것을 잃을 수 있습니다. 백업 파일을 다운로드하거나 Google Drive 동기화를 활성화하세요.' },
+    backupGuideDownload: { en: 'Download Backup Now', es: 'Descargar Respaldo Ahora', tl: 'Mag-download ng Backup Ngayon', vi: 'Tải Xuống Sao Lưu Ngay', ko: '지금 백업 다운로드' },
+    backupGuideGoogleDrive: { en: 'Setup Google Drive Sync', es: 'Configurar Sincronización de Google Drive', tl: 'I-setup ang Google Drive Sync', vi: 'Cài Đặt Đồng Bộ Google Drive', ko: 'Google Drive 동기화 설정' },
+    backupGuideRemindLater: { en: 'Remind Me Later', es: 'Recordármelo Después', tl: 'Paalalahanan Ako Mamaya', vi: 'Nhắc Tôi Sau', ko: '나중에 알림' },
+    backupGuideDontShow: { en: "Don't show again", es: 'No mostrar de nuevo', tl: 'Huwag ipakita muli', vi: 'Không hiển thị lại', ko: '다시 보지 않기' },
     statusDrafting: { en: 'Drafting', es: 'Redactando', tl: 'Drafting', vi: 'Đang Soạn Thảo', ko: '초안 작성 중' },
     statusStatementGenerated: { en: 'Statement Generated', es: 'Declaración Generada', tl: 'Nalikha na ang Statement', vi: 'Đã Tạo Báo Cáo', ko: '진술서 생성됨' },
     statusReview: { en: 'Review', es: 'Revisión', tl: 'Review', vi: 'Xem Xét', ko: '검토' },
@@ -3949,15 +3956,21 @@ export const LanguageProvider = ({ children }) => {
 
   // Get translation for a key
   // Supports both t('section', 'key') and t('section.key') formats
-  const t = useCallback((sectionOrPath, key) => {
+  // Also supports interpolation: t('section.key', { param: value })
+  const t = useCallback((sectionOrPath, keyOrParams, params) => {
     let section = sectionOrPath;
-    let actualKey = key;
+    let actualKey = keyOrParams;
+    let interpolationParams = params;
     
-    // Handle dot-notation format: t('section.key')
-    if (!key && typeof sectionOrPath === 'string' && sectionOrPath.includes('.')) {
-      const parts = sectionOrPath.split('.');
-      section = parts[0];
-      actualKey = parts.slice(1).join('.'); // Support nested keys like 'section.sub.key'
+    // Handle dot-notation format: t('section.key') or t('section.key', { params })
+    if (typeof sectionOrPath === 'string' && sectionOrPath.includes('.')) {
+      // Check if second param is interpolation object (not a string key)
+      if (keyOrParams === undefined || (typeof keyOrParams === 'object' && keyOrParams !== null)) {
+        const parts = sectionOrPath.split('.');
+        section = parts[0];
+        actualKey = parts.slice(1).join('.'); // Support nested keys like 'section.sub.key'
+        interpolationParams = keyOrParams; // Second param is interpolation params
+      }
     }
     
     // Handle empty or invalid keys silently
@@ -3967,16 +3980,25 @@ export const LanguageProvider = ({ children }) => {
     
     const sectionData = APP_TRANSLATIONS[section];
     if (!sectionData) {
-      console.warn(`Translation section not found: ${section}`);
-      return actualKey;
+      console.warn(`Translation section not found: ${sectionOrPath}`);
+      return typeof actualKey === 'string' ? actualKey : sectionOrPath;
     }
     const keyData = sectionData[actualKey];
     if (!keyData) {
       console.warn(`Translation key not found: ${section}.${actualKey}`);
-      return actualKey;
+      return typeof actualKey === 'string' ? actualKey : sectionOrPath;
     }
-    // Return translation for current language, fallback to English
-    return keyData[language] || keyData.en || actualKey;
+    // Get translation for current language, fallback to English
+    let result = keyData[language] || keyData.en || actualKey;
+    
+    // Handle interpolation: replace {placeholder} with values from params
+    if (interpolationParams && typeof interpolationParams === 'object') {
+      for (const [paramKey, paramValue] of Object.entries(interpolationParams)) {
+        result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+      }
+    }
+    
+    return result;
   }, [language]);
 
   // Get all translations for a section
