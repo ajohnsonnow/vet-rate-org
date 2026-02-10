@@ -262,8 +262,14 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
 
     setIsAIThinking(true);
     setAIAdvice(null);
+    setError(null); // Clear previous errors
 
     try {
+      // Create a timeout promise (60 second timeout)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('AI request timed out after 60 seconds')), 60000);
+      });
+
       const prompt = `You are a state veteran benefits expert helping veterans understand and maximize their state-level benefits.
 
 Veteran's Question: "${aiQuestion}"
@@ -280,7 +286,11 @@ Provide helpful, specific advice about:
 
 Be practical, encouraging, and emphasize these are benefits that "claim sharks" never tell veterans about.`;
 
-      const response = await generateAI(prompt);
+      // Race between AI call and timeout
+      const response = await Promise.race([
+        generateAI(prompt),
+        timeoutPromise
+      ]);
       
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;
@@ -291,7 +301,11 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
       }
     } catch (err) {
       console.error('AI consultation error:', err);
-      setError('An error occurred during AI consultation.');
+      const errorMsg = err.message?.includes('timed out') 
+        ? 'AI request timed out. Please try again or check your connection.'
+        : 'An error occurred during AI consultation. Please try again.';
+      setError(errorMsg);
+      setAIAdvice(null);
     } finally {
       setIsAIThinking(false);
     }
@@ -365,13 +379,13 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="state-benefit-hunter-title"
     >
-      <div className="min-h-screen px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl my-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
           {/* Header */}
           <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
             {/* Decorative elements */}
