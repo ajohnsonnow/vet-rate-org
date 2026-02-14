@@ -33,10 +33,12 @@ VetRate demonstrates **world-class integration** with 7 VA.gov APIs through two 
 ## Demo Flow: My Packet → VA Records
 
 ### Step 1: Open VA Data Center
+
 1. Open "My Packet" from the main menu
 2. Click the "VA Records" tab (shows 🏛️ icon)
 
 ### Step 2: Authorization Flow
+
 1. Click **"Sign in with VA.gov"** button
 2. System redirects to VA.gov OAuth portal
 3. Veteran authenticates with their credentials
@@ -44,18 +46,22 @@ VetRate demonstrates **world-class integration** with 7 VA.gov APIs through two 
 5. Upon approval, redirected back to VetRate
 
 ### Step 3: View Available Data
+
 The VA Data Center shows 3 tabs:
+
 - **Your VA Records** (4 OAuth APIs)
 - **Reference Data** (3 API Key APIs)
 - **Saved Data** (locally stored records)
 
 ### Step 4: Selective Download
+
 1. Each data type has a **checkbox** for selection
 2. Preview data before saving by clicking **expand arrow**
 3. Toggle **"Show JSON"** to see raw API response
 4. Click **"Save Selected to My Packet"**
 
 ### Step 5: Privacy & Disconnect
+
 1. Data saved to localStorage (never sent to servers)
 2. Click **"Disconnect"** to log out
 3. Saved data persists locally for AI tools
@@ -65,19 +71,23 @@ The VA Data Center shows 3 tabs:
 ## Demo Flow: VA API Interface
 
 ### Opening the Interface
+
 1. Click **"VA API Interface"** from menu (or URL: `/va-sandbox`)
 
 ### Testing OAuth APIs
-1. Click **"Sign In to VA.gov"**
+
+1. Click **"Sign In to VA.gov"****
 2. After auth, click individual **"Fetch"** buttons
 3. View formatted data AND raw JSON
 
 ### Testing API Key APIs
+
 1. For Facilities: Enter ZIP code (e.g., "90210")
 2. For Forms: Enter search term (e.g., "21-526EZ" or "PTSD")
 3. For Benefits Reference: Click "Load Data"
 
 ### Validation Checklist
+
 - ✅ Rate limiting indicator shows remaining calls
 - ✅ Error handling displays user-friendly messages
 - ✅ Raw JSON toggle available for all APIs
@@ -88,6 +98,7 @@ The VA Data Center shows 3 tabs:
 ## Environment Setup Verification
 
 ### Required Environment Variables (Render Dashboard)
+
 ```
 VITE_VA_CLIENT_ID=<your_oauth_client_id>
 VITE_VA_REDIRECT_URL=https://vet-rate.org/callback
@@ -98,7 +109,9 @@ VITE_VA_BENEFITS_REF_API_KEY=<benefits_ref_api_key>
 ```
 
 ### Configuration Status Check
+
 The UI displays individual status for each API:
+
 - 🟢 OAuth (VA.gov Sign-In) - Configured
 - 🟢 Facilities API - Configured
 - 🟢 Forms API - Configured
@@ -119,21 +132,25 @@ The UI displays individual status for each API:
 ## Use Case Demonstrations
 
 ### Use Case 1: Pre-Fill Claim Form
+
 1. Import Service History
 2. Data auto-populates service dates in claim builder
 3. Reduces data entry errors
 
 ### Use Case 2: Plan Supplemental Claim
+
 1. View current Claims with status
 2. Check Appealable Issues for decisions within 1 year
 3. Use AI to analyze rating decisions
 
 ### Use Case 3: Find C&P Exam Location
+
 1. Search Facilities by ZIP
 2. Filter by "VA Health" type
 3. Get contact info and hours
 
 ### Use Case 4: Get Correct DBQ
+
 1. Search Forms for condition name
 2. Find corresponding DBQ
 3. Download PDF directly

@@ -27,6 +27,7 @@
 ### 2. Authorization & Consent Flow
 
 **OAuth 2.0 Implementation:**
+
 - ✅ **OAuth Provider:** [useVaAuth.js](src/hooks/useVaAuth.js) - Full PKCE flow
 - ✅ **Configuration:** [vaAuth.js](src/config/vaAuth.js)
 - ✅ **Login Flow:** `VaSandboxTest.jsx` → Click "Connect VA Account" → VA.gov redirect → Consent screen → Callback → Token exchange
@@ -34,12 +35,14 @@
 - ✅ **Token Management:** Automatic refresh with `offline_access` scope
 
 **Scopes Requested:**
+
 ```javascript
 openid profile offline_access claim.read service_history.read 
 appealable_issues.read appeals_status.read
 ```
 
 **Demonstration Path:**
+
 1. User clicks "Connect VA Account" button
 2. Redirect to `https://sandbox-api.va.gov/oauth2/authorization`
 3. User sees VA.gov consent screen showing:
@@ -54,11 +57,13 @@ appealable_issues.read appeals_status.read
 ### 3. Account Management
 
 **Veteran Account Creation:**
+
 - ✅ OAuth automatically creates session on first login
 - ✅ User info retrieved from `/oauth2/userinfo` endpoint
 - ✅ Data stored in browser sessionStorage only (no database)
 
 **Account Deactivation:**
+
 - ✅ "Disconnect VA Account" button in dashboard
 - ✅ Calls `/oauth2/revoke` endpoint to invalidate tokens
 - ✅ Clears all sessionStorage data
@@ -73,6 +78,7 @@ appealable_issues.read appeals_status.read
 **Status:** ✅ FULLY CONFIGURED
 
 **Local Setup:**
+
 ```bash
 # Install dependencies
 npm install
@@ -85,6 +91,7 @@ http://localhost:5173
 ```
 
 **Environment Variables (`.env.local`):**
+
 ```env
 # OAuth Configuration
 VITE_VA_CLIENT_ID=your_sandbox_client_id
@@ -98,6 +105,7 @@ VITE_VA_BENEFITS_REF_API_KEY=your_benefits_ref_api_key
 ```
 
 **Proxy Configuration (CORS Bypass):**
+
 - [vite.config.js](vite.config.js#L20-L30) - Proxies `/va-api/*` to `https://sandbox-api.va.gov/*`
 
 ---
@@ -109,6 +117,7 @@ VITE_VA_BENEFITS_REF_API_KEY=your_benefits_ref_api_key
 **Test Component:** [VaSandboxTest.jsx](src/components/VaSandboxTest.jsx)
 
 **Testing Capabilities:**
+
 - Real-time API testing dashboard
 - "Run All Tests" button executes all 7 APIs
 - Pass/Fail status indicators
@@ -117,14 +126,16 @@ VITE_VA_BENEFITS_REF_API_KEY=your_benefits_ref_api_key
 - Network request inspection
 
 **Sandbox Test Users:**
+
 - Username: `va.api.user+idme.001@gmail.com`
-- Available at: https://developer.va.gov/explore/verification/sandbox-access
+- Available at: <https://developer.va.gov/explore/verification/sandbox-access>
 
 ---
 
 ### 6. Technical Staff
 
 **Primary Developer:** Anth (ajohnsonnow)
+
 - GitHub: [@ajohnsonnow](https://github.com/ajohnsonnow)
 - Role: Full-stack developer, VA API integration lead
 
@@ -135,13 +146,16 @@ VITE_VA_BENEFITS_REF_API_KEY=your_benefits_ref_api_key
 ### 7. Use Case Demonstrations
 
 #### Use Case #1: Facilities API
+
 **Workflow:**
+
 1. Veteran enters ZIP code
 2. App searches nearby VA facilities
 3. Displays medical centers, benefits offices, vet centers
 4. Shows distance, hours, phone numbers
 
 **Demo Command:**
+
 ```javascript
 testFacilitiesApi() // Searches 97217 ZIP, returns 5 facilities
 ```
@@ -149,13 +163,16 @@ testFacilitiesApi() // Searches 97217 ZIP, returns 5 facilities
 ---
 
 #### Use Case #2: Forms API
+
 **Workflow:**
+
 1. Veteran searches for VA form by name or number
 2. App queries VA Forms API
 3. Displays form details, PDF links, last revision date
 4. Provides direct download link
 
 **Demo Command:**
+
 ```javascript
 testFormsApi() // Searches "21-526EZ" disability claim form
 ```
@@ -163,13 +180,16 @@ testFormsApi() // Searches "21-526EZ" disability claim form
 ---
 
 #### Use Case #3: Benefits Reference Data
+
 **Workflow:**
+
 1. App loads disability rating reference data
 2. Provides condition names and diagnostic codes
 3. Used for claim preparation and evidence matching
 4. Helps veterans identify conditions for claims
 
 **Demo Command:**
+
 ```javascript
 testDisabilitiesApi() // Returns disabilities list
 ```
@@ -177,7 +197,9 @@ testDisabilitiesApi() // Returns disabilities list
 ---
 
 #### Use Case #4: Benefits Claims API
+
 **Workflow:**
+
 1. Veteran logs in with OAuth
 2. App fetches all claims
 3. Displays claim status, phase (1-8), date filed
@@ -186,11 +208,13 @@ testDisabilitiesApi() // Returns disabilities list
 6. **With consent:** Saves claim data to MyPacket and VKB for offline access
 
 **Demo Command:**
+
 ```javascript
 testClaimsApi(accessToken) // Requires OAuth
 ```
 
 **Visual Output:**
+
 - Claim ID
 - Claim type (Compensation, Pension, etc.)
 - Current phase with progress bar
@@ -200,7 +224,9 @@ testClaimsApi(accessToken) // Requires OAuth
 ---
 
 #### Use Case #5: Appeals Status API
+
 **Workflow:**
+
 1. Veteran logs in with OAuth
 2. App fetches all active appeals
 3. Displays appeal type (HLR, Supplemental, Board)
@@ -208,6 +234,7 @@ testClaimsApi(accessToken) // Requires OAuth
 5. Tracks appeal timeline
 
 **Demo Command:**
+
 ```javascript
 testAppealsStatusApi(accessToken) // Requires OAuth
 ```
@@ -215,7 +242,9 @@ testAppealsStatusApi(accessToken) // Requires OAuth
 ---
 
 #### Use Case #6: Appealable Issues API
+
 **Workflow:**
+
 1. Veteran logs in with OAuth
 2. App fetches denied decisions
 3. Identifies which issues can be appealed
@@ -223,11 +252,13 @@ testAppealsStatusApi(accessToken) // Requires OAuth
 5. Guides veteran to correct appeal lane
 
 **Demo Command:**
+
 ```javascript
 testAppealableIssuesApi(accessToken) // Requires OAuth
 ```
 
 **Visual Output:**
+
 - Issue description
 - Decision date
 - Current rating
@@ -236,7 +267,9 @@ testAppealableIssuesApi(accessToken) // Requires OAuth
 ---
 
 #### Use Case #7: Service History & Eligibility API
+
 **Workflow:**
+
 1. Veteran logs in with OAuth
 2. App fetches military service records
 3. Displays branch, service dates, discharge status
@@ -245,11 +278,13 @@ testAppealableIssuesApi(accessToken) // Requires OAuth
 6. **With consent:** Saves to VKB for AI-assisted claim building
 
 **Demo Command:**
+
 ```javascript
 testServiceHistoryApi(accessToken) // Requires OAuth
 ```
 
 **Visual Output:**
+
 - Branch of service
 - Start/end dates
 - Discharge status
@@ -261,11 +296,13 @@ testServiceHistoryApi(accessToken) // Requires OAuth
 ## 🎬 Demo Flow (10-Minute Structure)
 
 ### Minute 0-2: Environment Setup
+
 1. Open app: `http://localhost:5173`
 2. Navigate to VA Integration Dashboard
 3. Show clean, unauthenticated state
 
 ### Minute 2-4: Open Data APIs (No Login)
+
 1. Click "Run All Tests" for Open Data section
 2. Show Facilities API results (ZIP 97217)
 3. Show Forms API results (21-526EZ form)
@@ -273,6 +310,7 @@ testServiceHistoryApi(accessToken) // Requires OAuth
 5. Toggle "Show Raw JSON" to prove real API responses
 
 ### Minute 4-7: OAuth Flow
+
 1. Click "Connect VA Account"
 2. Redirect to VA.gov sandbox
 3. **Narrate:** "Using OAuth 2.0 with PKCE - no client secret"
@@ -282,6 +320,7 @@ testServiceHistoryApi(accessToken) // Requires OAuth
 7. Show authenticated state indicator
 
 ### Minute 7-10: User-Specific APIs
+
 1. Watch Service History load automatically
 2. Show Claims API data with progress bars
 3. Show Appeals Status (if test user has appeals)
@@ -294,6 +333,7 @@ testServiceHistoryApi(accessToken) // Requires OAuth
 ## 🔒 Security Highlights
 
 **For the Demo:**
+
 - ✅ **No Client Secret:** PKCE flow eliminates secret storage
 - ✅ **No Server Storage:** All data in browser sessionStorage
 - ✅ **Token Revocation:** Proper logout with `/oauth2/revoke`
@@ -360,24 +400,31 @@ npm run dev
 ## ❓ Anticipated Questions & Answers
 
 ### Q: "Where is veteran PII stored?"
+
 **A:** "Nowhere on our servers. All data is in browser sessionStorage, which is automatically cleared when the tab closes or when the user logs out. We're a 100% client-side application with zero database."
 
 ### Q: "How do you handle token refresh?"
+
 **A:** "We request `offline_access` scope to receive a refresh token. Our `useVaAuth` hook automatically detects expired access tokens and exchanges the refresh token for a new one before making API calls. Users never see an error."
 
 ### Q: "What if the user revokes access?"
+
 **A:** "They can click 'Disconnect VA Account' in our dashboard, which calls the `/oauth2/revoke` endpoint and clears all local storage. They can also revoke via their VA.gov profile. Either way, our next API call will fail gracefully and prompt re-authentication."
 
 ### Q: "Do you use the client secret?"
+
 **A:** "No. We use PKCE (Proof Key for Code Exchange), which is designed specifically for public clients. No secret is stored in our code or environment variables."
 
 ### Q: "How do you prevent CORS errors?"
+
 **A:** "In development, we use a Vite proxy that forwards `/va-api/*` requests to `https://sandbox-api.va.gov/*`. In production, we make direct calls to your API since our app will be hosted on an approved domain."
 
 ### Q: "Can you show me the code?"
+
 **A:** "Absolutely. [Pull up src/hooks/useVaAuth.js or src/api/va.js and walk through it]"
 
 ### Q: "What error handling do you have?"
+
 **A:** "Every API call is wrapped in try-catch blocks. We display user-friendly messages for common errors (network issues, expired tokens) and log technical details to console for debugging. Users never see raw error objects."
 
 ---
@@ -388,10 +435,12 @@ After Nathan approves:
 
 1. Request production credentials
 2. Update `.env.local` with production values:
+
    ```env
    VITE_VA_API_ENV=production
    VITE_VA_CLIENT_ID=production_client_id
    ```
+
 3. Test production endpoints in staging environment
 4. Deploy to production domain
 5. Monitor API usage and error rates

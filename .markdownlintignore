@@ -1,0 +1,6 @@
+# Legal documents - verbatim copies, do not lint
+LICENSE
+
+# Third-party content
+node_modules/
+dist/

@@ -60,6 +60,8 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
   const [showImportConfirm, setShowImportConfirm] = useState(null);
   const [backupCreated, setBackupCreated] = useState(false);
   const [isCertified, setIsCertified] = useState(false); // Certification for downloads
+  const [showBackupGuide, setShowBackupGuide] = useState(false); // Ground Guide - first-time backup guidance
+  const [hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
   
@@ -547,6 +549,25 @@ Return ONLY the JSON object, no explanation.`,
     }
   };
 
+  // Check if user needs backup guidance on mount
+  useEffect(() => {
+    const hasBackedUp = localStorage.getItem('vetrate_external_backup_created');
+    setHasExternalBackup(!!hasBackedUp);
+    // Show guide if they have claims but haven't downloaded a backup
+    const hasDismissedGuide = localStorage.getItem('vetrate_backup_guide_dismissed');
+    if (claims.length > 0 && !hasBackedUp && !hasDismissedGuide) {
+      setShowBackupGuide(true);
+    }
+  }, [claims.length]);
+
+  // Dismiss backup guide
+  const dismissBackupGuide = (remindLater = true) => {
+    setShowBackupGuide(false);
+    if (!remindLater) {
+      localStorage.setItem('vetrate_backup_guide_dismissed', 'true');
+    }
+  };
+
   // Backup COMPLETE packet to JSON file (includes profile and forms)
   const handleBackupPacket = () => {
     const statements = getAllStatements();
@@ -556,6 +577,9 @@ Return ONLY the JSON object, no explanation.`,
     downloadPacketBackup(exportData, `vet-rate-complete-backup-${new Date().toISOString().split('T')[0]}.json`);
     setImportStatus({ type: 'success', message: `Complete backup created with ${claims.length} claims, ${forms.length} forms, and your profile` });
     setBackupCreated(true);
+    setHasExternalBackup(true);
+    setShowBackupGuide(false);
+    localStorage.setItem('vetrate_external_backup_created', Date.now().toString());
     setTimeout(() => setImportStatus(null), 4000);
   };
 
@@ -926,6 +950,57 @@ Return ONLY the JSON object, no explanation.`,
               <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">🏆 {t('myPacketSection.statusFiled')}</div>
             </div>
           </div>
+
+          {/* 🛡️ GROUND GUIDE - Shows when user has data but no external backup */}
+          {showBackupGuide && claims.length > 0 && (
+            <div className="mx-4 sm:mx-6 mt-4 p-4 bg-gradient-to-r from-amber-50 via-amber-100 to-yellow-50 dark:from-amber-900/30 dark:via-amber-800/30 dark:to-yellow-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 text-4xl">🛡️</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-1">
+                    {t('myPacketSection.backupGuideTitle')}
+                  </h3>
+                  <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                    <strong>Important:</strong> {t('myPacketSection.backupGuideMessage')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleBackupPacket}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      {t('myPacketSection.backupGuideDownload')}
+                    </button>
+                    {onOpenGoogleDriveSync && (
+                      <button
+                        onClick={() => { dismissBackupGuide(false); onOpenGoogleDriveSync(); }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-sm shadow-md"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm-.71 1h10l5.15 10H2.85l5.15-10zm.71 11h8.58l2.29 4.5H5.42l2.29-4.5z"/>
+                        </svg>
+                        {t('myPacketSection.backupGuideGoogleDrive')}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => dismissBackupGuide(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
+                    >
+                      {t('myPacketSection.backupGuideRemindLater')}
+                    </button>
+                    <button
+                      onClick={() => dismissBackupGuide(false)}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
+                    >
+                      {t('myPacketSection.backupGuideDontShow')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Backup/Restore Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-3 bg-gray-100 dark:bg-gray-850 border-b dark:border-gray-700">

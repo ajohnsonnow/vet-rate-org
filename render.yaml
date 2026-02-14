@@ -2,7 +2,7 @@ services:
   # Vet-Rate.org - Free Version
   - type: web
     name: vet-rate-org
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     envVars:
@@ -51,7 +51,7 @@ services:
   # Supply Locker - Supporter Version (same codebase, different branding)
   - type: web
     name: supply-locker
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build:supplylocker
     staticPublishPath: ./dist-supplylocker
     envVars:

@@ -1,4 +1,5 @@
 # VA API Demo - Quick Reference Card
+
 *Print this and keep it next to your screen during the demo*
 
 ---
@@ -57,15 +58,19 @@ Tools → VA Integration Dashboard
 ## 💬 Key Talking Points
 
 ### On Open Data APIs (Min 1-3)
+
 > "These 3 APIs use API key authentication - no user login required. Perfect for public data like facility locations and forms."
 
 ### On OAuth Flow (Min 3-5)
+
 > "Using OAuth 2.0 with PKCE - no client secret stored client-side. The veteran sees exactly what we're requesting."
 
 ### On User Data (Min 5-8)
+
 > "Now we can access veteran-specific data. These 4 APIs require the OAuth token we just received."
 
 ### On Security (Min 8-10)
+
 > "All data is in browser sessionStorage. No database. No server-side storage. It's cleared when the tab closes or when the user logs out."
 
 ---
@@ -73,21 +78,27 @@ Tools → VA Integration Dashboard
 ## ❓ Anticipated Questions
 
 ### "Where is veteran data stored?"
+
 **A:** VA data is fetched into sessionStorage temporarily. With veteran consent, we can save to localStorage/IndexedDB on their device for offline access (My Packet & Knowledge Base). No database. They can delete anytime.
 
 ### "Do you use a client secret?"
+
 **A:** No. OAuth 2.0 PKCE eliminates the need for a secret in public clients.
 
 ### "What if the token expires?"
+
 **A:** We request `offline_access` for a refresh token. Our hook auto-refreshes before making calls.
 
 ### "How do you handle errors?"
+
 **A:** Try-catch blocks on every API call. User-friendly messages displayed. Technical details logged to console.
 
 ### "Can I see the code?"
+
 **A:** Absolutely. `src/hooks/useVaAuth.js` and `src/api/va.js` have all the OAuth and API logic.
 
 ### "How do you prevent CORS?"
+
 **A:** Development uses Vite proxy. Production will make direct calls from approved domain.
 
 ---
@@ -95,18 +106,22 @@ Tools → VA Integration Dashboard
 ## 🛠️ Troubleshooting (If Things Go Wrong)
 
 ### OAuth redirect fails
+
 - Check `.env.local` has correct `VITE_VA_CLIENT_ID` and `VITE_VA_REDIRECT_URL`
 - Ensure redirect URL matches VA Developer Portal registration
 
 ### API returns 403 Forbidden
+
 - Verify API key is registered for that specific service
 - Check key hasn't been rotated
 
 ### Network error / CORS
+
 - Confirm Vite proxy is running (`/va-api` → `sandbox-api.va.gov`)
 - Check browser console for specific error
 
 ### Token expired
+
 - Click "Disconnect" and log in again
 - Refresh tokens are valid for 7 days in sandbox
 
