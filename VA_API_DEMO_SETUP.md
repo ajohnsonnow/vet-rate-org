@@ -25,6 +25,7 @@ The production build shows this error because the VA environment variables are n
 ### Step 2: Add Required Variables
 
 **OAuth Configuration:**
+
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `VITE_VA_CLIENT_ID` | `0oaXXXXXXXXXX` | Your VA.gov OAuth Client ID from [developer.va.gov](https://developer.va.gov) |
@@ -32,6 +33,7 @@ The production build shows this error because the VA environment variables are n
 | `VITE_VA_API_ENV` | `sandbox` | Use `sandbox` until production approved |
 
 **API Keys (Open Data - can use same key for all 3):**
+
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `VITE_VA_API_KEY` | `your-va-api-key` | **VA Facilities API** - Find nearby VA locations |
@@ -139,7 +141,7 @@ Make sure your redirect URIs are registered at [developer.va.gov](https://develo
 1. **Facilities API Test**
    - Real-time facility search by ZIP code
    - Returns VA medical centers, benefits offices, vet centers
-   
+
 2. **Forms API Test**
    - Search for VA forms (21-526EZ, etc.)
    - Returns form metadata and PDF links
@@ -175,7 +177,8 @@ This is a browser-side warning (Edge/Chrome tracking protection). It's cosmetic 
 
 **Cause**: Missing environment variables in production
 
-**Fix**: 
+**Fix**:
+
 1. Go to Render Dashboard
 2. Add `VITE_VA_CLIENT_ID` and `VITE_VA_REDIRECT_URL`
 3. Redeploy
@@ -184,7 +187,7 @@ This is a browser-side warning (Edge/Chrome tracking protection). It's cosmetic 
 
 **Cause**: Requesting scopes that aren't approved for your Client ID
 
-**Fix**: 
+**Fix**:
 Edit [vaAuth.js](src/config/vaAuth.js) and comment out unapproved scopes:
 
 ```javascript

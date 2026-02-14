@@ -410,11 +410,12 @@ const AboutUs = ({ onClose, onReportBug }) => {
                       <p><strong>Memory:</strong> Corsair Vengeance 128 GB (4 x 32 GB) DDR5-5600 CL40</p>
                       <p><strong>Primary SSD:</strong> MSI SPATIUM M570 HS 2 TB PCIe 5.0 X4 NVMe</p>
                       <p><strong>Storage:</strong> 2 x Silicon Power UD90 4 TB PCIe 4.0 X4 NVMe</p>
-                      <p><strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB; Asus Dual GeForce RTX 5060 Ti OC 16GB</p>
+                      <p><strong>GPU:</strong> Asus ProArt OC GeForce RTX 4080 SUPER 16 GB (top slot); Asus ProArt OC RTX 4070 Ti SUPER 16 GB (middle slot)</p>
                       <p><strong>Case:</strong> Asus ProArt PA602 ATX Mid Tower</p>
                       <p><strong>PSU:</strong> be quiet! Dark Power Pro 13 1300W 80+ Titanium</p>
-                      <p><strong>Displays:</strong> Asus ProArt PA329CV 32" 4K + PA279CRV 27" 4K</p>
-                      <p className="pt-1 border-t border-gray-200 dark:border-gray-700 mt-1"><strong>eGPU:</strong> Asus ProArt OC RTX 4070 Ti SUPER 16 GB in Sonnet Breakaway Box 750ex</p>
+                      <p><strong>Displays:</strong> Asus ProArt PA329CV 32" 4K + PA279CRV 27" 4K + Caperave CU17 17.3" 4K</p>
+                      <p className="pt-1 border-t border-gray-200 dark:border-gray-700 mt-1"><strong>eGPU:</strong> Asus Dual GeForce RTX 5060 Ti OC 16GB in Sonnet Breakaway Box 850 T5</p>
+                      <p><strong>eGPU:</strong> Asus Dual RTX 4060 Ti EVO OC 16 GB in Sonnet Breakaway Box 750ex</p>
                     </div>
                   </details>
                 </div>

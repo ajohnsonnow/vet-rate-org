@@ -13,7 +13,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | Metric | Traditional Development | Agentic Development | Advantage |
 |--------|------------------------|---------------------|-----------|
 | **Timeline** | 11.5 years (solo) / 18-24 months (team) | 20 days | **190x faster** |
-| **Cost** | $3,224,340 | $63,000 | **98.0% savings** |
+| **Cost** | $3,226,095 | $63,000 | **98.0% savings** |
 | **Hourly Rate** | $135/hr (blended) | $420/hr | Higher rate, lower total |
 | **LOC/Hour** | 9.77 (team average) | 1,292 | **132x more productive** |
 | **Risk** | High (scope creep, turnover) | Low (single point of expertise) | Reduced complexity |
@@ -26,8 +26,8 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| **Lines of Code** | 193,796 | Production React/JavaScript |
-| **Total Files** | 1,628 | Organized codebase |
+| **Lines of Code** | 193,908 | Production React/JavaScript |
+| **Total Files** | 1,630 | Organized codebase |
 | **React Components** | 190 | 41 major tools + 149 supporting |
 | **Utility Modules** | 107 | Reusable helper functions |
 | **Disabilities Database** | 748 | Validated against 38 CFR |
@@ -59,6 +59,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 ### Traditional Team Options
 
 #### Option A: Balanced Team (18-24 months)
+
 | Role | FTE | Hours | Rate | Cost |
 |------|-----|-------|------|------|
 | Principal Engineer | 1 | 1,200 | $200 | $240,000 |
@@ -73,6 +74,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 *Plus 25% overhead (benefits, tools, infrastructure): **$3,226,250***
 
 #### Option B: Senior-Heavy Team (12-15 months)
+
 | Role | FTE | Hours | Rate | Cost |
 |------|-----|-------|------|------|
 | Principal Engineer | 1 | 1,800 | $200 | $360,000 |
@@ -84,11 +86,12 @@ This document presents a real-world case study comparing **Agentic Content Devel
 *Plus 25% overhead: **$2,785,000***
 
 #### Option C: Solo Senior Developer
+
 | Metric | Value |
 |--------|-------|
-| Hours Required | 23,884 |
+| Hours Required | 23,894 |
 | Rate | $135/hr |
-| **Total Cost** | **$3,224,340** |
+| **Total Cost** | **$3,225,690** |
 | **Timeline** | **11.5 years** |
 
 *Unrealistic for most projects due to timeline.*
@@ -114,7 +117,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | **Billable Hours** | 150 hours |
 | **Hourly Rate** | $420/hr |
 | **Total Cost** | $63,000 |
-| **Lines of Code** | 193,796 |
+| **Lines of Code** | 193,908 |
 | **Effective LOC/Hour** | 1,292 |
 | **Commits** | 241 |
 | **Commits per Day** | 11 average |
@@ -130,7 +133,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | Documentation | 200 hrs equiv | Done in ~3 hrs |
 | Research | 150 hrs equiv | Done in ~1 hr |
 | Deployment | 73 hrs equiv | Done in ~1 hr |
-| **Total** | **23,884 hrs** | **150 hrs actual** |
+| **Total** | **23,894 hrs** | **150 hrs actual** |
 
 ---
 
@@ -139,7 +142,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 ### 159x Productivity Gain Explained
 
 ```
-Traditional Hours Required:   23,884 hours
+Traditional Hours Required:   23,894 hours
 Actual Hours Spent:              150 hours
 Productivity Multiplier:        159x
 ```
@@ -167,12 +170,12 @@ Senior-Heavy Team (12-15 months):
 ███████████████████████████████████████████ $2,785,000
 
 Solo Developer (11.5 years):
-██████████████████████████████████████████████████ $3,224,340
+██████████████████████████████████████████████████ $3,225,690
 
 Agentic Development (20 days):
 █ $63,000
 
-Savings: $3,161,340 (98.0%)
+Savings: $3,162,690 (98.0%)
 ```
 
 ---
@@ -239,7 +242,7 @@ Savings: $3,161,340 (98.0%)
 
 ```
 Investment:        $63,000
-Value Created:  $3,224,340
+Value Created:  $3,225,690
 ROI:                5,019%
 Payback Period:     20 days
 ```
@@ -260,7 +263,7 @@ Payback Period:     20 days
 
 ### Validation
 
-- 241 commits with detailed history
+- 242 commits with detailed history
 - 16/16 automated pre-deploy checks pass
 - Production deployment on Render.com
 - Real veterans using the platform daily
@@ -293,29 +296,33 @@ The question isn't whether you can afford Agentic Development at $420/hour.
 ## Appendix: Methodology
 
 ### Lines of Code Counting
+
 ```bash
 find src -name '*.js' -o -name '*.jsx' | xargs wc -l
 # Result: 193,796 lines
 ```
 
 ### Hours Tracking
+
 - Git commit timestamps analyzed
 - Active coding sessions identified
 - 20 days with development activity
 - ~150 hours total engagement
 
 ### Traditional Hour Estimation
+
 - Industry-standard COCOMO II parameters
 - QSM benchmarks for productivity rates
 - Adjusted for project complexity (medical/legal domain)
 
 ### Cost Calculations
+
 - Rates from Robert Half Technology 2025 Guide
 - Glassdoor median salaries for major tech hubs
 - 25% burden rate for benefits/overhead
 
 ---
 
-*Document generated: February 5, 2026*
-*Version: 1.19.3*
+*Document generated: February 13, 2026*
+*Version: 1.19.4*
 *Project: VetRate.org*
