@@ -449,7 +449,7 @@ const VaSandboxTest = () => {
             <div className="mt-4 flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
                 <span className="text-blue-200">Client ID:</span>
-                <span className="font-mono">{import.meta.env.VITE_VA_CLIENT_ID?.slice(0, 12)}...</span>
+                <span className="font-mono">{import.meta.env.VITE_VA_AUTH_ID?.slice(0, 12)}...</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
                 <span className="text-blue-200">API Key:</span>

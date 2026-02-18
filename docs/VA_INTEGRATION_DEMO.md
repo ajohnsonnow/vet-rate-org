@@ -9,6 +9,7 @@ This document provides everything you need to demonstrate VA.gov API integration
 ## 📁 Files Created/Modified
 
 ### New Files
+
 | File | Purpose |
 |------|---------|
 | `src/api/va.js` | VA API service layer - all API calls |
@@ -18,6 +19,7 @@ This document provides everything you need to demonstrate VA.gov API integration
 | `.env.local.example` | Complete environment variable reference |
 
 ### Modified Files
+
 | File | Changes |
 |------|---------|
 | `src/main.jsx` | Added VaAuthProvider wrapper and OAuth callback routing |
@@ -35,7 +37,7 @@ Create a `.env.local` file with these variables:
 
 ```env
 # VA.gov OAuth 2.0 (PKCE)
-VITE_VA_CLIENT_ID=your_sandbox_client_id_here
+VITE_VA_AUTH_ID=your_sandbox_client_id_here
 VITE_VA_REDIRECT_URL=http://localhost:5173/callback
 VITE_VA_API_ENV=sandbox
 
@@ -66,29 +68,37 @@ VITE_GEMINI_API_KEY=your_gemini_key_here
 ### OAuth-Authenticated Endpoints
 
 1. **Service History** (Veteran Verification API)
+
    ```
    GET https://sandbox-api.va.gov/services/veteran_verification/v2/service_history
    ```
+
    - Returns: Military service records, branches, dates, discharge status
 
 2. **Claims** (Benefits Claims API)
+
    ```
    GET https://sandbox-api.va.gov/services/claims/v2/veterans/me/claims
    ```
+
    - Returns: All claims with status, dates, phase information
 
 3. **Appealable Issues** (Appeals API)
+
    ```
    GET https://sandbox-api.va.gov/services/appeals/appealable-issues/v0/appealable-issues
    ```
+
    - Returns: Decisions eligible for appeal
 
 ### API Key Endpoints
 
-4. **VA Facilities** (Facilities API)
+1. **VA Facilities** (Facilities API)
+
    ```
    GET https://sandbox-api.va.gov/services/va_facilities/v1/facilities
    ```
+
    - Uses API Key authentication (not OAuth)
    - Returns: Nearby VA medical centers, benefits offices, etc.
 
@@ -142,9 +152,10 @@ VITE_GEMINI_API_KEY=your_gemini_key_here
 
 ### VA Test Users (Sandbox)
 
-VA provides test users at: https://developer.va.gov/explore/api/veteran-verification/sandbox-access
+VA provides test users at: <https://developer.va.gov/explore/api/veteran-verification/sandbox-access>
 
 Common test users include:
+
 - `va.api.user+idme.001@gmail.com` (Standard veteran)
 - `va.api.user+idme.002@gmail.com` (Veteran with claims)
 
@@ -177,20 +188,24 @@ Common test users include:
 ## 🛡️ Security Implementation
 
 ### PKCE (Proof Key for Code Exchange)
+
 - `code_verifier`: 32-byte random string
 - `code_challenge`: SHA-256 hash of verifier (base64url encoded)
 - Prevents authorization code interception attacks
 
 ### State Parameter
+
 - Random 16-byte string for CSRF protection
 - Validated on callback
 
 ### Token Storage
+
 - Tokens stored in `sessionStorage` (not localStorage)
 - Cleared on logout
 - Cleared when tab/window closes
 
 ### Error Handling
+
 - 401 responses trigger logout
 - 403 responses show permission error
 - Network errors handled gracefully
@@ -231,11 +246,13 @@ Common test users include:
 ## 🚀 Access the Demo
 
 In the running app:
+
 1. Click the **🔧 Tools** dropdown in the header
 2. Scroll to **🤝 Support & Resources**
 3. Click **🔗 VA.gov Integration** (marked with DEMO badge)
 
 Or add this button anywhere in your app:
+
 ```jsx
 <button onClick={() => setShowVaIntegrationDemo(true)}>
   Open VA Integration Demo
@@ -249,9 +266,10 @@ Or add this button anywhere in your app:
 When requesting production access:
 
 1. Update `.env.local`:
+
    ```env
    VITE_VA_API_ENV=production
-   VITE_VA_CLIENT_ID=your_production_client_id
+   VITE_VA_AUTH_ID=your_production_client_id
    ```
 
 2. Update redirect URI at developer.va.gov to your production domain

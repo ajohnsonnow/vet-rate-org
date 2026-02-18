@@ -3,54 +3,74 @@
  * 
  * This configuration is for the Authorization Code Grant with PKCE flow.
  * Client-side only - NO CLIENT SECRET required or used.
+ * 
+ * IMPORTANT: VA OAuth endpoints are API-specific. Different APIs use different
+ * OAuth paths. For example:
+ *   - Veteran Service History & Eligibility: /oauth2/veteran-verification/v1/
+ *   - Benefits Claims: /oauth2/claims/v1/
+ *   - Clinical Health: /oauth2/clinical-health/v1/
+ * 
+ * Set VITE_VA_OAUTH_API_PATH to match the API you registered for at:
+ *   https://developer.va.gov/explore
+ * 
+ * The redirect URI you set in VITE_VA_REDIRECT_URL MUST exactly match
+ * the redirect URI you submitted on the VA sandbox access form.
+ * 
+ * @see https://developer.va.gov/explore/api/veteran-service-history-and-eligibility/authorization-code
  */
 
 // Read from environment variables (set in .env file)
 export const VA_AUTH_CONFIG = {
-  clientId: import.meta.env.VITE_VA_CLIENT_ID,
+  clientId: import.meta.env.VITE_VA_AUTH_ID,
   redirectUri: import.meta.env.VITE_VA_REDIRECT_URL,
   environment: import.meta.env.VITE_VA_API_ENV || 'sandbox',
+  // The API-specific OAuth path segment (e.g. "veteran-verification/v1")
+  // This determines which VA API's OAuth server handles your requests.
+  oauthApiPath: import.meta.env.VITE_VA_OAUTH_API_PATH || 'veteran-verification/v1',
 };
 
-// VA.gov OAuth endpoints
-const ENDPOINTS = {
-  sandbox: {
-    authorization: 'https://sandbox-api.va.gov/oauth2/authorization',
-    token: 'https://sandbox-api.va.gov/oauth2/token',
-    userInfo: 'https://sandbox-api.va.gov/oauth2/userinfo',
-    revoke: 'https://sandbox-api.va.gov/oauth2/revoke',
-  },
-  production: {
-    authorization: 'https://api.va.gov/oauth2/authorization',
-    token: 'https://api.va.gov/oauth2/token',
-    userInfo: 'https://api.va.gov/oauth2/userinfo',
-    revoke: 'https://api.va.gov/oauth2/revoke',
-  },
-};
+// VA.gov OAuth endpoints - built dynamically from environment + API path
+// Each VA API has its own OAuth authorization server, so the path matters.
+function buildEndpoints(environment, oauthApiPath) {
+  const baseHost = environment === 'production'
+    ? 'https://api.va.gov'
+    : 'https://sandbox-api.va.gov';
 
-// Get the appropriate endpoints based on environment
-export const VA_ENDPOINTS = ENDPOINTS[VA_AUTH_CONFIG.environment];
+  return {
+    authorization: `${baseHost}/oauth2/${oauthApiPath}/authorization`,
+    token:         `${baseHost}/oauth2/${oauthApiPath}/token`,
+    userInfo:      `${baseHost}/oauth2/${oauthApiPath}/userinfo`,
+    revoke:        `${baseHost}/oauth2/${oauthApiPath}/revoke`,
+    manage:        `${baseHost}/oauth2/${oauthApiPath}/manage`,
+    keys:          `${baseHost}/oauth2/${oauthApiPath}/keys`,
+  };
+}
 
-// OAuth Scopes
-// openid: Required for OpenID Connect
-// profile: Basic user profile info
-// offline_access: Enables refresh tokens for long-term access
-// claim.read: Access to VA claims data
-// service_history.read: Access to military service history
-// appealable_issues.read: Access to appealable decisions (DISABLED - may not be approved)
-// appeals_status.read: Access to appeals status (DISABLED - may not be approved)
+// Get the appropriate endpoints based on environment + API path
+export const VA_ENDPOINTS = buildEndpoints(
+  VA_AUTH_CONFIG.environment,
+  VA_AUTH_CONFIG.oauthApiPath
+);
 
-// NOTE: Only request scopes that were approved when you registered your Client ID!
-// If login fails with "invalid_scope", comment out the unapproved scopes below.
-// Start with minimal scopes and add more as they're approved.
+// OAuth Scopes - must match exactly what was approved when you registered
+// your Client ID via the VA sandbox access form.
+//
+// Scopes for the Veteran Service History & Eligibility API:
+//   openid, profile, offline_access,
+//   disability_rating.read, service_history.read, veteran_status.read,
+//   enrolled_benefits.read, flashes.read
+//
+// If login fails with "invalid_scope", reduce to only the scopes VA approved.
+// Start minimal (openid + profile) and add more as approved.
 export const VA_SCOPES = [
   'openid',
   'profile',
-  // 'offline_access',          // Uncomment if approved for refresh tokens
-  // 'claim.read',              // Uncomment if approved
-  // 'service_history.read',    // Uncomment if approved
-  // 'appealable_issues.read',  // Uncomment if approved
-  // 'appeals_status.read',     // Uncomment if approved
+  'offline_access',                // Refresh tokens (7-day sandbox, 42-day production expiry)
+  'disability_rating.read',        // VA disability ratings + effective dates
+  'service_history.read',          // Military service history + deployments
+  'veteran_status.read',           // Confirm Veteran status
+  // 'enrolled_benefits.read',     // Uncomment if approved - enrolled VA benefits
+  // 'flashes.read',               // Uncomment if approved - claimant-specific indicators
 ].join(' ');
 
 // VA API Keys (separate from OAuth)
@@ -77,10 +97,13 @@ export function isVaIntegrationConfigured() {
 export function getVaConfigStatus() {
   const issues = [];
   if (!VA_AUTH_CONFIG.clientId) {
-    issues.push('VITE_VA_CLIENT_ID not set');
+    issues.push('VITE_VA_AUTH_ID not set - get one from https://developer.va.gov/explore');
   }
   if (!VA_AUTH_CONFIG.redirectUri) {
-    issues.push('VITE_VA_REDIRECT_URL not set');
+    issues.push('VITE_VA_REDIRECT_URL not set - must match what you submitted on the VA sandbox form');
+  }
+  if (!VA_AUTH_CONFIG.oauthApiPath) {
+    issues.push('VITE_VA_OAUTH_API_PATH not set - defaults to veteran-verification/v1');
   }
   if (!VA_FACILITIES_API_KEY) {
     issues.push('VITE_VA_API_KEY not set (VA Facilities)');
@@ -112,13 +135,21 @@ export function getVaConfigStatus() {
 // Validate configuration (logs errors - use for login attempts)
 export function validateConfig() {
   if (!VA_AUTH_CONFIG.clientId) {
-    console.error('[VA Auth] Missing VITE_VA_CLIENT_ID environment variable');
-    console.error('[VA Auth] Set this in your Render Dashboard or .env.local file');
+    console.error('[VA Auth] Missing VITE_VA_AUTH_ID environment variable');
+    console.error('[VA Auth] Get a sandbox Client ID at: https://developer.va.gov/explore');
     return false;
   }
   if (!VA_AUTH_CONFIG.redirectUri) {
     console.error('[VA Auth] Missing VITE_VA_REDIRECT_URL environment variable');
+    console.error('[VA Auth] This must exactly match the redirect URI you submitted on the VA sandbox access form');
     return false;
   }
+  
+  // Log the constructed endpoints so developers can verify them
+  console.log('[VA Auth] Environment:', VA_AUTH_CONFIG.environment);
+  console.log('[VA Auth] OAuth API Path:', VA_AUTH_CONFIG.oauthApiPath);
+  console.log('[VA Auth] Authorization URL:', VA_ENDPOINTS.authorization);
+  console.log('[VA Auth] Redirect URI:', VA_AUTH_CONFIG.redirectUri);
+  
   return true;
 }

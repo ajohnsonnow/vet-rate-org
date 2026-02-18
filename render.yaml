@@ -9,12 +9,14 @@ services:
       - key: VITE_BRAND_MODE
         value: vetrate
       # VA.gov OAuth Configuration (set values in Render Dashboard)
-      - key: VITE_VA_CLIENT_ID
+      - key: VITE_VA_AUTH_ID
         sync: false  # Set in Render Dashboard (sensitive)
       - key: VITE_VA_REDIRECT_URL
         value: https://vet-rate.org/callback
       - key: VITE_VA_API_ENV
         value: sandbox
+      - key: VITE_VA_OAUTH_API_PATH
+        value: veteran-verification/v1
       # VA API Keys (set values in Render Dashboard)
       - key: VITE_VA_API_KEY
         sync: false  # Set in Render Dashboard (sensitive)

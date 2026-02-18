@@ -57,17 +57,17 @@ src/
 
 ### UI Components
 
-5. **[VaAuthCallback.jsx](src/components/VaAuthCallback.jsx)**
+1. **[VaAuthCallback.jsx](src/components/VaAuthCallback.jsx)**
    - Requires React Router
    - Shows loading/success/error states
    - Automatic redirect after success
 
-6. **[VaAuthCallbackNoRouter.jsx](src/components/VaAuthCallbackNoRouter.jsx)**
+2. **[VaAuthCallbackNoRouter.jsx](src/components/VaAuthCallbackNoRouter.jsx)**
    - No React Router required
    - Same functionality as above
    - Works with single-page apps
 
-7. **[VaLoginButton.jsx](src/components/VaLoginButton.jsx)**
+3. **[VaLoginButton.jsx](src/components/VaLoginButton.jsx)**
    - Pre-styled login/logout button
    - Shows user info when authenticated
    - Handles loading and error states
@@ -75,19 +75,19 @@ src/
 
 ### Documentation & Examples
 
-8. **[VA_AUTH_QUICK_START.md](docs/VA_AUTH_QUICK_START.md)**
+1. **[VA_AUTH_QUICK_START.md](docs/VA_AUTH_QUICK_START.md)**
    - 5-minute setup guide
    - No React Router required
    - Step-by-step instructions
    - Common use cases
 
-9. **[VA_AUTH_INTEGRATION.md](docs/VA_AUTH_INTEGRATION.md)**
+2. **[VA_AUTH_INTEGRATION.md](docs/VA_AUTH_INTEGRATION.md)**
    - Comprehensive documentation
    - Security best practices
    - API reference
    - Troubleshooting guide
 
-10. **[VaAuthIntegrationExample.jsx](src/examples/VaAuthIntegrationExample.jsx)**
+3. **[VaAuthIntegrationExample.jsx](src/examples/VaAuthIntegrationExample.jsx)**
     - Complete code examples
     - Protected routes
     - API requests
@@ -100,6 +100,7 @@ src/
 No additional dependencies required! Uses native browser APIs.
 
 If you want React Router (optional):
+
 ```bash
 npm install react-router-dom
 ```
@@ -107,8 +108,9 @@ npm install react-router-dom
 ### 2. Configure Environment
 
 Add to `.env`:
+
 ```env
-VITE_VA_CLIENT_ID=your_va_client_id
+VITE_VA_AUTH_ID=your_va_client_id
 VITE_VA_REDIRECT_URL=http://localhost:5173
 VITE_VA_API_ENV=sandbox
 ```
@@ -141,6 +143,7 @@ function Header() {
 ### 5. Handle Callback
 
 **Without React Router:**
+
 ```jsx
 import VaAuthCallbackNoRouter from './components/VaAuthCallbackNoRouter';
 
@@ -157,6 +160,7 @@ function App() {
 ```
 
 **With React Router:**
+
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import VaAuthCallback from './components/VaAuthCallback';
@@ -278,13 +282,14 @@ VITE_VA_API_ENV=sandbox
 ```
 
 Sandbox URLs:
+
 - Authorization: `https://sandbox-api.va.gov/oauth2/authorization`
 - Token: `https://sandbox-api.va.gov/oauth2/token`
 - User Info: `https://sandbox-api.va.gov/oauth2/userinfo`
 
 ### Test Accounts
 
-Get test accounts from: https://developer.va.gov/explore/api/test-user-guide
+Get test accounts from: <https://developer.va.gov/explore/api/test-user-guide>
 
 ### Production Environment
 
@@ -295,6 +300,7 @@ VITE_VA_API_ENV=production
 ```
 
 Production URLs:
+
 - Authorization: `https://api.va.gov/oauth2/authorization`
 - Token: `https://api.va.gov/oauth2/token`
 - User Info: `https://api.va.gov/oauth2/userinfo`
@@ -351,9 +357,10 @@ function ProtectedRoute({ children }) {
 ### Issue: "Invalid configuration"
 
 **Solution:** Ensure environment variables are set:
+
 ```bash
 # Check .env file exists and has:
-VITE_VA_CLIENT_ID=...
+VITE_VA_AUTH_ID=...
 VITE_VA_REDIRECT_URL=...
 ```
 
@@ -362,15 +369,17 @@ Restart dev server after creating `.env`.
 ### Issue: "State mismatch"
 
 **Solution:** Don't reload page during OAuth flow. Clear sessionStorage:
+
 ```javascript
 sessionStorage.clear();
 ```
 
 ### Issue: Redirect not working
 
-**Solution:** 
+**Solution:**
+
 1. Check `VITE_VA_REDIRECT_URL` matches your current URL
-2. Verify URL is registered at https://developer.va.gov/
+2. Verify URL is registered at <https://developer.va.gov/>
 3. Include the port number for localhost
 
 ### Issue: Tokens not persisting
@@ -389,6 +398,7 @@ sessionStorage.clear();
 ### Updating Scopes
 
 Edit [vaAuth.js](src/config/vaAuth.js):
+
 ```javascript
 export const VA_SCOPES = [
   'openid',
@@ -400,11 +410,13 @@ export const VA_SCOPES = [
 ### Switching Environments
 
 Development:
+
 ```env
 VITE_VA_API_ENV=sandbox
 ```
 
 Production:
+
 ```env
 VITE_VA_API_ENV=production
 ```
@@ -420,5 +432,6 @@ This integration was built specifically for Vet-Rate.org to help veterans access
 ---
 
 **Questions?**
-- VA API Support: api@va.gov
-- Developer Portal: https://developer.va.gov/support
+
+- VA API Support: <api@va.gov>
+- Developer Portal: <https://developer.va.gov/support>
