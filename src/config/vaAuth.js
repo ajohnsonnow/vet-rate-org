@@ -95,6 +95,12 @@ export function getVaConfigStatus() {
     isConfigured: issues.length === 0,
     issues,
     environment: VA_AUTH_CONFIG.environment,
+    // Primary property names (used by VADataCenter)
+    oauthConfigured: !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+    facilitiesConfigured: !!VA_FACILITIES_API_KEY,
+    formsConfigured: !!VA_FORMS_API_KEY,
+    benefitsConfigured: !!VA_BENEFITS_REF_API_KEY,
+    // Legacy aliases (backwards compat)
     hasOAuth: !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
     hasApiKey: !!VA_FACILITIES_API_KEY,
     hasFormsApiKey: !!VA_FORMS_API_KEY,
