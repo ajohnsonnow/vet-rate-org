@@ -47,6 +47,14 @@ services:
       - path: /*.css
         name: Content-Type
         value: text/css; charset=utf-8
+    routes:
+      # SPA client-side routing - serve index.html for all non-asset paths
+      - type: rewrite
+        source: /callback
+        destination: /index.html
+      - type: rewrite
+        source: /sandbox-test
+        destination: /index.html
 
   # Supply Locker - Supporter Version (same codebase, different branding)
   - type: web
