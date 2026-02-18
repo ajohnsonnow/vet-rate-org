@@ -339,19 +339,6 @@ export const formatFileSize = (bytes) => {
 };
 
 /**
- * Validate file size (max 50MB)
- */
-export const validateFileSize = (file, maxSizeMB = 50) => {
-  const maxBytes = maxSizeMB * 1024 * 1024;
-  if (file.size > maxBytes) {
-    throw new Error(
-      `File size (${formatFileSize(file.size)}) exceeds maximum allowed size (${maxSizeMB}MB)`
-    );
-  }
-  return true;
-};
-
-/**
  * Render PDF pages to images for vision model input
  * This bypasses OCR and sends actual images to vision-language models
  * 
@@ -471,18 +458,4 @@ export async function renderPDFToImages(file, options = {}, onProgress = () => {
     throw new Error(`Failed to render PDF: ${error.message}`);
   }
 }
-
-/**
- * Convert an image file to base64 data URL for vision model input
- * 
- * @param {File} file - Image file (JPEG, PNG, etc.)
- * @returns {Promise<string>} Base64 data URL
- */
-export async function imageFileToDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read image file'));
-    reader.readAsDataURL(file);
-  });
-}
+

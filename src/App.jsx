@@ -80,8 +80,8 @@ import CrisisModal from './components/CrisisModal';
 import UpdateBanner from './components/UpdateBanner';
 import WhatsNewModal from './components/WhatsNewModal';
 import ToastContainer, { useToast } from './components/Toast';
-import StatementAnalyzer from './components/StatementAnalyzer';
-import ClaimProgress from './components/ClaimProgress';
+// StatementAnalyzer & ClaimProgress are embedded components
+// Used inside NexusBuilder and MyPacket - no App-level import needed
 import PWAInstallButton from './components/PWAInstallButton';
 import DenialDecoder from './components/DenialDecoder';
 import ZonkButton from './components/ZonkButton';
@@ -712,9 +712,9 @@ function App() {
       'my-packet': () => setShowMyPacket(true),
       'knowledge-base': () => setShowVKBViewer(true),
       'nexus-builder': () => setShowNexusBuilder(true),
-      'statement-analyzer': () => setShowStatementAnalyzer(true),
+      'statement-analyzer': () => setShowNexusBuilder(true), // Statement Analyzer is embedded in Nexus Builder
       'mos-hazard': () => setShowMOSHazardMatcher(true),
-      'timeline-wizard': () => setShowTimelineWizard(true),
+      'timeline-wizard': () => setShowEvidenceTimeline(true), // Timeline Wizard maps to Evidence Timeline
       'dd214-analyzer': () => setShowDD214Analyzer(true),
       'web-of-conditions': () => setShowWebOfConditions(true),
       'cap-simulator': () => setShowCAPSimulator(true),

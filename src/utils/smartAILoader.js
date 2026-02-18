@@ -169,23 +169,4 @@ export const smartLoadAI = async (toolId, onProgress = null) => {
     return false;
   }
 };
-
-/**
- * Get a simple status message for UI display
- * @param {string} toolId - The tool being used
- * @returns {string} Status message
- */
-export const getSmartLoadStatus = (toolId) => {
-  const check = checkModelMatch(toolId);
-  const device = getDeviceType();
-  
-  if (check.isCorrect) {
-    return `✅ ${check.recommendedModel.name} loaded (${device})`;
-  }
-  
-  if (check.action === 'load') {
-    return `📥 Load ${check.recommendedModel.name} for ${device}`;
-  }
-  
-  return `🔄 Switch to ${check.recommendedModel.name} (recommended for ${device})`;
-};
+

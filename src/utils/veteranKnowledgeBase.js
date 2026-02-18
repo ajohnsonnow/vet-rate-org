@@ -470,39 +470,6 @@ export const getDocumentFromVKB = async (documentId) => {
 };
 
 /**
- * Get all documents of a specific type/category
- * @param {string} category - One of: dd214s, blueButtonReports, cFiles, privateRecords, otherEvidence
- * @returns {Promise<Array>} All documents of that type, sorted by version (newest first)
- */
-export const getDocumentsByType = async (category) => {
-  const vkb = await loadVKB();
-  const docs = vkb.documentation[category] || [];
-  
-  // Sort by version number descending (newest first)
-  return docs.sort((a, b) => (b.version || 0) - (a.version || 0));
-};
-
-/**
- * Get the most recent document of a specific type
- * @param {string} category - One of: dd214s, blueButtonReports, cFiles, privateRecords, otherEvidence
- * @returns {Promise<object|null>} Most recent document or null if none exist
- */
-export const getMostRecentDocument = async (category) => {
-  const vkb = await loadVKB();
-  const docs = vkb.documentation[category] || [];
-  
-  // Find document marked as mostRecent
-  const mostRecent = docs.find(doc => doc.mostRecent === true);
-  if (mostRecent) return mostRecent;
-  
-  // Fallback: return document with highest version number
-  if (docs.length === 0) return null;
-  return docs.reduce((latest, doc) => 
-    (doc.version || 0) > (latest.version || 0) ? doc : latest
-  );
-};
-
-/**
  * Compare two document versions side-by-side
  * @param {string} docId1 - ID of first document
  * @param {string} docId2 - ID of second document
@@ -891,23 +858,6 @@ export const exportVKB = async () => {
   link.download = `vetrate-knowledge-base-${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
-};
-
-/**
- * Import VKB from file
- */
-export const importVKB = (fileContent) => {
-  try {
-    const vkb = JSON.parse(fileContent);
-    if (!vkb.metadata || !vkb.personal || !vkb.serviceHistory) {
-      throw new Error('Invalid VKB format');
-    }
-    saveVKB(vkb);
-    return { success: true };
-  } catch (err) {
-    console.error('Error importing VKB:', err);
-    return { success: false, error: err.message };
-  }
 };
 
 /**

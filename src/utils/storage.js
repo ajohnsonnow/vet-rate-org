@@ -281,17 +281,6 @@ function estimateLocalStorageSize() {
 }
 
 /**
- * Force a re-migration (for testing or recovery)
- * @returns {Promise<Object>} Migration results
- */
-export async function forceMigration() {
-  console.warn('⚠️ Forcing re-migration from localStorage to IndexedDB');
-  await storage.removeItem(MIGRATION_KEY);
-  await storage.removeItem(MIGRATION_TIMESTAMP_KEY);
-  return await migrateFromLocalStorage();
-}
-
-/**
  * Export all data from IndexedDB (for backup)
  * @returns {Promise<Object>} All data in a single object
  */

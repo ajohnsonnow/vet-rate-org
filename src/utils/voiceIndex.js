@@ -75,7 +75,7 @@ export const initializeCompassionateVoice = () => {
 /**
  * Configuration for voice features
  */
-export const VOICE_CONFIG = {
+const VOICE_CONFIG = {
   // Default voice settings (TBI-friendly)
   defaultSettings: {
     pitch: 0.95,

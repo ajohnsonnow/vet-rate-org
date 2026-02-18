@@ -65,22 +65,6 @@ function base64UrlEncode(buffer) {
 }
 
 /**
- * Validate that the code verifier meets PKCE requirements
- * @param {string} verifier - The code verifier to validate
- * @returns {boolean} True if valid
- */
-export function validateCodeVerifier(verifier) {
-  // Must be 43-128 characters long
-  if (!verifier || verifier.length < 43 || verifier.length > 128) {
-    return false;
-  }
-  
-  // Must only contain alphanumeric characters, hyphens, underscores, periods, and tildes
-  const validPattern = /^[A-Za-z0-9\-._~]+$/;
-  return validPattern.test(verifier);
-}
-
-/**
  * Generate both code_verifier and code_challenge at once
  * @returns {Promise<{verifier: string, challenge: string}>}
  */

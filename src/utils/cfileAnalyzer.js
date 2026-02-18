@@ -995,34 +995,6 @@ async function analyzeChunk(chunk, chunkNum, totalChunks, onProgress) {
 export { attemptJSONRepair };
 
 /**
- * Validate a Gemini API key by making a simple test request
- * @param {string} apiKey - The API key to validate
- * @returns {Promise<{valid: boolean, error?: string}>}
- */
-export async function validateApiKey(apiKey) {
-  if (!apiKey || apiKey.trim().length < 10) {
-    return { valid: false, error: 'API key is too short' };
-  }
-  
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-    const response = await fetch(endpoint);
-    
-    if (response.ok) {
-      return { valid: true };
-    }
-    
-    if (response.status === 400 || response.status === 403) {
-      return { valid: false, error: 'Invalid API key' };
-    }
-    
-    return { valid: false, error: `Validation failed (${response.status})` };
-  } catch (error) {
-    return { valid: false, error: 'Network error during validation' };
-  }
-}
-
-/**
  * Estimate chunks needed for a given text length
  * Useful for showing user what to expect before processing
  */

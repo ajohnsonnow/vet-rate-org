@@ -130,45 +130,6 @@ export async function convertPdfPageToBlob(pdfInput, pageNum = 1, scale = PDF_CO
 }
 
 /**
- * Convert all PDF pages to image blobs
- * 
- * @param {File|ArrayBuffer} pdfInput - PDF file or data
- * @param {number} scale - Render scale
- * @param {Function} onProgress - Progress callback (page, total)
- * @returns {Promise<Blob[]>} Array of PNG blobs
- */
-export async function convertAllPdfPagesToBlobs(pdfInput, scale = PDF_CONFIG.SCALE_HIGH, onProgress = null) {
-  // Get PDF info
-  let pdfData;
-  if (pdfInput instanceof File) {
-    pdfData = await pdfInput.arrayBuffer();
-  } else {
-    pdfData = pdfInput;
-  }
-
-  const loadingTask = pdfjsLib.getDocument({
-    data: pdfData,
-    standardFontDataUrl: STANDARD_FONT_DATA_URL,
-  });
-
-  const pdf = await loadingTask.promise;
-  const numPages = Math.min(pdf.numPages, PDF_CONFIG.MAX_PAGES);
-  
-  const blobs = [];
-  
-  for (let i = 1; i <= numPages; i++) {
-    if (onProgress) {
-      onProgress(i, numPages);
-    }
-    
-    const blob = await convertPdfPageToBlob(pdfData, i, scale);
-    blobs.push(blob);
-  }
-
-  return blobs;
-}
-
-/**
  * Get PDF metadata (page count, dimensions, etc.)
  * 
  * @param {File|ArrayBuffer} pdfInput - PDF file or data
@@ -268,50 +229,4 @@ export function getOptimalScale(metadata) {
     return PDF_CONFIG.SCALE_NORMAL;   // Large/high-quality original
   }
 }
-
-/**
- * Create a thumbnail blob for preview (lower resolution)
- * 
- * @param {File|ArrayBuffer} pdfInput - PDF file or data
- * @param {number} pageNum - Page number
- * @param {number} maxDimension - Max width/height for thumbnail
- * @returns {Promise<Blob>} Thumbnail blob
- */
-export async function createPdfThumbnail(pdfInput, pageNum = 1, maxDimension = 300) {
-  let pdfData;
-  if (pdfInput instanceof File) {
-    pdfData = await pdfInput.arrayBuffer();
-  } else {
-    pdfData = pdfInput;
-  }
-
-  const loadingTask = pdfjsLib.getDocument({
-    data: pdfData,
-    standardFontDataUrl: STANDARD_FONT_DATA_URL,
-  });
-
-  const pdf = await loadingTask.promise;
-  const page = await pdf.getPage(pageNum);
-  
-  // Calculate scale to fit within maxDimension
-  const viewport = page.getViewport({ scale: 1.0 });
-  const scale = maxDimension / Math.max(viewport.width, viewport.height);
-  const thumbViewport = page.getViewport({ scale });
-
-  const canvas = document.createElement('canvas');
-  canvas.width = thumbViewport.width;
-  canvas.height = thumbViewport.height;
-  
-  const context = canvas.getContext('2d');
-  context.fillStyle = '#FFFFFF';
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  await page.render({
-    canvasContext: context,
-    viewport: thumbViewport,
-  }).promise;
-
-  return new Promise((resolve) => {
-    canvas.toBlob(resolve, 'image/jpeg', 0.8);
-  });
-}
+

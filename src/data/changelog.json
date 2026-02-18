@@ -1,8 +1,42 @@
 {
-  "version": "1.19.4",
-  "lastUpdated": "2026-02-14",
+  "version": "1.19.5",
+  "lastUpdated": "2026-02-18",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
+    {
+      "version": "1.19.5",
+      "date": "2026-02-18",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.19.4",
+      "changelog": [
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.19.4",
+          "description": "release v1.19.4"
+        }
+      ]
+    },
+    {
+      "version": "1.19.4",
+      "date": "2026-02-16",
+      "isFirstRelease": false,
+      "releaseTitle": "Bug Fixes & Improvements - v1.19.4",
+      "changelog": [
+        {
+          "type": "chore",
+          "category": "Other",
+          "title": "release v1.19.4",
+          "description": "release v1.19.4"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "resolve State Benefit Hunter modal scroll and AI button freeze",
+          "description": "resolve State Benefit Hunter modal scroll and AI button freeze"
+        }
+      ]
+    },
     {
       "version": "1.19.4",
       "date": "2026-02-14",

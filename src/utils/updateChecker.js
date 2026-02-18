@@ -153,28 +153,4 @@ export const stopUpdateChecker = () => {
     console.log('🛡️ Update checker stopped');
   }
 };
-
-/**
- * Get info about the last check
- */
-export const getCheckInfo = () => {
-  return {
-    isRunning: checkInterval !== null,
-    lastCheckTime: lastCheckTime ? new Date(lastCheckTime).toISOString() : null,
-    checkInterval: UPDATE_CHECK_INTERVAL,
-    currentVersion: APP_VERSION
-  };
-};
-
-/**
- * Manual update check (for testing or user-triggered check)
- * @param {Function} onResult - Callback with result
- */
-export const manualUpdateCheck = async (onResult) => {
-  console.log('🔍 Manual update check requested...');
-  const result = await checkForUpdates();
-  if (onResult) {
-    onResult(result);
-  }
-  return result;
-};
+

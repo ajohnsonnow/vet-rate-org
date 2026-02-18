@@ -514,32 +514,4 @@ export const isStorageAvailable = () => {
     return false;
   }
 };
-
-/**
- * Clear all feature requests from storage
- * @returns {Promise<boolean>}
- */
-export const clearAllFeatureRequests = async () => {
-  try {
-    const database = await openDatabase();
-    
-    return new Promise((resolve, reject) => {
-      const transaction = database.transaction([REQUESTS_STORE], 'readwrite');
-      const store = transaction.objectStore(REQUESTS_STORE);
-      const clearRequest = store.clear();
-      
-      clearRequest.onsuccess = () => {
-        console.log('✅ All feature requests cleared');
-        resolve(true);
-      };
-      
-      clearRequest.onerror = () => {
-        console.error('Failed to clear feature requests:', clearRequest.error);
-        reject(clearRequest.error);
-      };
-    });
-  } catch (error) {
-    console.error('Error clearing feature requests:', error);
-    return false;
-  }
-};
+

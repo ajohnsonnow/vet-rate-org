@@ -124,38 +124,4 @@ export function estimateProcessingTime(pageCount) {
   return `${totalMinutes}-${totalMinutes + 2} minutes`;
 }
 
-/**
- * Chunk text for API limits if needed
- * Gemini 1.5 Flash has 1M token context, so this is rarely needed
- * @param {string} text - Full text
- * @param {number} maxChars - Maximum characters per chunk (default ~800K to be safe)
- * @returns {string[]}
- */
-export function chunkText(text, maxChars = 800000) {
-  if (text.length <= maxChars) {
-    return [text];
-  }
-  
-  const chunks = [];
-  const pages = text.split(/--- PAGE \d+ ---/);
-  let currentChunk = '';
-  let currentPageNum = 0;
-  
-  for (const pageText of pages) {
-    currentPageNum++;
-    const pageWithMarker = `--- PAGE ${currentPageNum} ---\n${pageText}\n`;
-    
-    if (currentChunk.length + pageWithMarker.length > maxChars) {
-      chunks.push(currentChunk);
-      currentChunk = pageWithMarker;
-    } else {
-      currentChunk += pageWithMarker;
-    }
-  }
-  
-  if (currentChunk) {
-    chunks.push(currentChunk);
-  }
-  
-  return chunks;
-}
+

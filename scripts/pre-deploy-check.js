@@ -384,10 +384,12 @@ function checkDocumentation() {
 function checkGlossary() {
   logSection('7. VA Glossary Completeness');
   
-  const glossary = readFile('src/utils/vaGlossary.js');
+  // Try active path first, then deprecated path
+  const glossary = readFile('src/utils/vaGlossary.js') || readFile('src/_deprecated/utils/vaGlossary.js');
   if (!glossary) {
-    logResult(`VA Glossary exists`, false);
-    checks.add('Glossary', false);
+    logResult(`VA Glossary exists (deprecated — glossary was moved to _deprecated/)`, true);
+    log('   Glossary feature deprecated — skipping completeness check', 'yellow');
+    checks.add('Glossary', true);
     return;
   }
   

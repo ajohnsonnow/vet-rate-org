@@ -353,17 +353,6 @@ export const logConsoleError = (entry) => {
 };
 
 /**
- * Clear console logs (useful for testing or after bug report submission)
- */
-export const clearConsoleLogs = () => {
-  try {
-    sessionStorage.removeItem('vet_rate_console_logs');
-  } catch {
-    // Silently fail
-  }
-};
-
-/**
  * Format the complete bug report for clipboard/display
  */
 export const formatBugReport = (reportData) => {
