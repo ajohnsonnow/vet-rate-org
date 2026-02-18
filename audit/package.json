@@ -1,0 +1,23 @@
+{
+  "name": "vetrate-audit-pipeline",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Autonomous codebase auditing and UI-to-function verification for VetRate",
+  "scripts": {
+    "audit": "node runner.js",
+    "audit:static": "node runner.js --static-only",
+    "audit:dynamic": "npx playwright test",
+    "audit:ast": "node static-analysis/ast-mapper.js",
+    "audit:deps": "node static-analysis/dependency-graph.js",
+    "audit:wiring": "node static-analysis/wiring-verifier.js",
+    "audit:report": "node coverage/coverage-analyzer.js",
+    "playwright:install": "npx playwright install chromium",
+    "playwright:ui": "npx playwright test --ui",
+    "playwright:headed": "npx playwright test --headed"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0",
+    "@babel/traverse": "^7.24.0",
+    "@playwright/test": "^1.48.0"
+  }
+}

@@ -26,7 +26,10 @@ const rootDir = path.resolve(__dirname, '..');
 // Configuration
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const GLOSSARY_SOURCE = path.join(rootDir, 'src/utils/vaGlossary.js');
+// Try active path first, then deprecated path
+const GLOSSARY_SOURCE_ACTIVE = path.join(rootDir, 'src/utils/vaGlossary.js');
+const GLOSSARY_SOURCE_DEPRECATED = path.join(rootDir, 'src/_deprecated/utils/vaGlossary.js');
+const GLOSSARY_SOURCE = fs.existsSync(GLOSSARY_SOURCE_ACTIVE) ? GLOSSARY_SOURCE_ACTIVE : GLOSSARY_SOURCE_DEPRECATED;
 const USER_MANUAL_PATH = path.join(rootDir, 'src/components/UserManual.jsx');
 
 // Terms to exclude (duplicates or alternate forms already handled)

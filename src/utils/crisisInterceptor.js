@@ -167,38 +167,6 @@ export function interceptBeforeAICall(userInput) {
 }
 
 /**
- * Log crisis intercept events (for future analytics/improvement)
- * Does NOT log user text - only metadata
- */
-export function logCrisisIntercept(severity, source = 'unknown') {
-  try {
-    const event = {
-      timestamp: new Date().toISOString(),
-      severity,
-      source, // e.g., 'NexusBuilder', 'WitnessBench', etc.
-      version: '1.0.0'
-    };
-    
-    // Store in localStorage for potential future review/improvement
-    const existingLogs = JSON.parse(localStorage.getItem('vetrate_crisis_logs') || '[]');
-    existingLogs.push(event);
-    
-    // Keep only last 100 events
-    if (existingLogs.length > 100) {
-      existingLogs.shift();
-    }
-    
-    localStorage.setItem('vetrate_crisis_logs', JSON.stringify(existingLogs));
-    
-    // Also log to console for immediate developer visibility
-    console.warn('🚨 CRISIS INTERCEPTOR TRIGGERED:', { severity, source });
-  } catch (error) {
-    // Silent fail - don't let logging errors block crisis response
-    console.error('Crisis logging failed (non-blocking):', error);
-  }
-}
-
-/**
  * Get user-friendly message based on severity
  */
 export function getCrisisMessage(severity) {
@@ -210,26 +178,4 @@ export function getCrisisMessage(severity) {
   
   return messages[severity] || messages.medium;
 }
-
-/**
- * Test function for development/validation
- */
-export function testCrisisDetection() {
-  const testCases = [
-    { text: "I can't take this anymore, I want to end it all", shouldTrigger: true },
-    { text: "I'm thinking about suicide", shouldTrigger: true },
-    { text: "Everyone would be better off if I was dead", shouldTrigger: true },
-    { text: "I have severe PTSD and anxiety", shouldTrigger: false },
-    { text: "My back pain is killing me", shouldTrigger: false },
-    { text: "I'm stressed about my claim", shouldTrigger: false },
-    { text: "I want to kill myself", shouldTrigger: true },
-    { text: "No reason to keep going", shouldTrigger: true }
-  ];
-
-  console.log('🧪 Crisis Detection Test Results:');
-  testCases.forEach(({ text, shouldTrigger }) => {
-    const result = detectCrisisLanguage(text);
-    const passed = result.isCrisis === shouldTrigger;
-    console.log(`${passed ? '✅' : '❌'} "${text.substring(0, 40)}..." - Expected: ${shouldTrigger}, Got: ${result.isCrisis}`);
-  });
-}
+

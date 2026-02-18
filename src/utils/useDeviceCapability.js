@@ -317,40 +317,4 @@ export function useDeviceCapability() {
   };
 }
 
-/**
- * Static version for non-React contexts
- * @returns {Promise<Object>} Device capabilities and advice
- */
-export async function getDeviceCapability() {
-  const userAgent = navigator.userAgent;
-  const androidVersion = parseAndroidVersion(userAgent);
-  const iosVersion = parseIOSVersion(userAgent);
-  const isMobile = checkIsMobile();
-  const isDataSaver = checkDataSaverMode();
-  const deviceMemory = getDeviceMemory();
-  
-  const webGPUResult = await checkWebGPUSupport();
-  const tier = await determineDeviceTier(userAgent, webGPUResult);
-  
-  const capabilities = {
-    isMobile,
-    isDataSaver,
-    deviceMemory,
-    androidVersion,
-    iosVersion,
-    webGPUSupported: webGPUResult.supported,
-    webGPUReason: webGPUResult.reason || null,
-    tier,
-  };
-  
-  return {
-    ...capabilities,
-    advice: getDeviceAdvice(tier, capabilities),
-    isHighEnd: tier === DEVICE_TIERS.HIGH_END,
-    isLegacy: tier === DEVICE_TIERS.LEGACY,
-    isUnsupported: tier === DEVICE_TIERS.UNSUPPORTED,
-    canRunLocalAI: webGPUResult.supported,
-  };
-}
-
 export default useDeviceCapability;

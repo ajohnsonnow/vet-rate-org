@@ -246,24 +246,4 @@ export const storeLocalKey = (backupId, keyExport) => {
 export const getLocalKey = (backupId) => {
   return localStorage.getItem(KEY_STORAGE_PREFIX + backupId);
 };
-
-/**
- * Remove encryption key from local storage
- */
-export const removeLocalKey = (backupId) => {
-  localStorage.removeItem(KEY_STORAGE_PREFIX + backupId);
-};
-
-/**
- * List all stored backup keys
- */
-export const listLocalKeys = () => {
-  const keys = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key.startsWith(KEY_STORAGE_PREFIX)) {
-      keys.push(key.replace(KEY_STORAGE_PREFIX, ''));
-    }
-  }
-  return keys;
-};
+

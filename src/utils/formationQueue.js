@@ -331,32 +331,6 @@ export const saveFormationState = (formation) => {
 };
 
 /**
- * Check if there's a saved formation to resume
- */
-export const canResumeFormation = () => {
-  try {
-    const saved = localStorage.getItem('vetrate_formation_state');
-    if (!saved) return false;
-    
-    const state = JSON.parse(saved);
-    if (!state.formation || state.formation.length === 0) return false;
-    
-    // Check if there are any incomplete documents
-    return state.formation.some(entry => 
-      entry.status === FORMATION_STATUS.WAITING ||
-      entry.status === FORMATION_STATUS.CALLED ||
-      entry.status === FORMATION_STATUS.OCR_IN_PROGRESS ||
-      entry.status === FORMATION_STATUS.INTEL_BRIEFING ||
-      entry.status === FORMATION_STATUS.USER_REVIEW ||
-      entry.status === FORMATION_STATUS.VERIFIED
-    );
-  } catch (error) {
-    console.error('Failed to check resume state:', error);
-    return false;
-  }
-};
-
-/**
  * Load saved formation state from localStorage
  * Note: File objects can't be serialized, so entries without actual files
  * will be displayed but can't be reprocessed
@@ -406,25 +380,4 @@ export const loadFormationState = () => {
 export const clearFormationState = () => {
   localStorage.removeItem('vetrate_formation_state');
 };
-
-/**
- * Get recommended processing order message
- */
-export const getProcessingOrderMessage = (formation) => {
-  const stats = getFormationStats(formation);
-  
-  if (stats.critical > 0) {
-    return `Processing ${stats.critical} critical document${stats.critical > 1 ? 's' : ''} first (DD214, Rating Decisions)`;
-  }
-  if (stats.important > 0) {
-    return `Processing ${stats.important} important document${stats.important > 1 ? 's' : ''} (Claims, Medical Records)`;
-  }
-  if (stats.review > 0) {
-    return `Processing ${stats.review} document${stats.review > 1 ? 's' : ''} for review`;
-  }
-  if (stats.unknown > 0) {
-    return `Processing ${stats.unknown} unknown document${stats.unknown > 1 ? 's' : ''} - will classify during inspection`;
-  }
-  
-  return 'Ready to begin formation inspection';
-};
+

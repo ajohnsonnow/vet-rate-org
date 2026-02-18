@@ -58,31 +58,6 @@ export function hasUnsavedChanges() {
 }
 
 /**
- * Get the time since last backup in minutes
- */
-export function getMinutesSinceLastBackup() {
-  const lastBackupTime = localStorage.getItem(LAST_BACKUP_KEY);
-  if (!lastBackupTime) return Infinity;
-  
-  const now = Date.now();
-  const timeDiff = now - parseInt(lastBackupTime, 10);
-  return Math.floor(timeDiff / 60000); // Convert to minutes
-}
-
-/**
- * Check if the user should be reminded to backup
- * Returns true if:
- * - There are unsaved changes AND
- * - It's been more than 30 minutes since last backup OR no backup exists
- */
-export function shouldShowBackupReminder() {
-  const unsaved = hasUnsavedChanges();
-  const minutesSinceBackup = getMinutesSinceLastBackup();
-  
-  return unsaved && minutesSinceBackup > 30;
-}
-
-/**
  * Setup the beforeunload listener to warn about unsaved changes
  * Should be called once when the app loads
  */
@@ -97,20 +72,3 @@ export function setupBeforeUnloadWarning() {
   });
 }
 
-/**
- * Check if significant data exists that would be worth backing up
- */
-export function hasSignificantData() {
-  const claims = localStorage.getItem('saved_claims');
-  const forms = localStorage.getItem('saved_forms');
-  
-  if (!claims && !forms) return false;
-  
-  try {
-    const claimsArray = claims ? JSON.parse(claims) : [];
-    const formsArray = forms ? JSON.parse(forms) : [];
-    return claimsArray.length > 0 || formsArray.length > 0;
-  } catch (e) {
-    return false;
-  }
-}

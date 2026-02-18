@@ -208,32 +208,6 @@ export async function removeFromCache(formId) {
 // ============================================================================
 
 /**
- * Get all cached DBQ form IDs
- * @returns {Promise<string[]>}
- */
-export async function getAllCachedIds() {
-  try {
-    return await dbGetAllKeys(STORE_PDFS);
-  } catch (error) {
-    console.error('Error getting cached IDs:', error);
-    return [];
-  }
-}
-
-/**
- * Get all DBQ metadata (cached and uncached)
- * @returns {Promise<object[]>}
- */
-export async function getAllDbqMetadata() {
-  try {
-    return await dbGetAll(STORE_METADATA);
-  } catch (error) {
-    console.error('Error getting metadata:', error);
-    return [];
-  }
-}
-
-/**
  * Get cache statistics
  * @returns {Promise<object>}
  */
@@ -460,27 +434,6 @@ export async function openDbqInBrowser(formId, fallbackPath) {
 // SERVICE WORKER INTEGRATION
 // ============================================================================
 
-/**
- * Register DBQ forms with service worker for offline access
- * This allows the service worker to serve cached forms when offline
- */
-export async function registerWithServiceWorker() {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    try {
-      const cachedIds = await getAllCachedIds();
-      navigator.serviceWorker.controller.postMessage({
-        type: 'DBQ_CACHE_UPDATE',
-        cachedForms: cachedIds,
-      });
-      return true;
-    } catch (error) {
-      console.error('Error registering with service worker:', error);
-      return false;
-    }
-  }
-  return false;
-}
-
 // ============================================================================
 // EXPORT UTILITIES
 // ============================================================================
@@ -520,50 +473,3 @@ export async function exportCachedDbqsAsZip() {
   }
 }
 
-/**
- * Import DBQs from a previously exported zip
- * @param {File} zipFile - The zip file to import
- * @param {function} onProgress - Progress callback
- * @returns {Promise<{success: boolean, imported: number}>}
- */
-export async function importDbqsFromZip(zipFile, onProgress = null) {
-  try {
-    const JSZip = (await import('jszip')).default;
-    const zip = await JSZip.loadAsync(zipFile);
-    
-    let imported = 0;
-    const files = Object.keys(zip.files);
-    const pdfFiles = files.filter(f => f.endsWith('.pdf'));
-    
-    // Try to load index for metadata
-    let indexData = null;
-    if (zip.files['dbq-index.json']) {
-      const indexText = await zip.files['dbq-index.json'].async('text');
-      indexData = JSON.parse(indexText);
-    }
-    
-    for (let i = 0; i < pdfFiles.length; i++) {
-      const filename = pdfFiles[i];
-      const formId = filename.replace('.pdf', '');
-      
-      if (onProgress) {
-        onProgress({
-          current: i + 1,
-          total: pdfFiles.length,
-          currentForm: formId,
-        });
-      }
-      
-      const pdfBlob = await zip.files[filename].async('blob');
-      const meta = indexData?.forms?.find(f => f.id === formId) || {};
-      
-      await cacheDbq(formId, pdfBlob, meta);
-      imported++;
-    }
-    
-    return { success: true, imported };
-  } catch (error) {
-    console.error('Error importing DBQs from zip:', error);
-    return { success: false, imported: 0 };
-  }
-}

@@ -52,21 +52,4 @@ export const useBodyScrollLock = (isLocked) => {
   }, [isLocked]);
 };
 
-/**
- * Alternative: Simple scroll lock without position preservation
- * Use this for simpler cases where scroll position doesn't matter
- */
-export const useSimpleScrollLock = (isLocked) => {
-  useEffect(() => {
-    if (!isLocked) return;
-    
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isLocked]);
-};
-
 export default useBodyScrollLock;

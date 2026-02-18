@@ -903,21 +903,6 @@ export const FORBIDDEN_PHRASES = {
 };
 
 /**
- * REQUIRED DISCLAIMERS - AI must include these for certain topics
- */
-export const REQUIRED_DISCLAIMERS = {
-  MEDICAL_TOPICS: `\n\n⚠️ **Important**: This is educational information only. I am not a doctor and cannot diagnose conditions, interpret medical records, or provide medical advice. For medical questions, consult your healthcare provider.`,
-  
-  LEGAL_TOPICS: `\n\n⚠️ **Important**: This is educational information only. I am not a lawyer and cannot provide legal advice. For legal questions about appeals or litigation, consult an accredited attorney or VA-accredited representative.`,
-  
-  RATING_PREDICTIONS: `\n\n⚠️ **Important**: I cannot predict claim outcomes. Only VA raters review evidence and make rating decisions. This analysis is based on regulations, not a guarantee of approval or denial.`,
-  
-  C_AND_P_EXAMS: `\n\n⚠️ **Important**: C&P exams are conducted by VA-contracted medical examiners. I cannot replicate or replace their professional medical opinions. This is practice guidance only.`,
-  
-  NEXUS_LETTERS: `\n\n⚠️ **Important**: A valid nexus letter must come from a licensed medical professional with expertise in the relevant condition. AI-generated text is not a substitute for a professional medical opinion.`,
-};
-
-/**
  * CITATION REQUIREMENTS - Enforced for regulatory claims
  */
 export const CITATION_ENFORCEMENT_RULES = {
@@ -935,18 +920,6 @@ export const CITATION_ENFORCEMENT_RULES = {
   // Valid citation format: "38 CFR § X.XXX" or "38 CFR Part X"
   VALID_CITATION_PATTERN: /38 CFR (§|Part) ?\d+\.?\d*/,
 };
-
-/**
- * "I DON'T KNOW" ENFORCEMENT
- * AI must use these phrases when uncertain, not generate plausible-sounding guesses
- */
-export const UNCERTAINTY_REQUIRED_PHRASES = [
-  "I don't have that specific information",
-  "I cannot find that in the loaded regulations",
-  "That is outside my knowledge base",
-  "I am not certain about",
-  "I cannot verify",
-];
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════════

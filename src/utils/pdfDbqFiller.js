@@ -201,40 +201,6 @@ export async function fillFormFields(pdfDoc, formData) {
   return results;
 }
 
-/**
- * Add text annotations to specific coordinates
- * Used when PDF fields can't be filled programmatically
- * @param {PDFDocument} pdfDoc - The PDF document
- * @param {Array<{page: number, x: number, y: number, text: string, size?: number}>} annotations
- * @returns {Promise<PDFDocument>}
- */
-export async function addTextAnnotations(pdfDoc, annotations) {
-  try {
-    const pages = pdfDoc.getPages();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    
-    for (const annotation of annotations) {
-      const pageIndex = annotation.page - 1; // Convert to 0-based
-      if (pageIndex >= 0 && pageIndex < pages.length) {
-        const page = pages[pageIndex];
-        
-        page.drawText(annotation.text, {
-          x: annotation.x,
-          y: annotation.y,
-          size: annotation.size || 10,
-          font,
-          color: rgb(0, 0, 0),
-        });
-      }
-    }
-    
-    return pdfDoc;
-  } catch (error) {
-    console.error('Error adding text annotations:', error);
-    return pdfDoc;
-  }
-}
-
 // ============================================================================
 // DBQ-SPECIFIC FIELD MAPPINGS
 // ============================================================================

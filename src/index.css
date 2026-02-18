@@ -2038,8 +2038,12 @@ body {
 /* Hide scrollbars while maintaining functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;
-  /* stylelint-disable-next-line property-no-unknown */
-  scrollbar-width: none; /* Modern browsers (Chrome 121+, Firefox 64+) - gracefully degrades */
+}
+
+@supports (scrollbar-width: none) {
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
 }
 
 .scrollbar-hide::-webkit-scrollbar {

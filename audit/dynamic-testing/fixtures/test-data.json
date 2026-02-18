@@ -1,0 +1,55 @@
+{
+  "veteran": {
+    "firstName": "Test",
+    "lastName": "Veteran",
+    "branch": "Army",
+    "serviceStartDate": "2010-01-15",
+    "serviceEndDate": "2018-06-30",
+    "rank": "E-5",
+    "mos": "11B - Infantryman"
+  },
+  "conditions": [
+    {
+      "name": "PTSD",
+      "rating": 70,
+      "diagnosticCode": "9411",
+      "serviceConnected": true
+    },
+    {
+      "name": "Tinnitus",
+      "rating": 10,
+      "diagnosticCode": "6260",
+      "serviceConnected": true
+    },
+    {
+      "name": "Lumbar Degenerative Disc Disease",
+      "rating": 20,
+      "diagnosticCode": "5243",
+      "serviceConnected": true
+    },
+    {
+      "name": "Left Knee Strain",
+      "rating": 10,
+      "diagnosticCode": "5260",
+      "serviceConnected": true
+    },
+    {
+      "name": "Right Knee Strain",
+      "rating": 10,
+      "diagnosticCode": "5260",
+      "serviceConnected": true,
+      "bilateral": true
+    }
+  ],
+  "expectedCombinedRating": 80,
+  "searchTerms": {
+    "valid": ["PTSD", "tinnitus", "back pain", "knee", "migraine", "sleep apnea"],
+    "edge": ["", "   ", "a", "zzzzzz", "12345"],
+    "malicious": [
+      "<script>alert(1)</script>",
+      "'; DROP TABLE conditions; --",
+      "${7*7}",
+      "{{constructor.constructor('return this')()}}"
+    ]
+  }
+}
