@@ -15,7 +15,7 @@ This integration implements secure OAuth 2.0 authentication with PKCE (Proof Key
 
 ## 📋 Prerequisites
 
-1. **VA.gov API Access**: Register your application at https://developer.va.gov/
+1. **VA.gov API Access**: Register your application at <https://developer.va.gov/>
 2. **Authorization Code Grant**: Request "Authorization Code Grant" access (not implicit grant)
 3. **Redirect URI**: Configure your callback URL in VA developer portal
 4. **Environment Variables**: Set up your `.env` file
@@ -34,12 +34,13 @@ cp .env.example .env
 Edit `.env` with your actual values:
 
 ```env
-VITE_VA_CLIENT_ID=your_actual_client_id_from_va_developer_portal
+VITE_VA_AUTH_ID=your_actual_client_id_from_va_developer_portal
 VITE_VA_REDIRECT_URL=http://localhost:5173/callback
 VITE_VA_API_ENV=sandbox
 ```
 
 **For production**, change:
+
 ```env
 VITE_VA_REDIRECT_URL=https://vet-rate.org/callback
 VITE_VA_API_ENV=production
@@ -269,21 +270,25 @@ console.log('Valid:', validateCodeVerifier(verifier));
 ## 🐛 Troubleshooting
 
 ### "Invalid VA.gov OAuth configuration"
-- Check that `VITE_VA_CLIENT_ID` and `VITE_VA_REDIRECT_URL` are set in `.env`
+
+- Check that `VITE_VA_AUTH_ID` and `VITE_VA_REDIRECT_URL` are set in `.env`
 - Ensure environment variables start with `VITE_` prefix
 - Restart dev server after changing `.env`
 
 ### "State mismatch - possible CSRF attack"
+
 - This can happen if you reload during the OAuth flow
 - Clear sessionStorage and try again
 - Ensure cookies are enabled
 
 ### "Code verifier not found"
+
 - Session expired between login and callback
 - Don't close the browser tab during OAuth flow
 - Check if sessionStorage is being cleared by extensions
 
 ### Tokens not persisting
+
 - Check browser's sessionStorage (not localStorage)
 - Ensure third-party cookies are not blocking sessionStorage
 - Verify no browser extensions are clearing storage
@@ -299,6 +304,7 @@ The integration automatically handles token refresh:
 ## 🔒 Security Best Practices
 
 ✅ **DO:**
+
 - Store tokens in sessionStorage (cleared on browser close)
 - Use HTTPS in production
 - Validate state parameter on callback
@@ -306,6 +312,7 @@ The integration automatically handles token refresh:
 - Revoke tokens on logout
 
 ❌ **DON'T:**
+
 - Store tokens in localStorage (persists indefinitely)
 - Commit `.env` to version control
 - Share access tokens between tabs (use same session)
@@ -321,10 +328,12 @@ The integration automatically handles token refresh:
 ## 🆘 Support
 
 For VA.gov API issues:
-- Email: api@va.gov
-- Developer Portal: https://developer.va.gov/support
+
+- Email: <api@va.gov>
+- Developer Portal: <https://developer.va.gov/support>
 
 For integration issues:
+
 - Check the browser console for detailed error messages
 - Review the callback URL configuration in VA developer portal
 - Verify environment variables are correctly set

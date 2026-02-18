@@ -492,8 +492,9 @@ const VaSandboxTest = ({ onClose }) => {
                     <ul className="text-xs text-yellow-300 mt-2 space-y-1 font-mono">
                       {!getVaConfigStatus().hasOAuth && (
                         <>
-                          <li>• VITE_VA_CLIENT_ID (from developer.va.gov)</li>
-                          <li>• VITE_VA_REDIRECT_URL (e.g., https://vet-rate.org/callback)</li>
+                          <li>• VITE_VA_AUTH_ID (from sandbox form at developer.va.gov/explore)</li>
+                          <li>• VITE_VA_REDIRECT_URL (must match what you submitted on the VA sandbox form)</li>
+                          <li>• VITE_VA_OAUTH_API_PATH (e.g., veteran-verification/v1)</li>
                         </>
                       )}
                       {!getVaConfigStatus().hasApiKey && (

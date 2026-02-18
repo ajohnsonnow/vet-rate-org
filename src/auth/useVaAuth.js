@@ -206,6 +206,7 @@ export function useVaAuth() {
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
         client_id: VA_AUTH_CONFIG.clientId,
+        scope: VA_SCOPES,
       }),
     });
     

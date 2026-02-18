@@ -9,7 +9,7 @@ Your app currently doesn't use React Router, so I've created a simpler integrati
 Add to your `.env` file (create it if it doesn't exist):
 
 ```env
-VITE_VA_CLIENT_ID=your_client_id_from_va_developer_portal
+VITE_VA_AUTH_ID=your_client_id_from_va_developer_portal
 VITE_VA_REDIRECT_URL=http://localhost:5173
 VITE_VA_API_ENV=sandbox
 ```
@@ -78,6 +78,7 @@ function App() {
 Update your [Header.jsx](src/components/Header.jsx) to include the VA login button.
 
 Option A - Import the pre-built component:
+
 ```jsx
 import VaLoginButton from './VaLoginButton';
 
@@ -86,6 +87,7 @@ import VaLoginButton from './VaLoginButton';
 ```
 
 Option B - Use the hook directly for custom UI:
+
 ```jsx
 import { useVaAuth } from '../hooks/useVaAuth';
 
@@ -197,30 +199,35 @@ Before deploying to production:
 
 - [ ] Update `VITE_VA_REDIRECT_URL` to your production domain
 - [ ] Change `VITE_VA_API_ENV` to `production`
-- [ ] Register your production redirect URI at https://developer.va.gov/
+- [ ] Register your production redirect URI at <https://developer.va.gov/>
 - [ ] Test the full OAuth flow on production
 - [ ] Ensure HTTPS is enabled
 
 ## 🆘 Troubleshooting
 
 **"Invalid configuration" error?**
-- Make sure your `.env` file has `VITE_VA_CLIENT_ID` and `VITE_VA_REDIRECT_URL`
+
+- Make sure your `.env` file has `VITE_VA_AUTH_ID` and `VITE_VA_REDIRECT_URL`
 - Restart your dev server after creating/editing `.env`
 
 **Redirect not working?**
+
 - Check that `VITE_VA_REDIRECT_URL` matches your current URL (including port)
 - Verify this URL is registered in VA developer portal
 
 **"State mismatch" error?**
+
 - Don't reload the page during OAuth flow
 - Clear sessionStorage and try again
 
 **Tokens not persisting?**
+
 - This is expected! Tokens are stored in `sessionStorage` and cleared when you close the browser
 - For persistent login, the app will use the refresh token automatically
 
 ---
 
 **Need Help?**
-- VA API Support: api@va.gov
-- Developer Portal: https://developer.va.gov/support
+
+- VA API Support: <api@va.gov>
+- Developer Portal: <https://developer.va.gov/support>
