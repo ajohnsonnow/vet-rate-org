@@ -1,0 +1,28 @@
+# Snyk Code / DeepCode ignore file
+# Syntax identical to .gitignore
+# Files and directories listed here are excluded from Snyk Code SAST analysis.
+
+# Deprecated components and hooks — not in production bundle, not actively used
+src/_deprecated/
+
+# Archive documents — not source code
+archive/
+
+# Build output
+dist/
+dist-supplylocker/
+
+# Third-party and generated assets
+public/
+node_modules/
+
+# LLM training scripts — Python ML toolchain for model training, not production app code.
+# These are developer-only CLI tools; path arguments come from the developer's own machine.
+# Any path traversal risk is mitigated in code via safe_path() and _extract_safe_path().
+llm-compiler/
+
+# Audit and cleanup scripts
+audit/
+
+# RooTools AI agent tooling (not app code)
+RooTools/

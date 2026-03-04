@@ -135,7 +135,20 @@ self.addEventListener('fetch', (event) => {
 
 // Handle messages from the client
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  // Validate origin - only accept messages from same origin
+  // In service workers, event.origin may be empty string for same-origin messages
+  const eventOrigin = event.origin || '';
+  const selfOrigin = self.location.origin || '';
+  if (eventOrigin !== '' && eventOrigin !== selfOrigin) {
+    console.warn('[SW] Rejected message from foreign origin:', eventOrigin);
+    return;
+  }
+  // Verify source is a controlled client (WindowClient)
+  if (!event.source || !('id' in event.source)) {
+    return;
+  }
+  // Only accept known message types with strict shape validation
+  if (event.data && typeof event.data === 'object' && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });

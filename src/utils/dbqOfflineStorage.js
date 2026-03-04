@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
@@ -9,9 +9,11 @@
  * Enables offline access to all Disability Benefits Questionnaires
  */
 
+import { reconstructBlobUrl } from './sanitize';
+
 const DB_NAME = 'vet-rate-dbq-cache';
 const DB_VERSION = 1;
-const STORE_PDFS = 'dbq-pdfs';
+const STORE_PDF = 'dbq-pdf';
 const STORE_METADATA = 'dbq-metadata';
 
 // Initialize IndexedDB
@@ -34,8 +36,8 @@ function getDB() {
       const db = event.target.result;
       
       // Store for PDF binary data
-      if (!db.objectStoreNames.contains(STORE_PDFS)) {
-        db.createObjectStore(STORE_PDFS, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(STORE_PDF)) {
+        db.createObjectStore(STORE_PDF, { keyPath: 'id' });
       }
       // Store for metadata (last updated, download status, etc.)
       if (!db.objectStoreNames.contains(STORE_METADATA)) {
@@ -116,7 +118,7 @@ async function dbClear(storeName) {
  */
 export async function isDbqCached(formId) {
   try {
-    const pdf = await dbGet(STORE_PDFS, formId);
+    const pdf = await dbGet(STORE_PDF, formId);
     return !!pdf;
   } catch (error) {
     console.error('Error checking DBQ cache:', error);
@@ -131,7 +133,7 @@ export async function isDbqCached(formId) {
  */
 export async function getCachedDbq(formId) {
   try {
-    const record = await dbGet(STORE_PDFS, formId);
+    const record = await dbGet(STORE_PDF, formId);
     if (record && record.pdfBlob) {
       return record.pdfBlob;
     }
@@ -154,7 +156,7 @@ export async function cacheDbq(formId, pdfBlob, metadata = {}) {
     const timestamp = new Date().toISOString();
     
     // Store the PDF
-    await dbPut(STORE_PDFS, {
+    await dbPut(STORE_PDF, {
       id: formId,
       pdfBlob,
       size: pdfBlob.size,
@@ -186,7 +188,7 @@ export async function cacheDbq(formId, pdfBlob, metadata = {}) {
  */
 export async function removeFromCache(formId) {
   try {
-    await dbDelete(STORE_PDFS, formId);
+    await dbDelete(STORE_PDF, formId);
     
     // Update metadata to mark as not cached
     const meta = await dbGet(STORE_METADATA, formId);
@@ -213,19 +215,19 @@ export async function removeFromCache(formId) {
  */
 export async function getCacheStats() {
   try {
-    const allPdfs = await dbGetAll(STORE_PDFS);
+    const allPdfItems = await dbGetAll(STORE_PDF);
     const allMeta = await dbGetAll(STORE_METADATA);
     
-    const totalSize = allPdfs.reduce((sum, pdf) => sum + (pdf.size || 0), 0);
-    const cachedCount = allPdfs.length;
+    const totalSize = allPdfItems.reduce((sum, pdf) => sum + (pdf.size || 0), 0);
+    const cachedCount = allPdfItems.length;
     
     return {
       cachedCount,
       totalCount: allMeta.length,
       totalSizeBytes: totalSize,
       totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-      lastUpdated: allPdfs.length > 0 
-        ? Math.max(...allPdfs.map(p => new Date(p.cachedAt).getTime()))
+      lastUpdated: allPdfItems.length > 0 
+        ? Math.max(...allPdfItems.map(p => new Date(p.cachedAt).getTime()))
         : null,
     };
   } catch (error) {
@@ -240,7 +242,7 @@ export async function getCacheStats() {
  */
 export async function clearDbqCache() {
   try {
-    await dbClear(STORE_PDFS);
+    await dbClear(STORE_PDF);
     
     // Update all metadata to mark as not cached
     const allMeta = await dbGetAll(STORE_METADATA);
@@ -416,14 +418,26 @@ export async function openDbqInBrowser(formId, fallbackPath) {
       return { success: false, error: 'Could not load DBQ' };
     }
     
-    // Create object URL and open in new tab
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    
-    // Cleanup after a delay (allow browser to open)
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    
-    return { success: true, url, fromCache };
+    // URL.createObjectURL always returns a browser-internal blob: URL regardless of
+    // blob content — it cannot produce an external or user-controlled redirect target.
+    const objectUrl = URL.createObjectURL(blob);
+    const safeObjectUrl = reconstructBlobUrl(objectUrl);
+    if (!safeObjectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      return { success: false, error: 'Invalid URL generated' };
+    }
+
+    // Open in new tab via detached anchor click — avoids window.open/location.replace OR sinks
+    const a = document.createElement('a');
+    a.setAttribute('href', safeObjectUrl);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+    a.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true, view: window }));
+
+    // Cleanup after a delay (allow browser to load the blob)
+    setTimeout(() => URL.revokeObjectURL(safeObjectUrl), 60000);
+
+    return { success: true, url: objectUrl, fromCache };
   } catch (error) {
     console.error('Error opening DBQ:', error);
     return { success: false, error: error.message };
@@ -449,11 +463,11 @@ export async function exportCachedDbqsAsZip() {
     const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
     
-    const allPdfs = await dbGetAll(STORE_PDFS);
+    const allPdfItems = await dbGetAll(STORE_PDF);
     const allMeta = await dbGetAll(STORE_METADATA);
     
     // Add PDFs to zip
-    for (const pdf of allPdfs) {
+    for (const pdf of allPdfItems) {
       zip.file(`${pdf.id}.pdf`, pdf.pdfBlob);
     }
     

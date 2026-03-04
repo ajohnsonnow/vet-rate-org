@@ -79,9 +79,10 @@ def download_file(url, filename, desc):
         response = requests.get(url, stream=True, timeout=300)
         
         if response.status_code != 200:
-            # Try without SSL verify
-            print(f"   ⚠️  Trying without SSL verification...")
-            response = requests.get(url, stream=True, timeout=300, verify=False)
+            # Retry with certifi CA bundle for SSL issues
+            print(f"   ⚠️  Retrying with certifi CA bundle...")
+            import certifi
+            response = requests.get(url, stream=True, timeout=300, verify=certifi.where())
         
         if response.status_code == 200:
             total_size = int(response.headers.get('content-length', 0))

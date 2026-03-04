@@ -108,7 +108,9 @@ test.describe('Security Audit — Data Privacy', () => {
     
     // Check that no external POST requests contain PII-like data
     for (const req of externalRequests) {
-      const body = req.body.toLowerCase();
+      const rawBody = req.body;
+      /** @type {string} */
+      const body = (typeof rawBody === 'string' ? rawBody : String(rawBody ?? '')).toLowerCase();
       // These patterns suggest PII might be leaking
       expect(body).not.toMatch(/ssn|social.*security/i);
       expect(body).not.toMatch(/\d{3}-\d{2}-\d{4}/); // SSN format

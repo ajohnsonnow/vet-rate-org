@@ -89,6 +89,7 @@ import LoadingBunker from './components/LoadingBunker';
 import BodyMapSelector from './components/BodyMapSelector';
 import ClaimStressTest from './components/ClaimStressTest';
 import EvidenceTimeline from './components/EvidenceTimeline';
+import BDDBuilder from './components/BDDBuilder';
 import QuickExitButton from './components/QuickExitButton';
 import MusterCall from './components/MusterCall';
 import IntelligenceBriefing from './components/IntelligenceBriefing';
@@ -220,6 +221,7 @@ function App() {
   const [showBodyMapSelector, setShowBodyMapSelector] = useState(false);
   const [showClaimStressTest, setShowClaimStressTest] = useState(false);
   const [showEvidenceTimeline, setShowEvidenceTimeline] = useState(false);
+  const [showBDDBuilder, setShowBDDBuilder] = useState(false);
   // ExamPrepRoom state removed - functionality merged into CAPSimulator
   
   // FORCE MULTIPLIER FEATURES
@@ -733,7 +735,8 @@ function App() {
       'user-manual': () => setShowUserManual(true),
       'nexus-analyzer': () => setShowNexusQualityAnalyzer(true),
       'remand-checker': () => setShowRemandRiskChecker(true),
-      'appeals-advisor': () => setShowAppealsLaneAdvisor(true)
+      'appeals-advisor': () => setShowAppealsLaneAdvisor(true),
+      'bdd-builder': () => setShowBDDBuilder(true)
     };
     
     // Execute the tool opener if it exists
@@ -893,6 +896,7 @@ function App() {
       if (showFormsHelper) return 'Forms Helper';
       if (showSymptomLogger) return 'Symptom Logger';
       if (showPainPainter) return 'Pain Painter (Body Map)';
+      if (showBDDBuilder) return 'BDD Builder';
       if (showEvidenceTimeline) return 'Evidence Timeline';
       if (showFOIAGenerator) return 'FOIA Generator (Keysmith)';
       if (showDD214Analyzer) return 'DD214 Analyzer';
@@ -930,7 +934,7 @@ function App() {
     showTacticalCalculator, showMillionDollarDashboard, showWhatIfSandbox, showRetroPayHunter, showTimeMachine,
     // Discover Tools
     showSecondaryScoutLauncher, showSecondaryScout, userConditions, showCAPSimulator, showPathfinder,
-    showClaimNavigator, showMOSHazardMatcher, showPACTActNavigator, showWebOfConditions,
+    showClaimNavigator, showMOSHazardMatcher, showPACTActNavigator, showWebOfConditions, showBDDBuilder,
     // Build Evidence Tools
     showCFileAnalyzer, showBlueButtonXRay, showRecordSearch, showWitnessBench, showNexusBuilder, nexusBuilderData,
     showFormsHelper, showSymptomLogger, showPainPainter, showEvidenceTimeline, showFOIAGenerator, showDD214Analyzer,
@@ -1070,6 +1074,7 @@ function App() {
             'workflow-guide': () => setShowWorkflowGuide(true),
             'record-search': () => setShowRecordSearch(true),
             'dd214-analyzer': () => setShowDD214Analyzer(true),
+            'bdd-builder': () => setShowBDDBuilder(true),
           };
           const handler = toolHandlers[toolId];
           if (handler) handler();
@@ -1118,6 +1123,7 @@ function App() {
         onMOSHazardMatcherClick={() => setShowMOSHazardMatcher(true)}
         onPACTActNavigatorClick={() => setShowPACTActNavigator(true)}
         onWebOfConditionsClick={() => setShowWebOfConditions(true)}
+        onBDDBuilderClick={() => setShowBDDBuilder(true)}
         // Build Evidence
         onCFileAnalyzerClick={() => setShowCFileAnalyzer(true)}
         onBlueButtonXRayClick={() => setShowBlueButtonXRay(true)}
@@ -2467,7 +2473,7 @@ function App() {
             setShowMyPacket(false); 
             setShowPathfinder(true); 
           }}
-          onOpenGoogleDriveSync={() => { setShowMyPacket(false); setShowCloudSync(true); }}
+          onOpenGoogleDriveSync={() => { setShowMyPacket(false); setShowCloudSyncManager(true); }}
           onOpenAISettings={() => setShowAISettings(true)}
           onOpenDD214Analyzer={() => { setShowMyPacket(false); setShowDD214Analyzer(true); }}
         />
@@ -3137,6 +3143,21 @@ function App() {
             />
           </div>
         </div>
+      )}
+      
+      {/* BDD Builder - Pre-Discharge Claims Planner */}
+      {showBDDBuilder && (
+        <BDDBuilder
+          onClose={() => setShowBDDBuilder(false)}
+          onReportBug={() => {
+            setShowBDDBuilder(false);
+            setShowBugSquasher(true);
+          }}
+          onNavigateToTool={(toolId) => {
+            setShowBDDBuilder(false);
+            handleToolSelect(toolId);
+          }}
+        />
       )}
       
       {/* ExamPrepRoom functionality merged into CAPSimulator - use "Exam Prep" button in C&P Exam Simulator */}

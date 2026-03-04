@@ -71,7 +71,7 @@ export function VaAuthProvider({ children }) {
         console.log('[VA Auth] Received success message from popup with token data');
         
         // The popup sends us the actual token data since sessionStorage isn't shared
-        const { access_token, refresh_token, expires_in, userInfo: popupUserInfo } = data;
+        const { access_token, refresh_token, expires_in, userInfo: popupUserInfo, autoImport } = data;
         
         if (access_token) {
           // Calculate expiry time
@@ -84,6 +84,11 @@ export function VaAuthProvider({ children }) {
           setUserInfo(popupUserInfo || null);
           setIsAuthenticated(true);
           setError(null);
+          
+          // Set auto-import flag so MyPacket will auto-fetch records
+          if (autoImport) {
+            sessionStorage.setItem('va_auth_just_connected', 'true');
+          }
           
           // Also store in sessionStorage for persistence
           sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);

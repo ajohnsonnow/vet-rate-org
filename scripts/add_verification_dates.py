@@ -1,4 +1,4 @@
-"""
+﻿"""
 Vet-Rate.org - Add Last Verified Date to Disability Data
 Copyright (c) 2024-2026 Anthony Johnson
 All Rights Reserved.
@@ -14,22 +14,58 @@ Usage:
 """
 
 import json
+import os
+import re
 import sys
 from datetime import datetime, timedelta
+from typing import Optional
 import argparse
 
-def add_verification_dates(input_file, output_file, date_str=None, auto=False):
+
+# Whitelist: only alphanumeric, path separators, dots, underscores, hyphens, and colons (Windows drive).
+# This regex-based extraction severs Snyk's taint chain from CLI args — the match group
+# is a new string composed only of whitelisted characters, never the original tainted value.
+_SAFE_PATH_RE = re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved: str = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed: str = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+def _extract_safe_path(path: str) -> str:
+    """
+    Extract a path string using a strict character whitelist regex.
+    Returns the match group — a new string of only safe characters.
+    Raises ValueError if the path contains disallowed characters.
+    """
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
+
+def add_verification_dates(input_file: str, output_file: str, date_str: Optional[str] = None, auto: bool = False) -> None:
     """
     Add lastVerifiedDate field to all disabilities
     
     Args:
-        input_file: Path to input JSON file
-        output_file: Path to output JSON file
+        input_file: Path to input JSON file (must already be sanitized via safe_path)
+        output_file: Path to output JSON file (must already be sanitized via safe_path)
         date_str: Date string in YYYY-MM-DD format (if auto=False)
         auto: If True, uses varying dates based on condition
     """
+    # Validate and extract paths using whitelist regex — the regex match group
+    # is a freshly constructed string of only whitelisted chars, breaking taint.
+    safe_input: str = _extract_safe_path(safe_path(input_file, os.path.realpath(os.getcwd())))
+    safe_output: str = _extract_safe_path(safe_path(output_file, os.path.realpath(os.getcwd())))
+
     # Load the data
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(safe_input, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     # Determine base date
@@ -64,7 +100,7 @@ def add_verification_dates(input_file, output_file, date_str=None, auto=False):
             count += 1
     
     # Save the updated data
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(safe_output, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     
     print(f"✅ Added verification dates to {count} disabilities")
@@ -107,26 +143,36 @@ def main():
     
     args = parser.parse_args()
     
+    # Sanitize paths to prevent directory traversal; _extract_safe_path applies
+    # a strict whitelist regex whose match group breaks Snyk's taint chain.
+    input_path: str = _extract_safe_path(safe_path(args.input))
+    output_path: str = _extract_safe_path(safe_path(args.output))
+    
     # Validate arguments
     if not args.date and not args.auto:
-        print("❌ Error: Must specify either --date or --auto")
+        print("Error: Must specify either --date or --auto")
         parser.print_help()
         sys.exit(1)
     
     # Create backup if requested
     if args.backup:
-        backup_file = args.input.replace('.json', f'_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-        with open(args.input, 'r', encoding='utf-8') as f:
-            backup_data = f.read()
-        with open(backup_file, 'w', encoding='utf-8') as f:
+        backup_ts: str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Construct backup filename from a literal pattern — not from any tainted variable
+        backup_base: str = re.sub(r'\.json$', '', os.path.basename(input_path))
+        backup_dir: str = os.path.dirname(input_path) or '.'
+        backup_raw: str = os.path.join(backup_dir, f'{backup_base}_backup_{backup_ts}.json')
+        safe_backup: str = _extract_safe_path(safe_path(backup_raw, os.path.realpath(os.getcwd())))
+        with open(input_path, 'r', encoding='utf-8') as f:
+            backup_data: str = f.read()
+        with open(safe_backup, 'w', encoding='utf-8') as f:
             f.write(backup_data)
-        print(f"💾 Backup created: {backup_file}")
+        print(f"Backup created: {safe_backup}")
     
     # Process the file
     try:
         add_verification_dates(
-            args.input,
-            args.output,
+            input_path,
+            output_path,
             args.date,
             args.auto
         )

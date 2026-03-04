@@ -19,6 +19,17 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 from xml.etree import ElementTree as ET
 
+
+def safe_path(user_path, allowed_dir=None):
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -308,6 +319,9 @@ def main():
     args = parser.parse_args()
     
     scraper = BVABatchScraper()
+    
+    # Sanitize year arg to prevent path traversal in filenames
+    args.year = re.sub(r'[^\w]', '', args.year)
     
     if args.all_years:
         scraper.scrape_all_years(batch_size=args.batch_size)

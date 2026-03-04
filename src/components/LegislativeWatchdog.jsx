@@ -537,6 +537,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                                 <h4 className="font-bold text-purple-900 dark:text-purple-100">AI Policy Analysis</h4>
                               </div>
                               <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-purple-900 dark:prose-headings:text-purple-100 prose-p:text-gray-700 dark:prose-p:text-gray-300">
+                                {/* deepcode ignore DOMXSS: React JSX auto-escapes this value */}
                                 <div className="whitespace-pre-wrap">{aiAnalysis[update.id]}</div>
                               </div>
                             </div>
@@ -544,7 +545,7 @@ Be direct, practical, and emphasize urgency when appropriate. Veterans need to k
                         </div>
                         
                         {/* Link */}
-                        {update.link && (
+                        {update.link && /^https:\/\//.test(update.link) && (
                           <a
                             href={update.link}
                             target="_blank"

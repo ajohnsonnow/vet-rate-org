@@ -1,6 +1,10 @@
 # Legal documents - verbatim copies, do not lint
 LICENSE
 
+# YAML policy files and gitignore-syntax files - not markdown, but have # comments parsed as headings
+.snyk
+.dcignore
+
 # Third-party content
 node_modules/
 dist/

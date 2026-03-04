@@ -454,6 +454,7 @@ const VaSandboxTest = ({ onClose }) => {
       className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
+      aria-label="VA API Sandbox Test"
     >
       <div className="min-h-screen px-4 py-8 flex items-start justify-center">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-6xl w-full animate-modalEnter relative">

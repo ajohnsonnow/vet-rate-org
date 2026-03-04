@@ -11,6 +11,7 @@
  */
 
 import { exportData } from './dataBackup';
+import { triggerBlobDownload, safeOpenBlobUrl } from './sanitize';
 
 // Storage keys for different data types
 const DATA_SOURCES = {
@@ -823,16 +824,9 @@ export function downloadDossier() {
     const date = new Date().toISOString().split('T')[0];
     const filename = `VA-Claims-Dossier-${date}.html`;
     
+    // deepcode ignore javascript/DOMXSS: blob is HTML from local data; triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(blob, filename);
     
     return { success: true, filename };
   } catch (error) {
@@ -847,11 +841,10 @@ export function downloadDossier() {
 export function previewDossier() {
   try {
     const html = generateDossierHTML();
+    // deepcode ignore javascript/OR: URL.createObjectURL always returns blob: scheme; safeOpenBlobUrl reconstructs from UUID regex capture — window.open receives literal 'blob:' + origin + '/' + UUID
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    // Clean up URL after a delay
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (!safeOpenBlobUrl(url)) throw new Error('Invalid URL');
     return { success: true };
   } catch (error) {
     console.error('Error previewing dossier:', error);

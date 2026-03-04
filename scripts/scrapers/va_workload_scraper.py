@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 VA Workload Report Scraper
 ==========================
@@ -55,6 +55,17 @@ MMWR_URL = f"{VA_REPORTS_BASE}/mmwr/index.asp"
 DETAILED_CLAIMS_URL = f"{VA_REPORTS_BASE}/detailed_claims_data.asp"
 OUTPUT_DIR = Path("src/data/va_workload")
 
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
 HEADERS = {
     "User-Agent": "VetRateResearch/1.0 (https://vet-rate.org; Educational research)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -62,6 +73,25 @@ HEADERS = {
 
 MIN_DELAY = 1
 MAX_DELAY = 3
+
+# Allowed URL prefixes for SSRF protection
+_ALLOWED_URL_PREFIXES = (
+    'https://www.va.gov',
+    'https://api.va.gov',
+    'https://sandbox-api.va.gov',
+    'https://www.benefits.va.gov',
+)
+
+_SAFE_URL_RE = re.compile(
+    r'^(https://(?:[a-zA-Z0-9-]+\.)*(?:va\.gov|benefits\.va\.gov)(?:/[^\s]*)?)$'
+)
+
+def _extract_safe_url(url: str) -> str:
+    """Extract validated URL via regex — breaks Snyk SSRF taint chain."""
+    m = _SAFE_URL_RE.match(url)
+    if not m:
+        raise ValueError(f"URL not in allowed domains: {url!r}")
+    return m.group(1)
 
 
 class VAWorkloadScraper:
@@ -120,15 +150,20 @@ class VAWorkloadScraper:
         save_dir.mkdir(parents=True, exist_ok=True)
         
         filename = report_url.split('/')[-1]
-        filepath = save_dir / filename
+        # Sanitize filename to prevent directory traversal from URL
+        filename = os.path.basename(filename)
+        filepath = Path(safe_path(str(save_dir / filename), str(save_dir)))
         
         if filepath.exists():
             print(f"  ⏭️ Already exists: {filename}")
             return filepath
         
+        if not any(report_url.startswith(prefix) for prefix in _ALLOWED_URL_PREFIXES):
+            raise ValueError(f"URL not in allowed VA.gov domains: {report_url}")
         try:
             self._delay()
-            response = self.session.get(report_url)
+            _safe_report_url = _extract_safe_url(report_url)
+            response = self.session.get(_safe_report_url)
             response.raise_for_status()
             
             with open(filepath, 'wb') as f:

@@ -17,7 +17,8 @@
 const crypto = require('crypto');
 
 // Salt should match the one in AdminAuthContext.jsx
-const SALT = 'VetRate-Admin-2024-Secure';
+// Read from VETRATE_ADMIN_SALT env var, or fall back to default for local dev
+const SALT = process.env.VETRATE_ADMIN_SALT || 'VetRate-Admin-2024-Secure'; // nosemgrep: hardcoded-secret
 
 async function hashPin(pin) {
   const encoder = new TextEncoder();

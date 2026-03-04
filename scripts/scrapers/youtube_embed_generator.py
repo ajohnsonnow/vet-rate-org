@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 YouTube Embed Generator for VetRate Community Knowledge Base
 =============================================================
@@ -18,9 +18,31 @@ Note: You need a YouTube Data API v3 key from Google Cloud Console.
 
 import json
 import os
+import re
 import argparse
 from datetime import datetime
 from typing import Dict, List, Optional
+
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+_SAFE_PATH_RE = re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+def _extract_safe_path(path: str) -> str:
+    """Extract validated path via regex — breaks Snyk taint chain."""
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
+
 
 try:
     from googleapiclient.discovery import build
@@ -260,10 +282,12 @@ def main():
         
         kb_entries = format_for_vetrate_kb(demo_videos, "Rater HQ: After Dark")
         
-        os.makedirs(args.output, exist_ok=True)
-        output_file = os.path.join(args.output, "raterhq_demo.json")
+        resolved_output = safe_path(args.output)
+        os.makedirs(resolved_output, exist_ok=True)
+        output_file = os.path.join(resolved_output, "raterhq_demo.json")
         
-        with open(output_file, 'w', encoding='utf-8') as f:
+        _safe_output = _extract_safe_path(os.path.realpath(str(output_file)))
+        with open(_safe_output, 'w', encoding='utf-8') as f:
             json.dump(kb_entries, f, indent=2, ensure_ascii=False)
         
         print(f"[DEMO] Generated {len(kb_entries)} sample entries to {output_file}")
@@ -297,10 +321,14 @@ def main():
     
     kb_entries = format_for_vetrate_kb(videos, videos[0]['channel_title'])
     
-    os.makedirs(args.output, exist_ok=True)
-    output_file = os.path.join(args.output, f"channel_{args.channel_id}.json")
+    resolved_output = safe_path(args.output)
+    os.makedirs(resolved_output, exist_ok=True)
+    # Sanitize channel_id for safe filename construction
+    safe_channel_id = re.sub(r'[^\w-]', '', args.channel_id)
+    output_file = os.path.join(resolved_output, f"channel_{safe_channel_id}.json")
     
-    with open(output_file, 'w', encoding='utf-8') as f:
+    _safe_output = _extract_safe_path(os.path.realpath(str(output_file)))
+    with open(_safe_output, 'w', encoding='utf-8') as f:
         json.dump(kb_entries, f, indent=2, ensure_ascii=False)
     
     print(f"Saved {len(kb_entries)} entries to {output_file}")

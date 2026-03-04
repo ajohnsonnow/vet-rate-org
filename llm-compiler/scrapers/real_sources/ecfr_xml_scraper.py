@@ -9,6 +9,10 @@ OFFICIAL DATA SOURCE: https://www.ecfr.gov/api/versioner/v1/full/
 import json
 import re
 import requests
+try:
+    from defusedxml.ElementTree import fromstring as safe_fromstring
+except ImportError:
+    from xml.etree.ElementTree import fromstring as safe_fromstring
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from datetime import datetime
@@ -63,7 +67,7 @@ class ECFRXMLScraper:
         print("\n[INFO] Parsing XML content...")
         
         # Parse the XML
-        root = ET.fromstring(xml_content)
+        root = safe_fromstring(xml_content)
         
         # Find all sections (each section is a regulation like 4.71a)
         codes = {}

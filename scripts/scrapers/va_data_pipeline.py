@@ -19,6 +19,7 @@ Usage:
 
 import json
 import os
+import re
 import sys
 import argparse
 import subprocess
@@ -28,6 +29,17 @@ from typing import Dict, List, Optional
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
+
+
+def safe_path(user_path, allowed_dir=None):
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
 
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -381,6 +393,10 @@ Examples:
         return
     
     pipeline = VADataPipeline(verbose=not args.quiet)
+    
+    # Sanitize condition arg to prevent path traversal in derived filenames
+    if args.condition:
+        args.condition = re.sub(r'[^\w\s-]', '', args.condition).strip()
     
     if args.full_update:
         conditions = [args.condition] if args.condition else None

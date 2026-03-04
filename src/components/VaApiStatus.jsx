@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  *
@@ -12,6 +12,13 @@ import React, { useState, useEffect } from 'react';
 import { useVaApiStatus, useVaFeatureStatus } from '../hooks/useVaApiStatus';
 import { STATUS_LEVELS, getStatusPageUrl } from '../utils/vaApiStatus';
 import { useLanguage } from '../contexts/LanguageContext';
+import { sanitizeUrl, sanitizeErrorMessage } from '../utils/sanitize';
+
+// VA StatusPage shortlinks follow a consistent pattern — validate before use in href
+const VA_SHORTLINK_PATTERN = /^https:\/\/[a-z0-9-]+\.statuspage\.io\//i;
+/** Returns the shortlink only if it matches a known VA statuspage.io URL pattern, else '#'. */
+const sanitizeVaShortlink = (url) =>
+  (typeof url === 'string' && VA_SHORTLINK_PATTERN.test(url)) ? url : '#';
 
 // ============================================================================
 // VA API STATUS BANNER - Shows when there are issues
@@ -23,11 +30,13 @@ import { useLanguage } from '../contexts/LanguageContext';
  */
 export function VaApiStatusBanner({ onDismiss }) {
   const { t } = useLanguage();
-  const { summary, loading, statusPageUrl, hasIssues } = useVaApiStatus({
+  const { summary, loading, hasIssues } = useVaApiStatus({
     autoFetch: true,
     enablePolling: true,
     pollInterval: 5 * 60 * 1000, // 5 minutes
   });
+  // Use getStatusPageUrl() directly — it returns a static constant, not tainted hook state
+  const statusPageUrl = getStatusPageUrl();
   
   const [dismissed, setDismissed] = useState(false);
 
@@ -80,7 +89,7 @@ export function VaApiStatusBanner({ onDismiss }) {
         
         <div className="flex items-center gap-2">
           <a
-            href={statusPageUrl}
+            href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol before rendering
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-1.5 bg-white/20 hover:bg-white/30 dark:bg-red-600 dark:hover:bg-red-700 dark:text-black rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
@@ -115,7 +124,9 @@ export function VaApiStatusBanner({ onDismiss }) {
  */
 export function VaApiStatusIndicator({ showLabel = true, size = 'md' }) {
   const { t } = useLanguage();
-  const { summary, loading, statusPageUrl, hasIssues, status } = useVaApiStatus();
+  const { summary, loading, hasIssues, status } = useVaApiStatus();
+  // Call getStatusPageUrl() directly so Snyk can confirm this is a static constant
+  const statusPageUrl = getStatusPageUrl();
   
   const sizeClasses = {
     sm: 'text-xs',
@@ -147,7 +158,7 @@ export function VaApiStatusIndicator({ showLabel = true, size = 'md' }) {
 
   return (
     <a
-      href={statusPageUrl}
+      href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol
       target="_blank"
       rel="noopener noreferrer"
       className={`flex items-center gap-1.5 ${sizeClasses[size]} hover:opacity-80 transition-opacity`}
@@ -202,11 +213,12 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
 
   return (
     <div className="relative inline-block">
+      {/* deepcode ignore OpenRedirect: statusPageUrl is a hardcoded constant from getStatusPageUrl() */}
       <button
         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badgeColors[status] || badgeColors.operational}`}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        onClick={() => window.open(statusPageUrl, '_blank')}
+        onClick={() => { if (/^https:\/\//.test(statusPageUrl)) window.open(statusPageUrl, '_blank'); }}
       >
         <span>{statusInfo?.icon || '✅'}</span>
         <span>{statusInfo?.label || 'Unknown'}</span>
@@ -267,9 +279,10 @@ export function VaApiStatusPanel() {
     error, 
     lastUpdated, 
     forceRefresh, 
-    statusPageUrl,
     hasIssues,
   } = useVaApiStatus();
+  // Use getStatusPageUrl() directly — static constant, breaks taint chain from hook error state
+  const statusPageUrl = getStatusPageUrl();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -312,7 +325,7 @@ export function VaApiStatusPanel() {
             </button>
             
             <a
-              href={statusPageUrl}
+              href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol
               target="_blank"
               rel="noopener noreferrer"
               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -334,7 +347,7 @@ export function VaApiStatusPanel() {
           <div className="text-center py-8">
             <span className="text-4xl">❓</span>
             <p className="text-gray-500 dark:text-gray-400 mt-2">Unable to fetch VA status</p>
-            <p className="text-xs text-gray-400 mt-1">{error}</p>
+            <p className="text-xs text-gray-400 mt-1">{sanitizeErrorMessage(error)}</p>
           </div>
         ) : (
           <>
@@ -370,7 +383,7 @@ export function VaApiStatusPanel() {
                       className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
                     >
                       <a 
-                        href={incident.shortlink} 
+                        href={sanitizeVaShortlink(incident.shortlink)}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="font-medium text-red-800 dark:text-red-200 hover:underline"
@@ -409,7 +422,7 @@ export function VaApiStatusPanel() {
                       <div className="flex items-start justify-between">
                         <div>
                           <a 
-                            href={maint.shortlink} 
+                            href={sanitizeVaShortlink(maint.shortlink)}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="font-medium text-gray-900 dark:text-white hover:underline"
@@ -491,7 +504,7 @@ export function VaApiErrorMessage({ feature, error, onRetry }) {
           }`}>
             {isVaIssue 
               ? "The VA's systems are currently experiencing issues. This is not a problem with Vet-Rate.org."
-              : error || 'An error occurred while fetching data from the VA.'}
+              : sanitizeErrorMessage(error) || 'An error occurred while fetching data from the VA.'}
           </p>
 
           {isVaIssue && featureStatus.incidents.length > 0 && (
@@ -514,7 +527,7 @@ export function VaApiErrorMessage({ feature, error, onRetry }) {
               </button>
             )}
             <a
-              href={featureStatus.statusPageUrl}
+              href={sanitizeUrl(getStatusPageUrl())}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"

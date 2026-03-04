@@ -37,7 +37,7 @@ def get_entry_hash(entry: Dict) -> str:
     """Generate a unique hash for deduplication"""
     # Use title + citation for uniqueness
     key_data = f"{entry.get('title', '')[:100]}|{entry.get('citation', '')}|{entry.get('url', '')}"
-    return hashlib.md5(key_data.encode()).hexdigest()
+    return hashlib.sha256(key_data.encode()).hexdigest()
 
 def normalize_entry(entry: Dict, source: str) -> Dict:
     """Normalize entry to standard DKB format"""

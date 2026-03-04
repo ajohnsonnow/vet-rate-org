@@ -27,6 +27,7 @@ import { exportPacketData, importPacketData, downloadPacketBackup, exportComplet
 import { getSavedForms, deleteSavedForm, getVeteranProfile, getMyRatings, removeRating, updateRating, clearMyRatings, addRating, getServiceHistory, addDeployment, removeDeployment, addAward, removeAward, saveDD214Data, clearDD214Data, getTimelineEvents, saveTimelineEvents, clearTimelineEvents, getPainMaps, deletePainMap, clearPainMaps } from '../utils/veteranProfile';
 import { loadVARecords, clearVARecords, saveVADataWithConsent } from '../utils/vaDataPersistence';
 import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import { triggerBlobDownload } from '../utils/sanitize';
 import { useVaAuth } from '../hooks/useVaAuth';
 import { isVaIntegrationConfigured } from '../config/vaAuth';
 import { 
@@ -126,6 +127,20 @@ const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoo
     loadVARecordsData();
     checkAIStatus();
   }, []);
+
+  // Auto-import VA records after fresh OAuth connection
+  useEffect(() => {
+    const justConnected = sessionStorage.getItem('va_auth_just_connected');
+    if (justConnected && isVaAuthenticated && vaAccessToken && !vaImportStatus.loading) {
+      sessionStorage.removeItem('va_auth_just_connected');
+      console.log('[MyPacket] Auto-importing VA records after fresh auth connection');
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        handleVaDataImport();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isVaAuthenticated, vaAccessToken]);
   
   const loadVeteranProfile = () => {
     const profile = getVeteranProfile();
@@ -738,15 +753,9 @@ Return ONLY the JSON object, no explanation.`,
 
   const downloadAsTxt = (statement, fileName) => {
     const content = statement.statement + '\n\n---\n\nDOCTOR\'S CHEAT SHEET\n\n' + statement.doctorNote;
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
     const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(blob, `${fileName}.txt`);
   };
 
   const downloadAsDocx = async (statement, fileName, claim) => {
@@ -791,15 +800,9 @@ Return ONLY the JSON object, no explanation.`,
         }]
       });
 
+      // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
       const blob = await Packer.toBlob(doc);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${fileName}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(blob, `${fileName}.docx`);
     } catch (error) {
       console.error('Error generating DOCX:', error);
       alert('Error generating Word document. Please try another format.');
@@ -2759,6 +2762,8 @@ Return ONLY the JSON object, no explanation.`,
                           onClick={() => {
                             const blob = new Blob([viewingForm.generatedContent], { type: 'text/plain' });
                             const url = URL.createObjectURL(blob);
+                            if (!url.startsWith('blob:')) return; // Validate blob URL
+                            // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
                             const a = document.createElement('a');
                             a.href = url;
                             a.download = `${viewingForm.formNumber || 'form'}-${viewingForm.title || 'draft'}.txt`;

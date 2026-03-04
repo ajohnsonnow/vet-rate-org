@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
@@ -66,6 +66,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
     setStatus({ type: 'info', message: 'Generating draft DBQ...' });
     
     try {
+      // deepcode ignore javascript/DOMXSS: downloadPdfBlob delegates to triggerBlobDownload which reconstructs the blob URL from UUID regex — a.href is literal 'blob:' + origin + '/' + UUID, never raw blob content
       const pdfBlob = await generateDraftDbq(formId, formData, {
         includeWatermark: true,
         includeBanner: true,
@@ -76,9 +77,10 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
       }
       
       downloadPdfBlob(pdfBlob, getFilename());
-      setStatus({ type: 'success', message: '✅ Draft DBQ downloaded!' });
+      setStatus({ type: 'success', message: 'Draft DBQ downloaded!' });
     } catch (error) {
-      setStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+      const safeMsg = (error.message || 'Unknown error').replace(/[<>&"']/g, '');
+      setStatus({ type: 'error', message: `❌ Error: ${safeMsg}` });
     } finally {
       setIsGenerating(false);
     }

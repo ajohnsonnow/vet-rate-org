@@ -280,11 +280,18 @@ export async function extractPageText(pdfData, pageNum) {
  * @returns {string} HTML string with highlighted term
  */
 export function highlightSearchTerm(context, searchTerm, caseSensitive = false) {
+  // Sanitize context to prevent XSS via dangerouslySetInnerHTML
+  const sanitized = context
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  
   const flags = caseSensitive ? 'g' : 'gi';
   const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp(`(${escapedTerm})`, flags);
   
-  return context.replace(pattern, '<mark class="bg-yellow-300 dark:bg-yellow-600 font-bold">$1</mark>');
+  return sanitized.replace(pattern, '<mark class="bg-yellow-300 dark:bg-yellow-600 font-bold">$1</mark>');
 }
 
 export default {

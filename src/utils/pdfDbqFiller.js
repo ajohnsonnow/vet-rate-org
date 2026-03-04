@@ -11,6 +11,7 @@
 
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { getCachedDbq, getDbqWithFallback } from './dbqOfflineStorage';
+import { triggerBlobDownload } from './sanitize';
 
 // ============================================================================
 // WATERMARK CONFIGURATION
@@ -284,14 +285,7 @@ export async function generateDraftDbq(formId, veteranInput, options = {}) {
  * @param {string} filename - The filename to use
  */
 export function downloadPdfBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  triggerBlobDownload(blob, String(filename || 'download'));
 }
 
 /**

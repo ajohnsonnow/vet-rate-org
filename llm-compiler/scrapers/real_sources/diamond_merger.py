@@ -44,7 +44,7 @@ def save_json(data, filepath):
 
 def generate_id(prefix, content):
     """Generate a unique ID from content."""
-    content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
+    content_hash = hashlib.sha256(content.encode()).hexdigest()[:8]
     return f"{prefix}_{content_hash}"
 
 def transform_freg_entry(entry):
@@ -180,7 +180,7 @@ def deduplicate_entries(entries):
         else:
             # Fallback: use content hash
             content = str(entry)[:200]
-            unique_key = hashlib.md5(content.encode()).hexdigest()
+            unique_key = hashlib.sha256(content.encode()).hexdigest()
         
         if unique_key not in seen_keys:
             seen_keys.add(unique_key)

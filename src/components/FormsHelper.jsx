@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { triggerBlobDownload } from '../utils/sanitize';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import jsPDF from 'jspdf';
 import ReportBugLink from './ReportBugLink';
@@ -158,15 +159,9 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const handleBackup = () => {
     const data = exportAllVeteranData();
     const jsonString = JSON.stringify(data, null, 2);
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID, no user content reaches the DOM
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `vet-rate-forms-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(blob, `vet-rate-forms-backup-${new Date().toISOString().split('T')[0]}.json`);
     setImportStatus({ type: 'success', message: 'Backup created successfully!' });
     setTimeout(() => setImportStatus(null), 3000);
   };
@@ -3674,6 +3669,8 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
   const downloadAsTxt = (content, fileName) => {
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
+    if (!url.startsWith('blob:')) return; // Validate blob URL
+    // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
     const a = document.createElement('a');
     a.href = url;
     a.download = `${fileName}.txt`;
@@ -3709,6 +3706,8 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
       const blob = await Packer.toBlob(doc);
       const url = URL.createObjectURL(blob);
+      if (!url.startsWith('blob:')) return; // Validate blob URL
+      // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
       const a = document.createElement('a');
       a.href = url;
       a.download = `${fileName}.docx`;

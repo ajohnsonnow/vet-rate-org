@@ -721,6 +721,7 @@ Format: Just the question, as if speaking directly to the veteran. 1-2 sentences
                 <button
                   onClick={() => setUseAI(!useAI)}
                   disabled={!aiAvailable}
+                  aria-label={useAI ? 'Disable AI judges' : 'Enable AI judges'}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     useAI && aiAvailable
                       ? 'bg-purple-600'

@@ -34,6 +34,7 @@ function Header({
   onMOSHazardMatcherClick,
   onPACTActNavigatorClick,
   onWebOfConditionsClick,
+  onBDDBuilderClick,
   // Build Your Evidence (Violet)
   onCFileAnalyzerClick,
   onBlueButtonXRayClick,
@@ -281,7 +282,7 @@ function Header({
 
             
             {/* Tools Dropdown - Main feature tools */}
-            <div id="tour-tools-dropdown" className="relative static sm:relative">
+            <div id="tour-tools-dropdown" className="relative sm:relative">
               <button
                 onClick={() => setShowToolsMenu(!showToolsMenu)}
                 onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
@@ -455,6 +456,18 @@ function Header({
                         </span>
                         <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
                           {t('tools', 'webOfConditionsDesc')}
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => { setShowToolsMenu(false); onBDDBuilderClick?.(); }}
+                        className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
+                      >
+                        <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                          🎖️ BDD Builder
+                          <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">NEW</span>
+                        </span>
+                        <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+                          Pre-discharge claims planner for active duty
                         </p>
                       </button>
                     </div>
@@ -820,7 +833,7 @@ function Header({
             </div>
             
             {/* Veteran Resources Dropdown */}
-            <div className="relative static sm:relative">
+            <div className="relative sm:relative">
               <button
                 onClick={() => setShowResourcesMenu(!showResourcesMenu)}
                 onBlur={() => setTimeout(() => setShowResourcesMenu(false), 200)}
