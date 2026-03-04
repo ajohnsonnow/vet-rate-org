@@ -114,16 +114,20 @@ class CAVCScraper:
                 print(f"[ERROR] Status {response.status_code}")
                 return None
         except requests.exceptions.SSLError:
-            # If SSL fails, try without verification
-            print("[WARN] SSL verification failed, trying without verification...")
+            # If SSL fails, retry with updated CA bundle from certifi
+            print("[WARN] SSL verification failed, retrying with certifi CA bundle...")
             try:
-                response = self.session.get(url, timeout=30, verify=False)
+                import certifi
+                response = self.session.get(url, timeout=30, verify=certifi.where())
                 if response.status_code == 200:
-                    print(f"[OK] Got page ({len(response.content):,} bytes) [SSL verification disabled]")
+                    print(f"[OK] Got page ({len(response.content):,} bytes) [certifi CA bundle]")
                     return response.text
                 else:
                     print(f"[ERROR] Status {response.status_code}")
                     return None
+            except ImportError:
+                print("[ERROR] certifi not installed. Run: pip install certifi")
+                return None
             except Exception as e:
                 print(f"[ERROR] {e}")
                 return None

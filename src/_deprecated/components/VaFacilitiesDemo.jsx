@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VA Facilities Demo Component
  * 
  * A standalone component to demonstrate VA Facilities API integration.
@@ -27,6 +27,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { sanitizeUrl, sanitizePhoneHref, sanitizeMapsUrl } from '../../utils/sanitize';
 
 // Facility type icons and colors
 const FACILITY_TYPES = {
@@ -319,7 +320,7 @@ const VaFacilitiesDemo = ({ embedded = false }) => {
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-gray-500" />
                             <a 
-                              href={`tel:${facility.phone.replace(/\D/g, '')}`}
+                              href={sanitizePhoneHref(String(facility.phone ?? ''))}
                               className="text-blue-600 dark:text-blue-400 hover:underline"
                             >
                               {formatPhone(facility.phone)}
@@ -332,7 +333,7 @@ const VaFacilitiesDemo = ({ embedded = false }) => {
                           <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4 text-gray-500" />
                             <a 
-                              href={facility.website}
+                              href={sanitizeUrl(String(facility.website ?? ''))}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline truncate"
@@ -382,7 +383,7 @@ const VaFacilitiesDemo = ({ embedded = false }) => {
                       {facility.coordinates?.lat && facility.coordinates?.lng && (
                         <div className="mt-4">
                           <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${facility.coordinates.lat},${facility.coordinates.lng}`}
+                            href={sanitizeMapsUrl(facility.coordinates.lat, facility.coordinates.lng)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"

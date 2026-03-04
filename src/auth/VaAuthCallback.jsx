@@ -71,11 +71,15 @@ const VaAuthCallback = () => {
         // Exchange code for tokens
         const tokenData = await exchangeCodeForTokens(code, state);
         console.log('[VA Callback] Token exchange successful');
+        
+        // Set flag so MyPacket knows to auto-import records
+        sessionStorage.setItem('va_auth_just_connected', 'true');
+        
         setStatus('success');
         
         // If in popup, notify parent and close
         if (isPopup && window.opener) {
-          window.opener.postMessage({ type: 'VA_AUTH_SUCCESS', data: tokenData }, window.location.origin);
+          window.opener.postMessage({ type: 'VA_AUTH_SUCCESS', data: { ...tokenData, autoImport: true } }, window.location.origin);
           setTimeout(() => {
             window.close();
           }, 1000);
@@ -166,7 +170,7 @@ const VaAuthCallback = () => {
           Connected Successfully!
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mb-4">
-          Your VA.gov account has been connected.
+          Your VA.gov account has been connected. Your records will be automatically downloaded and saved to My Packet.
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {isPopup ? 'This window will close automatically...' : 'Redirecting...'}

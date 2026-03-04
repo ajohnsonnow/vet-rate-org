@@ -127,7 +127,7 @@ export default function AccessibilityMenu() {
   ];
 
   return (
-    <div className="relative static sm:relative">
+    <div className="relative sm:relative">
       {/* Accessibility Toggle Button */}
       <button
         ref={buttonRef}

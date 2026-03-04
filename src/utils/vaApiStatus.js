@@ -17,6 +17,25 @@ const STATUS_API_URL = 'https://valighthouse.statuspage.io/api/v2/summary.json';
 const INCIDENTS_API_URL = 'https://valighthouse.statuspage.io/api/v2/incidents/unresolved.json';
 const SCHEDULED_API_URL = 'https://valighthouse.statuspage.io/api/v2/scheduled-maintenances/upcoming.json';
 
+// Allowed URL domains for external links from status API
+const TRUSTED_URL_DOMAINS = ['statuspage.io', 'va.gov', 'stspg.io'];
+
+/**
+ * Sanitize external URL - only allow https from trusted domains
+ * Returns sanitized URL or fallback STATUS_PAGE_URL
+ */
+export function sanitizeStatusUrl(url) {
+  if (!url || typeof url !== 'string') return STATUS_PAGE_URL;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return STATUS_PAGE_URL;
+    if (!TRUSTED_URL_DOMAINS.some(d => parsed.hostname.endsWith(d))) return STATUS_PAGE_URL;
+    return url;
+  } catch {
+    return STATUS_PAGE_URL;
+  }
+}
+
 // Cache duration (5 minutes)
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 
@@ -183,7 +202,7 @@ function processStatusData(summary, incidents, scheduled) {
     impact: incident.impact,
     createdAt: incident.created_at,
     updatedAt: incident.updated_at,
-    shortlink: incident.shortlink,
+    shortlink: sanitizeStatusUrl(incident.shortlink),
     affectedComponents: (incident.components || []).map(c => c.name),
     updates: (incident.incident_updates || []).map(update => ({
       status: update.status,
@@ -200,7 +219,7 @@ function processStatusData(summary, incidents, scheduled) {
     impact: maint.impact,
     scheduledFor: maint.scheduled_for,
     scheduledUntil: maint.scheduled_until,
-    shortlink: maint.shortlink,
+    shortlink: sanitizeStatusUrl(maint.shortlink),
     affectedComponents: (maint.components || []).map(c => c.name),
     updates: (maint.incident_updates || []).map(update => ({
       status: update.status,
@@ -214,7 +233,7 @@ function processStatusData(summary, incidents, scheduled) {
     lastChecked: new Date().toISOString(),
     overallStatus: normalizeStatus(status?.indicator || 'none'),
     overallDescription: status?.description || 'All Systems Operational',
-    pageUrl: page?.url || STATUS_PAGE_URL,
+    pageUrl: sanitizeStatusUrl(page?.url) || STATUS_PAGE_URL,
     components: componentStatus,
     activeIncidents,
     scheduledMaintenance,
@@ -426,6 +445,7 @@ export default {
   getStatusSummary,
   clearStatusCache,
   getStatusPageUrl,
+  sanitizeStatusUrl,
   VA_API_MAPPING,
   STATUS_LEVELS,
 };

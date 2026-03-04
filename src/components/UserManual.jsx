@@ -73,6 +73,11 @@ const navigationStructure = [
     isCategory: true,
   },
   {
+    id: 'bdd-builder',
+    title: 'BDD Builder',
+    icon: '🔍',
+  },
+  {
     id: 'cap-exam-simulator',
     title: 'C&P Exam Simulator',
     icon: '🔍',

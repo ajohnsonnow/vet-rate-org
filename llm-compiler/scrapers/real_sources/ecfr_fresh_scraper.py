@@ -17,6 +17,10 @@ This scraper:
 import json
 import re
 import requests
+try:
+    from defusedxml.ElementTree import fromstring as safe_fromstring
+except ImportError:
+    from xml.etree.ElementTree import fromstring as safe_fromstring
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from datetime import datetime
@@ -125,12 +129,12 @@ class ECFRFreshScraper:
         
         # Parse XML
         try:
-            root = ET.fromstring(xml_content)
+            root = safe_fromstring(xml_content)
         except ET.ParseError as e:
             print(f"[ERROR] XML Parse Error: {e}")
             # Try cleaning the XML
             xml_content = re.sub(r'&(?!amp;|lt;|gt;|apos;|quot;)', '&amp;', xml_content)
-            root = ET.fromstring(xml_content)
+            root = safe_fromstring(xml_content)
         
         # Debug: Show root structure
         print(f"[DEBUG] Root tag: {root.tag}")

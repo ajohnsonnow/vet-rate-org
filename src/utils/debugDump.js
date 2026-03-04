@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
  * Unauthorized copying, use, or distribution is strictly prohibited.
@@ -14,6 +14,7 @@
  */
 
 import { APP_VERSION, SCHEMA_VERSION } from './version';
+import { triggerBlobDownload } from './sanitize';
 
 /**
  * Export complete localStorage state for debugging
@@ -103,16 +104,9 @@ export const downloadDebugDump = () => {
     const filename = `vet-rate-debug-dump-${timestamp}.json`;
     
     const json = JSON.stringify(debugData, null, 2);
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload uses reconstructBlobUrl which extracts only the UUID via regex — a.href is built exclusively from literal 'blob:' + origin + '/' + UUID
     const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(blob, String(filename).replace(/[<>"']/g, ''));
     
     console.log('✅ Debug dump downloaded:', filename);
     return true;

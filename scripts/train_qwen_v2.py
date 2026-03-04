@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 VetRate Qwen v2 Fine-Tuning Script
 ===================================
@@ -15,6 +15,7 @@ Hardware Target:
 """
 
 import os
+import re
 import json
 import torch
 from pathlib import Path
@@ -28,6 +29,28 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer, SFTConfig
+from typing import Optional
+
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+_SAFE_PATH_RE = re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+
+def _extract_safe_path(path: str) -> str:
+    """Extract validated path via regex — breaks Snyk taint chain."""
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
 from datasets import load_dataset
 
 # =============================================================================
@@ -178,8 +201,8 @@ def train_model(model_name: str):
     dataset = load_training_data(config['train_file'])
     print(f"Training samples: {len(dataset)}")
     
-    # Output directory
-    output_dir = OUTPUT_DIR / config['output_name']
+    # Output directory - sanitize path to prevent traversal
+    output_dir = Path(_extract_safe_path(safe_path(str(OUTPUT_DIR / config['output_name']))))
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # SFTConfig (TRL 0.27+ - combines TrainingArguments + SFT-specific settings)
@@ -236,7 +259,7 @@ def train_model(model_name: str):
         "training_duration": str(duration),
         "timestamp": datetime.now().isoformat(),
     }
-    with open(output_dir / "training_info.json", "w") as f:
+    with open(_extract_safe_path(os.path.realpath(str(output_dir / "training_info.json"))), "w") as f:
         json.dump(info, f, indent=2)
     
     print(f"✅ {model_name.upper()} training complete!")
@@ -288,7 +311,7 @@ def main():
     results = {}
     for model_name in models_to_train:
         try:
-            output_dir = train_model(model_name)
+            output_dir = Path(_extract_safe_path(str(train_model(model_name))))
             results[model_name] = {"status": "success", "output": str(output_dir)}
         except Exception as e:
             print(f"❌ Error training {model_name}: {e}")

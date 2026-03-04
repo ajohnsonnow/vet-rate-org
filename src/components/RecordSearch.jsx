@@ -17,6 +17,7 @@ import {
   highlightSearchTerm,
   COMMON_MEDICAL_KEYWORDS 
 } from '../utils/pdfSearchEngine';
+import { escapeHtml } from '../utils/sanitize';
 
 const RecordSearch = ({ onClose }) => {
   const { t } = useLanguage();
@@ -402,7 +403,10 @@ const RecordSearch = ({ onClose }) => {
                         <p
                           className="text-gray-300 text-sm leading-relaxed"
                           dangerouslySetInnerHTML={{
-                            __html: highlightSearchTerm(result.context, result.matchText || searchTerm)
+                            __html: highlightSearchTerm(
+                              escapeHtml(result.context),
+                              escapeHtml(result.matchText || searchTerm)
+                            )
                           }}
                         />
                       </div>

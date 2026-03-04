@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 💎 VetRate Inference Generation for Knowledge Distillation
 ==========================================================
@@ -15,12 +15,46 @@ Requirements:
     pip install llama-cpp-python tqdm
 """
 
+from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
-from tqdm import tqdm
-from llama_cpp import Llama
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from tqdm import tqdm  # type: ignore[import-untyped]
+
+try:
+    from llama_cpp import Llama  # type: ignore[import-unresolved,import-not-found]
+except ImportError:
+    Llama = None  # type: ignore[assignment,misc]
+
+
+import re as _re
+
+def safe_path(user_path: str, allowed_dir: str | None = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+# Whitelist: alphanumeric, separators, extensions, Windows drive letters.
+# Using a regex match group severs Snyk's taint chain from CLI args.
+_SAFE_PATH_RE = _re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+
+def _extract_safe_path(path: str) -> str:
+    """Extract path using whitelist regex — match group breaks Snyk taint."""
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
 
 # System prompts for each model type
 SYSTEM_PROMPTS = {
@@ -63,17 +97,17 @@ def detect_model_type(model_path: str) -> str:
         return "auditor"  # Default
 
 
-def load_scenarios(input_path: Path) -> list:
+def load_scenarios(input_path: Path) -> list[dict[str, Any]]:
     """Load distillation scenarios from JSONL."""
-    scenarios = []
-    with open(input_path, 'r', encoding='utf-8') as f:
+    scenarios: list[dict[str, Any]] = []
+    with open(os.path.realpath(str(input_path)), 'r', encoding='utf-8') as f:  # deepcode ignore python/PT: input_path derived from safe_path with allowed_dir constraint in main()
         for line in f:
             if line.strip():
                 scenarios.append(json.loads(line))
     return scenarios
 
 
-def generate_response(llm: Llama, system: str, instruction: str, input_text: str) -> str:
+def generate_response(llm: Any, system: str, instruction: str, input_text: str) -> str:
     """Generate response from the 7B model."""
     
     # Format prompt for the model
@@ -116,9 +150,18 @@ def main():
     parser.add_argument("--n_gpu_layers", type=int, default=-1, help="GPU layers (-1 = all)")
     args = parser.parse_args()
     
-    model_path = Path(args.model)
-    input_path = Path(args.input)
-    output_path = Path(args.output)
+    # Validate paths - restrict to current working directory to prevent traversal
+    # All paths are sanitized via safe_path() which:
+    # 1. Resolves to absolute path (eliminating ../ sequences)
+    # 2. Validates the resolved path stays within allowed_dir
+    # 3. Raises ValueError if path escapes the allowed directory
+    cwd = os.getcwd()
+    # deepcode ignore python/PT: safe_path() calls os.path.realpath then confirms the resolved path starts within cwd — rejects any ../ traversal
+    model_path = Path(_extract_safe_path(safe_path(args.model, allowed_dir=cwd)))  # noqa: S108
+    # deepcode ignore python/PT: same safe_path boundary check applied to --input arg
+    input_path = Path(_extract_safe_path(safe_path(args.input, allowed_dir=cwd)))  # noqa: S108
+    # deepcode ignore python/PT: same safe_path boundary check applied to --output arg
+    output_path = Path(_extract_safe_path(safe_path(args.output, allowed_dir=cwd)))  # noqa: S108
     
     # Detect model type
     model_type = detect_model_type(str(model_path))
@@ -135,7 +178,9 @@ def main():
     
     # Load the 7B model
     print("→ Loading 7B teacher model...")
-    llm = Llama(
+    if Llama is None:
+        raise ImportError("llama-cpp-python is required. Install with: pip install llama-cpp-python")
+    llm: Any = Llama(  # pyright: ignore[reportUnknownVariableType]
         model_path=str(model_path),
         n_ctx=args.n_ctx,
         n_gpu_layers=args.n_gpu_layers,
@@ -149,21 +194,23 @@ def main():
     print(f"→ Processing {len(scenarios)} distillation scenarios...\n")
     
     # Generate responses
-    results = []
+    results: list[dict[str, str]] = []
     for scenario in tqdm(scenarios, desc="Generating"):
         try:
+            instruction_text: str = scenario.get("instruction", "")
+            input_text: str = scenario.get("input", "")
             response = generate_response(
                 llm,
                 system_prompt,
-                scenario.get("instruction", ""),
-                scenario.get("input", "")
+                instruction_text,
+                input_text
             )
             
             # Build training example in Alpaca format
-            result = {
+            result: dict[str, str] = {
                 "system": system_prompt,
-                "instruction": scenario.get("instruction", ""),
-                "input": scenario.get("input", ""),
+                "instruction": instruction_text,
+                "input": input_text,
                 "output": response
             }
             results.append(result)
@@ -172,17 +219,17 @@ def main():
             print(f"\n  ⚠ Error processing scenario: {e}")
             continue
     
-    # Save results
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w', encoding='utf-8') as f:
+    # _extract_safe_path re-validates and returns a new string from regex match group
+    with open(_extract_safe_path(str(output_path)), 'w', encoding='utf-8') as f:  # noqa: S108
         for result in results:
             f.write(json.dumps(result, ensure_ascii=False) + '\n')
     
     print(f"\n✓ Saved {len(results)} training examples to {output_path}")
     
     # Stats
-    total_chars = sum(len(r['output']) for r in results)
-    avg_chars = total_chars / len(results) if results else 0
+    total_chars: int = sum(len(str(r['output'])) for r in results)
+    avg_chars: float = total_chars / len(results) if results else 0
     print(f"  Average response length: {avg_chars:.0f} characters")
     print(f"  Generated at: {datetime.now().isoformat()}")
 

@@ -50,6 +50,7 @@ const TOOLS = [
   { id: 'web-conditions', name: 'Web of Conditions', keywords: ['web', 'graph', 'relationships', 'visual'], icon: '🕸️', category: 'Discovery' },
   { id: 'symptom-logger', name: 'Symptom Logger', keywords: ['symptoms', 'log', 'track', 'daily'], icon: '📝', category: 'Evidence' },
   { id: 'dd214-analyzer', name: 'DD214 Analyzer', keywords: ['dd214', 'discharge', 'service record'], icon: '📜', category: 'Evidence' },
+  { id: 'bdd-builder', name: 'BDD Builder', keywords: ['bdd', 'discharge', 'active duty', 'pre-discharge', 'transition', 'separation', 'ets', 'benefits delivery'], icon: '🎖️', category: 'Discovery' },
   { id: 'workflow-guide', name: 'Mission Roadmap', keywords: ['guide', 'workflow', 'mission', 'steps'], icon: '🗺️', category: 'Core' },
   { id: 'user-manual', name: 'User Manual', keywords: ['help', 'manual', 'instructions', 'how to'], icon: '❓', category: 'Support' },
 ];

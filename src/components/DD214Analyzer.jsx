@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vet-Rate.org - DD214 Information Analyzer
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
@@ -366,10 +366,11 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
 
   // Check AI status on mount and periodically
   useEffect(() => {
+    /** @type {() => void} */
     const checkStatus = () => setAIStatus(getAIStatus());
     checkStatus();
-    const interval = setInterval(checkStatus, 1000);
-    return () => clearInterval(interval);
+    const intervalId = setInterval(() => checkStatus(), 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
   /**

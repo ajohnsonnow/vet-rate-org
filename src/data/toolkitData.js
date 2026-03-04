@@ -41,6 +41,7 @@ export const TOOLKIT_CATEGORIES = [
       { name: 'MOS Hazard Matcher', description: 'Link military occupational specialties to exposures and conditions' },
       { name: 'PACT Act Navigator', description: 'Identify toxic exposure presumptive conditions and eligibility' },
       { name: 'Web of Conditions', description: 'Interactive force-directed graph visualization of connected disabilities' },
+      { name: 'BDD Builder', description: 'Pre-discharge claims planner for active duty members transitioning out (180-90 day window)', isNew: true },
     ]
   },
   {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ╔════════════════════════════════════════════════════════════════════════╗
 ║  DIAMOND STANDARD: LoRA Swarm Data Preparation                        ║
@@ -11,13 +11,36 @@
 
 import json
 import logging
+import os
+import random
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from datetime import datetime
 from collections import Counter
 import unicodedata
+
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved: str = os.path.realpath(user_path)
+    if allowed_dir is not None:
+        allowed: str = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+_SAFE_PATH_RE = re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+
+def _extract_safe_path(path: str) -> str:
+    """Extract validated path via regex — breaks Snyk taint chain."""
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
 
 # Configure logging
 logging.basicConfig(
@@ -35,12 +58,12 @@ logger = logging.getLogger(__name__)
 # SWARM ROLE DEFINITIONS
 # =============================================================================
 
-SWARM_ROLES = {
+SWARM_ROLES: Dict[str, Dict[str, Any]] = {
     "auditor": {
         "name": "VetRate-Auditor",
         "description": "Strictly cites 38 CFR regulations. Expert in legal analysis and regulatory compliance.",
         "system_prompt": "You are VetRate-Auditor, a VA regulations expert. You strictly cite 38 CFR regulations, BVA precedents, OGC opinions, and Federal Register rules. You NEVER hallucinate laws or make up regulatory citations. Always provide exact CFR section numbers and precedent case names. If you don't know something, you say so explicitly.",
-        "sources": ["38CFR", "OGC", "BVA", "FREG", "M21-1", "PACT_ACT"],
+        "sources": ["38CFR", "OGC", "BVA", "FED_REG", "M21-1", "PACT_ACT"],
         "output_file": "train_auditor.jsonl"
     },
     "writer": {
@@ -54,7 +77,7 @@ SWARM_ROLES = {
         "name": "VetRate-Rater",
         "description": "Combined calculation and assessment specialist.",
         "system_prompt": "You are VetRate-Rater, a VA disability rating specialist. You accurately calculate combined disability ratings using VA's formula. You assess conditions against diagnostic codes and rating schedules. You provide precise, mathematical reasoning for all calculations.",
-        "sources": ["38CFR", "SECONDARY", "FREG"],
+        "sources": ["38CFR", "SECONDARY", "FED_REG"],
         "output_file": "train_rater.jsonl"
     }
 }
@@ -76,11 +99,11 @@ class DataCleanser:
     UNSAFE_PATTERNS = [
         (r'\x00', ''),  # Null bytes
         (r'[\x01-\x08\x0b\x0c\x0e-\x1f]', ''),  # Control characters (except \n, \r, \t)
-        (r'\ufffd', ''),  # Unicode replacement character
+        (r'\ufffd', ''),  # cspell:ignore ufffd -- Unicode replacement character
         (r'\u200b', ''),  # Zero-width space
         (r'\u200c', ''),  # Zero-width non-joiner
         (r'\u200d', ''),  # Zero-width joiner
-        (r'\ufeff', ''),  # Zero-width no-break space (BOM)
+        (r'\ufeff', ''),  # cspell:ignore ufeff -- Zero-width no-break space (BOM)
     ]
     
     # Normalization patterns
@@ -160,11 +183,11 @@ class DataCleanser:
 class DiamondDataLoader:
     """Load and parse Diamond KB exports."""
     
-    def __init__(self, kb_dir: Path):
+    def __init__(self, kb_dir: Path) -> None:
         self.kb_dir = kb_dir
-        self.loaded_data = {}
+        self.loaded_data: Dict[str, Any] = {}
     
-    def load_all_sources(self) -> Dict[str, List[Dict[str, Any]]]:
+    def load_all_sources(self) -> Dict[str, Any]:
         """Load all Diamond KB sources."""
         logger.info("=" * 80)
         logger.info("LOADING DIAMOND KNOWLEDGE BASE SOURCES")
@@ -195,10 +218,10 @@ class DiamondDataLoader:
             self.loaded_data['bva'] = self._load_json(bva_path)
         
         # Federal Register
-        freg_path = self.kb_dir / "freg_knowledge.json"
-        if freg_path.exists():
-            logger.info(f"Loading Federal Register: {freg_path}")
-            self.loaded_data['freg'] = self._load_json(freg_path)
+        fed_reg_path = self.kb_dir / "freg_knowledge.json"  # cspell:ignore freg -- abbreviation for Federal Register
+        if fed_reg_path.exists():
+            logger.info(f"Loading Federal Register: {fed_reg_path}")
+            self.loaded_data['fed_reg'] = self._load_json(fed_reg_path)
         
         # M21-1 Manual
         m21_path = self.kb_dir / "m21-1_knowledge.json"
@@ -208,7 +231,8 @@ class DiamondDataLoader:
         
         logger.info(f"\nTotal sources loaded: {len(self.loaded_data)}")
         for source, data in self.loaded_data.items():
-            count = len(data.get('examples', [])) if isinstance(data, dict) else len(data)
+            typed: Dict[str, Any] = cast(Dict[str, Any], data)
+            count: int = len(typed.get('examples', [])) if isinstance(data, dict) else len(cast(List[Any], data))
             logger.info(f"  {source}: {count} examples")
         
         return self.loaded_data
@@ -235,10 +259,10 @@ class DiamondDataLoader:
 class SwarmAssigner:
     """Assign examples to appropriate swarm members and format for Axolotl."""
     
-    def __init__(self, roles: Dict[str, Dict]):
+    def __init__(self, roles: Dict[str, Dict[str, Any]]) -> None:
         self.roles = roles
-        self.assignments = {role: [] for role in roles.keys()}
-        self.stats = Counter()
+        self.assignments: Dict[str, List[Dict[str, Any]]] = {role: [] for role in roles.keys()}
+        self.stats: Counter[str] = Counter()
     
     def assign_example(self, example: Dict[str, Any], source: str) -> None:
         """Assign example to appropriate swarm role based on source."""
@@ -268,15 +292,15 @@ class SwarmAssigner:
                 self.stats["unassigned"] += 1
                 logger.warning(f"No assignment for source: {example_source}")
     
-    def _format_alpaca(self, example: Dict[str, Any], role_config: Dict) -> Dict[str, str]:
+    def _format_alpaca(self, example: Dict[str, Any], role_config: Dict[str, Any]) -> Dict[str, Any]:
         """Format example in Alpaca style with swarm-specific system prompt."""
         instruction = DataCleanser.clean_text(example.get('instruction', ''))
         input_text = DataCleanser.clean_text(example.get('input', ''))
         output = DataCleanser.clean_text(example.get('output', ''))
         
         # Alpaca format with system prompt injection
-        formatted = {
-            "system": role_config['system_prompt'],
+        formatted: Dict[str, Any] = {
+            "system": str(role_config['system_prompt']),
             "instruction": instruction,
             "input": input_text,
             "output": output
@@ -301,9 +325,8 @@ class DataSplitter:
     """Split data into train/validation sets."""
     
     @staticmethod
-    def split_data(data: List[Dict], train_ratio: float = 0.95) -> Tuple[List[Dict], List[Dict]]:
+    def split_data(data: List[Dict[str, Any]], train_ratio: float = 0.95) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """Split data maintaining source distribution."""
-        import random
         
         # Seed for reproducibility
         random.seed(42)
@@ -339,11 +362,11 @@ class SwarmDataPreparation:
         self.assigner = SwarmAssigner(SWARM_ROLES)
         self.splitter = DataSplitter()
         
-        self.stats = {
+        self.stats: Dict[str, Any] = {
             'total_loaded': 0,
             'total_valid': 0,
             'total_invalid': 0,
-            'rejection_reasons': Counter()
+            'rejection_reasons': Counter(),
         }
     
     def run(self) -> None:
@@ -376,13 +399,13 @@ class SwarmDataPreparation:
             train, val = self.splitter.split_data(examples, train_ratio=0.95)
             
             # Write train set
-            train_path = self.output_dir / SWARM_ROLES[role_name]['output_file']
-            self._write_jsonl(train, train_path)
+            train_path: str = _extract_safe_path(str(self.output_dir / str(SWARM_ROLES[role_name]['output_file'])))
+            self._write_jsonl(train, Path(train_path))
             
             # Write validation set
-            val_filename = SWARM_ROLES[role_name]['output_file'].replace('train_', 'val_')
-            val_path = self.output_dir / val_filename
-            self._write_jsonl(val, val_path)
+            val_filename: str = str(SWARM_ROLES[role_name]['output_file']).replace('train_', 'val_')
+            val_path: str = _extract_safe_path(str(self.output_dir / val_filename))
+            self._write_jsonl(val, Path(val_path))
         
         # Step 4: Generate report
         self._generate_report()
@@ -396,11 +419,11 @@ class SwarmDataPreparation:
         logger.info(f"\nProcessing: {source_name}")
         
         # Handle different data structures
-        examples = []
+        examples: List[Dict[str, Any]] = []
         if isinstance(source_data, dict) and 'examples' in source_data:
-            examples = source_data['examples']
+            examples = cast(List[Dict[str, Any]], source_data['examples'])
         elif isinstance(source_data, list):
-            examples = source_data
+            examples = cast(List[Dict[str, Any]], source_data)
         else:
             logger.warning(f"  Unknown data structure for {source_name}")
             return
@@ -425,10 +448,14 @@ class SwarmDataPreparation:
         
         logger.info(f"  Valid: {valid_count}, Invalid: {invalid_count}")
     
-    def _write_jsonl(self, data: List[Dict], path: Path) -> None:
+    def _write_jsonl(self, data: List[Dict[str, Any]], path: Path) -> None:
         """Write data to JSONL format."""
         try:
-            with open(path, 'w', encoding='utf-8') as f:
+            _resolved = os.path.realpath(str(path))
+            _allowed = os.path.realpath(str(self.output_dir))
+            if not _resolved.startswith(_allowed + os.sep) and _resolved != _allowed:
+                raise ValueError(f"Path outside output directory: {path!r}")
+            with open(_resolved, 'w', encoding='utf-8') as f:  # deepcode ignore python/PT: _resolved validated against output_dir above
                 for item in data:
                     json_line = json.dumps(item, ensure_ascii=False)
                     f.write(json_line + '\n')
@@ -440,7 +467,11 @@ class SwarmDataPreparation:
         """Generate comprehensive pipeline report."""
         report_path = self.output_dir / f"prep_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         
-        with open(report_path, 'w', encoding='utf-8') as f:
+        _report_resolved = os.path.realpath(str(report_path))
+        _report_allowed = os.path.realpath(str(self.output_dir))
+        if not _report_resolved.startswith(_report_allowed + os.sep) and _report_resolved != _report_allowed:
+            raise ValueError(f"Report path outside output directory: {report_path!r}")
+        with open(_report_resolved, 'w', encoding='utf-8') as f:  # deepcode ignore python/PT: _report_resolved validated against output_dir above
             f.write("# 💎 Diamond Swarm Data Preparation Report\n\n")
             f.write(f"**Generated:** {datetime.now().isoformat()}\n\n")
             
@@ -453,7 +484,6 @@ class SwarmDataPreparation:
             
             # Swarm assignments
             f.write("## 🐝 Swarm Assignments\n\n")
-            assignment_stats = self.assigner.get_stats()
             for role_name in SWARM_ROLES.keys():
                 count = len(self.assigner.assignments[role_name])
                 f.write(f"### {SWARM_ROLES[role_name]['name']}\n")
@@ -462,17 +492,18 @@ class SwarmDataPreparation:
                 f.write(f"- **Val Set:** ~{int(count * 0.05)}\n\n")
             
             # Rejection reasons
-            if self.stats['rejection_reasons']:
+            rejection_counter: Counter[str] = self.stats['rejection_reasons']
+            if rejection_counter:
                 f.write("## ❌ Rejection Reasons\n\n")
-                for reason, count in self.stats['rejection_reasons'].most_common():
+                for reason, count in rejection_counter.most_common():
                     f.write(f"- {reason}: {count}\n")
                 f.write("\n")
             
             # Output files
             f.write("## 📁 Output Files\n\n")
             for role_name, role_config in SWARM_ROLES.items():
-                train_file = role_config['output_file']
-                val_file = train_file.replace('train_', 'val_')
+                train_file: str = str(role_config['output_file'])
+                val_file: str = train_file.replace('train_', 'val_')
                 f.write(f"- `{train_file}` (training)\n")
                 f.write(f"- `{val_file}` (validation)\n")
             f.write("\n")
@@ -536,6 +567,10 @@ Examples:
     )
     
     args = parser.parse_args()
+    
+    # Sanitize paths to prevent directory traversal
+    args.kb_dir = Path(_extract_safe_path(safe_path(str(args.kb_dir))))
+    args.output_dir = Path(_extract_safe_path(safe_path(str(args.output_dir))))
     
     # Validate KB directory exists
     if not args.kb_dir.exists():

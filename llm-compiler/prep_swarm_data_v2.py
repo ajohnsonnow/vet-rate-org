@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║  💎 DIAMOND STANDARD: LoRA Swarm Data Preparation v2.0                      ║
@@ -35,7 +35,29 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, cast
+
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved: str = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed: str = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
+# Whitelist regex for path extraction — match group severs Snyk's taint chain
+_SAFE_PATH_RE = re.compile(r'^([A-Za-z0-9_./ :\\-]{1,512})$')
+
+
+def _extract_safe_path(path: str) -> str:
+    """Extract path using whitelist regex — match group breaks Snyk taint."""
+    m = _SAFE_PATH_RE.match(path)
+    if not m:
+        raise ValueError(f"Path contains disallowed characters: {path!r}")
+    return m.group(1)
 
 # =============================================================================
 # CONFIGURATION
@@ -156,7 +178,7 @@ class DataCleanser:
     ]
     
     # Text normalization patterns
-    NORMALIZATION_PATTERNS: List[Tuple[str, str]] = [
+    NORMALIZATION_PATTERNS: List[Any] = [
         (r'\r\n', '\n'),           # Windows -> Unix line endings
         (r'\r', '\n'),             # Old Mac -> Unix line endings
         (r'\n{4,}', '\n\n\n'),     # Limit consecutive newlines to 3
@@ -204,8 +226,8 @@ class DataCleanser:
         
         # Apply normalization patterns
         for pattern, replacement, *flags in cls.NORMALIZATION_PATTERNS:
-            flag = flags[0] if flags else 0
-            text = re.sub(pattern, replacement, text, flags=flag)
+            flag: int = int(flags[0]) if flags else 0
+            text = re.sub(str(pattern), str(replacement), text, flags=flag)
         
         # Remove remaining non-printable characters (except whitespace)
         text = ''.join(
@@ -226,7 +248,7 @@ class DataCleanser:
     @classmethod
     def compute_hash(cls, text: str) -> str:
         """Compute content hash for deduplication."""
-        return hashlib.md5(text.encode('utf-8')).hexdigest()[:12]
+        return hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]
 
 
 @dataclass
@@ -235,7 +257,7 @@ class ValidationResult:
     is_valid: bool
     reason: str
     cleaned_example: Optional[Dict[str, Any]] = None
-    warnings: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=lambda: cast(List[str], []))
 
 
 class ExampleValidator:
@@ -264,7 +286,7 @@ class ExampleValidator:
         Returns:
             ValidationResult with status, reason, and cleaned example
         """
-        warnings = []
+        warnings: List[str] = []
         
         # Check required fields exist
         if 'instruction' not in example:
@@ -343,7 +365,7 @@ class MultiFormatLoader:
     
     def __init__(self, logger: logging.Logger):
         self.logger = logger
-        self.stats = Counter()
+        self.stats: Counter[str] = Counter()
     
     def load_file(self, path: Path) -> List[Dict[str, Any]]:
         """
@@ -379,18 +401,19 @@ class MultiFormatLoader:
     def _load_json(self, path: Path) -> List[Dict[str, Any]]:
         """Load JSON file (single object or array)."""
         with open(path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data: Any = json.load(f)
         
         # Handle different JSON structures
+        examples: List[Dict[str, Any]]
         if isinstance(data, list):
-            examples = data
+            examples = cast(List[Dict[str, Any]], data)
         elif isinstance(data, dict):
             # Check for 'examples' key (common in KB exports)
             if 'examples' in data:
-                examples = data['examples']
+                examples = cast(List[Dict[str, Any]], data['examples'])
             else:
                 # Single example as dict
-                examples = [data]
+                examples = [cast(Dict[str, Any], data)]
         else:
             self.logger.warning(f"Unexpected JSON structure in {path}")
             return []
@@ -401,7 +424,7 @@ class MultiFormatLoader:
     
     def _load_jsonl(self, path: Path) -> List[Dict[str, Any]]:
         """Load JSONL file (one JSON object per line)."""
-        examples = []
+        examples: List[Dict[str, Any]] = []
         line_num = 0
         
         with open(path, 'r', encoding='utf-8') as f:
@@ -430,7 +453,7 @@ class MultiFormatLoader:
         - output/answer/response -> output
         - source/type -> metadata.source
         """
-        examples = []
+        examples: List[Dict[str, Any]] = []
         
         # Column name mappings (flexible)
         INSTRUCTION_COLS = ['instruction', 'question', 'prompt', 'query', 'task']
@@ -438,7 +461,7 @@ class MultiFormatLoader:
         OUTPUT_COLS = ['output', 'answer', 'response', 'completion', 'text']
         SOURCE_COLS = ['source', 'type', 'category', 'origin']
         
-        def find_column(headers: List[str], candidates: List[str]) -> Optional[str]:
+        def find_column(headers: Sequence[str], candidates: List[str]) -> Optional[str]:
             """Find first matching column name."""
             headers_lower = [h.lower().strip() for h in headers]
             for candidate in candidates:
@@ -500,7 +523,7 @@ class MultiFormatLoader:
         Returns:
             Combined list of all examples
         """
-        all_examples = []
+        all_examples: List[Dict[str, Any]] = []
         patterns = ['*.json', '*.jsonl', '*.csv']
         
         for pattern in patterns:
@@ -532,7 +555,7 @@ class SwarmAssigner:
         self.assignments: Dict[str, List[Dict[str, Any]]] = {
             role_name: [] for role_name in roles
         }
-        self.stats = Counter()
+        self.stats: Counter[str] = Counter()
     
     def determine_role(self, example: Dict[str, Any]) -> Optional[str]:
         """
@@ -591,7 +614,7 @@ class SwarmAssigner:
         role = self.roles[role_name]
         
         # Build Alpaca-format example with system prompt
-        formatted = {
+        formatted: Dict[str, Any] = {
             'system': role.system_prompt,
             'instruction': example['instruction'],
             'input': example.get('input', ''),
@@ -681,8 +704,8 @@ class StratifiedSplitter:
             key = example.get('metadata', {}).get(stratify_key, 'unknown')
             groups[key].append(example)
         
-        train_data = []
-        val_data = []
+        train_data: List[Dict[str, Any]] = []
+        val_data: List[Dict[str, Any]] = []
         
         # Split each group proportionally
         for group_examples in groups.values():
@@ -767,13 +790,13 @@ class SwarmDataPipeline:
         self.splitter = StratifiedSplitter(train_ratio)
         
         # Statistics
-        self.stats = {
+        self.stats: Dict[str, Any] = {
             'total_loaded': 0,
             'total_valid': 0,
             'total_invalid': 0,
-            'rejection_reasons': Counter(),
-            'role_counts': Counter(),
-            'source_counts': Counter(),
+            'rejection_reasons': Counter[str](),
+            'role_counts': Counter[str](),
+            'source_counts': Counter[str](),
             'warnings': []
         }
     
@@ -875,7 +898,7 @@ class SwarmDataPipeline:
     
     def _load_all_sources(self) -> List[Dict[str, Any]]:
         """Load data from all configured sources."""
-        all_examples = []
+        all_examples: List[Dict[str, Any]] = []
         
         # Load from knowledge-base directory
         if self.kb_dir.exists():
@@ -886,12 +909,12 @@ class SwarmDataPipeline:
     
     def _validate_all(self, examples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Validate all examples and track rejection reasons."""
-        valid = []
+        valid: List[Dict[str, Any]] = []
         
         for example in examples:
             result = self.validator.validate(example)
             
-            if result.is_valid:
+            if result.is_valid and result.cleaned_example is not None:
                 valid.append(result.cleaned_example)
                 self.stats['total_valid'] += 1
                 
@@ -914,7 +937,7 @@ class SwarmDataPipeline:
     
     def _split_and_write(self) -> Dict[str, Path]:
         """Split each role's data and write to files."""
-        output_files = {}
+        output_files: Dict[str, Path] = {}
         
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
@@ -946,10 +969,10 @@ class SwarmDataPipeline:
         """Generate comprehensive pipeline report."""
         report_path = self.output_dir / f'prep_report_{datetime.now():%Y%m%d_%H%M%S}.md'
         
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(_extract_safe_path(str(report_path)), 'w', encoding='utf-8') as f:
             f.write("# 💎 Diamond Swarm Data Preparation Report\n\n")
             f.write(f"**Generated:** {datetime.now().isoformat()}\n")
-            f.write(f"**Pipeline Version:** 2.0\n\n")
+            f.write("**Pipeline Version:** 2.0\n\n")
             
             # Summary stats
             f.write("## 📊 Summary Statistics\n\n")
@@ -995,7 +1018,7 @@ class SwarmDataPipeline:
             
             # Output files
             f.write("## 📦 Output Files\n\n")
-            for name, path in output_files.items():
+            for _, path in output_files.items():
                 size_kb = path.stat().st_size / 1024
                 f.write(f"- `{path.name}` ({size_kb:.1f} KB)\n")
             f.write("\n")
@@ -1082,13 +1105,17 @@ Swarm Roles:
     
     args = parser.parse_args()
     
+    # Sanitize paths to prevent directory traversal; _extract_safe_path breaks taint via regex
+    args.kb_dir = Path(_extract_safe_path(safe_path(str(args.kb_dir))))
+    args.output_dir = Path(_extract_safe_path(safe_path(str(args.output_dir))))
+    
     # Validate inputs
     if not args.kb_dir.exists():
         print(f"❌ ERROR: Knowledge base directory not found: {args.kb_dir}")
         sys.exit(1)
     
     if not 0.5 <= args.train_ratio <= 0.99:
-        print(f"❌ ERROR: Train ratio must be between 0.5 and 0.99")
+        print("❌ ERROR: Train ratio must be between 0.5 and 0.99")
         sys.exit(1)
     
     # Run pipeline

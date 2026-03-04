@@ -34,11 +34,11 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
       sessionStorage.clear();
       
       // 3. Clear cookies
-      console.log('🔥 Clearing cookies...');
+      console.log('Clearing cookies...');
       document.cookie.split(";").forEach((c) => {
-        document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
+        // Expire cookie with all security attributes to ensure deletion
+        document.cookie = cookieName + "=;expires=" + new Date(0).toUTCString() + ";path=/;Secure;SameSite=Lax";
       });
       
       // 4. Clear IndexedDB (Vector Store, AI Models, etc.)

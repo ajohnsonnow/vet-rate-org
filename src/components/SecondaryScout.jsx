@@ -421,6 +421,8 @@ const SecondaryConditionCard = ({
   onToggleSelect,
   onGetDoctorsPacket
 }) => {
+  const { t } = useLanguage();
+  const evidenceList = suggestion.medicalEvidence || suggestion.medicalCitations || [];
   return (
     <div className={`bg-white rounded-lg shadow-md border-2 overflow-hidden transition-all hover:shadow-lg ${
       isSelected ? 'border-blue-500 bg-blue-50/30' : 'border-gray-200'
@@ -542,14 +544,14 @@ const SecondaryConditionCard = ({
           )}
 
           {/* Medical Evidence (Literature Support) */}
-          {(suggestion.medicalEvidence || suggestion.medicalCitations) && (suggestion.medicalEvidence || suggestion.medicalCitations).length > 0 && (
+          {evidenceList.length > 0 && (
             <div className="mb-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-3">{t('secondaryScoutSection.medicalLiteratureSupport')}</h4>
               {suggestion.evidenceType && (
                 <p className="text-xs text-gray-500 mb-2 italic">{suggestion.evidenceType}</p>
               )}
               <ul className="space-y-2">
-                {(suggestion.medicalEvidence || suggestion.medicalCitations).map((citation, idx) => (
+                {evidenceList.map((citation, idx) => (
                   <li key={idx} className="flex items-start text-sm text-gray-700">
                     <svg className="w-4 h-4 mr-2 mt-0.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

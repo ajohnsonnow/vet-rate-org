@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Analytics Transparency Widget
  * =============================
  * Shows users exactly what data is collected and displays live visitor stats.
@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Shield, Globe, Clock, Monitor, MapPin, ExternalLink, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import BRAND from '../config/branding';
+import { sanitizeUrl } from '../../utils/sanitize';
 
 // GoatCounter public stats endpoint (uses brand config)
 const STATS_URL = BRAND.goatCounterUrl;
@@ -241,7 +242,7 @@ function AnalyticsTransparency({ compact = false }) {
         {stats?.available && (
           <div className="mt-6 text-center">
             <a
-              href={stats.dashboardUrl}
+              href={sanitizeUrl(STATS_URL)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"

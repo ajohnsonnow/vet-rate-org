@@ -29,11 +29,15 @@
       name="description"
       content="Vet-Rate.org - Your complete VA claims arsenal. 39 professional tools: search 748 conditions, calculate ratings, discover secondary claims, AI document analysis, C&P prep, evidence builders, strategic planning. What claim sharks charge $1000s for, FREE. Built by a veteran for veterans."
     />
-    <!-- Progressive enhancement: Android/Chrome/Safari/Edge only, gracefully ignored by Firefox -->
+    <!-- Progressive enhancement: theme-color for Android Chrome/Safari/Edge address bar -->
+    <!-- Unsupported browsers (Firefox) safely ignore this meta tag -->
     <!-- htmlhint meta[name=theme-color]:false -->
-    <meta name="theme-color" content="#003f87" />
+    <!-- compat-api/html: intentionally used despite partial browser support -->
+    <meta name="theme-color" content="#003f87" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)" />
     
     <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/images/Vet-Rate-org-logo-official.png" />
     <link rel="shortcut icon" type="image/png" href="/images/Vet-Rate-org-logo-official.png" />
     <link rel="apple-touch-icon" href="/images/Vet-Rate-org-logo-official.png" />

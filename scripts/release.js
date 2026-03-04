@@ -33,7 +33,10 @@ const __dirname = path.dirname(__filename);
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const versionType = args[0] || 'patch'; // patch, minor, major
+const rawVersionType = args[0] || 'patch';
+// Sanitize: only allow known version types to prevent command injection
+const ALLOWED_TYPES = ['patch', 'minor', 'major'];
+const versionType = ALLOWED_TYPES.includes(rawVersionType) ? rawVersionType : 'patch';
 const isPreview = args.includes('--preview') || args.includes('--dry-run');
 const skipPrompts = args.includes('-y') || args.includes('--yes');
 
@@ -54,6 +57,12 @@ function log(message, color = 'reset') {
 }
 
 function execCommand(command, silent = false) {
+  // Validate command is from a known safe set (prevent injection via args)
+  const allowedPrefixes = ['git ', 'npm ', 'node ', 'npx '];
+  if (!allowedPrefixes.some(prefix => command.startsWith(prefix))) {
+    log(`❌ Blocked untrusted command: ${command}`, 'red');
+    process.exit(1);
+  }
   try {
     const output = execSync(command, { encoding: 'utf-8' });
     if (!silent) {

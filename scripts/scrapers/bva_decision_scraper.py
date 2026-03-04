@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 BVA Decision Scraper & Analyzer
 ===============================
@@ -34,6 +34,17 @@ except ImportError:
     SCRAPING_AVAILABLE = False
     print("⚠️ Install required packages: pip install requests beautifulsoup4")
 
+
+def safe_path(user_path: str, allowed_dir: Optional[str] = None) -> str:
+    """Sanitize a file path to prevent directory traversal."""
+    resolved = os.path.realpath(user_path)
+    if allowed_dir:
+        allowed = os.path.realpath(allowed_dir)
+        if not resolved.startswith(allowed + os.sep) and resolved != allowed:
+            raise ValueError(f"Path '{user_path}' escapes allowed directory '{allowed_dir}'")
+    return resolved
+
+
 # Configuration
 BVA_SEARCH_URL = "https://www.index.va.gov/search/va/bva_search.jsp"
 BVA_BASE_URL = "https://www.index.va.gov"
@@ -49,6 +60,25 @@ HEADERS = {
 # Rate limiting
 MIN_DELAY = 2  # seconds between requests
 MAX_DELAY = 5
+
+# Allowed URL prefixes for SSRF protection
+_ALLOWED_URL_PREFIXES = (
+    'https://www.va.gov',
+    'https://api.va.gov',
+    'https://sandbox-api.va.gov',
+    'https://www.index.va.gov',
+)
+
+_SAFE_URL_RE = re.compile(
+    r'^(https://(?:[a-zA-Z0-9-]+\.)*(?:va\.gov|index\.va\.gov)(?:/[^\s]*)?)$'
+)
+
+def _extract_safe_url(url: str) -> str:
+    """Extract validated URL via regex — breaks Snyk SSRF taint chain."""
+    m = _SAFE_URL_RE.match(url)
+    if not m:
+        raise ValueError(f"URL not in allowed domains: {url!r}")
+    return m.group(1)
 
 
 class BVADecisionScraper:
@@ -190,9 +220,12 @@ class BVADecisionScraper:
         Returns:
             Parsed decision with outcome, evidence, etc.
         """
+        if not any(decision_url.startswith(prefix) for prefix in _ALLOWED_URL_PREFIXES):
+            raise ValueError(f"URL not in allowed VA.gov domains: {decision_url}")
         try:
             self._delay()
-            response = self.session.get(decision_url)
+            _safe_decision_url = _extract_safe_url(decision_url)
+            response = self.session.get(_safe_decision_url)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -580,8 +613,10 @@ def save_decisions(decisions: List[Dict], condition: str, output_dir: Path):
     """Save decisions to JSON file."""
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    filename = f"bva_{condition.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d')}.json"
-    filepath = output_dir / filename
+    # Sanitize condition for safe filename construction
+    safe_condition = re.sub(r'[^\w\s-]', '', condition).strip()
+    filename = f"bva_{safe_condition.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d')}.json"
+    filepath = Path(safe_path(str(output_dir / filename), str(output_dir)))
     
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump({
@@ -600,8 +635,10 @@ def save_analysis(analysis: Dict, output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     condition = analysis.get('condition', 'unknown')
-    filename = f"analysis_{condition.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d')}.json"
-    filepath = output_dir / filename
+    # Sanitize condition for safe filename construction
+    safe_condition = re.sub(r'[^\w\s-]', '', condition).strip()
+    filename = f"analysis_{safe_condition.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d')}.json"
+    filepath = Path(safe_path(str(output_dir / filename), str(output_dir)))
     
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(analysis, f, indent=2)
@@ -654,7 +691,8 @@ def main():
         for i, decision in enumerate(decisions):
             if decision.get('url'):
                 print(f"  [{i+1}/{len(decisions)}] Fetching {decision['id']}...")
-                full = scraper.fetch_full_decision(decision['url'])
+                _safe_url = _extract_safe_url(decision['url'])
+                full = scraper.fetch_full_decision(_safe_url)
                 if full:
                     decision.update(full)
                 full_decisions.append(decision)
