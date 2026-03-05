@@ -91,22 +91,22 @@ const RegulationsReference = ({ onClose }) => {
 
   const getCategoryIcon = (iconName) => {
     const icons = {
-      '??': <BookOpen className="h-5 w-5" />,
-      '??': <Scale className="h-5 w-5" />,
-      '???': <Shield className="h-5 w-5" />,
-      '??': <FileText className="h-5 w-5" />,
-      '??': <FileText className="h-5 w-5" />,
-      '??': <Shield className="h-5 w-5" />,
-      '??': <Scale className="h-5 w-5" />,
-      '??': <AlertTriangle className="h-5 w-5" />,
-      '??': <Calendar className="h-5 w-5" />,
-      '??': <Clock className="h-5 w-5" />,
-      '??': <DollarSign className="h-5 w-5" />,
-      '??': <Shield className="h-5 w-5" />,
-      '???': <Gavel className="h-5 w-5" />,
-      '??': <FileText className="h-5 w-5" />,
-      '??': <FileText className="h-5 w-5" />,
-      '??': <DollarSign className="h-5 w-5" />
+      '\u{1F4D6}': <BookOpen className="h-5 w-5" />,
+      '\u2696\uFE0F': <Scale className="h-5 w-5" />,
+      '\u{1F6E1}\uFE0F': <Shield className="h-5 w-5" />,
+      '\u{1F4CB}': <FileText className="h-5 w-5" />,
+      '\u{1F4DD}': <FileText className="h-5 w-5" />,
+      '\u{1F91D}': <Shield className="h-5 w-5" />,
+      '\u{1F517}': <Scale className="h-5 w-5" />,
+      '\u2622\uFE0F': <AlertTriangle className="h-5 w-5" />,
+      '\u{1F4C5}': <Calendar className="h-5 w-5" />,
+      '\u{1F504}': <Clock className="h-5 w-5" />,
+      '\u{1F4B0}': <DollarSign className="h-5 w-5" />,
+      '\u{1F3E5}': <Shield className="h-5 w-5" />,
+      '\u{1F3DB}\uFE0F': <Gavel className="h-5 w-5" />,
+      '\u{1F3A4}': <FileText className="h-5 w-5" />,
+      '\u{1F4DC}': <FileText className="h-5 w-5" />,
+      '\u{1F4B5}': <DollarSign className="h-5 w-5" />
     };
     return icons[iconName] || <BookOpen className="h-5 w-5" />;
   };

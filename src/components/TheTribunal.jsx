@@ -17,6 +17,7 @@ import { getSavedClaims } from '../utils/claimsStorage';
 import { generateAI, getAIStatus } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import ReportBugLink from './ReportBugLink';
+import { getVeteranAIContext } from '../utils/veteranContextProvider';
 
 // BVA Judge personalities and response patterns
 const JUDGE_PERSONAS = {
@@ -116,6 +117,14 @@ export default function TheTribunal({ onClose, onReportBug, onOpenAISettings }) 
     };
     checkAI();
   }, []);
+
+  // Load veteran context from VKB for realistic mock hearings
+  const [veteranVKBContext, setVeteranVKBContext] = useState('');
+  useEffect(() => {
+    getVeteranAIContext({ maxPacketTokens: 500 })
+      .then(ctx => setVeteranVKBContext(ctx))
+      .catch(() => {});
+  }, []);
   
   // AI Judge prompts for different scenarios
   const AI_JUDGE_SYSTEM_PROMPT = `You are an AI Veterans Law Judge conducting a mock Board of Veterans' Appeals (BVA) hearing. Your role is to:
@@ -151,12 +160,16 @@ RESPONSE FORMAT:
       const claimContext = userClaims.length > 0 
         ? `Veteran's claimed conditions: ${userClaims.map(c => c.conditionName).join(', ')}`
         : 'No specific claims provided';
+
+      const vkbBlock = veteranVKBContext
+        ? `\nVETERAN CASE DATA (use to ask pointed questions about their actual service/conditions):\n${veteranVKBContext}\n`
+        : '';
       
       const prompt = `${AI_JUDGE_SYSTEM_PROMPT}
 
 CURRENT HEARING CONTEXT:
 ${claimContext}
-Judge Persona: ${judge.name} - ${judge.style}
+${vkbBlock}Judge Persona: ${judge.name} - ${judge.style}
 
 QUESTION BEING ANSWERED:
 Category: ${questionContext?.category || 'General'}
@@ -194,11 +207,16 @@ As ${judge.name}, evaluate this response. Was it legally sound? What specific fe
       const claimContext = userClaims.length > 0 
         ? `Veteran's conditions: ${userClaims.map(c => c.conditionName).join(', ')}`
         : 'General BVA hearing practice';
+
+      const vkbBlock = veteranVKBContext
+        ? `\nVETERAN CASE DATA:\n${veteranVKBContext}\n`
+        : '';
       
       const prompt = `${AI_JUDGE_SYSTEM_PROMPT}
 
 As ${judge.name}, generate the next hearing question for this veteran.
 ${claimContext}
+${vkbBlock}
 
 Session progress: ${sessionScore.total} questions asked, ${sessionScore.correct} answered well.
 

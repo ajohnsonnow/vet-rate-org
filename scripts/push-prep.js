@@ -173,7 +173,7 @@ function bumpVersion(currentVersion, bumpType) {
 
 async function main() {
   const args = parseArgs();
-  const totalSteps = args.noBump ? 8 : 9; // Added VA data pipeline step
+  const totalSteps = args.noBump ? 9 : 10; // +1 for contract enforcement gate
   let currentStep = 0;
   
   console.log('\n' + '═'.repeat(65));
@@ -357,7 +357,65 @@ async function main() {
   logSuccess('Legal pages verified');
   
   // ─────────────────────────────────────────────────────────────────────────────
-  // Step 7: Production build
+  // Contract Enforcement Gate (claude-toolkit)
+  // Hard-fail on critical violations before build
+  // ─────────────────────────────────────────────────────────────────────────────
+  logStep(++currentStep, totalSteps, 'Contract enforcement gate...');
+  
+  const criticalPatterns = [
+    { id: 'CTK-002', name: 'eval() usage', pattern: 'eval(' },
+    { id: 'CTK-005', name: 'Hardcoded secrets', pattern: '-----BEGIN' },
+    { id: 'CTK-005', name: 'Hardcoded API key', pattern: 'sk-ant-' },
+    { id: 'SEC-007', name: 'new Function()', pattern: 'new Function(' },
+  ];
+  
+  const srcDir = path.join(rootDir, 'src');
+  let criticalViolations = [];
+  
+  function scanDir(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory() && !entry.name.startsWith('.')) {
+        scanDir(fullPath);
+      } else if (entry.isFile() && /\.(js|jsx)$/.test(entry.name)) {
+        const content = fs.readFileSync(fullPath, 'utf8');
+        const lines = content.split('\n');
+        for (const cp of criticalPatterns) {
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+            if (line.includes(cp.pattern)) {
+              criticalViolations.push({
+                id: cp.id,
+                name: cp.name,
+                file: path.relative(rootDir, fullPath),
+                line: i + 1
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  if (fs.existsSync(srcDir)) {
+    scanDir(srcDir);
+  }
+  
+  if (criticalViolations.length > 0) {
+    logError(`Found ${criticalViolations.length} critical contract violation(s):`);
+    criticalViolations.forEach(v => {
+      log(`   [${v.id}] ${v.name} — ${v.file}:${v.line}`, 'red');
+    });
+    logError('Build blocked. Fix critical violations before deploying.');
+    process.exit(1);
+  } else {
+    logSuccess('No critical contract violations found');
+  }
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Production build
   // ─────────────────────────────────────────────────────────────────────────────
   logStep(++currentStep, totalSteps, 'Creating production build...');
   

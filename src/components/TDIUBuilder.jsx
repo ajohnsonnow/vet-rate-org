@@ -29,6 +29,7 @@ import { LLMRecommendationBadge } from './LLMRecommendation';
 import SmartAILoadButton from './SmartAILoadButton';
 import ShareButton from './ShareButton';
 import VoiceInputButton from './VoiceInput';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 /**
  * Common disability categories for quick selection
@@ -78,7 +79,7 @@ const DISABILITY_CATEGORIES = [
 /**
  * Generate vocational impact analysis using Unified AI Service
  */
-const generateVocationalImpact = async (disabilities) => {
+const generateVocationalImpact = async (disabilities, veteranContext = '') => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
     throw new Error('No AI available. Please configure an API key or enable Local AI.');
@@ -87,9 +88,13 @@ const generateVocationalImpact = async (disabilities) => {
   const disabilityList = disabilities.map(d => 
     `- ${d.condition}: ${d.symptoms.join(', ')}`
   ).join('\n');
+
+  const contextBlock = veteranContext
+    ? `\nVETERAN CASE DATA (use for accurate service details and condition history):\n${veteranContext}\n`
+    : '';
   
   const prompt = `You are a Vocational Rehabilitation Expert analyzing a veteran's disabilities for a TDIU (Total Disability Individual Unemployability) claim.
-
+${contextBlock}
 VETERAN'S SERVICE-CONNECTED DISABILITIES AND SYMPTOMS:
 ${disabilityList}
 
@@ -314,15 +319,33 @@ export default function TDIUBuilder({ onClose, onReportBug, onOpenAISettings }) 
     
     try {
       let analysis;
+
+      // Load veteran context for smarter generation
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 600 });
       
       if (isAIAvailable()) {
-        analysis = await generateVocationalImpact(disabilities);
+        analysis = await generateVocationalImpact(disabilities, veteranContext);
       } else {
         analysis = generateTemplateImpact(disabilities);
       }
       
       setVocationalAnalysis(analysis);
       setStep(3);
+
+      // Save the generated TDIU statement to My Packet
+      const fullText = analysis.summary_argument || '';
+      saveAnalysisResults({
+        toolName: 'TDIU Builder',
+        classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+        rawText: fullText,
+        extractedData: analysis,
+        vkbMergeData: {
+          aiInsights: {
+            tdiuSummary: analysis.summary_argument,
+            tdiuJobsPrecluded: analysis.job_types_precluded,
+          },
+        },
+      }).catch(err => console.warn('Failed to save TDIU results:', err));
     } catch (err) {
       console.error('Generation error:', err);
       // Fall back to template

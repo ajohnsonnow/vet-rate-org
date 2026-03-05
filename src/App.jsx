@@ -1378,6 +1378,45 @@ function App() {
             </div>
           </div>
 
+          {/* BDD Builder CTA - Active Duty Transitioning */}
+          <div className="mt-6">
+            <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+              
+              <div className="relative flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                    <span className="text-4xl">🎖️</span>
+                  </div>
+                </div>
+                
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 className="text-xl font-bold">BDD Builder</h3>
+                    <span className="px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">NEW</span>
+                    <span className="px-2 py-0.5 bg-red-500/80 text-white text-xs font-bold rounded-full">ACTIVE DUTY</span>
+                  </div>
+                  <p className="text-amber-100 max-w-2xl">
+                    <strong>Leaving the service?</strong> File your VA claim <strong>before</strong> you separate. 
+                    The BDD program (38 CFR &sect; 3.326) lets you claim <strong>180-90 days</strong> before discharge &mdash; 
+                    benefits start Day 1 as a veteran.
+                  </p>
+                </div>
+                
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={() => setShowBDDBuilder(true)}
+                    className="px-6 py-3 bg-white text-amber-700 rounded-lg font-bold text-lg hover:bg-amber-50 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <span>🎖️</span>
+                    <span>Plan My BDD Claim</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Pathfinder CTA - Full Width Featured - Teal Theme for Discover Section */}
           <div className="mt-6">
             <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 rounded-xl p-6 text-white relative overflow-hidden shadow-xl">

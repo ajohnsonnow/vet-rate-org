@@ -17,6 +17,7 @@ import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
 import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
+import { saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 // Sub-components for the dashboard
 import CFileTimeline from './CFileTimeline';
@@ -188,6 +189,47 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       setAnalysisResult(result.analysis);
       setAnalysisMetadata(result.metadata);
       setProcessingStage('');
+
+      // Save C-File analysis to VKB + My Packet
+      try {
+        const analysis = result.analysis || {};
+        await saveAnalysisResults({
+          toolName: 'C-File Analyzer',
+          classification: PACKET_DOC_TYPES.C_FILE,
+          rawText: extractionResult?.text || '',
+          extractedData: analysis,
+          fileName: file?.name || 'c-file.pdf',
+          pageCount: extractionResult?.totalPages || 1,
+          vkbDocument: {
+            classification: 'c_file',
+            rawText: (extractionResult?.text || '').slice(0, 5000),
+            extractedData: analysis,
+            source: 'CFileAnalyzer',
+          },
+          vkbMergeData: {
+            claims: (analysis.potential_claims || []).map(c => ({
+              condition: c.condition || c.name || 'Unknown',
+              status: 'identified',
+              source: 'C-File Analysis',
+              evidence: c.evidence || c.description || '',
+              diagnosticCode: c.diagnosticCode || '',
+            })),
+            evidence: (analysis.timeline || []).map(e => ({
+              date: e.date,
+              type: 'c_file_event',
+              description: e.event || e.description || '',
+              source: 'C-File',
+            })),
+            aiInsights: {
+              cfileAnalysisSummary: analysis.summary || '',
+              cfileExposures: analysis.exposures || [],
+              cfileActionItems: analysis.actionItems || [],
+            },
+          },
+        });
+      } catch (saveErr) {
+        console.warn('Failed to save C-File results to VKB/Packet:', saveErr);
+      }
       
     } catch (err) {
       console.error('Analysis error:', err);

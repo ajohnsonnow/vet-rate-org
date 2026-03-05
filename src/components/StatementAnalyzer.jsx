@@ -13,6 +13,7 @@ import { AlertTriangle, Check, Lightbulb, Brain } from 'lucide-react';
 import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 // The Diplomat's AI System Prompt
 const TONE_ANALYSIS_PROMPT = `You are a clinical writing coach helping veterans write effective VA disability statements.
@@ -107,7 +108,12 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
     setError(null);
 
     try {
-      const fullPrompt = TONE_ANALYSIS_PROMPT + '\n\n' + text;
+      // Load veteran context for smarter rewrites
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 400 });
+      const contextBlock = veteranContext
+        ? `\n\nVETERAN CASE DATA (use for accurate condition names and service details):\n${veteranContext}\n\n`
+        : '';
+      const fullPrompt = TONE_ANALYSIS_PROMPT + contextBlock + '\n\n' + text;
       
       // Use unified AI service
       const response = await generateAI(fullPrompt, {
@@ -158,6 +164,19 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
       
       // Mark as applied
       setAppliedIndices(prev => new Set([...prev, index]));
+
+      // Save the applied rewrite to My Packet for record-keeping
+      saveAnalysisResults({
+        toolName: 'The Diplomat',
+        classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+        rawText: suggestion.original,
+        extractedData: {
+          original: suggestion.original,
+          rewrite: suggestion.rewrite,
+          reason: suggestion.reason,
+          severity: suggestion.severity,
+        },
+      }).catch(err => console.warn('Failed to save statement rewrite:', err));
     }
   };
 

@@ -22,6 +22,9 @@ import ReportBugLink from './ReportBugLink';
 import { analyzeDocument, OCR_STATES, getProgressStyling, formatFileSize, isFileSupported, getFileTypeLabel, getAcceptString, renderPDFToImages } from '../utils/documentAnalyzer';
 import { saveDD214Data, getServiceHistory, addAward, getVeteranProfile, updateVeteranProfile } from '../utils/veteranProfile';
 import { parseDD214Text } from '../utils/ribbonRackData';
+import { extractDD214Fields, mergeAIAndRegexResults } from '../utils/dd214FieldExtractor';
+import { saveDocumentToPacket, PACKET_DOC_TYPES } from '../utils/myPacketManager';
+import { loadVKB, saveVKB, mergeDD214IntoVKB, addDocumentToVKB } from '../utils/veteranKnowledgeBase';
 import ProfileImportConfirmModal from './ProfileImportConfirmModal';
 import DD214FormBuilder from './DD214FormBuilder';
 
@@ -836,6 +839,26 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
 
       setAnalysisResult(data);
       
+      // ─── DIAMOND STANDARD: Regex Safety Net ───
+      // Run the deterministic field extractor on the raw OCR text and
+      // merge with AI results. If AI missed a field but regex found it,
+      // the regex value fills the gap. If both have a value, AI wins for
+      // complex fields, regex wins for structured fields like dates/MOS.
+      try {
+        const combinedRaw = getCombinedText();
+        const regexResult = extractDD214Fields(combinedRaw);
+        if (regexResult && Object.keys(regexResult).length > 0) {
+          const merged = mergeAIAndRegexResults(data, regexResult);
+          console.log('🔀 Merged AI + Regex results:', Object.keys(merged).length, 'fields');
+          // Update the result in state with merged data
+          Object.assign(data, merged);
+          setAnalysisResult({ ...data });
+        }
+      } catch (regexErr) {
+        console.warn('Regex field extraction failed (non-fatal):', regexErr.message);
+        // AI-only results are still valid — this is just the safety net
+      }
+      
       // Automatically trigger the save flow to show import confirmation
       // This provides immediate feedback to the user
       setTimeout(() => {
@@ -1044,10 +1067,14 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
 
   /**
    * Confirm and save profile data after user review
+   * DIAMOND STANDARD: Saves to THREE places:
+   *   1. Veteran Profile (localStorage) — for forms and calculator
+   *   2. Veteran Knowledge Base (IndexedDB) — for AI tools
+   *   3. My Packet (IndexedDB) — permanent document archive
    */
-  const handleConfirmProfileImport = (selectedFields) => {
+  const handleConfirmProfileImport = async (selectedFields) => {
     try {
-      // Save DD214 data to service history (includes all fields)
+      // ── 1. SAVE TO VETERAN PROFILE (existing behavior) ──
       saveDD214Data({
         branch: analysisResult.branch,
         component: analysisResult.component,
@@ -1096,6 +1123,102 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
         updateVeteranProfile(selectedFields);
       }
 
+      // ── 2. SAVE TO VETERAN KNOWLEDGE BASE (VKB) ──
+      // This makes ALL extracted DD214 data available to every AI tool
+      try {
+        const vkb = await loadVKB();
+
+        // Build comprehensive data object for VKB merge
+        const vkbData = {
+          fullName: analysisResult.fullName || `${analysisResult.lastName || ''}, ${analysisResult.firstName || ''}`.replace(/^, |, $/g, ''),
+          name: analysisResult.fullName || analysisResult.name,
+          ssn: analysisResult.ssnLast4 || analysisResult.ssn,
+          ssnLast4: analysisResult.ssnLast4,
+          dateOfBirth: analysisResult.dateOfBirth,
+          branch: analysisResult.branch,
+          component: analysisResult.component || analysisResult.componentFull,
+          rank: analysisResult.rank,
+          payGrade: analysisResult.payGrade,
+          mos: analysisResult.mos,
+          mosTitle: analysisResult.mosTitle,
+          entryDate: analysisResult.entryDate,
+          separationDate: analysisResult.separationDate,
+          yearsService: analysisResult.yearsService,
+          netActiveServiceTime: analysisResult.netActiveService,
+          characterOfService: analysisResult.characterOfService,
+          separationAuthority: analysisResult.separationAuthority,
+          separationType: analysisResult.separationType,
+          narrativeReason: analysisResult.narrativeReason,
+          reentryCode: analysisResult.reentryCode,
+          spnCode: analysisResult.separationCode || analysisResult.separationProgramDesignator,
+          reenlisted: analysisResult.reenlisted,
+          foreignService: analysisResult.foreignService,
+          educationYears: analysisResult.educationYears,
+          education: analysisResult.militaryEducation,
+          awards: analysisResult.awards || [],
+          deployments: analysisResult.deployments || [],
+          combatService: analysisResult.combatService || null,
+          specialQualifications: analysisResult.specialQualifications || [],
+          mailingAddress: analysisResult.homeAddress || null,
+        };
+
+        // Determine filename for tracking
+        const sourceFileName = extractedTexts.length > 0
+          ? extractedTexts.map(t => t.filename).join(', ')
+          : 'Pasted DD214 Text';
+
+        mergeDD214IntoVKB(vkb, vkbData, { fileName: sourceFileName });
+        await saveVKB(vkb);
+        console.log('✅ DD214 data merged into VKB');
+
+        // Also register the document in VKB documentation
+        await addDocumentToVKB({
+          fileName: sourceFileName,
+          classification: 'DD214',
+          fileSize: getCombinedText().length,
+          pageCount: extractedTexts.reduce((sum, t) => sum + (t.pageCount || 1), 0) || 1,
+          extractedText: getCombinedText().substring(0, 50000),
+          extractedData: vkbData,
+          ocrUsed: extractedTexts.some(t => t.ocrUsed),
+          method: extractedTexts[0]?.method || 'paste',
+        });
+
+      } catch (vkbErr) {
+        console.error('VKB save failed (non-fatal):', vkbErr);
+        // Don't block the save — profile data is still saved
+      }
+
+      // ── 3. SAVE TO MY PACKET (permanent archive) ──
+      // This stores the full document text + structured data forever
+      try {
+        const sourceFileName = extractedTexts.length > 0
+          ? extractedTexts.map(t => t.filename).join(', ')
+          : 'Pasted DD214 Text';
+
+        const packetResult = await saveDocumentToPacket({
+          fileName: sourceFileName,
+          classification: PACKET_DOC_TYPES.DD214,
+          rawText: getCombinedText(),
+          extractedData: analysisResult,
+          pageCount: extractedTexts.reduce((sum, t) => sum + (t.pageCount || 1), 0) || 1,
+          fileSize: new Blob([getCombinedText()]).size,
+          ocrMethod: extractedTexts[0]?.method || 'paste',
+          ocrConfidence: extractedTexts[0]?.ocrConfidence || 0,
+          aiAnalysis: analysisResult,
+          tags: [
+            analysisResult.branch,
+            analysisResult.rank,
+            analysisResult.mos,
+          ].filter(Boolean),
+        });
+
+        if (packetResult.success) {
+          console.log('📁 DD214 saved to My Packet:', packetResult.documentId);
+        }
+      } catch (packetErr) {
+        console.error('My Packet save failed (non-fatal):', packetErr);
+      }
+
       // Callback if provided
       if (onSaveResults) {
         onSaveResults(analysisResult);
@@ -1107,7 +1230,7 @@ const DD214Analyzer = ({ onClose, onReportBug, onOpenAISettings, onSaveResults, 
 
       // Success message
       const fieldCount = Object.keys(selectedFields).length;
-      alert(`✅ ${t('dd214Analyzer', 'dd214DataSaved')}\n• ${t('dd214Analyzer', 'serviceHistoryUpdated')}\n• ${analysisResult.awards?.length || 0} ${t('dd214Analyzer', 'awardsRecorded')}\n• ${fieldCount} ${t('dd214Analyzer', 'profileFieldsImported')}`);
+      alert(`✅ ${t('dd214Analyzer', 'dd214DataSaved')}\n• ${t('dd214Analyzer', 'serviceHistoryUpdated')}\n• ${analysisResult.awards?.length || 0} ${t('dd214Analyzer', 'awardsRecorded')}\n• ${fieldCount} ${t('dd214Analyzer', 'profileFieldsImported')}\n• Saved to Knowledge Base (AI-ready)\n• Archived in My Packet`);
       
     } catch (err) {
       console.error('Save error:', err);

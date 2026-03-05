@@ -23,6 +23,9 @@ import { AIStatusBadge } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
 import { useRedditClipboard } from '../hooks/useRedditClipboard';
 import { autoSummarizeIfLong } from '../utils/redditSummarizer';
+import { loadVKB, generateLLMContext } from '../utils/veteranKnowledgeBase';
+import { generatePacketContext } from '../utils/myPacketManager';
+import { getVeteranAIContext } from '../utils/veteranContextProvider';
 
 const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const { t } = useLanguage();
@@ -49,6 +52,15 @@ const AIAssistant = ({ currentTool = 'Home', onClose, onOpenAISettings }) => {
   const [copiedMessageIdx, setCopiedMessageIdx] = useState(null);
   const [summaryStates, setSummaryStates] = useState({}); // { [idx]: { isSummarizing, summary, error } }
   
+  // VKB + My Packet context for AI-enriched responses
+  const [veteranContext, setVeteranContext] = useState('');
+  
+  // Load veteran context from VKB + My Packet on mount
+  useEffect(() => {
+    getVeteranAIContext({ maxPacketTokens: 1000 })
+      .then(ctx => setVeteranContext(ctx))
+      .catch(err => console.warn('Failed to load veteran context for AI Assistant:', err));
+  }, []);
   // Handler to copy message and show confirmation
   const handleCopyMessage = async (content, idx) => {
     const success = await copyToClipboard(content);
@@ -224,6 +236,12 @@ GUIDELINES:
 - Emphasize that this is educational, not legal advice
 
 TONE: ${isHelperMode ? 'Extra supportive and patient - user may be a caregiver unfamiliar with VA processes' : 'Professional but warm and empathetic'}`;
+
+    // Inject VKB + My Packet context if available
+    // This gives the AI complete knowledge of the veteran's case
+    if (veteranContext) {
+      return basePrompt + '\n\nVETERAN CASE DATA (from uploaded documents):\n' + veteranContext;
+    }
 
     return basePrompt;
   };

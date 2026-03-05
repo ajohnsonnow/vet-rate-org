@@ -25,6 +25,7 @@ import { isAIAvailable } from '../utils/aiStatementHelper';
 import { getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 import {
   VA_PAY_RATES_HISTORICAL,
   getHistoricalRate,
@@ -118,7 +119,14 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
     setAIAnalysis('');
     
     try {
+      // Load veteran context so AI can correlate with known conditions
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 400 });
+      const contextBlock = veteranContext
+        ? `\nVETERAN CASE DATA:\n${veteranContext}\n`
+        : '';
+
       const prompt = `You are a VA benefits expert analyzing retroactive payment findings for a veteran.
+${contextBlock}
 
 **Analysis Summary:**
 - Total Months Analyzed: ${analysis.totalMonths}
@@ -147,6 +155,25 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
       const aiText = response?.text || response;
       setAIAnalysis(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
       setShowAIAnalysis(true);
+
+      // Save retro pay findings to VKB + My Packet
+      saveAnalysisResults({
+        toolName: 'Retro Pay Hunter',
+        classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+        rawText: typeof aiText === 'string' ? aiText : JSON.stringify(aiText),
+        extractedData: {
+          totalMonths: analysis?.totalMonths,
+          cueAlerts: cueAlerts?.length || 0,
+          bilateralIssue: bilateralCheck?.applicable || false,
+          ratingPeriods: ratingHistory?.length || 0,
+        },
+        vkbMergeData: {
+          aiInsights: {
+            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, ${cueAlerts?.length || 0} potential CUE issues`,
+            bilateralFactorIssue: bilateralCheck?.applicable || false,
+          },
+        },
+      }).catch(err => console.warn('Failed to save retro pay results:', err));
     } catch (error) {
       console.error('AI analysis error:', error);
       setAIAnalysis('Unable to generate AI analysis. The calculations above show what you should have been paid.');

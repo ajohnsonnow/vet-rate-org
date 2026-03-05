@@ -20,6 +20,7 @@ import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/un
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import { getMyRatings } from '../utils/veteranProfile';
 import ReportBugLink from './ReportBugLink';
+import { getVeteranAIContext } from '../utils/veteranContextProvider';
 
 /**
  * VA Protection Rules per 38 CFR
@@ -353,8 +354,15 @@ export default function RiskAssessment({ onClose, onReportBug, onOpenAISettings 
     
     setIsAnalyzingWithAI(true);
     setAIError(null);
+
+    // Load veteran context for better risk analysis
+    const veteranContext = await getVeteranAIContext({ maxPacketTokens: 500 }).catch(() => '');
+    const contextBlock = veteranContext
+      ? `\nVETERAN CASE DATA (use for comprehensive risk assessment):\n${veteranContext}\n`
+      : '';
     
     const prompt = `You are a VA disability claims expert analyzing the risk of a veteran filing a new claim. Analyze this situation and provide strategic advice.
+${contextBlock}
 
 VETERAN'S SITUATION:
 - Current Combined Rating: ${currentRating}%

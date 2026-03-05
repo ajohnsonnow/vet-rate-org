@@ -21,6 +21,7 @@ import { LLMRecommendationBadge } from './LLMRecommendation';
 import SmartAILoadButton from './SmartAILoadButton';
 import ReportBugLink from './ReportBugLink';
 import { addDocumentToVKB } from '../utils/veteranKnowledgeBase';
+import { saveDocumentToPacket, PACKET_DOC_TYPES } from '../utils/myPacketManager';
 
 // Configure PDF.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -264,6 +265,26 @@ export default function BlueButtonXRay({ onClose, onAddToCalculator, onCheckRati
       
       setSavedToVKB(true);
       console.log('✅ Blue Button saved to VKB (My Packet)');
+
+      // Also save to My Packet permanent archive
+      try {
+        await saveDocumentToPacket({
+          fileName: file.name,
+          classification: PACKET_DOC_TYPES.BLUE_BUTTON,
+          rawText: textToSave || '',
+          extractedData: {
+            conditions: extractedConditions.length > 0 ? extractedConditions : [],
+            processingDate: new Date().toISOString(),
+          },
+          pageCount: 1,
+          fileSize: file.size || 0,
+          ocrMethod: 'text_extraction',
+          tags: ['blue_button', 'medical'],
+        });
+        console.log('📁 Blue Button archived in My Packet');
+      } catch (pktErr) {
+        console.warn('My Packet save failed (non-fatal):', pktErr.message);
+      }
     } catch (err) {
       console.error('Failed to save to VKB:', err);
       setError('Failed to save to My Packet: ' + err.message);
