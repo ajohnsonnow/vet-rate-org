@@ -30,6 +30,7 @@ import { parseDD214Text } from './ribbonRackData';
 import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
 import { generateAI, isAnyAIAvailable } from './unifiedAIService';
 import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
+import { saveDocumentToPacket, PACKET_DOC_TYPES } from './myPacketManager';
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
@@ -536,6 +537,43 @@ const processSingleDocument = async (file, onProgress) => {
         console.warn(`⚠️ ${vkbResult.storageWarning}`);
         result.storageWarning = vkbResult.storageWarning;
       }
+    }
+
+    // Step 5: Also save to My Packet (permanent document archive)
+    try {
+      const classToPacketType = {
+        'DD214': PACKET_DOC_TYPES.DD214,
+        'service_record': PACKET_DOC_TYPES.DD214,
+        'NGB22': PACKET_DOC_TYPES.NGB22,
+        'DD256': PACKET_DOC_TYPES.DD256,
+        'DD257': PACKET_DOC_TYPES.DD257,
+        'rating_decision': PACKET_DOC_TYPES.RATING_DECISION,
+        'claim_letter': PACKET_DOC_TYPES.CLAIM_LETTER,
+        'c_file': PACKET_DOC_TYPES.C_FILE,
+        'blue_button': PACKET_DOC_TYPES.BLUE_BUTTON,
+        'medical_record': PACKET_DOC_TYPES.MEDICAL_RECORD,
+        'dbq': PACKET_DOC_TYPES.DBQ,
+        'nexus_letter': PACKET_DOC_TYPES.NEXUS_LETTER,
+        'personal_statement': PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+        'buddy_statement': PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        'va_decision': PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+      };
+      const packetType = classToPacketType[result.classification.type] || PACKET_DOC_TYPES.OTHER;
+
+      await saveDocumentToPacket({
+        fileName: file.name,
+        classification: packetType,
+        rawText: result.text || '',
+        extractedData: result.extractedData || {},
+        pageCount: result.pageCount || 1,
+        fileSize: file.size || 0,
+        ocrMethod: result.method || 'text',
+        ocrConfidence: result.classification?.confidence || 0,
+        tags: [result.classification?.type, result.classification?.subtype].filter(Boolean),
+      });
+      console.log(`📁 Archived ${file.name} in My Packet`);
+    } catch (packetErr) {
+      console.warn(`My Packet save failed for ${file.name} (non-fatal):`, packetErr.message);
     }
 
     result.status = 'complete';

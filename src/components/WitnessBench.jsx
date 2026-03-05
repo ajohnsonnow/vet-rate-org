@@ -23,6 +23,7 @@ import SmartAILoadButton from './SmartAILoadButton';
 import ShareButton from './ShareButton';
 import ReportBugLink from './ReportBugLink';
 import VoiceInputButton from './VoiceInput';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 /**
  * Relationship types that affect the interview questions
@@ -204,13 +205,17 @@ const getBaseQuestions = (relationship, conditionCategory) => {
 /**
  * Generate interview questions using AI based on relationship and condition
  */
-const generateAIQuestions = async (relationship, condition, conditionCategory) => {
+const generateAIQuestions = async (relationship, condition, conditionCategory, veteranContext = '') => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
     throw new Error('No AI available. Please configure an API key or enable Local AI.');
   }
   
   const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
+
+  const contextBlock = veteranContext
+    ? `\nVETERAN CASE DATA (use for accurate service details and condition specifics):\n${veteranContext}\n`
+    : '';
   
   const prompt = `You are a Gentle Interviewer helping a veteran's family member write a "Lay Statement" (VA Form 21-10210).
 
@@ -218,6 +223,7 @@ CONTEXT:
 - Relationship to veteran: ${relationshipLabel}
 - Condition being claimed: ${condition}
 - Condition category: ${conditionCategory}
+${contextBlock}
 
 YOUR GOAL:
 Generate 4 specific, probing interview questions to help this ${relationshipLabel.toLowerCase()} describe how the veteran's ${condition} affects daily life. 
@@ -465,7 +471,9 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
     if (useAI && aiAvailable) {
       setIsLoadingQuestions(true);
       try {
-        const aiQuestions = await generateAIQuestions(relationship, condition, category);
+        // Load veteran context for smarter questions
+        const veteranContext = await getVeteranAIContext({ maxPacketTokens: 500 });
+        const aiQuestions = await generateAIQuestions(relationship, condition, category, veteranContext);
         
         // Combine AI questions with base questions
         const baseQuestions = getBaseQuestions(relationship, category);
@@ -517,12 +525,33 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       
       setGeneratedStatement(statement);
       setStep(3);
+
+      // Save buddy statement to My Packet
+      saveAnalysisResults({
+        toolName: 'Witness Bench',
+        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        rawText: statement,
+        extractedData: {
+          relationship,
+          condition,
+          answers,
+          statementLength: statement.length,
+        },
+      }).catch(err => console.warn('Failed to save buddy statement:', err));
     } catch (err) {
       console.error('Statement generation failed:', err);
       // Fall back to template
       const statement = compileStatementWithoutAI(relationship, condition, answers);
       setGeneratedStatement(statement);
       setStep(3);
+
+      // Still save even template-based output
+      saveAnalysisResults({
+        toolName: 'Witness Bench',
+        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        rawText: statement,
+        extractedData: { relationship, condition, answers },
+      }).catch(err => console.warn('Failed to save buddy statement:', err));
     } finally {
       setIsGeneratingStatement(false);
     }

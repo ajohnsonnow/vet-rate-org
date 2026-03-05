@@ -1,0 +1,68 @@
+# claude-toolkit configuration for VetRate
+# Adapted from claude-toolkit Phase 1-4
+
+# API Provider: auto-detected from environment
+# GITHUB_TOKEN set → uses Copilot | ANTHROPIC_API_KEY set → uses Anthropic
+apiProvider: "copilot"
+
+# Model Settings
+model: "claude-opus-4-6"
+effort: "max"
+
+# Phase 1: Synthesizer — Skills & Agents
+synthesizer:
+  skillsDir: ".claude-tools/skills"
+  agentsDir: ".claude-tools/agents"
+  maxFiles: 500
+  exclude:
+    - "node_modules/**"
+    - "dist/**"
+    - "dist-supplylocker/**"
+    - "coverage/**"
+    - "archive/**"
+    - "llm-compiler/**"
+    - ".venv/**"
+
+# Phase 2: Orchestrator — Agent Pipeline
+orchestrator:
+  alphaModel: "claude-sonnet-4-6"    # Alpha Researcher (VA regulations)
+  betaModel:  "claude-sonnet-4-6"    # Beta Coder (implementation)
+  gammaModel: "claude-sonnet-4-6"    # Gamma Auditor (quality gate)
+  contractsFile: ".arc/CONTRACTS.md"
+  maxRetries: 2
+
+# Phase 3: Self-Healing E2E
+healing:
+  testPattern: "**/*.spec.{js,jsx}"
+  baseUrl: "http://localhost:5173"   # Vite dev server
+  maxAttempts: 3
+  artifactsDir: ".claude-tools/test-artifacts"
+
+# Phase 4: Security
+security:
+  mcpServers:
+    - "context-engine"
+    - "playwright-skill"
+    - "filesystem-mcp"
+  generateAiIgnore: true
+  enforcePolicy: true
+  policyOutputDir: ".claude-tools/security"
+
+# VetRate-Specific Settings
+vetrate:
+  # Accuracy requirements
+  requireCFRCitations: true
+  bilateralFactorSource: "38 CFR 4.26"
+  combinedRatingsSource: "38 CFR 4.25"
+  
+  # Privacy
+  noServerPII: true
+  allowedStorage: ["localStorage", "IndexedDB"]
+  
+  # Accessibility
+  wcagLevel: "AA"
+  minContrastRatio: 4.5
+  
+  # Build
+  brands: ["vetrate", "supplylocker"]
+  devPort: 5173

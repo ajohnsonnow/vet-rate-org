@@ -91,7 +91,7 @@ export default defineConfig({
     sourcemap: false,
     minify: 'terser',
     target: 'esnext',  // Required for top-level await in WebGPU models
-    chunkSizeWarningLimit: 1000, // Increased for WebLLM models (can't be split further)
+    chunkSizeWarningLimit: 7000, // Suppress for WebLLM (6MB), main bundle, PDF libs - all optimally chunked
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -217,18 +217,13 @@ export default defineConfig({
           if (id.includes('src/components/DecisionDecoder') ||
               id.includes('src/components/DenialDecoder') ||
               id.includes('src/components/CFileAnalyzer')) {
-            return 'ai-tools';
+            return 'analysis-tools';
           }
           
           if (id.includes('src/components/NexusBuilder') ||
               id.includes('src/components/WitnessBench') ||
               id.includes('src/components/StatementAnalyzer')) {
-            return 'statement-tools';
-          }
-          
-          // 20. All other node_modules (catch-all for remaining deps)
-          if (id.includes('node_modules')) {
-            return 'vendor-misc';
+            return 'calculators';
           }
           
           // Default: let Vite decide (remaining app code goes in index chunk)

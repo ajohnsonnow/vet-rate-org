@@ -23,6 +23,11 @@
  * 11. Archive check (files that should be archived)
  * 12. BuyMeCoffee integration check (funding verbiage)
  * 13. Feature documentation check (new features documented)
+ * 14. Changelog version sync check
+ * 15. User Manual documentation completeness
+ * 16. Contract enforcement (.arc/CONTRACTS.md banned patterns)
+ * 17. Security scanner (OWASP Top 10 pattern checks)
+ * 18. Accessibility audit (ARIA, keyboard navigation)
  */
 
 import fs from 'fs';
@@ -724,6 +729,246 @@ function checkUserManualSync() {
   }
 }
 
+// 16. Contract Enforcement (.arc/CONTRACTS.md)
+function checkContractEnforcement() {
+  logSection('16. Contract Enforcement (.arc/CONTRACTS.md)');
+  
+  // Built-in banned patterns from claude-toolkit contracts
+  const contracts = [
+    { id: 'CTK-002', name: 'No eval()', patterns: ['eval('], severity: 'error', fileFilter: /\.(js|jsx)$/ },
+    { id: 'CTK-005', name: 'No hardcoded secrets', patterns: ['-----BEGIN', 'sk-ant-', 'sk-proj-'], severity: 'error', fileFilter: /\.(js|jsx|json)$/ },
+    { id: 'CTK-007', name: 'No deprecated crypto', patterns: ["createHash('md5')", "createHash('sha1')"], severity: 'error', fileFilter: /\.(js|jsx)$/ },
+    { id: 'VA-003', name: 'No PII in fetch calls', patterns: ['body.*ssn', 'body.*social_security'], severity: 'error', fileFilter: /\.(js|jsx)$/ },
+    { id: 'VA-006', name: 'No inline styles in components', patterns: ['style={{'], severity: 'warning', fileFilter: /\.jsx$/ },
+  ];
+  
+  const srcDir = path.join(rootDir, 'src');
+  const srcFiles = globFiles('src/');
+  let totalViolations = 0;
+  let criticalViolations = 0;
+  const violationDetails = [];
+  
+  for (const file of srcFiles) {
+    if (!file.endsWith('.js') && !file.endsWith('.jsx') && !file.endsWith('.json')) continue;
+    
+    const content = fs.readFileSync(file, 'utf8');
+    const relativePath = path.relative(rootDir, file);
+    const lines = content.split('\n');
+    
+    for (const contract of contracts) {
+      if (contract.fileFilter && !contract.fileFilter.test(file)) continue;
+      
+      for (const pattern of contract.patterns) {
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // Skip comments and test files
+          if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+          if (relativePath.includes('.test.') || relativePath.includes('.spec.')) continue;
+          
+          if (line.includes(pattern)) {
+            totalViolations++;
+            if (contract.severity === 'error') criticalViolations++;
+            violationDetails.push({
+              contract: contract.id,
+              name: contract.name,
+              file: relativePath,
+              line: i + 1,
+              severity: contract.severity
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  // Report violations
+  if (violationDetails.length > 0) {
+    const errors = violationDetails.filter(v => v.severity === 'error');
+    const warnings = violationDetails.filter(v => v.severity === 'warning');
+    
+    if (errors.length > 0) {
+      log(`\n   CRITICAL violations (${errors.length}):`, 'red');
+      errors.slice(0, 10).forEach(v => {
+        log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'red');
+      });
+      if (errors.length > 10) log(`      ... and ${errors.length - 10} more`, 'red');
+    }
+    
+    if (warnings.length > 0) {
+      log(`\n   Warnings (${warnings.length}):`, 'yellow');
+      warnings.slice(0, 5).forEach(v => {
+        log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'yellow');
+      });
+      if (warnings.length > 5) log(`      ... and ${warnings.length - 5} more`, 'yellow');
+    }
+  }
+  
+  const contractsPassed = criticalViolations === 0;
+  logResult(`Contract enforcement (${totalViolations} violation(s), ${criticalViolations} critical)`, contractsPassed);
+  checks.add('Contracts', contractsPassed, criticalViolations > 0 ? `${criticalViolations} critical violation(s)` : '');
+}
+
+// 17. Security Scanner (OWASP Top 10 patterns from claude-toolkit Phase 4)
+function checkSecurityPatterns() {
+  logSection('17. Security Scanner (OWASP Top 10)');
+  
+  const securityChecks = [
+    { id: 'SEC-001', name: 'Hardcoded credentials', severity: 'critical',
+      patterns: [/password\s*=\s*['"][^'"]{4,}/gi, /api_key\s*=\s*['"][^'"]{8,}/gi, /secret\s*=\s*['"][^'"]{8,}/gi],
+      fileFilter: /\.(js|jsx)$/ },
+    { id: 'SEC-003', name: 'SQL injection risk', severity: 'critical',
+      patterns: [/`SELECT\s.*\$\{/gi, /query\(['"]SELECT.*\+/gi],
+      fileFilter: /\.(js|jsx)$/ },
+    { id: 'SEC-004', name: 'XSS risk', severity: 'high',
+      patterns: [/dangerouslySetInnerHTML/g, /innerHTML\s*=/g, /document\.write\(/g],
+      fileFilter: /\.(js|jsx)$/ },
+    { id: 'SEC-007', name: 'Arbitrary code execution', severity: 'critical',
+      patterns: [/\beval\s*\(/g, /new\s+Function\s*\(/g],
+      fileFilter: /\.(js|jsx)$/ },
+    { id: 'SEC-009', name: 'Overly permissive CORS', severity: 'high',
+      patterns: [/Access-Control-Allow-Origin.*\*/g, /cors\(\{\s*origin:\s*['"]\*['"]/g],
+      fileFilter: /\.(js|jsx)$/ },
+    { id: 'SEC-010', name: 'Path traversal', severity: 'high',
+      patterns: [/readFile.*req\.(params|query|body)/g],
+      fileFilter: /\.(js|jsx)$/ },
+  ];
+  
+  const srcFiles = globFiles('src/');
+  let totalIssues = 0;
+  let criticalIssues = 0;
+  const securityIssues = [];
+  
+  for (const file of srcFiles) {
+    if (!file.endsWith('.js') && !file.endsWith('.jsx')) continue;
+    
+    const content = fs.readFileSync(file, 'utf8');
+    const relativePath = path.relative(rootDir, file);
+    
+    // Skip test files
+    if (relativePath.includes('.test.') || relativePath.includes('.spec.')) continue;
+    
+    for (const check of securityChecks) {
+      if (check.fileFilter && !check.fileFilter.test(file)) continue;
+      
+      for (const pattern of check.patterns) {
+        // Reset regex lastIndex for global patterns
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(content)) !== null) {
+          const lineNumber = content.slice(0, match.index).split('\n').length;
+          const line = content.split('\n')[lineNumber - 1] || '';
+          
+          // Skip matches in comments
+          if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+          
+          totalIssues++;
+          if (check.severity === 'critical') criticalIssues++;
+          securityIssues.push({
+            id: check.id,
+            name: check.name,
+            file: relativePath,
+            line: lineNumber,
+            severity: check.severity
+          });
+        }
+      }
+    }
+  }
+  
+  if (securityIssues.length > 0) {
+    const critical = securityIssues.filter(i => i.severity === 'critical');
+    const high = securityIssues.filter(i => i.severity === 'high');
+    
+    if (critical.length > 0) {
+      log(`\n   CRITICAL security issues (${critical.length}):`, 'red');
+      critical.slice(0, 10).forEach(i => {
+        log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'red');
+      });
+    }
+    
+    if (high.length > 0) {
+      log(`\n   HIGH severity issues (${high.length}):`, 'yellow');
+      high.slice(0, 5).forEach(i => {
+        log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'yellow');
+      });
+    }
+  }
+  
+  const securityPassed = criticalIssues === 0;
+  logResult(`Security scan (${totalIssues} finding(s), ${criticalIssues} critical)`, securityPassed);
+  checks.add('Security scan', securityPassed, criticalIssues > 0 ? `${criticalIssues} critical issue(s)` : '');
+}
+
+// 18. Accessibility Audit (ARIA, keyboard navigation patterns)
+function checkAccessibility() {
+  logSection('18. Accessibility Audit');
+  
+  const componentsDir = path.join(rootDir, 'src', 'components');
+  if (!fs.existsSync(componentsDir)) {
+    logResult('Components directory exists', false);
+    checks.add('Accessibility', false);
+    return;
+  }
+  
+  const componentFiles = fs.readdirSync(componentsDir).filter(f => f.endsWith('.jsx'));
+  
+  let totalComponents = 0;
+  let ariaComponents = 0;
+  let keyboardComponents = 0;
+  const missingAria = [];
+  
+  for (const file of componentFiles) {
+    const content = fs.readFileSync(path.join(componentsDir, file), 'utf8');
+    totalComponents++;
+    
+    // Check for ARIA attributes
+    const hasAria = /aria-/.test(content);
+    if (hasAria) ariaComponents++;
+    
+    // Check for keyboard handlers
+    const hasKeyboard = /onKeyDown|onKeyPress|onKeyUp|tabIndex|role=/.test(content);
+    if (hasKeyboard) keyboardComponents++;
+    
+    // Flag interactive components without ARIA
+    const hasButtons = /(<button|onClick|<a\s|<input|<select|<textarea)/i.test(content);
+    if (hasButtons && !hasAria) {
+      missingAria.push(file);
+    }
+  }
+  
+  const ariaPercent = Math.round((ariaComponents / totalComponents) * 100);
+  const keyboardPercent = Math.round((keyboardComponents / totalComponents) * 100);
+  
+  logResult(`ARIA attributes: ${ariaComponents}/${totalComponents} components (${ariaPercent}%)`, ariaPercent >= 50);
+  logResult(`Keyboard support: ${keyboardComponents}/${totalComponents} components (${keyboardPercent}%)`, keyboardPercent >= 30);
+  
+  if (missingAria.length > 0 && missingAria.length <= 10) {
+    log(`\n   Interactive components missing ARIA (${missingAria.length}):`, 'yellow');
+    missingAria.slice(0, 10).forEach(f => log(`      - ${f}`, 'yellow'));
+  } else if (missingAria.length > 10) {
+    log(`\n   ${missingAria.length} interactive components missing ARIA attributes`, 'yellow');
+  }
+  
+  // Check for focus management in modal components
+  const modalFiles = componentFiles.filter(f => 
+    f.toLowerCase().includes('modal') || f.toLowerCase().includes('dialog')
+  );
+  let focusManaged = 0;
+  for (const file of modalFiles) {
+    const content = fs.readFileSync(path.join(componentsDir, file), 'utf8');
+    if (/useRef|focus\(\)|autoFocus|FocusTrap|createPortal/.test(content)) {
+      focusManaged++;
+    }
+  }
+  
+  if (modalFiles.length > 0) {
+    logResult(`Modal focus management: ${focusManaged}/${modalFiles.length} modals`, focusManaged >= modalFiles.length * 0.5);
+  }
+  
+  const a11yPassed = ariaPercent >= 50;
+  checks.add('Accessibility', a11yPassed, a11yPassed ? '' : `Only ${ariaPercent}% components have ARIA attributes`);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -735,7 +980,7 @@ async function main() {
   
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
-  console.log('        Vet-Rate.org Comprehensive Check (15 checks)');
+  console.log('        Vet-Rate.org Comprehensive Check (18 checks)');
   console.log('═══════════════════════════════════════════════════════════════');
   console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
   console.log(`📁 Project: ${rootDir}`);
@@ -761,6 +1006,9 @@ async function main() {
   checkComponentExports();
   checkChangelogSync();         // NEW: Verify changelog is synced with version
   checkUserManualSync();        // NEW: Verify User Manual documents all tools
+  checkContractEnforcement();   // CTK: Enforce .arc/CONTRACTS.md banned patterns
+  checkSecurityPatterns();      // CTK: OWASP Top 10 security scanner
+  checkAccessibility();         // CTK: ARIA + keyboard navigation audit
   
   // Summary
   logSection('📊 VALIDATION SUMMARY');

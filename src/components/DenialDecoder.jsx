@@ -17,6 +17,7 @@ import { createWorker } from 'tesseract.js';
 import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
 import { AIStatusBadge } from './AIModeSelector';
 import { LLMRecommendationBadge } from './LLMRecommendation';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 // AI System Prompt for analyzing denial letters
 const DENIAL_ANALYSIS_PROMPT = `You are a VA claims expert helping veterans understand their denial letters.
@@ -124,7 +125,12 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
     }
 
     try {
-      const fullPrompt = DENIAL_ANALYSIS_PROMPT + '\n\n' + text;
+      // Load veteran context from VKB + My Packet for smarter analysis
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 600 });
+      const contextBlock = veteranContext
+        ? `\n\nVETERAN CASE DATA (use to correlate denial with known evidence):\n${veteranContext}\n\n`
+        : '';
+      const fullPrompt = DENIAL_ANALYSIS_PROMPT + contextBlock + '\n\n' + text;
       
       // Use unified AI service
       const response = await generateAI(fullPrompt, {
@@ -153,6 +159,31 @@ const DenialDecoder = ({ onClose, className = '', onOpenAISettings }) => {
 
       setAnalysis(parsedAnalysis);
       setStep('results');
+
+      // Save analysis results to VKB + My Packet
+      await saveAnalysisResults({
+        toolName: 'Denial Decoder',
+        classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+        rawText: text,
+        extractedData: parsedAnalysis,
+        vkbDocument: {
+          classification: 'va_decision',
+          rawText: text,
+          extractedData: parsedAnalysis,
+          source: 'DenialDecoder',
+        },
+        vkbMergeData: {
+          aiInsights: {
+            lastDenialReason: parsedAnalysis.denialReason,
+            lastDenialMissing: parsedAnalysis.whatWasMissing,
+            denialUrgency: parsedAnalysis.urgency,
+            appealDeadline: parsedAnalysis.appealDeadline,
+          },
+          keyFacts: [
+            { source: 'DenialDecoder', fact: `Denial reason: ${parsedAnalysis.denialReason}`, date: new Date().toISOString() },
+          ],
+        },
+      });
 
     } catch (err) {
       console.error('AI Analysis Error:', err);

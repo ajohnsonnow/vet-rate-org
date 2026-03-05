@@ -9,6 +9,7 @@ import ShareButton from './ShareButton';
 import { generateAI, getAIStatus, AI_MODES, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import VoiceInputButton from './VoiceInput';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 /**
  * SymptomLogger Component - "The 50% Maker"
@@ -359,6 +360,14 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
     };
 
     setLogs(prev => [logEntry, ...prev]);
+
+    // Save symptom log entry to My Packet
+    saveAnalysisResults({
+      toolName: 'Symptom Logger',
+      classification: PACKET_DOC_TYPES.MEDICAL_RECORD,
+      rawText: `${SYMPTOM_TYPES[symptomType]?.label || symptomType} log: severity ${newLog.severity}/10, duration ${newLog.duration}, prostrating: ${newLog.prostrating}${newLog.activityImpact ? ', impact: ' + newLog.activityImpact : ''}${newLog.notes ? ', notes: ' + newLog.notes : ''}`,
+      extractedData: logEntry,
+    }).catch(err => console.warn('Failed to save symptom log:', err));
     
     // Reset form
     setNewLog({
@@ -545,9 +554,15 @@ Write a 2-3 sentence clinical-style note suitable for VA disability documentatio
     
     try {
       const prompt = getAISuggestionPrompt(field);
-      
+
+      // Load veteran context for smarter suggestions
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 300, includePacket: false });
+      const contextBlock = veteranContext
+        ? `\nVETERAN CASE DATA:\n${veteranContext}\n`
+        : '';
+
       const response = await generateAI(
-        `${prompt}
+        `${prompt}${contextBlock}
 
 IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
         {

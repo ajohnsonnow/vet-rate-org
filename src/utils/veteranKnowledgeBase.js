@@ -621,71 +621,391 @@ export const calculateCompleteness = (vkb) => {
 };
 
 /**
- * Merge data from DD-214 into VKB
+ * Merge data from DD-214 into VKB - DIAMOND STANDARD
+ * 
+ * Handles ALL 29 blocks of the DD-214 form:
+ *   - Blocks 1-3: Name, Branch, SSN
+ *   - Blocks 4a-4b: Grade/Pay Grade
+ *   - Block 5: DOB
+ *   - Block 6: Reserve obligation date
+ *   - Blocks 7-8: Dates of service
+ *   - Blocks 9-11: Service time calculations
+ *   - Blocks 12a-e: Separation details
+ *   - Block 13: Awards (may continue in Block 18)
+ *   - Block 14: MOS
+ *   - Block 15: Education (GED/college)
+ *   - Blocks 16-17: Not commonly extracted
+ *   - Block 18: Additional remarks (deployments, combat, continuation awards)
+ *   - Blocks 19-22: Addresses
+ *   - Block 23: Separation type
+ *   - Block 24: Character of service
+ *   - Blocks 25-27: RE code, SPN code, dates
+ *   - Block 28: Narrative reason
+ *   - Block 29: Member copy indicator
+ *
+ * This function MERGES - it never overwrites existing VKB data
+ * with empty values. Newer DD214s update rank/dates to the most recent.
+ * Awards are always ADDED (not replaced).
+ *
+ * @param {Object} vkb - The VKB to merge into
+ * @param {Object} dd214Data - Extracted DD214 data (from dd214FieldExtractor or AI)
+ * @param {Object} options - Merge options
+ * @param {boolean} options.isMultiDD214 - Part of a multi-DD214 set
+ * @param {number} options.ddIndex - Index in the set (0-based)
+ * @param {string} options.fileName - Original filename
+ * @returns {Object} Updated VKB
  */
-export const mergeDD214IntoVKB = (vkb, dd214Data) => {
-  // Personal info
-  if (dd214Data.name && !vkb.personal.fullName) {
-    vkb.personal.fullName = dd214Data.name;
+export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
+  if (!dd214Data || typeof dd214Data !== 'object') return vkb;
+
+  // ─── PERSONAL INFO (Blocks 1, 3, 5) ───
+  if (dd214Data.fullName || dd214Data.name) {
+    const name = dd214Data.fullName || dd214Data.name;
+    if (!vkb.personal.fullName || name.length > vkb.personal.fullName.length) {
+      vkb.personal.fullName = name;
+    }
   }
-  if (dd214Data.ssn && !vkb.personal.ssn) {
-    vkb.personal.ssn = dd214Data.ssn.slice(-4);
+  if (dd214Data.ssn || dd214Data.ssnLast4) {
+    const ssn = dd214Data.ssnLast4 || (dd214Data.ssn ? dd214Data.ssn.slice(-4) : null);
+    if (ssn && !vkb.personal.ssn) {
+      vkb.personal.ssn = ssn;
+    }
   }
-  
-  // Service history
+  if (dd214Data.dateOfBirth && !vkb.personal.dateOfBirth) {
+    vkb.personal.dateOfBirth = dd214Data.dateOfBirth;
+  }
+
+  // ─── SERVICE HISTORY (Blocks 2, 4a-4b, 7-11, 24) ───
   vkb.serviceHistory.branch = dd214Data.branch || vkb.serviceHistory.branch;
-  vkb.serviceHistory.entryDate = dd214Data.entryDate || vkb.serviceHistory.entryDate;
-  vkb.serviceHistory.separationDate = dd214Data.separationDate || vkb.serviceHistory.separationDate;
-  vkb.serviceHistory.yearsOfService = dd214Data.yearsService || vkb.serviceHistory.yearsOfService;
+
+  // Component (Active, Reserve, Guard)
+  if (dd214Data.component) {
+    if (!vkb.serviceHistory.component) vkb.serviceHistory.component = dd214Data.component;
+  }
+
+  // Dates - use the EARLIEST entry and LATEST separation across all DD214s
+  if (dd214Data.entryDate) {
+    if (!vkb.serviceHistory.entryDate || 
+        new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate)) {
+      vkb.serviceHistory.entryDate = dd214Data.entryDate;
+    }
+  }
+  if (dd214Data.separationDate) {
+    if (!vkb.serviceHistory.separationDate || 
+        new Date(dd214Data.separationDate) > new Date(vkb.serviceHistory.separationDate)) {
+      vkb.serviceHistory.separationDate = dd214Data.separationDate;
+    }
+  }
+
+  // Calculate total years of service
+  if (vkb.serviceHistory.entryDate && vkb.serviceHistory.separationDate) {
+    const entry = new Date(vkb.serviceHistory.entryDate);
+    const sep = new Date(vkb.serviceHistory.separationDate);
+    const years = ((sep - entry) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
+    vkb.serviceHistory.yearsOfService = parseFloat(years);
+  } else {
+    vkb.serviceHistory.yearsOfService = dd214Data.yearsService || dd214Data.totalService || vkb.serviceHistory.yearsOfService;
+  }
+
+  // Net active service time (Block 9)
+  if (dd214Data.netActiveServiceTime) {
+    vkb.serviceHistory.netActiveServiceTime = dd214Data.netActiveServiceTime;
+  }
+
+  // Rank - use the HIGHEST rank (latest DD214 usually has highest)
+  if (dd214Data.rank) {
+    vkb.serviceHistory.rank.discharge = dd214Data.rank;
+    if (!vkb.serviceHistory.rank.entry) {
+      vkb.serviceHistory.rank.entry = dd214Data.rank; // Will be overwritten by earlier DD214
+    }
+  }
+  if (dd214Data.payGrade) {
+    if (!vkb.serviceHistory.payGrade) vkb.serviceHistory.payGrade = dd214Data.payGrade;
+    // Keep the HIGHEST pay grade
+    const currentGrade = parsePayGrade(vkb.serviceHistory.payGrade);
+    const newGrade = parsePayGrade(dd214Data.payGrade);
+    if (newGrade > currentGrade) {
+      vkb.serviceHistory.payGrade = dd214Data.payGrade;
+    }
+  }
+
+  // Character of service - keep the most recent
   vkb.serviceHistory.characterOfService = dd214Data.characterOfService || vkb.serviceHistory.characterOfService;
   vkb.serviceHistory.reenlisted = dd214Data.reenlisted || vkb.serviceHistory.reenlisted;
   vkb.serviceHistory.foreignService = dd214Data.foreignService || vkb.serviceHistory.foreignService;
-  
-  // MOS
-  if (dd214Data.mos && dd214Data.mosTitle) {
-    const existingMOS = vkb.serviceHistory.mos.find(m => m.code === dd214Data.mos);
+
+  // ─── SEPARATION DETAILS (Blocks 12, 23, 25-28) ───
+  if (dd214Data.separationAuthority || dd214Data.separationType || dd214Data.narrativeReason || dd214Data.reentryCode || dd214Data.spnCode) {
+    if (!vkb.serviceHistory.separationDetails) vkb.serviceHistory.separationDetails = {};
+    vkb.serviceHistory.separationDetails = {
+      authority: dd214Data.separationAuthority || vkb.serviceHistory.separationDetails?.authority,
+      separationType: dd214Data.separationType || vkb.serviceHistory.separationDetails?.separationType,
+      narrativeReason: dd214Data.narrativeReason || vkb.serviceHistory.separationDetails?.narrativeReason,
+      reentryCode: dd214Data.reentryCode || dd214Data.reCode || vkb.serviceHistory.separationDetails?.reentryCode,
+      spnCode: dd214Data.spnCode || vkb.serviceHistory.separationDetails?.spnCode,
+    };
+  }
+
+  // ─── MOS (Block 14) ───
+  const mosCode = dd214Data.mos || dd214Data.primaryMOS;
+  const mosTitle = dd214Data.mosTitle || dd214Data.primaryMOSTitle || dd214Data.dutyMOS;
+  if (mosCode) {
+    const existingMOS = vkb.serviceHistory.mos.find(m => m.code === mosCode);
     if (!existingMOS) {
       vkb.serviceHistory.mos.push({
-        code: dd214Data.mos,
-        title: dd214Data.mosTitle,
+        code: mosCode,
+        title: mosTitle || '',
         dates: {
-          start: dd214Data.entryDate,
-          end: dd214Data.separationDate,
+          start: dd214Data.entryDate || null,
+          end: dd214Data.separationDate || null,
         },
-        hazards: [], // To be filled by MOS Hazard Matcher
+        hazards: [], // Filled by MOS Hazard Matcher
       });
     }
   }
-  
-  // Awards
-  if (dd214Data.awards && Array.isArray(dd214Data.awards)) {
-    dd214Data.awards.forEach(award => {
-      const existingAward = vkb.serviceHistory.awards.find(a => 
-        a.name === award.name || a.name === award.abbreviation
-      );
-      if (!existingAward) {
-        vkb.serviceHistory.awards.push({
-          name: award.name,
-          date: null,
-          isCombat: award.isCombat || false,
-          devices: award.devices || [],
+  // Additional MOS entries
+  if (dd214Data.additionalMOS && Array.isArray(dd214Data.additionalMOS)) {
+    dd214Data.additionalMOS.forEach(addMos => {
+      const code = typeof addMos === 'string' ? addMos : addMos.code;
+      if (code && !vkb.serviceHistory.mos.find(m => m.code === code)) {
+        vkb.serviceHistory.mos.push({
+          code,
+          title: addMos.title || '',
+          dates: { start: null, end: null },
+          hazards: [],
         });
       }
     });
   }
-  
-  // Documentation
+
+  // ─── EDUCATION (Block 15) ───
+  if (dd214Data.educationYears || dd214Data.education) {
+    if (!vkb.serviceHistory.education) vkb.serviceHistory.education = {};
+    vkb.serviceHistory.education = {
+      years: dd214Data.educationYears || vkb.serviceHistory.education?.years,
+      description: dd214Data.education || vkb.serviceHistory.education?.description,
+    };
+  }
+
+  // ─── AWARDS (Block 13 + Block 18 continuation) ───
+  if (dd214Data.awards && Array.isArray(dd214Data.awards)) {
+    dd214Data.awards.forEach(award => {
+      const awardName = typeof award === 'string' ? award : (award.name || award.abbreviation || '');
+      if (!awardName) return;
+
+      // Normalize for comparison - ignore case, trim, collapse spaces
+      const normalizedNew = awardName.toLowerCase().replace(/\s+/g, ' ').trim();
+      const existingAward = vkb.serviceHistory.awards.find(a => {
+        const normalizedExisting = (a.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        return normalizedExisting === normalizedNew || 
+               normalizedExisting.includes(normalizedNew) ||
+               normalizedNew.includes(normalizedExisting);
+      });
+
+      if (!existingAward) {
+        vkb.serviceHistory.awards.push({
+          name: awardName,
+          date: award.date || null,
+          isCombat: award.isCombat || false,
+          devices: award.devices || [],
+          source: options.fileName || 'DD-214',
+        });
+      } else if (typeof award === 'object' && award.devices?.length) {
+        // Merge new devices into existing award
+        const existingDevices = new Set(existingAward.devices?.map(d => d.toLowerCase()) || []);
+        award.devices.forEach(d => {
+          if (!existingDevices.has(d.toLowerCase())) {
+            existingAward.devices = existingAward.devices || [];
+            existingAward.devices.push(d);
+          }
+        });
+      }
+    });
+  }
+
+  // ─── DEPLOYMENTS (from Block 18 / extracted) ───
+  if (dd214Data.deployments && Array.isArray(dd214Data.deployments)) {
+    dd214Data.deployments.forEach(dep => {
+      const location = dep.location || dep.theater || '';
+      const operation = dep.operation || '';
+      // Avoid duplicate deployments
+      const isDuplicate = vkb.serviceHistory.deployments.some(d => 
+        (d.location || '').toLowerCase() === location.toLowerCase() &&
+        (d.startDate || '') === (dep.startDate || '')
+      );
+      if (!isDuplicate && (location || operation)) {
+        vkb.serviceHistory.deployments.push({
+          location,
+          startDate: dep.startDate || null,
+          endDate: dep.endDate || null,
+          combatZone: dep.combatZone || dep.isHazardous || false,
+          operation,
+          source: options.fileName || 'DD-214',
+        });
+      }
+    });
+  }
+
+  // ─── COMBAT SERVICE ───
+  if (dd214Data.combatService) {
+    if (!vkb.serviceHistory.combatService) {
+      vkb.serviceHistory.combatService = {
+        hasVerifiedCombat: false,
+        indicators: [],
+        campaigns: [],
+      };
+    }
+    if (dd214Data.combatService.hasVerifiedCombat) {
+      vkb.serviceHistory.combatService.hasVerifiedCombat = true;
+    }
+    if (dd214Data.combatService.indicators) {
+      dd214Data.combatService.indicators.forEach(ind => {
+        if (!vkb.serviceHistory.combatService.indicators.includes(ind)) {
+          vkb.serviceHistory.combatService.indicators.push(ind);
+        }
+      });
+    }
+    if (dd214Data.combatService.campaigns) {
+      dd214Data.combatService.campaigns.forEach(camp => {
+        if (!vkb.serviceHistory.combatService.campaigns.includes(camp)) {
+          vkb.serviceHistory.combatService.campaigns.push(camp);
+        }
+      });
+    }
+  }
+
+  // ─── SPECIAL QUALIFICATIONS ───
+  if (dd214Data.specialQualifications && Array.isArray(dd214Data.specialQualifications)) {
+    if (!vkb.serviceHistory.specialQualifications) vkb.serviceHistory.specialQualifications = [];
+    dd214Data.specialQualifications.forEach(qual => {
+      if (!vkb.serviceHistory.specialQualifications.includes(qual)) {
+        vkb.serviceHistory.specialQualifications.push(qual);
+      }
+    });
+  }
+
+  // ─── ADDRESSES (Blocks 19-22) ───
+  if (dd214Data.mailingAddress || dd214Data.address) {
+    const addr = dd214Data.mailingAddress || dd214Data.address;
+    if (typeof addr === 'object') {
+      vkb.personal.address = {
+        street: addr.street || vkb.personal.address.street,
+        city: addr.city || vkb.personal.address.city,
+        state: addr.state || vkb.personal.address.state,
+        zip: addr.zip || addr.zipCode || vkb.personal.address.zip,
+      };
+    } else if (typeof addr === 'string' && addr.trim()) {
+      // Parse string address
+      if (!vkb.personal.address.street) {
+        vkb.personal.address.street = addr;
+      }
+    }
+  }
+
+  // ─── EVIDENCE TIMELINE ───
+  const timelineEntries = [];
+  if (dd214Data.entryDate) {
+    timelineEntries.push({
+      date: dd214Data.entryDate,
+      eventType: 'service_entry',
+      description: `Entered active duty (${dd214Data.branch || vkb.serviceHistory.branch || 'Military'})`,
+      source: options.fileName || 'DD-214',
+      significance: 'service_milestone',
+    });
+  }
+  if (dd214Data.separationDate) {
+    timelineEntries.push({
+      date: dd214Data.separationDate,
+      eventType: 'service_separation',
+      description: `Separated from service - ${dd214Data.characterOfService || 'Honorable'} discharge`,
+      source: options.fileName || 'DD-214',
+      significance: 'service_milestone',
+    });
+  }
+  if (dd214Data.deployments) {
+    dd214Data.deployments.forEach(dep => {
+      if (dep.startDate) {
+        timelineEntries.push({
+          date: dep.startDate,
+          eventType: 'deployment',
+          description: `Deployed to ${dep.location || dep.operation || 'overseas'}`,
+          source: options.fileName || 'DD-214',
+          significance: 'combat_exposure',
+        });
+      }
+    });
+  }
+
+  // Add timeline entries (avoid duplicates)
+  timelineEntries.forEach(entry => {
+    const isDuplicate = vkb.evidenceTimeline.some(e => 
+      e.date === entry.date && e.eventType === entry.eventType
+    );
+    if (!isDuplicate) {
+      vkb.evidenceTimeline.push(entry);
+    }
+  });
+
+  // Sort timeline by date
+  vkb.evidenceTimeline.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  // ─── SERVICE PERIOD TRACKING (for multi-DD214 sets) ───
+  if (!vkb.serviceHistory.servicePeriods) vkb.serviceHistory.servicePeriods = [];
+  if (dd214Data.entryDate && dd214Data.separationDate) {
+    const isDuplicate = vkb.serviceHistory.servicePeriods.some(p =>
+      p.entryDate === dd214Data.entryDate && p.separationDate === dd214Data.separationDate
+    );
+    if (!isDuplicate) {
+      vkb.serviceHistory.servicePeriods.push({
+        entryDate: dd214Data.entryDate,
+        separationDate: dd214Data.separationDate,
+        branch: dd214Data.branch || vkb.serviceHistory.branch,
+        component: dd214Data.component || '',
+        rank: dd214Data.rank || '',
+        payGrade: dd214Data.payGrade || '',
+        mos: mosCode || '',
+        mosTitle: mosTitle || '',
+        characterOfService: dd214Data.characterOfService || '',
+        source: options.fileName || 'DD-214',
+      });
+    }
+  }
+
+  // ─── DOCUMENTATION ───
   vkb.documentation.dd214s.push({
-    id: `dd214-${Date.now()}`,
-    fileName: 'DD-214',
+    id: `dd214-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+    fileName: options.fileName || 'DD-214',
     uploadDate: new Date().toISOString(),
     pageCount: dd214Data.pageCount || 1,
     extracted: true,
+    servicePeriod: dd214Data.entryDate && dd214Data.separationDate
+      ? `${dd214Data.entryDate} to ${dd214Data.separationDate}`
+      : null,
+    rank: dd214Data.rank || '',
+    branch: dd214Data.branch || '',
   });
-  
+
   vkb.metadata.documentCount++;
   return vkb;
 };
+
+/**
+ * Parse a pay grade string (e.g., "E-5", "O-3") into a numeric rank value.
+ * Higher number = higher rank. Used to find the veteran's highest grade.
+ */
+function parsePayGrade(pg) {
+  if (!pg) return 0;
+  const match = pg.match(/([EOW])-?(\d+)/i);
+  if (!match) return 0;
+  const category = match[1].toUpperCase();
+  const level = parseInt(match[2], 10);
+  const base = category === 'E' ? 0 : category === 'W' ? 100 : 200;
+  return base + level;
+}
 
 /**
  * Merge data from Blue Button into VKB
@@ -773,26 +1093,47 @@ export const mergeMusterCallIntoVKB = (vkb, musterCallData) => {
 
 /**
  * Generate LLM context string from VKB
- * This is what we'll inject into AI prompts
+ * This is what we inject into AI prompts so every AI tool
+ * knows everything about the veteran - Diamond Standard completeness.
  */
 export const generateLLMContext = (vkb) => {
   let context = '=== VETERAN KNOWLEDGE BASE ===\n\n';
   
-  // Personal
+  // ─── PERSONAL ───
   if (vkb.personal.fullName) {
     context += `Veteran: ${vkb.personal.fullName}\n`;
   }
   if (vkb.personal.dateOfBirth) {
     context += `DOB: ${vkb.personal.dateOfBirth}\n`;
   }
+  if (vkb.personal.ssn) {
+    context += `SSN (last 4): ${vkb.personal.ssn}\n`;
+  }
+  if (vkb.personal.address && (vkb.personal.address.city || vkb.personal.address.state)) {
+    const addr = vkb.personal.address;
+    const parts = [addr.street, addr.city, addr.state, addr.zip].filter(Boolean);
+    context += `Address: ${parts.join(', ')}\n`;
+  }
   
-  // Service
+  // ─── SERVICE HISTORY ───
   context += '\n--- SERVICE HISTORY ---\n';
   if (vkb.serviceHistory.branch) {
     context += `Branch: ${vkb.serviceHistory.branch}\n`;
   }
+  if (vkb.serviceHistory.component) {
+    context += `Component: ${vkb.serviceHistory.component}\n`;
+  }
   if (vkb.serviceHistory.entryDate && vkb.serviceHistory.separationDate) {
-    context += `Service: ${vkb.serviceHistory.entryDate} to ${vkb.serviceHistory.separationDate} (${vkb.serviceHistory.yearsOfService} years)\n`;
+    context += `Service: ${vkb.serviceHistory.entryDate} to ${vkb.serviceHistory.separationDate}`;
+    if (vkb.serviceHistory.yearsOfService) {
+      context += ` (${vkb.serviceHistory.yearsOfService} years)`;
+    }
+    context += '\n';
+  }
+  if (vkb.serviceHistory.rank?.discharge) {
+    context += `Rank at Discharge: ${vkb.serviceHistory.rank.discharge}`;
+    if (vkb.serviceHistory.payGrade) context += ` (${vkb.serviceHistory.payGrade})`;
+    context += '\n';
   }
   if (vkb.serviceHistory.mos.length > 0) {
     context += `MOS: ${vkb.serviceHistory.mos.map(m => `${m.code} (${m.title})`).join(', ')}\n`;
@@ -800,15 +1141,92 @@ export const generateLLMContext = (vkb) => {
   if (vkb.serviceHistory.characterOfService) {
     context += `Discharge: ${vkb.serviceHistory.characterOfService}\n`;
   }
-  
-  // Conditions
-  context += '\n--- CLAIMED CONDITIONS ---\n';
-  vkb.medicalConditions.current.forEach(condition => {
-    context += `• ${condition.name}`;
-    if (condition.diagnosisDate) context += ` (diagnosed ${condition.diagnosisDate})`;
-    if (condition.ratedPercentage) context += ` [${condition.ratedPercentage}% rated]`;
+
+  // Service periods (multi-DD214)
+  if (vkb.serviceHistory.servicePeriods?.length > 1) {
+    context += '\nService Periods:\n';
+    vkb.serviceHistory.servicePeriods.forEach((p, i) => {
+      context += `  Period ${i + 1}: ${p.entryDate} to ${p.separationDate} - ${p.branch || ''} ${p.rank || ''} (${p.mos || ''})\n`;
+    });
+  }
+
+  // Separation details
+  if (vkb.serviceHistory.separationDetails) {
+    const sep = vkb.serviceHistory.separationDetails;
+    if (sep.narrativeReason) context += `Separation Reason: ${sep.narrativeReason}\n`;
+    if (sep.reentryCode) context += `RE Code: ${sep.reentryCode}\n`;
+    if (sep.spnCode) context += `SPN Code: ${sep.spnCode}\n`;
+  }
+
+  // ─── DEPLOYMENTS ───
+  if (vkb.serviceHistory.deployments?.length > 0) {
+    context += '\n--- DEPLOYMENTS ---\n';
+    vkb.serviceHistory.deployments.forEach(dep => {
+      context += `• ${dep.location || dep.operation || 'Unknown'}`;
+      if (dep.startDate) context += ` (${dep.startDate}`;
+      if (dep.endDate) context += ` to ${dep.endDate}`;
+      if (dep.startDate) context += ')';
+      if (dep.combatZone) context += ' [COMBAT ZONE]';
+      context += '\n';
+    });
+  }
+
+  // ─── COMBAT SERVICE ───
+  if (vkb.serviceHistory.combatService?.hasVerifiedCombat) {
+    context += '\n--- COMBAT SERVICE: VERIFIED ---\n';
+    if (vkb.serviceHistory.combatService.indicators?.length) {
+      context += `Indicators: ${vkb.serviceHistory.combatService.indicators.join(', ')}\n`;
+    }
+    if (vkb.serviceHistory.combatService.campaigns?.length) {
+      context += `Campaigns: ${vkb.serviceHistory.combatService.campaigns.join(', ')}\n`;
+    }
+  }
+
+  // ─── AWARDS ───
+  if (vkb.serviceHistory.awards?.length > 0) {
+    context += '\n--- AWARDS & DECORATIONS ---\n';
+    const combatAwards = vkb.serviceHistory.awards.filter(a => a.isCombat);
+    const otherAwards = vkb.serviceHistory.awards.filter(a => !a.isCombat);
+    
+    if (combatAwards.length > 0) {
+      context += 'Combat Awards:\n';
+      combatAwards.forEach(a => {
+        context += `  ★ ${a.name}`;
+        if (a.devices?.length) context += ` (${a.devices.join(', ')})`;
+        context += '\n';
+      });
+    }
+    otherAwards.forEach(a => {
+      context += `  • ${a.name}`;
+      if (a.devices?.length) context += ` (${a.devices.join(', ')})`;
+      context += '\n';
+    });
+  }
+
+  // ─── SPECIAL QUALIFICATIONS ───
+  if (vkb.serviceHistory.specialQualifications?.length > 0) {
+    context += `\nSpecial Qualifications: ${vkb.serviceHistory.specialQualifications.join(', ')}\n`;
+  }
+
+  // ─── EDUCATION ───
+  if (vkb.serviceHistory.education) {
+    const edu = vkb.serviceHistory.education;
+    if (edu.years) context += `Education: ${edu.years} years`;
+    if (edu.description) context += ` - ${edu.description}`;
     context += '\n';
-  });
+  }
+  
+  // ─── MEDICAL CONDITIONS ───
+  if (vkb.medicalConditions.current.length > 0) {
+    context += '\n--- CLAIMED CONDITIONS ---\n';
+    vkb.medicalConditions.current.forEach(condition => {
+      context += `• ${condition.name}`;
+      if (condition.diagnosisDate) context += ` (diagnosed ${condition.diagnosisDate})`;
+      if (condition.ratedPercentage) context += ` [${condition.ratedPercentage}% rated]`;
+      if (condition.serviceConnected) context += ' [SC]';
+      context += '\n';
+    });
+  }
   
   // Secondary conditions
   if (vkb.medicalConditions.secondary.length > 0) {
@@ -817,20 +1235,92 @@ export const generateLLMContext = (vkb) => {
       context += `• ${sec.condition} (secondary to ${sec.primaryCondition})\n`;
     });
   }
+
+  // Presumptive conditions
+  if (vkb.medicalConditions.presumptive?.length > 0) {
+    context += '\n--- PRESUMPTIVE CONDITIONS ---\n';
+    vkb.medicalConditions.presumptive.forEach(p => {
+      context += `• ${p.condition} (${p.exposureType}, eligible under ${p.eligibleUnder})\n`;
+    });
+  }
+
+  // Medications
+  if (vkb.medications.current.length > 0) {
+    context += '\n--- CURRENT MEDICATIONS ---\n';
+    vkb.medications.current.forEach(med => {
+      context += `• ${med.name}`;
+      if (med.dosage) context += ` ${med.dosage}`;
+      if (med.frequency) context += ` (${med.frequency})`;
+      if (med.prescribedFor) context += ` - for ${med.prescribedFor}`;
+      context += '\n';
+    });
+  }
+
+  // ─── EXPOSURES ───
+  const hasExposures = (vkb.exposures.environmental.length + vkb.exposures.occupational.length + vkb.exposures.combat.length) > 0;
+  if (hasExposures) {
+    context += '\n--- EXPOSURES ---\n';
+    vkb.exposures.environmental.forEach(e => {
+      context += `• Environmental: ${e.type} at ${e.location} (${e.dates || 'dates unknown'})\n`;
+    });
+    vkb.exposures.occupational.forEach(e => {
+      context += `• Occupational: ${e.hazard} - MOS ${e.mos}\n`;
+    });
+    vkb.exposures.combat.forEach(e => {
+      context += `• Combat: ${e.incident} at ${e.location} (${e.date || 'date unknown'})\n`;
+    });
+  }
+
+  // ─── CLAIMS HISTORY ───
+  if (vkb.vaClaimsHistory.claims.length > 0 || vkb.vaClaimsHistory.ratings.length > 0) {
+    context += '\n--- VA CLAIMS HISTORY ---\n';
+    vkb.vaClaimsHistory.claims.forEach(claim => {
+      context += `• Claim #${claim.claimNumber}: ${claim.status}`;
+      if (claim.filedDate) context += ` (filed ${claim.filedDate})`;
+      context += '\n';
+    });
+    if (vkb.vaClaimsHistory.ratings.length > 0) {
+      context += 'Current Ratings:\n';
+      vkb.vaClaimsHistory.ratings.forEach(r => {
+        context += `  ${r.condition}: ${r.percentage}%`;
+        if (r.effectiveDate) context += ` (effective ${r.effectiveDate})`;
+        context += '\n';
+      });
+    }
+  }
   
-  // Evidence
+  // ─── EVIDENCE ───
   context += '\n--- EVIDENCE ON FILE ---\n';
   context += `DD-214s: ${vkb.documentation.dd214s.length}\n`;
   context += `Blue Button Reports: ${vkb.documentation.blueButtonReports.length}\n`;
   context += `C-Files: ${vkb.documentation.cFiles.length}\n`;
   context += `Private Records: ${vkb.documentation.privateRecords.length}\n`;
   context += `Other Evidence: ${vkb.documentation.otherEvidence.length}\n`;
+
+  // ─── EVIDENCE TIMELINE ───
+  if (vkb.evidenceTimeline.length > 0) {
+    context += '\n--- EVIDENCE TIMELINE ---\n';
+    vkb.evidenceTimeline.slice(0, 20).forEach(e => {
+      context += `  ${e.date || '???'}: ${e.description} [${e.source || ''}]\n`;
+    });
+    if (vkb.evidenceTimeline.length > 20) {
+      context += `  ... and ${vkb.evidenceTimeline.length - 20} more events\n`;
+    }
+  }
   
   // Key facts
   if (vkb.keyFacts.length > 0) {
     context += '\n--- KEY FACTS ---\n';
-    vkb.keyFacts.slice(0, 10).forEach(fact => { // Top 10 most important
+    vkb.keyFacts.slice(0, 10).forEach(fact => {
       context += `• ${fact.fact} [Source: ${fact.source}]\n`;
+    });
+  }
+
+  // Nexus statements
+  if (vkb.nexusStatements?.length > 0) {
+    context += '\n--- NEXUS STATEMENTS ---\n';
+    vkb.nexusStatements.forEach(ns => {
+      context += `• ${ns.condition}: "${ns.relationship}" (by ${ns.statedBy || 'unknown'}, ${ns.date || ''})\n`;
     });
   }
   

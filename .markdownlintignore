@@ -4,6 +4,7 @@ LICENSE
 # YAML policy files and gitignore-syntax files - not markdown, but have # comments parsed as headings
 .snyk
 .dcignore
+.aiignore
 
 # Third-party content
 node_modules/

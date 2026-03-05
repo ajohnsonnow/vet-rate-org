@@ -19,6 +19,7 @@ import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { CONSISTENCY_CHECK_PROMPT, SOLO_STATEMENT_ANALYSIS_PROMPT } from '../utils/consistencyPrompts';
 import DiffHighlighter, { IssueCard } from './common/DiffHighlighter';
 import RedditCopyButton from './common/RedditCopyButton';
+import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
 
 /**
  * AIConsistencyAnalyzer - The Cross-Examination Tool
@@ -52,13 +53,21 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
     setAnalysis(null);
 
     try {
+      // Load veteran context so the AI knows the veteran's real history
+      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 600 });
+
       // Select the right prompt based on mode
       const prompt = mode === 'compare' 
         ? CONSISTENCY_CHECK_PROMPT(referenceText, targetText)
         : SOLO_STATEMENT_ANALYSIS_PROMPT(targetText);
 
+      // Inject veteran context into the system prompt
+      const systemPromptWithContext = veteranContext
+        ? `You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.\n\nVETERAN CASE DATA (use to cross-reference known facts):\n${veteranContext}`
+        : 'You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.';
+
       const response = await generateAI(prompt, {
-        systemPrompt: "You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.",
+        systemPrompt: systemPromptWithContext,
         taskType: 'analysis',
         maxTokens: 2000,
         temperature: 0.2 // Low temp for consistent structured output
@@ -86,6 +95,27 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 
       const result = JSON.parse(jsonText);
       setAnalysis(result);
+
+      // Save consistency analysis to VKB + My Packet
+      saveAnalysisResults({
+        toolName: 'AI Cross-Examination',
+        classification: PACKET_DOC_TYPES.OTHER,
+        rawText: mode === 'compare' ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}` : targetText,
+        extractedData: result,
+        vkbMergeData: {
+          aiInsights: {
+            consistencyScore: result.overall_score || result.score || null,
+            contradictionsFound: result.issues?.length || result.contradictions?.length || 0,
+          },
+          keyFacts: [
+            {
+              source: 'AI Cross-Examination',
+              fact: `Consistency score: ${result.overall_score || result.score || 'N/A'}, Issues: ${result.issues?.length || result.contradictions?.length || 0}`,
+              date: new Date().toISOString(),
+            },
+          ],
+        },
+      }).catch(err => console.warn('Failed to save consistency results:', err));
       
     } catch (err) {
       console.error("AI Consistency Check Failed:", err);

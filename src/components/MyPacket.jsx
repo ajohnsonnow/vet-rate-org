@@ -49,6 +49,7 @@ import ClaimProgress from './ClaimProgress';
 import { generateAI, getAIStatus, isAnyAIAvailable } from '../utils/unifiedAIService';
 import { AIStatusBadge, AIModeSelector } from './AIModeSelector';
 import VADataCenter from './VADataCenter';
+import { getVeteranAIContext } from '../utils/veteranContextProvider';
 
 const MyPacket = ({ onResume, onClose, onReportBug, onAnalyzeStrategy, onOpenGoogleDriveSync, onOpenAISettings, onOpenDD214Analyzer }) => {
   const { t } = useLanguage();

@@ -19,9 +19,11 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 ## 1. VetRate-Auditor
 
 ### Role
+
 **VA Regulations Expert & Claims Auditor**
 
 ### Capabilities
+
 - **38 CFR Knowledge**: Deep understanding of Title 38 Code of Federal Regulations, particularly Part 3 (Adjudication) and Part 4 (Schedule for Rating Disabilities)
 - **Diagnostic Code Expertise**: Comprehensive knowledge of VA diagnostic codes and rating criteria
 - **Claims Review**: Analyzes disability claims for completeness and compliance
@@ -30,12 +32,14 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 - **Appeals Process**: Explains NOD (Notice of Disagreement), BVA (Board of Veterans Appeals), and CAVC procedures
 
 ### Example Use Cases
+
 - "What are the rating criteria for PTSD under 38 CFR § 4.130?"
 - "What secondary conditions can be claimed with sleep apnea?"
 - "Explain the bilateral factor calculation"
 - "What evidence is needed for a TDIU claim?"
 
 ### Training Focus
+
 - eCFR regulations and legal citations
 - VA M21-1 Adjudication Procedures Manual
 - Diagnostic code definitions and criteria
@@ -46,9 +50,11 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 ## 2. VetRate-Writer
 
 ### Role
+
 **Medical-Legal Document Specialist**
 
 ### Capabilities
+
 - **Nexus Letters**: Drafts medical nexus letters connecting conditions to military service
 - **Personal Statements**: Creates compelling personal/buddy statements for claims
 - **DBQ Assistance**: Helps understand and prepare for Disability Benefits Questionnaires
@@ -57,12 +63,14 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 - **Medical Terminology**: Translates complex medical language for VA claims
 
 ### Example Use Cases
+
 - "Write a nexus letter for sleep apnea secondary to PTSD"
 - "Create a personal statement for tinnitus claim"
 - "Draft a buddy statement for PTSD stressor verification"
 - "Help me respond to a duty to assist letter"
 
 ### Training Focus
+
 - Medical-legal writing conventions
 - VA-accepted nexus letter formats
 - Persuasive statement techniques
@@ -73,9 +81,11 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 ## 3. VetRate-Rater
 
 ### Role
+
 **VA Combined Rating Calculator & Decision Support**
 
 ### Capabilities
+
 - **Combined Ratings**: Calculates VA combined disability ratings using official formula
 - **Bilateral Factor**: Applies bilateral factor for paired extremity conditions
 - **Rating Predictions**: Estimates potential ratings based on symptom severity
@@ -84,12 +94,14 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 - **SMC Eligibility**: Identifies Special Monthly Compensation eligibility
 
 ### Example Use Cases
+
 - "Calculate combined rating: 70% PTSD, 40% back, 30% knee bilateral"
 - "What rating would I get with these PTSD symptoms: [symptoms]"
 - "How much is 80% disability compensation with 2 dependents?"
 - "Am I eligible for SMC-S with 100% scheduler plus 60% separate?"
 
 ### Training Focus
+
 - VA combined rating mathematics
 - Bilateral factor calculations
 - Compensation rate tables
@@ -100,6 +112,7 @@ VetRate uses three specialized fine-tuned language models, each optimized for sp
 ## Technical Details
 
 ### Training Configuration
+
 ```yaml
 # QLoRA Parameters
 load_in_4bit: true
@@ -124,11 +137,13 @@ optimizer: adamw_bnb_8bit
 ```
 
 ### Hardware Requirements
+
 - **Minimum**: 8GB VRAM (Q4_K_M quantized)
 - **Recommended**: 16GB VRAM (F16 or multiple models)
 - **Tested On**: NVIDIA RTX 4080 SUPER + RTX 4070 Ti SUPER
 
 ### Performance Metrics
+
 | Metric | Value |
 |--------|-------|
 | Prompt Processing | 132-422 tokens/sec |
@@ -141,12 +156,14 @@ optimizer: adamw_bnb_8bit
 ## Model Files
 
 ### Available Formats
+
 | Format | Size | Use Case |
 |--------|------|----------|
 | F16 (GGUF) | ~6.0 GB | Maximum quality, requires more VRAM |
 | Q4_K_M (GGUF) | ~1.9 GB | Balanced quality/size, recommended |
 
 ### File Locations
+
 ```
 models/gguf/
 ├── vetrate-auditor-3b-F16.gguf      # 6.0 GB
@@ -162,6 +179,7 @@ models/gguf/
 ## Usage Examples
 
 ### With llama.cpp
+
 ```bash
 # Load Auditor model
 ./llama-cli -m vetrate-auditor-3b-Q4_K_M.gguf -ngl 99 -c 4096 -cnv
@@ -174,6 +192,7 @@ models/gguf/
 ```
 
 ### With Python (transformers)
+
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -219,6 +238,7 @@ User Query
 ## Disclaimer
 
 These models are trained to assist veterans with understanding VA disability claims processes. They are **NOT** a substitute for:
+
 - Professional legal advice
 - Medical diagnosis or treatment
 - Official VA decisions
@@ -274,6 +294,7 @@ Since no LLM can reliably do VA math, we created a Python tool:
 **Location**: `src/utils/vaCalculatorTool.py`
 
 ### Features
+
 - ✅ Correct VA combined rating formula
 - ✅ Bilateral factor calculation (38 CFR 4.26)
 - ✅ TDIU eligibility check (38 CFR 4.16)
