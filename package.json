@@ -45,6 +45,8 @@
         "va-data": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --generate-frontend",
         "va-data:full": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --full-update",
         "va-data:bva": ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --condition",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "prepare": "husky"
     },
     "dependencies": {
@@ -70,6 +72,7 @@
     "devDependencies": {
         "@testing-library/jest-dom": "^6.9.1",
         "@vitejs/plugin-react": "^4.2.0",
+        "@vitest/coverage-v8": "^4.1.0",
         "autoprefixer": "^10.4.16",
         "cross-env": "^10.1.0",
         "eslint": "^8.52.0",
