@@ -324,5 +324,5 @@ find src -name '*.js' -o -name '*.jsx' | xargs wc -l
 ---
 
 *Document generated: March 19, 2026*
-*Version: 1.19.10*
+*Version: 1.20.0*
 *Project: VetRate.org*

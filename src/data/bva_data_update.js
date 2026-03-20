@@ -1,5 +1,5 @@
 // BVA Data Update - Auto-generated
-// Generated: 2026-03-05T00:26:02.381724
+// Generated: 2026-03-19T18:56:27.429188
 // Source: VA Public Records
 // DO NOT EDIT MANUALLY - Run va_data_pipeline.py to update
 
@@ -19,10 +19,10 @@ export const VA_PROCESSING_CURRENT = {};
  * Data freshness info
  */
 export const DATA_METADATA = {
-  lastUpdated: "2026-03-05",
+  lastUpdated: "2026-03-19",
   bvaDecisionsAnalyzed: 0,
   conditionsCovered: 0,
-  source: "VA Public Records (BVA decisions, VA.gov reports)"
+  source: "VA Public Records (BVA decisions, VA.gov reports)",
 };
 
 /**
@@ -34,12 +34,12 @@ export function mergeLatestData(existingData) {
     ...existingData,
     conditionSpecific: {
       ...(existingData.conditionSpecific || {}),
-      ...BVA_CONDITION_STATS
+      ...BVA_CONDITION_STATS,
     },
     processingTimes: {
       ...(existingData.processingTimes || {}),
-      ...VA_PROCESSING_CURRENT
+      ...VA_PROCESSING_CURRENT,
     },
-    _lastAutoUpdate: DATA_METADATA.lastUpdated
+    _lastAutoUpdate: DATA_METADATA.lastUpdated,
   };
 }
