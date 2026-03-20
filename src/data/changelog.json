@@ -1,11 +1,11 @@
 {
-  "version": "1.19.10",
-  "lastUpdated": "2026-03-05",
+  "version": "1.20.0",
+  "lastUpdated": "2026-03-20",
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
-      "version": "1.19.10",
-      "date": "2026-03-05",
+      "version": "1.20.0",
+      "date": "2026-03-20",
       "isFirstRelease": false,
       "releaseTitle": "Maintenance & Documentation Sync - v1.19.7",
       "changelog": [
