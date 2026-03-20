@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { fileURLToPath, URL } from 'node:url'
 
 // Brand configurations for build-time HTML transformation
 const BRAND_CONFIGS = {
@@ -41,6 +42,14 @@ function brandingPlugin() {
 
 export default defineConfig({
   plugins: [react(), brandingPlugin()],
+  
+  // Resolve dompurify to the noop shim — jspdf lists it as optional but doesn't
+  // need it for our use case. All dompurify 3.x versions have XSS advisories.
+  resolve: {
+    alias: {
+      dompurify: fileURLToPath(new URL('./packages/dompurify-noop/index.js', import.meta.url))
+    }
+  },
   
   // === WEBGPU / TRANSFORMERS.JS SUPPORT ===
   // Required for Florence-2 Vision LLM
