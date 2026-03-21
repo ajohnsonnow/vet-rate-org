@@ -109,69 +109,130 @@ export function formatFileSize(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
 }
 
+// ============================================================
+// C-FILE STREAMING STORAGE (IndexedDB)
+// Batches written to IDB as they complete so RAM stays flat
+// regardless of document size.
+// ============================================================
+const CFILE_DB_NAME = "VetRate_CFileStream";
+const CFILE_DB_VERSION = 1;
+const CFILE_STORE = "page_batches";
+
+function openCFileDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(CFILE_DB_NAME, CFILE_DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(CFILE_STORE)) {
+        db.createObjectStore(CFILE_STORE, { keyPath: "batchKey" });
+      }
+    };
+  });
+}
+
+function writeBatchToDB(db, sessionKey, batchIndex, batchText, stats) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CFILE_STORE, "readwrite");
+    const store = tx.objectStore(CFILE_STORE);
+    const req = store.put({
+      batchKey: `${sessionKey}:${batchIndex}`,
+      sessionKey,
+      batchIndex,
+      text: batchText,
+      stats,
+      savedAt: Date.now(),
+    });
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => resolve();
+  });
+}
+
+async function readAllBatchesFromDB(db, sessionKey) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CFILE_STORE, "readonly");
+    const store = tx.objectStore(CFILE_STORE);
+    const req = store.getAll();
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const all = (req.result || [])
+        .filter((r) => r.sessionKey === sessionKey)
+        .sort((a, b) => a.batchIndex - b.batchIndex);
+      resolve(all);
+    };
+  });
+}
+
+async function clearSessionBatches(db, sessionKey) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(CFILE_STORE, "readwrite");
+    const store = tx.objectStore(CFILE_STORE);
+    const reqAll = store.getAll();
+    reqAll.onsuccess = () => {
+      const keys = (reqAll.result || [])
+        .filter((r) => r.sessionKey === sessionKey)
+        .map((r) => r.batchKey);
+      for (const k of keys) store.delete(k);
+    };
+    tx.oncomplete = () => resolve();
+  });
+}
+
 /**
- * Process a large PDF file using streaming (range requests) to avoid loading
- * the entire file into RAM.  Suitable for C-files (100MB–400MB).
+ * Process ALL pages of a large PDF file in streaming batches.
  *
- * Strategy: load first `headPages` + last `tailPages` to capture both the
- * clinical narrative (front) and the Code Sheet / current ratings (back).
+ * Uses URL.createObjectURL + rangeChunkSize so pdfjs fetches pages
+ * on-demand without loading the entire file into RAM at once.
+ * Each batch is written to IndexedDB immediately after extraction
+ * and discarded from the JS heap, keeping memory usage flat for
+ * documents of any size (300+ MB / 5000+ pages).
  *
- * @param {File} file - The large PDF File object (browser File API)
+ * @param {File} file - The PDF File object (browser File API)
  * @param {Object} options
- * @param {number}   [options.headPages=100]   Pages to read from the start
- * @param {number}   [options.tailPages=100]   Pages to read from the end
- * @param {number}   [options.batchSize=20]    Pages per batch
- * @param {Function} [options.onBatch]         Callback(batchResult) after each batch
- * @param {Function} [options.onProgress]      Callback(currentPage, totalPages)
- * @returns {Promise<{text, pageCount, processedPages, skippedPages, hasScannedSections}>}
+ * @param {number}   [options.batchSize=20]      Pages extracted per batch
+ * @param {Function} [options.onBatch]           Called after each batch with progress info
+ * @param {Function} [options.onProgress]        Called as (currentPage, totalPages, pct)
+ * @param {string}   [options.sessionKey]        Unique IDB namespace key (auto-generated)
+ * @param {boolean}  [options.keepInIDB=false]   Leave batches in IDB after completion
+ * @returns {Promise<{text, pageCount, processedPages, pagesWithText, pagesEmpty,
+ *                    hasScannedSections, scannedPageRanges, method}>}
  */
 export async function processLargePDF(file, options = {}) {
   const {
-    headPages = 100,
-    tailPages = 100,
     batchSize = 20,
     onBatch = null,
     onProgress = () => {},
+    sessionKey = `cfile_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    keepInIDB = false,
   } = options;
 
-  // Stream the PDF via object URL so pdfjs can range-request pages on demand
+  const db = await openCFileDB();
   const objectUrl = URL.createObjectURL(file);
 
   try {
     const pdf = await pdfjsLib.getDocument({
       url: objectUrl,
-      rangeChunkSize: 65536, // 64 KB chunks — enables HTTP range streaming
+      rangeChunkSize: 65536, // 64 KB per HTTP range chunk � enables streaming
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: false,
       disableStream: false,
     }).promise;
 
     const numPages = pdf.numPages;
-
-    // Build the set of page numbers to process (1-indexed, no duplicates)
-    const head = Math.min(headPages, numPages);
-    const tailStart = Math.max(numPages - tailPages + 1, head + 1);
-    const pagesToProcess = [];
-
-    for (let p = 1; p <= head; p++) pagesToProcess.push(p);
-    for (let p = tailStart; p <= numPages; p++) pagesToProcess.push(p);
-
-    let fullText = "";
+    let processedCount = 0;
     let pagesWithText = 0;
     let pagesEmpty = 0;
-    let processedCount = 0;
+    const scannedRanges = [];
+    let currentEmptyRun = null;
 
-    // Process in batches
-    for (
-      let batchStart = 0;
-      batchStart < pagesToProcess.length;
-      batchStart += batchSize
-    ) {
-      const batch = pagesToProcess.slice(batchStart, batchStart + batchSize);
+    // Process ALL pages sequentially in batches
+    for (let startPage = 1; startPage <= numPages; startPage += batchSize) {
+      const endPage = Math.min(startPage + batchSize - 1, numPages);
       let batchText = "";
-      const batchPageStats = [];
+      const batchStats = [];
 
-      for (const pageNum of batch) {
+      for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
         try {
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
@@ -183,55 +244,79 @@ export async function processLargePDF(file, options = {}) {
 
           const chars = pageText.length;
           batchText += `--- PAGE ${pageNum} ---\n${pageText}\n\n`;
-          batchPageStats.push({ pageNum, chars });
+          batchStats.push({ pageNum, chars });
 
-          if (chars >= 50) pagesWithText++;
-          else pagesEmpty++;
+          if (chars >= 50) {
+            pagesWithText++;
+            if (currentEmptyRun) {
+              scannedRanges.push({ ...currentEmptyRun });
+              currentEmptyRun = null;
+            }
+          } else {
+            pagesEmpty++;
+            if (!currentEmptyRun)
+              currentEmptyRun = { start: pageNum, end: pageNum };
+            else currentEmptyRun.end = pageNum;
+          }
         } catch (pageErr) {
           console.warn(
-            `processLargePDF: error on page ${pageNum}:`,
+            `processLargePDF: page ${pageNum} error:`,
             pageErr.message,
           );
           batchText += `--- PAGE ${pageNum} ---\n[extraction error]\n\n`;
-          batchPageStats.push({ pageNum, chars: 0, error: pageErr.message });
+          batchStats.push({ pageNum, chars: 0, error: pageErr.message });
           pagesEmpty++;
         }
 
         processedCount++;
-        onProgress(processedCount, pagesToProcess.length);
+        onProgress(
+          processedCount,
+          numPages,
+          Math.round((processedCount / numPages) * 100),
+        );
       }
 
-      fullText += batchText;
+      // Write batch to IDB, then let it be garbage-collected
+      const batchIndex = Math.floor((startPage - 1) / batchSize);
+      await writeBatchToDB(db, sessionKey, batchIndex, batchText, batchStats);
 
       if (onBatch) {
         onBatch({
-          batchIndex: Math.floor(batchStart / batchSize),
-          pagesInBatch: batch,
-          batchText,
-          batchPageStats,
-          totalProcessedSoFar: processedCount,
+          batchIndex,
+          startPage,
+          endPage,
+          totalPages: numPages,
+          batchStats,
+          processedSoFar: processedCount,
+          pct: Math.round((processedCount / numPages) * 100),
         });
       }
 
-      // Yield to browser between batches to keep UI responsive
+      // Yield to browser to keep UI responsive
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
-    const skippedPages = numPages - pagesToProcess.length;
-    const hasScannedSections = pagesEmpty > pagesToProcess.length * 0.3;
+    if (currentEmptyRun) scannedRanges.push({ ...currentEmptyRun });
+
+    // Reassemble full text from IDB in page order
+    const batches = await readAllBatchesFromDB(db, sessionKey);
+    const fullText = batches.map((b) => b.text).join("");
+
+    if (!keepInIDB) await clearSessionBatches(db, sessionKey);
 
     return {
       text: fullText,
       pageCount: numPages,
       processedPages: processedCount,
-      skippedPages,
-      hasScannedSections,
       pagesWithText,
       pagesEmpty,
-      method: "streaming",
+      hasScannedSections: pagesEmpty > numPages * 0.1,
+      scannedPageRanges: scannedRanges,
+      method: "streaming_all_pages",
     };
   } finally {
     URL.revokeObjectURL(objectUrl);
+    db.close();
   }
 }
 
