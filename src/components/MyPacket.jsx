@@ -91,6 +91,7 @@ import {
   isAnyAIAvailable,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
+import { RibbonRackDisplay } from "./VisualRibbon";
 import VADataCenter from "./VADataCenter";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
@@ -142,6 +143,7 @@ const MyPacket = ({
   });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
   const [showAwardForm, setShowAwardForm] = useState(false);
+  const [showRibbonRack, setShowRibbonRack] = useState(false);
   const [showDD214Processor, setShowDD214Processor] = useState(false);
   const [newDeployment, setNewDeployment] = useState({
     theater: "",
@@ -885,12 +887,75 @@ Return ONLY the JSON object, no explanation.`,
       }
     }
 
+    // Import service history
+    if (data.serviceHistory) {
+      try {
+        localStorage.setItem(
+          "vet_rate_service_history",
+          JSON.stringify(data.serviceHistory),
+        );
+      } catch (e) {
+        console.error("Error importing service history:", e);
+      }
+    }
+
+    // Import ratings
+    if (data.myRatings && Array.isArray(data.myRatings)) {
+      try {
+        localStorage.setItem(
+          "vet_rate_my_ratings",
+          JSON.stringify(data.myRatings),
+        );
+      } catch (e) {
+        console.error("Error importing ratings:", e);
+      }
+    }
+
+    // Import timeline events
+    if (data.timelineEvents && Array.isArray(data.timelineEvents)) {
+      try {
+        localStorage.setItem(
+          "vet_rate_timeline_events",
+          JSON.stringify(data.timelineEvents),
+        );
+      } catch (e) {
+        console.error("Error importing timeline events:", e);
+      }
+    }
+
+    // Import pain maps
+    if (data.painMaps && Array.isArray(data.painMaps)) {
+      try {
+        localStorage.setItem(
+          "vet_rate_pain_maps",
+          JSON.stringify(data.painMaps),
+        );
+      } catch (e) {
+        console.error("Error importing pain maps:", e);
+      }
+    }
+
+    // Reload ALL state after import
+    loadVeteranProfile();
+    loadServiceHistory();
+    loadMyRatings();
+    loadTimelineEvents();
+    loadPainMaps();
+
     if (claimSuccess && statementSuccess) {
       const parts = [`${data.claims.length} claims`];
       if (data.savedForms?.length)
         parts.push(`${data.savedForms.length} forms`);
       if (data.veteranProfile && Object.keys(data.veteranProfile).length > 0)
         parts.push("profile");
+      if (data.serviceHistory?.deployments?.length)
+        parts.push(`${data.serviceHistory.deployments.length} deployments`);
+      if (data.serviceHistory?.awards?.length)
+        parts.push(`${data.serviceHistory.awards.length} awards`);
+      if (data.myRatings?.length)
+        parts.push(`${data.myRatings.length} ratings`);
+      if (data.timelineEvents?.length)
+        parts.push(`${data.timelineEvents.length} timeline events`);
 
       setImportStatus({
         type: "success",
@@ -1516,6 +1581,11 @@ Return ONLY the JSON object, no explanation.`,
                 <span className="hidden sm:inline">
                   {t("myPacketSection.profile")}
                 </span>
+                {veteranProfile.firstName && (
+                  <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs">
+                    ✓
+                  </span>
+                )}
               </button>
 
               <button
@@ -3098,6 +3168,33 @@ Return ONLY the JSON object, no explanation.`,
                     </div>
                   )}
                 </div>
+
+                {/* Ribbon Rack */}
+                {serviceHistory.awards.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        🎗️ Ribbon Rack
+                      </h3>
+                      <button
+                        onClick={() => setShowRibbonRack(!showRibbonRack)}
+                        className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                      >
+                        {showRibbonRack ? "Hide" : "View Ribbon Rack"}
+                      </button>
+                    </div>
+                    {showRibbonRack && (
+                      <div className="flex justify-center p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <RibbonRackDisplay
+                          awards={serviceHistory.awards}
+                          ribbonsPerRow={3}
+                          size="md"
+                          showNames={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Info Banner */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

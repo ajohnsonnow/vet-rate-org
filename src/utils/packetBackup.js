@@ -344,6 +344,36 @@ export const exportCompletePacket = (
   veteranProfile = null,
   savedForms = [],
 ) => {
+  // Read additional data from localStorage
+  let serviceHistory = { deployments: [], awards: [], dd214Data: null };
+  let myRatings = [];
+  let timelineEvents = [];
+  let painMaps = [];
+  try {
+    const sh = localStorage.getItem("vet_rate_service_history");
+    if (sh) serviceHistory = JSON.parse(sh);
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    const mr = localStorage.getItem("vet_rate_my_ratings");
+    if (mr) myRatings = JSON.parse(mr);
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    const te = localStorage.getItem("vet_rate_timeline_events");
+    if (te) timelineEvents = JSON.parse(te);
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    const pm = localStorage.getItem("vet_rate_pain_maps");
+    if (pm) painMaps = JSON.parse(pm);
+  } catch (e) {
+    /* ignore */
+  }
+
   const exportData = {
     version: "2.0",
     exportDate: new Date().toISOString(),
@@ -355,6 +385,14 @@ export const exportCompletePacket = (
       statements: {},
       veteranProfile: veteranProfile || null,
       savedForms: savedForms || [],
+      serviceHistory: serviceHistory || {
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+      },
+      myRatings: myRatings || [],
+      timelineEvents: timelineEvents || [],
+      painMaps: painMaps || [],
     },
   };
 
@@ -405,6 +443,17 @@ export const importCompletePacket = (jsonString) => {
     baseResult.data.savedForms = parsed.data.savedForms;
     baseResult.meta.savedFormsCount = parsed.data.savedForms.length;
   }
+
+  // Add serviceHistory if present
+  if (parsed.data?.serviceHistory)
+    baseResult.data.serviceHistory = parsed.data.serviceHistory;
+  // Add myRatings if present
+  if (parsed.data?.myRatings) baseResult.data.myRatings = parsed.data.myRatings;
+  // Add timelineEvents if present
+  if (parsed.data?.timelineEvents)
+    baseResult.data.timelineEvents = parsed.data.timelineEvents;
+  // Add painMaps if present
+  if (parsed.data?.painMaps) baseResult.data.painMaps = parsed.data.painMaps;
 
   return baseResult;
 };
