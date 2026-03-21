@@ -40,6 +40,7 @@ import {
   processFormationDocument,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
+import { smolVLMService, isSmolVLMSupported } from "../utils/smolVLMService";
 import {
   saveDD214Data,
   getServiceHistory,
@@ -713,14 +714,17 @@ const DD214Analyzer = ({
     setIsGenerating(true);
 
     const combinedText = getCombinedText();
-    const hasVisionModel = isLocalAIVisionModel();
     const hasPDFFiles = originalPDFFiles.length > 0;
 
-    // Vision model support: DISABLED - Custom model compilation did not produce image_embed function
-    // MLC-LLM vision models require special compilation that includes CLIP preprocessing
-    // To enable, load the official "Phi-3.5-vision-instruct-q4f16_1-MLC" model from MLC-AI
-    // TODO: Investigate proper vision model compilation with image_embed export
-    const useVisionAnalysis = false; // Force OCR path - vision requires official MLC models
+    // Vision analysis: use SmolVLM-256M (transformers.js v3 + WebGPU) when:
+    //   - WebGPU is available in this browser
+    //   - User has PDF files loaded (needs images to analyze)
+    //   - No text has been extracted yet (avoids double-processing)
+    // NOTE: The original MLC WebLLM Phi-3.5-vision path is disabled — it crashes with
+    //   "Cannot find parameter in cache: vision_embed_tokens..." (WebLLM v0.2.80 bug).
+    //   SmolVLM replaces it via the same transformers.js v3 runtime used by Florence-2.
+    const useVisionAnalysis =
+      isSmolVLMSupported() && hasPDFFiles && !combinedText;
 
     console.log(
       `🔍 Analysis mode: ${useVisionAnalysis ? "VISION (direct image)" : "TEXT (OCR/extraction)"}`,
@@ -753,56 +757,61 @@ const DD214Analyzer = ({
       let response;
 
       if (useVisionAnalysis) {
-        // ========== VISION MODEL PATH ==========
-        // Render PDFs to images and send directly to vision model
-        console.log("🖼️ Using Vision Model for direct image analysis");
+        // ========== VISION MODEL PATH — SmolVLM (transformers.js v3 + WebGPU) ==========
+        // Processes PDF pages as images directly through SmolVLM-256M-Instruct.
+        // Replaces the broken MLC WebLLM Phi-3.5-vision path.
+        console.log("🖼️ Using SmolVLM Vision for direct image analysis");
 
         setOcrProgress({
           state: OCR_STATES.LOADING,
           progress: 0,
-          message: "Preparing images for vision analysis...",
+          message: "Initializing SmolVLM Vision engine...",
         });
 
-        // Collect all images from all PDF files
-        const allImages = [];
+        // Ensure model is loaded (cached after first load)
+        const visionReady = await smolVLMService.initialize();
+        if (!visionReady) {
+          throw new Error(
+            "SmolVLM failed to initialize. Falling back — please run OCR first.",
+          );
+        }
+
+        // Process each PDF — up to 2 pages per file (DD214 is typically 1-2 pages)
+        const visionPrompt =
+          "Analyze this DD214 military discharge document and extract all information. " +
+          "Return your analysis as JSON following the format specified in the system prompt.";
+
+        const allPageTexts = [];
         for (let i = 0; i < originalPDFFiles.length; i++) {
           const pdfFile = originalPDFFiles[i];
           setOcrProgress({
             state: OCR_STATES.OCR_IN_PROGRESS,
-            progress: (i / originalPDFFiles.length) * 50,
-            message: `Rendering ${pdfFile.name}...`,
+            progress: 10 + (i / originalPDFFiles.length) * 60,
+            message: `SmolVLM reading ${pdfFile.name}...`,
           });
 
-          const { images } = await renderPDFToImages(pdfFile, {
-            maxPages: 2, // First 2 pages usually have critical DD214 info
-            scale: 1.5, // Good balance of quality vs size
-            format: "jpeg",
-            quality: 0.85,
+          const result = await smolVLMService.processMultiplePages(pdfFile, {
+            maxPages: 2,
+            prompt: visionPrompt,
+            onPageComplete: (pageNum, total) => {
+              setOcrProgress({
+                state: OCR_STATES.OCR_IN_PROGRESS,
+                progress:
+                  10 + ((i + pageNum / total) / originalPDFFiles.length) * 60,
+                message: `SmolVLM: page ${pageNum}/${total} of ${pdfFile.name}...`,
+              });
+            },
           });
-          allImages.push(...images);
+          allPageTexts.push(result.combinedText);
         }
 
-        console.log(`📷 Total images for vision model: ${allImages.length}`);
-
-        setOcrProgress({
-          state: OCR_STATES.OCR_IN_PROGRESS,
-          progress: 60,
-          message: "Analyzing images with vision model...",
-        });
-
-        // Send images to vision model
-        response = await generateAIWithImage(
-          "Analyze this DD214 discharge document and extract all information. Return your analysis as JSON following the format specified in the system prompt.",
-          allImages,
-          {
-            systemPrompt: DD214_ANALYSIS_SYSTEM_PROMPT,
-            maxTokens: 2048,
-            temperature: 0.2,
-            skipHallucinationCheck: true, // DD214 JSON doesn't contain diagnostic codes
-          },
-        );
-
         setOcrProgress(null);
+
+        // SmolVLM already generated structured output — use it directly as response
+        response = {
+          content: allPageTexts.join("\n\n---\n\n"),
+          isVisionResponse: true,
+        };
       } else {
         // ========== TEXT MODEL PATH (original) ==========
         // Use OCR/text extraction then send to LLM
