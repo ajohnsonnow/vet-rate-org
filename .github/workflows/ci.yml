@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+# 🛫 Pre-Flight Check: run locally before pushing with `npm run preflight`
+# Quick check (no E2E/build): `npm run preflight:fast`
+
 permissions:
   contents: read
 
