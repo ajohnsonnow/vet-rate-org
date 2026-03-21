@@ -47,6 +47,9 @@
                     "va-data:bva":  ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --condition",
                     "test":  "vitest run",
                     "test:coverage":  "vitest run --coverage",
+                    "preflight":  "node scripts/preflight.js",
+                    "preflight:fast":  "node scripts/preflight.js --skip-e2e --skip-build",
+                    "preflight:full":  "node scripts/preflight.js --report",
                     "prepare":  "husky"
                 },
     "dependencies":  {
@@ -107,4 +110,3 @@
                                               ]
                     }
 }
-

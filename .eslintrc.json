@@ -25,6 +25,19 @@
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off",
-    "react/prop-types": "off"
+    "react/prop-types": "off",
+    "react/no-unescaped-entities": "warn",
+    "react/display-name": "warn",
+    "react/jsx-no-comment-textnodes": "warn",
+    "react/no-unknown-property": "warn",
+    "no-useless-escape": "warn",
+    "no-case-declarations": "warn",
+    "no-prototype-builtins": "warn",
+    "no-undef": "warn",
+    "no-dupe-keys": "warn",
+    "no-constant-condition": "warn",
+    "no-empty": "warn",
+    "no-misleading-character-class": "warn",
+    "no-control-regex": "warn"
   }
 }
