@@ -58,7 +58,7 @@
         "driver.js": "^1.4.0",
         "html2canvas": "^1.4.1",
         "idb-keyval": "^6.2.1",
-        "jspdf": "^4.2.0",
+        "jspdf": "^4.2.1",
         "lucide-react": "^0.562.0",
         "mammoth": "^1.11.0",
         "pdf-lib": "^1.17.1",
