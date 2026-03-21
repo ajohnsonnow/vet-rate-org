@@ -554,12 +554,14 @@ async function phaseShip(newVersion, validateResults) {
   run(`git commit -m "${commitMsg}"`, { stdio: "pipe" });
   console.log(c("green", `✅ Committed v${ver}`));
 
-  // Tag
-  run(`git tag -a v${ver} -m "Release v${ver}" 2>nul || git tag v${ver}`, {
-    stdio: "pipe",
-    ignoreError: true,
-  });
-  console.log(c("green", `✅ Tagged v${ver}`));
+  // Tag (skip if already exists)
+  const tagExists = tryRun(`git tag -l v${ver}`).out.trim() === `v${ver}`;
+  if (!tagExists) {
+    tryRun(`git tag -a v${ver} -m "Release v${ver}"`);
+    console.log(c("green", `✅ Tagged v${ver}`));
+  } else {
+    console.log(c("dim", `  Tag v${ver} already exists — skipping`));
+  }
 
   if (AUTO_PUSH) {
     process.stdout.write("  🚀 Pushing to origin... ");
