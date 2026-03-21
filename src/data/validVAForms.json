@@ -35,115 +35,53 @@
     },
     "unemployability": {
       "description": "TDIU and employment forms",
-      "forms": [
-        "21-8940",
-        "21-4192",
-        "21-4140"
-      ]
+      "forms": ["21-8940", "21-4192", "21-4140"]
     },
     "dependents": {
       "description": "Dependents and family forms",
-      "forms": [
-        "21-686c",
-        "21-674",
-        "21-509",
-        "21-534EZ"
-      ]
+      "forms": ["21-686c", "21-674", "21-509", "21-534EZ"]
     },
     "representation": {
       "description": "VSO and representative forms",
-      "forms": [
-        "21-22",
-        "21-22a"
-      ]
+      "forms": ["21-22", "21-22a"]
     },
     "medical": {
       "description": "Medical and aid/attendance forms",
-      "forms": [
-        "21-2680",
-        "10-10EZ",
-        "10-10EZR",
-        "10-5345",
-        "10-5345a"
-      ]
+      "forms": ["21-2680", "10-10EZ", "10-10EZR", "10-5345", "10-5345a"]
     },
     "records": {
       "description": "Records and information request forms",
-      "forms": [
-        "180",
-        "SF-180",
-        "3288",
-        "20-10207"
-      ]
+      "forms": ["180", "SF-180", "3288", "20-10207"]
     },
     "admin": {
       "description": "Administrative forms",
-      "forms": [
-        "21-0958",
-        "27-0820",
-        "27-0820a",
-        "119",
-        "21-0845",
-        "21-0847"
-      ]
+      "forms": ["21-0958", "27-0820", "27-0820a", "119", "21-0845", "21-0847"]
     },
     "pension": {
       "description": "Pension-related forms",
-      "forms": [
-        "21P-527EZ",
-        "21P-534EZ",
-        "21P-4165",
-        "21P-530EZ",
-        "21P-8416"
-      ]
+      "forms": ["21P-527EZ", "21P-534EZ", "21P-4165", "21P-530EZ", "21P-8416"]
     },
     "insurance": {
       "description": "Insurance and SGLI forms",
-      "forms": [
-        "29-4364",
-        "29-357",
-        "SGLV-8286",
-        "SGLV-8714"
-      ]
+      "forms": ["29-4364", "29-357", "SGLV-8286", "SGLV-8714"]
     },
     "education": {
       "description": "Education and GI Bill forms",
-      "forms": [
-        "22-1990",
-        "22-1995",
-        "22-5490",
-        "22-1999"
-      ]
+      "forms": ["22-1990", "22-1995", "22-5490", "22-1999"]
     },
     "vocational": {
       "description": "Vocational rehabilitation forms",
-      "forms": [
-        "28-1900",
-        "28-1902",
-        "28-1902w",
-        "28-8832"
-      ]
+      "forms": ["28-1900", "28-1902", "28-1902w", "28-8832"]
     },
     "housing": {
       "description": "Home loan and housing forms",
-      "forms": [
-        "26-1880",
-        "26-8937",
-        "26-0551"
-      ]
+      "forms": ["26-1880", "26-8937", "26-0551"]
     },
     "burial": {
       "description": "Burial and memorial forms",
-      "forms": [
-        "40-1330",
-        "40-10007",
-        "21P-530"
-      ]
+      "forms": ["40-1330", "40-10007", "21P-530"]
     }
   },
-  "dbqPrefixes": [
-    "21-0960",
-    "DBQ"
-  ],
+  "dbqPrefixes": ["21-0960", "DBQ"],
   "_note": "DBQs (Disability Benefits Questionnaires) follow patterns like 21-0960M-15, 21-0960P-3, etc. The formValidator allows any form starting with these prefixes."
 }

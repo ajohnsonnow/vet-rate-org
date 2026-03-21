@@ -2,10 +2,10 @@
  * Vet-Rate.org - Crisis Interceptor
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * SAFETY-CRITICAL SYSTEM: This interceptor detects self-harm language
  * and prevents AI engagement, redirecting to immediate human crisis support.
- * 
+ *
  * This is not a "nice to have" - this is a lifesaving feature.
  */
 
@@ -30,9 +30,9 @@ const CRISIS_PATTERNS = {
     /\bworld\s+(is\s+)?better\s+without\s+me\b/i,
     /\bsayonara\b.*\bworld\b/i,
     /\bfinal\s+goodbye\b/i,
-    /\bending\s+my\s+life\b/i
+    /\bending\s+my\s+life\b/i,
   ],
-  
+
   // HIGH: Suicidal ideation or planning
   high: [
     /\bsuicidal\s+(thought|idea)/i,
@@ -44,9 +44,9 @@ const CRISIS_PATTERNS = {
     /\bburden\s+to\s+(everyone|my family)\b/i,
     /\bnothing\s+(left|to live for)\b/i,
     /\bpermanent\s+solution\b/i,
-    /\bonly\s+way\s+out\b/i
+    /\bonly\s+way\s+out\b/i,
   ],
-  
+
   // MEDIUM: Severe distress indicators
   medium: [
     /\bcan'?t\s+take\s+(this|the pain)\s+anymore\b/i,
@@ -56,8 +56,8 @@ const CRISIS_PATTERNS = {
     /\bgiving\s+up\b/i,
     /\bworthless\b/i,
     /\bfailed\s+at\s+everything\b/i,
-    /\bpoint\s+of\s+no\s+return\b/i
-  ]
+    /\bpoint\s+of\s+no\s+return\b/i,
+  ],
 };
 
 /**
@@ -68,23 +68,23 @@ const CRISIS_PATTERNS = {
  */
 export const CRISIS_RESOURCES = {
   phone: {
-    primary: '988',
-    extension: '1',
-    display: 'Dial 988, then Press 1',
-    tel: 'tel:988'
+    primary: "988",
+    extension: "1",
+    display: "Dial 988, then Press 1",
+    tel: "tel:988",
   },
   text: {
-    number: '838255',
-    display: 'Text 838255'
+    number: "838255",
+    display: "Text 838255",
   },
   chat: {
-    url: 'https://www.veteranscrisisline.net/get-help-now/chat/',
-    display: 'Chat at VeteransCrisisLine.net'
+    url: "https://www.veteranscrisisline.net/get-help-now/chat/",
+    display: "Chat at VeteransCrisisLine.net",
   },
   international: {
-    phone: '+1-800-273-8255',
-    display: '+1-800-273-8255 (International)'
-  }
+    phone: "+1-800-273-8255",
+    display: "+1-800-273-8255 (International)",
+  },
 };
 
 /**
@@ -93,7 +93,7 @@ export const CRISIS_RESOURCES = {
  * @returns {Object} - { isCrisis: boolean, severity: string|null, matchedPattern: string|null }
  */
 export function detectCrisisLanguage(text) {
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return { isCrisis: false, severity: null, matchedPattern: null };
   }
 
@@ -105,8 +105,8 @@ export function detectCrisisLanguage(text) {
     if (pattern.test(normalizedText)) {
       return {
         isCrisis: true,
-        severity: 'critical',
-        matchedPattern: pattern.toString()
+        severity: "critical",
+        matchedPattern: pattern.toString(),
       };
     }
   }
@@ -116,8 +116,8 @@ export function detectCrisisLanguage(text) {
     if (pattern.test(normalizedText)) {
       return {
         isCrisis: true,
-        severity: 'high',
-        matchedPattern: pattern.toString()
+        severity: "high",
+        matchedPattern: pattern.toString(),
       };
     }
   }
@@ -127,8 +127,8 @@ export function detectCrisisLanguage(text) {
     if (pattern.test(normalizedText)) {
       return {
         isCrisis: true,
-        severity: 'medium',
-        matchedPattern: pattern.toString()
+        severity: "medium",
+        matchedPattern: pattern.toString(),
       };
     }
   }
@@ -139,21 +139,21 @@ export function detectCrisisLanguage(text) {
 /**
  * Pre-flight check before ANY AI API call
  * This MUST be called before sending text to external AI services
- * 
+ *
  * @param {string|Object} userInput - Text or form data to check
  * @returns {Object} - { shouldBlock: boolean, crisisDetected: boolean, severity: string|null }
  */
 export function interceptBeforeAICall(userInput) {
-  let textToCheck = '';
+  let textToCheck = "";
 
   // Handle different input types
-  if (typeof userInput === 'string') {
+  if (typeof userInput === "string") {
     textToCheck = userInput;
-  } else if (typeof userInput === 'object' && userInput !== null) {
+  } else if (typeof userInput === "object" && userInput !== null) {
     // Concatenate all string values from object (form answers)
     textToCheck = Object.values(userInput)
-      .filter(val => typeof val === 'string')
-      .join(' ');
+      .filter((val) => typeof val === "string")
+      .join(" ");
   }
 
   const result = detectCrisisLanguage(textToCheck);
@@ -162,7 +162,7 @@ export function interceptBeforeAICall(userInput) {
     shouldBlock: result.isCrisis,
     crisisDetected: result.isCrisis,
     severity: result.severity,
-    matchedPattern: result.matchedPattern
+    matchedPattern: result.matchedPattern,
   };
 }
 
@@ -171,11 +171,12 @@ export function interceptBeforeAICall(userInput) {
  */
 export function getCrisisMessage(severity) {
   const messages = {
-    critical: 'We detected language that suggests you may be in immediate crisis. Your safety is our priority.',
-    high: 'We noticed you may be experiencing thoughts of self-harm. You are not alone.',
-    medium: 'We see you are going through a difficult time. Help is available right now.'
+    critical:
+      "We detected language that suggests you may be in immediate crisis. Your safety is our priority.",
+    high: "We noticed you may be experiencing thoughts of self-harm. You are not alone.",
+    medium:
+      "We see you are going through a difficult time. Help is available right now.",
   };
-  
+
   return messages[severity] || messages.medium;
 }
-

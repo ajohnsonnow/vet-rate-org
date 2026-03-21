@@ -4,25 +4,41 @@
  * Military-themed messaging for veteran users
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  AlertCircle,
+  CheckCircle,
+  AlertTriangle,
+  WifiOff,
+  RefreshCw,
+} from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * Toast severity levels
  */
 export const ToastType = {
-  SUCCESS: 'success',
-  ERROR: 'error',
-  WARNING: 'warning',
-  INFO: 'info',
-  NETWORK: 'network'
+  SUCCESS: "success",
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+  NETWORK: "network",
 };
 
 /**
  * Individual Toast component
  */
-const Toast = ({ id, type, title, message, action, duration, onClose, onAction }) => {
+const Toast = ({
+  id,
+  type,
+  title,
+  message,
+  action,
+  duration,
+  onClose,
+  onAction,
+}) => {
   const { t } = useLanguage();
   const [isExiting, setIsExiting] = useState(false);
 
@@ -69,15 +85,15 @@ const Toast = ({ id, type, title, message, action, duration, onClose, onAction }
   const getBorderColor = () => {
     switch (type) {
       case ToastType.SUCCESS:
-        return 'border-l-green-500';
+        return "border-l-green-500";
       case ToastType.ERROR:
-        return 'border-l-red-500';
+        return "border-l-red-500";
       case ToastType.WARNING:
-        return 'border-l-amber-500';
+        return "border-l-amber-500";
       case ToastType.NETWORK:
-        return 'border-l-orange-500';
+        return "border-l-orange-500";
       default:
-        return 'border-l-blue-500';
+        return "border-l-blue-500";
     }
   };
 
@@ -89,15 +105,13 @@ const Toast = ({ id, type, title, message, action, duration, onClose, onAction }
         border-l-4 ${getBorderColor()}
         rounded-lg shadow-lg
         transform transition-all duration-300 ease-out
-        ${isExiting ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}
+        ${isExiting ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"}
         min-w-[320px] max-w-[480px]
       `}
       role="alert"
       aria-live="assertive"
     >
-      <div className="flex-shrink-0 mt-0.5">
-        {getIcon()}
-      </div>
+      <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
 
       <div className="flex-1 min-w-0">
         {title && (
@@ -106,11 +120,9 @@ const Toast = ({ id, type, title, message, action, duration, onClose, onAction }
           </p>
         )}
         {message && (
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {message}
-          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
         )}
-        
+
         {action && (
           <button
             onClick={handleAction}
@@ -144,12 +156,14 @@ export const ToastContainer = ({ toasts, onClose, onAction }) => {
       aria-atomic="true"
     >
       <div className="flex flex-col pointer-events-auto">
-        {toasts.map(toast => (
+        {toasts.map((toast) => (
           <Toast
             key={toast.id}
             {...toast}
             onClose={onClose}
-            onAction={() => onAction && onAction(toast.id, toast.action?.callback)}
+            onAction={() =>
+              onAction && onAction(toast.id, toast.action?.callback)
+            }
           />
         ))}
       </div>
@@ -170,12 +184,12 @@ class ToastManager {
   subscribe(listener) {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   notify() {
-    this.listeners.forEach(listener => listener(this.toasts));
+    this.listeners.forEach((listener) => listener(this.toasts));
   }
 
   add(toast) {
@@ -185,14 +199,14 @@ class ToastManager {
       duration: 5000, // Default 5 seconds
       ...toast,
     };
-    
+
     this.toasts = [...this.toasts, newToast];
     this.notify();
     return id;
   }
 
   remove(id) {
-    this.toasts = this.toasts.filter(t => t.id !== id);
+    this.toasts = this.toasts.filter((t) => t.id !== id);
     this.notify();
   }
 
@@ -207,12 +221,12 @@ class ToastManager {
   }
 
   error(title, message, action) {
-    return this.add({ 
-      type: ToastType.ERROR, 
-      title, 
-      message, 
+    return this.add({
+      type: ToastType.ERROR,
+      title,
+      message,
       action,
-      duration: 0 // Errors don't auto-dismiss
+      duration: 0, // Errors don't auto-dismiss
     });
   }
 
@@ -225,15 +239,15 @@ class ToastManager {
   }
 
   network(title, message, action) {
-    return this.add({ 
-      type: ToastType.NETWORK, 
-      title: title || 'Connection Interrupted', 
-      message: message || 'Network connection unstable. Your data is safe.', 
+    return this.add({
+      type: ToastType.NETWORK,
+      title: title || "Connection Interrupted",
+      message: message || "Network connection unstable. Your data is safe.",
       action: action || {
-        label: 'Retry Transmission',
-        icon: RefreshCw
+        label: "Retry Transmission",
+        icon: RefreshCw,
       },
-      duration: 0 // Network errors don't auto-dismiss
+      duration: 0, // Network errors don't auto-dismiss
     });
   }
 }
@@ -266,7 +280,7 @@ export const useToast = () => {
     toasts,
     onClose: handleClose,
     onAction: handleAction,
-    toast: toastManager
+    toast: toastManager,
   };
 };
 

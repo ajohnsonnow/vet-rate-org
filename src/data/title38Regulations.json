@@ -391,12 +391,28 @@
       "title": "Disability Compensation vs. Pension",
       "columns": ["Feature", "Disability Compensation", "Pension"],
       "rows": [
-        ["Requires Service Connection", "Yes - must be caused by service", "No - disability doesn't need to be from service"],
+        [
+          "Requires Service Connection",
+          "Yes - must be caused by service",
+          "No - disability doesn't need to be from service"
+        ],
         ["Income Limits", "No income limits", "Yes - needs-based benefit"],
-        ["Net Worth Limits", "No net worth limits", "Yes - approximately $150,538"],
-        ["Wartime Service Required", "No - any service", "Yes - must be wartime veteran"],
+        [
+          "Net Worth Limits",
+          "No net worth limits",
+          "Yes - approximately $150,538"
+        ],
+        [
+          "Wartime Service Required",
+          "No - any service",
+          "Yes - must be wartime veteran"
+        ],
         ["Age Requirement", "None", "65+ OR permanently disabled"],
-        ["Can Receive Both", "Yes, if eligible for both", "Yes, but pension reduced by compensation amount"]
+        [
+          "Can Receive Both",
+          "Yes, if eligible for both",
+          "Yes, but pension reduced by compensation amount"
+        ]
       ]
     }
   },

@@ -2,61 +2,91 @@
  * Vet-Rate.org - C-File Analyzer Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * The "Kill Shot" feature - Client-side C-File analysis that competitors charge $500+ for
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { ripTextFromPdf, readFileAsArrayBuffer, formatFileSize, estimateProcessingTime } from '../utils/pdfExtractor';
-import { analyzeCFile, getCFilePrivacyDisclosure, estimateChunks, getContextWindowInfo } from '../utils/cfileAnalyzer';
-import { isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
-import { AIStatusBadge } from './AIModeSelector';
-import { LLMRecommendationBadge } from './LLMRecommendation';
-import SmartAILoadButton from './SmartAILoadButton';
-import ReportBugLink from './ReportBugLink';
-import { saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  ripTextFromPdf,
+  readFileAsArrayBuffer,
+  formatFileSize,
+  estimateProcessingTime,
+} from "../utils/pdfExtractor";
+import {
+  analyzeCFile,
+  getCFilePrivacyDisclosure,
+  estimateChunks,
+  getContextWindowInfo,
+} from "../utils/cfileAnalyzer";
+import {
+  isAnyAIAvailable,
+  getAIStatus,
+  AI_MODES,
+} from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
+import { LLMRecommendationBadge } from "./LLMRecommendation";
+import SmartAILoadButton from "./SmartAILoadButton";
+import ReportBugLink from "./ReportBugLink";
+import {
+  saveAnalysisResults,
+  PACKET_DOC_TYPES,
+} from "../utils/veteranContextProvider";
 
 // Sub-components for the dashboard
-import CFileTimeline from './CFileTimeline';
-import CFileClaimsCards from './CFileClaimsCards';
+import CFileTimeline from "./CFileTimeline";
+import CFileClaimsCards from "./CFileClaimsCards";
 
-export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }) {
+export default function CFileAnalyzer({
+  onClose,
+  onOpenAISettings,
+  onReportBug,
+}) {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
-  
+
   // File drop state
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   // AI status state (unified AI service handles API keys internally)
   const [aiStatus, setAIStatus] = useState(getAIStatus());
-  
+
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStage, setProcessingStage] = useState('');
-  const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
-  const [chunkProgress, setChunkProgress] = useState({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
+  const [processingStage, setProcessingStage] = useState("");
+  const [extractionProgress, setExtractionProgress] = useState({
+    current: 0,
+    total: 0,
+  });
+  const [chunkProgress, setChunkProgress] = useState({
+    current: 0,
+    total: 0,
+    phase: "",
+    startPage: 0,
+    endPage: 0,
+  });
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
-  
+
   // Analysis metadata (for showing chunks processed)
   const [analysisMetadata, setAnalysisMetadata] = useState(null);
-  
+
   // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
-  
+
   // Results state
   const [analysisResult, setAnalysisResult] = useState(null);
   const [extractedText, setExtractedText] = useState(null);
-  const [activeTab, setActiveTab] = useState('summary');
-  
+  const [activeTab, setActiveTab] = useState("summary");
+
   // Monitor AI status
   useEffect(() => {
     const interval = setInterval(() => {
@@ -64,109 +94,121 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-  
+
   // Handle file drop
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile) {
-      if (droppedFile.type !== 'application/pdf') {
-        setError(t('cfileAnalyzer', 'pleaseDropPdf'));
-        return;
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      const droppedFile = e.dataTransfer?.files?.[0];
+      if (droppedFile) {
+        if (droppedFile.type !== "application/pdf") {
+          setError(t("cfileAnalyzer", "pleaseDropPdf"));
+          return;
+        }
+        setFile(droppedFile);
+        setError(null);
+        setAnalysisResult(null);
       }
-      setFile(droppedFile);
-      setError(null);
-      setAnalysisResult(null);
-    }
-  }, [t]);
-  
+    },
+    [t],
+  );
+
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragging(true);
   }, []);
-  
+
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
     setIsDragging(false);
   }, []);
-  
-  const handleFileSelect = useCallback((e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.type !== 'application/pdf') {
-        setError(t('cfileAnalyzer', 'pleaseDropPdf'));
-        return;
+
+  const handleFileSelect = useCallback(
+    (e) => {
+      const selectedFile = e.target.files?.[0];
+      if (selectedFile) {
+        if (selectedFile.type !== "application/pdf") {
+          setError(t("cfileAnalyzer", "pleaseDropPdf"));
+          return;
+        }
+        setFile(selectedFile);
+        setError(null);
+        setAnalysisResult(null);
       }
-      setFile(selectedFile);
-      setError(null);
-      setAnalysisResult(null);
-    }
-  }, [t]);
-  
+    },
+    [t],
+  );
+
   // Stop analysis
   const handleStopAnalysis = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      setProcessingStage('Stopping analysis...');
+      setProcessingStage("Stopping analysis...");
     }
   }, []);
-  
+
   // Start analysis process
   const handleStartAnalysis = useCallback(() => {
     if (!file) {
-      setError(t('cfileAnalyzer', 'pleaseDropFileFirst'));
+      setError(t("cfileAnalyzer", "pleaseDropFileFirst"));
       return;
     }
-    
+
     // Check if ANY AI is available (Cloud or Local)
     if (!isAnyAIAvailable()) {
-      setError(t('cfileAnalyzer', 'noAiAvailable'));
+      setError(t("cfileAnalyzer", "noAiAvailable"));
       setShowAISettings(true);
       return;
     }
-    
+
     setShowPrivacyConsent(true);
   }, [file, t]);
-  
+
   // Process the file after consent
   const handleConsentAndProcess = useCallback(async () => {
     setHasConsented(true);
     setShowPrivacyConsent(false);
     setIsProcessing(true);
     setError(null);
-    setChunkProgress({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
-    
+    setChunkProgress({
+      current: 0,
+      total: 0,
+      phase: "",
+      startPage: 0,
+      endPage: 0,
+    });
+
     // Create abort controller
     abortControllerRef.current = new AbortController();
-    
+
     try {
       // Stage 1: Read the file
-      setProcessingStage(t('cfileAnalyzer', 'readingPdf'));
+      setProcessingStage(t("cfileAnalyzer", "readingPdf"));
       const arrayBuffer = await readFileAsArrayBuffer(file);
-      
+
       // Stage 2: Extract text
-      setProcessingStage(t('cfileAnalyzer', 'extractingText'));
+      setProcessingStage(t("cfileAnalyzer", "extractingText"));
       const extractionResult = await ripTextFromPdf(
         arrayBuffer,
-        (current, total) => setExtractionProgress({ current, total })
+        (current, total) => setExtractionProgress({ current, total }),
       );
-      
+
       // Check if the PDF has actual text
       if (!extractionResult.hasText) {
         setError(
-          `${t('cfileAnalyzer', 'scannedImageError')} (${extractionResult.avgCharsPerPage} characters per page average). ` +
-          t('cfileAnalyzer', 'scannedImageSolution')
+          `${t("cfileAnalyzer", "scannedImageError")} (${extractionResult.avgCharsPerPage} characters per page average). ` +
+            t("cfileAnalyzer", "scannedImageSolution"),
         );
         setIsProcessing(false);
         return;
       }
-      
+
       setExtractedText(extractionResult);
-      
+
       // Stage 3: Analyze with AI (uses unified AI service with automatic chunking)
-      setProcessingStage(t('cfileAnalyzer', 'analyzingWithAi'));
+      setProcessingStage(t("cfileAnalyzer", "analyzingWithAi"));
       const result = await analyzeCFile(
         null, // API key handled by unified AI service
         extractionResult.text,
@@ -177,75 +219,75 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
             setChunkProgress({
               current: progressData.current || 0,
               total: progressData.total || 0,
-              phase: progressData.phase || '',
+              phase: progressData.phase || "",
               startPage: progressData.startPage || 0,
-              endPage: progressData.endPage || 0
+              endPage: progressData.endPage || 0,
             });
           }
         },
-        abortControllerRef.current // Pass abort controller
+        abortControllerRef.current, // Pass abort controller
       );
-      
+
       setAnalysisResult(result.analysis);
       setAnalysisMetadata(result.metadata);
-      setProcessingStage('');
+      setProcessingStage("");
 
       // Save C-File analysis to VKB + My Packet
       try {
         const analysis = result.analysis || {};
         await saveAnalysisResults({
-          toolName: 'C-File Analyzer',
+          toolName: "C-File Analyzer",
           classification: PACKET_DOC_TYPES.C_FILE,
-          rawText: extractionResult?.text || '',
+          rawText: extractionResult?.text || "",
           extractedData: analysis,
-          fileName: file?.name || 'c-file.pdf',
+          fileName: file?.name || "c-file.pdf",
           pageCount: extractionResult?.totalPages || 1,
           vkbDocument: {
-            classification: 'c_file',
-            rawText: (extractionResult?.text || '').slice(0, 5000),
+            classification: "c_file",
+            rawText: (extractionResult?.text || "").slice(0, 5000),
             extractedData: analysis,
-            source: 'CFileAnalyzer',
+            source: "CFileAnalyzer",
           },
           vkbMergeData: {
-            claims: (analysis.potential_claims || []).map(c => ({
-              condition: c.condition || c.name || 'Unknown',
-              status: 'identified',
-              source: 'C-File Analysis',
-              evidence: c.evidence || c.description || '',
-              diagnosticCode: c.diagnosticCode || '',
+            claims: (analysis.potential_claims || []).map((c) => ({
+              condition: c.condition || c.name || "Unknown",
+              status: "identified",
+              source: "C-File Analysis",
+              evidence: c.evidence || c.description || "",
+              diagnosticCode: c.diagnosticCode || "",
             })),
-            evidence: (analysis.timeline || []).map(e => ({
+            evidence: (analysis.timeline || []).map((e) => ({
               date: e.date,
-              type: 'c_file_event',
-              description: e.event || e.description || '',
-              source: 'C-File',
+              type: "c_file_event",
+              description: e.event || e.description || "",
+              source: "C-File",
             })),
             aiInsights: {
-              cfileAnalysisSummary: analysis.summary || '',
+              cfileAnalysisSummary: analysis.summary || "",
               cfileExposures: analysis.exposures || [],
               cfileActionItems: analysis.actionItems || [],
             },
           },
         });
       } catch (saveErr) {
-        console.warn('Failed to save C-File results to VKB/Packet:', saveErr);
+        console.warn("Failed to save C-File results to VKB/Packet:", saveErr);
       }
-      
     } catch (err) {
-      console.error('Analysis error:', err);
-      console.error('Error stack:', err.stack);
-      console.error('Error details:', {
+      console.error("Analysis error:", err);
+      console.error("Error stack:", err.stack);
+      console.error("Error details:", {
         message: err.message,
         name: err.name,
-        cause: err.cause
+        cause: err.cause,
       });
-      
+
       // Check if it was a cancellation
-      if (err.message === 'Analysis cancelled by user') {
-        setError('Analysis stopped by user');
+      if (err.message === "Analysis cancelled by user") {
+        setError("Analysis stopped by user");
       } else {
         // Provide detailed error message
-        const errorMessage = err.message || err.toString() || t('cfileAnalyzer', 'analysisError');
+        const errorMessage =
+          err.message || err.toString() || t("cfileAnalyzer", "analysisError");
         setError(errorMessage);
       }
     } finally {
@@ -253,20 +295,26 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       abortControllerRef.current = null;
     }
   }, [file, t]);
-  
+
   // Reset to start over
   const handleReset = useCallback(() => {
     setFile(null);
     setAnalysisResult(null);
     setExtractedText(null);
     setError(null);
-    setProcessingStage('');
+    setProcessingStage("");
     setExtractionProgress({ current: 0, total: 0 });
-    setChunkProgress({ current: 0, total: 0, phase: '', startPage: 0, endPage: 0 });
+    setChunkProgress({
+      current: 0,
+      total: 0,
+      phase: "",
+      startPage: 0,
+      endPage: 0,
+    });
     setAnalysisMetadata(null);
     setHasConsented(false);
   }, []);
-  
+
   // Render the drop zone form
   const renderUploadForm = () => (
     <div className="max-w-4xl mx-auto">
@@ -275,32 +323,37 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         <div className="flex items-start gap-3">
           <span className="text-2xl">⚠️</span>
           <div>
-            <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('cfileAnalyzer', 'securityNotice')}</h3>
+            <h3 className="font-bold text-amber-800 dark:text-amber-200">
+              {t("cfileAnalyzer", "securityNotice")}
+            </h3>
             <p className="text-amber-700 dark:text-amber-300 text-sm">
-              {t('cfileAnalyzer', 'securityNoticeDesc')}
+              {t("cfileAnalyzer", "securityNoticeDesc")}
             </p>
           </div>
         </div>
       </div>
-      
+
       {/* AI Tip - Compact */}
       {isAnyAIAvailable() && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-6">
           <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
             <span>💡</span>
-            <span><strong>{t('cfileAnalyzer', 'unlimitedFileSize')}</strong> {t('cfileAnalyzer', 'unlimitedFileSizeDesc')}</span>
+            <span>
+              <strong>{t("cfileAnalyzer", "unlimitedFileSize")}</strong>{" "}
+              {t("cfileAnalyzer", "unlimitedFileSizeDesc")}
+            </span>
           </div>
         </div>
       )}
-      
+
       {/* Drop Zone */}
       <div
         className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
           isDragging
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
             : file
-            ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
-            : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
+              ? "border-green-500 bg-green-50 dark:bg-green-900/30"
+              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500"
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -314,7 +367,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           onChange={handleFileSelect}
           className="hidden"
         />
-        
+
         {file ? (
           <div className="space-y-3">
             <div className="text-5xl">📄</div>
@@ -331,25 +384,25 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               }}
               className="text-sm text-red-600 hover:text-red-800 dark:text-red-400"
             >
-              {t('cfileAnalyzer', 'removeFile')}
+              {t("cfileAnalyzer", "removeFile")}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="text-5xl">📁</div>
             <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              {t('cfileAnalyzer', 'dropYourCFile')}
+              {t("cfileAnalyzer", "dropYourCFile")}
             </div>
             <div className="text-gray-600 dark:text-gray-400">
-              {t('cfileAnalyzer', 'orClickToBrowse')}
+              {t("cfileAnalyzer", "orClickToBrowse")}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-500">
-              {t('cfileAnalyzer', 'supportsPdfUpTo')}
+              {t("cfileAnalyzer", "supportsPdfUpTo")}
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Error Display */}
       {error && (
         <div className="mt-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -359,116 +412,129 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           </div>
         </div>
       )}
-      
+
       {/* Smart AI Load Button */}
       {!isAnyAIAvailable() && (
         <div className="mt-6">
-          <SmartAILoadButton 
+          <SmartAILoadButton
             toolId="cfile-analyzer"
-            onLoadComplete={(model) => console.log('Smart AI loaded for C-File Analyzer:', model?.name)}
+            onLoadComplete={(model) =>
+              console.log("Smart AI loaded for C-File Analyzer:", model?.name)
+            }
           />
         </div>
       )}
-      
+
       {/* Analyze Button */}
       <div className="mt-8 flex justify-center">
         <button
           onClick={handleStartAnalysis}
           disabled={!file || !isAnyAIAvailable()}
-          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${file && isAnyAIAvailable()
-              ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
-              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
+            file && isAnyAIAvailable()
+              ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
           }`}
         >
-          🔍 {t('cfileAnalyzer', 'analyzeMyFile')}
+          🔍 {t("cfileAnalyzer", "analyzeMyFile")}
         </button>
       </div>
-      
+
       {file && (
         <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          {t('cfileAnalyzer', 'estimatedProcessingTime')} {estimateProcessingTime(Math.ceil(file.size / 5000))}
+          {t("cfileAnalyzer", "estimatedProcessingTime")}{" "}
+          {estimateProcessingTime(Math.ceil(file.size / 5000))}
         </div>
       )}
     </div>
   );
-  
+
   // Render privacy consent modal
   const renderPrivacyConsent = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-            🔒 {t('cfileAnalyzer', 'privacyDataHandling')}
+            🔒 {t("cfileAnalyzer", "privacyDataHandling")}
           </h2>
-          
+
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <pre className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
               {getCFilePrivacyDisclosure()}
             </pre>
           </div>
-          
+
           <div className="mt-6 flex gap-4">
             <button
               onClick={() => setShowPrivacyConsent(false)}
               className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              {t('cfileAnalyzer', 'cancel')}
+              {t("cfileAnalyzer", "cancel")}
             </button>
             <button
               onClick={handleConsentAndProcess}
               className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
-              {t('cfileAnalyzer', 'iUnderstandStart')}
+              {t("cfileAnalyzer", "iUnderstandStart")}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-  
+
   // Render processing state
   const renderProcessing = () => {
     const isMultiChunk = chunkProgress.total > 1;
-    const chunkPercent = chunkProgress.total > 0
-      ? Math.round((chunkProgress.current / chunkProgress.total) * 100)
-      : 0;
-    
+    const chunkPercent =
+      chunkProgress.total > 0
+        ? Math.round((chunkProgress.current / chunkProgress.total) * 100)
+        : 0;
+
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
         <div className="mb-8">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
         </div>
-        
+
         <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-          {isMultiChunk ? `📦 ${t('cfileAnalyzer', 'processingLargeCFile')}` : t('cfileAnalyzer', 'analyzingYourCFile')}
+          {isMultiChunk
+            ? `📦 ${t("cfileAnalyzer", "processingLargeCFile")}`
+            : t("cfileAnalyzer", "analyzingYourCFile")}
         </h3>
-        
+
         <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
           {processingStage}
         </p>
-        
+
         {/* PDF Extraction Progress */}
-        {extractionProgress.total > 0 && processingStage.includes('Extracting') && (
-          <div className="max-w-md mx-auto mb-6">
-            <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-              <div
-                className="bg-blue-500 h-full transition-all duration-300"
-                style={{ width: `${(extractionProgress.current / extractionProgress.total) * 100}%` }}
-              ></div>
+        {extractionProgress.total > 0 &&
+          processingStage.includes("Extracting") && (
+            <div className="max-w-md mx-auto mb-6">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full transition-all duration-300"
+                  style={{
+                    width: `${(extractionProgress.current / extractionProgress.total) * 100}%`,
+                  }}
+                ></div>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {t("cfileAnalyzer", "page")} {extractionProgress.current} /{" "}
+                {extractionProgress.total}
+              </p>
             </div>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {t('cfileAnalyzer', 'page')} {extractionProgress.current} / {extractionProgress.total}
-            </p>
-          </div>
-        )}
-        
+          )}
+
         {/* Multi-Chunk Progress */}
-        {isMultiChunk && chunkProgress.phase === 'analyze' && (
+        {isMultiChunk && chunkProgress.phase === "analyze" && (
           <div className="max-w-md mx-auto mb-6">
             <div className="bg-violet-100 dark:bg-violet-900/30 rounded-xl p-4 border border-violet-300 dark:border-violet-700">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-violet-800 dark:text-violet-200">
-                  {t('cfileAnalyzer', 'chunkOf').replace('{current}', chunkProgress.current).replace('{total}', chunkProgress.total)}
+                  {t("cfileAnalyzer", "chunkOf")
+                    .replace("{current}", chunkProgress.current)
+                    .replace("{total}", chunkProgress.total)}
                 </span>
                 <span className="text-sm font-bold text-violet-600 dark:text-violet-400">
                   {chunkPercent}%
@@ -482,33 +548,47 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               </div>
               {chunkProgress.startPage > 0 && (
                 <p className="mt-2 text-xs text-violet-600 dark:text-violet-400">
-                  📄 {t('cfileAnalyzer', 'analyzingPages').replace('{start}', chunkProgress.startPage).replace('{end}', chunkProgress.endPage)}
+                  📄{" "}
+                  {t("cfileAnalyzer", "analyzingPages")
+                    .replace("{start}", chunkProgress.startPage)
+                    .replace("{end}", chunkProgress.endPage)}
                 </p>
               )}
             </div>
           </div>
         )}
-        
+
         {/* Merging Phase */}
-        {chunkProgress.phase === 'merge' && (
+        {chunkProgress.phase === "merge" && (
           <div className="max-w-md mx-auto mb-6">
             <div className="bg-emerald-100 dark:bg-emerald-900/30 rounded-xl p-4 border border-emerald-300 dark:border-emerald-700">
               <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
                 <span className="animate-pulse">🔀</span>
-                <span className="font-medium">{t('cfileAnalyzer', 'mergingChunks').replace('{total}', chunkProgress.total)}</span>
+                <span className="font-medium">
+                  {t("cfileAnalyzer", "mergingChunks").replace(
+                    "{total}",
+                    chunkProgress.total,
+                  )}
+                </span>
               </div>
             </div>
           </div>
         )}
-        
+
         <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
           {isMultiChunk ? (
-            <>⚡ {t('cfileAnalyzer', 'largeFileDetected').replace('{total}', chunkProgress.total)}</>
+            <>
+              ⚡{" "}
+              {t("cfileAnalyzer", "largeFileDetected").replace(
+                "{total}",
+                chunkProgress.total,
+              )}
+            </>
           ) : (
-            <>⚡ {t('cfileAnalyzer', 'largeFileMayTake')}</>
+            <>⚡ {t("cfileAnalyzer", "largeFileMayTake")}</>
           )}
         </div>
-        
+
         {/* Stop Button */}
         <div className="mt-6">
           <button
@@ -522,7 +602,7 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       </div>
     );
   };
-  
+
   // Render the analysis dashboard
   const renderDashboard = () => (
     <div className="max-w-7xl mx-auto">
@@ -531,16 +611,27 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              ✅ {t('cfileAnalyzer', 'analysisComplete')}
+              ✅ {t("cfileAnalyzer", "analysisComplete")}
             </h2>
             <p className="mt-1 opacity-90">
-              {file?.name} • {extractedText?.pageCount} {t('cfileAnalyzer', 'pagesAnalyzed')} • {extractedText?.totalCharacters?.toLocaleString()} {t('cfileAnalyzer', 'charactersExtracted')}
+              {file?.name} • {extractedText?.pageCount}{" "}
+              {t("cfileAnalyzer", "pagesAnalyzed")} •{" "}
+              {extractedText?.totalCharacters?.toLocaleString()}{" "}
+              {t("cfileAnalyzer", "charactersExtracted")}
             </p>
             {/* Multi-chunk indicator */}
             {analysisMetadata?.chunksProcessed > 1 && (
               <p className="mt-1 text-sm opacity-75 flex items-center gap-2">
-                📦 {t('cfileAnalyzer', 'processedInChunks').replace('{count}', analysisMetadata.chunksProcessed)}
-                {analysisMetadata.aiMode && <span className="px-2 py-0.5 bg-white/20 rounded text-xs">{analysisMetadata.aiMode}</span>}
+                📦{" "}
+                {t("cfileAnalyzer", "processedInChunks").replace(
+                  "{count}",
+                  analysisMetadata.chunksProcessed,
+                )}
+                {analysisMetadata.aiMode && (
+                  <span className="px-2 py-0.5 bg-white/20 rounded text-xs">
+                    {analysisMetadata.aiMode}
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -548,66 +639,101 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
             onClick={handleReset}
             className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
           >
-            {t('cfileAnalyzer', 'analyzeAnotherFile')}
+            {t("cfileAnalyzer", "analyzeAnotherFile")}
           </button>
         </div>
       </div>
-      
+
       {/* Executive Summary */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-          📋 {t('cfileAnalyzer', 'executiveSummary')}
+          📋 {t("cfileAnalyzer", "executiveSummary")}
         </h3>
         <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
           {analysisResult.summary}
         </p>
-        
+
         {analysisResult.servicePeriod && (
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
             {analysisResult.servicePeriod.branch && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'branch')}</div>
-                <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.branch}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("cfileAnalyzer", "branch")}
+                </div>
+                <div className="font-semibold text-gray-800 dark:text-gray-200">
+                  {analysisResult.servicePeriod.branch}
+                </div>
               </div>
             )}
             {analysisResult.servicePeriod.mos && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'mos')}</div>
-                <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.mos}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("cfileAnalyzer", "mos")}
+                </div>
+                <div className="font-semibold text-gray-800 dark:text-gray-200">
+                  {analysisResult.servicePeriod.mos}
+                </div>
               </div>
             )}
             {analysisResult.servicePeriod.entryDate && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'entryDate')}</div>
-                <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.entryDate}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("cfileAnalyzer", "entryDate")}
+                </div>
+                <div className="font-semibold text-gray-800 dark:text-gray-200">
+                  {analysisResult.servicePeriod.entryDate}
+                </div>
               </div>
             )}
             {analysisResult.servicePeriod.separationDate && (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'separationDate')}</div>
-                <div className="font-semibold text-gray-800 dark:text-gray-200">{analysisResult.servicePeriod.separationDate}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("cfileAnalyzer", "separationDate")}
+                </div>
+                <div className="font-semibold text-gray-800 dark:text-gray-200">
+                  {analysisResult.servicePeriod.separationDate}
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
-      
+
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {[
-          { id: 'claims', label: `🎯 ${t('cfileAnalyzer', 'tabPotentialClaims')}`, count: analysisResult.potential_claims?.length },
-          { id: 'timeline', label: `📅 ${t('cfileAnalyzer', 'tabTimeline')}`, count: analysisResult.timeline?.length },
-          { id: 'exposures', label: `☢️ ${t('cfileAnalyzer', 'tabExposures')}`, count: analysisResult.exposures?.length },
-          { id: 'mental', label: `🧠 ${t('cfileAnalyzer', 'tabMentalHealth')}` },
-          { id: 'actions', label: `✅ ${t('cfileAnalyzer', 'tabActionItems')}`, count: analysisResult.actionItems?.length },
-        ].map(tab => (
+          {
+            id: "claims",
+            label: `🎯 ${t("cfileAnalyzer", "tabPotentialClaims")}`,
+            count: analysisResult.potential_claims?.length,
+          },
+          {
+            id: "timeline",
+            label: `📅 ${t("cfileAnalyzer", "tabTimeline")}`,
+            count: analysisResult.timeline?.length,
+          },
+          {
+            id: "exposures",
+            label: `☢️ ${t("cfileAnalyzer", "tabExposures")}`,
+            count: analysisResult.exposures?.length,
+          },
+          {
+            id: "mental",
+            label: `🧠 ${t("cfileAnalyzer", "tabMentalHealth")}`,
+          },
+          {
+            id: "actions",
+            label: `✅ ${t("cfileAnalyzer", "tabActionItems")}`,
+            count: analysisResult.actionItems?.length,
+          },
+        ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
             {tab.label}
@@ -619,45 +745,67 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           </button>
         ))}
       </div>
-      
+
       {/* Tab Content */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {activeTab === 'claims' && (
+        {activeTab === "claims" && (
           <CFileClaimsCards claims={analysisResult.potential_claims || []} />
         )}
-        
-        {activeTab === 'timeline' && (
+
+        {activeTab === "timeline" && (
           <CFileTimeline events={analysisResult.timeline || []} />
         )}
-        
-        {activeTab === 'exposures' && (
+
+        {activeTab === "exposures" && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer', 'toxicExposures')}</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">
+              {t("cfileAnalyzer", "toxicExposures")}
+            </h3>
             {analysisResult.exposures?.length > 0 ? (
               <div className="space-y-4">
                 {analysisResult.exposures.map((exposure, idx) => (
-                  <div key={idx} className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                  <div
+                    key={idx}
+                    className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-bold text-orange-800 dark:text-orange-200">{exposure.type}</h4>
-                        {exposure.location && <p className="text-sm text-orange-700 dark:text-orange-300">📍 {exposure.location}</p>}
-                        {exposure.timeframe && <p className="text-sm text-orange-700 dark:text-orange-300">📅 {exposure.timeframe}</p>}
+                        <h4 className="font-bold text-orange-800 dark:text-orange-200">
+                          {exposure.type}
+                        </h4>
+                        {exposure.location && (
+                          <p className="text-sm text-orange-700 dark:text-orange-300">
+                            📍 {exposure.location}
+                          </p>
+                        )}
+                        {exposure.timeframe && (
+                          <p className="text-sm text-orange-700 dark:text-orange-300">
+                            📅 {exposure.timeframe}
+                          </p>
+                        )}
                       </div>
                       {exposure.page_number && (
                         <span className="text-xs bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-1 rounded">
-                          {t('cfileAnalyzer', 'page')} {exposure.page_number}
+                          {t("cfileAnalyzer", "page")} {exposure.page_number}
                         </span>
                       )}
                     </div>
                     {exposure.presumptive_conditions?.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-xs font-semibold text-orange-800 dark:text-orange-200 mb-1">{t('cfileAnalyzer', 'presumptiveConditions')}</p>
+                        <p className="text-xs font-semibold text-orange-800 dark:text-orange-200 mb-1">
+                          {t("cfileAnalyzer", "presumptiveConditions")}
+                        </p>
                         <div className="flex flex-wrap gap-1">
-                          {exposure.presumptive_conditions.map((condition, i) => (
-                            <span key={i} className="text-xs bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded">
-                              {condition}
-                            </span>
-                          ))}
+                          {exposure.presumptive_conditions.map(
+                            (condition, i) => (
+                              <span
+                                key={i}
+                                className="text-xs bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded"
+                              >
+                                {condition}
+                              </span>
+                            ),
+                          )}
                         </div>
                       </div>
                     )}
@@ -665,101 +813,135 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'noExposuresFound')}</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                {t("cfileAnalyzer", "noExposuresFound")}
+              </p>
             )}
           </div>
         )}
-        
-        {activeTab === 'mental' && (
+
+        {activeTab === "mental" && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer', 'mentalHealthIndicators')}</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">
+              {t("cfileAnalyzer", "mentalHealthIndicators")}
+            </h3>
             {analysisResult.mentalHealth && (
               <div className="space-y-4">
                 {analysisResult.mentalHealth.diagnoses?.length > 0 && (
                   <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                    <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">{t('cfileAnalyzer', 'diagnosesFound')}</h4>
+                    <h4 className="font-bold text-purple-800 dark:text-purple-200 mb-2">
+                      {t("cfileAnalyzer", "diagnosesFound")}
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {analysisResult.mentalHealth.diagnoses.map((dx, i) => (
-                        <span key={i} className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm">
+                        <span
+                          key={i}
+                          className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm"
+                        >
                           {dx}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
-                
+
                 {analysisResult.mentalHealth.indicators?.length > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">{t('cfileAnalyzer', 'indicators')}</h4>
+                    <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">
+                      {t("cfileAnalyzer", "indicators")}
+                    </h4>
                     <ul className="list-disc list-inside text-blue-700 dark:text-blue-300 text-sm space-y-1">
-                      {analysisResult.mentalHealth.indicators.map((indicator, i) => (
-                        <li key={i}>{indicator}</li>
-                      ))}
+                      {analysisResult.mentalHealth.indicators.map(
+                        (indicator, i) => (
+                          <li key={i}>{indicator}</li>
+                        ),
+                      )}
                     </ul>
                   </div>
                 )}
-                
+
                 {analysisResult.mentalHealth.stressors?.length > 0 && (
                   <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                    <h4 className="font-bold text-amber-800 dark:text-amber-200 mb-2">{t('cfileAnalyzer', 'documentedStressors')}</h4>
+                    <h4 className="font-bold text-amber-800 dark:text-amber-200 mb-2">
+                      {t("cfileAnalyzer", "documentedStressors")}
+                    </h4>
                     <ul className="list-disc list-inside text-amber-700 dark:text-amber-300 text-sm space-y-1">
-                      {analysisResult.mentalHealth.stressors.map((stressor, i) => (
-                        <li key={i}>{stressor}</li>
-                      ))}
+                      {analysisResult.mentalHealth.stressors.map(
+                        (stressor, i) => (
+                          <li key={i}>{stressor}</li>
+                        ),
+                      )}
                     </ul>
                   </div>
                 )}
-                
+
                 {analysisResult.mentalHealth.pages?.length > 0 && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    📄 {t('cfileAnalyzer', 'seePages')} {analysisResult.mentalHealth.pages.join(', ')}
+                    📄 {t("cfileAnalyzer", "seePages")}{" "}
+                    {analysisResult.mentalHealth.pages.join(", ")}
                   </p>
                 )}
               </div>
             )}
-            {(!analysisResult.mentalHealth || 
-              (!analysisResult.mentalHealth.diagnoses?.length && 
-               !analysisResult.mentalHealth.indicators?.length)) && (
-              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'noMentalHealthIndicators')}</p>
+            {(!analysisResult.mentalHealth ||
+              (!analysisResult.mentalHealth.diagnoses?.length &&
+                !analysisResult.mentalHealth.indicators?.length)) && (
+              <p className="text-gray-500 dark:text-gray-400">
+                {t("cfileAnalyzer", "noMentalHealthIndicators")}
+              </p>
             )}
           </div>
         )}
-        
-        {activeTab === 'actions' && (
+
+        {activeTab === "actions" && (
           <div className="p-6">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{t('cfileAnalyzer', 'recommendedNextSteps')}</h3>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">
+              {t("cfileAnalyzer", "recommendedNextSteps")}
+            </h3>
             {analysisResult.actionItems?.length > 0 ? (
               <div className="space-y-3">
                 {analysisResult.actionItems.map((action, idx) => (
-                  <div key={idx} className="flex items-start gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4"
+                  >
                     <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-green-500 text-white rounded-full font-bold text-sm">
                       {idx + 1}
                     </span>
-                    <p className="text-green-800 dark:text-green-200">{action}</p>
+                    <p className="text-green-800 dark:text-green-200">
+                      {action}
+                    </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">{t('cfileAnalyzer', 'noActionItems')}</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                {t("cfileAnalyzer", "noActionItems")}
+              </p>
             )}
           </div>
         )}
       </div>
-      
+
       {/* Red Flags Section */}
       {analysisResult.redFlags?.length > 0 && (
         <div className="mt-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-6">
           <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
-            🚨 {t('cfileAnalyzer', 'attentionNeeded')}
+            🚨 {t("cfileAnalyzer", "attentionNeeded")}
           </h3>
           <div className="space-y-3">
             {analysisResult.redFlags.map((flag, idx) => (
-              <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-700">
+              <div
+                key={idx}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-700"
+              >
                 <div className="flex items-start justify-between">
-                  <p className="font-medium text-red-800 dark:text-red-200">{flag.issue}</p>
+                  <p className="font-medium text-red-800 dark:text-red-200">
+                    {flag.issue}
+                  </p>
                   {flag.page_number && (
                     <span className="text-xs bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 px-2 py-1 rounded">
-                      {t('cfileAnalyzer', 'page')} {flag.page_number}
+                      {t("cfileAnalyzer", "page")} {flag.page_number}
                     </span>
                   )}
                 </div>
@@ -773,25 +955,32 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
           </div>
         </div>
       )}
-      
+
       {/* Combat Indicators */}
       {analysisResult.combatIndicators?.length > 0 && (
         <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-xl p-6">
           <h3 className="text-lg font-bold text-indigo-800 dark:text-indigo-200 mb-4 flex items-center gap-2">
-            🎖️ {t('cfileAnalyzer', 'combatIndicatorsFound')}
+            🎖️ {t("cfileAnalyzer", "combatIndicatorsFound")}
           </h3>
           <div className="space-y-3">
             {analysisResult.combatIndicators.map((indicator, idx) => (
-              <div key={idx} className="flex items-start justify-between bg-white dark:bg-gray-800 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700">
+              <div
+                key={idx}
+                className="flex items-start justify-between bg-white dark:bg-gray-800 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700"
+              >
                 <div>
-                  <p className="font-medium text-indigo-800 dark:text-indigo-200">{indicator.indicator}</p>
+                  <p className="font-medium text-indigo-800 dark:text-indigo-200">
+                    {indicator.indicator}
+                  </p>
                   {indicator.significance && (
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{indicator.significance}</p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {indicator.significance}
+                    </p>
                   )}
                 </div>
                 {indicator.page_number && (
                   <span className="text-xs bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-200 px-2 py-1 rounded">
-                    {t('cfileAnalyzer', 'page')} {indicator.page_number}
+                    {t("cfileAnalyzer", "page")} {indicator.page_number}
                   </span>
                 )}
               </div>
@@ -801,13 +990,13 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
       )}
     </div>
   );
-  
+
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
         onClick={(e) => e.stopPropagation()}
       >
@@ -818,59 +1007,77 @@ export default function CFileAnalyzer({ onClose, onOpenAISettings, onReportBug }
               <span className="text-3xl">🔬</span>
               <div>
                 <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  {t('cfileAnalyzer', 'title')}
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('cfileAnalyzer', 'ai')}</span>
+                  {t("cfileAnalyzer", "title")}
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                    {t("cfileAnalyzer", "ai")}
+                  </span>
                 </h1>
                 <p className="text-sm text-violet-100">
-                  {t('cfileAnalyzer', 'subtitle')}
+                  {t("cfileAnalyzer", "subtitle")}
                 </p>
               </div>
               <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
-                {t('cfileAnalyzer', 'beta')}
+                {t("cfileAnalyzer", "beta")}
               </span>
-              <span className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1" title="VA also uses AI for document classification in claims processing">
-                🤖 {t('cfileAnalyzer', 'vaUsesSimilarAi')}
+              <span
+                className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
+                title="VA also uses AI for document classification in claims processing"
+              >
+                🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
               </span>
             </div>
             <div className="flex items-center gap-3">
               {/* AI Status & LLM Recommendation Badges */}
               <LLMRecommendationBadge toolId="cfile-analyzer" />
               <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="C-File Analyzer" />}
+              {onReportBug && (
+                <ReportBugLink
+                  onClick={onReportBug}
+                  variant="light"
+                  moduleName="C-File Analyzer"
+                />
+              )}
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-                aria-label={t('cfileAnalyzer', 'closeCFileAnalyzer')}
+                aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
           </div>
         </div>
-        
+
         {/* Main Content - Scrollable */}
         <div className="overflow-y-auto flex-1 p-4">
-        {showPrivacyConsent && renderPrivacyConsent()}
-        
-        {isProcessing ? (
-          renderProcessing()
-        ) : analysisResult ? (
-          renderDashboard()
-        ) : (
-          renderUploadForm()
-        )}
+          {showPrivacyConsent && renderPrivacyConsent()}
+
+          {isProcessing
+            ? renderProcessing()
+            : analysisResult
+              ? renderDashboard()
+              : renderUploadForm()}
         </div>
-        
+
         {/* Footer Disclaimer */}
         <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
-            ⚠️ {t('cfileAnalyzer', 'footerDisclaimer')}
+            ⚠️ {t("cfileAnalyzer", "footerDisclaimer")}
           </p>
         </div>
       </div>
     </div>
   );
 }
-

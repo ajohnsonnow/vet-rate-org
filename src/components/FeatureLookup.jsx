@@ -1,24 +1,40 @@
 /**
  * Vet-Rate.org - Feature Request Lookup (Admin Interface)
  * Secure Feature Request Retrieval and Management
- * 
+ *
  * Admin tool to search, view and manage feature requests.
  * - Searches local IndexedDB storage
  * - Track request status (new, under-review, planned, completed, declined)
  * - Logs all access in audit trail
- * 
+ *
  * Built by a fellow veteran. "Every idea counts."
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
-  Search, Lightbulb, AlertCircle, Clock, CheckCircle,
-  X, Database, FileText, Monitor, RefreshCw,
-  Download, Trash2, History, Shield, Filter,
-  Copy, Check, Zap, MessageSquare, Star
-} from 'lucide-react';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+  Search,
+  Lightbulb,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  X,
+  Database,
+  FileText,
+  Monitor,
+  RefreshCw,
+  Download,
+  Trash2,
+  History,
+  Shield,
+  Filter,
+  Copy,
+  Check,
+  Zap,
+  MessageSquare,
+  Star,
+} from "lucide-react";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   getFeatureRequest,
   getAllFeatureRequests,
@@ -29,25 +45,61 @@ import {
   getFeatureAuditLog,
   exportFeatureRequests,
   isStorageAvailable,
-  getFeatureFromLocalStorage
-} from '../utils/featureRequestStorage';
+  getFeatureFromLocalStorage,
+} from "../utils/featureRequestStorage";
 
 // Priority icons and colors
 const PRIORITY_CONFIG = {
-  critical: { icon: Zap, color: 'text-red-500', bg: 'bg-red-500/20', label: 'Critical' },
-  high: { icon: Star, color: 'text-orange-500', bg: 'bg-orange-500/20', label: 'High' },
-  medium: { icon: Lightbulb, color: 'text-yellow-500', bg: 'bg-yellow-500/20', label: 'Medium' },
-  low: { icon: MessageSquare, color: 'text-green-500', bg: 'bg-green-500/20', label: 'Low' }
+  critical: {
+    icon: Zap,
+    color: "text-red-500",
+    bg: "bg-red-500/20",
+    label: "Critical",
+  },
+  high: {
+    icon: Star,
+    color: "text-orange-500",
+    bg: "bg-orange-500/20",
+    label: "High",
+  },
+  medium: {
+    icon: Lightbulb,
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/20",
+    label: "Medium",
+  },
+  low: {
+    icon: MessageSquare,
+    color: "text-green-500",
+    bg: "bg-green-500/20",
+    label: "Low",
+  },
 };
 
 // Status configuration
 const STATUS_CONFIG = {
-  new: { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'New' },
-  'under-review': { color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'Under Review' },
-  planned: { color: 'text-amber-400', bg: 'bg-amber-500/20', label: 'Planned' },
-  'in-progress': { color: 'text-cyan-400', bg: 'bg-cyan-500/20', label: 'In Progress' },
-  completed: { color: 'text-green-400', bg: 'bg-green-500/20', label: 'Completed' },
-  declined: { color: 'text-slate-400', bg: 'bg-slate-500/20', label: 'Declined' }
+  new: { color: "text-blue-400", bg: "bg-blue-500/20", label: "New" },
+  "under-review": {
+    color: "text-purple-400",
+    bg: "bg-purple-500/20",
+    label: "Under Review",
+  },
+  planned: { color: "text-amber-400", bg: "bg-amber-500/20", label: "Planned" },
+  "in-progress": {
+    color: "text-cyan-400",
+    bg: "bg-cyan-500/20",
+    label: "In Progress",
+  },
+  completed: {
+    color: "text-green-400",
+    bg: "bg-green-500/20",
+    label: "Completed",
+  },
+  declined: {
+    color: "text-slate-400",
+    bg: "bg-slate-500/20",
+    label: "Declined",
+  },
 };
 
 export default function FeatureLookup({ onClose }) {
@@ -55,20 +107,20 @@ export default function FeatureLookup({ onClose }) {
   useBodyScrollLock(true);
 
   // State
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requests, setRequests] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [auditLog, setAuditLog] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [view, setView] = useState('list'); // list, detail
+  const [error, setError] = useState("");
+  const [view, setView] = useState("list"); // list, detail
   const [filters, setFilters] = useState({ status: null, priority: null });
   const [showFilters, setShowFilters] = useState(false);
   const [copied, setCopied] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [reviewNotes, setReviewNotes] = useState('');
+  const [newStatus, setNewStatus] = useState("");
+  const [reviewNotes, setReviewNotes] = useState("");
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [storageAvailable, setStorageAvailable] = useState(true);
 
@@ -77,7 +129,7 @@ export default function FeatureLookup({ onClose }) {
     const init = async () => {
       const available = isStorageAvailable();
       setStorageAvailable(available);
-      
+
       if (available) {
         await loadRequests();
         await loadStatistics();
@@ -88,27 +140,27 @@ export default function FeatureLookup({ onClose }) {
         setLoading(false);
       }
     };
-    
+
     init();
   }, []);
 
   // Load requests with current filters
   const loadRequests = async () => {
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       const loadedRequests = await getAllFeatureRequests({
         status: filters.status,
         priority: filters.priority,
-        limit: 100
+        limit: 100,
       });
       setRequests(loadedRequests);
     } catch (err) {
-      console.error('Failed to load requests:', err);
-      setError('Failed to load feature requests');
+      console.error("Failed to load requests:", err);
+      setError("Failed to load feature requests");
     }
-    
+
     setLoading(false);
   };
 
@@ -118,7 +170,7 @@ export default function FeatureLookup({ onClose }) {
       const stats = await getFeatureStatistics();
       setStatistics(stats);
     } catch (err) {
-      console.error('Failed to load statistics:', err);
+      console.error("Failed to load statistics:", err);
     }
   };
 
@@ -130,28 +182,31 @@ export default function FeatureLookup({ onClose }) {
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // First try exact ID match
-      const exactMatch = await getFeatureRequest(searchQuery.toUpperCase(), 'admin');
-      
+      const exactMatch = await getFeatureRequest(
+        searchQuery.toUpperCase(),
+        "admin",
+      );
+
       if (exactMatch) {
         setRequests([exactMatch]);
         setSelectedRequest(exactMatch);
-        setView('detail');
+        setView("detail");
       } else {
         // Fall back to text search
         const results = await searchFeatureRequests(searchQuery);
         setRequests(results);
-        
+
         if (results.length === 0) {
           setError(`No requests found matching "${searchQuery}"`);
         }
       }
     } catch (err) {
-      console.error('Search failed:', err);
-      setError('Search failed. Please try again.');
+      console.error("Search failed:", err);
+      setError("Search failed. Please try again.");
     }
 
     setLoading(false);
@@ -160,59 +215,63 @@ export default function FeatureLookup({ onClose }) {
   // View a specific request
   const handleViewRequest = async (request) => {
     setSelectedRequest(request);
-    setView('detail');
-    
+    setView("detail");
+
     // Load audit log for this request
     try {
       const log = await getFeatureAuditLog(request.request_id);
       setAuditLog(log);
     } catch (err) {
-      console.error('Failed to load audit log:', err);
+      console.error("Failed to load audit log:", err);
     }
   };
 
   // Update request status
   const handleUpdateStatus = async () => {
     if (!selectedRequest || !newStatus) return;
-    
+
     setUpdating(true);
-    
+
     try {
       const updated = await updateFeatureRequestStatus(
         selectedRequest.request_id,
         newStatus,
         reviewNotes,
-        'admin'
+        "admin",
       );
       setSelectedRequest(updated);
       setShowStatusModal(false);
-      setNewStatus('');
-      setReviewNotes('');
+      setNewStatus("");
+      setReviewNotes("");
       await loadRequests();
       await loadStatistics();
     } catch (err) {
-      console.error('Failed to update:', err);
-      setError('Failed to update status');
+      console.error("Failed to update:", err);
+      setError("Failed to update status");
     }
-    
+
     setUpdating(false);
   };
 
   // Delete a request
   const handleDelete = async (requestId) => {
-    if (!window.confirm('Are you sure you want to delete this feature request? This cannot be undone.')) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this feature request? This cannot be undone.",
+      )
+    ) {
       return;
     }
-    
+
     try {
-      await deleteFeatureRequest(requestId, 'admin');
+      await deleteFeatureRequest(requestId, "admin");
       setSelectedRequest(null);
-      setView('list');
+      setView("list");
       await loadRequests();
       await loadStatistics();
     } catch (err) {
-      console.error('Failed to delete:', err);
-      setError('Failed to delete request');
+      console.error("Failed to delete:", err);
+      setError("Failed to delete request");
     }
   };
 
@@ -220,23 +279,25 @@ export default function FeatureLookup({ onClose }) {
   const handleExport = async () => {
     try {
       const exportData = await exportFeatureRequests();
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `vetrate-feature-requests-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `vetrate-feature-requests-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export failed:', err);
-      setError('Failed to export requests');
+      console.error("Export failed:", err);
+      setError("Failed to export requests");
     }
   };
 
   // Copy request to clipboard
   const handleCopyRequest = async () => {
     if (!selectedRequest) return;
-    
+
     const requestText = JSON.stringify(selectedRequest, null, 2);
     await navigator.clipboard.writeText(requestText);
     setCopied(true);
@@ -247,9 +308,11 @@ export default function FeatureLookup({ onClose }) {
   const PriorityBadge = ({ priority }) => {
     const config = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
     const Icon = config.icon;
-    
+
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
+      >
         <Icon className="w-3 h-3" />
         {config.label}
       </span>
@@ -259,9 +322,11 @@ export default function FeatureLookup({ onClose }) {
   // Render status badge
   const StatusBadge = ({ status }) => {
     const config = STATUS_CONFIG[status] || STATUS_CONFIG.new;
-    
+
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -275,20 +340,28 @@ export default function FeatureLookup({ onClose }) {
           <div className="flex items-center gap-3">
             <Lightbulb className="w-6 h-6 text-purple-500" />
             <div>
-              <h1 className="text-lg font-bold text-white">Feature Requests - Admin Lookup</h1>
-              <p className="text-xs text-slate-400">Search and manage feature requests</p>
+              <h1 className="text-lg font-bold text-white">
+                Feature Requests - Admin Lookup
+              </h1>
+              <p className="text-xs text-slate-400">
+                Search and manage feature requests
+              </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {/* Storage Status */}
-            <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-              storageAvailable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-            }`}>
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                storageAvailable
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
               <Database className="w-3 h-3" />
-              {storageAvailable ? 'DB Online' : 'Fallback Mode'}
+              {storageAvailable ? "DB Online" : "Fallback Mode"}
             </div>
-            
+
             <button
               onClick={handleExport}
               className="p-2 text-slate-400 hover:text-white transition-colors"
@@ -296,7 +369,7 @@ export default function FeatureLookup({ onClose }) {
             >
               <Download className="w-5 h-5" />
             </button>
-            
+
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
@@ -317,7 +390,7 @@ export default function FeatureLookup({ onClose }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Enter Request ID (e.g., FEAT-MKNCUI1I) or search text..."
               className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
@@ -331,21 +404,25 @@ export default function FeatureLookup({ onClose }) {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-2 rounded-lg transition-colors ${
-              showFilters ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              showFilters
+                ? "bg-purple-500 text-white"
+                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
             }`}
           >
             <Filter className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Filters */}
         {showFilters && (
           <div className="flex gap-4 mt-3 pt-3 border-t border-slate-700">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 text-sm">Status:</span>
               <select
-                value={filters.status || ''}
-                onChange={(e) => setFilters(f => ({ ...f, status: e.target.value || null }))}
+                value={filters.status || ""}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, status: e.target.value || null }))
+                }
                 className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               >
                 <option value="">All</option>
@@ -360,8 +437,13 @@ export default function FeatureLookup({ onClose }) {
             <div className="flex items-center gap-2">
               <span className="text-slate-400 text-sm">Priority:</span>
               <select
-                value={filters.priority || ''}
-                onChange={(e) => setFilters(f => ({ ...f, priority: e.target.value || null }))}
+                value={filters.priority || ""}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    priority: e.target.value || null,
+                  }))
+                }
                 className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               >
                 <option value="">All</option>
@@ -386,16 +468,26 @@ export default function FeatureLookup({ onClose }) {
       {statistics && (
         <div className="bg-slate-800/30 border-b border-slate-700 px-4 py-2 flex gap-6 text-sm">
           <span className="text-slate-400">
-            Total: <span className="text-white font-medium">{statistics.total}</span>
+            Total:{" "}
+            <span className="text-white font-medium">{statistics.total}</span>
           </span>
           <span className="text-slate-400">
-            New: <span className="text-blue-400 font-medium">{statistics.byStatus.new}</span>
+            New:{" "}
+            <span className="text-blue-400 font-medium">
+              {statistics.byStatus.new}
+            </span>
           </span>
           <span className="text-slate-400">
-            Planned: <span className="text-amber-400 font-medium">{statistics.byStatus.planned}</span>
+            Planned:{" "}
+            <span className="text-amber-400 font-medium">
+              {statistics.byStatus.planned}
+            </span>
           </span>
           <span className="text-slate-400">
-            Critical: <span className="text-red-400 font-medium">{statistics.byPriority.critical}</span>
+            Critical:{" "}
+            <span className="text-red-400 font-medium">
+              {statistics.byPriority.critical}
+            </span>
           </span>
         </div>
       )}
@@ -403,7 +495,9 @@ export default function FeatureLookup({ onClose }) {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex">
         {/* Request List */}
-        <div className={`${view === 'list' ? 'w-full' : 'w-1/3'} border-r border-slate-700 overflow-y-auto`}>
+        <div
+          className={`${view === "list" ? "w-full" : "w-1/3"} border-r border-slate-700 overflow-y-auto`}
+        >
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
@@ -417,7 +511,9 @@ export default function FeatureLookup({ onClose }) {
             <div className="p-8 text-center">
               <Lightbulb className="w-12 h-12 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400">No feature requests found</p>
-              <p className="text-slate-500 text-sm mt-1">Requests will appear here when users submit them</p>
+              <p className="text-slate-500 text-sm mt-1">
+                Requests will appear here when users submit them
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-slate-700">
@@ -426,19 +522,27 @@ export default function FeatureLookup({ onClose }) {
                   key={request.request_id}
                   onClick={() => handleViewRequest(request)}
                   className={`w-full p-4 text-left hover:bg-slate-700/30 transition-colors ${
-                    selectedRequest?.request_id === request.request_id ? 'bg-slate-700/50' : ''
+                    selectedRequest?.request_id === request.request_id
+                      ? "bg-slate-700/50"
+                      : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-purple-400 text-sm">{request.request_id}</span>
+                        <span className="font-mono text-purple-400 text-sm">
+                          {request.request_id}
+                        </span>
                         <StatusBadge status={request.status} />
                       </div>
-                      <p className="text-white text-sm truncate">{request.title || 'No title'}</p>
+                      <p className="text-white text-sm truncate">
+                        {request.title || "No title"}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <PriorityBadge priority={request.priority} />
-                        <span className="text-slate-500 text-xs">{request.category}</span>
+                        <span className="text-slate-500 text-xs">
+                          {request.category}
+                        </span>
                       </div>
                     </div>
                     <div className="text-slate-500 text-xs whitespace-nowrap">
@@ -452,17 +556,22 @@ export default function FeatureLookup({ onClose }) {
         </div>
 
         {/* Request Detail */}
-        {view === 'detail' && selectedRequest && (
+        {view === "detail" && selectedRequest && (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-3xl mx-auto space-y-4">
               {/* Request Header */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold font-mono text-purple-400">{selectedRequest.request_id}</h2>
-                    <p className="text-white text-lg mt-2">{selectedRequest.title}</p>
+                    <h2 className="text-xl font-bold font-mono text-purple-400">
+                      {selectedRequest.request_id}
+                    </h2>
+                    <p className="text-white text-lg mt-2">
+                      {selectedRequest.title}
+                    </p>
                     <p className="text-slate-400 text-sm mt-1">
-                      Created: {new Date(selectedRequest.created_at).toLocaleString()}
+                      Created:{" "}
+                      {new Date(selectedRequest.created_at).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -477,8 +586,12 @@ export default function FeatureLookup({ onClose }) {
                     onClick={handleCopyRequest}
                     className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white transition-colors"
                   >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copied!' : 'Copy JSON'}
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    {copied ? "Copied!" : "Copy JSON"}
                   </button>
                   <button
                     onClick={() => setShowStatusModal(true)}
@@ -500,13 +613,16 @@ export default function FeatureLookup({ onClose }) {
               {/* Description */}
               <DetailSection title="Description" icon={FileText}>
                 <p className="text-slate-300 whitespace-pre-wrap">
-                  {selectedRequest.description || '(No description provided)'}
+                  {selectedRequest.description || "(No description provided)"}
                 </p>
               </DetailSection>
 
               {/* Problem Solved */}
               {selectedRequest.problemSolved && (
-                <DetailSection title="Problem This Would Solve" icon={Lightbulb}>
+                <DetailSection
+                  title="Problem This Would Solve"
+                  icon={Lightbulb}
+                >
                   <p className="text-slate-300 whitespace-pre-wrap">
                     {selectedRequest.problemSolved}
                   </p>
@@ -536,19 +652,27 @@ export default function FeatureLookup({ onClose }) {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-slate-500">Browser:</span>
-                    <span className="text-slate-300 ml-2 break-all">{selectedRequest.systemInfo?.browser}</span>
+                    <span className="text-slate-300 ml-2 break-all">
+                      {selectedRequest.systemInfo?.browser}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">Screen:</span>
-                    <span className="text-slate-300 ml-2">{selectedRequest.systemInfo?.screenResolution}</span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedRequest.systemInfo?.screenResolution}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">Module:</span>
-                    <span className="text-slate-300 ml-2">{selectedRequest.module}</span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedRequest.module}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">Category:</span>
-                    <span className="text-slate-300 ml-2">{selectedRequest.category}</span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedRequest.category}
+                    </span>
                   </div>
                 </div>
               </DetailSection>
@@ -560,7 +684,8 @@ export default function FeatureLookup({ onClose }) {
                     {selectedRequest.review_notes}
                   </p>
                   <p className="text-slate-500 text-xs mt-2">
-                    Reviewed: {new Date(selectedRequest.reviewed_at).toLocaleString()}
+                    Reviewed:{" "}
+                    {new Date(selectedRequest.reviewed_at).toLocaleString()}
                   </p>
                 </DetailSection>
               )}
@@ -570,11 +695,22 @@ export default function FeatureLookup({ onClose }) {
                 <DetailSection title="Audit Log" icon={History}>
                   <div className="space-y-2">
                     {auditLog.map((entry, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span className="text-slate-400">
-                          <span className="font-medium text-white">{entry.action}</span>
-                          {' by '}{entry.accessor}
-                          {entry.details && <span className="text-slate-500"> - {entry.details}</span>}
+                          <span className="font-medium text-white">
+                            {entry.action}
+                          </span>
+                          {" by "}
+                          {entry.accessor}
+                          {entry.details && (
+                            <span className="text-slate-500">
+                              {" "}
+                              - {entry.details}
+                            </span>
+                          )}
                         </span>
                         <span className="text-slate-500">
                           {new Date(entry.timestamp).toLocaleString()}
@@ -594,7 +730,9 @@ export default function FeatureLookup({ onClose }) {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-white mb-4">Update Status</h3>
-            <label className="block text-sm text-slate-400 mb-2">New Status:</label>
+            <label className="block text-sm text-slate-400 mb-2">
+              New Status:
+            </label>
             <select
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value)}
@@ -608,7 +746,9 @@ export default function FeatureLookup({ onClose }) {
               <option value="completed">Completed</option>
               <option value="declined">Declined</option>
             </select>
-            <label className="block text-sm text-slate-400 mb-2">Review Notes:</label>
+            <label className="block text-sm text-slate-400 mb-2">
+              Review Notes:
+            </label>
             <textarea
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
@@ -627,7 +767,7 @@ export default function FeatureLookup({ onClose }) {
                 disabled={updating || !newStatus}
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors disabled:opacity-50"
               >
-                {updating ? 'Saving...' : 'Update Status'}
+                {updating ? "Saving..." : "Update Status"}
               </button>
             </div>
           </div>

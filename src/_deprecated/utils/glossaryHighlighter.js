@@ -1,21 +1,21 @@
 /**
  * VA Glossary Highlighter - "Jargon Decoder"
  * Automatically detects VA acronyms in text and wraps them with tooltip markup
- * 
+ *
  * Usage:
  *   import { highlightVATerms } from './utils/glossaryHighlighter';
- *   
+ *
  *   const enhanced = highlightVATerms("You need a C&P Exam and a Nexus Letter for your claim.");
  *   // Returns: "You need a <span class="va-term" data-term="C&P">C&P</span> Exam..."
  */
 
-import { VA_GLOSSARY, VA_GLOSSARY_PATTERNS, getDefinition } from './vaGlossary';
+import { VA_GLOSSARY, VA_GLOSSARY_PATTERNS, getDefinition } from "./vaGlossary";
 
 /**
  * Escape special regex characters in a string
  */
 const escapeRegex = (str) => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
 /**
@@ -31,10 +31,10 @@ export const highlightVATerms = (text, options = {}) => {
   const {
     caseSensitive = false,
     excludeTerms = [],
-    wrapperClass = 'va-term'
+    wrapperClass = "va-term",
   } = options;
 
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return text;
   }
 
@@ -46,17 +46,17 @@ export const highlightVATerms = (text, options = {}) => {
     if (excludeTerms.includes(key)) return;
 
     const matches = [...processedText.matchAll(pattern)];
-    matches.forEach(match => {
+    matches.forEach((match) => {
       const term = match[0];
       const definition = getDefinition(key);
-      
+
       if (definition) {
         const placeholder = `__VA_TERM_${replacements.length}__`;
         replacements.push({
           placeholder,
-          html: `<span class="${wrapperClass}" data-term="${escapeHtml(key)}" data-definition="${escapeHtml(definition)}">${escapeHtml(term)}</span>`
+          html: `<span class="${wrapperClass}" data-term="${escapeHtml(key)}" data-definition="${escapeHtml(definition)}">${escapeHtml(term)}</span>`,
         });
-        
+
         // Replace with placeholder to prevent double-processing
         processedText = processedText.replace(match[0], placeholder);
       }
@@ -64,31 +64,35 @@ export const highlightVATerms = (text, options = {}) => {
   });
 
   // Second pass: Handle single-word terms from glossary
-  Object.keys(VA_GLOSSARY).forEach(term => {
+  Object.keys(VA_GLOSSARY).forEach((term) => {
     if (excludeTerms.includes(term)) return;
-    
+
     // Skip if already covered by patterns
-    const alreadyCovered = VA_GLOSSARY_PATTERNS.some(p => p.key === term);
+    const alreadyCovered = VA_GLOSSARY_PATTERNS.some((p) => p.key === term);
     if (alreadyCovered) return;
 
-    const flags = caseSensitive ? 'g' : 'gi';
+    const flags = caseSensitive ? "g" : "gi";
     const regex = new RegExp(`\\b${escapeRegex(term)}\\b`, flags);
-    
+
     // Only process if not inside a placeholder
     const matches = [...processedText.matchAll(regex)];
-    matches.forEach(match => {
+    matches.forEach((match) => {
       // Skip if inside an existing placeholder
-      if (match.input.substring(Math.max(0, match.index - 10), match.index).includes('__VA_TERM_')) {
+      if (
+        match.input
+          .substring(Math.max(0, match.index - 10), match.index)
+          .includes("__VA_TERM_")
+      ) {
         return;
       }
-      
+
       const definition = VA_GLOSSARY[term];
       const placeholder = `__VA_TERM_${replacements.length}__`;
       replacements.push({
         placeholder,
-        html: `<span class="${wrapperClass}" data-term="${escapeHtml(term)}" data-definition="${escapeHtml(definition)}">${escapeHtml(match[0])}</span>`
+        html: `<span class="${wrapperClass}" data-term="${escapeHtml(term)}" data-definition="${escapeHtml(definition)}">${escapeHtml(match[0])}</span>`,
       });
-      
+
       processedText = processedText.replace(match[0], placeholder);
     });
   });
@@ -108,14 +112,11 @@ export const highlightVATerms = (text, options = {}) => {
  * @returns {Array<string|Object>} - Array of text strings and React element objects
  */
 export const highlightVATermsReact = (text, options = {}) => {
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return [text];
   }
 
-  const {
-    caseSensitive = false,
-    excludeTerms = [],
-  } = options;
+  const { caseSensitive = false, excludeTerms = [] } = options;
 
   const elements = [];
   let lastIndex = 0;
@@ -124,7 +125,7 @@ export const highlightVATermsReact = (text, options = {}) => {
   // Collect all matches with their positions
   VA_GLOSSARY_PATTERNS.forEach(({ pattern, key }) => {
     if (excludeTerms.includes(key)) return;
-    
+
     const regex = new RegExp(pattern.source, pattern.flags);
     let match;
     while ((match = regex.exec(text)) !== null) {
@@ -135,23 +136,23 @@ export const highlightVATermsReact = (text, options = {}) => {
           end: match.index + match[0].length,
           term: match[0],
           key: key,
-          definition: definition
+          definition: definition,
         });
       }
     }
   });
 
   // Add single-word matches
-  Object.keys(VA_GLOSSARY).forEach(term => {
+  Object.keys(VA_GLOSSARY).forEach((term) => {
     if (excludeTerms.includes(term)) return;
-    
-    const alreadyCovered = VA_GLOSSARY_PATTERNS.some(p => p.key === term);
+
+    const alreadyCovered = VA_GLOSSARY_PATTERNS.some((p) => p.key === term);
     if (alreadyCovered) return;
 
-    const flags = caseSensitive ? 'g' : 'gi';
+    const flags = caseSensitive ? "g" : "gi";
     const regex = new RegExp(`\\b${escapeRegex(term)}\\b`, flags);
     let match;
-    
+
     while ((match = regex.exec(text)) !== null) {
       const definition = VA_GLOSSARY[term];
       matches.push({
@@ -159,7 +160,7 @@ export const highlightVATermsReact = (text, options = {}) => {
         end: match.index + match[0].length,
         term: match[0],
         key: term,
-        definition: definition
+        definition: definition,
       });
     }
   });
@@ -168,8 +169,8 @@ export const highlightVATermsReact = (text, options = {}) => {
   matches.sort((a, b) => a.start - b.start);
   const filteredMatches = [];
   let lastEnd = -1;
-  
-  matches.forEach(match => {
+
+  matches.forEach((match) => {
     if (match.start >= lastEnd) {
       filteredMatches.push(match);
       lastEnd = match.end;
@@ -182,16 +183,16 @@ export const highlightVATermsReact = (text, options = {}) => {
     if (match.start > lastIndex) {
       elements.push(text.substring(lastIndex, match.start));
     }
-    
+
     // Add the match as a React element object
     elements.push({
-      type: 'va-term',
+      type: "va-term",
       key: `va-term-${index}`,
       term: match.key,
       displayText: match.term,
-      definition: match.definition
+      definition: match.definition,
     });
-    
+
     lastIndex = match.end;
   });
 
@@ -207,7 +208,7 @@ export const highlightVATermsReact = (text, options = {}) => {
  * Escape HTML special characters
  */
 const escapeHtml = (text) => {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 };
@@ -218,7 +219,7 @@ const escapeHtml = (text) => {
  * @returns {Array<{term: string, definition: string}>}
  */
 export const extractVATerms = (text) => {
-  if (!text || typeof text !== 'string') {
+  if (!text || typeof text !== "string") {
     return [];
   }
 
@@ -229,8 +230,8 @@ export const extractVATerms = (text) => {
   VA_GLOSSARY_PATTERNS.forEach(({ pattern, key }) => {
     const regex = new RegExp(pattern.source, pattern.flags);
     const matches = [...text.matchAll(regex)];
-    
-    matches.forEach(match => {
+
+    matches.forEach((match) => {
       if (!seen.has(key)) {
         const definition = getDefinition(key);
         if (definition) {
@@ -242,10 +243,10 @@ export const extractVATerms = (text) => {
   });
 
   // Check single words
-  Object.keys(VA_GLOSSARY).forEach(term => {
+  Object.keys(VA_GLOSSARY).forEach((term) => {
     if (seen.has(term)) return;
-    
-    const regex = new RegExp(`\\b${escapeRegex(term)}\\b`, 'gi');
+
+    const regex = new RegExp(`\\b${escapeRegex(term)}\\b`, "gi");
     if (regex.test(text)) {
       found.push({ term, definition: VA_GLOSSARY[term] });
       seen.add(term);

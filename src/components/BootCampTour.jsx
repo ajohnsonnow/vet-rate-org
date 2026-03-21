@@ -1,20 +1,20 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
- * 
+ *
  * BootCampTour Component
  * Interactive onboarding tour using driver.js
  * "The First Five Minutes" - Ensures new users aren't overwhelmed
  */
 
-import { useEffect, useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
-import { getTotalToolCount } from '../data/toolkitData';
-import { PROJECT_STATS } from '../data/projectStats';
+import { useEffect, useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+import { getTotalToolCount } from "../data/toolkitData";
+import { PROJECT_STATS } from "../data/projectStats";
 
-const TOUR_SEEN_KEY = 'vetrate-tour-completed';
+const TOUR_SEEN_KEY = "vetrate-tour-completed";
 
 /**
  * Custom CSS overrides for driver.js to match Vet-Rate dark theme
@@ -169,7 +169,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 
   useEffect(() => {
     // Inject custom styles
-    const styleSheet = document.createElement('style');
+    const styleSheet = document.createElement("style");
     styleSheet.textContent = tourStyles;
     document.head.appendChild(styleSheet);
 
@@ -184,52 +184,52 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
       // Small delay to allow any modals to close
       setTimeout(() => startTour(), 500);
     };
-    
-    window.addEventListener('restartTour', handleRestartTour);
-    return () => window.removeEventListener('restartTour', handleRestartTour);
+
+    window.addEventListener("restartTour", handleRestartTour);
+    return () => window.removeEventListener("restartTour", handleRestartTour);
   }, []);
 
   useEffect(() => {
     // Check if tour should run
     const hasSeenTour = localStorage.getItem(TOUR_SEEN_KEY);
-    const tosAccepted = localStorage.getItem('vet-rate-tos-accepted');
-    
+    const tosAccepted = localStorage.getItem("vet-rate-tos-accepted");
+
     // Don't start tour if already seen, or if TOS hasn't been accepted yet
     if (!forceShow && hasSeenTour) {
       return;
     }
-    
+
     // Helper function to start tour when ready
     const waitForWhatsNewAndStart = () => {
       // Check if What's New modal is showing (check for the element)
-      const whatsNewModal = document.querySelector('[data-whats-new-modal]');
+      const whatsNewModal = document.querySelector("[data-whats-new-modal]");
       if (whatsNewModal) {
         // What's New is showing, wait for it to close
-        console.log('🎯 Tour: Waiting for What\'s New to close...');
+        console.log("🎯 Tour: Waiting for What's New to close...");
         const handleWhatsNewClosed = () => {
-          window.removeEventListener('whatsNewClosed', handleWhatsNewClosed);
+          window.removeEventListener("whatsNewClosed", handleWhatsNewClosed);
           setTimeout(() => startTour(), 300);
         };
-        window.addEventListener('whatsNewClosed', handleWhatsNewClosed);
+        window.addEventListener("whatsNewClosed", handleWhatsNewClosed);
       } else {
         // No What's New showing, start tour
         setTimeout(() => startTour(), 300);
       }
     };
-    
+
     if (!tosAccepted) {
       // TOS modal is still showing, wait and check again
       const checkInterval = setInterval(() => {
-        if (localStorage.getItem('vet-rate-tos-accepted')) {
+        if (localStorage.getItem("vet-rate-tos-accepted")) {
           clearInterval(checkInterval);
           // TOS accepted, now wait for What's New
           setTimeout(() => waitForWhatsNewAndStart(), 500);
         }
       }, 500);
-      
+
       // Cleanup after 30 seconds max
       const cleanup = setTimeout(() => clearInterval(checkInterval), 30000);
-      
+
       return () => {
         clearInterval(checkInterval);
         clearTimeout(cleanup);
@@ -246,289 +246,295 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 
   const startTour = () => {
     // Prevent Navigator from auto-opening during tour
-    localStorage.setItem('vet_rate_ai_assistant_used', 'true');
-    
+    localStorage.setItem("vet_rate_ai_assistant_used", "true");
+
     // Close AI Assistant if it's open (prevents it from blocking tour elements)
-    const navigatorCloseEvent = new CustomEvent('closeNavigator');
+    const navigatorCloseEvent = new CustomEvent("closeNavigator");
     window.dispatchEvent(navigatorCloseEvent);
-    
+
     // Hide footer during tour to prevent interference
-    const footer = document.querySelector('footer');
+    const footer = document.querySelector("footer");
     if (footer) {
-      footer.style.display = 'none';
+      footer.style.display = "none";
     }
-    
+
     // Small delay to ensure Navigator is closed before tour starts
     setTimeout(() => {
       const driverObj = driver({
         showProgress: true,
         animate: true,
-      allowClose: true,
-      overlayClickNext: false,
-      stagePadding: 10,
-      stageRadius: 8,
-      popoverClass: 'vetrate-tour-popover',
-      progressText: '',
-      nextBtnText: t('bootCampTour', 'nextBtn'),
-      prevBtnText: t('bootCampTour', 'prevBtn'),
-      doneBtnText: t('bootCampTour', 'doneBtn'),
-      smoothScroll: true,
-      onDestroyStarted: () => {
-        // Show footer again when tour ends
-        const footer = document.querySelector('footer');
-        if (footer) {
-          footer.style.display = '';
-        }
-        // Mark tour as completed
-        localStorage.setItem(TOUR_SEEN_KEY, 'true');
-        if (onComplete) onComplete();
-        driverObj.destroy();
-      },
-      steps: [
-        // Welcome Intro
-        {
-          popover: {
-            title: t('bootCampTour', 'welcomeTitle'),
-            description: `
+        allowClose: true,
+        overlayClickNext: false,
+        stagePadding: 10,
+        stageRadius: 8,
+        popoverClass: "vetrate-tour-popover",
+        progressText: "",
+        nextBtnText: t("bootCampTour", "nextBtn"),
+        prevBtnText: t("bootCampTour", "prevBtn"),
+        doneBtnText: t("bootCampTour", "doneBtn"),
+        smoothScroll: true,
+        onDestroyStarted: () => {
+          // Show footer again when tour ends
+          const footer = document.querySelector("footer");
+          if (footer) {
+            footer.style.display = "";
+          }
+          // Mark tour as completed
+          localStorage.setItem(TOUR_SEEN_KEY, "true");
+          if (onComplete) onComplete();
+          driverObj.destroy();
+        },
+        steps: [
+          // Welcome Intro
+          {
+            popover: {
+              title: t("bootCampTour", "welcomeTitle"),
+              description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>${t('bootCampTour', 'welcomeIntro')}</strong> ${t('bootCampTour', 'welcomeSubtitle')}
+                  <strong>${t("bootCampTour", "welcomeIntro")}</strong> ${t("bootCampTour", "welcomeSubtitle")}
                 </p>
                 <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 15px;">
-                  ${t('bootCampTour', 'welcomeDuration')}
+                  ${t("bootCampTour", "welcomeDuration")}
                 </p>
                 <div style="margin-top: 20px; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #fbbf24; font-weight: 600; margin: 0;">
-                    ${t('bootCampTour', 'welcomeTip')}
+                    ${t("bootCampTour", "welcomeTip")}
                   </p>
                 </div>
               </div>
             `,
-            popoverClass: 'welcome-step',
-            showButtons: ['close', 'next']
-          }
-        },
-        // Search Bar
-        {
-          element: '#tour-search-section',
-          popover: {
-            title: t('bootCampTour', 'searchTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'searchIntro')}</strong></p>
-              <p style="margin-top: 10px;">${t('bootCampTour', 'searchLookup')}</p>
+              popoverClass: "welcome-step",
+              showButtons: ["close", "next"],
+            },
+          },
+          // Search Bar
+          {
+            element: "#tour-search-section",
+            popover: {
+              title: t("bootCampTour", "searchTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "searchIntro")}</strong></p>
+              <p style="margin-top: 10px;">${t("bootCampTour", "searchLookup")}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>${t('bootCampTour', 'searchByName')}</li>
-                <li>${t('bootCampTour', 'searchByBody')}</li>
-                <li>${t('bootCampTour', 'searchByCode')}</li>
+                <li>${t("bootCampTour", "searchByName")}</li>
+                <li>${t("bootCampTour", "searchByBody")}</li>
+                <li>${t("bootCampTour", "searchByCode")}</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                ${t('bootCampTour', 'searchCoverage').replace('{count}', PROJECT_STATS.disabilitiesValidated)}
+                ${t("bootCampTour", "searchCoverage").replace("{count}", PROJECT_STATS.disabilitiesValidated)}
               </p>
             `,
-            side: 'bottom',
-            align: 'center'
+              side: "bottom",
+              align: "center",
+            },
+            onHighlightStarted: () => {
+              // Scroll to top to ensure search section is visible
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            },
           },
-          onHighlightStarted: () => {
-            // Scroll to top to ensure search section is visible
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        // Quick Condition Picker
-        {
-          element: '#tour-quick-picker',
-          popover: {
-            title: t('bootCampTour', 'quickPickerTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'quickPickerIntro')}</strong> ${t('bootCampTour', 'quickPickerShortcut')}</p>
+          // Quick Condition Picker
+          {
+            element: "#tour-quick-picker",
+            popover: {
+              title: t("bootCampTour", "quickPickerTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "quickPickerIntro")}</strong> ${t("bootCampTour", "quickPickerShortcut")}</p>
               <p style="margin-top: 10px;">
-                ${t('bootCampTour', 'quickPickerDesc')}
+                ${t("bootCampTour", "quickPickerDesc")}
               </p>
               <p style="color: #c8a961; margin-top: 10px; font-weight: 600;">
-                ${t('bootCampTour', 'quickPickerHowTo')}
+                ${t("bootCampTour", "quickPickerHowTo")}
               </p>
             `,
-            side: 'right',
-            align: 'start'
+              side: "right",
+              align: "start",
+            },
+            onHighlightStarted: () => {
+              // Ensure Quick Picker is at the top of viewport
+              const element = document.getElementById("tour-quick-picker");
+              if (element) {
+                const rect = element.getBoundingClientRect();
+                const scrollTop =
+                  window.pageYOffset || document.documentElement.scrollTop;
+                // Position element near top with some padding
+                const targetScroll = scrollTop + rect.top - 100;
+                window.scrollTo({
+                  top: Math.max(0, targetScroll),
+                  behavior: "smooth",
+                });
+              }
+            },
           },
-          onHighlightStarted: () => {
-            // Ensure Quick Picker is at the top of viewport
-            const element = document.getElementById('tour-quick-picker');
-            if (element) {
-              const rect = element.getBoundingClientRect();
-              const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-              // Position element near top with some padding
-              const targetScroll = scrollTop + rect.top - 100;
-              window.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-            }
-          }
-        },
-        // My Packet Button
-        {
-          element: '#tour-my-packet-btn',
-          popover: {
-            title: t('bootCampTour', 'myPacketTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'myPacketIntro')}</strong></p>
-              <p style="margin-top: 10px;">${t('bootCampTour', 'myPacketEverything')}</p>
+          // My Packet Button
+          {
+            element: "#tour-my-packet-btn",
+            popover: {
+              title: t("bootCampTour", "myPacketTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "myPacketIntro")}</strong></p>
+              <p style="margin-top: 10px;">${t("bootCampTour", "myPacketEverything")}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>${t('bootCampTour', 'myPacketConditions')}</li>
-                <li>${t('bootCampTour', 'myPacketStatements')}</li>
-                <li>${t('bootCampTour', 'myPacketEvidence')}</li>
-                <li>${t('bootCampTour', 'myPacketDocs')}</li>
+                <li>${t("bootCampTour", "myPacketConditions")}</li>
+                <li>${t("bootCampTour", "myPacketStatements")}</li>
+                <li>${t("bootCampTour", "myPacketEvidence")}</li>
+                <li>${t("bootCampTour", "myPacketDocs")}</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>${t('bootCampTour', 'myPacketHomeBase')}</strong>
+                <strong>${t("bootCampTour", "myPacketHomeBase")}</strong>
               </p>
             `,
-            side: 'bottom',
-            align: 'start'
+              side: "bottom",
+              align: "start",
+            },
+            onHighlightStarted: () => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            },
           },
-          onHighlightStarted: () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        // Workflow Guide
-        {
-          element: '#tour-workflow-guide-btn',
-          popover: {
-            title: t('bootCampTour', 'workflowTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'workflowIntro')}</strong> ${t('bootCampTour', 'workflowCovered')}</p>
-              <p style="margin-top: 10px;">${t('bootCampTour', 'workflowWalks')}</p>
+          // Workflow Guide
+          {
+            element: "#tour-workflow-guide-btn",
+            popover: {
+              title: t("bootCampTour", "workflowTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "workflowIntro")}</strong> ${t("bootCampTour", "workflowCovered")}</p>
+              <p style="margin-top: 10px;">${t("bootCampTour", "workflowWalks")}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>${t('bootCampTour', 'workflowFirstClaim')}</li>
-                <li>${t('bootCampTour', 'workflowAppeal')}</li>
-                <li>${t('bootCampTour', 'workflowIncrease')}</li>
-                <li>${t('bootCampTour', 'workflowSpecial')}</li>
+                <li>${t("bootCampTour", "workflowFirstClaim")}</li>
+                <li>${t("bootCampTour", "workflowAppeal")}</li>
+                <li>${t("bootCampTour", "workflowIncrease")}</li>
+                <li>${t("bootCampTour", "workflowSpecial")}</li>
               </ul>
               <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
-                ${t('bootCampTour', 'workflowLost')} <strong>${t('bootCampTour', 'workflowStartHere')}</strong>
+                ${t("bootCampTour", "workflowLost")} <strong>${t("bootCampTour", "workflowStartHere")}</strong>
               </p>
             `,
-            side: 'bottom',
-            align: 'center'
+              side: "bottom",
+              align: "center",
+            },
+            onHighlightStarted: () => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            },
           },
-          onHighlightStarted: () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        // Tools Menu
-        {
-          element: '#tour-tools-dropdown',
-          popover: {
-            title: t('bootCampTour', 'toolsTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'toolsIntro')}</strong> ${t('bootCampTour', 'toolsCount').replace('{count}', getTotalToolCount())}</p>
+          // Tools Menu
+          {
+            element: "#tour-tools-dropdown",
+            popover: {
+              title: t("bootCampTour", "toolsTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "toolsIntro")}</strong> ${t("bootCampTour", "toolsCount").replace("{count}", getTotalToolCount())}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>${t('bootCampTour', 'toolsSecondaryScout')}</li>
-                <li>${t('bootCampTour', 'toolsCPSimulator')}</li>
-                <li>${t('bootCampTour', 'toolsCalculator')}</li>
-                <li>${t('bootCampTour', 'toolsNexus')}</li>
-                <li>${t('bootCampTour', 'toolsMore')}</li>
+                <li>${t("bootCampTour", "toolsSecondaryScout")}</li>
+                <li>${t("bootCampTour", "toolsCPSimulator")}</li>
+                <li>${t("bootCampTour", "toolsCalculator")}</li>
+                <li>${t("bootCampTour", "toolsNexus")}</li>
+                <li>${t("bootCampTour", "toolsMore")}</li>
               </ul>
               <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                ${t('bootCampTour', 'toolsClickAnytime')}
+                ${t("bootCampTour", "toolsClickAnytime")}
               </p>
             `,
-            side: 'bottom',
-            align: 'center'
+              side: "bottom",
+              align: "center",
+            },
+            onHighlightStarted: () => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            },
           },
-          onHighlightStarted: () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        // AI Navigator - Show as centered popover with arrow pointing to bottom-left
-        {
-          popover: {
-            title: t('bootCampTour', 'navigatorTitle'),
-            description: `
+          // AI Navigator - Show as centered popover with arrow pointing to bottom-left
+          {
+            popover: {
+              title: t("bootCampTour", "navigatorTitle"),
+              description: `
               <div style="text-align: center;">
                 <p style="font-size: 2.5rem; margin-bottom: 10px;">↙️</p>
-                <p><strong>${t('bootCampTour', 'navigatorLookCorner')}</strong></p>
-                <p style="margin-top: 10px;">${t('bootCampTour', 'navigatorOpens')}</p>
-                <p style="margin-top: 10px;">${t('bootCampTour', 'navigatorCan')}</p>
+                <p><strong>${t("bootCampTour", "navigatorLookCorner")}</strong></p>
+                <p style="margin-top: 10px;">${t("bootCampTour", "navigatorOpens")}</p>
+                <p style="margin-top: 10px;">${t("bootCampTour", "navigatorCan")}</p>
                 <ul style="margin: 10px 0; padding-left: 20px; text-align: left;">
-                  <li>${t('bootCampTour', 'navigatorAnswer')}</li>
-                  <li>${t('bootCampTour', 'navigatorExplain')}</li>
-                  <li>${t('bootCampTour', 'navigatorWalk')}</li>
-                  <li>${t('bootCampTour', 'navigatorSuggest')}</li>
+                  <li>${t("bootCampTour", "navigatorAnswer")}</li>
+                  <li>${t("bootCampTour", "navigatorExplain")}</li>
+                  <li>${t("bootCampTour", "navigatorWalk")}</li>
+                  <li>${t("bootCampTour", "navigatorSuggest")}</li>
                 </ul>
                 <p style="color: #c8a961; font-weight: 600; margin-top: 10px;">
-                  ${t('bootCampTour', 'navigatorDrag')}
+                  ${t("bootCampTour", "navigatorDrag")}
                 </p>
                 <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 10px;">
-                  ${t('bootCampTour', 'navigatorOpenEnd')}
+                  ${t("bootCampTour", "navigatorOpenEnd")}
                 </p>
               </div>
             `,
-            popoverClass: 'welcome-step'
-          }
-        },
-        // Help Button
-        {
-          element: '#tour-help-btn',
-          popover: {
-            title: t('bootCampTour', 'helpTitle'),
-            description: `
-              <p><strong>${t('bootCampTour', 'helpStuck')}</strong> ${t('bootCampTour', 'helpFriend')}</p>
-              <p style="margin-top: 10px;">${t('bootCampTour', 'helpInside')}</p>
+              popoverClass: "welcome-step",
+            },
+          },
+          // Help Button
+          {
+            element: "#tour-help-btn",
+            popover: {
+              title: t("bootCampTour", "helpTitle"),
+              description: `
+              <p><strong>${t("bootCampTour", "helpStuck")}</strong> ${t("bootCampTour", "helpFriend")}</p>
+              <p style="margin-top: 10px;">${t("bootCampTour", "helpInside")}</p>
               <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>${t('bootCampTour', 'helpDocs')}</li>
-                <li>${t('bootCampTour', 'helpGuides')}</li>
-                <li>${t('bootCampTour', 'helpFAQ')}</li>
-                <li>${t('bootCampTour', 'helpRestart')}</li>
+                <li>${t("bootCampTour", "helpDocs")}</li>
+                <li>${t("bootCampTour", "helpGuides")}</li>
+                <li>${t("bootCampTour", "helpFAQ")}</li>
+                <li>${t("bootCampTour", "helpRestart")}</li>
               </ul>
               <p style="color: #c8a961; margin-top: 10px;">
-                <strong>${t('bootCampTour', 'helpBackup')}</strong>
+                <strong>${t("bootCampTour", "helpBackup")}</strong>
               </p>
             `,
-            side: 'bottom',
-            align: 'center'
+              side: "bottom",
+              align: "center",
+            },
+            onHighlightStarted: () => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            },
           },
-          onHighlightStarted: () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        },
-        // Final screen
-        {
-          popover: {
-            title: t('bootCampTour', 'finalTitle'),
-            description: `
+          // Final screen
+          {
+            popover: {
+              title: t("bootCampTour", "finalTitle"),
+              description: `
               <div style="text-align: center; padding: 10px 0;">
                 <p style="font-size: 1.1rem; margin-bottom: 15px;">
-                  <strong>${t('bootCampTour', 'finalThatsIt')}</strong> ${t('bootCampTour', 'finalKnowEssentials')}
+                  <strong>${t("bootCampTour", "finalThatsIt")}</strong> ${t("bootCampTour", "finalKnowEssentials")}
                 </p>
                 
                 <div style="margin: 20px 0; padding: 15px; background: #1f2937; border-radius: 8px; border: 1px solid #374151;">
                   <p style="color: #22c55e; font-weight: 600; margin: 0;">
-                    ${t('bootCampTour', 'finalDemoData')}
+                    ${t("bootCampTour", "finalDemoData")}
                   </p>
                 </div>
                 
                 <p style="color: #9ca3af; font-size: 0.9rem; margin-top: 15px;">
-                  ${t('bootCampTour', 'finalRemember')}
+                  ${t("bootCampTour", "finalRemember")}
                 </p>
                 
                 <p style="color: #c8a961; font-weight: 700; margin-top: 20px; font-size: 1rem;">
-                  ${t('bootCampTour', 'finalMotto')}
+                  ${t("bootCampTour", "finalMotto")}
                 </p>
               </div>
             `,
-            popoverClass: 'welcome-step'
+              popoverClass: "welcome-step",
+            },
+            onHighlightStarted: () => {
+              // Open the Navigator on the final step so it's ready when tour ends
+              const navigatorButton = document.getElementById(
+                "tour-ai-navigator-btn",
+              );
+              if (navigatorButton) {
+                navigatorButton.click();
+              }
+            },
           },
-          onHighlightStarted: () => {
-            // Open the Navigator on the final step so it's ready when tour ends
-            const navigatorButton = document.getElementById('tour-ai-navigator-btn');
-            if (navigatorButton) {
-              navigatorButton.click();
-            }
-          }
-        }
-      ]
-    });
+        ],
+      });
 
-    setTourDriver(driverObj);
-    driverObj.drive();
+      setTourDriver(driverObj);
+      driverObj.drive();
     }, 100); // End of setTimeout delay
   };
 
@@ -548,13 +554,13 @@ export const resetTourState = () => {
 // Export function to trigger tour restart (dispatches event that BootCampTour listens for)
 export const triggerTourRestart = () => {
   localStorage.removeItem(TOUR_SEEN_KEY);
-  const event = new CustomEvent('restartTour');
+  const event = new CustomEvent("restartTour");
   window.dispatchEvent(event);
 };
 
 // Export function to check if tour has been seen
 export const hasTourBeenSeen = () => {
-  return localStorage.getItem(TOUR_SEEN_KEY) === 'true';
+  return localStorage.getItem(TOUR_SEEN_KEY) === "true";
 };
 
 export default BootCampTour;

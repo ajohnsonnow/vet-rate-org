@@ -2,14 +2,19 @@
  * Vet-Rate.org - Shark Radar (Contract Scanner)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * AI-powered contract scanner that detects predatory practices
  * targeting veterans based on 38 U.S.C. § 5901 and 38 CFR § 14.636.
- * 
+ *
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getAIStatus,
+  AI_MODES,
+} from "./unifiedAIService";
 
 // The specialized system prompt for contract analysis
 const SHARK_RADAR_SYSTEM_PROMPT = `You are a VA Compliance Auditor and Legal Contract Analyst. Your job is to scan text (contracts, emails, or marketing copy) for predatory practices targeting veterans.
@@ -70,13 +75,17 @@ CRITICAL: If the text appears to be from a VA-accredited attorney or claims agen
 export async function analyzeContract(apiKey, textToAnalyze) {
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
-    throw new Error('No AI available. Please set up an API key or enable Local AI.');
+    throw new Error(
+      "No AI available. Please set up an API key or enable Local AI.",
+    );
   }
-  
+
   if (!textToAnalyze || textToAnalyze.trim().length < 50) {
-    throw new Error('Please provide more text to analyze (at least 50 characters)');
+    throw new Error(
+      "Please provide more text to analyze (at least 50 characters)",
+    );
   }
-  
+
   const userPrompt = `${SHARK_RADAR_SYSTEM_PROMPT}
 
 Analyze the following text from a VA claim consulting company for predatory practices:
@@ -95,40 +104,41 @@ Identify all red flags and provide your analysis.`;
       expectJSON: true,
       skipHallucinationCheck: true, // Contract analysis returns risk flags, not diagnostic codes
     });
-    
+
     if (!content) {
-      throw new Error('No content received from AI');
+      throw new Error("No content received from AI");
     }
-    
+
     // Parse JSON response
     let result;
     try {
       let cleanContent = content.trim();
       // Remove markdown formatting if present
-      if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
-      if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
-      if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
-      
+      if (cleanContent.startsWith("```json"))
+        cleanContent = cleanContent.slice(7);
+      if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+      if (cleanContent.endsWith("```"))
+        cleanContent = cleanContent.slice(0, -3);
+
       result = JSON.parse(cleanContent.trim());
     } catch (parseError) {
-      console.error('Parse error:', parseError, content.substring(0, 500));
-      throw new Error('Failed to parse AI response. Please try again.');
+      console.error("Parse error:", parseError, content.substring(0, 500));
+      throw new Error("Failed to parse AI response. Please try again.");
     }
-    
+
     // Validate required fields
     if (!result.risk_level || result.score === undefined) {
-      throw new Error('AI response missing required fields. Please try again.');
+      throw new Error("AI response missing required fields. Please try again.");
     }
-    
+
     return {
       success: true,
       data: result,
       analyzedAt: new Date().toISOString(),
-      aiMode: getAIStatus().effectiveMode
+      aiMode: getAIStatus().effectiveMode,
     };
-    
   } catch (error) {
-    console.error('Shark Radar analysis error:', error);
+    console.error("Shark Radar analysis error:", error);
     throw error;
   }
 }
@@ -138,37 +148,37 @@ Identify all red flags and provide your analysis.`;
  */
 export function getRiskLevelColors(riskLevel) {
   switch (riskLevel?.toUpperCase()) {
-    case 'SAFE':
+    case "SAFE":
       return {
-        bg: 'bg-green-500',
-        bgLight: 'bg-green-100 dark:bg-green-900/30',
-        text: 'text-green-700 dark:text-green-300',
-        border: 'border-green-500',
-        gradient: 'from-green-500 to-emerald-500'
+        bg: "bg-green-500",
+        bgLight: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-300",
+        border: "border-green-500",
+        gradient: "from-green-500 to-emerald-500",
       };
-    case 'CAUTION':
+    case "CAUTION":
       return {
-        bg: 'bg-yellow-500',
-        bgLight: 'bg-yellow-100 dark:bg-yellow-900/30',
-        text: 'text-yellow-700 dark:text-yellow-300',
-        border: 'border-yellow-500',
-        gradient: 'from-yellow-500 to-orange-500'
+        bg: "bg-yellow-500",
+        bgLight: "bg-yellow-100 dark:bg-yellow-900/30",
+        text: "text-yellow-700 dark:text-yellow-300",
+        border: "border-yellow-500",
+        gradient: "from-yellow-500 to-orange-500",
       };
-    case 'PREDATORY':
+    case "PREDATORY":
       return {
-        bg: 'bg-red-500',
-        bgLight: 'bg-red-100 dark:bg-red-900/30',
-        text: 'text-red-700 dark:text-red-300',
-        border: 'border-red-500',
-        gradient: 'from-red-500 to-rose-600'
+        bg: "bg-red-500",
+        bgLight: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-300",
+        border: "border-red-500",
+        gradient: "from-red-500 to-rose-600",
       };
     default:
       return {
-        bg: 'bg-gray-500',
-        bgLight: 'bg-gray-100 dark:bg-gray-800',
-        text: 'text-gray-700 dark:text-gray-300',
-        border: 'border-gray-500',
-        gradient: 'from-gray-500 to-gray-600'
+        bg: "bg-gray-500",
+        bgLight: "bg-gray-100 dark:bg-gray-800",
+        text: "text-gray-700 dark:text-gray-300",
+        border: "border-gray-500",
+        gradient: "from-gray-500 to-gray-600",
       };
   }
 }
@@ -178,14 +188,14 @@ export function getRiskLevelColors(riskLevel) {
  */
 export function getSeverityColor(severity) {
   switch (severity?.toUpperCase()) {
-    case 'HIGH':
-      return 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700';
-    case 'MEDIUM':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700';
-    case 'LOW':
-      return 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700';
+    case "HIGH":
+      return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700";
+    case "MEDIUM":
+      return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700";
+    case "LOW":
+      return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700";
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600';
+      return "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600";
   }
 }
 
@@ -195,7 +205,7 @@ export function getSeverityColor(severity) {
  */
 export function getSharkRadarPrivacyDisclosure() {
   const status = getAIStatus();
-  
+
   if (status.effectiveMode === AI_MODES.LOCAL) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
@@ -213,7 +223,7 @@ When you scan a contract or email:
 
 ✅ This is the most private way to scan contracts for red flags.`;
   }
-  
+
   return `☁️ CLOUD AI MODE (Google Gemini)
 
 When you scan a contract or email:

@@ -1,10 +1,10 @@
 /**
  * Vet-Rate.org - Consistency Check Prompts
  * "The Cross-Examination" - AI-powered contradiction detection
- * 
+ *
  * Used by the Consistency Engine's AI mode to find discrepancies
  * between reference evidence and veteran statements.
- * 
+ *
  * @author Vet-Rate.org Development Team
  * @version 1.0.0
  */
@@ -12,7 +12,7 @@
 /**
  * AI Cross-Examination Prompt
  * Instructs the AI to act as a skeptical VA Examiner looking for discrepancies.
- * 
+ *
  * @param {string} referenceText - The evidence (medical records, previous statements)
  * @param {string} targetText - The statement being analyzed
  * @returns {string} The formatted prompt
@@ -65,7 +65,7 @@ RULES FOR OUTPUT:
 /**
  * Quick statement analysis prompt - for single text analysis
  * Used when no reference text is provided
- * 
+ *
  * @param {string} statementText - The statement to analyze
  * @returns {string} The formatted prompt
  */
@@ -104,12 +104,15 @@ Return ONLY a valid JSON object:
 /**
  * Medical record vs statement comparison prompt
  * Specifically for C-File or Blue Button data analysis
- * 
+ *
  * @param {string} medicalText - Extracted medical record text
  * @param {string} statementText - The personal statement
  * @returns {string} The formatted prompt
  */
-export const MEDICAL_RECORD_COMPARISON_PROMPT = (medicalText, statementText) => `
+export const MEDICAL_RECORD_COMPARISON_PROMPT = (
+  medicalText,
+  statementText,
+) => `
 ### ROLE
 You are a medical-legal reviewer. Compare the veteran's personal statement against their official medical records.
 
@@ -149,5 +152,5 @@ Return ONLY a valid JSON object:
 export default {
   CONSISTENCY_CHECK_PROMPT,
   SOLO_STATEMENT_ANALYSIS_PROMPT,
-  MEDICAL_RECORD_COMPARISON_PROMPT
+  MEDICAL_RECORD_COMPARISON_PROMPT,
 };

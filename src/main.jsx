@@ -13,15 +13,18 @@
  * GNU Affero General Public License for more details.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { VaAuthProvider } from './contexts/VaAuthContext';
-import VaAuthCallback from './auth/VaAuthCallback';
-import VaSandboxTest from './components/debug/VaSandboxTest';
-import { checkSystemCapabilities, renderBrowserWarning } from './utils/systemCapabilityCheck';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { VaAuthProvider } from "./contexts/VaAuthContext";
+import VaAuthCallback from "./auth/VaAuthCallback";
+import VaSandboxTest from "./components/debug/VaSandboxTest";
+import {
+  checkSystemCapabilities,
+  renderBrowserWarning,
+} from "./utils/systemCapabilityCheck";
+import "./index.css";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Suppress Browser Extension Errors
@@ -29,17 +32,17 @@ import './index.css';
 // ═══════════════════════════════════════════════════════════════════════════════
 const originalError = console.error;
 console.error = (...args) => {
-  const errorMessage = args[0]?.toString() || '';
-  
+  const errorMessage = args[0]?.toString() || "";
+
   // Filter out known extension-related errors
   if (
-    errorMessage.includes('message channel closed') ||
-    errorMessage.includes('Extension context invalidated') ||
-    errorMessage.includes('asynchronous response')
+    errorMessage.includes("message channel closed") ||
+    errorMessage.includes("Extension context invalidated") ||
+    errorMessage.includes("asynchronous response")
   ) {
     return; // Suppress these errors - they're from browser extensions, not our code
   }
-  
+
   // Log all other errors normally
   originalError.apply(console, args);
 };
@@ -52,31 +55,32 @@ const capabilityResults = checkSystemCapabilities();
 
 if (!capabilityResults.passed) {
   // Browser doesn't meet minimum requirements - show friendly upgrade page
-  console.warn('[Tech Check] Browser missing required capabilities:', capabilityResults.failedTests);
+  console.warn(
+    "[Tech Check] Browser missing required capabilities:",
+    capabilityResults.failedTests,
+  );
   renderBrowserWarning(capabilityResults);
 } else {
   // All systems go - render the app
-  console.log('[Tech Check] ✓ All browser capabilities verified');
-  
+  console.log("[Tech Check] ✓ All browser capabilities verified");
+
   // Check if this is an OAuth callback or sandbox test route
   const pathname = window.location.pathname;
-  const isOAuthCallback = pathname === '/callback';
-  const isSandboxTest = pathname === '/sandbox-test';
-  
+  const isOAuthCallback = pathname === "/callback";
+  const isSandboxTest = pathname === "/sandbox-test";
+
   // Helper to render the appropriate component based on route
   const renderRoute = () => {
     if (isOAuthCallback) return <VaAuthCallback />;
     if (isSandboxTest) return <VaSandboxTest />;
     return <App />;
   };
-  
-  ReactDOM.createRoot(document.getElementById('root')).render(
+
+  ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
       <ThemeProvider>
-        <VaAuthProvider>
-          {renderRoute()}
-        </VaAuthProvider>
+        <VaAuthProvider>{renderRoute()}</VaAuthProvider>
       </ThemeProvider>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }

@@ -1,27 +1,27 @@
 /**
  * VA Sandbox API Utilities
- * 
+ *
  * Provides functions to interact with all VA.gov Sandbox APIs:
- * 
+ *
  * USER DATA (OAuth Required):
  * - Service History API
  * - Claims API
  * - Appealable Issues API
  * - Appeals Status API
- * 
+ *
  * OPEN DATA (API Key Required):
  * - VA Facilities API
  * - VA Forms API
  * - Benefits Reference Data API
- * 
+ *
  * @see https://developer.va.gov/explore
  */
 
-import { VA_AUTH_CONFIG } from '../config/vaAuth';
+import { VA_AUTH_CONFIG } from "../config/vaAuth";
 
 // Base URLs - use proxy in development to bypass CORS
 const isDev = import.meta.env.DEV;
-const SANDBOX_BASE = isDev ? '/va-api' : 'https://sandbox-api.va.gov';
+const SANDBOX_BASE = isDev ? "/va-api" : "https://sandbox-api.va.gov";
 
 // Get API keys from environment (each VA API may have its own key)
 const API_KEY = import.meta.env.VITE_VA_API_KEY;
@@ -37,32 +37,36 @@ const FORMS_API_KEY = import.meta.env.VITE_VA_FORMS_API_KEY;
  */
 async function authenticatedFetch(endpoint, accessToken, options = {}) {
   const url = `${SANDBOX_BASE}${endpoint}`;
-  
+
   console.log(`[VA API] Fetching: ${url}`);
-  
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
       ...options.headers,
     },
   });
-  
+
   if (response.status === 401) {
-    const error = new Error('Authentication expired. Please reconnect your VA account.');
-    error.code = 'UNAUTHORIZED';
+    const error = new Error(
+      "Authentication expired. Please reconnect your VA account.",
+    );
+    error.code = "UNAUTHORIZED";
     throw error;
   }
-  
+
   if (response.status === 403) {
-    const error = new Error('Access denied. Missing required scope for this data.');
-    error.code = 'FORBIDDEN';
+    const error = new Error(
+      "Access denied. Missing required scope for this data.",
+    );
+    error.code = "FORBIDDEN";
     throw error;
   }
-  
+
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
     let errorMessage = `API error: ${response.status} ${response.statusText}`;
     try {
       const errorJson = JSON.parse(errorBody);
@@ -72,7 +76,7 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
     }
     throw new Error(errorMessage);
   }
-  
+
   return response.json();
 }
 
@@ -84,35 +88,37 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
  */
 async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
   const apiKey = customApiKey || API_KEY;
-  
+
   if (!apiKey) {
-    throw new Error('VA API Key not configured. Add VITE_VA_API_KEY to .env');
+    throw new Error("VA API Key not configured. Add VITE_VA_API_KEY to .env");
   }
-  
+
   const url = `${SANDBOX_BASE}${endpoint}`;
-  
+
   console.log(`[VA API] Fetching (API Key): ${url}`);
   console.log(`[VA API] Using API Key: ${apiKey.substring(0, 8)}...`);
-  
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'apikey': apiKey,
-      'Accept': 'application/json',
+      apikey: apiKey,
+      Accept: "application/json",
       ...options.headers,
     },
   });
-  
+
   console.log(`[VA API] Response status: ${response.status}`);
-  
+
   if (response.status === 401 || response.status === 403) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
     console.error(`[VA API] Auth error response: ${errorBody}`);
-    throw new Error(`API access denied (${response.status}). Check your VITE_VA_API_KEY or API access.`);
+    throw new Error(
+      `API access denied (${response.status}). Check your VITE_VA_API_KEY or API access.`,
+    );
   }
-  
+
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
     let errorMessage = `API error: ${response.status} ${response.statusText}`;
     try {
       const errorJson = JSON.parse(errorBody);
@@ -122,7 +128,7 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
     }
     throw new Error(errorMessage);
   }
-  
+
   return response.json();
 }
 
@@ -133,110 +139,113 @@ async function apiKeyFetch(endpoint, options = {}, customApiKey = null) {
 /**
  * Get veteran's military service history
  * Scope: service_history.read
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Service history data
  */
 export async function getServiceHistory(accessToken) {
   return authenticatedFetch(
-    '/services/veteran_verification/v2/service_history',
-    accessToken
+    "/services/veteran_verification/v2/service_history",
+    accessToken,
   );
 }
 
 /**
  * Get veteran's disability claims
  * Scope: claim.read
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Claims data
  */
 export async function getClaims(accessToken) {
-  return authenticatedFetch(
-    '/services/claims/v1/claims',
-    accessToken
-  );
+  return authenticatedFetch("/services/claims/v1/claims", accessToken);
 }
 
 /**
  * Get veteran's appealable issues (denied decisions that can be appealed)
  * Scope: appealable_issues.read
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Appealable issues data
  */
 export async function getAppealableIssues(accessToken) {
   return authenticatedFetch(
-    '/services/appeals/appealable-issues/v0/appealable-issues',
-    accessToken
+    "/services/appeals/appealable-issues/v0/appealable-issues",
+    accessToken,
   );
 }
 
 /**
  * Get veteran's appeals status
  * Scope: appeals_status.read
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Appeals status data
  */
 export async function getAppealsStatus(accessToken) {
-  return authenticatedFetch(
-    '/services/appeals/v0/appeals',
-    accessToken
-  );
+  return authenticatedFetch("/services/appeals/v0/appeals", accessToken);
 }
 
 /**
  * Upload a supporting document to a specific claim
  * Scope: claim.write
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @param {string} claimId - The claim ID to upload to
  * @param {File} file - The PDF file to upload
  * @param {string} documentType - Document type code (default: L049 for DBQ)
  * @returns {Promise<Object>} Upload result
  */
-export async function uploadClaimDocument(accessToken, claimId, file, documentType = 'L049') {
+export async function uploadClaimDocument(
+  accessToken,
+  claimId,
+  file,
+  documentType = "L049",
+) {
   if (!accessToken) {
-    throw new Error('No access token provided');
+    throw new Error("No access token provided");
   }
   if (!claimId) {
-    throw new Error('No claim ID provided');
+    throw new Error("No claim ID provided");
   }
   if (!file) {
-    throw new Error('No file provided');
+    throw new Error("No file provided");
   }
 
   const url = `${SANDBOX_BASE}/services/claims/v2/veterans/me/claims/${claimId}/documents`;
-  
+
   console.log(`[VA API] Uploading document to claim ${claimId}`);
-  
+
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('documentType', documentType);
-  
+  formData.append("file", file);
+  formData.append("documentType", documentType);
+
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: formData,
   });
 
   if (response.status === 401) {
-    const error = new Error('Authentication expired. Please reconnect your VA account.');
-    error.code = 'UNAUTHORIZED';
+    const error = new Error(
+      "Authentication expired. Please reconnect your VA account.",
+    );
+    error.code = "UNAUTHORIZED";
     throw error;
   }
 
   if (response.status === 403) {
-    const error = new Error('Access denied. Missing required scope for document upload.');
-    error.code = 'FORBIDDEN';
+    const error = new Error(
+      "Access denied. Missing required scope for document upload.",
+    );
+    error.code = "FORBIDDEN";
     throw error;
   }
 
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
     let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
     try {
       const errorJson = JSON.parse(errorBody);
@@ -256,46 +265,54 @@ export async function uploadClaimDocument(accessToken, claimId, file, documentTy
 
 /**
  * Search for VA facilities near a ZIP code
- * 
+ *
  * @param {string} zip - ZIP code to search near
  * @param {Object} options - Additional options
  * @returns {Promise<Object>} Facilities data
  */
-export async function getFacilities(zip = '97217', options = {}) {
+export async function getFacilities(zip = "97217", options = {}) {
   const params = new URLSearchParams({
     zip: zip,
-    per_page: options.perPage || '10',
+    per_page: options.perPage || "10",
   });
-  
+
   // Add coordinates for Portland, OR area if using 97217
-  if (zip === '97217') {
-    params.set('lat', '45.523');
-    params.set('long', '-122.676');
+  if (zip === "97217") {
+    params.set("lat", "45.523");
+    params.set("long", "-122.676");
   }
-  
+
   return apiKeyFetch(`/services/va_facilities/v1/facilities?${params}`);
 }
 
 /**
  * Search for VA forms
- * 
+ *
  * @param {string} query - Search query (e.g., "21-526EZ")
  * @returns {Promise<Object>} Forms data
  */
-export async function searchForms(query = '21-526EZ') {
+export async function searchForms(query = "21-526EZ") {
   const params = new URLSearchParams({ query });
   // Use dedicated VA Forms API key
-  return apiKeyFetch(`/services/va_forms/v0/forms?${params}`, {}, FORMS_API_KEY);
+  return apiKeyFetch(
+    `/services/va_forms/v0/forms?${params}`,
+    {},
+    FORMS_API_KEY,
+  );
 }
 
 /**
  * Get benefits reference data (disabilities list)
- * 
+ *
  * @returns {Promise<Object>} Disabilities reference data
  */
 export async function getBenefitsReferenceData() {
   // Use dedicated Benefits Reference Data API key
-  return apiKeyFetch('/services/benefits-reference-data/v1/disabilities', {}, BENEFITS_REF_API_KEY);
+  return apiKeyFetch(
+    "/services/benefits-reference-data/v1/disabilities",
+    {},
+    BENEFITS_REF_API_KEY,
+  );
 }
 
 // ============================================================================
@@ -307,13 +324,13 @@ export async function getBenefitsReferenceData() {
  */
 export function formatServiceHistory(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(episode => ({
+
+  return data.data.map((episode) => ({
     id: episode.id,
-    branch: episode.attributes?.branch_of_service || 'Unknown Branch',
+    branch: episode.attributes?.branch_of_service || "Unknown Branch",
     startDate: episode.attributes?.start_date,
     endDate: episode.attributes?.end_date,
-    dischargeStatus: episode.attributes?.discharge_status || 'Unknown',
+    dischargeStatus: episode.attributes?.discharge_status || "Unknown",
     payGrade: episode.attributes?.pay_grade,
     separationReason: episode.attributes?.separation_reason,
     deployments: episode.attributes?.deployments || [],
@@ -325,10 +342,10 @@ export function formatServiceHistory(data) {
  */
 export function formatClaims(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(claim => ({
+
+  return data.data.map((claim) => ({
     id: claim.id,
-    type: claim.attributes?.claim_type || 'Unknown',
+    type: claim.attributes?.claim_type || "Unknown",
     status: claim.attributes?.status,
     phase: claim.attributes?.claim_phase_dates?.phase_change_date,
     phaseNumber: claim.attributes?.claim_phase_dates?.current_phase_back,
@@ -345,12 +362,14 @@ export function formatClaims(data) {
  */
 export function formatAppealableIssues(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(issue => ({
+
+  return data.data.map((issue) => ({
     id: issue.id,
     type: issue.type,
-    description: issue.attributes?.description || issue.attributes?.ratingIssueSubjectText,
-    decisionDate: issue.attributes?.approxDecisionDate || issue.attributes?.decisionDate,
+    description:
+      issue.attributes?.description || issue.attributes?.ratingIssueSubjectText,
+    decisionDate:
+      issue.attributes?.approxDecisionDate || issue.attributes?.decisionDate,
     ratingPercent: issue.attributes?.ratingIssuePercentNumber,
     diagnosticCode: issue.attributes?.ratingIssueDiagnosticCode,
   }));
@@ -361,8 +380,8 @@ export function formatAppealableIssues(data) {
  */
 export function formatAppealsStatus(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(appeal => ({
+
+  return data.data.map((appeal) => ({
     id: appeal.id,
     type: appeal.type,
     status: appeal.attributes?.status?.type,
@@ -381,8 +400,8 @@ export function formatAppealsStatus(data) {
  */
 export function formatFacilities(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(facility => ({
+
+  return data.data.map((facility) => ({
     id: facility.id,
     name: facility.attributes?.name,
     type: facility.attributes?.facility_type,
@@ -401,8 +420,8 @@ export function formatFacilities(data) {
  */
 export function formatForms(data) {
   if (!data?.data) return [];
-  
-  return data.data.map(form => ({
+
+  return data.data.map((form) => ({
     id: form.id,
     name: form.attributes?.form_name,
     title: form.attributes?.title,
@@ -423,11 +442,11 @@ export function formatForms(data) {
  */
 export function formatDisabilities(data) {
   if (!data?.data) return [];
-  
+
   // Handle both array and items property
-  const items = Array.isArray(data.data) ? data.data : (data.data.items || []);
-  
-  return items.slice(0, 50).map(disability => ({
+  const items = Array.isArray(data.data) ? data.data : data.data.items || [];
+
+  return items.slice(0, 50).map((disability) => ({
     id: disability.id || disability.name,
     name: disability.name || disability.attributes?.name,
     description: disability.description || disability.attributes?.description,
@@ -445,12 +464,12 @@ export default {
   getAppealableIssues,
   getAppealsStatus,
   uploadClaimDocument,
-  
+
   // Open Data (API Key)
   getFacilities,
   searchForms,
   getBenefitsReferenceData,
-  
+
   // Formatters
   formatServiceHistory,
   formatClaims,

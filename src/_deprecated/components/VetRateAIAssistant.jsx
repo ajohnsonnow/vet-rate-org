@@ -5,14 +5,14 @@
  * RAG-based VA claims assistance with official sources only
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useVetRateAI } from '../hooks/useVetRateAI';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { 
-  Bot, 
-  Send, 
-  Sparkles, 
-  FileText, 
+import React, { useState, useRef, useEffect } from "react";
+import { useVetRateAI } from "../hooks/useVetRateAI";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  Bot,
+  Send,
+  Sparkles,
+  FileText,
   AlertCircle,
   Loader2,
   ChevronDown,
@@ -20,34 +20,44 @@ import {
   BookOpen,
   Shield,
   Gem,
-  Clock
-} from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+  Clock,
+} from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const VetRateAIAssistant = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(isOpen);
-  
-  const { isReady, isLoading, ask, knowledgeCount, metadata, sourceColors, isDiamond, bvaApiPending } = useVetRateAI();
+
+  const {
+    isReady,
+    isLoading,
+    ask,
+    knowledgeCount,
+    metadata,
+    sourceColors,
+    isDiamond,
+    bvaApiPending,
+  } = useVetRateAI();
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [showSources, setShowSources] = useState({});
   const [showKBInfo, setShowKBInfo] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Welcome message
   useEffect(() => {
     if (isReady && messages.length === 0) {
-      setMessages([{
-        type: 'assistant',
-        content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** loaded.
+      setMessages([
+        {
+          type: "assistant",
+          content: `Welcome to the Vet-Rate AI Assistant! 💎 **Diamond Knowledge Base (DKB)** loaded.
 
 **Current Mode:** Web-Optimized (${knowledgeCount.toLocaleString()} high-priority entries)
 **Full Database:** 130,508 entries (available with Local LLM)
@@ -71,8 +81,9 @@ const VetRateAIAssistant = ({ isOpen, onClose }) => {
 • Rating criteria (e.g., "rating criteria for tinnitus")
 
 How can I help you today?`,
-        sources: []
-      }]);
+          sources: [],
+        },
+      ]);
     }
   }, [isReady, knowledgeCount]);
 
@@ -81,24 +92,27 @@ How can I help you today?`,
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
-    setInput('');
+    setInput("");
 
     // Add user message
-    setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
+    setMessages((prev) => [...prev, { type: "user", content: userMessage }]);
 
     // Get AI response
     const response = await ask(userMessage);
 
     // Add assistant response
     const msgId = Date.now();
-    setMessages(prev => [...prev, {
-      id: msgId,
-      type: 'assistant',
-      content: response.answer,
-      sources: response.sources || [],
-      suggestions: response.suggestions || [],
-      matchCount: response.matchCount
-    }]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: msgId,
+        type: "assistant",
+        content: response.answer,
+        sources: response.sources || [],
+        suggestions: response.suggestions || [],
+        matchCount: response.matchCount,
+      },
+    ]);
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -106,7 +120,7 @@ How can I help you today?`,
   };
 
   const toggleSources = (msgId) => {
-    setShowSources(prev => ({ ...prev, [msgId]: !prev[msgId] }));
+    setShowSources((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
   };
 
   if (!isOpen) return null;
@@ -114,19 +128,65 @@ How can I help you today?`,
   // Get source color info (DKB sources only - no community)
   const getSourceStyle = (source) => {
     const styles = {
-      'eCFR_OFFICIAL': { bg: 'bg-red-900/50', text: 'text-red-300', label: '38 CFR' },
-      'FEDERAL_REGISTER_OFFICIAL': { bg: 'bg-orange-900/50', text: 'text-orange-300', label: 'Fed Register' },
-      'OGC_PRECEDENT_OPINION': { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'OGC' },
-      'BVA_DECISIONS': { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'BVA' },
-      'BVA_REPORTS_OFFICIAL': { bg: 'bg-purple-900/50', text: 'text-purple-300', label: 'BVA Reports' },
-      'M21-1_OFFICIAL': { bg: 'bg-blue-900/50', text: 'text-blue-300', label: 'M21-1' },
-      'PACT_ACT_OFFICIAL': { bg: 'bg-green-900/50', text: 'text-green-300', label: 'PACT Act' },
-      'VA_OFFICIAL': { bg: 'bg-slate-700/50', text: 'text-slate-300', label: 'VA Official' },
-      'SECONDARY_CONDITIONS_MATRIX': { bg: 'bg-cyan-900/50', text: 'text-cyan-300', label: 'Secondary' },
-      'EAJA_STATISTICS_OFFICIAL': { bg: 'bg-yellow-900/50', text: 'text-yellow-300', label: 'EAJA' },
+      eCFR_OFFICIAL: {
+        bg: "bg-red-900/50",
+        text: "text-red-300",
+        label: "38 CFR",
+      },
+      FEDERAL_REGISTER_OFFICIAL: {
+        bg: "bg-orange-900/50",
+        text: "text-orange-300",
+        label: "Fed Register",
+      },
+      OGC_PRECEDENT_OPINION: {
+        bg: "bg-purple-900/50",
+        text: "text-purple-300",
+        label: "OGC",
+      },
+      BVA_DECISIONS: {
+        bg: "bg-purple-900/50",
+        text: "text-purple-300",
+        label: "BVA",
+      },
+      BVA_REPORTS_OFFICIAL: {
+        bg: "bg-purple-900/50",
+        text: "text-purple-300",
+        label: "BVA Reports",
+      },
+      "M21-1_OFFICIAL": {
+        bg: "bg-blue-900/50",
+        text: "text-blue-300",
+        label: "M21-1",
+      },
+      PACT_ACT_OFFICIAL: {
+        bg: "bg-green-900/50",
+        text: "text-green-300",
+        label: "PACT Act",
+      },
+      VA_OFFICIAL: {
+        bg: "bg-slate-700/50",
+        text: "text-slate-300",
+        label: "VA Official",
+      },
+      SECONDARY_CONDITIONS_MATRIX: {
+        bg: "bg-cyan-900/50",
+        text: "text-cyan-300",
+        label: "Secondary",
+      },
+      EAJA_STATISTICS_OFFICIAL: {
+        bg: "bg-yellow-900/50",
+        text: "text-yellow-300",
+        label: "EAJA",
+      },
       // NOTE: COMMUNITY_PROVIDED not included - CKB is separate
     };
-    return styles[source] || { bg: 'bg-slate-700', text: 'text-slate-400', label: source };
+    return (
+      styles[source] || {
+        bg: "bg-slate-700",
+        text: "text-slate-400",
+        label: source,
+      }
+    );
   };
 
   return (
@@ -156,7 +216,7 @@ How can I help you today?`,
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     {knowledgeCount.toLocaleString()} verified entries
-                    <button 
+                    <button
                       onClick={() => setShowKBInfo(!showKBInfo)}
                       className="ml-1 text-blue-400 hover:text-blue-300 underline"
                     >
@@ -184,8 +244,15 @@ How can I help you today?`,
         {showKBInfo && (
           <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 text-xs">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-emerald-300 font-medium">💎 Diamond Knowledge Base (DKB) - Official Sources Only</span>
-              <button onClick={() => setShowKBInfo(false)} className="text-slate-500 hover:text-slate-300">&times;</button>
+              <span className="text-emerald-300 font-medium">
+                💎 Diamond Knowledge Base (DKB) - Official Sources Only
+              </span>
+              <button
+                onClick={() => setShowKBInfo(false)}
+                className="text-slate-500 hover:text-slate-300"
+              >
+                &times;
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-2">
@@ -215,12 +282,16 @@ How can I help you today?`,
             </div>
             <div className="mt-2 flex items-center gap-2 text-amber-400/80 bg-amber-900/20 px-2 py-1 rounded">
               <Clock className="w-3 h-3" />
-              <span>👥 CKB (Community): Separate - not used for AI training</span>
+              <span>
+                👥 CKB (Community): Separate - not used for AI training
+              </span>
             </div>
             {bvaApiPending && (
               <div className="mt-2 flex items-center gap-2 text-amber-400/80 bg-amber-900/20 px-2 py-1 rounded">
                 <Clock className="w-3 h-3" />
-                <span>BVA Full Decisions: Pending API access from data.va.gov</span>
+                <span>
+                  BVA Full Decisions: Pending API access from data.va.gov
+                </span>
               </div>
             )}
           </div>
@@ -231,16 +302,16 @@ How can I help you today?`,
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`max-w-[85%] rounded-2xl p-4 ${
-                  msg.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-800 text-slate-100'
+                  msg.type === "user"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-100"
                 }`}
               >
-                {msg.type === 'assistant' && (
+                {msg.type === "assistant" && (
                   <div className="flex items-center gap-2 mb-2 text-blue-400 text-sm">
                     <Sparkles className="w-4 h-4" />
                     <span>AI Assistant</span>
@@ -251,7 +322,7 @@ How can I help you today?`,
                     )}
                   </div>
                 )}
-                
+
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
                   {msg.content}
                 </div>
@@ -271,7 +342,7 @@ How can I help you today?`,
                         <ChevronDown className="w-3 h-3" />
                       )}
                     </button>
-                    
+
                     {showSources[msg.id] && (
                       <div className="mt-2 space-y-1">
                         {msg.sources.map((src, i) => {
@@ -282,8 +353,12 @@ How can I help you today?`,
                               className="flex items-center gap-2 text-xs text-slate-400"
                             >
                               <FileText className="w-3 h-3" />
-                              <span className="truncate flex-1">{src.citation}</span>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] ${style.bg} ${style.text}`}>
+                              <span className="truncate flex-1">
+                                {src.citation}
+                              </span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] ${style.bg} ${style.text}`}
+                              >
                                 {style.label}
                               </span>
                             </div>
@@ -311,16 +386,18 @@ How can I help you today?`,
               </div>
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-slate-800 rounded-2xl p-4 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                <span className="text-sm text-slate-400">Searching knowledge base...</span>
+                <span className="text-sm text-slate-400">
+                  Searching knowledge base...
+                </span>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -343,7 +420,7 @@ How can I help you today?`,
               <Send className="w-5 h-5" />
             </button>
           </div>
-          
+
           <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
             <div className="flex items-center gap-2">
               <Shield className="w-3 h-3" />

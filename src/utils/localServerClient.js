@@ -1,19 +1,19 @@
 /**
  * Local Diamond Server Client
- * 
+ *
  * Connects to llama.cpp server running locally with VetRate models.
  * Provides OpenAI-compatible API interface.
  */
 
 // Default server configuration
 const DEFAULT_CONFIG = {
-  host: 'localhost',
+  host: "localhost",
   port: 8080,
-  timeout: 60000
+  timeout: 60000,
 };
 
 // Storage key for server config
-const SERVER_CONFIG_KEY = 'vetrate_local_server_config';
+const SERVER_CONFIG_KEY = "vetrate_local_server_config";
 
 /**
  * Get saved server configuration
@@ -47,23 +47,24 @@ const getBaseUrl = (config = getServerConfig()) => {
 export const checkServerHealth = async (config = getServerConfig()) => {
   try {
     const response = await fetch(`${getBaseUrl(config)}/health`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(5000)
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       return {
         available: true,
-        status: data.status || 'ok',
-        model: data.model || 'unknown'
+        status: data.status || "ok",
+        model: data.model || "unknown",
       };
     }
-    return { available: false, reason: 'Server returned error' };
+    return { available: false, reason: "Server returned error" };
   } catch (error) {
-    return { 
-      available: false, 
-      reason: error.name === 'TimeoutError' ? 'Connection timeout' : error.message 
+    return {
+      available: false,
+      reason:
+        error.name === "TimeoutError" ? "Connection timeout" : error.message,
     };
   }
 };
@@ -74,10 +75,10 @@ export const checkServerHealth = async (config = getServerConfig()) => {
 export const getModelInfo = async (config = getServerConfig()) => {
   try {
     const response = await fetch(`${getBaseUrl(config)}/props`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(5000)
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
     });
-    
+
     if (response.ok) {
       return await response.json();
     }
@@ -95,48 +96,48 @@ export const generateCompletion = async (prompt, options = {}) => {
     maxTokens = 1024,
     temperature = 0.7,
     topP = 0.9,
-    stopTokens = ['<|end|>', '<|user|>'],
+    stopTokens = ["<|end|>", "<|user|>"],
     onToken,
     signal,
-    config = getServerConfig()
+    config = getServerConfig(),
   } = options;
-  
+
   const body = {
     prompt,
     n_predict: maxTokens,
     temperature,
     top_p: topP,
     stop: stopTokens,
-    stream: !!onToken
+    stream: !!onToken,
   };
-  
+
   try {
     const response = await fetch(`${getBaseUrl(config)}/completion`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: signal || AbortSignal.timeout(config.timeout)
+      signal: signal || AbortSignal.timeout(config.timeout),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
-    
+
     // Handle streaming response
     if (onToken && response.body) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let result = '';
-      
+      let result = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        
+        const lines = chunk.split("\n");
+
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.content) {
@@ -147,17 +148,16 @@ export const generateCompletion = async (prompt, options = {}) => {
           }
         }
       }
-      
+
       return result;
     }
-    
+
     // Non-streaming response
     const data = await response.json();
     return data.content;
-    
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('[LocalServer] Request aborted');
+    if (error.name === "AbortError") {
+      console.log("[LocalServer] Request aborted");
       return null;
     }
     throw error;
@@ -170,17 +170,17 @@ export const generateCompletion = async (prompt, options = {}) => {
 export const chatCompletion = async (messages, systemPrompt, options = {}) => {
   // Build prompt in Qwen/ChatML format
   let prompt = `<|system|>\n${systemPrompt}\n<|end|>\n`;
-  
+
   for (const msg of messages) {
-    if (msg.role === 'user') {
+    if (msg.role === "user") {
       prompt += `<|user|>\n${msg.content}\n<|end|>\n`;
-    } else if (msg.role === 'assistant') {
+    } else if (msg.role === "assistant") {
       prompt += `<|assistant|>\n${msg.content}\n<|end|>\n`;
     }
   }
-  
-  prompt += '<|assistant|>\n';
-  
+
+  prompt += "<|assistant|>\n";
+
   return generateCompletion(prompt, options);
 };
 
@@ -189,7 +189,7 @@ export const chatCompletion = async (messages, systemPrompt, options = {}) => {
  */
 export const cancelGeneration = async (config = getServerConfig()) => {
   try {
-    await fetch(`${getBaseUrl(config)}/cancel`, { method: 'POST' });
+    await fetch(`${getBaseUrl(config)}/cancel`, { method: "POST" });
     return true;
   } catch {
     return false;
@@ -202,10 +202,10 @@ export const cancelGeneration = async (config = getServerConfig()) => {
 export const getSlotsInfo = async (config = getServerConfig()) => {
   try {
     const response = await fetch(`${getBaseUrl(config)}/slots`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(5000)
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
     });
-    
+
     if (response.ok) {
       return await response.json();
     }
@@ -223,5 +223,5 @@ export default {
   cancelGeneration,
   getSlotsInfo,
   getServerConfig,
-  saveServerConfig
+  saveServerConfig,
 };

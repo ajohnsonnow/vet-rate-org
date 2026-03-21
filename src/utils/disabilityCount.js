@@ -1,14 +1,14 @@
 /**
  * Dynamic Disability Count Utility
- * 
+ *
  * NEVER HARDCODE CONDITION COUNTS!
  * This utility provides a single source of truth for the number of VA disabilities
  * in the system, dynamically computed from actual data.
- * 
+ *
  * Diamond Standard: Data drives documentation, not the other way around.
  */
 
-import disabilityDataJson from '../data/disabilityData.json';
+import disabilityDataJson from "../data/disabilityData.json";
 
 /**
  * Get the actual count of disabilities in the system
@@ -19,11 +19,16 @@ export function getDisabilityCount() {
   if (Array.isArray(disabilityDataJson)) {
     return disabilityDataJson.length;
   }
-  if (disabilityDataJson.disabilities && Array.isArray(disabilityDataJson.disabilities)) {
+  if (
+    disabilityDataJson.disabilities &&
+    Array.isArray(disabilityDataJson.disabilities)
+  ) {
     return disabilityDataJson.disabilities.length;
   }
-  
-  console.error('[disabilityCount] Unable to determine disability count - data format unexpected');
+
+  console.error(
+    "[disabilityCount] Unable to determine disability count - data format unexpected",
+  );
   return 0;
 }
 
@@ -45,17 +50,18 @@ export function getDisabilityCountWithValidation() {
   return {
     count: getDisabilityCount(),
     validated: true,
-    validationDate: '2026-01-15', // eCFR validation date
-    source: '38 CFR Part 4'
+    validationDate: "2026-01-15", // eCFR validation date
+    source: "38 CFR Part 4",
   };
 }
 
 // Export the raw data array for components that need it
-export const disabilityDataArray = disabilityDataJson.disabilities || disabilityDataJson || [];
+export const disabilityDataArray =
+  disabilityDataJson.disabilities || disabilityDataJson || [];
 
 export default {
   getDisabilityCount,
   getFormattedDisabilityCount,
   getDisabilityCountWithValidation,
-  disabilityDataArray
+  disabilityDataArray,
 };

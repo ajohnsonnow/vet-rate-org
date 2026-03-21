@@ -1,37 +1,44 @@
 /**
  * Vet-Rate.org - AI Consistency Analyzer
  * "The Cross-Examination" - AI-powered contradiction detection
- * 
+ *
  * This component provides a "split view" interface where veterans can:
  * 1. Paste medical records/evidence on the left
  * 2. Paste their personal statement on the right
  * 3. Get AI-powered analysis of contradictions
- * 
+ *
  * Uses DiffHighlighter to visually show problem areas.
- * 
+ *
  * @author Vet-Rate.org Development Team
  * @version 1.0.0
  */
 
-import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
-import { CONSISTENCY_CHECK_PROMPT, SOLO_STATEMENT_ANALYSIS_PROMPT } from '../utils/consistencyPrompts';
-import DiffHighlighter, { IssueCard } from './common/DiffHighlighter';
-import RedditCopyButton from './common/RedditCopyButton';
-import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
+import React, { useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import {
+  CONSISTENCY_CHECK_PROMPT,
+  SOLO_STATEMENT_ANALYSIS_PROMPT,
+} from "../utils/consistencyPrompts";
+import DiffHighlighter, { IssueCard } from "./common/DiffHighlighter";
+import RedditCopyButton from "./common/RedditCopyButton";
+import {
+  getVeteranAIContext,
+  saveAnalysisResults,
+  PACKET_DOC_TYPES,
+} from "../utils/veteranContextProvider";
 
 /**
  * AIConsistencyAnalyzer - The Cross-Examination Tool
  */
 const AIConsistencyAnalyzer = ({ onBack }) => {
   const { t } = useLanguage();
-  const [referenceText, setReferenceText] = useState('');
-  const [targetText, setTargetText] = useState('');
+  const [referenceText, setReferenceText] = useState("");
+  const [targetText, setTargetText] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [mode, setMode] = useState('compare'); // 'compare' or 'solo'
+  const [mode, setMode] = useState("compare"); // 'compare' or 'solo'
 
   const aiAvailable = isAnyAIAvailable();
 
@@ -39,12 +46,12 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
    * Run the AI consistency check
    */
   const runConsistencyCheck = async () => {
-    if (mode === 'compare' && (!referenceText || !targetText)) {
-      setError('Please provide both reference evidence and your statement.');
+    if (mode === "compare" && (!referenceText || !targetText)) {
+      setError("Please provide both reference evidence and your statement.");
       return;
     }
-    if (mode === 'solo' && !targetText) {
-      setError('Please provide a statement to analyze.');
+    if (mode === "solo" && !targetText) {
+      setError("Please provide a statement to analyze.");
       return;
     }
 
@@ -54,41 +61,45 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 
     try {
       // Load veteran context so the AI knows the veteran's real history
-      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 600 });
+      const veteranContext = await getVeteranAIContext({
+        maxPacketTokens: 600,
+      });
 
       // Select the right prompt based on mode
-      const prompt = mode === 'compare' 
-        ? CONSISTENCY_CHECK_PROMPT(referenceText, targetText)
-        : SOLO_STATEMENT_ANALYSIS_PROMPT(targetText);
+      const prompt =
+        mode === "compare"
+          ? CONSISTENCY_CHECK_PROMPT(referenceText, targetText)
+          : SOLO_STATEMENT_ANALYSIS_PROMPT(targetText);
 
       // Inject veteran context into the system prompt
       const systemPromptWithContext = veteranContext
         ? `You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.\n\nVETERAN CASE DATA (use to cross-reference known facts):\n${veteranContext}`
-        : 'You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.';
+        : "You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.";
 
       const response = await generateAI(prompt, {
         systemPrompt: systemPromptWithContext,
-        taskType: 'analysis',
+        taskType: "analysis",
         maxTokens: 2000,
-        temperature: 0.2 // Low temp for consistent structured output
+        temperature: 0.2, // Low temp for consistent structured output
       });
 
       // Extract text from response (handle both string and object returns)
-      const responseText = typeof response === 'object' ? response.text : response;
-      
+      const responseText =
+        typeof response === "object" ? response.text : response;
+
       // Parse the JSON response
       // Try to extract JSON from the response (handle potential markdown wrapping)
       let jsonText = responseText;
-      
+
       // Remove markdown code blocks if present
       const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
         jsonText = jsonMatch[1].trim();
       }
-      
+
       // Find JSON object in the text
-      const startIdx = jsonText.indexOf('{');
-      const endIdx = jsonText.lastIndexOf('}');
+      const startIdx = jsonText.indexOf("{");
+      const endIdx = jsonText.lastIndexOf("}");
       if (startIdx !== -1 && endIdx !== -1) {
         jsonText = jsonText.substring(startIdx, endIdx + 1);
       }
@@ -98,25 +109,30 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 
       // Save consistency analysis to VKB + My Packet
       saveAnalysisResults({
-        toolName: 'AI Cross-Examination',
+        toolName: "AI Cross-Examination",
         classification: PACKET_DOC_TYPES.OTHER,
-        rawText: mode === 'compare' ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}` : targetText,
+        rawText:
+          mode === "compare"
+            ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}`
+            : targetText,
         extractedData: result,
         vkbMergeData: {
           aiInsights: {
             consistencyScore: result.overall_score || result.score || null,
-            contradictionsFound: result.issues?.length || result.contradictions?.length || 0,
+            contradictionsFound:
+              result.issues?.length || result.contradictions?.length || 0,
           },
           keyFacts: [
             {
-              source: 'AI Cross-Examination',
-              fact: `Consistency score: ${result.overall_score || result.score || 'N/A'}, Issues: ${result.issues?.length || result.contradictions?.length || 0}`,
+              source: "AI Cross-Examination",
+              fact: `Consistency score: ${result.overall_score || result.score || "N/A"}, Issues: ${result.issues?.length || result.contradictions?.length || 0}`,
               date: new Date().toISOString(),
             },
           ],
         },
-      }).catch(err => console.warn('Failed to save consistency results:', err));
-      
+      }).catch((err) =>
+        console.warn("Failed to save consistency results:", err),
+      );
     } catch (err) {
       console.error("AI Consistency Check Failed:", err);
       setError(`Analysis failed: ${err.message}. Please try again.`);
@@ -129,20 +145,20 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
    * Get score color based on credibility/alignment score
    */
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-yellow-500";
+    return "text-red-500";
   };
 
   /**
    * Get score label
    */
   const getScoreLabel = (score) => {
-    if (score >= 90) return 'Excellent';
-    if (score >= 80) return 'Good';
-    if (score >= 70) return 'Fair';
-    if (score >= 50) return 'Needs Work';
-    return 'Critical Issues';
+    if (score >= 90) return "Excellent";
+    if (score >= 80) return "Good";
+    if (score >= 70) return "Fair";
+    if (score >= 50) return "Needs Work";
+    return "Critical Issues";
   };
 
   return (
@@ -154,10 +170,13 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
             <h1 className="text-3xl font-bold text-white flex items-center gap-3">
               <span className="text-4xl">🔍</span>
               AI Cross-Examination
-              <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">AI BETA</span>
+              <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">
+                AI BETA
+              </span>
             </h1>
             <p className="text-gray-400 mt-2">
-              The "Red Team" for your story. Find contradictions before the VA does.
+              The "Red Team" for your story. Find contradictions before the VA
+              does.
             </p>
           </div>
           {onBack && (
@@ -176,7 +195,8 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
         <div className="bg-yellow-900/30 border border-yellow-600 text-yellow-200 p-4 rounded-lg">
           <p className="font-bold">⚠️ AI Not Available</p>
           <p className="text-sm mt-1">
-            Please configure Cloud AI (Gemini) or initialize Local AI to use this feature.
+            Please configure Cloud AI (Gemini) or initialize Local AI to use
+            this feature.
           </p>
         </div>
       )}
@@ -184,33 +204,39 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
       {/* Mode Toggle */}
       <div className="flex gap-4 mb-6">
         <button
-          onClick={() => setMode('compare')}
+          onClick={() => setMode("compare")}
           className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-            mode === 'compare' 
-              ? 'bg-purple-600 text-white' 
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            mode === "compare"
+              ? "bg-purple-600 text-white"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
         >
           📋 Compare Mode
-          <span className="block text-xs font-normal opacity-75">Evidence vs Statement</span>
+          <span className="block text-xs font-normal opacity-75">
+            Evidence vs Statement
+          </span>
         </button>
         <button
-          onClick={() => setMode('solo')}
+          onClick={() => setMode("solo")}
           className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-            mode === 'solo' 
-              ? 'bg-purple-600 text-white' 
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            mode === "solo"
+              ? "bg-purple-600 text-white"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
         >
           📝 Solo Mode
-          <span className="block text-xs font-normal opacity-75">Statement Only</span>
+          <span className="block text-xs font-normal opacity-75">
+            Statement Only
+          </span>
         </button>
       </div>
 
       {/* Input Area */}
-      <div className={`grid ${mode === 'compare' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-6`}>
+      <div
+        className={`grid ${mode === "compare" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"} gap-6`}
+      >
         {/* Left: Reference Evidence (Compare mode only) */}
-        {mode === 'compare' && (
+        {mode === "compare" && (
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-blue-400 uppercase tracking-wide">
               📄 Reference Evidence
@@ -237,7 +263,7 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
             Paste the personal statement or nexus letter you're working on.
           </p>
           <textarea
-            className={`w-full ${mode === 'solo' ? 'h-48' : 'h-64'} bg-gray-900 border border-orange-900/50 rounded-lg p-4 text-sm text-gray-300 placeholder-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none`}
+            className={`w-full ${mode === "solo" ? "h-48" : "h-64"} bg-gray-900 border border-orange-900/50 rounded-lg p-4 text-sm text-gray-300 placeholder-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none`}
             placeholder="Example: 'My back pain is severe and constant. It radiates down both legs every single day, preventing me from any physical activity...'"
             value={targetText}
             onChange={(e) => setTargetText(e.target.value)}
@@ -257,14 +283,19 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
       <div className="flex justify-center">
         <button
           onClick={runConsistencyCheck}
-          disabled={loading || !aiAvailable || (mode === 'compare' ? (!referenceText || !targetText) : !targetText)}
+          disabled={
+            loading ||
+            !aiAvailable ||
+            (mode === "compare" ? !referenceText || !targetText : !targetText)
+          }
           className={`
             px-8 py-3 rounded-full font-bold text-lg transition-all shadow-lg
-            ${loading 
-              ? 'bg-gray-700 cursor-wait' 
-              : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white transform hover:scale-105'
+            ${
+              loading
+                ? "bg-gray-700 cursor-wait"
+                : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white transform hover:scale-105"
             }
-            ${(!aiAvailable || (mode === 'compare' ? (!referenceText || !targetText) : !targetText)) ? 'opacity-50 cursor-not-allowed' : ''}
+            ${!aiAvailable || (mode === "compare" ? !referenceText || !targetText : !targetText) ? "opacity-50 cursor-not-allowed" : ""}
           `}
         >
           {loading ? (
@@ -273,7 +304,7 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
               Running Cross-Examination...
             </span>
           ) : (
-            '🔍 Analyze Consistency'
+            "🔍 Analyze Consistency"
           )}
         </button>
       </div>
@@ -285,18 +316,24 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
           <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
             <div className="bg-gray-900 p-6 border-b border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">
-                {mode === 'compare' ? '🎯 Cross-Examination Results' : '📊 Statement Analysis'}
+                {mode === "compare"
+                  ? "🎯 Cross-Examination Results"
+                  : "📊 Statement Analysis"}
               </h2>
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <span className="text-sm text-gray-400">
-                    {mode === 'compare' ? 'Credibility Score' : 'Quality Score'}
+                    {mode === "compare" ? "Credibility Score" : "Quality Score"}
                   </span>
-                  <div className={`text-3xl font-black ${getScoreColor(analysis.credibility_score || analysis.score || 0)}`}>
+                  <div
+                    className={`text-3xl font-black ${getScoreColor(analysis.credibility_score || analysis.score || 0)}`}
+                  >
                     {analysis.credibility_score || analysis.score || 0}/100
                   </div>
                   <span className="text-xs text-gray-500">
-                    {getScoreLabel(analysis.credibility_score || analysis.score || 0)}
+                    {getScoreLabel(
+                      analysis.credibility_score || analysis.score || 0,
+                    )}
                   </span>
                 </div>
               </div>
@@ -311,13 +348,14 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
                     <span>📝</span> Text Forensics
                   </h3>
                   <p className="text-xs text-gray-400 mt-1">
-                    Hover over highlighted sections to see why they were flagged.
+                    Hover over highlighted sections to see why they were
+                    flagged.
                   </p>
                 </div>
                 <div className="p-6 bg-black/20 max-h-[600px] overflow-y-auto">
-                  <DiffHighlighter 
-                    text={targetText} 
-                    issues={analysis.issues || []} 
+                  <DiffHighlighter
+                    text={targetText}
+                    issues={analysis.issues || []}
                   />
                 </div>
               </div>
@@ -326,20 +364,23 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
               <div className="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
                 <div className="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center">
                   <h3 className="text-white font-bold flex items-center gap-2">
-                    <span>⚠️</span> Issues Found ({analysis.issues?.length || 0})
+                    <span>⚠️</span> Issues Found ({analysis.issues?.length || 0}
+                    )
                   </h3>
                   {analysis.issues?.length > 0 && (
-                    <RedditCopyButton 
+                    <RedditCopyButton
                       textContent={formatIssuesForReddit(analysis)}
                       variant="compact"
                     />
                   )}
                 </div>
                 <div className="p-4 max-h-[600px] overflow-y-auto space-y-4">
-                  {(!analysis.issues || analysis.issues.length === 0) ? (
+                  {!analysis.issues || analysis.issues.length === 0 ? (
                     <div className="text-center py-8 text-green-400">
                       <p className="text-4xl mb-2">✅</p>
-                      <p className="text-lg font-semibold">No issues detected!</p>
+                      <p className="text-lg font-semibold">
+                        No issues detected!
+                      </p>
                       <p className="text-sm text-gray-400 mt-2">
                         Your statement appears consistent with the evidence.
                       </p>
@@ -354,21 +395,26 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
             </div>
 
             {/* Strengths (Solo mode) */}
-            {mode === 'solo' && analysis.strengths && analysis.strengths.length > 0 && (
-              <div className="p-6 border-t border-gray-700">
-                <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-                  <span>💪</span> Strengths
-                </h3>
-                <ul className="space-y-2">
-                  {analysis.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-green-300 text-sm">
-                      <span>✓</span>
-                      <span>{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {mode === "solo" &&
+              analysis.strengths &&
+              analysis.strengths.length > 0 && (
+                <div className="p-6 border-t border-gray-700">
+                  <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <span>💪</span> Strengths
+                  </h3>
+                  <ul className="space-y-2">
+                    {analysis.strengths.map((strength, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 text-green-300 text-sm"
+                      >
+                        <span>✓</span>
+                        <span>{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
 
           {/* Tips Box */}
@@ -377,10 +423,22 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
               <span>💡</span> Why This Matters
             </h4>
             <ul className="text-sm text-blue-200 space-y-2">
-              <li>• VA raters are trained to find <strong>credibility issues</strong> as grounds for denial</li>
-              <li>• Inconsistencies between your statement and medical records are automatic red flags</li>
-              <li>• Words like "always" and "never" are hard to prove and invite scrutiny</li>
-              <li>• Fix these issues <strong>before</strong> submission to strengthen your claim</li>
+              <li>
+                • VA raters are trained to find{" "}
+                <strong>credibility issues</strong> as grounds for denial
+              </li>
+              <li>
+                • Inconsistencies between your statement and medical records are
+                automatic red flags
+              </li>
+              <li>
+                • Words like "always" and "never" are hard to prove and invite
+                scrutiny
+              </li>
+              <li>
+                • Fix these issues <strong>before</strong> submission to
+                strengthen your claim
+              </li>
             </ul>
           </div>
         </div>
@@ -395,14 +453,14 @@ const AIConsistencyAnalyzer = ({ onBack }) => {
 function formatIssuesForReddit(analysis) {
   const score = analysis.credibility_score || analysis.score || 0;
   let text = `**Consistency Check Results: ${score}/100**\n\n`;
-  
+
   if (!analysis.issues || analysis.issues.length === 0) {
-    text += '✅ No issues found! Statement appears internally consistent.\n';
+    text += "✅ No issues found! Statement appears internally consistent.\n";
     return text;
   }
-  
+
   text += `Found **${analysis.issues.length}** potential issues:\n\n`;
-  
+
   analysis.issues.forEach((issue, idx) => {
     text += `**${idx + 1}. ${issue.type}** (${issue.severity})\n`;
     if (issue.quote_target) {
@@ -414,10 +472,10 @@ function formatIssuesForReddit(analysis) {
     if (issue.fix_suggestion) {
       text += `💡 *Fix: ${issue.fix_suggestion}*\n`;
     }
-    text += '\n';
+    text += "\n";
   });
-  
-  text += '*Analyzed using Vet-Rate.org Consistency Engine*';
+
+  text += "*Analyzed using Vet-Rate.org Consistency Engine*";
   return text;
 }
 

@@ -1,6 +1,6 @@
 /**
  * Integration Example for VA.gov OAuth 2.0
- * 
+ *
  * This file shows how to integrate the VA authentication into your existing App.jsx
  */
 
@@ -9,18 +9,18 @@
 // ============================================================================
 
 // main.jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import { VaAuthProvider } from './contexts/VaAuthContext';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import { VaAuthProvider } from "./contexts/VaAuthContext";
+import "./index.css";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <VaAuthProvider>
       <App />
     </VaAuthProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
 // ============================================================================
@@ -28,8 +28,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 // ============================================================================
 
 // App.jsx or wherever you define routes
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import VaAuthCallback from './components/VaAuthCallback';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import VaAuthCallback from "./components/VaAuthCallback";
 
 function App() {
   return (
@@ -37,10 +37,10 @@ function App() {
       <Routes>
         {/* Your existing routes */}
         <Route path="/" element={<HomePage />} />
-        
+
         {/* Add the VA callback route */}
         <Route path="/callback" element={<VaAuthCallback />} />
-        
+
         {/* More existing routes */}
       </Routes>
     </BrowserRouter>
@@ -52,13 +52,13 @@ function App() {
 // ============================================================================
 
 // Header.jsx or Navigation.jsx
-import VaLoginButton from './components/VaLoginButton';
+import VaLoginButton from "./components/VaLoginButton";
 
 function Header() {
   return (
     <header className="flex justify-between items-center p-4">
       <div>Your Logo</div>
-      
+
       {/* Add the VA login button */}
       <VaLoginButton />
     </header>
@@ -70,8 +70,8 @@ function Header() {
 // ============================================================================
 
 // Create a ProtectedRoute component
-import { Navigate } from 'react-router-dom';
-import { useVaAuth } from './hooks/useVaAuth';
+import { Navigate } from "react-router-dom";
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useVaAuth();
@@ -92,22 +92,22 @@ function ProtectedRoute({ children }) {
 }
 
 // Use it in your routes
-<Route 
-  path="/my-va-claims" 
+<Route
+  path="/my-va-claims"
   element={
     <ProtectedRoute>
       <VaClaimsPage />
     </ProtectedRoute>
-  } 
-/>
+  }
+/>;
 
 // ============================================================================
 // STEP 5: Fetch VA data in your components
 // ============================================================================
 
 // VaClaimsPage.jsx (example)
-import { useState, useEffect } from 'react';
-import { useVaAuth } from './hooks/useVaAuth';
+import { useState, useEffect } from "react";
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function VaClaimsPage() {
   const { fetchVaApi, isAuthenticated } = useVaAuth();
@@ -126,7 +126,7 @@ function VaClaimsPage() {
         setLoading(true);
         // Replace with actual VA endpoint
         const data = await fetchVaApi(
-          'https://sandbox-api.va.gov/services/claims/v1/claims'
+          "https://sandbox-api.va.gov/services/claims/v1/claims",
         );
         setClaims(data);
       } catch (err) {
@@ -150,7 +150,7 @@ function VaClaimsPage() {
   return (
     <div>
       <h1>My VA Claims</h1>
-      {claims.map(claim => (
+      {claims.map((claim) => (
         <div key={claim.id}>
           <h2>{claim.type}</h2>
           <p>Status: {claim.status}</p>
@@ -165,7 +165,7 @@ function VaClaimsPage() {
 // ============================================================================
 
 // UserProfile.jsx (example)
-import { useVaAuth } from './hooks/useVaAuth';
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function UserProfile() {
   const { userInfo, isAuthenticated } = useVaAuth();
@@ -176,7 +176,7 @@ function UserProfile() {
 
   return (
     <div className="user-profile">
-      <h2>Welcome, {userInfo?.name || 'Veteran'}!</h2>
+      <h2>Welcome, {userInfo?.name || "Veteran"}!</h2>
       {userInfo?.email && <p>Email: {userInfo.email}</p>}
       {userInfo?.given_name && <p>First Name: {userInfo.given_name}</p>}
       {userInfo?.family_name && <p>Last Name: {userInfo.family_name}</p>}
@@ -189,7 +189,7 @@ function UserProfile() {
 // ============================================================================
 
 // AnyComponent.jsx
-import { useVaAuth } from './hooks/useVaAuth';
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function FeatureComponent() {
   const { isAuthenticated } = useVaAuth();
@@ -198,7 +198,7 @@ function FeatureComponent() {
     <div>
       {/* Always visible content */}
       <h1>Disability Calculator</h1>
-      
+
       {/* Only show to authenticated users */}
       {isAuthenticated && (
         <div className="premium-features">
@@ -206,7 +206,7 @@ function FeatureComponent() {
           <p>View your personalized claims information</p>
         </div>
       )}
-      
+
       {/* Only show to non-authenticated users */}
       {!isAuthenticated && (
         <div className="cta">
@@ -222,10 +222,10 @@ function FeatureComponent() {
 // COMPLETE EXAMPLE: Minimal App.jsx with VA Auth
 // ============================================================================
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useVaAuth } from './hooks/useVaAuth';
-import VaAuthCallback from './components/VaAuthCallback';
-import VaLoginButton from './components/VaLoginButton';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useVaAuth } from "./hooks/useVaAuth";
+import VaAuthCallback from "./components/VaAuthCallback";
+import VaLoginButton from "./components/VaLoginButton";
 
 function App() {
   return (
@@ -253,7 +253,7 @@ function HomePage() {
   return (
     <div className="home">
       <h1>Welcome to Vet-Rate.org</h1>
-      
+
       {isAuthenticated ? (
         <div>
           <p>Hello, {userInfo?.name}! 🎖️</p>

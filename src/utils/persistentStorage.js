@@ -4,15 +4,15 @@
  * Unauthorized copying, use, or distribution is strictly prohibited.
  *
  * Persistent Storage System - "The Bunker"
- * 
+ *
  * A multi-layered, crash-proof storage system that ensures veteran data
  * survives browser crashes, cache clears, and device changes.
- * 
+ *
  * Storage Hierarchy:
  * 1. File System Access API (Desktop) - Crash/cache proof, saves to user's drive
  * 2. IndexedDB - Primary browser storage, survives tab closes
  * 3. Memory buffer - Real-time changes before save
- * 
+ *
  * Features:
  * - Auto-save on form changes ("Save-As-You-Go")
  * - Desktop: Seamless background saves to user's file system
@@ -21,35 +21,35 @@
  * - Resume packet from saved file
  */
 
-import { storage } from './storage';
+import { storage } from "./storage";
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 const CONFIG = {
-  PACKET_FILENAME: 'My-Vet-Rate-Packet.json',
-  AUTO_SAVE_DEBOUNCE_MS: 1500,      // Wait 1.5s after last input before auto-save
-  MILESTONE_SAVE_MS: 30000,          // Force save every 30 seconds if changes exist
-  STORAGE_KEY_PREFIX: 'vetrate_',
-  FILE_HANDLE_KEY: 'vetrate_file_handle_metadata',
-  UNSAVED_FLAG_KEY: 'vetrate_unsaved_changes',
-  LAST_SAVE_KEY: 'vetrate_last_save_timestamp',
-  PACKET_VERSION: '2.0.0'
+  PACKET_FILENAME: "My-Vet-Rate-Packet.json",
+  AUTO_SAVE_DEBOUNCE_MS: 1500, // Wait 1.5s after last input before auto-save
+  MILESTONE_SAVE_MS: 30000, // Force save every 30 seconds if changes exist
+  STORAGE_KEY_PREFIX: "vetrate_",
+  FILE_HANDLE_KEY: "vetrate_file_handle_metadata",
+  UNSAVED_FLAG_KEY: "vetrate_unsaved_changes",
+  LAST_SAVE_KEY: "vetrate_last_save_timestamp",
+  PACKET_VERSION: "2.0.0",
 };
 
 // ============================================================================
 // INTERNAL STATE
 // ============================================================================
 
-let activeFileHandle = null;        // File System Access API handle
-let hasUnsavedChanges = false;      // Tracks if there are pending changes
-let autoSaveTimer = null;           // Debounce timer for auto-save
-let milestoneSaveTimer = null;      // Periodic milestone save timer
-let saveInProgress = false;         // Prevents concurrent saves
-let lastSaveTimestamp = null;       // When we last saved
-let saveListeners = [];             // Callbacks for save events
-let packetData = null;              // Current packet data in memory
+let activeFileHandle = null; // File System Access API handle
+let hasUnsavedChanges = false; // Tracks if there are pending changes
+let autoSaveTimer = null; // Debounce timer for auto-save
+let milestoneSaveTimer = null; // Periodic milestone save timer
+let saveInProgress = false; // Prevents concurrent saves
+let lastSaveTimestamp = null; // When we last saved
+let saveListeners = []; // Callbacks for save events
+let packetData = null; // Current packet data in memory
 
 // ============================================================================
 // FEATURE DETECTION
@@ -59,7 +59,7 @@ let packetData = null;              // Current packet data in memory
  * Check if File System Access API is supported (desktop browsers only)
  */
 export const supportsFileSystemAccess = () => {
-  return 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
+  return "showSaveFilePicker" in window && "showOpenFilePicker" in window;
 };
 
 /**
@@ -69,23 +69,28 @@ export const supportsFileSystemAccess = () => {
  */
 export const isTabletDevice = () => {
   const ua = navigator.userAgent;
-  
+
   // iPad detection (including iPadOS 13+ which reports as Mac)
-  const isIPad = /iPad/i.test(ua) || 
-                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  
+  const isIPad =
+    /iPad/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
   // Android tablet detection (Android without "Mobile" keyword)
   const isAndroidTablet = /Android/i.test(ua) && !/Mobile/i.test(ua);
-  
+
   // Surface/Windows tablet detection
   const isSurfaceTablet = /Windows.*Touch/i.test(ua);
-  
+
   // Screen size check for tablets (768px-1366px typical range)
   const screenWidth = Math.max(window.screen.width, window.screen.height);
   const isTabletScreenSize = screenWidth >= 768 && screenWidth <= 1366;
-  
-  return isIPad || isAndroidTablet || isSurfaceTablet || 
-         (navigator.maxTouchPoints > 2 && isTabletScreenSize);
+
+  return (
+    isIPad ||
+    isAndroidTablet ||
+    isSurfaceTablet ||
+    (navigator.maxTouchPoints > 2 && isTabletScreenSize)
+  );
 };
 
 /**
@@ -93,10 +98,13 @@ export const isTabletDevice = () => {
  */
 export const isMobilePhone = () => {
   const ua = navigator.userAgent;
-  
+
   // Phones explicitly
-  const isPhone = /iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  
+  const isPhone =
+    /iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry|IEMobile|Opera Mini/i.test(
+      ua,
+    );
+
   // Not a tablet
   return isPhone && !isTabletDevice();
 };
@@ -113,14 +121,18 @@ export const isMobileDevice = () => {
  */
 export const getOrientationInfo = () => {
   const isLandscape = window.innerWidth > window.innerHeight;
-  const screenType = isTabletDevice() ? 'tablet' : isMobilePhone() ? 'phone' : 'desktop';
-  
+  const screenType = isTabletDevice()
+    ? "tablet"
+    : isMobilePhone()
+      ? "phone"
+      : "desktop";
+
   return {
     isLandscape,
     isPortrait: !isLandscape,
     screenType,
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
   };
 };
 
@@ -134,19 +146,19 @@ export const getStorageStrategy = () => {
   const hasFileSystemAPI = supportsFileSystemAccess();
   const isTablet = isTabletDevice();
   const isPhone = isMobilePhone();
-  
+
   if (hasFileSystemAPI && !isPhone) {
     // Desktop and some tablets (iPad Safari 15.2+, Chrome on tablets) support File System API
-    return 'file-system';
+    return "file-system";
   }
-  
+
   if (isTablet) {
     // Tablets get enhanced experience with more prominent save prompts
-    return 'indexeddb-download-enhanced';
+    return "indexeddb-download-enhanced";
   }
-  
+
   // Phones use basic IndexedDB + download
-  return 'indexeddb-download';
+  return "indexeddb-download";
 };
 
 // ============================================================================
@@ -160,39 +172,41 @@ export const getStorageStrategy = () => {
  */
 export async function createPacketFile() {
   if (!supportsFileSystemAccess()) {
-    console.warn('File System Access API not supported, using fallback');
+    console.warn("File System Access API not supported, using fallback");
     return false;
   }
 
   try {
     const opts = {
       suggestedName: CONFIG.PACKET_FILENAME,
-      types: [{
-        description: 'Veteran Packet File',
-        accept: { 'application/json': ['.json'] },
-      }],
+      types: [
+        {
+          description: "Veteran Packet File",
+          accept: { "application/json": [".json"] },
+        },
+      ],
     };
 
     // Show system "Save As" dialog
     activeFileHandle = await window.showSaveFilePicker(opts);
-    
+
     // Store handle metadata for session persistence
     await storeFileHandleMetadata();
-    
+
     // Initial write to create the file
     const initialData = getEmptyPacket();
     await writeToFileHandle(initialData);
-    
-    console.log('✅ Packet file created successfully');
-    notifySaveListeners('file-created', initialData);
-    
+
+    console.log("✅ Packet file created successfully");
+    notifySaveListeners("file-created", initialData);
+
     return true;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('User cancelled file creation');
+    if (error.name === "AbortError") {
+      console.log("User cancelled file creation");
       return false;
     }
-    console.error('Error creating packet file:', error);
+    console.error("Error creating packet file:", error);
     return false;
   }
 }
@@ -204,48 +218,48 @@ export async function createPacketFile() {
  */
 async function writeToFileHandle(data) {
   if (!activeFileHandle) {
-    console.warn('No active file handle for direct write');
+    console.warn("No active file handle for direct write");
     return false;
   }
 
   try {
     saveInProgress = true;
-    
+
     // Create the writable stream
     const writable = await activeFileHandle.createWritable();
-    
+
     // Prepare packet with metadata
     const packetToSave = {
       ...data,
       _meta: {
         version: CONFIG.PACKET_VERSION,
         savedAt: new Date().toISOString(),
-        savedBy: 'Vet-Rate.org',
-        checksum: generateChecksum(data)
-      }
+        savedBy: "Vet-Rate.org",
+        checksum: generateChecksum(data),
+      },
     };
-    
+
     // Write the JSON data
     await writable.write(JSON.stringify(packetToSave, null, 2));
-    
+
     // Close the stream (completes the save)
     await writable.close();
-    
+
     lastSaveTimestamp = Date.now();
     hasUnsavedChanges = false;
-    
+
     // Update IndexedDB backup
     await storage.setItem(CONFIG.LAST_SAVE_KEY, lastSaveTimestamp.toString());
-    await storage.setItem(CONFIG.UNSAVED_FLAG_KEY, 'false');
-    
-    console.log('💾 Auto-saved to file:', new Date().toLocaleTimeString());
-    notifySaveListeners('saved', data);
-    
+    await storage.setItem(CONFIG.UNSAVED_FLAG_KEY, "false");
+
+    console.log("💾 Auto-saved to file:", new Date().toLocaleTimeString());
+    notifySaveListeners("saved", data);
+
     return true;
   } catch (error) {
-    console.error('❌ File write failed:', error);
-    notifySaveListeners('save-error', error);
-    
+    console.error("❌ File write failed:", error);
+    notifySaveListeners("save-error", error);
+
     // Fall back to IndexedDB if file write fails
     await saveToIndexedDB(data);
     return false;
@@ -260,16 +274,16 @@ async function writeToFileHandle(data) {
  */
 async function storeFileHandleMetadata() {
   if (!activeFileHandle) return;
-  
+
   try {
     const metadata = {
       hasHandle: true,
       name: activeFileHandle.name,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     await storage.setItem(CONFIG.FILE_HANDLE_KEY, JSON.stringify(metadata));
   } catch (error) {
-    console.error('Error storing file handle metadata:', error);
+    console.error("Error storing file handle metadata:", error);
   }
 }
 
@@ -279,17 +293,19 @@ async function storeFileHandleMetadata() {
  */
 export async function openExistingPacket() {
   if (!supportsFileSystemAccess()) {
-    console.warn('File System Access API not supported');
+    console.warn("File System Access API not supported");
     return null;
   }
 
   try {
     const [handle] = await window.showOpenFilePicker({
-      types: [{
-        description: 'Veteran Packet File',
-        accept: { 'application/json': ['.json'] },
-      }],
-      multiple: false
+      types: [
+        {
+          description: "Veteran Packet File",
+          accept: { "application/json": [".json"] },
+        },
+      ],
+      multiple: false,
     });
 
     activeFileHandle = handle;
@@ -302,23 +318,23 @@ export async function openExistingPacket() {
 
     // Validate it's a Vet-Rate packet
     if (!validatePacketData(data)) {
-      throw new Error('Invalid packet file format');
+      throw new Error("Invalid packet file format");
     }
 
     // Load into memory and IndexedDB
     packetData = data;
     await saveToIndexedDB(data);
-    
-    console.log('✅ Packet loaded from file');
-    notifySaveListeners('loaded', data);
-    
+
+    console.log("✅ Packet loaded from file");
+    notifySaveListeners("loaded", data);
+
     return data;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('User cancelled file selection');
+    if (error.name === "AbortError") {
+      console.log("User cancelled file selection");
       return null;
     }
-    console.error('Error opening packet file:', error);
+    console.error("Error opening packet file:", error);
     throw error;
   }
 }
@@ -327,7 +343,7 @@ export async function openExistingPacket() {
 // INDEXEDDB STORAGE LAYER (Primary Browser Storage)
 // ============================================================================
 
-const PACKET_STORAGE_KEY = 'vetrate_complete_packet';
+const PACKET_STORAGE_KEY = "vetrate_complete_packet";
 
 /**
  * Save packet data to IndexedDB (the browser backup)
@@ -340,15 +356,15 @@ export async function saveToIndexedDB(data) {
       ...data,
       _indexedDBMeta: {
         savedAt: new Date().toISOString(),
-        isBackup: !activeFileHandle
-      }
+        isBackup: !activeFileHandle,
+      },
     };
-    
+
     await storage.setItem(PACKET_STORAGE_KEY, JSON.stringify(packetToSave));
-    console.log('📦 Saved to IndexedDB backup');
+    console.log("📦 Saved to IndexedDB backup");
     return true;
   } catch (error) {
-    console.error('IndexedDB save error:', error);
+    console.error("IndexedDB save error:", error);
     return false;
   }
 }
@@ -367,7 +383,7 @@ export async function loadFromIndexedDB() {
     }
     return null;
   } catch (error) {
-    console.error('IndexedDB load error:', error);
+    console.error("IndexedDB load error:", error);
     return null;
   }
 }
@@ -387,18 +403,18 @@ export function downloadPacketFile(data, filename = null) {
     _meta: {
       version: CONFIG.PACKET_VERSION,
       exportedAt: new Date().toISOString(),
-      exportedBy: 'Vet-Rate.org'
-    }
+      exportedBy: "Vet-Rate.org",
+    },
   };
 
   const jsonString = JSON.stringify(packetToDownload, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
+  const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
-  const date = new Date().toISOString().split('T')[0];
+  const date = new Date().toISOString().split("T")[0];
   const downloadName = filename || `My-Vet-Rate-Packet-${date}.json`;
 
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = downloadName;
   document.body.appendChild(a);
@@ -409,9 +425,9 @@ export function downloadPacketFile(data, filename = null) {
   // Mark as saved
   hasUnsavedChanges = false;
   lastSaveTimestamp = Date.now();
-  
-  notifySaveListeners('downloaded', data);
-  console.log('📥 Packet downloaded:', downloadName);
+
+  notifySaveListeners("downloaded", data);
+  console.log("📥 Packet downloaded:", downloadName);
 }
 
 /**
@@ -423,18 +439,18 @@ export async function loadFromUploadedFile(file) {
   try {
     const contents = await file.text();
     const data = JSON.parse(contents);
-    
+
     if (!validatePacketData(data)) {
-      throw new Error('Invalid packet file format');
+      throw new Error("Invalid packet file format");
     }
-    
+
     packetData = data;
     await saveToIndexedDB(data);
-    
-    notifySaveListeners('loaded', data);
+
+    notifySaveListeners("loaded", data);
     return data;
   } catch (error) {
-    console.error('Error loading uploaded file:', error);
+    console.error("Error loading uploaded file:", error);
     throw error;
   }
 }
@@ -449,12 +465,12 @@ export async function loadFromUploadedFile(file) {
  */
 export function markAsModified() {
   hasUnsavedChanges = true;
-  
+
   // Clear existing debounce timer
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer);
   }
-  
+
   // Set new debounce timer for auto-save
   autoSaveTimer = setTimeout(() => {
     triggerAutoSave();
@@ -466,18 +482,18 @@ export function markAsModified() {
  */
 async function triggerAutoSave() {
   if (saveInProgress || !hasUnsavedChanges) return;
-  
+
   const data = await gatherPacketData();
-  
+
   if (supportsFileSystemAccess() && activeFileHandle) {
     // Desktop with active file: Direct file write
     await writeToFileHandle(data);
   } else {
     // Mobile or no file handle: IndexedDB only
     await saveToIndexedDB(data);
-    
+
     // Store the unsaved flag for warning on close
-    await storage.setItem(CONFIG.UNSAVED_FLAG_KEY, 'true');
+    await storage.setItem(CONFIG.UNSAVED_FLAG_KEY, "true");
   }
 }
 
@@ -488,13 +504,13 @@ async function triggerAutoSave() {
  */
 export async function manualSave(forceDownload = false) {
   const data = await gatherPacketData();
-  
+
   if (forceDownload || !supportsFileSystemAccess()) {
     // Download flow
     downloadPacketFile(data);
     return true;
   }
-  
+
   if (activeFileHandle) {
     // Write to existing file
     return await writeToFileHandle(data);
@@ -514,17 +530,17 @@ export async function manualSave(forceDownload = false) {
  */
 export async function saveOnStepComplete() {
   if (!hasUnsavedChanges && !packetData) return true;
-  
+
   const data = await gatherPacketData();
-  
+
   // Always save to IndexedDB as backup
   await saveToIndexedDB(data);
-  
+
   // Desktop: Also save to file if handle exists
   if (supportsFileSystemAccess() && activeFileHandle) {
     await writeToFileHandle(data);
   }
-  
+
   return true;
 }
 
@@ -547,10 +563,10 @@ function getEmptyPacket() {
     serviceHistory: {
       deployments: [],
       awards: [],
-      dd214Data: null
+      dd214Data: null,
     },
     gapAnalyses: [],
-    settings: {}
+    settings: {},
   };
 }
 
@@ -561,55 +577,69 @@ function getEmptyPacket() {
 export async function gatherPacketData() {
   // If we have data in memory, use it as base
   const base = packetData || getEmptyPacket();
-  
+
   // Gather from various storage locations
   const gathered = {
     ...base,
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   };
-  
+
   // Pull claims
   try {
-    const claims = localStorage.getItem('vet_rate_saved_claims');
+    const claims = localStorage.getItem("vet_rate_saved_claims");
     if (claims) gathered.claims = JSON.parse(claims);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull statements
   try {
-    const statements = localStorage.getItem('vet_rate_statements');
+    const statements = localStorage.getItem("vet_rate_statements");
     if (statements) gathered.statements = JSON.parse(statements);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull veteran profile
   try {
-    const profile = localStorage.getItem('vet_rate_veteran_profile');
+    const profile = localStorage.getItem("vet_rate_veteran_profile");
     if (profile) gathered.veteranProfile = JSON.parse(profile);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull saved forms
   try {
-    const forms = localStorage.getItem('vet_rate_saved_forms');
+    const forms = localStorage.getItem("vet_rate_saved_forms");
     if (forms) gathered.savedForms = JSON.parse(forms);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull ratings
   try {
-    const ratings = localStorage.getItem('vet_rate_my_ratings');
+    const ratings = localStorage.getItem("vet_rate_my_ratings");
     if (ratings) gathered.myRatings = JSON.parse(ratings);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull service history
   try {
-    const history = localStorage.getItem('vet_rate_service_history');
+    const history = localStorage.getItem("vet_rate_service_history");
     if (history) gathered.serviceHistory = JSON.parse(history);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   // Pull gap analyses
   try {
-    const gaps = localStorage.getItem('vet_rate_gap_analyses');
+    const gaps = localStorage.getItem("vet_rate_gap_analyses");
     if (gaps) gathered.gapAnalyses = JSON.parse(gaps);
-  } catch (e) { /* ignore */ }
-  
+  } catch (e) {
+    /* ignore */
+  }
+
   packetData = gathered;
   return gathered;
 }
@@ -620,41 +650,62 @@ export async function gatherPacketData() {
  */
 export async function restorePacketData(packet) {
   if (!packet) return false;
-  
+
   try {
     // Restore each data type
     if (packet.claims) {
-      localStorage.setItem('vet_rate_saved_claims', JSON.stringify(packet.claims));
+      localStorage.setItem(
+        "vet_rate_saved_claims",
+        JSON.stringify(packet.claims),
+      );
     }
     if (packet.statements) {
-      localStorage.setItem('vet_rate_statements', JSON.stringify(packet.statements));
+      localStorage.setItem(
+        "vet_rate_statements",
+        JSON.stringify(packet.statements),
+      );
     }
     if (packet.veteranProfile) {
-      localStorage.setItem('vet_rate_veteran_profile', JSON.stringify(packet.veteranProfile));
+      localStorage.setItem(
+        "vet_rate_veteran_profile",
+        JSON.stringify(packet.veteranProfile),
+      );
     }
     if (packet.savedForms) {
-      localStorage.setItem('vet_rate_saved_forms', JSON.stringify(packet.savedForms));
+      localStorage.setItem(
+        "vet_rate_saved_forms",
+        JSON.stringify(packet.savedForms),
+      );
     }
     if (packet.myRatings) {
-      localStorage.setItem('vet_rate_my_ratings', JSON.stringify(packet.myRatings));
+      localStorage.setItem(
+        "vet_rate_my_ratings",
+        JSON.stringify(packet.myRatings),
+      );
     }
     if (packet.serviceHistory) {
-      localStorage.setItem('vet_rate_service_history', JSON.stringify(packet.serviceHistory));
+      localStorage.setItem(
+        "vet_rate_service_history",
+        JSON.stringify(packet.serviceHistory),
+      );
     }
     if (packet.gapAnalyses) {
-      localStorage.setItem('vet_rate_gap_analyses', JSON.stringify(packet.gapAnalyses));
+      localStorage.setItem(
+        "vet_rate_gap_analyses",
+        JSON.stringify(packet.gapAnalyses),
+      );
     }
-    
+
     packetData = packet;
-    
+
     // Also store in IndexedDB
     await saveToIndexedDB(packet);
-    
-    notifySaveListeners('restored', packet);
-    console.log('✅ Packet data restored successfully');
+
+    notifySaveListeners("restored", packet);
+    console.log("✅ Packet data restored successfully");
     return true;
   } catch (error) {
-    console.error('Error restoring packet data:', error);
+    console.error("Error restoring packet data:", error);
     return false;
   }
 }
@@ -667,13 +718,13 @@ export async function restorePacketData(packet) {
  * Validate that a packet has the expected structure
  */
 function validatePacketData(data) {
-  if (!data || typeof data !== 'object') return false;
-  
+  if (!data || typeof data !== "object") return false;
+
   // Must have at least version or some expected fields
   const hasVersion = data.version || data._meta?.version;
   const hasClaims = Array.isArray(data.claims);
   const hasProfile = data.veteranProfile !== undefined;
-  
+
   return hasVersion || hasClaims || hasProfile;
 }
 
@@ -685,7 +736,7 @@ function generateChecksum(data) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return hash.toString(16);
@@ -699,12 +750,12 @@ function generateChecksum(data) {
  * Initialize the beforeunload warning for unsaved changes
  */
 export function initUnsavedChangesWarning() {
-  window.addEventListener('beforeunload', (event) => {
+  window.addEventListener("beforeunload", (event) => {
     if (hasUnsavedChanges) {
       // This triggers the browser's native warning dialog
       event.preventDefault();
-      event.returnValue = '';
-      return '';
+      event.returnValue = "";
+      return "";
     }
   });
 }
@@ -725,7 +776,7 @@ export function getSaveStatus() {
     lastSaveTimestamp,
     hasActiveFileHandle: !!activeFileHandle,
     storageStrategy: getStorageStrategy(),
-    isMobile: isMobileDevice()
+    isMobile: isMobileDevice(),
   };
 }
 
@@ -740,7 +791,7 @@ export function getSaveStatus() {
 export function addSaveListener(callback) {
   saveListeners.push(callback);
   return () => {
-    saveListeners = saveListeners.filter(cb => cb !== callback);
+    saveListeners = saveListeners.filter((cb) => cb !== callback);
   };
 }
 
@@ -748,11 +799,11 @@ export function addSaveListener(callback) {
  * Notify all listeners of a save event
  */
 function notifySaveListeners(eventType, data) {
-  saveListeners.forEach(callback => {
+  saveListeners.forEach((callback) => {
     try {
       callback(eventType, data);
     } catch (error) {
-      console.error('Save listener error:', error);
+      console.error("Save listener error:", error);
     }
   });
 }
@@ -769,10 +820,10 @@ export function startMilestoneSaves() {
   if (milestoneSaveTimer) {
     clearInterval(milestoneSaveTimer);
   }
-  
+
   milestoneSaveTimer = setInterval(async () => {
     if (hasUnsavedChanges && !saveInProgress) {
-      console.log('⏰ Milestone save triggered');
+      console.log("⏰ Milestone save triggered");
       await triggerAutoSave();
     }
   }, CONFIG.MILESTONE_SAVE_MS);
@@ -797,35 +848,37 @@ export function stopMilestoneSaves() {
  * Call this on app startup
  */
 export async function initPersistentStorage() {
-  console.log('🚀 Initializing Persistent Storage System...');
+  console.log("🚀 Initializing Persistent Storage System...");
   console.log(`   Strategy: ${getStorageStrategy()}`);
-  console.log(`   File System API: ${supportsFileSystemAccess() ? 'Supported' : 'Not supported'}`);
-  console.log(`   Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`);
-  
+  console.log(
+    `   File System API: ${supportsFileSystemAccess() ? "Supported" : "Not supported"}`,
+  );
+  console.log(`   Device: ${isMobileDevice() ? "Mobile" : "Desktop"}`);
+
   // Load any existing data from IndexedDB
   const existingData = await loadFromIndexedDB();
   if (existingData) {
     packetData = existingData;
-    console.log('📂 Loaded existing packet from IndexedDB');
+    console.log("📂 Loaded existing packet from IndexedDB");
   }
-  
+
   // Check if there were unsaved changes from a previous session
   const unsavedFlag = await storage.getItem(CONFIG.UNSAVED_FLAG_KEY);
-  if (unsavedFlag === 'true') {
+  if (unsavedFlag === "true") {
     hasUnsavedChanges = true;
-    console.log('⚠️ Found unsaved changes from previous session');
+    console.log("⚠️ Found unsaved changes from previous session");
   }
-  
+
   // Initialize unsaved changes warning
   initUnsavedChangesWarning();
-  
+
   // Start milestone saves
   startMilestoneSaves();
-  
+
   return {
     strategy: getStorageStrategy(),
     hasExistingData: !!existingData,
-    hasUnsavedChanges
+    hasUnsavedChanges,
   };
 }
 
@@ -838,37 +891,37 @@ export default {
   supportsFileSystemAccess,
   isMobileDevice,
   getStorageStrategy,
-  
+
   // File System API
   createPacketFile,
   openExistingPacket,
-  
+
   // IndexedDB
   saveToIndexedDB,
   loadFromIndexedDB,
-  
+
   // Mobile fallback
   downloadPacketFile,
   loadFromUploadedFile,
-  
+
   // Unified save protocol
   markAsModified,
   manualSave,
   saveOnStepComplete,
-  
+
   // Data management
   gatherPacketData,
   restorePacketData,
-  
+
   // Status
   checkHasUnsavedChanges,
   getSaveStatus,
-  
+
   // Listeners
   addSaveListener,
-  
+
   // Lifecycle
   initPersistentStorage,
   startMilestoneSaves,
-  stopMilestoneSaves
+  stopMilestoneSaves,
 };

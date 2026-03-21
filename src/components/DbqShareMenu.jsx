@@ -11,7 +11,7 @@
  * Tab 3: Mobile Handoff (AirDrop/Share)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   generateDraftDbq,
   downloadPdfBlob,
@@ -19,8 +19,8 @@ import {
   sharePdfNatively,
   copyDbqSummaryToClipboard,
   getSubjectiveQuestions,
-} from '../utils/pdfDbqFiller';
-import { useLanguage } from '../contexts/LanguageContext';
+} from "../utils/pdfDbqFiller";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * DbqShareMenu - Secure sharing interface for draft DBQs
@@ -32,21 +32,23 @@ import { useLanguage } from '../contexts/LanguageContext';
  */
 export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('download');
+  const [activeTab, setActiveTab] = useState("download");
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState(null);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
-  
+
   // Check for native share support on mount
   useEffect(() => {
     const checkShareSupport = async () => {
       if (navigator.share) {
         // Create a test file to check if file sharing is supported
-        const testBlob = new Blob(['test'], { type: 'application/pdf' });
-        const testFile = new File([testBlob], 'test.pdf', { type: 'application/pdf' });
-        
+        const testBlob = new Blob(["test"], { type: "application/pdf" });
+        const testFile = new File([testBlob], "test.pdf", {
+          type: "application/pdf",
+        });
+
         if (navigator.canShare && navigator.canShare({ files: [testFile] })) {
           setCanNativeShare(true);
         }
@@ -56,31 +58,34 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   }, []);
 
   const getFilename = () => {
-    const date = new Date().toISOString().split('T')[0];
+    const date = new Date().toISOString().split("T")[0];
     return `DRAFT_DBQ_${formId}_${date}.pdf`;
   };
 
   // Tab 1: Direct Download
   const handleDirectDownload = async () => {
     setIsGenerating(true);
-    setStatus({ type: 'info', message: 'Generating draft DBQ...' });
-    
+    setStatus({ type: "info", message: "Generating draft DBQ..." });
+
     try {
       // deepcode ignore javascript/DOMXSS: downloadPdfBlob delegates to triggerBlobDownload which reconstructs the blob URL from UUID regex — a.href is literal 'blob:' + origin + '/' + UUID, never raw blob content
       const pdfBlob = await generateDraftDbq(formId, formData, {
         includeWatermark: true,
         includeBanner: true,
       });
-      
+
       if (!pdfBlob) {
-        throw new Error('Failed to generate PDF');
+        throw new Error("Failed to generate PDF");
       }
-      
+
       downloadPdfBlob(pdfBlob, getFilename());
-      setStatus({ type: 'success', message: 'Draft DBQ downloaded!' });
+      setStatus({ type: "success", message: "Draft DBQ downloaded!" });
     } catch (error) {
-      const safeMsg = (error.message || 'Unknown error').replace(/[<>&"']/g, '');
-      setStatus({ type: 'error', message: `❌ Error: ${safeMsg}` });
+      const safeMsg = (error.message || "Unknown error").replace(
+        /[<>&"']/g,
+        "",
+      );
+      setStatus({ type: "error", message: `❌ Error: ${safeMsg}` });
     } finally {
       setIsGenerating(false);
     }
@@ -89,38 +94,46 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   // Tab 2: Encrypted ZIP
   const handleEncryptedDownload = async () => {
     if (!password || password.length < 4) {
-      setStatus({ type: 'error', message: '❌ Please enter a password (at least 4 characters)' });
+      setStatus({
+        type: "error",
+        message: "❌ Please enter a password (at least 4 characters)",
+      });
       return;
     }
-    
+
     setIsGenerating(true);
-    setStatus({ type: 'info', message: 'Generating secure package...' });
-    
+    setStatus({ type: "info", message: "Generating secure package..." });
+
     try {
       const pdfBlob = await generateDraftDbq(formId, formData, {
         includeWatermark: true,
         includeBanner: true,
       });
-      
+
       if (!pdfBlob) {
-        throw new Error('Failed to generate PDF');
+        throw new Error("Failed to generate PDF");
       }
-      
-      const zipBlob = await createEncryptedZip(pdfBlob, getFilename(), password);
-      
+
+      const zipBlob = await createEncryptedZip(
+        pdfBlob,
+        getFilename(),
+        password,
+      );
+
       if (!zipBlob) {
-        throw new Error('Failed to create ZIP');
+        throw new Error("Failed to create ZIP");
       }
-      
-      const date = new Date().toISOString().split('T')[0];
+
+      const date = new Date().toISOString().split("T")[0];
       downloadPdfBlob(zipBlob, `Secure_DBQ_Package_${date}.zip`);
-      
-      setStatus({ 
-        type: 'success', 
-        message: '✅ Secure package downloaded! Share the password separately (call/text).' 
+
+      setStatus({
+        type: "success",
+        message:
+          "✅ Secure package downloaded! Share the password separately (call/text).",
       });
     } catch (error) {
-      setStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+      setStatus({ type: "error", message: `❌ Error: ${error.message}` });
     } finally {
       setIsGenerating(false);
     }
@@ -129,29 +142,33 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   // Tab 3: Mobile Share
   const handleNativeShare = async () => {
     setIsGenerating(true);
-    setStatus({ type: 'info', message: 'Preparing to share...' });
-    
+    setStatus({ type: "info", message: "Preparing to share..." });
+
     try {
       const pdfBlob = await generateDraftDbq(formId, formData, {
         includeWatermark: true,
         includeBanner: true,
       });
-      
+
       if (!pdfBlob) {
-        throw new Error('Failed to generate PDF');
+        throw new Error("Failed to generate PDF");
       }
-      
-      const result = await sharePdfNatively(pdfBlob, getFilename(), `Draft DBQ: ${formTitle}`);
-      
+
+      const result = await sharePdfNatively(
+        pdfBlob,
+        getFilename(),
+        `Draft DBQ: ${formTitle}`,
+      );
+
       if (result.success) {
-        setStatus({ type: 'success', message: '✅ Shared successfully!' });
-      } else if (result.method === 'cancelled') {
-        setStatus({ type: 'info', message: 'Share cancelled' });
+        setStatus({ type: "success", message: "✅ Shared successfully!" });
+      } else if (result.method === "cancelled") {
+        setStatus({ type: "info", message: "Share cancelled" });
       } else {
-        throw new Error(result.error || 'Share failed');
+        throw new Error(result.error || "Share failed");
       }
     } catch (error) {
-      setStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+      setStatus({ type: "error", message: `❌ Error: ${error.message}` });
     } finally {
       setIsGenerating(false);
     }
@@ -160,26 +177,29 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
   // Fallback: Copy to clipboard
   const handleCopyToClipboard = async () => {
     setIsGenerating(true);
-    
+
     try {
       const success = await copyDbqSummaryToClipboard(formData);
-      
+
       if (success) {
-        setStatus({ type: 'success', message: '✅ Summary copied to clipboard!' });
+        setStatus({
+          type: "success",
+          message: "✅ Summary copied to clipboard!",
+        });
       } else {
-        throw new Error('Failed to copy');
+        throw new Error("Failed to copy");
       }
     } catch (error) {
-      setStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+      setStatus({ type: "error", message: `❌ Error: ${error.message}` });
     } finally {
       setIsGenerating(false);
     }
   };
 
   const tabs = [
-    { id: 'download', label: '📥 Download', icon: '📥' },
-    { id: 'encrypt', label: '🔐 Encrypt', icon: '🔐' },
-    { id: 'share', label: '📲 Share', icon: '📲' },
+    { id: "download", label: "📥 Download", icon: "📥" },
+    { id: "encrypt", label: "🔐 Encrypt", icon: "🔐" },
+    { id: "share", label: "📲 Share", icon: "📲" },
   ];
 
   return (
@@ -223,8 +243,8 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
             }`}
           >
             {tab.label}
@@ -238,11 +258,11 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
         {status && (
           <div
             className={`mb-4 p-3 rounded-lg text-sm ${
-              status.type === 'success'
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                : status.type === 'error'
-                ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
+              status.type === "success"
+                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                : status.type === "error"
+                  ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                  : "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
             }`}
           >
             {status.message}
@@ -250,14 +270,14 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
         )}
 
         {/* Tab 1: Direct Download */}
-        {activeTab === 'download' && (
+        {activeTab === "download" && (
           <div className="space-y-4">
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <h4 className="font-semibold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
                 📥 Direct Download
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Download the draft DBQ as a PDF file. Perfect for printing or 
+                Download the draft DBQ as a PDF file. Perfect for printing or
                 saving to your records before your appointment.
               </p>
               <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
@@ -266,7 +286,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                 <li>✓ Your responses pre-filled in subjective sections</li>
               </ul>
             </div>
-            
+
             <button
               onClick={handleDirectDownload}
               disabled={isGenerating}
@@ -277,23 +297,21 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                   <span className="animate-spin">⏳</span> Generating...
                 </>
               ) : (
-                <>
-                  📄 Download Draft PDF
-                </>
+                <>📄 Download Draft PDF</>
               )}
             </button>
           </div>
         )}
 
         {/* Tab 2: Encrypted ZIP */}
-        {activeTab === 'encrypt' && (
+        {activeTab === "encrypt" && (
           <div className="space-y-4">
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <h4 className="font-semibold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
                 🔐 Password-Protected Package
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Create a secure ZIP file to email to your doctor. Share the 
+                Create a secure ZIP file to email to your doctor. Share the
                 password separately (call or text) for security.
               </p>
               <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
@@ -302,14 +320,14 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                 <li>✓ Includes instructions for your doctor</li>
               </ul>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Set a Password
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter a password (min 4 characters)"
@@ -320,14 +338,15 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                💡 Tip: Use your birth year or last 4 of phone # - easy to share verbally
+                💡 Tip: Use your birth year or last 4 of phone # - easy to share
+                verbally
               </p>
             </div>
-            
+
             <button
               onClick={handleEncryptedDownload}
               disabled={isGenerating || password.length < 4}
@@ -338,16 +357,14 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                   <span className="animate-spin">⏳</span> Creating Package...
                 </>
               ) : (
-                <>
-                  🔒 Generate Secure ZIP
-                </>
+                <>🔒 Generate Secure ZIP</>
               )}
             </button>
           </div>
         )}
 
         {/* Tab 3: Mobile Share */}
-        {activeTab === 'share' && (
+        {activeTab === "share" && (
           <div className="space-y-4">
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <h4 className="font-semibold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
@@ -355,8 +372,8 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 {canNativeShare
-                  ? 'Share directly to your doctor\'s device via AirDrop, text, or any app.'
-                  : 'Copy your responses to paste into a patient portal or message.'}
+                  ? "Share directly to your doctor's device via AirDrop, text, or any app."
+                  : "Copy your responses to paste into a patient portal or message."}
               </p>
               {canNativeShare && (
                 <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
@@ -366,7 +383,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                 </ul>
               )}
             </div>
-            
+
             {canNativeShare ? (
               <button
                 onClick={handleNativeShare}
@@ -378,9 +395,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                     <span className="animate-spin">⏳</span> Preparing...
                   </>
                 ) : (
-                  <>
-                    📲 Open Share Sheet
-                  </>
+                  <>📲 Open Share Sheet</>
                 )}
               </button>
             ) : (
@@ -391,7 +406,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                     Use the options below instead:
                   </p>
                 </div>
-                
+
                 <button
                   onClick={handleCopyToClipboard}
                   disabled={isGenerating}
@@ -399,7 +414,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
                 >
                   📋 Copy Summary to Clipboard
                 </button>
-                
+
                 <button
                   onClick={handleDirectDownload}
                   disabled={isGenerating}
@@ -416,7 +431,8 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
       {/* Footer */}
       <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          🔒 Your data never leaves your device. Vet-Rate.org processes everything locally.
+          🔒 Your data never leaves your device. Vet-Rate.org processes
+          everything locally.
         </p>
       </div>
     </div>

@@ -1,26 +1,26 @@
 /**
  * VA Tooltip Component - "Jargon Decoder"
  * Displays definitions for VA terminology on hover
- * 
+ *
  * Usage:
  *   <VaTerm term="C&P">C&P Exam</VaTerm>
- *   
+ *
  * Or use the auto-highlighter:
  *   <VaTermHighlighter text="You need a C&P Exam for your claim." />
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { getDefinition } from '../utils/vaGlossary';
-import { highlightVATermsReact } from '../utils/glossaryHighlighter';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useRef, useEffect } from "react";
+import { getDefinition } from "../utils/vaGlossary";
+import { highlightVATermsReact } from "../utils/glossaryHighlighter";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * Individual VA term with tooltip
  */
-export const VaTerm = ({ term, definition, children, className = '' }) => {
+export const VaTerm = ({ term, definition, children, className = "" }) => {
   const { t } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState('');
+  const [tooltipPosition, setTooltipPosition] = useState("");
   const termRef = useRef(null);
 
   // Auto-fetch definition if not provided
@@ -32,18 +32,18 @@ export const VaTerm = ({ term, definition, children, className = '' }) => {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
-      let position = '';
+      let position = "";
 
       // Check horizontal position
       if (rect.left < 160) {
-        position += ' tooltip-right';
+        position += " tooltip-right";
       } else if (rect.right > windowWidth - 160) {
-        position += ' tooltip-left';
+        position += " tooltip-left";
       }
 
       // Check vertical position
       if (rect.top < 100) {
-        position += ' tooltip-bottom';
+        position += " tooltip-bottom";
       }
 
       setTooltipPosition(position);
@@ -83,11 +83,11 @@ export const VaTerm = ({ term, definition, children, className = '' }) => {
  * Automatic VA term highlighter component
  * Scans text and automatically wraps VA terms with tooltips
  */
-export const VaTermHighlighter = ({ 
-  text, 
-  className = '',
+export const VaTermHighlighter = ({
+  text,
+  className = "",
   excludeTerms = [],
-  caseSensitive = false 
+  caseSensitive = false,
 }) => {
   if (!text) return null;
 
@@ -96,14 +96,14 @@ export const VaTermHighlighter = ({
   return (
     <span className={className}>
       {elements.map((element, index) => {
-        if (typeof element === 'string') {
+        if (typeof element === "string") {
           return <React.Fragment key={index}>{element}</React.Fragment>;
         }
-        
-        if (element.type === 'va-term') {
+
+        if (element.type === "va-term") {
           return (
-            <VaTerm 
-              key={element.key} 
+            <VaTerm
+              key={element.key}
               term={element.term}
               definition={element.definition}
             >
@@ -111,7 +111,7 @@ export const VaTermHighlighter = ({
             </VaTerm>
           );
         }
-        
+
         return null;
       })}
     </span>
@@ -125,48 +125,48 @@ export const useVATooltips = (contentRef, dependencies = []) => {
   useEffect(() => {
     if (!contentRef.current) return;
 
-    const terms = contentRef.current.querySelectorAll('.va-term');
-    
-    terms.forEach(termElement => {
-      const term = termElement.getAttribute('data-term');
-      const definition = termElement.getAttribute('data-definition');
-      
+    const terms = contentRef.current.querySelectorAll(".va-term");
+
+    terms.forEach((termElement) => {
+      const term = termElement.getAttribute("data-term");
+      const definition = termElement.getAttribute("data-definition");
+
       if (!definition) return;
 
       const handleMouseEnter = () => {
-        const tooltip = document.createElement('span');
-        tooltip.className = 'va-tooltip';
+        const tooltip = document.createElement("span");
+        tooltip.className = "va-tooltip";
         tooltip.innerHTML = `<span class="va-tooltip-term">${term}</span>${definition}`;
         termElement.appendChild(tooltip);
-        
+
         // Position adjustment
         setTimeout(() => {
           const rect = termElement.getBoundingClientRect();
           const tooltipRect = tooltip.getBoundingClientRect();
-          
+
           if (rect.left < 160) {
-            tooltip.classList.add('tooltip-right');
+            tooltip.classList.add("tooltip-right");
           } else if (rect.right > window.innerWidth - 160) {
-            tooltip.classList.add('tooltip-left');
+            tooltip.classList.add("tooltip-left");
           }
-          
+
           if (rect.top < 100) {
-            tooltip.classList.add('tooltip-bottom');
+            tooltip.classList.add("tooltip-bottom");
           }
         }, 10);
       };
 
       const handleMouseLeave = () => {
-        const tooltip = termElement.querySelector('.va-tooltip');
+        const tooltip = termElement.querySelector(".va-tooltip");
         if (tooltip) tooltip.remove();
       };
 
-      termElement.addEventListener('mouseenter', handleMouseEnter);
-      termElement.addEventListener('mouseleave', handleMouseLeave);
+      termElement.addEventListener("mouseenter", handleMouseEnter);
+      termElement.addEventListener("mouseleave", handleMouseLeave);
 
       return () => {
-        termElement.removeEventListener('mouseenter', handleMouseEnter);
-        termElement.removeEventListener('mouseleave', handleMouseLeave);
+        termElement.removeEventListener("mouseenter", handleMouseEnter);
+        termElement.removeEventListener("mouseleave", handleMouseLeave);
       };
     });
   }, [contentRef, ...dependencies]);
@@ -178,15 +178,15 @@ export const useVATooltips = (contentRef, dependencies = []) => {
 export const withVATooltips = (WrappedComponent) => {
   return function WithVATooltipsComponent(props) {
     const { text, children, ...otherProps } = props;
-    
-    if (text && typeof text === 'string') {
+
+    if (text && typeof text === "string") {
       return (
         <WrappedComponent {...otherProps}>
           <VaTermHighlighter text={text} />
         </WrappedComponent>
       );
     }
-    
+
     return <WrappedComponent {...props}>{children}</WrappedComponent>;
   };
 };

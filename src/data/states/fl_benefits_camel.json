@@ -112,11 +112,7 @@
         "form": "DR-501",
         "deadline": null,
         "renewalRequired": false,
-        "documentation": [
-          "DD-214",
-          "Medical certification",
-          "VA letter"
-        ],
+        "documentation": ["DD-214", "Medical certification", "VA letter"],
         "onlineApplicationAvailable": false,
         "applicationUrl": null
       },
@@ -186,10 +182,7 @@
         "minRating": 100,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "Florida resident",
-          "Disabled Veteran license plate"
-        ]
+        "otherReqs": ["Florida resident", "Disabled Veteran license plate"]
       },
       "applicationProcess": {
         "agency": "Florida's Turnpike Enterprise",
@@ -311,10 +304,7 @@
         "minRating": 100,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "Florida resident",
-          "Service-connected disability"
-        ]
+        "otherReqs": ["Florida resident", "Service-connected disability"]
       },
       "applicationProcess": {
         "agency": "Florida Fish and Wildlife Conservation Commission",
@@ -352,20 +342,14 @@
         "minRating": 10,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "Florida resident",
-          "Service-connected disability"
-        ]
+        "otherReqs": ["Florida resident", "Service-connected disability"]
       },
       "applicationProcess": {
         "agency": "Florida State Parks",
         "form": null,
         "deadline": null,
         "renewalRequired": false,
-        "documentation": [
-          "DD-214",
-          "VA disability letter"
-        ],
+        "documentation": ["DD-214", "VA disability letter"],
         "onlineApplicationAvailable": false,
         "applicationUrl": "https://www.floridastateparks.org/"
       },

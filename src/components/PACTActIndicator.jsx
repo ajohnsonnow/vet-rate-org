@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2025 Vet-Rate.org
  * All rights reserved.
- * 
+ *
  * This source code is proprietary and confidential.
  */
 
-import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import pactActData from '../data/pactActData.json';
+import React, { useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import pactActData from "../data/pactActData.json";
 
 /**
  * PACTActBadge - A small badge to indicate PACT Act presumptive status
@@ -15,42 +15,51 @@ import pactActData from '../data/pactActData.json';
 export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
   const { t } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const pactInfo = pactActData.diagnosticCodePactMapping[diagnosticCode];
-  
+
   if (!pactInfo?.pactAct) return null;
-  
+
   const exposureNames = {
-    burnPit: '🔥 Burn Pit',
-    agentOrange: '🍊 Agent Orange',
-    radiation: '☢️ Radiation',
-    campLejeune: '💧 Camp Lejeune',
-    gulfWar: '🏜️ Gulf War'
+    burnPit: "🔥 Burn Pit",
+    agentOrange: "🍊 Agent Orange",
+    radiation: "☢️ Radiation",
+    campLejeune: "💧 Camp Lejeune",
+    gulfWar: "🏜️ Gulf War",
   };
-  
+
   return (
-    <div 
+    <div
       className="relative inline-flex"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <span 
+      <span
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-sm cursor-help"
         title="PACT Act Presumptive Condition"
       >
         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          <path
+            fillRule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
         </svg>
         PACT Act
       </span>
-      
+
       {showTooltip && isHovered && (
         <div className="absolute bottom-full left-0 mb-2 z-50 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl">
-          <div className="font-semibold text-green-400 mb-1">✓ Presumptive Condition</div>
+          <div className="font-semibold text-green-400 mb-1">
+            ✓ Presumptive Condition
+          </div>
           <p className="mb-2">{pactInfo.claimTip}</p>
           <div className="flex flex-wrap gap-1">
-            {pactInfo.exposures.map(exp => (
-              <span key={exp} className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+            {pactInfo.exposures.map((exp) => (
+              <span
+                key={exp}
+                className="px-1.5 py-0.5 bg-gray-700 rounded text-xs"
+              >
                 {exposureNames[exp] || exp}
               </span>
             ))}
@@ -67,82 +76,92 @@ export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
  */
 export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const pactInfo = pactActData.diagnosticCodePactMapping[diagnosticCode];
-  
+
   if (!pactInfo?.pactAct) return null;
-  
+
   const exposureData = pactActData.exposureCategories;
-  
+
   const exposureDetails = {
     burnPit: {
-      icon: '🔥',
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      icon: "🔥",
+      color: "from-orange-500 to-red-500",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200",
     },
     agentOrange: {
-      icon: '🍊',
-      color: 'from-orange-400 to-yellow-500',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      icon: "🍊",
+      color: "from-orange-400 to-yellow-500",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200",
     },
     radiation: {
-      icon: '☢️',
-      color: 'from-yellow-500 to-amber-500',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200'
+      icon: "☢️",
+      color: "from-yellow-500 to-amber-500",
+      bgColor: "bg-yellow-50",
+      borderColor: "border-yellow-200",
     },
     campLejeune: {
-      icon: '💧',
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      icon: "💧",
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
     },
     gulfWar: {
-      icon: '🏜️',
-      color: 'from-amber-500 to-yellow-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200'
-    }
+      icon: "🏜️",
+      color: "from-amber-500 to-yellow-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+    },
   };
-  
+
   return (
     <div className="mt-4 border-2 border-green-200 rounded-lg overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50">
       {/* Header */}
-      <div 
+      <div
         className="px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
           </svg>
           <span className="font-bold">PACT Act Presumptive Condition</span>
         </div>
-        <svg 
-          className={`w-5 h-5 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`w-5 h-5 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </div>
-      
+
       {/* Summary - Always visible */}
       <div className="px-4 py-3">
         <p className="text-gray-700 text-sm">
-          <span className="font-semibold text-green-700">Good news!</span> {pactInfo.claimTip}
+          <span className="font-semibold text-green-700">Good news!</span>{" "}
+          {pactInfo.claimTip}
         </p>
-        
+
         {/* Exposure badges */}
         <div className="mt-2 flex flex-wrap gap-2">
-          {pactInfo.exposures.map(expKey => {
+          {pactInfo.exposures.map((expKey) => {
             const details = exposureDetails[expKey];
             const expData = exposureData[expKey];
             return (
-              <span 
+              <span
                 key={expKey}
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${details.bgColor} ${details.borderColor} border`}
               >
@@ -153,64 +172,78 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
           })}
         </div>
       </div>
-      
+
       {/* Expanded details */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
           <hr className="border-green-200" />
-          
+
           {/* What is a presumptive condition */}
           <div>
             <h4 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
               <span>❓</span> What does "presumptive" mean?
             </h4>
             <p className="text-sm text-gray-600">
-              For presumptive conditions, you <strong>don't need to prove</strong> that your service caused the condition. 
-              The VA automatically assumes ("presumes") that your service caused it if you meet the service requirements.
+              For presumptive conditions, you{" "}
+              <strong>don't need to prove</strong> that your service caused the
+              condition. The VA automatically assumes ("presumes") that your
+              service caused it if you meet the service requirements.
             </p>
           </div>
-          
+
           {/* Service requirements */}
-          {pactInfo.exposures.map(expKey => {
+          {pactInfo.exposures.map((expKey) => {
             const expData = exposureData[expKey];
             const details = exposureDetails[expKey];
             if (!expData) return null;
-            
+
             return (
-              <div key={expKey} className={`p-3 rounded-lg ${details.bgColor} ${details.borderColor} border`}>
+              <div
+                key={expKey}
+                className={`p-3 rounded-lg ${details.bgColor} ${details.borderColor} border`}
+              >
                 <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                  <span>{details.icon}</span> {expData.name} - Service Requirements
+                  <span>{details.icon}</span> {expData.name} - Service
+                  Requirements
                 </h4>
-                
+
                 {expData.serviceRequirements?.locations && (
                   <div className="mb-2">
-                    <span className="text-sm font-medium text-gray-700">Qualifying Locations:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Qualifying Locations:
+                    </span>
                     <ul className="text-sm text-gray-600 ml-4 mt-1 list-disc">
-                      {expData.serviceRequirements.locations.slice(0, 5).map((loc, i) => (
-                        <li key={i}>{loc}</li>
-                      ))}
+                      {expData.serviceRequirements.locations
+                        .slice(0, 5)
+                        .map((loc, i) => (
+                          <li key={i}>{loc}</li>
+                        ))}
                       {expData.serviceRequirements.locations.length > 5 && (
                         <li className="text-gray-500">...and more</li>
                       )}
                     </ul>
                   </div>
                 )}
-                
+
                 {expData.serviceRequirements?.dateRange && (
                   <div className="text-sm">
-                    <span className="font-medium text-gray-700">Service Dates: </span>
+                    <span className="font-medium text-gray-700">
+                      Service Dates:{" "}
+                    </span>
                     <span className="text-gray-600">
-                      {typeof expData.serviceRequirements.dateRange === 'string' 
-                        ? expData.serviceRequirements.dateRange 
-                        : 'Various - see VA.gov for details'}
+                      {typeof expData.serviceRequirements.dateRange === "string"
+                        ? expData.serviceRequirements.dateRange
+                        : "Various - see VA.gov for details"}
                     </span>
                   </div>
                 )}
-                
+
                 {/* Airborne Hazards Details - only for burn pit exposure */}
-                {expKey === 'burnPit' && expData.airborneHazards && (
+                {expKey === "burnPit" && expData.airborneHazards && (
                   <div className="mt-3 pt-3 border-t border-orange-200">
-                    <span className="text-sm font-medium text-gray-700">Types of Airborne Hazards:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Types of Airborne Hazards:
+                    </span>
                     <ul className="text-sm text-gray-600 ml-4 mt-1 list-disc">
                       {expData.airborneHazards.map((hazard, i) => (
                         <li key={i}>{hazard}</li>
@@ -218,30 +251,50 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
                     </ul>
                   </div>
                 )}
-                
+
                 {expData.vaUrl && (
                   <div className="flex flex-wrap gap-3 mt-3">
-                    <a 
+                    <a
                       href={expData.vaUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
                     >
                       Learn more on VA.gov
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
                       </svg>
                     </a>
                     {expData.registryUrl && (
-                      <a 
+                      <a
                         href={expData.registryUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-800 hover:underline font-medium"
                       >
                         📋 Join Burn Pit Registry
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
                         </svg>
                       </a>
                     )}
@@ -250,30 +303,57 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
               </div>
             );
           })}
-          
+
           {/* Filing tips */}
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
               <span>💡</span> Filing Tips
             </h4>
             <ul className="text-sm text-gray-700 space-y-1">
-              <li>• File your claim as a <strong>presumptive condition</strong> related to your qualifying service</li>
-              <li>• You'll still need medical evidence of your current diagnosis</li>
-              <li>• Include your DD-214 showing qualifying service locations/dates</li>
-              <li>• Consider registering for the <a href="https://www.publichealth.va.gov/exposures/burnpits/registry.asp" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">Airborne Hazards and Open Burn Pit Registry</a></li>
+              <li>
+                • File your claim as a <strong>presumptive condition</strong>{" "}
+                related to your qualifying service
+              </li>
+              <li>
+                • You'll still need medical evidence of your current diagnosis
+              </li>
+              <li>
+                • Include your DD-214 showing qualifying service locations/dates
+              </li>
+              <li>
+                • Consider registering for the{" "}
+                <a
+                  href="https://www.publichealth.va.gov/exposures/burnpits/registry.asp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                >
+                  Airborne Hazards and Open Burn Pit Registry
+                </a>
+              </li>
             </ul>
           </div>
-          
+
           {/* VA Resource link */}
           <div className="text-center">
-            <a 
+            <a
               href={pactActData.pactActInfo.vaResourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               Learn More About the PACT Act on VA.gov
             </a>
@@ -288,27 +368,38 @@ export const PACTActInfoCard = ({ diagnosticCode, conditionName }) => {
  * PACTActAlert - A prominent alert for search results with PACT Act conditions
  */
 export const PACTActAlert = ({ diagnosticCodes = [] }) => {
-  const pactCodes = diagnosticCodes.filter(code => 
-    pactActData.diagnosticCodePactMapping[code]?.pactAct
+  const pactCodes = diagnosticCodes.filter(
+    (code) => pactActData.diagnosticCodePactMapping[code]?.pactAct,
   );
-  
+
   if (pactCodes.length === 0) return null;
-  
+
   return (
     <div className="mb-4 p-4 bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-600 rounded-r-lg">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          <svg
+            className="w-6 h-6 text-green-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
         <div>
-          <h3 className="font-bold text-green-800">PACT Act Presumptive Condition Found!</h3>
+          <h3 className="font-bold text-green-800">
+            PACT Act Presumptive Condition Found!
+          </h3>
           <p className="text-sm text-green-700 mt-1">
-            This condition may qualify for presumptive service connection under the PACT Act.
-            Veterans with qualifying toxic exposure don't need to prove service causation.
+            This condition may qualify for presumptive service connection under
+            the PACT Act. Veterans with qualifying toxic exposure don't need to
+            prove service causation.
           </p>
-          <a 
+          <a
             href={pactActData.pactActInfo.vaResourceUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -326,7 +417,9 @@ export const PACTActAlert = ({ diagnosticCodes = [] }) => {
  * Utility function to check if a diagnostic code is PACT Act presumptive
  */
 export const isPactActPresumptive = (diagnosticCode) => {
-  return pactActData.diagnosticCodePactMapping[diagnosticCode]?.pactAct === true;
+  return (
+    pactActData.diagnosticCodePactMapping[diagnosticCode]?.pactAct === true
+  );
 };
 
 /**
@@ -336,4 +429,10 @@ export const getPactActInfo = (diagnosticCode) => {
   return pactActData.diagnosticCodePactMapping[diagnosticCode] || null;
 };
 
-export default { PACTActBadge, PACTActInfoCard, PACTActAlert, isPactActPresumptive, getPactActInfo };
+export default {
+  PACTActBadge,
+  PACTActInfoCard,
+  PACTActAlert,
+  isPactActPresumptive,
+  getPactActInfo,
+};

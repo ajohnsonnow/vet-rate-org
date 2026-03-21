@@ -1,9 +1,9 @@
 /**
  * VA Integration Demo Dashboard
- * 
+ *
  * A comprehensive proof-of-concept component for VA.gov API integration.
  * Designed to showcase functionality during VA Production Access Demo.
- * 
+ *
  * Features:
  * - OAuth 2.0 PKCE authentication with VA.gov
  * - Service History display
@@ -12,28 +12,28 @@
  * - Raw JSON toggle for technical review
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useVaAuth } from '../hooks/useVaAuth';
-import { 
-  getServiceHistory, 
-  getClaims, 
+import React, { useState, useEffect, useCallback } from "react";
+import { useVaAuth } from "../hooks/useVaAuth";
+import {
+  getServiceHistory,
+  getClaims,
   getAppealableIssues,
   formatServiceHistory,
   formatClaims,
   formatAppealableIssues,
-} from '../api/va';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import VaSandboxTest from './VaSandboxTest';
-import { useLanguage } from '../contexts/LanguageContext';
+} from "../api/va";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import VaSandboxTest from "./VaSandboxTest";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Icons from lucide-react
-import { 
-  Shield, 
-  FileText, 
-  AlertTriangle, 
-  RefreshCw, 
-  LogIn, 
-  LogOut, 
+import {
+  Shield,
+  FileText,
+  AlertTriangle,
+  RefreshCw,
+  LogIn,
+  LogOut,
   User,
   Calendar,
   Award,
@@ -49,21 +49,21 @@ import {
   AlertCircle,
   Briefcase,
   Medal,
-} from 'lucide-react';
+} from "lucide-react";
 
 const VaIntegrationTest = ({ onClose }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
-  
+
   // State for sandbox test modal
   const [showSandboxTest, setShowSandboxTest] = useState(false);
-  
-  const { 
-    isAuthenticated, 
-    isLoading: authLoading, 
-    userInfo, 
-    login, 
-    logout, 
+
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    userInfo,
+    login,
+    logout,
     accessToken,
     error: authError,
   } = useVaAuth();
@@ -115,8 +115,8 @@ const VaIntegrationTest = ({ onClose }) => {
   }, [isAuthenticated, accessToken, fetchAllData]);
 
   const fetchServiceHistory = async () => {
-    setLoading(prev => ({ ...prev, serviceHistory: true }));
-    setErrors(prev => ({ ...prev, serviceHistory: null }));
+    setLoading((prev) => ({ ...prev, serviceHistory: true }));
+    setErrors((prev) => ({ ...prev, serviceHistory: null }));
 
     try {
       const data = await getServiceHistory(accessToken);
@@ -124,24 +124,25 @@ const VaIntegrationTest = ({ onClose }) => {
       setServiceHistory(formatServiceHistory(data));
     } catch (err) {
       // 403 is expected in sandbox - test user may not have service history
-      const isSandboxLimit = err.code === 'FORBIDDEN' || err.message?.includes('Access denied');
+      const isSandboxLimit =
+        err.code === "FORBIDDEN" || err.message?.includes("Access denied");
       if (!isSandboxLimit) {
-        console.error('[VA Demo] Service history error:', err);
+        console.error("[VA Demo] Service history error:", err);
       }
-      setErrors(prev => ({ 
-        ...prev, 
-        serviceHistory: isSandboxLimit 
-          ? 'Sandbox limitation: Test user has no service history. Production access required.'
-          : err.message 
+      setErrors((prev) => ({
+        ...prev,
+        serviceHistory: isSandboxLimit
+          ? "Sandbox limitation: Test user has no service history. Production access required."
+          : err.message,
       }));
     } finally {
-      setLoading(prev => ({ ...prev, serviceHistory: false }));
+      setLoading((prev) => ({ ...prev, serviceHistory: false }));
     }
   };
 
   const fetchClaims = async () => {
-    setLoading(prev => ({ ...prev, claims: true }));
-    setErrors(prev => ({ ...prev, claims: null }));
+    setLoading((prev) => ({ ...prev, claims: true }));
+    setErrors((prev) => ({ ...prev, claims: null }));
 
     try {
       const data = await getClaims(accessToken);
@@ -149,25 +150,26 @@ const VaIntegrationTest = ({ onClose }) => {
       setClaims(formatClaims(data));
     } catch (err) {
       // 403 is expected in sandbox - test user may not have claims data
-      const isSandboxLimit = err.code === 'FORBIDDEN' || err.message?.includes('Access denied');
+      const isSandboxLimit =
+        err.code === "FORBIDDEN" || err.message?.includes("Access denied");
       if (!isSandboxLimit) {
-        console.error('[VA Demo] Claims error:', err);
+        console.error("[VA Demo] Claims error:", err);
       }
-      setErrors(prev => ({ 
-        ...prev, 
-        claims: isSandboxLimit 
-          ? 'Sandbox limitation: Test user has no claims data. Production access required.'
-          : err.message 
+      setErrors((prev) => ({
+        ...prev,
+        claims: isSandboxLimit
+          ? "Sandbox limitation: Test user has no claims data. Production access required."
+          : err.message,
       }));
     } finally {
-      setLoading(prev => ({ ...prev, claims: false }));
+      setLoading((prev) => ({ ...prev, claims: false }));
     }
   };
 
   // Note: Appeals API is Future Scope - this function is available but not auto-called
   const fetchAppealableIssues = async () => {
-    setLoading(prev => ({ ...prev, appealableIssues: true }));
-    setErrors(prev => ({ ...prev, appealableIssues: null }));
+    setLoading((prev) => ({ ...prev, appealableIssues: true }));
+    setErrors((prev) => ({ ...prev, appealableIssues: null }));
 
     try {
       const data = await getAppealableIssues(accessToken);
@@ -175,23 +177,24 @@ const VaIntegrationTest = ({ onClose }) => {
       setAppealableIssues(formatAppealableIssues(data));
     } catch (err) {
       // 404 is expected - Appeals API endpoint may not exist in sandbox
-      const isNotFound = err.message?.includes('Not Found') || err.message?.includes('404');
+      const isNotFound =
+        err.message?.includes("Not Found") || err.message?.includes("404");
       if (!isNotFound) {
-        console.error('[VA Demo] Appealable issues error:', err);
+        console.error("[VA Demo] Appealable issues error:", err);
       }
-      setErrors(prev => ({ 
-        ...prev, 
-        appealableIssues: isNotFound 
-          ? 'Future Scope: Appeals API not available in current sandbox.'
-          : err.message 
+      setErrors((prev) => ({
+        ...prev,
+        appealableIssues: isNotFound
+          ? "Future Scope: Appeals API not available in current sandbox."
+          : err.message,
       }));
     } finally {
-      setLoading(prev => ({ ...prev, appealableIssues: false }));
+      setLoading((prev) => ({ ...prev, appealableIssues: false }));
     }
   };
 
   const toggleRawJson = (key) => {
-    setShowRawJson(prev => ({ ...prev, [key]: !prev[key] }));
+    setShowRawJson((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleLogin = async () => {
@@ -210,12 +213,12 @@ const VaIntegrationTest = ({ onClose }) => {
 
   // Format date for display
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     } catch {
       return dateString;
@@ -224,31 +227,58 @@ const VaIntegrationTest = ({ onClose }) => {
 
   // Get discharge status badge color
   const getDischargeStatusColor = (status) => {
-    const statusLower = status?.toLowerCase() || '';
-    if (statusLower.includes('honorable')) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    if (statusLower.includes('general')) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-    if (statusLower.includes('other than honorable') || statusLower.includes('oth')) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-    if (statusLower.includes('bad conduct') || statusLower.includes('dishonorable')) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-    return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    const statusLower = status?.toLowerCase() || "";
+    if (statusLower.includes("honorable"))
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (statusLower.includes("general"))
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    if (
+      statusLower.includes("other than honorable") ||
+      statusLower.includes("oth")
+    )
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+    if (
+      statusLower.includes("bad conduct") ||
+      statusLower.includes("dishonorable")
+    )
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
   };
 
   // Get claim status badge
   const getClaimStatusBadge = (phase) => {
-    if (!phase) return { icon: Clock, color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-700' };
-    
-    const phaseName = phase.name?.toLowerCase() || '';
-    
-    if (phaseName.includes('complete')) {
-      return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900' };
+    if (!phase)
+      return {
+        icon: Clock,
+        color: "text-gray-500",
+        bg: "bg-gray-100 dark:bg-gray-700",
+      };
+
+    const phaseName = phase.name?.toLowerCase() || "";
+
+    if (phaseName.includes("complete")) {
+      return {
+        icon: CheckCircle,
+        color: "text-green-600",
+        bg: "bg-green-100 dark:bg-green-900",
+      };
     }
-    if (phaseName.includes('error') || phaseName.includes('cancel')) {
-      return { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900' };
+    if (phaseName.includes("error") || phaseName.includes("cancel")) {
+      return {
+        icon: XCircle,
+        color: "text-red-600",
+        bg: "bg-red-100 dark:bg-red-900",
+      };
     }
-    return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900' };
+    return {
+      icon: Clock,
+      color: "text-blue-600",
+      bg: "bg-blue-100 dark:bg-blue-900",
+    };
   };
 
   // Render loading spinner
-  const LoadingSpinner = ({ text = 'Loading...' }) => (
+  const LoadingSpinner = ({ text = "Loading..." }) => (
     <div className="flex items-center justify-center py-8 text-gray-500 dark:text-gray-400">
       <Loader2 className="w-6 h-6 animate-spin mr-2" />
       <span>{text}</span>
@@ -283,8 +313,12 @@ const VaIntegrationTest = ({ onClose }) => {
         className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
       >
         <Code className="w-4 h-4" />
-        {isOpen ? 'Hide' : 'Show'} Raw JSON
-        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {isOpen ? "Hide" : "Show"} Raw JSON
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4" />
+        ) : (
+          <ChevronDown className="w-4 h-4" />
+        )}
       </button>
       {isOpen && data && (
         <pre className="mt-2 p-4 bg-gray-900 text-gray-100 rounded-lg text-xs overflow-auto max-h-96 font-mono">
@@ -295,7 +329,7 @@ const VaIntegrationTest = ({ onClose }) => {
   );
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
@@ -311,7 +345,12 @@ const VaIntegrationTest = ({ onClose }) => {
                   <Shield className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 id="va-integration-title" className="text-2xl font-bold">VA.gov Integration Demo <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+                  <h2 id="va-integration-title" className="text-2xl font-bold">
+                    VA.gov Integration Demo{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
+                  </h2>
                   <p className="text-blue-200 text-sm mt-1">
                     Production Access Demonstration • Sandbox Environment
                   </p>
@@ -330,8 +369,18 @@ const VaIntegrationTest = ({ onClose }) => {
                 className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
                 aria-label="Close"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -339,13 +388,19 @@ const VaIntegrationTest = ({ onClose }) => {
             {/* Auth Status Bar */}
             <div className="mt-4 flex items-center justify-between bg-white/10 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`} />
+                <div
+                  className={`w-3 h-3 rounded-full ${isAuthenticated ? "bg-green-400" : "bg-yellow-400"} animate-pulse`}
+                />
                 <span className="font-medium">
-                  {authLoading ? 'Checking authentication...' : isAuthenticated ? 'Connected to VA.gov' : 'Not Connected'}
+                  {authLoading
+                    ? "Checking authentication..."
+                    : isAuthenticated
+                      ? "Connected to VA.gov"
+                      : "Not Connected"}
                 </span>
                 {isAuthenticated && userInfo && (
                   <span className="text-blue-200 text-sm ml-2">
-                    • {userInfo.given_name || userInfo.name || 'Veteran'}
+                    • {userInfo.given_name || userInfo.name || "Veteran"}
                   </span>
                 )}
               </div>
@@ -389,10 +444,10 @@ const VaIntegrationTest = ({ onClose }) => {
                   Connect Your VA.gov Account
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto mb-6">
-                  This demo securely connects to VA.gov using OAuth 2.0 with PKCE. 
-                  Your credentials are never shared with this application.
+                  This demo securely connects to VA.gov using OAuth 2.0 with
+                  PKCE. Your credentials are never shared with this application.
                 </p>
-                
+
                 {/* Scopes Info */}
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 max-w-md mx-auto text-left mb-6">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -402,15 +457,23 @@ const VaIntegrationTest = ({ onClose }) => {
                   <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <li className="flex items-center gap-2">
                       <Medal className="w-4 h-4 text-blue-500" />
-                      <span><strong>service_history.read</strong> - View military service records</span>
+                      <span>
+                        <strong>service_history.read</strong> - View military
+                        service records
+                      </span>
                     </li>
                     <li className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-green-500" />
-                      <span><strong>claim.read</strong> - View disability claims</span>
+                      <span>
+                        <strong>claim.read</strong> - View disability claims
+                      </span>
                     </li>
                     <li className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
-                      <span><strong>appealable_issues.read</strong> - View appealable decisions</span>
+                      <span>
+                        <strong>appealable_issues.read</strong> - View
+                        appealable decisions
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -439,10 +502,16 @@ const VaIntegrationTest = ({ onClose }) => {
                 <div className="flex justify-end">
                   <button
                     onClick={fetchAllData}
-                    disabled={loading.serviceHistory || loading.claims || loading.appealableIssues}
+                    disabled={
+                      loading.serviceHistory ||
+                      loading.claims ||
+                      loading.appealableIssues
+                    }
                     className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
                   >
-                    <RefreshCw className={`w-4 h-4 ${(loading.serviceHistory || loading.claims || loading.appealableIssues) ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 ${loading.serviceHistory || loading.claims || loading.appealableIssues ? "animate-spin" : ""}`}
+                    />
                     Refresh All Data
                   </button>
                 </div>
@@ -455,8 +524,12 @@ const VaIntegrationTest = ({ onClose }) => {
                         <Medal className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Service History</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Military service records from VA.gov</p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Service History
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Military service records from VA.gov
+                        </p>
                       </div>
                     </div>
                     <button
@@ -465,18 +538,26 @@ const VaIntegrationTest = ({ onClose }) => {
                       className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-lg transition-colors disabled:opacity-50"
                       title="Refresh"
                     >
-                      <RefreshCw className={`w-5 h-5 ${loading.serviceHistory ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-5 h-5 ${loading.serviceHistory ? "animate-spin" : ""}`}
+                      />
                     </button>
                   </div>
 
                   {loading.serviceHistory ? (
                     <LoadingSpinner text="Fetching service history..." />
                   ) : errors.serviceHistory ? (
-                    <ErrorMessage message={errors.serviceHistory} onRetry={fetchServiceHistory} />
+                    <ErrorMessage
+                      message={errors.serviceHistory}
+                      onRetry={fetchServiceHistory}
+                    />
                   ) : serviceHistory && serviceHistory.length > 0 ? (
                     <div className="space-y-4">
                       {serviceHistory.map((service, idx) => (
-                        <div key={service.id || idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                        <div
+                          key={service.id || idx}
+                          className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
+                        >
                           <div className="flex items-start justify-between">
                             <div>
                               <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
@@ -484,11 +565,14 @@ const VaIntegrationTest = ({ onClose }) => {
                               </h4>
                               <div className="flex items-center gap-2 mt-1 text-sm text-gray-600 dark:text-gray-300">
                                 <Calendar className="w-4 h-4" />
-                                {formatDate(service.startDate)} - {formatDate(service.endDate)}
+                                {formatDate(service.startDate)} -{" "}
+                                {formatDate(service.endDate)}
                               </div>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDischargeStatusColor(service.dischargeStatus)}`}>
-                              {service.dischargeStatus || 'Unknown'}
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${getDischargeStatusColor(service.dischargeStatus)}`}
+                            >
+                              {service.dischargeStatus || "Unknown"}
                             </span>
                           </div>
                           {service.payGrade && (
@@ -496,18 +580,28 @@ const VaIntegrationTest = ({ onClose }) => {
                               Pay Grade: {service.payGrade}
                             </p>
                           )}
-                          {service.deployments && service.deployments.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deployments:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {service.deployments.map((dep, depIdx) => (
-                                  <span key={depIdx} className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded">
-                                    {dep.location || dep.country || 'Deployment'} ({formatDate(dep.startDate)} - {formatDate(dep.endDate)})
-                                  </span>
-                                ))}
+                          {service.deployments &&
+                            service.deployments.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Deployments:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {service.deployments.map((dep, depIdx) => (
+                                    <span
+                                      key={depIdx}
+                                      className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded"
+                                    >
+                                      {dep.location ||
+                                        dep.country ||
+                                        "Deployment"}{" "}
+                                      ({formatDate(dep.startDate)} -{" "}
+                                      {formatDate(dep.endDate)})
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       ))}
                     </div>
@@ -518,9 +612,9 @@ const VaIntegrationTest = ({ onClose }) => {
                     </div>
                   )}
 
-                  <RawJsonToggle 
+                  <RawJsonToggle
                     isOpen={showRawJson.serviceHistory}
-                    onToggle={() => toggleRawJson('serviceHistory')}
+                    onToggle={() => toggleRawJson("serviceHistory")}
                     data={rawServiceHistory}
                   />
                 </div>
@@ -533,8 +627,12 @@ const VaIntegrationTest = ({ onClose }) => {
                         <FileText className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Claims Tracker</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Active and past disability claims</p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Claims Tracker
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Active and past disability claims
+                        </p>
                       </div>
                     </div>
                     <button
@@ -543,32 +641,41 @@ const VaIntegrationTest = ({ onClose }) => {
                       className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-800/50 rounded-lg transition-colors disabled:opacity-50"
                       title="Refresh"
                     >
-                      <RefreshCw className={`w-5 h-5 ${loading.claims ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-5 h-5 ${loading.claims ? "animate-spin" : ""}`}
+                      />
                     </button>
                   </div>
 
                   {loading.claims ? (
                     <LoadingSpinner text="Fetching claims..." />
                   ) : errors.claims ? (
-                    <ErrorMessage message={errors.claims} onRetry={fetchClaims} />
+                    <ErrorMessage
+                      message={errors.claims}
+                      onRetry={fetchClaims}
+                    />
                   ) : claims && claims.length > 0 ? (
                     <div className="space-y-3">
                       {claims.map((claim, idx) => {
                         const statusBadge = getClaimStatusBadge(claim.phase);
                         const StatusIcon = statusBadge.icon;
                         const isExpanded = expandedClaim === claim.id;
-                        
+
                         return (
-                          <div 
-                            key={claim.id || idx} 
+                          <div
+                            key={claim.id || idx}
                             className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
                           >
                             <button
-                              onClick={() => setExpandedClaim(isExpanded ? null : claim.id)}
+                              onClick={() =>
+                                setExpandedClaim(isExpanded ? null : claim.id)
+                              }
                               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                             >
                               <div className="flex items-center gap-3">
-                                <StatusIcon className={`w-5 h-5 ${statusBadge.color}`} />
+                                <StatusIcon
+                                  className={`w-5 h-5 ${statusBadge.color}`}
+                                />
                                 <div className="text-left">
                                   <h4 className="font-medium text-gray-900 dark:text-white">
                                     {claim.type} Claim
@@ -579,24 +686,39 @@ const VaIntegrationTest = ({ onClose }) => {
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.color}`}>
-                                  Phase {claim.phase?.number || '?'}: {claim.phase?.name || claim.status}
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge.bg} ${statusBadge.color}`}
+                                >
+                                  Phase {claim.phase?.number || "?"}:{" "}
+                                  {claim.phase?.name || claim.status}
                                 </span>
-                                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                {isExpanded ? (
+                                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                                )}
                               </div>
                             </button>
-                            
+
                             {isExpanded && (
                               <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                   <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Claim ID:</span>
-                                    <span className="ml-2 text-gray-900 dark:text-white font-mono text-xs">{claim.id}</span>
+                                    <span className="text-gray-500 dark:text-gray-400">
+                                      Claim ID:
+                                    </span>
+                                    <span className="ml-2 text-gray-900 dark:text-white font-mono text-xs">
+                                      {claim.id}
+                                    </span>
                                   </div>
                                   {claim.closeDate && (
                                     <div>
-                                      <span className="text-gray-500 dark:text-gray-400">Closed:</span>
-                                      <span className="ml-2 text-gray-900 dark:text-white">{formatDate(claim.closeDate)}</span>
+                                      <span className="text-gray-500 dark:text-gray-400">
+                                        Closed:
+                                      </span>
+                                      <span className="ml-2 text-gray-900 dark:text-white">
+                                        {formatDate(claim.closeDate)}
+                                      </span>
                                     </div>
                                   )}
                                   {claim.documentsNeeded && (
@@ -607,17 +729,21 @@ const VaIntegrationTest = ({ onClose }) => {
                                     </div>
                                   )}
                                 </div>
-                                
+
                                 {/* Progress Bar */}
                                 <div className="mt-4">
                                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                                     <span>Progress</span>
-                                    <span>Phase {claim.phase?.number || 0} of 8</span>
+                                    <span>
+                                      Phase {claim.phase?.number || 0} of 8
+                                    </span>
                                   </div>
                                   <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                                    <div 
+                                    <div
                                       className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all"
-                                      style={{ width: `${((claim.phase?.number || 0) / 8) * 100}%` }}
+                                      style={{
+                                        width: `${((claim.phase?.number || 0) / 8) * 100}%`,
+                                      }}
                                     />
                                   </div>
                                 </div>
@@ -634,9 +760,9 @@ const VaIntegrationTest = ({ onClose }) => {
                     </div>
                   )}
 
-                  <RawJsonToggle 
+                  <RawJsonToggle
                     isOpen={showRawJson.claims}
-                    onToggle={() => toggleRawJson('claims')}
+                    onToggle={() => toggleRawJson("claims")}
                     data={rawClaims}
                   />
                 </div>
@@ -649,8 +775,12 @@ const VaIntegrationTest = ({ onClose }) => {
                         <AlertTriangle className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Appealable Issues</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Decisions eligible for appeal</p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Appealable Issues
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Decisions eligible for appeal
+                        </p>
                       </div>
                     </div>
                     <button
@@ -659,18 +789,26 @@ const VaIntegrationTest = ({ onClose }) => {
                       className="p-2 text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-800/50 rounded-lg transition-colors disabled:opacity-50"
                       title="Refresh"
                     >
-                      <RefreshCw className={`w-5 h-5 ${loading.appealableIssues ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`w-5 h-5 ${loading.appealableIssues ? "animate-spin" : ""}`}
+                      />
                     </button>
                   </div>
 
                   {loading.appealableIssues ? (
                     <LoadingSpinner text="Fetching appealable issues..." />
                   ) : errors.appealableIssues ? (
-                    <ErrorMessage message={errors.appealableIssues} onRetry={fetchAppealableIssues} />
+                    <ErrorMessage
+                      message={errors.appealableIssues}
+                      onRetry={fetchAppealableIssues}
+                    />
                   ) : appealableIssues && appealableIssues.length > 0 ? (
                     <div className="space-y-3">
                       {appealableIssues.map((issue, idx) => (
-                        <div key={issue.id || idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                        <div
+                          key={issue.id || idx}
+                          className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -693,8 +831,10 @@ const VaIntegrationTest = ({ onClose }) => {
                                 )}
                               </div>
                             </div>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${issue.isRating ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'}`}>
-                              {issue.isRating ? 'Rating Issue' : 'Non-Rating'}
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${issue.isRating ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200" : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"}`}
+                            >
+                              {issue.isRating ? "Rating Issue" : "Non-Rating"}
                             </span>
                           </div>
                         </div>
@@ -708,9 +848,9 @@ const VaIntegrationTest = ({ onClose }) => {
                     </div>
                   )}
 
-                  <RawJsonToggle 
+                  <RawJsonToggle
                     isOpen={showRawJson.appealableIssues}
-                    onToggle={() => toggleRawJson('appealableIssues')}
+                    onToggle={() => toggleRawJson("appealableIssues")}
                     data={rawAppealableIssues}
                   />
                 </div>
@@ -720,18 +860,23 @@ const VaIntegrationTest = ({ onClose }) => {
                   <div className="flex items-start gap-3">
                     <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-800 dark:text-blue-200">
-                      <p className="font-semibold">Sandbox Environment Notice</p>
-                      <p className="mt-1">
-                        This demo uses VA.gov Sandbox APIs with test data. Production access requires 
-                        VA approval. All data shown is synthetic test data provided by VA for development purposes.
+                      <p className="font-semibold">
+                        Sandbox Environment Notice
                       </p>
-                      <a 
-                        href="https://developer.va.gov/explore" 
-                        target="_blank" 
+                      <p className="mt-1">
+                        This demo uses VA.gov Sandbox APIs with test data.
+                        Production access requires VA approval. All data shown
+                        is synthetic test data provided by VA for development
+                        purposes.
+                      </p>
+                      <a
+                        href="https://developer.va.gov/explore"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 mt-2 text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        Learn more at developer.va.gov <ExternalLink className="w-3 h-3" />
+                        Learn more at developer.va.gov{" "}
+                        <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                   </div>

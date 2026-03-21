@@ -921,8 +921,8 @@ function CommunityRoadmap({ onClose }) {
 
           {/* Kanban Board */}
           {!showSubmitForm && (
-            <div className="flex-1 overflow-x-auto p-6">
-              <div className="flex gap-4 min-w-max pb-4">
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 {ROADMAP_COLUMNS.map((column) => {
                   const items = getItemsForColumn(column.id);
 
@@ -930,8 +930,8 @@ function CommunityRoadmap({ onClose }) {
                     <div
                       key={column.id}
                       className={`
-                        w-72 flex-shrink-0 rounded-xl ${column.bgColor} border ${column.borderColor}
-                        flex flex-col max-h-[calc(90vh-280px)]
+                        rounded-xl ${column.bgColor} border ${column.borderColor}
+                        flex flex-col max-h-[600px]
                       `}
                     >
                       {/* Column Header */}

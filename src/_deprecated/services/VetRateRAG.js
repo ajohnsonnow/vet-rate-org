@@ -11,7 +11,7 @@ class VetRateRAG {
 
   async loadKnowledgeBase() {
     // Load from training data
-    const response = await fetch('/data/vet_rate_knowledge.json');
+    const response = await fetch("/data/vet_rate_knowledge.json");
     this.knowledgeBase = await response.json();
     console.log(`Loaded ${this.knowledgeBase.length} knowledge entries`);
   }
@@ -19,11 +19,11 @@ class VetRateRAG {
   // Simple TF-IDF style matching
   findRelevant(query, topK = 5) {
     const queryTerms = query.toLowerCase().split(/\s+/);
-    
-    const scored = this.knowledgeBase.map(item => {
+
+    const scored = this.knowledgeBase.map((item) => {
       const text = `${item.instruction} ${item.output}`.toLowerCase();
       let score = 0;
-      
+
       for (const term of queryTerms) {
         if (text.includes(term)) {
           score += 1;
@@ -33,36 +33,37 @@ class VetRateRAG {
           }
         }
       }
-      
+
       return { item, score };
     });
-    
+
     return scored
-      .filter(s => s.score > 0)
+      .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, topK)
-      .map(s => s.item);
+      .map((s) => s.item);
   }
 
   async answer(query) {
     const relevant = this.findRelevant(query);
-    
+
     if (relevant.length === 0) {
       return {
-        answer: "I couldn't find specific information. Please try rephrasing your question about VA disability claims.",
-        sources: []
+        answer:
+          "I couldn't find specific information. Please try rephrasing your question about VA disability claims.",
+        sources: [],
       };
     }
 
     // Combine relevant knowledge
-    const context = relevant.map(r => r.output).join('\n\n');
-    
+    const context = relevant.map((r) => r.output).join("\n\n");
+
     return {
       answer: context,
-      sources: relevant.map(r => ({
-        citation: r.metadata?.citation || 'VA Knowledge Base',
-        source: r.metadata?.source || 'Unknown'
-      }))
+      sources: relevant.map((r) => ({
+        citation: r.metadata?.citation || "VA Knowledge Base",
+        source: r.metadata?.source || "Unknown",
+      })),
     };
   }
 }

@@ -2,28 +2,28 @@
  * Vet-Rate.org - Profile Import Confirmation Modal
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * Shows extracted DD214/PDF data before auto-filling Veteran Profile
  * Prevents accidental overwriting of existing information
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 
 /**
  * Profile Import Confirmation Modal
  * Shows extracted data with side-by-side comparison and selective import
  */
-const ProfileImportConfirmModal = ({ 
-  extractedData, 
-  currentProfile, 
-  onConfirm, 
-  onCancel 
+const ProfileImportConfirmModal = ({
+  extractedData,
+  currentProfile,
+  onConfirm,
+  onCancel,
 }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
-  
+
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
 
@@ -31,12 +31,15 @@ const ProfileImportConfirmModal = ({
   useEffect(() => {
     if (extractedData) {
       setEditableData({ ...extractedData });
-      
+
       // Auto-select fields that are new or different
       const autoSelected = {};
-      Object.keys(extractedData).forEach(key => {
+      Object.keys(extractedData).forEach((key) => {
         // Select if current profile doesn't have this field, or if values differ
-        if (!currentProfile[key] || currentProfile[key] !== extractedData[key]) {
+        if (
+          !currentProfile[key] ||
+          currentProfile[key] !== extractedData[key]
+        ) {
           autoSelected[key] = true;
         }
       });
@@ -48,16 +51,16 @@ const ProfileImportConfirmModal = ({
    * Update a field value
    */
   const handleFieldChange = (field, value) => {
-    setEditableData(prev => ({ ...prev, [field]: value }));
+    setEditableData((prev) => ({ ...prev, [field]: value }));
   };
 
   /**
    * Toggle field selection
    */
   const handleFieldToggle = (field) => {
-    setSelectedFields(prev => ({ 
-      ...prev, 
-      [field]: prev[field] === true ? false : true 
+    setSelectedFields((prev) => ({
+      ...prev,
+      [field]: prev[field] === true ? false : true,
     }));
   };
 
@@ -66,7 +69,7 @@ const ProfileImportConfirmModal = ({
    */
   const handleSelectAll = () => {
     const allSelected = {};
-    Object.keys(editableData).forEach(key => {
+    Object.keys(editableData).forEach((key) => {
       allSelected[key] = true;
     });
     setSelectedFields(allSelected);
@@ -84,7 +87,7 @@ const ProfileImportConfirmModal = ({
    */
   const handleConfirm = () => {
     const fieldsToImport = {};
-    Object.keys(selectedFields).forEach(key => {
+    Object.keys(selectedFields).forEach((key) => {
       if (selectedFields[key] && editableData[key]) {
         fieldsToImport[key] = editableData[key];
       }
@@ -95,115 +98,115 @@ const ProfileImportConfirmModal = ({
   // Field labels for display
   const fieldLabels = {
     // Personal Information (Blocks 1-7)
-    firstName: 'First Name',
-    middleInitial: 'Middle Initial',
-    middleName: 'Middle Name',
-    lastName: 'Last Name',
-    fullName: 'Full Name',
-    dob: 'Date of Birth',
-    dateOfBirth: 'Date of Birth',
-    ssnLast4: 'SSN (Last 4)',
-    ssnFull: 'SSN (Full)',
-    serviceNumber: 'Service Number',
-    vaFileNumber: 'VA File Number',
-    placeOfBirth: 'Place of Birth',
-    homeOfRecord: 'Home of Record',
-    
+    firstName: "First Name",
+    middleInitial: "Middle Initial",
+    middleName: "Middle Name",
+    lastName: "Last Name",
+    fullName: "Full Name",
+    dob: "Date of Birth",
+    dateOfBirth: "Date of Birth",
+    ssnLast4: "SSN (Last 4)",
+    ssnFull: "SSN (Full)",
+    serviceNumber: "Service Number",
+    vaFileNumber: "VA File Number",
+    placeOfBirth: "Place of Birth",
+    homeOfRecord: "Home of Record",
+
     // Service Information (Blocks 2, 4a-4c, 17)
-    branch: 'Branch of Service',
-    component: 'Component',
-    componentFull: 'Component (Full Name)',
-    rank: 'Rank',
-    payGrade: 'Pay Grade',
-    dateOfRank: 'Date of Rank',
-    
+    branch: "Branch of Service",
+    component: "Component",
+    componentFull: "Component (Full Name)",
+    rank: "Rank",
+    payGrade: "Pay Grade",
+    dateOfRank: "Date of Rank",
+
     // MOS & Assignments (Blocks 4b, 8, 9, 11)
-    mos: 'MOS/Rating',
-    mosTitle: 'MOS Title',
-    primarySpecialty: 'Primary Specialty',
-    lastDutyAssignment: 'Last Duty Assignment',
-    commandTransferredTo: 'Command Transferred To',
-    
+    mos: "MOS/Rating",
+    mosTitle: "MOS Title",
+    primarySpecialty: "Primary Specialty",
+    lastDutyAssignment: "Last Duty Assignment",
+    commandTransferredTo: "Command Transferred To",
+
     // Service Dates (Blocks 12a-12e)
-    serviceStartDate: 'Service Start Date',
-    entryDate: 'Entry Date',
-    serviceEndDate: 'Separation Date',
-    separationDate: 'Separation Date',
-    netActiveService: 'Net Active Service',
-    totalPriorActiveService: 'Total Prior Active Service',
-    totalPriorInactiveService: 'Total Prior Inactive Service',
-    yearsService: 'Years of Service',
-    monthsService: 'Months of Service',
-    daysService: 'Days of Service',
-    totalActiveDutyDays: 'Total Active Duty Days',
-    
+    serviceStartDate: "Service Start Date",
+    entryDate: "Entry Date",
+    serviceEndDate: "Separation Date",
+    separationDate: "Separation Date",
+    netActiveService: "Net Active Service",
+    totalPriorActiveService: "Total Prior Active Service",
+    totalPriorInactiveService: "Total Prior Inactive Service",
+    yearsService: "Years of Service",
+    monthsService: "Months of Service",
+    daysService: "Days of Service",
+    totalActiveDutyDays: "Total Active Duty Days",
+
     // Benefits & Obligations (Blocks 10, 26-29)
-    sglCoverage: 'SGLI Coverage',
-    giBlStatus: 'Post-9/11 GI Bill Status',
-    reserveObligationDate: 'Reserve Obligation End Date',
-    daysLost: 'Days Lost',
-    foreignService: 'Foreign Service',
-    foreignServiceDetails: 'Foreign Service Details',
-    seaService: 'Sea Service',
-    
+    sglCoverage: "SGLI Coverage",
+    giBlStatus: "Post-9/11 GI Bill Status",
+    reserveObligationDate: "Reserve Obligation End Date",
+    daysLost: "Days Lost",
+    foreignService: "Foreign Service",
+    foreignServiceDetails: "Foreign Service Details",
+    seaService: "Sea Service",
+
     // Separation Info (Blocks 19-25)
-    separationAuthority: 'Separation Authority',
-    separationCode: 'Separation Code (SPD/SPN)',
-    reentryCode: 'Reentry Code (RE)',
-    separationProgramDesignator: 'Separation Program Designator',
-    separationType: 'Type of Separation',
-    characterOfService: 'Character of Service',
-    narrativeReason: 'Narrative Reason for Separation',
-    
+    separationAuthority: "Separation Authority",
+    separationCode: "Separation Code (SPD/SPN)",
+    reentryCode: "Reentry Code (RE)",
+    separationProgramDesignator: "Separation Program Designator",
+    separationType: "Type of Separation",
+    characterOfService: "Character of Service",
+    narrativeReason: "Narrative Reason for Separation",
+
     // Education & Training (Blocks 14, 15)
-    militaryEducation: 'Military Education',
-    memberRequests: 'Member Requests',
-    
+    militaryEducation: "Military Education",
+    memberRequests: "Member Requests",
+
     // Contact (Block 30)
-    homeAddress: 'Home Address at Separation',
-    email: 'Email',
-    phone: 'Phone',
-    alternatePhone: 'Alternate Phone',
-    street: 'Street Address',
-    city: 'City',
-    state: 'State',
-    zip: 'ZIP Code',
-    
+    homeAddress: "Home Address at Separation",
+    email: "Email",
+    phone: "Phone",
+    alternatePhone: "Alternate Phone",
+    street: "Street Address",
+    city: "City",
+    state: "State",
+    zip: "ZIP Code",
+
     // Combat & Qualifications
-    specialQualifications: 'Special Qualifications',
-    securityClearance: 'Security Clearance',
-    
+    specialQualifications: "Special Qualifications",
+    securityClearance: "Security Clearance",
+
     // Legacy
-    reenlisted: 'Re-enlisted',
+    reenlisted: "Re-enlisted",
   };
 
   /**
    * Get field label
    */
   const getFieldLabel = (field) => {
-    return fieldLabels[field] || field.replace(/([A-Z])/g, ' $1').trim();
+    return fieldLabels[field] || field.replace(/([A-Z])/g, " $1").trim();
   };
 
   /**
    * Format field value for display
    */
   const formatValue = (field, value) => {
-    if (value === null || value === undefined || value === '') return '(empty)';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    
+    if (value === null || value === undefined || value === "") return "(empty)";
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+
     // Handle service time objects
-    if (typeof value === 'object' && value.years !== undefined) {
+    if (typeof value === "object" && value.years !== undefined) {
       const years = value.years || 0;
       const months = value.months || 0;
       const days = value.days || 0;
       return `${years}y ${months}m ${days}d`;
     }
-    
+
     // Handle arrays (like militaryEducation)
     if (Array.isArray(value)) {
-      return value.length > 0 ? value.join(', ') : '(none)';
+      return value.length > 0 ? value.join(", ") : "(none)";
     }
-    
+
     return String(value);
   };
 
@@ -215,30 +218,79 @@ const ProfileImportConfirmModal = ({
       personal: [],
       service: [],
       contact: [],
-      other: []
+      other: [],
     };
 
     const personalFields = [
-      'firstName', 'middleInitial', 'middleName', 'lastName', 'fullName', 
-      'dob', 'dateOfBirth', 'ssnLast4', 'ssnFull', 'serviceNumber', 'vaFileNumber', 
-      'placeOfBirth', 'homeOfRecord'
+      "firstName",
+      "middleInitial",
+      "middleName",
+      "lastName",
+      "fullName",
+      "dob",
+      "dateOfBirth",
+      "ssnLast4",
+      "ssnFull",
+      "serviceNumber",
+      "vaFileNumber",
+      "placeOfBirth",
+      "homeOfRecord",
     ];
     const serviceFields = [
-      'branch', 'component', 'componentFull', 'rank', 'payGrade', 'dateOfRank',
-      'mos', 'mosTitle', 'primarySpecialty', 'lastDutyAssignment', 'commandTransferredTo',
-      'serviceStartDate', 'entryDate', 'serviceEndDate', 'separationDate',
-      'netActiveService', 'totalPriorActiveService', 'totalPriorInactiveService',
-      'yearsService', 'monthsService', 'daysService', 'totalActiveDutyDays',
-      'sglCoverage', 'giBlStatus', 'reserveObligationDate', 'daysLost', 
-      'foreignService', 'foreignServiceDetails', 'seaService',
-      'separationAuthority', 'separationCode', 'reentryCode', 
-      'separationProgramDesignator', 'separationType', 'characterOfService', 'narrativeReason',
-      'militaryEducation', 'memberRequests',
-      'specialQualifications', 'securityClearance', 'reenlisted'
+      "branch",
+      "component",
+      "componentFull",
+      "rank",
+      "payGrade",
+      "dateOfRank",
+      "mos",
+      "mosTitle",
+      "primarySpecialty",
+      "lastDutyAssignment",
+      "commandTransferredTo",
+      "serviceStartDate",
+      "entryDate",
+      "serviceEndDate",
+      "separationDate",
+      "netActiveService",
+      "totalPriorActiveService",
+      "totalPriorInactiveService",
+      "yearsService",
+      "monthsService",
+      "daysService",
+      "totalActiveDutyDays",
+      "sglCoverage",
+      "giBlStatus",
+      "reserveObligationDate",
+      "daysLost",
+      "foreignService",
+      "foreignServiceDetails",
+      "seaService",
+      "separationAuthority",
+      "separationCode",
+      "reentryCode",
+      "separationProgramDesignator",
+      "separationType",
+      "characterOfService",
+      "narrativeReason",
+      "militaryEducation",
+      "memberRequests",
+      "specialQualifications",
+      "securityClearance",
+      "reenlisted",
     ];
-    const contactFields = ['homeAddress', 'email', 'phone', 'alternatePhone', 'street', 'city', 'state', 'zip'];
+    const contactFields = [
+      "homeAddress",
+      "email",
+      "phone",
+      "alternatePhone",
+      "street",
+      "city",
+      "state",
+      "zip",
+    ];
 
-    Object.keys(editableData).forEach(field => {
+    Object.keys(editableData).forEach((field) => {
       if (personalFields.includes(field)) {
         categories.personal.push(field);
       } else if (serviceFields.includes(field)) {
@@ -275,8 +327,18 @@ const ProfileImportConfirmModal = ({
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             aria-label="Close"
           >
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -286,8 +348,10 @@ const ProfileImportConfirmModal = ({
           <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
             <span className="text-lg">⚠️</span>
             <span>
-              <strong>Important:</strong> Review the extracted information below. Uncheck any fields you don't want to update. 
-              Fields already in your profile that differ from the imported data are pre-selected for your review.
+              <strong>Important:</strong> Review the extracted information
+              below. Uncheck any fields you don't want to update. Fields already
+              in your profile that differ from the imported data are
+              pre-selected for your review.
             </span>
           </p>
         </div>
@@ -295,7 +359,14 @@ const ProfileImportConfirmModal = ({
         {/* Selection Controls */}
         <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            <strong className="text-gray-900 dark:text-white">{selectedCount}</strong> of <strong className="text-gray-900 dark:text-white">{totalCount}</strong> fields selected for import
+            <strong className="text-gray-900 dark:text-white">
+              {selectedCount}
+            </strong>{" "}
+            of{" "}
+            <strong className="text-gray-900 dark:text-white">
+              {totalCount}
+            </strong>{" "}
+            fields selected for import
           </div>
           <div className="flex gap-2">
             <button
@@ -322,7 +393,7 @@ const ProfileImportConfirmModal = ({
                 👤 Personal Information
               </h3>
               <div className="space-y-3">
-                {categories.personal.map(field => (
+                {categories.personal.map((field) => (
                   <FieldRow
                     key={field}
                     field={field}
@@ -345,7 +416,7 @@ const ProfileImportConfirmModal = ({
                 🎖️ Service Information
               </h3>
               <div className="space-y-3">
-                {categories.service.map(field => (
+                {categories.service.map((field) => (
                   <FieldRow
                     key={field}
                     field={field}
@@ -368,7 +439,7 @@ const ProfileImportConfirmModal = ({
                 📞 Contact Information
               </h3>
               <div className="space-y-3">
-                {categories.contact.map(field => (
+                {categories.contact.map((field) => (
                   <FieldRow
                     key={field}
                     field={field}
@@ -391,7 +462,7 @@ const ProfileImportConfirmModal = ({
                 📝 Other Information
               </h3>
               <div className="space-y-3">
-                {categories.other.map(field => (
+                {categories.other.map((field) => (
                   <FieldRow
                     key={field}
                     field={field}
@@ -419,9 +490,14 @@ const ProfileImportConfirmModal = ({
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {selectedCount === 0 ? (
-                <span className="text-red-600 dark:text-red-400 font-semibold">⚠️ No fields selected</span>
+                <span className="text-red-600 dark:text-red-400 font-semibold">
+                  ⚠️ No fields selected
+                </span>
               ) : (
-                <span>Ready to import {selectedCount} field{selectedCount !== 1 ? 's' : ''}</span>
+                <span>
+                  Ready to import {selectedCount} field
+                  {selectedCount !== 1 ? "s" : ""}
+                </span>
               )}
             </span>
             <button
@@ -429,8 +505,8 @@ const ProfileImportConfirmModal = ({
               disabled={selectedCount === 0}
               className={`px-6 py-2.5 font-semibold rounded-lg transition-colors ${
                 selectedCount === 0
-                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
               }`}
             >
               ✓ Import Selected Fields
@@ -445,23 +521,35 @@ const ProfileImportConfirmModal = ({
 /**
  * Field Row Component - Shows current vs imported value with checkbox
  */
-const FieldRow = ({ field, label, currentValue, importedValue, isSelected, onToggle, onChange }) => {
+const FieldRow = ({
+  field,
+  label,
+  currentValue,
+  importedValue,
+  isSelected,
+  onToggle,
+  onChange,
+}) => {
   // Helper function must be defined before use
   const formatValue = (field, value) => {
-    if (value === null || value === undefined || value === '') return '(empty)';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (value === null || value === undefined || value === "") return "(empty)";
+    if (typeof value === "boolean") return value ? "Yes" : "No";
     return String(value);
   };
 
-  const hasChange = currentValue !== formatValue(field, importedValue) && currentValue !== '(empty)';
-  const isBooleanField = typeof importedValue === 'boolean';
+  const hasChange =
+    currentValue !== formatValue(field, importedValue) &&
+    currentValue !== "(empty)";
+  const isBooleanField = typeof importedValue === "boolean";
 
   return (
-    <div className={`p-3 rounded-lg border ${
-      isSelected 
-        ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' 
-        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
-    } transition-all`}>
+    <div
+      className={`p-3 rounded-lg border ${
+        isSelected
+          ? "border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      } transition-all`}
+    >
       <div className="flex items-start gap-3">
         {/* Checkbox */}
         <div className="pt-1">
@@ -489,17 +577,21 @@ const FieldRow = ({ field, label, currentValue, importedValue, isSelected, onTog
           {/* Value Comparison */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current Value:</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Current Value:
+              </div>
               <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 break-words">
                 {currentValue}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Imported Value:</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Imported Value:
+              </div>
               {isBooleanField ? (
                 <select
-                  value={importedValue ? 'true' : 'false'}
-                  onChange={(e) => onChange(e.target.value === 'true')}
+                  value={importedValue ? "true" : "false"}
+                  onChange={(e) => onChange(e.target.value === "true")}
                   disabled={!isSelected}
                   className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"
                 >
@@ -509,7 +601,7 @@ const FieldRow = ({ field, label, currentValue, importedValue, isSelected, onTog
               ) : (
                 <input
                   type="text"
-                  value={importedValue || ''}
+                  value={importedValue || ""}
                   onChange={(e) => onChange(e.target.value)}
                   disabled={!isSelected}
                   className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"

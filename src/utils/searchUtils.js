@@ -12,9 +12,9 @@ export const normalizeSearchTerm = (term) => {
   return term
     .toLowerCase()
     .trim()
-    .replace(/[\-\/,().]/g, ' ') // Replace punctuation with spaces
-    .replace(/\s+/g, ' ')         // Normalize multiple spaces to single
-    .trim();                       // Remove leading/trailing spaces
+    .replace(/[\-\/,().]/g, " ") // Replace punctuation with spaces
+    .replace(/\s+/g, " ") // Normalize multiple spaces to single
+    .trim(); // Remove leading/trailing spaces
 };
 
 /**
@@ -38,7 +38,7 @@ const levenshteinDistance = (str1, str2) => {
       track[j][i] = Math.min(
         track[j][i - 1] + 1,
         track[j - 1][i] + 1,
-        track[j - 1][i - 1] + indicator
+        track[j - 1][i - 1] + indicator,
       );
     }
   }
@@ -74,7 +74,7 @@ export const searchDisabilityData = (searchTerm, data) => {
   const seen = new Set();
 
   if (!data || !data.disabilities) {
-    console.warn('Invalid disability data structure');
+    console.warn("Invalid disability data structure");
     return [];
   }
 
@@ -82,7 +82,7 @@ export const searchDisabilityData = (searchTerm, data) => {
     const score = calculateMatchScore(
       normalizedSearchTerm,
       disability,
-      data.synonymDictionary
+      data.synonymDictionary,
     );
 
     if (score > 0 && !seen.has(disability.id)) {
@@ -151,7 +151,10 @@ const calculateMatchScore = (searchTerm, disability, synonymDictionary) => {
       if (Array.isArray(synonyms)) {
         synonyms.forEach((synonym) => {
           const normalizedSynonym = normalizeSearchTerm(synonym);
-          if (normalizedSynonym === searchTerm || normalizedSynonym.includes(searchTerm)) {
+          if (
+            normalizedSynonym === searchTerm ||
+            normalizedSynonym.includes(searchTerm)
+          ) {
             // Check if this disability is related to this keyword
             const disabilityTerms = [
               ...disability.aliases,
@@ -159,7 +162,7 @@ const calculateMatchScore = (searchTerm, disability, synonymDictionary) => {
               disability.conditionName,
             ]
               .map(normalizeSearchTerm)
-              .join(' ');
+              .join(" ");
 
             if (disabilityTerms.includes(keyword.toLowerCase())) {
               score += 50;
@@ -195,7 +198,11 @@ export const getSearchSuggestions = (searchTerm, data, limit = 10) => {
     const key = normalizeSearchTerm(text);
     const existing = suggestionsMap.get(key);
     // Prefer version with capital letter (more readable) or keep first found
-    if (!existing || (text[0] === text[0].toUpperCase() && existing[0] !== existing[0].toUpperCase())) {
+    if (
+      !existing ||
+      (text[0] === text[0].toUpperCase() &&
+        existing[0] !== existing[0].toUpperCase())
+    ) {
       suggestionsMap.set(key, text);
     }
   };
@@ -244,10 +251,10 @@ export const getSearchSuggestions = (searchTerm, data, limit = 10) => {
  * Allows all standard medical/anatomical terminology
  */
 export const validateSearchTerm = (term) => {
-  if (typeof term !== 'string') return false;
+  if (typeof term !== "string") return false;
   if (term.length === 0) return false;
   if (term.length > 150) return false; // Increased limit for longer medical terms
-  
+
   // Allow alphanumeric, spaces, hyphens, slashes, parentheses, periods, commas, ampersands, and apostrophes
   // This supports all legitimate medical terminology including anatomical terms
   return /^[a-zA-Z0-9\s\-\/().,&']*$/.test(term);

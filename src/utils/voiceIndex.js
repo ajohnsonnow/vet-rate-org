@@ -1,7 +1,7 @@
 /**
  * Vet-Rate.org - Compassionate Voice System
  * Diamond Standard Voice Index
- * 
+ *
  * Central export point for all voice-related modules.
  * Implements the "Compassionate Peer" experience for veterans.
  */
@@ -21,8 +21,8 @@ export {
   resumeSpeaking,
   isSpeaking,
   previewVoice,
-  speakWithModelHeader
-} from './voiceEngine';
+  speakWithModelHeader,
+} from "./voiceEngine";
 
 // Tone Mapping (Jargon → Vet-Speak)
 export {
@@ -38,8 +38,8 @@ export {
   getPrivacyPromise,
   getSpeechRecognitionLang,
   detectMultilingualCrisis,
-  formatBilingualText
-} from './toneMapper';
+  formatBilingualText,
+} from "./toneMapper";
 
 // Safety Systems
 export {
@@ -51,15 +51,18 @@ export {
   hasUsedPanicFeature,
   initializeShakeToExit,
   createQuickExitButton,
-  removeQuickExitButton
-} from './safetyRedirect';
+  removeQuickExitButton,
+} from "./safetyRedirect";
 
 // Re-export Voice Orchestrator Service
-export { getVoiceOrchestrator, VoiceOrchestrator } from '../services/VoiceOrchestrator';
+export {
+  getVoiceOrchestrator,
+  VoiceOrchestrator,
+} from "../services/VoiceOrchestrator";
 
 // Import for the quick setup function
-import { initializeVoiceEngine } from './voiceEngine';
-import { initializePanicKey } from './safetyRedirect';
+import { initializeVoiceEngine } from "./voiceEngine";
+import { initializePanicKey } from "./safetyRedirect";
 
 /**
  * Quick setup function for voice features
@@ -68,8 +71,8 @@ import { initializePanicKey } from './safetyRedirect';
 export const initializeCompassionateVoice = () => {
   initializeVoiceEngine();
   initializePanicKey();
-  
-  console.log('💎 Compassionate Voice System initialized');
+
+  console.log("💎 Compassionate Voice System initialized");
 };
 
 /**
@@ -80,27 +83,27 @@ const VOICE_CONFIG = {
   defaultSettings: {
     pitch: 0.95,
     rate: 0.88,
-    volume: 1.0
+    volume: 1.0,
   },
-  
+
   // Supported languages
-  supportedLanguages: ['en', 'es', 'tl', 'vi', 'ko'],
-  
+  supportedLanguages: ["en", "es", "tl", "vi", "ko"],
+
   // Military branches
   branches: [
-    'Army',
-    'Marine',
-    'Navy', 
-    'Air Force',
-    'Coast Guard',
-    'Space Force'
+    "Army",
+    "Marine",
+    "Navy",
+    "Air Force",
+    "Coast Guard",
+    "Space Force",
   ],
-  
+
   // Storage keys
   storageKeys: {
-    voicePreferences: 'vetrate_voice_preferences',
-    safetyUseCount: 'vetrate_safety_use_count',
-    voiceEnabled: 'vetrate_voice_enabled',
-    selectedLanguage: 'vetrate_voice_language'
-  }
+    voicePreferences: "vetrate_voice_preferences",
+    safetyUseCount: "vetrate_safety_use_count",
+    voiceEnabled: "vetrate_voice_enabled",
+    selectedLanguage: "vetrate_voice_language",
+  },
 };

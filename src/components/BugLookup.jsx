@@ -1,27 +1,45 @@
 /**
  * Vet-Rate.org - Bug Lookup (Admin Interface)
  * "Safe-Squash" Architecture - Secure Bug Report Retrieval
- * 
+ *
  * Admin tool to search and view bug reports by ID.
  * - Searches local IndexedDB storage
  * - Displays sanitized reports (no PII)
  * - Logs all access in audit trail
- * 
+ *
  * Security: Because PII was redacted before storage, viewing
  * these logs does not expose user data.
- * 
+ *
  * Built by a fellow veteran. "Find any bug, fix any bug."
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
-  Search, Bug, AlertTriangle, AlertCircle, Clock, CheckCircle,
-  X, Database, FileText, Monitor, Smartphone, RefreshCw,
-  Download, Trash2, Eye, History, Shield, Filter, ChevronDown,
-  ChevronRight, Copy, Check
-} from 'lucide-react';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+  Search,
+  Bug,
+  AlertTriangle,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  X,
+  Database,
+  FileText,
+  Monitor,
+  Smartphone,
+  RefreshCw,
+  Download,
+  Trash2,
+  Eye,
+  History,
+  Shield,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Check,
+} from "lucide-react";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   getBugReport,
   getAllBugReports,
@@ -32,15 +50,35 @@ import {
   getAuditLog,
   exportBugReports,
   isStorageAvailable,
-  getFromLocalStorage
-} from '../utils/bugReportStorage';
+  getFromLocalStorage,
+} from "../utils/bugReportStorage";
 
 // Severity icons and colors - labels will be translated in component
 const SEVERITY_CONFIG = {
-  critical: { icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-500/20', labelKey: 'severityCritical' },
-  high: { icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-500/20', labelKey: 'severityHigh' },
-  medium: { icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/20', labelKey: 'severityMedium' },
-  low: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/20', labelKey: 'severityLow' }
+  critical: {
+    icon: AlertTriangle,
+    color: "text-red-500",
+    bg: "bg-red-500/20",
+    labelKey: "severityCritical",
+  },
+  high: {
+    icon: AlertCircle,
+    color: "text-orange-500",
+    bg: "bg-orange-500/20",
+    labelKey: "severityHigh",
+  },
+  medium: {
+    icon: Clock,
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/20",
+    labelKey: "severityMedium",
+  },
+  low: {
+    icon: CheckCircle,
+    color: "text-green-500",
+    bg: "bg-green-500/20",
+    labelKey: "severityLow",
+  },
 };
 
 export default function BugLookup({ onClose }) {
@@ -48,19 +86,19 @@ export default function BugLookup({ onClose }) {
   useBodyScrollLock(true);
 
   // State
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
   const [reports, setReports] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [auditLog, setAuditLog] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [view, setView] = useState('list'); // list, detail, audit
+  const [error, setError] = useState("");
+  const [view, setView] = useState("list"); // list, detail, audit
   const [filters, setFilters] = useState({ resolved: null, severity: null });
   const [showFilters, setShowFilters] = useState(false);
   const [copied, setCopied] = useState(false);
   const [resolving, setResolving] = useState(false);
-  const [resolutionNotes, setResolutionNotes] = useState('');
+  const [resolutionNotes, setResolutionNotes] = useState("");
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [storageAvailable, setStorageAvailable] = useState(true);
 
@@ -69,7 +107,7 @@ export default function BugLookup({ onClose }) {
     const init = async () => {
       const available = isStorageAvailable();
       setStorageAvailable(available);
-      
+
       if (available) {
         await loadReports();
         await loadStatistics();
@@ -80,27 +118,27 @@ export default function BugLookup({ onClose }) {
         setLoading(false);
       }
     };
-    
+
     init();
   }, []);
 
   // Load reports with current filters
   const loadReports = async () => {
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       const loadedReports = await getAllBugReports({
         resolved: filters.resolved,
         severity: filters.severity,
-        limit: 100
+        limit: 100,
       });
       setReports(loadedReports);
     } catch (err) {
-      console.error('Failed to load reports:', err);
-      setError(t('bugLookup', 'errorLoadReports'));
+      console.error("Failed to load reports:", err);
+      setError(t("bugLookup", "errorLoadReports"));
     }
-    
+
     setLoading(false);
   };
 
@@ -110,7 +148,7 @@ export default function BugLookup({ onClose }) {
       const stats = await getBugStatistics();
       setStatistics(stats);
     } catch (err) {
-      console.error('Failed to load statistics:', err);
+      console.error("Failed to load statistics:", err);
     }
   };
 
@@ -122,28 +160,28 @@ export default function BugLookup({ onClose }) {
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // First try exact ID match
-      const exactMatch = await getBugReport(searchQuery.toUpperCase(), 'admin');
-      
+      const exactMatch = await getBugReport(searchQuery.toUpperCase(), "admin");
+
       if (exactMatch) {
         setReports([exactMatch]);
         setSelectedReport(exactMatch);
-        setView('detail');
+        setView("detail");
       } else {
         // Fall back to text search
         const results = await searchBugReports(searchQuery);
         setReports(results);
-        
+
         if (results.length === 0) {
-          setError(`${t('bugLookup', 'noReportsMatching')} "${searchQuery}"`);
+          setError(`${t("bugLookup", "noReportsMatching")} "${searchQuery}"`);
         }
       }
     } catch (err) {
-      console.error('Search failed:', err);
-      setError(t('bugLookup', 'errorSearchFailed'));
+      console.error("Search failed:", err);
+      setError(t("bugLookup", "errorSearchFailed"));
     }
 
     setLoading(false);
@@ -152,57 +190,57 @@ export default function BugLookup({ onClose }) {
   // View a specific report
   const handleViewReport = async (report) => {
     setSelectedReport(report);
-    setView('detail');
-    
+    setView("detail");
+
     // Load audit log for this report
     try {
       const log = await getAuditLog(report.report_id);
       setAuditLog(log);
     } catch (err) {
-      console.error('Failed to load audit log:', err);
+      console.error("Failed to load audit log:", err);
     }
   };
 
   // Resolve a report
   const handleResolve = async () => {
     if (!selectedReport) return;
-    
+
     setResolving(true);
-    
+
     try {
       const updated = await resolveBugReport(
         selectedReport.report_id,
         resolutionNotes,
-        'admin'
+        "admin",
       );
       setSelectedReport(updated);
       setShowResolveModal(false);
-      setResolutionNotes('');
+      setResolutionNotes("");
       await loadReports();
       await loadStatistics();
     } catch (err) {
-      console.error('Failed to resolve:', err);
-      setError(t('bugLookup', 'errorResolve'));
+      console.error("Failed to resolve:", err);
+      setError(t("bugLookup", "errorResolve"));
     }
-    
+
     setResolving(false);
   };
 
   // Delete a report
   const handleDelete = async (reportId) => {
-    if (!window.confirm(t('bugLookup', 'confirmDelete'))) {
+    if (!window.confirm(t("bugLookup", "confirmDelete"))) {
       return;
     }
-    
+
     try {
-      await deleteBugReport(reportId, 'admin');
+      await deleteBugReport(reportId, "admin");
       setSelectedReport(null);
-      setView('list');
+      setView("list");
       await loadReports();
       await loadStatistics();
     } catch (err) {
-      console.error('Failed to delete:', err);
-      setError(t('bugLookup', 'errorDelete'));
+      console.error("Failed to delete:", err);
+      setError(t("bugLookup", "errorDelete"));
     }
   };
 
@@ -210,23 +248,23 @@ export default function BugLookup({ onClose }) {
   const handleExport = async () => {
     try {
       const exportData = await exportBugReports();
-      const blob = new Blob([exportData], { type: 'application/json' });
+      const blob = new Blob([exportData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `vetrate-bug-reports-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `vetrate-bug-reports-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export failed:', err);
-      setError(t('bugLookup', 'errorExport'));
+      console.error("Export failed:", err);
+      setError(t("bugLookup", "errorExport"));
     }
   };
 
   // Copy report to clipboard
   const handleCopyReport = async () => {
     if (!selectedReport) return;
-    
+
     const reportText = JSON.stringify(selectedReport, null, 2);
     await navigator.clipboard.writeText(reportText);
     setCopied(true);
@@ -237,11 +275,13 @@ export default function BugLookup({ onClose }) {
   const SeverityBadge = ({ severity }) => {
     const config = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.medium;
     const Icon = config.icon;
-    
+
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.color}`}
+      >
         <Icon className="w-3 h-3" />
-        {t('bugLookup', config.labelKey)}
+        {t("bugLookup", config.labelKey)}
       </span>
     );
   };
@@ -254,32 +294,42 @@ export default function BugLookup({ onClose }) {
           <div className="flex items-center gap-3">
             <Bug className="w-6 h-6 text-amber-500" />
             <div>
-              <h1 className="text-lg font-bold text-white">{t('bugLookup', 'title')}</h1>
-              <p className="text-xs text-slate-400">{t('bugLookup', 'subtitle')}</p>
+              <h1 className="text-lg font-bold text-white">
+                {t("bugLookup", "title")}
+              </h1>
+              <p className="text-xs text-slate-400">
+                {t("bugLookup", "subtitle")}
+              </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {/* Storage Status */}
-            <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-              storageAvailable ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-            }`}>
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                storageAvailable
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
               <Database className="w-3 h-3" />
-              {storageAvailable ? t('bugLookup', 'dbOnline') : t('bugLookup', 'fallbackMode')}
+              {storageAvailable
+                ? t("bugLookup", "dbOnline")
+                : t("bugLookup", "fallbackMode")}
             </div>
-            
+
             <button
               onClick={handleExport}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title={t('bugLookup', 'exportAllReports')}
+              title={t("bugLookup", "exportAllReports")}
             >
               <Download className="w-5 h-5" />
             </button>
-            
+
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              title={t('common', 'close')}
+              title={t("common", "close")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -296,8 +346,8 @@ export default function BugLookup({ onClose }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder={t('bugLookup', 'searchPlaceholder')}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder={t("bugLookup", "searchPlaceholder")}
               className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
@@ -305,48 +355,70 @@ export default function BugLookup({ onClose }) {
             onClick={handleSearch}
             className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium rounded-lg transition-colors"
           >
-            {t('common', 'search')}
+            {t("common", "search")}
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-2 rounded-lg transition-colors ${
-              showFilters ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              showFilters
+                ? "bg-amber-500 text-slate-900"
+                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
             }`}
           >
             <Filter className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Filters */}
         {showFilters && (
           <div className="flex gap-4 mt-3 pt-3 border-t border-slate-700">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">{t('bugLookup', 'filterStatus')}:</span>
+              <span className="text-slate-400 text-sm">
+                {t("bugLookup", "filterStatus")}:
+              </span>
               <select
-                value={filters.resolved === null ? '' : filters.resolved.toString()}
+                value={
+                  filters.resolved === null ? "" : filters.resolved.toString()
+                }
                 onChange={(e) => {
                   const val = e.target.value;
-                  setFilters(f => ({ ...f, resolved: val === '' ? null : val === 'true' }));
+                  setFilters((f) => ({
+                    ...f,
+                    resolved: val === "" ? null : val === "true",
+                  }));
                 }}
                 className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               >
-                <option value="">{t('common', 'all')}</option>
-                <option value="false">{t('bugLookup', 'statusUnresolved')}</option>
-                <option value="true">{t('bugLookup', 'statusResolved')}</option>
+                <option value="">{t("common", "all")}</option>
+                <option value="false">
+                  {t("bugLookup", "statusUnresolved")}
+                </option>
+                <option value="true">{t("bugLookup", "statusResolved")}</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">{t('bugLookup', 'filterSeverity')}:</span>
+              <span className="text-slate-400 text-sm">
+                {t("bugLookup", "filterSeverity")}:
+              </span>
               <select
-                value={filters.severity || ''}
-                onChange={(e) => setFilters(f => ({ ...f, severity: e.target.value || null }))}
+                value={filters.severity || ""}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    severity: e.target.value || null,
+                  }))
+                }
                 className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               >
-                <option value="">{t('common', 'all')}</option>
-                <option value="critical">{t('bugLookup', 'severityCritical')}</option>
-                <option value="high">{t('bugLookup', 'severityHigh')}</option>
-                <option value="medium">{t('bugLookup', 'severityMedium')}</option>
-                <option value="low">{t('bugLookup', 'severityLow')}</option>
+                <option value="">{t("common", "all")}</option>
+                <option value="critical">
+                  {t("bugLookup", "severityCritical")}
+                </option>
+                <option value="high">{t("bugLookup", "severityHigh")}</option>
+                <option value="medium">
+                  {t("bugLookup", "severityMedium")}
+                </option>
+                <option value="low">{t("bugLookup", "severityLow")}</option>
               </select>
             </div>
             <button
@@ -354,7 +426,7 @@ export default function BugLookup({ onClose }) {
               className="flex items-center gap-1 text-sm text-amber-400 hover:text-amber-300"
             >
               <RefreshCw className="w-4 h-4" />
-              {t('bugLookup', 'applyFilters')}
+              {t("bugLookup", "applyFilters")}
             </button>
           </div>
         )}
@@ -364,16 +436,26 @@ export default function BugLookup({ onClose }) {
       {statistics && (
         <div className="bg-slate-800/30 border-b border-slate-700 px-4 py-2 flex gap-6 text-sm">
           <span className="text-slate-400">
-            {t('bugLookup', 'statsTotal')}: <span className="text-white font-medium">{statistics.total}</span>
+            {t("bugLookup", "statsTotal")}:{" "}
+            <span className="text-white font-medium">{statistics.total}</span>
           </span>
           <span className="text-slate-400">
-            {t('bugLookup', 'statsUnresolved')}: <span className="text-red-400 font-medium">{statistics.unresolved}</span>
+            {t("bugLookup", "statsUnresolved")}:{" "}
+            <span className="text-red-400 font-medium">
+              {statistics.unresolved}
+            </span>
           </span>
           <span className="text-slate-400">
-            {t('bugLookup', 'statsCritical')}: <span className="text-red-500 font-medium">{statistics.bySeverity.critical}</span>
+            {t("bugLookup", "statsCritical")}:{" "}
+            <span className="text-red-500 font-medium">
+              {statistics.bySeverity.critical}
+            </span>
           </span>
           <span className="text-slate-400">
-            {t('bugLookup', 'statsLast24h')}: <span className="text-amber-400 font-medium">{statistics.last24Hours}</span>
+            {t("bugLookup", "statsLast24h")}:{" "}
+            <span className="text-amber-400 font-medium">
+              {statistics.last24Hours}
+            </span>
           </span>
         </div>
       )}
@@ -381,7 +463,9 @@ export default function BugLookup({ onClose }) {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex">
         {/* Report List */}
-        <div className={`${view === 'list' ? 'w-full' : 'w-1/3'} border-r border-slate-700 overflow-y-auto`}>
+        <div
+          className={`${view === "list" ? "w-full" : "w-1/3"} border-r border-slate-700 overflow-y-auto`}
+        >
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full" />
@@ -394,8 +478,12 @@ export default function BugLookup({ onClose }) {
           ) : reports.length === 0 ? (
             <div className="p-8 text-center">
               <Bug className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">{t('bugLookup', 'noReportsFound')}</p>
-              <p className="text-slate-500 text-sm mt-1">{t('bugLookup', 'reportsWillAppear')}</p>
+              <p className="text-slate-400">
+                {t("bugLookup", "noReportsFound")}
+              </p>
+              <p className="text-slate-500 text-sm mt-1">
+                {t("bugLookup", "reportsWillAppear")}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-slate-700">
@@ -404,21 +492,31 @@ export default function BugLookup({ onClose }) {
                   key={report.report_id}
                   onClick={() => handleViewReport(report)}
                   className={`w-full p-4 text-left hover:bg-slate-700/30 transition-colors ${
-                    selectedReport?.report_id === report.report_id ? 'bg-slate-700/50' : ''
+                    selectedReport?.report_id === report.report_id
+                      ? "bg-slate-700/50"
+                      : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-amber-400 text-sm">{report.report_id}</span>
+                        <span className="font-mono text-amber-400 text-sm">
+                          {report.report_id}
+                        </span>
                         {report.resolved && (
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         )}
                       </div>
-                      <p className="text-white text-sm truncate">{report.user_description || report.error_message || t('bugLookup', 'noDescription')}</p>
+                      <p className="text-white text-sm truncate">
+                        {report.user_description ||
+                          report.error_message ||
+                          t("bugLookup", "noDescription")}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <SeverityBadge severity={report.severity} />
-                        <span className="text-slate-500 text-xs">{report.module}</span>
+                        <span className="text-slate-500 text-xs">
+                          {report.module}
+                        </span>
                       </div>
                     </div>
                     <div className="text-slate-500 text-xs whitespace-nowrap">
@@ -432,16 +530,19 @@ export default function BugLookup({ onClose }) {
         </div>
 
         {/* Report Detail */}
-        {view === 'detail' && selectedReport && (
+        {view === "detail" && selectedReport && (
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-3xl mx-auto space-y-4">
               {/* Report Header */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold font-mono text-amber-400">{selectedReport.report_id}</h2>
+                    <h2 className="text-xl font-bold font-mono text-amber-400">
+                      {selectedReport.report_id}
+                    </h2>
                     <p className="text-slate-400 text-sm mt-1">
-                      {t('bugLookup', 'created')}: {new Date(selectedReport.created_at).toLocaleString()}
+                      {t("bugLookup", "created")}:{" "}
+                      {new Date(selectedReport.created_at).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -449,11 +550,11 @@ export default function BugLookup({ onClose }) {
                     {selectedReport.resolved ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
                         <CheckCircle className="w-3 h-3" />
-                        {t('bugLookup', 'statusResolved')}
+                        {t("bugLookup", "statusResolved")}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">
-                        {t('bugLookup', 'statusOpen')}
+                        {t("bugLookup", "statusOpen")}
                       </span>
                     )}
                   </div>
@@ -465,8 +566,14 @@ export default function BugLookup({ onClose }) {
                     onClick={handleCopyReport}
                     className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white transition-colors"
                   >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? t('bugLookup', 'copied') : t('bugLookup', 'copyJson')}
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    {copied
+                      ? t("bugLookup", "copied")
+                      : t("bugLookup", "copyJson")}
                   </button>
                   {!selectedReport.resolved && (
                     <button
@@ -474,7 +581,7 @@ export default function BugLookup({ onClose }) {
                       className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded text-sm text-white transition-colors"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      {t('bugLookup', 'markResolved')}
+                      {t("bugLookup", "markResolved")}
                     </button>
                   )}
                   <button
@@ -482,21 +589,28 @@ export default function BugLookup({ onClose }) {
                     className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded text-sm text-white transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
-                    {t('common', 'delete')}
+                    {t("common", "delete")}
                   </button>
                 </div>
               </div>
 
               {/* Description */}
-              <DetailSection title={t('bugLookup', 'sectionUserDescription')} icon={FileText}>
+              <DetailSection
+                title={t("bugLookup", "sectionUserDescription")}
+                icon={FileText}
+              >
                 <p className="text-slate-300 whitespace-pre-wrap">
-                  {selectedReport.user_description || t('bugLookup', 'noDescriptionProvided')}
+                  {selectedReport.user_description ||
+                    t("bugLookup", "noDescriptionProvided")}
                 </p>
               </DetailSection>
 
               {/* Error Info */}
               {selectedReport.error_message && (
-                <DetailSection title={t('bugLookup', 'sectionErrorMessage')} icon={AlertTriangle}>
+                <DetailSection
+                  title={t("bugLookup", "sectionErrorMessage")}
+                  icon={AlertTriangle}
+                >
                   <pre className="text-red-400 text-sm overflow-x-auto bg-slate-900/50 p-3 rounded">
                     {selectedReport.error_message}
                   </pre>
@@ -505,7 +619,10 @@ export default function BugLookup({ onClose }) {
 
               {/* Stack Trace */}
               {selectedReport.stack_trace && (
-                <DetailSection title={t('bugLookup', 'sectionStackTrace')} icon={AlertCircle}>
+                <DetailSection
+                  title={t("bugLookup", "sectionStackTrace")}
+                  icon={AlertCircle}
+                >
                   <pre className="text-slate-400 text-xs overflow-x-auto bg-slate-900/50 p-3 rounded max-h-48">
                     {selectedReport.stack_trace}
                   </pre>
@@ -514,7 +631,10 @@ export default function BugLookup({ onClose }) {
 
               {/* Steps to Reproduce */}
               {selectedReport.steps_to_reproduce && (
-                <DetailSection title={t('bugLookup', 'sectionStepsToReproduce')} icon={RefreshCw}>
+                <DetailSection
+                  title={t("bugLookup", "sectionStepsToReproduce")}
+                  icon={RefreshCw}
+                >
                   <p className="text-slate-300 whitespace-pre-wrap">
                     {selectedReport.steps_to_reproduce}
                   </p>
@@ -522,48 +642,79 @@ export default function BugLookup({ onClose }) {
               )}
 
               {/* Client Metadata */}
-              <DetailSection title={t('bugLookup', 'sectionClientEnvironment')} icon={Monitor}>
+              <DetailSection
+                title={t("bugLookup", "sectionClientEnvironment")}
+                icon={Monitor}
+              >
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-slate-500">{t('bugLookup', 'envBrowser')}:</span>
-                    <span className="text-slate-300 ml-2 break-all">{selectedReport.client_metadata?.browser}</span>
+                    <span className="text-slate-500">
+                      {t("bugLookup", "envBrowser")}:
+                    </span>
+                    <span className="text-slate-300 ml-2 break-all">
+                      {selectedReport.client_metadata?.browser}
+                    </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">{t('bugLookup', 'envOS')}:</span>
-                    <span className="text-slate-300 ml-2">{selectedReport.client_metadata?.os}</span>
+                    <span className="text-slate-500">
+                      {t("bugLookup", "envOS")}:
+                    </span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedReport.client_metadata?.os}
+                    </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">{t('bugLookup', 'envScreen')}:</span>
-                    <span className="text-slate-300 ml-2">{selectedReport.client_metadata?.screen_resolution}</span>
+                    <span className="text-slate-500">
+                      {t("bugLookup", "envScreen")}:
+                    </span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedReport.client_metadata?.screen_resolution}
+                    </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">{t('bugLookup', 'envWindow')}:</span>
-                    <span className="text-slate-300 ml-2">{selectedReport.client_metadata?.window_size}</span>
+                    <span className="text-slate-500">
+                      {t("bugLookup", "envWindow")}:
+                    </span>
+                    <span className="text-slate-300 ml-2">
+                      {selectedReport.client_metadata?.window_size}
+                    </span>
                   </div>
                 </div>
               </DetailSection>
 
               {/* Resolution Notes */}
               {selectedReport.resolved && selectedReport.resolution_notes && (
-                <DetailSection title={t('bugLookup', 'sectionResolutionNotes')} icon={CheckCircle}>
+                <DetailSection
+                  title={t("bugLookup", "sectionResolutionNotes")}
+                  icon={CheckCircle}
+                >
                   <p className="text-green-400 whitespace-pre-wrap">
                     {selectedReport.resolution_notes}
                   </p>
                   <p className="text-slate-500 text-xs mt-2">
-                    {t('bugLookup', 'statusResolved')}: {new Date(selectedReport.resolved_at).toLocaleString()}
+                    {t("bugLookup", "statusResolved")}:{" "}
+                    {new Date(selectedReport.resolved_at).toLocaleString()}
                   </p>
                 </DetailSection>
               )}
 
               {/* Audit Log */}
               {auditLog.length > 0 && (
-                <DetailSection title={t('bugLookup', 'sectionAuditLog')} icon={History}>
+                <DetailSection
+                  title={t("bugLookup", "sectionAuditLog")}
+                  icon={History}
+                >
                   <div className="space-y-2">
                     {auditLog.map((entry, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm">
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span className="text-slate-400">
-                          <span className="font-medium text-white">{entry.action}</span>
-                          {' '}{t('bugLookup', 'auditBy')}{' '}{entry.accessor}
+                          <span className="font-medium text-white">
+                            {entry.action}
+                          </span>{" "}
+                          {t("bugLookup", "auditBy")} {entry.accessor}
                         </span>
                         <span className="text-slate-500">
                           {new Date(entry.timestamp).toLocaleString()}
@@ -578,12 +729,15 @@ export default function BugLookup({ onClose }) {
               <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
                 <Shield className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-green-400 font-medium text-sm">{t('bugLookup', 'privacyProtected')}</p>
+                  <p className="text-green-400 font-medium text-sm">
+                    {t("bugLookup", "privacyProtected")}
+                  </p>
                   <p className="text-green-300/70 text-xs mt-1">
-                    {t('bugLookup', 'privacyMessage')}
+                    {t("bugLookup", "privacyMessage")}
                   </p>
                   <p className="text-green-400/50 text-xs mt-1">
-                    {t('bugLookup', 'sanitized')}: {selectedReport._sanitization?.sanitizedAt}
+                    {t("bugLookup", "sanitized")}:{" "}
+                    {selectedReport._sanitization?.sanitizedAt}
                   </p>
                 </div>
               </div>
@@ -596,12 +750,16 @@ export default function BugLookup({ onClose }) {
       {showResolveModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-white mb-4">{t('bugLookup', 'markAsResolved')}</h3>
-            <label className="block text-sm text-slate-400 mb-2">{t('bugLookup', 'resolutionNotesLabel')}:</label>
+            <h3 className="text-lg font-bold text-white mb-4">
+              {t("bugLookup", "markAsResolved")}
+            </h3>
+            <label className="block text-sm text-slate-400 mb-2">
+              {t("bugLookup", "resolutionNotesLabel")}:
+            </label>
             <textarea
               value={resolutionNotes}
               onChange={(e) => setResolutionNotes(e.target.value)}
-              placeholder={t('bugLookup', 'resolutionNotesPlaceholder')}
+              placeholder={t("bugLookup", "resolutionNotesPlaceholder")}
               className="w-full h-32 bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
             <div className="flex justify-end gap-2 mt-4">
@@ -609,14 +767,16 @@ export default function BugLookup({ onClose }) {
                 onClick={() => setShowResolveModal(false)}
                 className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
               >
-                {t('common', 'cancel')}
+                {t("common", "cancel")}
               </button>
               <button
                 onClick={handleResolve}
                 disabled={resolving}
                 className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors disabled:opacity-50"
               >
-                {resolving ? t('bugLookup', 'saving') : t('bugLookup', 'markResolved')}
+                {resolving
+                  ? t("bugLookup", "saving")
+                  : t("bugLookup", "markResolved")}
               </button>
             </div>
           </div>

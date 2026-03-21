@@ -16,8 +16,18 @@
  *   // Inject ctx into your AI prompt as system-level context
  */
 
-import { loadVKB, generateLLMContext, addDocumentToVKB, saveVKB } from './veteranKnowledgeBase';
-import { saveDocumentToPacket, generatePacketContext, PACKET_DOC_TYPES, PACKET_DOC_LABELS } from './myPacketManager';
+import {
+  loadVKB,
+  generateLLMContext,
+  addDocumentToVKB,
+  saveVKB,
+} from "./veteranKnowledgeBase";
+import {
+  saveDocumentToPacket,
+  generatePacketContext,
+  PACKET_DOC_TYPES,
+  PACKET_DOC_LABELS,
+} from "./myPacketManager";
 
 // ============================================================
 // CONTEXT LOADER  —  "Read the veteran's file"
@@ -42,7 +52,7 @@ export const getVeteranAIContext = async (options = {}) => {
     includeVKB = true,
   } = options;
 
-  let ctx = '';
+  let ctx = "";
 
   try {
     // 1) VKB — structured knowledge graph (service history, conditions, etc.)
@@ -55,13 +65,18 @@ export const getVeteranAIContext = async (options = {}) => {
 
     // 2) My Packet — document archive summaries
     if (includePacket) {
-      const packetCtx = await generatePacketContext({ maxTokens: maxPacketTokens });
+      const packetCtx = await generatePacketContext({
+        maxTokens: maxPacketTokens,
+      });
       if (packetCtx) {
-        ctx += '\n' + packetCtx;
+        ctx += "\n" + packetCtx;
       }
     }
   } catch (err) {
-    console.warn('[VeteranContextProvider] Failed to load veteran context:', err);
+    console.warn(
+      "[VeteranContextProvider] Failed to load veteran context:",
+      err,
+    );
   }
 
   return ctx;
@@ -89,7 +104,7 @@ export const getVeteranAIContext = async (options = {}) => {
 export const saveAnalysisResults = async ({
   toolName,
   classification,
-  rawText = '',
+  rawText = "",
   extractedData = {},
   vkbDocument = null,
   fileName = null,
@@ -115,16 +130,23 @@ export const saveAnalysisResults = async ({
         analyzedAt: timestamp,
       },
     });
-    console.log(`[VeteranContextProvider] ✅ Saved ${toolName} results to My Packet`);
+    console.log(
+      `[VeteranContextProvider] ✅ Saved ${toolName} results to My Packet`,
+    );
   } catch (err) {
-    console.error(`[VeteranContextProvider] ❌ Failed to save to My Packet:`, err);
+    console.error(
+      `[VeteranContextProvider] ❌ Failed to save to My Packet:`,
+      err,
+    );
   }
 
   // 2) Save to VKB (structured knowledge graph)
   try {
     if (vkbDocument) {
       await addDocumentToVKB(vkbDocument);
-      console.log(`[VeteranContextProvider] ✅ Saved ${toolName} document to VKB`);
+      console.log(
+        `[VeteranContextProvider] ✅ Saved ${toolName} document to VKB`,
+      );
     }
 
     // Merge extra data directly into VKB if provided
@@ -145,8 +167,10 @@ export const saveAnalysisResults = async ({
         if (vkbMergeData.claims && Array.isArray(vkbMergeData.claims)) {
           vkb.claims = vkb.claims || [];
           // Avoid duplicates by checking condition names
-          const existingConditions = new Set(vkb.claims.map(c => c.condition?.toLowerCase()));
-          vkbMergeData.claims.forEach(claim => {
+          const existingConditions = new Set(
+            vkb.claims.map((c) => c.condition?.toLowerCase()),
+          );
+          vkbMergeData.claims.forEach((claim) => {
             if (!existingConditions.has(claim.condition?.toLowerCase())) {
               vkb.claims.push(claim);
             }
@@ -162,8 +186,10 @@ export const saveAnalysisResults = async ({
           vkb.medical = vkb.medical || {};
           if (vkbMergeData.medical.conditions) {
             vkb.medical.conditions = vkb.medical.conditions || [];
-            const existing = new Set(vkb.medical.conditions.map(c => c.name?.toLowerCase()));
-            vkbMergeData.medical.conditions.forEach(cond => {
+            const existing = new Set(
+              vkb.medical.conditions.map((c) => c.name?.toLowerCase()),
+            );
+            vkbMergeData.medical.conditions.forEach((cond) => {
               if (!existing.has(cond.name?.toLowerCase())) {
                 vkb.medical.conditions.push(cond);
               }
@@ -176,7 +202,9 @@ export const saveAnalysisResults = async ({
         }
         vkb.lastUpdated = timestamp;
         await saveVKB(vkb);
-        console.log(`[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`);
+        console.log(
+          `[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`,
+        );
       }
     }
   } catch (err) {

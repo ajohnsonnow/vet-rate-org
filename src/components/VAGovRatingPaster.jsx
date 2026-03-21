@@ -4,33 +4,49 @@
  * Used across multiple tools: TacticalCalculator, Pathfinder, RetroPayHunter, etc.
  */
 
-import React, { useState } from 'react';
-import { parseVAGovRatings, validateParsedRatings, formatParsedRatings, EXAMPLE_VA_GOV_TEXT } from '../utils/vaGovRatingParser';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState } from "react";
+import {
+  parseVAGovRatings,
+  validateParsedRatings,
+  formatParsedRatings,
+  EXAMPLE_VA_GOV_TEXT,
+} from "../utils/vaGovRatingParser";
+import { useLanguage } from "../contexts/LanguageContext";
 
-export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExample = true }) {
+export default function VAGovRatingPaster({
+  onRatingsParsed,
+  onClose,
+  showExample = true,
+}) {
   const { t } = useLanguage();
-  const [pasteText, setPasteText] = useState('');
+  const [pasteText, setPasteText] = useState("");
   const [parsedResult, setParsedResult] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   const [isParsing, setIsParsing] = useState(false);
 
   const handleParse = () => {
     if (!pasteText.trim()) {
-      alert('Please paste your ratings text first.');
+      alert("Please paste your ratings text first.");
       return;
     }
 
     setIsParsing(true);
-    
+
     // Use setTimeout to allow UI to update with "Parsing..." state
     setTimeout(() => {
       try {
         const parseResult = parseVAGovRatings(pasteText);
-        const validatedServiceConnected = validateParsedRatings(parseResult.serviceConnected);
+        const validatedServiceConnected = validateParsedRatings(
+          parseResult.serviceConnected,
+        );
 
-        if (validatedServiceConnected.length === 0 && parseResult.notServiceConnected.length === 0) {
-          alert('No valid ratings found. Please check the format and try again.');
+        if (
+          validatedServiceConnected.length === 0 &&
+          parseResult.notServiceConnected.length === 0
+        ) {
+          alert(
+            "No valid ratings found. Please check the format and try again.",
+          );
           setIsParsing(false);
           return;
         }
@@ -41,8 +57,8 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
           notServiceConnected: parseResult.notServiceConnected,
         });
       } catch (error) {
-        console.error('Parse error:', error);
-        alert('Error parsing ratings. Please try again.');
+        console.error("Parse error:", error);
+        alert("Error parsing ratings. Please try again.");
       } finally {
         setIsParsing(false);
       }
@@ -96,7 +112,7 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
               </h3>
               <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-2 ml-6 list-decimal">
                 <li>
-                  Go to{' '}
+                  Go to{" "}
                   <a
                     href="https://www.va.gov/disability/view-disability-rating/rating"
                     target="_blank"
@@ -154,12 +170,20 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
                   ✅ Supported Formats
                 </h4>
                 <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                  <li className="font-mono">• Full page copy (CTRL+A, CTRL+C, CTRL+V)</li>
-                  <li className="font-mono">• Automatically extracts combined rating</li>
-                  <li className="font-mono">• 20% rating for radiculopathy, left lower extremity</li>
+                  <li className="font-mono">
+                    • Full page copy (CTRL+A, CTRL+C, CTRL+V)
+                  </li>
+                  <li className="font-mono">
+                    • Automatically extracts combined rating
+                  </li>
+                  <li className="font-mono">
+                    • 20% rating for radiculopathy, left lower extremity
+                  </li>
                   <li className="font-mono">• 50% PTSD</li>
                   <li className="font-mono">• Tinnitus - 10%</li>
-                  <li className="font-mono">• Filters non-service-connected conditions</li>
+                  <li className="font-mono">
+                    • Filters non-service-connected conditions
+                  </li>
                 </ul>
               </div>
 
@@ -172,9 +196,25 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
                 >
                   {isParsing ? (
                     <>
-                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       <span>Parsing...</span>
                     </>
@@ -186,7 +226,7 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
                   )}
                 </button>
                 <button
-                  onClick={() => setPasteText('')}
+                  onClick={() => setPasteText("")}
                   disabled={!pasteText}
                   className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
@@ -199,8 +239,12 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
               {/* Combined Rating */}
               {parsedResult.combinedRating !== null && (
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl shadow-lg">
-                  <div className="text-sm opacity-90 mb-1">Combined VA Disability Rating</div>
-                  <div className="text-4xl font-bold">{parsedResult.combinedRating}%</div>
+                  <div className="text-sm opacity-90 mb-1">
+                    Combined VA Disability Rating
+                  </div>
+                  <div className="text-4xl font-bold">
+                    {parsedResult.combinedRating}%
+                  </div>
                 </div>
               )}
 
@@ -208,7 +252,11 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
               <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-lg">
                 <h3 className="font-bold text-green-800 dark:text-green-300 mb-2 flex items-center gap-2">
                   <span className="text-xl">✅</span>
-                  Successfully Parsed {parsedResult.serviceConnected.length} Service-Connected Rating{parsedResult.serviceConnected.length === 1 ? '' : 's'}
+                  Successfully Parsed {
+                    parsedResult.serviceConnected.length
+                  }{" "}
+                  Service-Connected Rating
+                  {parsedResult.serviceConnected.length === 1 ? "" : "s"}
                 </h3>
                 <p className="text-sm text-green-700 dark:text-green-300">
                   Review the conditions below and click "Import" to add them.
@@ -228,7 +276,8 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
                       </div>
                       {rating.effectiveDate && (
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Effective: {new Date(rating.effectiveDate).toLocaleDateString()}
+                          Effective:{" "}
+                          {new Date(rating.effectiveDate).toLocaleDateString()}
                         </div>
                       )}
                     </div>
@@ -251,14 +300,25 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
               {parsedResult.notServiceConnected.length > 0 && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-lg">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-2">
-                    <strong>⚠️ Note:</strong> Found {parsedResult.notServiceConnected.length} non-service-connected condition{parsedResult.notServiceConnected.length === 1 ? '' : 's'} that will NOT be imported:
+                    <strong>⚠️ Note:</strong> Found{" "}
+                    {parsedResult.notServiceConnected.length}{" "}
+                    non-service-connected condition
+                    {parsedResult.notServiceConnected.length === 1
+                      ? ""
+                      : "s"}{" "}
+                    that will NOT be imported:
                   </p>
                   <ul className="text-xs text-yellow-700 dark:text-yellow-400 ml-4 space-y-1">
-                    {parsedResult.notServiceConnected.slice(0, 5).map((condition, index) => (
-                      <li key={index}>• {condition.condition}</li>
-                    ))}
+                    {parsedResult.notServiceConnected
+                      .slice(0, 5)
+                      .map((condition, index) => (
+                        <li key={index}>• {condition.condition}</li>
+                      ))}
                     {parsedResult.notServiceConnected.length > 5 && (
-                      <li>• ...and {parsedResult.notServiceConnected.length - 5} more</li>
+                      <li>
+                        • ...and {parsedResult.notServiceConnected.length - 5}{" "}
+                        more
+                      </li>
                     )}
                   </ul>
                 </div>
@@ -271,12 +331,13 @@ export default function VAGovRatingPaster({ onRatingsParsed, onClose, showExampl
                   className="flex-1 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">✓</span>
-                  Import {parsedResult.serviceConnected.length} Rating{parsedResult.serviceConnected.length === 1 ? '' : 's'}
+                  Import {parsedResult.serviceConnected.length} Rating
+                  {parsedResult.serviceConnected.length === 1 ? "" : "s"}
                 </button>
                 <button
                   onClick={() => {
                     setParsedResult(null);
-                    setPasteText('');
+                    setPasteText("");
                   }}
                   className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >

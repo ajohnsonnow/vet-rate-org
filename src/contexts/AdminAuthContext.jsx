@@ -1,21 +1,27 @@
 /**
  * Vet-Rate.org - Admin Authentication Context
  * Gold Standard Security Implementation
- * 
+ *
  * Security Features:
  * - PIN-based authentication with SHA-256 hashing
  * - Session timeout (30 minutes of inactivity)
  * - Account lockout after failed attempts
  * - Audit logging of all authentication events
  * - No credentials stored in localStorage (session only)
- * 
+ *
  * IMPORTANT: Admin features are completely hidden from regular users.
  * Access is only via secret keyboard shortcut (Ctrl+Shift+A).
- * 
+ *
  * Built by a fellow veteran. "Security is mission-critical."
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 // ============================================
 // SECURITY CONFIGURATION
@@ -24,16 +30,16 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 const SECURITY_CONFIG = {
   // Session timeout in milliseconds (30 minutes)
   SESSION_TIMEOUT: 30 * 60 * 1000,
-  
+
   // Maximum failed login attempts before lockout
   MAX_FAILED_ATTEMPTS: 5,
-  
+
   // Lockout duration in milliseconds (15 minutes)
   LOCKOUT_DURATION: 15 * 60 * 1000,
-  
+
   // Session check interval (1 minute)
   SESSION_CHECK_INTERVAL: 60 * 1000,
-  
+
   // Minimum PIN length
   MIN_PIN_LENGTH: 6,
 };
@@ -49,14 +55,14 @@ const SECURITY_CONFIG = {
 // To generate: await hashPin('your-pin-here')
 const ADMIN_CREDENTIALS = [
   {
-    id: 'admin_001',
-    name: 'Anthony Johnson',
-    email: 'Anth@StructuredForGrowth.com',
+    id: "admin_001",
+    name: "Anthony Johnson",
+    email: "Anth@StructuredForGrowth.com",
     // This is a placeholder - you'll need to set your actual PIN hash
     // Generate with: console.log(await hashPin('your-secure-pin'))
-    pinHash: import.meta.env.VITE_ADMIN_PIN_HASH || 'SET_YOUR_PIN_HASH_IN_ENV',
-    role: 'super_admin',
-    createdAt: '2024-01-01',
+    pinHash: import.meta.env.VITE_ADMIN_PIN_HASH || "SET_YOUR_PIN_HASH_IN_ENV",
+    role: "super_admin",
+    createdAt: "2024-01-01",
   },
   // Future admins can be added here
 ];
@@ -72,10 +78,10 @@ const ADMIN_CREDENTIALS = [
  */
 export const hashPin = async (pin) => {
   const encoder = new TextEncoder();
-  const data = encoder.encode(pin + 'vetrate_salt_2024'); // Add salt
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const data = encoder.encode(pin + "vetrate_salt_2024"); // Add salt
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
 /**
@@ -99,7 +105,7 @@ const verifyPin = async (pin, hash) => {
 // AUDIT LOGGING
 // ============================================
 
-const AUDIT_LOG_KEY = 'vetrate_admin_audit';
+const AUDIT_LOG_KEY = "vetrate_admin_audit";
 
 /**
  * Log an authentication event
@@ -108,7 +114,7 @@ const AUDIT_LOG_KEY = 'vetrate_admin_audit';
  */
 const logAuthEvent = (event, details = {}) => {
   try {
-    const logs = JSON.parse(sessionStorage.getItem(AUDIT_LOG_KEY) || '[]');
+    const logs = JSON.parse(sessionStorage.getItem(AUDIT_LOG_KEY) || "[]");
     logs.push({
       timestamp: new Date().toISOString(),
       event,
@@ -119,7 +125,7 @@ const logAuthEvent = (event, details = {}) => {
     if (logs.length > 100) logs.shift();
     sessionStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(logs));
   } catch (error) {
-    console.error('Audit log error:', error);
+    console.error("Audit log error:", error);
   }
 };
 
@@ -129,7 +135,7 @@ const logAuthEvent = (event, details = {}) => {
  */
 export const getAuthAuditLog = () => {
   try {
-    return JSON.parse(sessionStorage.getItem(AUDIT_LOG_KEY) || '[]');
+    return JSON.parse(sessionStorage.getItem(AUDIT_LOG_KEY) || "[]");
   } catch {
     return [];
   }
@@ -139,7 +145,7 @@ export const getAuthAuditLog = () => {
 // LOCKOUT MANAGEMENT
 // ============================================
 
-const LOCKOUT_KEY = 'vetrate_admin_lockout';
+const LOCKOUT_KEY = "vetrate_admin_lockout";
 
 /**
  * Get lockout status
@@ -147,7 +153,7 @@ const LOCKOUT_KEY = 'vetrate_admin_lockout';
  */
 const getLockoutStatus = () => {
   try {
-    const data = JSON.parse(localStorage.getItem(LOCKOUT_KEY) || '{}');
+    const data = JSON.parse(localStorage.getItem(LOCKOUT_KEY) || "{}");
     return {
       failedAttempts: data.failedAttempts || 0,
       lockedUntil: data.lockedUntil || null,
@@ -163,7 +169,10 @@ const getLockoutStatus = () => {
  * @param {number|null} lockedUntil - Lockout expiry timestamp
  */
 const setLockoutStatus = (failedAttempts, lockedUntil = null) => {
-  localStorage.setItem(LOCKOUT_KEY, JSON.stringify({ failedAttempts, lockedUntil }));
+  localStorage.setItem(
+    LOCKOUT_KEY,
+    JSON.stringify({ failedAttempts, lockedUntil }),
+  );
 };
 
 /**
@@ -180,13 +189,13 @@ const clearLockout = () => {
 const checkLockout = () => {
   const { lockedUntil } = getLockoutStatus();
   if (!lockedUntil) return { isLocked: false, remainingTime: 0 };
-  
+
   const remaining = lockedUntil - Date.now();
   if (remaining <= 0) {
     clearLockout();
     return { isLocked: false, remainingTime: 0 };
   }
-  
+
   return { isLocked: true, remainingTime: remaining };
 };
 
@@ -202,13 +211,16 @@ export function AdminAuthProvider({ children }) {
   const [sessionExpiry, setSessionExpiry] = useState(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [lockoutInfo, setLockoutInfo] = useState({ isLocked: false, remainingTime: 0 });
+  const [lockoutInfo, setLockoutInfo] = useState({
+    isLocked: false,
+    remainingTime: 0,
+  });
 
   // Check lockout status on mount
   useEffect(() => {
     const status = checkLockout();
     setLockoutInfo(status);
-    
+
     // Update lockout timer
     if (status.isLocked) {
       const timer = setInterval(() => {
@@ -226,11 +238,14 @@ export function AdminAuthProvider({ children }) {
 
     const checkSession = () => {
       if (Date.now() > sessionExpiry) {
-        logout('Session expired');
+        logout("Session expired");
       }
     };
 
-    const interval = setInterval(checkSession, SECURITY_CONFIG.SESSION_CHECK_INTERVAL);
+    const interval = setInterval(
+      checkSession,
+      SECURITY_CONFIG.SESSION_CHECK_INTERVAL,
+    );
     return () => clearInterval(interval);
   }, [isAuthenticated, sessionExpiry]);
 
@@ -245,11 +260,14 @@ export function AdminAuthProvider({ children }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
     const handler = () => extendSession();
-    
-    events.forEach(event => window.addEventListener(event, handler, { passive: true }));
-    return () => events.forEach(event => window.removeEventListener(event, handler));
+
+    events.forEach((event) =>
+      window.addEventListener(event, handler, { passive: true }),
+    );
+    return () =>
+      events.forEach((event) => window.removeEventListener(event, handler));
   }, [isAuthenticated, extendSession]);
 
   /**
@@ -262,22 +280,22 @@ export function AdminAuthProvider({ children }) {
     const lockStatus = checkLockout();
     if (lockStatus.isLocked) {
       const minutes = Math.ceil(lockStatus.remainingTime / 60000);
-      logAuthEvent('LOGIN_BLOCKED', { reason: 'lockout' });
-      return { 
-        success: false, 
-        error: `Account locked. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.` 
+      logAuthEvent("LOGIN_BLOCKED", { reason: "lockout" });
+      return {
+        success: false,
+        error: `Account locked. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`,
       };
     }
 
     // Validate PIN format
     if (!pin || pin.length < SECURITY_CONFIG.MIN_PIN_LENGTH) {
-      return { success: false, error: 'Invalid PIN format' };
+      return { success: false, error: "Invalid PIN format" };
     }
 
     // Try to authenticate against each admin
     for (const admin of ADMIN_CREDENTIALS) {
       const isValid = await verifyPin(pin, admin.pinHash);
-      
+
       if (isValid) {
         // Success!
         clearLockout();
@@ -285,12 +303,12 @@ export function AdminAuthProvider({ children }) {
         setCurrentAdmin(admin);
         setSessionExpiry(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT);
         setShowAdminLogin(false);
-        
-        logAuthEvent('LOGIN_SUCCESS', { 
-          adminId: admin.id, 
-          role: admin.role 
+
+        logAuthEvent("LOGIN_SUCCESS", {
+          adminId: admin.id,
+          role: admin.role,
         });
-        
+
         return { success: true };
       }
     }
@@ -298,30 +316,33 @@ export function AdminAuthProvider({ children }) {
     // Failed attempt
     const { failedAttempts } = getLockoutStatus();
     const newAttempts = failedAttempts + 1;
-    
-    logAuthEvent('LOGIN_FAILED', { attempts: newAttempts });
+
+    logAuthEvent("LOGIN_FAILED", { attempts: newAttempts });
 
     if (newAttempts >= SECURITY_CONFIG.MAX_FAILED_ATTEMPTS) {
       const lockedUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
       setLockoutStatus(newAttempts, lockedUntil);
-      setLockoutInfo({ isLocked: true, remainingTime: SECURITY_CONFIG.LOCKOUT_DURATION });
-      
-      logAuthEvent('ACCOUNT_LOCKED', { 
-        duration: SECURITY_CONFIG.LOCKOUT_DURATION 
+      setLockoutInfo({
+        isLocked: true,
+        remainingTime: SECURITY_CONFIG.LOCKOUT_DURATION,
       });
-      
-      return { 
-        success: false, 
-        error: 'Too many failed attempts. Account locked for 15 minutes.' 
+
+      logAuthEvent("ACCOUNT_LOCKED", {
+        duration: SECURITY_CONFIG.LOCKOUT_DURATION,
+      });
+
+      return {
+        success: false,
+        error: "Too many failed attempts. Account locked for 15 minutes.",
       };
     }
 
     setLockoutStatus(newAttempts);
     const remaining = SECURITY_CONFIG.MAX_FAILED_ATTEMPTS - newAttempts;
-    
-    return { 
-      success: false, 
-      error: `Invalid PIN. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.` 
+
+    return {
+      success: false,
+      error: `Invalid PIN. ${remaining} attempt${remaining > 1 ? "s" : ""} remaining.`,
     };
   };
 
@@ -329,14 +350,17 @@ export function AdminAuthProvider({ children }) {
    * Logout and clear session
    * @param {string} reason - Logout reason for audit
    */
-  const logout = useCallback((reason = 'User logout') => {
-    logAuthEvent('LOGOUT', { reason, adminId: currentAdmin?.id });
-    
-    setIsAuthenticated(false);
-    setCurrentAdmin(null);
-    setSessionExpiry(null);
-    setShowAdminPanel(false);
-  }, [currentAdmin]);
+  const logout = useCallback(
+    (reason = "User logout") => {
+      logAuthEvent("LOGOUT", { reason, adminId: currentAdmin?.id });
+
+      setIsAuthenticated(false);
+      setCurrentAdmin(null);
+      setSessionExpiry(null);
+      setShowAdminPanel(false);
+    },
+    [currentAdmin],
+  );
 
   /**
    * Open admin login modal (via secret shortcut)
@@ -344,7 +368,7 @@ export function AdminAuthProvider({ children }) {
   const openAdminLogin = useCallback(() => {
     if (!isAuthenticated) {
       setShowAdminLogin(true);
-      logAuthEvent('LOGIN_MODAL_OPENED');
+      logAuthEvent("LOGIN_MODAL_OPENED");
     } else {
       setShowAdminPanel(true);
       extendSession();
@@ -365,7 +389,7 @@ export function AdminAuthProvider({ children }) {
     if (isAuthenticated) {
       setShowAdminPanel(true);
       extendSession();
-      logAuthEvent('ADMIN_PANEL_OPENED', { adminId: currentAdmin?.id });
+      logAuthEvent("ADMIN_PANEL_OPENED", { adminId: currentAdmin?.id });
     }
   }, [isAuthenticated, extendSession, currentAdmin]);
 
@@ -380,20 +404,20 @@ export function AdminAuthProvider({ children }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl+Shift+A to open admin login/panel
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      if (e.ctrlKey && e.shiftKey && e.key === "A") {
         e.preventDefault();
         openAdminLogin();
       }
-      
+
       // Escape to close modals
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (showAdminLogin) setShowAdminLogin(false);
         if (showAdminPanel) setShowAdminPanel(false);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [openAdminLogin, showAdminLogin, showAdminPanel]);
 
   const value = {
@@ -404,7 +428,7 @@ export function AdminAuthProvider({ children }) {
     showAdminLogin,
     showAdminPanel,
     lockoutInfo,
-    
+
     // Actions
     authenticate,
     logout,
@@ -413,7 +437,7 @@ export function AdminAuthProvider({ children }) {
     openAdminPanel,
     closeAdminPanel,
     extendSession,
-    
+
     // Config (for display)
     sessionTimeout: SECURITY_CONFIG.SESSION_TIMEOUT,
   };
@@ -431,7 +455,7 @@ export function AdminAuthProvider({ children }) {
 export function useAdminAuth() {
   const context = useContext(AdminAuthContext);
   if (!context) {
-    throw new Error('useAdminAuth must be used within AdminAuthProvider');
+    throw new Error("useAdminAuth must be used within AdminAuthProvider");
   }
   return context;
 }

@@ -4,38 +4,43 @@
  * Generates a detailed feature request that can be passed to developers
  */
 
-import React, { useState } from 'react';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { useLanguage } from '../contexts/LanguageContext';
-import ReportBugLink from './ReportBugLink';
+import React, { useState } from "react";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useLanguage } from "../contexts/LanguageContext";
+import ReportBugLink from "./ReportBugLink";
 
 const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
   useBodyScrollLock(isOpen);
-  
+
   const { t, language, getCurrentLanguage } = useLanguage();
   const currentLang = getCurrentLanguage();
-  
-  const [languages, setLanguages] = useState([{ name: '', nativeName: '', region: '', reason: '' }]);
-  const [contactEmail, setContactEmail] = useState('');
-  const [additionalNotes, setAdditionalNotes] = useState('');
+
+  const [languages, setLanguages] = useState([
+    { name: "", nativeName: "", region: "", reason: "" },
+  ]);
+  const [contactEmail, setContactEmail] = useState("");
+  const [additionalNotes, setAdditionalNotes] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [generatedRequest, setGeneratedRequest] = useState('');
+  const [generatedRequest, setGeneratedRequest] = useState("");
 
   const regions = [
-    { id: 'pacific', name: 'Pacific Islander', icon: '🌊' },
-    { id: 'asian', name: 'Asian', icon: '🌏' },
-    { id: 'african', name: 'African', icon: '🌍' },
-    { id: 'middle-eastern', name: 'Middle Eastern', icon: '🕌' },
-    { id: 'native-american', name: 'Native American', icon: '🪶' },
-    { id: 'caribbean', name: 'Caribbean', icon: '🏝️' },
-    { id: 'european', name: 'European', icon: '🌐' },
-    { id: 'south-american', name: 'South American', icon: '🌎' },
-    { id: 'central-american', name: 'Central American', icon: '🌎' },
-    { id: 'other', name: 'Other', icon: '🌍' },
+    { id: "pacific", name: "Pacific Islander", icon: "🌊" },
+    { id: "asian", name: "Asian", icon: "🌏" },
+    { id: "african", name: "African", icon: "🌍" },
+    { id: "middle-eastern", name: "Middle Eastern", icon: "🕌" },
+    { id: "native-american", name: "Native American", icon: "🪶" },
+    { id: "caribbean", name: "Caribbean", icon: "🏝️" },
+    { id: "european", name: "European", icon: "🌐" },
+    { id: "south-american", name: "South American", icon: "🌎" },
+    { id: "central-american", name: "Central American", icon: "🌎" },
+    { id: "other", name: "Other", icon: "🌍" },
   ];
 
   const addLanguage = () => {
-    setLanguages([...languages, { name: '', nativeName: '', region: '', reason: '' }]);
+    setLanguages([
+      ...languages,
+      { name: "", nativeName: "", region: "", reason: "" },
+    ]);
   };
 
   const removeLanguage = (index) => {
@@ -51,45 +56,49 @@ const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
   };
 
   const generateFeatureRequest = () => {
-    const validLanguages = languages.filter(l => l.name.trim());
-    
+    const validLanguages = languages.filter((l) => l.name.trim());
+
     if (validLanguages.length === 0) {
       return null;
     }
 
     const timestamp = new Date().toISOString();
-    const regionById = Object.fromEntries(regions.map(r => [r.id, r.name]));
+    const regionById = Object.fromEntries(regions.map((r) => [r.id, r.name]));
 
     const request = `
 ═══════════════════════════════════════════════════════════════
 🌍 LANGUAGE SUPPORT FEATURE REQUEST
 ═══════════════════════════════════════════════════════════════
 
-📅 Submitted: ${new Date().toLocaleDateString('en-US', { 
-  weekday: 'long', 
-  year: 'numeric', 
-  month: 'long', 
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit'
-})}
-📧 Contact: ${contactEmail || 'Not provided'}
+📅 Submitted: ${new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+📧 Contact: ${contactEmail || "Not provided"}
 🌐 Submitted from: ${currentLang.nativeName} (${language})
 
 ───────────────────────────────────────────────────────────────
 📋 REQUESTED LANGUAGES (${validLanguages.length})
 ───────────────────────────────────────────────────────────────
 
-${validLanguages.map((lang, i) => `
-${i + 1}. ${lang.name}${lang.nativeName ? ` (${lang.nativeName})` : ''}
-   ├─ Region: ${regionById[lang.region] || lang.region || 'Not specified'}
-   └─ Reason: ${lang.reason || 'Community support / veteran population'}
-`).join('\n')}
+${validLanguages
+  .map(
+    (lang, i) => `
+${i + 1}. ${lang.name}${lang.nativeName ? ` (${lang.nativeName})` : ""}
+   ├─ Region: ${regionById[lang.region] || lang.region || "Not specified"}
+   └─ Reason: ${lang.reason || "Community support / veteran population"}
+`,
+  )
+  .join("\n")}
 
 ───────────────────────────────────────────────────────────────
 📝 ADDITIONAL NOTES
 ───────────────────────────────────────────────────────────────
-${additionalNotes || 'None provided'}
+${additionalNotes || "None provided"}
 
 ───────────────────────────────────────────────────────────────
 📊 IMPLEMENTATION CHECKLIST (For Developer)
@@ -155,9 +164,9 @@ Verify translations with native speakers for accuracy!
   };
 
   const downloadRequest = () => {
-    const blob = new Blob([generatedRequest], { type: 'text/plain' });
+    const blob = new Blob([generatedRequest], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `language-request-${Date.now()}.txt`;
     a.click();
@@ -165,11 +174,11 @@ Verify translations with native speakers for accuracy!
   };
 
   const resetForm = () => {
-    setLanguages([{ name: '', nativeName: '', region: '', reason: '' }]);
-    setContactEmail('');
-    setAdditionalNotes('');
+    setLanguages([{ name: "", nativeName: "", region: "", reason: "" }]);
+    setContactEmail("");
+    setAdditionalNotes("");
     setIsSubmitted(false);
-    setGeneratedRequest('');
+    setGeneratedRequest("");
   };
 
   if (!isOpen) return null;
@@ -183,17 +192,35 @@ Verify translations with native speakers for accuracy!
             <span className="text-3xl">🌍</span>
             <div>
               <h2 className="text-xl font-bold">Suggest a Language</h2>
-              <p className="text-sm text-cyan-100">Help us be more inclusive!</p>
+              <p className="text-sm text-cyan-100">
+                Help us be more inclusive!
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Language Suggestion" />}
+            {onReportBug && (
+              <ReportBugLink
+                onClick={onReportBug}
+                variant="light"
+                moduleName="Language Suggestion"
+              />
+            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -206,8 +233,12 @@ Verify translations with native speakers for accuracy!
               {/* Intro */}
               <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-4 border border-cyan-200 dark:border-cyan-800">
                 <p className="text-sm text-cyan-800 dark:text-cyan-200">
-                  🎖️ <strong>Every veteran deserves support in their language.</strong> Suggest languages 
-                  for our next update. We especially welcome languages from underserved military communities.
+                  🎖️{" "}
+                  <strong>
+                    Every veteran deserves support in their language.
+                  </strong>{" "}
+                  Suggest languages for our next update. We especially welcome
+                  languages from underserved military communities.
                 </p>
               </div>
 
@@ -216,9 +247,12 @@ Verify translations with native speakers for accuracy!
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
                   Languages to Add
                 </label>
-                
+
                 {languages.map((lang, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-3">
+                  <div
+                    key={index}
+                    className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Language #{index + 1}
@@ -233,13 +267,15 @@ Verify translations with native speakers for accuracy!
                         </button>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input
                         type="text"
                         placeholder="Language name (e.g., Bengali)"
                         value={lang.name}
-                        onChange={(e) => updateLanguage(index, 'name', e.target.value)}
+                        onChange={(e) =>
+                          updateLanguage(index, "name", e.target.value)
+                        }
                         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                         required
                       />
@@ -247,33 +283,41 @@ Verify translations with native speakers for accuracy!
                         type="text"
                         placeholder="Native name (e.g., বাংলা)"
                         value={lang.nativeName}
-                        onChange={(e) => updateLanguage(index, 'nativeName', e.target.value)}
+                        onChange={(e) =>
+                          updateLanguage(index, "nativeName", e.target.value)
+                        }
                         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <select
                         value={lang.region}
-                        onChange={(e) => updateLanguage(index, 'region', e.target.value)}
+                        onChange={(e) =>
+                          updateLanguage(index, "region", e.target.value)
+                        }
                         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       >
                         <option value="">Select region...</option>
-                        {regions.map(r => (
-                          <option key={r.id} value={r.id}>{r.icon} {r.name}</option>
+                        {regions.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.icon} {r.name}
+                          </option>
                         ))}
                       </select>
                       <input
                         type="text"
                         placeholder="Why this language? (optional)"
                         value={lang.reason}
-                        onChange={(e) => updateLanguage(index, 'reason', e.target.value)}
+                        onChange={(e) =>
+                          updateLanguage(index, "reason", e.target.value)
+                        }
                         className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       />
                     </div>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={addLanguage}
@@ -321,7 +365,9 @@ Verify translations with native speakers for accuracy!
               >
                 <span>🚀</span>
                 <span>Generate Feature Request</span>
-                <span className="text-sm font-normal opacity-80">Bon Voyage!</span>
+                <span className="text-sm font-normal opacity-80">
+                  Bon Voyage!
+                </span>
               </button>
             </form>
           ) : (
@@ -334,7 +380,8 @@ Verify translations with native speakers for accuracy!
                     Feature Request Generated!
                   </p>
                   <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                    Copy this request and share it with the Vet-Rate development team.
+                    Copy this request and share it with the Vet-Rate development
+                    team.
                   </p>
                 </div>
               </div>
@@ -379,11 +426,18 @@ Verify translations with native speakers for accuracy!
               {/* Share instructions */}
               <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  <strong>📧 How to submit:</strong> Share this feature request via{' '}
-                  <a href="https://github.com/your-repo/issues" target="_blank" rel="noopener noreferrer" className="underline">
+                  <strong>📧 How to submit:</strong> Share this feature request
+                  via{" "}
+                  <a
+                    href="https://github.com/your-repo/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
                     GitHub Issues
-                  </a>{' '}
-                  or email it to the development team. We review all submissions!
+                  </a>{" "}
+                  or email it to the development team. We review all
+                  submissions!
                 </p>
               </div>
             </div>
@@ -393,7 +447,8 @@ Verify translations with native speakers for accuracy!
         {/* Footer */}
         <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-            🎖️ Currently supporting 40+ languages • Your suggestion helps veterans worldwide
+            🎖️ Currently supporting 40+ languages • Your suggestion helps
+            veterans worldwide
           </p>
         </div>
       </div>

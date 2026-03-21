@@ -59,20 +59,14 @@
         "minRating": 10,
         "maxRating": 90,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "Texas resident",
-          "Primary residence"
-        ]
+        "otherReqs": ["Texas resident", "Primary residence"]
       },
       "applicationProcess": {
         "agency": "County Appraisal District",
         "form": "Form 50-114",
         "deadline": "April 30 annually",
         "renewalRequired": false,
-        "documentation": [
-          "DD-214",
-          "VA rating letter"
-        ],
+        "documentation": ["DD-214", "VA rating letter"],
         "onlineApplicationAvailable": false,
         "applicationUrl": null
       },
@@ -99,21 +93,14 @@
         "minRating": 10,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "Texas resident",
-          "Valid driver's license"
-        ]
+        "otherReqs": ["Texas resident", "Valid driver's license"]
       },
       "applicationProcess": {
         "agency": "Texas Department of Motor Vehicles",
         "form": "Form VTR-615",
         "deadline": "None",
         "renewalRequired": false,
-        "documentation": [
-          "DD-214",
-          "VA rating letter",
-          "Vehicle title"
-        ],
+        "documentation": ["DD-214", "VA rating letter", "Vehicle title"],
         "onlineApplicationAvailable": false,
         "applicationUrl": null
       },

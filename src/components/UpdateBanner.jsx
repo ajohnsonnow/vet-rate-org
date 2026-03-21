@@ -7,20 +7,16 @@
 
 /**
  * UPDATE BANNER - "The Alert"
- * 
+ *
  * Non-intrusive notification when an update is available.
  * Appears at the top of the screen, doesn't block work.
  */
 
-import React from 'react';
-import { RefreshCw, X } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React from "react";
+import { RefreshCw, X } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const UpdateBanner = ({ 
-  onApplyUpdate, 
-  onDismiss,
-  updateInfo 
-}) => {
+const UpdateBanner = ({ onApplyUpdate, onDismiss, updateInfo }) => {
   const { t } = useLanguage();
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-slideDown">
@@ -28,15 +24,14 @@ const UpdateBanner = ({
         <div className="flex items-center gap-3 flex-1">
           <RefreshCw className="w-5 h-5 animate-spin-slow" />
           <div>
-            <p className="font-semibold text-sm">
-              🆕 New Update Available!
-            </p>
+            <p className="font-semibold text-sm">🆕 New Update Available!</p>
             <p className="text-xs text-blue-100">
-              Version {updateInfo?.serverVersion} is ready. Click to refresh and get the latest features.
+              Version {updateInfo?.serverVersion} is ready. Click to refresh and
+              get the latest features.
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={onApplyUpdate}
@@ -44,7 +39,7 @@ const UpdateBanner = ({
           >
             Update Now
           </button>
-          
+
           <button
             onClick={onDismiss}
             className="p-2 hover:bg-blue-800 rounded-md transition-colors"

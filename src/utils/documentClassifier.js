@@ -2,7 +2,7 @@
  * Vet-Rate.org - Document Classification System
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * Intelligent document classifier for Muster Call system.
  * Analyzes document content to determine type:
  * - DD214/DD215/NGB22 (Service Records)
@@ -20,21 +20,21 @@
  * Document type constants
  */
 export const DOCUMENT_TYPES = {
-  DD214: 'DD214',
-  DD215: 'DD215',
-  NGB22: 'NGB22',
-  DD256: 'DD256', // Reserve discharge
-  DD257: 'DD257', // Reserve discharge
-  RATING_DECISION: 'RATING_DECISION',
-  CLAIM_LETTER: 'CLAIM_LETTER',
-  C_FILE_MEDICAL: 'C_FILE_MEDICAL',
-  DBQ: 'DBQ',
-  NEXUS_LETTER: 'NEXUS_LETTER',
-  PERSONAL_STATEMENT: 'PERSONAL_STATEMENT',
-  VA_CORRESPONDENCE: 'VA_CORRESPONDENCE',
-  MEDICAL_RECORD: 'MEDICAL_RECORD',
-  EXAM_REPORT: 'EXAM_REPORT',
-  UNKNOWN: 'UNKNOWN'
+  DD214: "DD214",
+  DD215: "DD215",
+  NGB22: "NGB22",
+  DD256: "DD256", // Reserve discharge
+  DD257: "DD257", // Reserve discharge
+  RATING_DECISION: "RATING_DECISION",
+  CLAIM_LETTER: "CLAIM_LETTER",
+  C_FILE_MEDICAL: "C_FILE_MEDICAL",
+  DBQ: "DBQ",
+  NEXUS_LETTER: "NEXUS_LETTER",
+  PERSONAL_STATEMENT: "PERSONAL_STATEMENT",
+  VA_CORRESPONDENCE: "VA_CORRESPONDENCE",
+  MEDICAL_RECORD: "MEDICAL_RECORD",
+  EXAM_REPORT: "EXAM_REPORT",
+  UNKNOWN: "UNKNOWN",
 };
 
 /**
@@ -45,30 +45,30 @@ const CLASSIFICATION_PATTERNS = {
     patterns: [
       // ===== DD214 / DISCHARGE DOCUMENT PATTERNS =====
       // Core identifiers - these should ONLY appear on actual DD214s
-      /DD\s*[-]?\s*FORM\s*[-]?\s*214/i,       // DD FORM 214, DD-FORM-214, etc.
-      /DD[-\s]?214/i,                          // DD214, DD-214, DD 214
-      /CERTIFICATE\s+OF\s+RELEASE/i,           // Shorter version (OCR friendly)
+      /DD\s*[-]?\s*FORM\s*[-]?\s*214/i, // DD FORM 214, DD-FORM-214, etc.
+      /DD[-\s]?214/i, // DD214, DD-214, DD 214
+      /CERTIFICATE\s+OF\s+RELEASE/i, // Shorter version (OCR friendly)
       /RELEASE\s+OR\s+DISCHARGE\s+FROM\s+ACTIVE\s+DUTY/i,
-      /MEMBER\s*[-]?\s*\d\s*[-:]\s*COPY/i,     // MEMBER 4 - COPY, MEMBER-1: COPY
-      /SEPARATION\s+DATE/i,                    // Generic separation date
+      /MEMBER\s*[-]?\s*\d\s*[-:]\s*COPY/i, // MEMBER 4 - COPY, MEMBER-1: COPY
+      /SEPARATION\s+DATE/i, // Generic separation date
       /CHARACTER\s+OF\s+(SERVICE|DISCHARGE)/i, // Character of service/discharge
-      
+
       // DD214 specific fields (boxes)
-      /DATE\s+ENTERED\s+(?:ACTIVE\s+)?(?:DUTY|SERVICE)/i,  // Box 12a
-      /DECORATIONS.*MEDALS.*BADGES/i,          // Box 13 (awards section)
-      /PRIMARY\s+SPECIALTY/i,                  // Box 11 (MOS)
-      /PAY\s+GRADE/i,                          // Box 4a
-      /GRADE.*RATE.*RANK/i,                    // Box 4
-      /NET\s+ACTIVE\s+SERVICE/i,               // Box 12c
+      /DATE\s+ENTERED\s+(?:ACTIVE\s+)?(?:DUTY|SERVICE)/i, // Box 12a
+      /DECORATIONS.*MEDALS.*BADGES/i, // Box 13 (awards section)
+      /PRIMARY\s+SPECIALTY/i, // Box 11 (MOS)
+      /PAY\s+GRADE/i, // Box 4a
+      /GRADE.*RATE.*RANK/i, // Box 4
+      /NET\s+ACTIVE\s+SERVICE/i, // Box 12c
       /TOTAL\s+PRIOR\s+(?:ACTIVE|INACTIVE)\s+SERVICE/i, // Box 12d/e
-      /PLACE\s+OF\s+ENTRY\s+INTO\s+ACTIVE\s+DUTY/i,     // Box 12b
-      /HOME\s+OF\s+RECORD/i,                   // Box 6
+      /PLACE\s+OF\s+ENTRY\s+INTO\s+ACTIVE\s+DUTY/i, // Box 12b
+      /HOME\s+OF\s+RECORD/i, // Box 6
       /RE[-\s]?CODE|REENLISTMENT\s+(?:CODE|ELIGIBILITY)/i, // Box 27
       /SPD\s+CODE|SEPARATION\s+(?:PROGRAM\s+)?DESIGNATOR/i, // Box 28
-      /NARRATIVE\s+REASON\s+FOR\s+SEPARATION/i // Box 28
+      /NARRATIVE\s+REASON\s+FOR\s+SEPARATION/i, // Box 28
     ],
     weight: 5,
-    category: 'service_record',
+    category: "service_record",
     priority: 10, // Highest priority
     // Negative patterns - if these appear, it's probably NOT a DD214
     negativePatterns: [
@@ -82,44 +82,44 @@ const CLASSIFICATION_PATTERNS = {
       /RATING\s+DECISION/i,
       /COMBINED\s+RATING/i,
       /DIAGNOSTIC\s+CODE\s*\d{4}/i,
-      /SERVICE\s+CONNECTION.*GRANTED/i
-    ]
+      /SERVICE\s+CONNECTION.*GRANTED/i,
+    ],
   },
-  
+
   [DOCUMENT_TYPES.DD215]: {
     patterns: [
       /DD\s*FORM\s*215/i,
       /CORRECTION\s+TO\s+DD\s+FORM\s+214/i,
-      /AMENDED\s+DISCHARGE/i
+      /AMENDED\s+DISCHARGE/i,
     ],
     weight: 5,
-    category: 'service_record',
-    priority: 9
+    category: "service_record",
+    priority: 9,
   },
-  
+
   [DOCUMENT_TYPES.NGB22]: {
     patterns: [
       /NGB\s*FORM\s*22/i,
       /NATIONAL\s+GUARD\s+BUREAU/i,
       /REPORT\s+OF\s+SEPARATION\s+AND\s+RECORD\s+OF\s+SERVICE/i,
-      /STATE\s+ACTIVE\s+DUTY/i
+      /STATE\s+ACTIVE\s+DUTY/i,
     ],
     weight: 5,
-    category: 'service_record',
-    priority: 10
+    category: "service_record",
+    priority: 10,
   },
-  
+
   [DOCUMENT_TYPES.DD256]: {
     patterns: [
       /DD\s*FORM\s*256/i,
       /HONORABLE\s+DISCHARGE.*RESERVE/i,
-      /RESERVE\s+COMPONENT/i
+      /RESERVE\s+COMPONENT/i,
     ],
     weight: 5,
-    category: 'service_record',
-    priority: 9
+    category: "service_record",
+    priority: 9,
   },
-  
+
   [DOCUMENT_TYPES.RATING_DECISION]: {
     patterns: [
       /RATING\s+DECISION/i,
@@ -129,18 +129,18 @@ const CLASSIFICATION_PATTERNS = {
       /38\s+CFR/i,
       /SERVICE\s+CONNECTION.*GRANTED/i,
       /EFFECTIVE\s+DATE.*ENTITLEMENT/i,
-      /BILATERAL\s+FACTOR/i
+      /BILATERAL\s+FACTOR/i,
     ],
     weight: 4,
-    category: 'rating',
-    priority: 9
+    category: "rating",
+    priority: 9,
   },
-  
+
   [DOCUMENT_TYPES.CLAIM_LETTER]: {
     patterns: [
       // ===== VA CLAIM LETTER SPECIFIC PATTERNS =====
       // These are VERY distinctive to claim letters and should NOT appear in DD214s
-      
+
       // Development letter / Initial claim acknowledgment
       /WE\s+RECEIVED\s+YOUR\s+CLAIM/i,
       /YOUR\s+CLAIM\s+(?:HAS\s+BEEN\s+)?RECEIVED/i,
@@ -148,7 +148,7 @@ const CLASSIFICATION_PATTERNS = {
       /ACKNOWLEDGMENT\s+(?:OF\s+)?(?:YOUR\s+)?CLAIM/i,
       /DEVELOPMENT\s+LETTER/i,
       /CLAIM\s+RECEIVED/i,
-      
+
       // What we need from you sections
       /WHAT\s+WE\s+NEED\s+FROM\s+YOU/i,
       /WHAT\s+WE\s+(?:STILL\s+)?NEED/i,
@@ -157,27 +157,27 @@ const CLASSIFICATION_PATTERNS = {
       /WE\s+NEED\s+(?:THE\s+FOLLOWING|YOU\s+TO)/i,
       /ADDITIONAL\s+(?:EVIDENCE|INFORMATION)\s+(?:IS\s+)?(?:REQUIRED|NEEDED)/i,
       /SUBMIT\s+(?:THE\s+FOLLOWING|EVIDENCE)/i,
-      
+
       // Response deadlines (common in all eras)
       /YOU\s+HAVE\s+\d+\s+DAYS/i,
       /RESPOND\s+(?:BY|WITHIN)/i,
       /REPLY\s+(?:BY|WITHIN|TO)/i,
       /(?:SUSPENSE|DUE|RESPONSE)\s+DATE/i,
       /DAYS\s+TO\s+(?:RESPOND|REPLY|SUBMIT)/i,
-      
+
       // What happens next
       /WHAT\s+(?:HAPPENS|TO\s+EXPECT)\s+NEXT/i,
       /NEXT\s+STEPS/i,
       /WE\s+WILL\s+(?:REVIEW|PROCESS)\s+YOUR\s+CLAIM/i,
       /YOUR\s+CLAIM\s+(?:IS|WILL\s+BE)\s+(?:BEING\s+)?REVIEWED/i,
-      
+
       // Claim status language (broader matching)
       /(?:PENDING|OPEN|ACTIVE)\s+CLAIM/i,
       /CLAIM\s+(?:STATUS|NUMBER|FILE)/i,
       /CLAIM\s+(?:IS\s+)?IN\s+PROGRESS/i,
       /UNDER\s+(?:REVIEW|CONSIDERATION)/i,
       /STATUS\s+OF\s+YOUR\s+CLAIM/i,
-      
+
       // Exam scheduling
       /C&P\s+EXAM(?:INATION)?/i,
       /COMPENSATION\s+(?:AND|&)\s+PENSION\s+EXAM/i,
@@ -186,23 +186,23 @@ const CLASSIFICATION_PATTERNS = {
       /MEDICAL\s+EXAM(?:INATION)?\s+(?:WILL\s+BE\s+)?SCHEDULED/i,
       /(?:QTC|VES|LHI)\s+(?:EXAM|APPOINTMENT|MEDICAL)/i,
       /SCHEDULED\s+(?:WITH|AT|BY|FOR)\s+(?:AN?\s+)?(?:QTC|VES|LHI|EXAM)/i,
-      
+
       // File/claim number formats (VA specific)
       /FILE\s+(?:NUMBER|NO\.?|#)/i,
       /CLAIM\s+(?:NUMBER|#|NO\.?)/i,
       /VA\s+FILE/i,
       /YOUR\s+(?:VA\s+)?FILE\s+NUMBER/i,
-      
+
       // Intent to File
       /INTENT\s+TO\s+FILE/i,
-      
+
       // Original patterns (kept + enhanced)
       /CLAIM\s+FOR\s+(?:DISABILITY\s+)?COMPENSATION/i,
       /VA\s+FORM\s+21-526/i,
       /APPLICATION\s+FOR\s+(?:DISABILITY\s+)?COMPENSATION/i,
       /CONTENTION(?:S)?/i,
       /CLAIMED\s+(?:CONDITION|DISABILITY)/i,
-      
+
       // Older VA letter patterns (pre-2010)
       /DEPARTMENT\s+OF\s+VETERANS\s+AFFAIRS.*(?:CLAIM|FILE)/i,
       /VETERANS\s+BENEFITS\s+ADMINISTRATION.*(?:CLAIM|FILE)/i,
@@ -211,14 +211,14 @@ const CLASSIFICATION_PATTERNS = {
       /DECISION\s+ON\s+YOUR\s+CLAIM/i,
       /(?:SERVICE[D]?[-\s]?)?CONNECTED\s+(?:DISABILITY|CLAIM)/i,
       /DISABILITY\s+CLAIM/i,
-      
+
       // VA letterhead/header patterns
       /VETERANS\s+BENEFITS\s+ADMINISTRATION/i,
-      /VA\s+REGIONAL\s+(?:OFFICE|CENTER)/i
+      /VA\s+REGIONAL\s+(?:OFFICE|CENTER)/i,
     ],
     // Higher weight to compete with DD214
     weight: 5,
-    category: 'claim',
+    category: "claim",
     // Higher priority than before - claim letters are important!
     priority: 9,
     // Negative patterns that should REDUCE score if found (DD214 indicators)
@@ -229,10 +229,10 @@ const CLASSIFICATION_PATTERNS = {
       /MEMBER\s+\d\s*-\s*COPY/i,
       /DECORATIONS.*MEDALS.*BADGES/i,
       /PRIMARY\s+(?:SPECIALTY|MOS)/i,
-      /NGB\s*FORM\s*22/i
-    ]
+      /NGB\s*FORM\s*22/i,
+    ],
   },
-  
+
   [DOCUMENT_TYPES.DBQ]: {
     patterns: [
       /DISABILITY\s+BENEFITS\s+QUESTIONNAIRE/i,
@@ -241,31 +241,31 @@ const CLASSIFICATION_PATTERNS = {
       /MEDICAL\s+OPINION/i,
       /NEXUS\s+STATEMENT/i,
       /AS\s+LIKELY\s+AS\s+NOT/i,
-      /MORE\s+LIKELY\s+THAN\s+NOT/i
+      /MORE\s+LIKELY\s+THAN\s+NOT/i,
     ],
     weight: 4,
-    category: 'medical',
-    priority: 7
+    category: "medical",
+    priority: 7,
   },
-  
+
   [DOCUMENT_TYPES.C_FILE_MEDICAL]: {
     patterns: [
       // C-File medical records are ACTUAL medical exam/treatment records
       // NOT letters ABOUT exams - they are the exams themselves
-      /COMPENSATION\s+&\s+PENSION.*EXAM.*FINDINGS/i,  // Require findings to be actual exam
-      /C&P\s+EXAM(?:INATION)?\s+(?:RESULTS|FINDINGS|REPORT)/i,  // Actual exam results
+      /COMPENSATION\s+&\s+PENSION.*EXAM.*FINDINGS/i, // Require findings to be actual exam
+      /C&P\s+EXAM(?:INATION)?\s+(?:RESULTS|FINDINGS|REPORT)/i, // Actual exam results
       /VA\s+MEDICAL\s+CENTER/i,
       /VETERANS\s+HEALTH\s+ADMINISTRATION/i,
       /TREATMENT\s+RECORD/i,
       /CLINICAL\s+NOTE/i,
       /PROGRESS\s+NOTE/i,
-      /CHIEF\s+COMPLAINT/i,          // Actual medical record language
+      /CHIEF\s+COMPLAINT/i, // Actual medical record language
       /PHYSICAL\s+EXAM(?:INATION)?/i, // Actual exam
       /MEDICAL\s+HISTORY/i,
-      /ASSESSMENT\s+AND\s+PLAN/i
+      /ASSESSMENT\s+AND\s+PLAN/i,
     ],
     weight: 3,
-    category: 'medical',
+    category: "medical",
     priority: 6,
     // Negative patterns - if these appear, it's probably a CLAIM LETTER not a medical record
     negativePatterns: [
@@ -276,10 +276,10 @@ const CLASSIFICATION_PATTERNS = {
       /RESPOND\s+WITHIN\s+\d+\s+DAYS/i,
       /CLAIM\s+(?:NUMBER|STATUS)/i,
       /PENDING\s+CLAIM/i,
-      /EVIDENCE\s+NEEDED/i
-    ]
+      /EVIDENCE\s+NEEDED/i,
+    ],
   },
-  
+
   [DOCUMENT_TYPES.NEXUS_LETTER]: {
     patterns: [
       /NEXUS\s+LETTER/i,
@@ -288,13 +288,13 @@ const CLASSIFICATION_PATTERNS = {
       /MORE\s+LIKELY\s+THAN\s+NOT.*SERVICE/i,
       /PROXIMATE\s+CAUSE/i,
       /ETIOLOGY/i,
-      /IMO\s*-\s*INDEPENDENT\s+MEDICAL\s+OPINION/i
+      /IMO\s*-\s*INDEPENDENT\s+MEDICAL\s+OPINION/i,
     ],
     weight: 4,
-    category: 'medical_opinion',
-    priority: 7
+    category: "medical_opinion",
+    priority: 7,
   },
-  
+
   [DOCUMENT_TYPES.PERSONAL_STATEMENT]: {
     patterns: [
       /PERSONAL\s+STATEMENT/i,
@@ -302,26 +302,26 @@ const CLASSIFICATION_PATTERNS = {
       /VA\s+FORM\s+21-4138/i,
       /I.*DECLARE/i,
       /MY\s+NAME\s+IS/i,
-      /I\s+AM\s+WRITING\s+TO/i
+      /I\s+AM\s+WRITING\s+TO/i,
     ],
     weight: 3,
-    category: 'statement',
-    priority: 5
+    category: "statement",
+    priority: 5,
   },
-  
+
   [DOCUMENT_TYPES.VA_CORRESPONDENCE]: {
     patterns: [
       /DEPARTMENT\s+OF\s+VETERANS\s+AFFAIRS/i,
       /VETERANS\s+BENEFITS\s+ADMINISTRATION/i,
       /REGIONAL\s+OFFICE/i,
       /VA\s+NOTIFICATION\s+LETTER/i,
-      /DECISION\s+REVIEW\s+OFFICER/i
+      /DECISION\s+REVIEW\s+OFFICER/i,
     ],
     weight: 2,
-    category: 'correspondence',
-    priority: 4
+    category: "correspondence",
+    priority: 4,
   },
-  
+
   [DOCUMENT_TYPES.EXAM_REPORT]: {
     patterns: [
       // Actual exam reports have specific medical documentation language
@@ -334,10 +334,10 @@ const CLASSIFICATION_PATTERNS = {
       /DIAGNOSIS/i,
       /CHIEF\s+COMPLAINT/i,
       /OBJECTIVE\s+FINDINGS/i,
-      /HISTORY\s+OF\s+PRESENT\s+ILLNESS/i
+      /HISTORY\s+OF\s+PRESENT\s+ILLNESS/i,
     ],
     weight: 3,
-    category: 'medical',
+    category: "medical",
     priority: 6,
     // Negative patterns - exam REPORTS are the actual exams, not letters about them
     negativePatterns: [
@@ -345,9 +345,9 @@ const CLASSIFICATION_PATTERNS = {
       /WHAT\s+WE\s+NEED\s+FROM\s+YOU/i,
       /WE\s+(?:HAVE\s+)?SCHEDULED?\s+(?:AN?\s+)?EXAM/i,
       /CLAIM\s+(?:NUMBER|STATUS)/i,
-      /RESPOND\s+(?:BY|WITHIN)/i
-    ]
-  }
+      /RESPOND\s+(?:BY|WITHIN)/i,
+    ],
+  },
 };
 
 /**
@@ -356,17 +356,17 @@ const CLASSIFICATION_PATTERNS = {
  * @param {string} filename - Optional filename for additional hints
  * @returns {Object} Classification result with type, confidence, and metadata
  */
-export const classifyDocument = (text, filename = '') => {
+export const classifyDocument = (text, filename = "") => {
   // Enable debug mode for classification troubleshooting
   const DEBUG_CLASSIFICATION = true;
-  
-  if (!text || typeof text !== 'string') {
+
+  if (!text || typeof text !== "string") {
     return {
       type: DOCUMENT_TYPES.UNKNOWN,
       confidence: 0,
-      category: 'unknown',
+      category: "unknown",
       priority: 0,
-      matches: []
+      matches: [],
     };
   }
 
@@ -375,10 +375,13 @@ export const classifyDocument = (text, filename = '') => {
   const filenameHints = filename.toLowerCase();
 
   if (DEBUG_CLASSIFICATION) {
-    console.log('🔍 [CLASSIFIER DEBUG] Starting document classification');
-    console.log('🔍 [CLASSIFIER DEBUG] Filename:', filename);
-    console.log('🔍 [CLASSIFIER DEBUG] Text length:', text.length);
-    console.log('🔍 [CLASSIFIER DEBUG] First 500 chars:', normalizedText.substring(0, 500));
+    console.log("🔍 [CLASSIFIER DEBUG] Starting document classification");
+    console.log("🔍 [CLASSIFIER DEBUG] Filename:", filename);
+    console.log("🔍 [CLASSIFIER DEBUG] Text length:", text.length);
+    console.log(
+      "🔍 [CLASSIFIER DEBUG] First 500 chars:",
+      normalizedText.substring(0, 500),
+    );
   }
 
   const scores = {};
@@ -417,13 +420,15 @@ export const classifyDocument = (text, filename = '') => {
     if (filenameHints.includes(docType.toLowerCase())) {
       score += 1;
     }
-    
+
     // Special filename pattern matching for common naming conventions
     if (docType === DOCUMENT_TYPES.CLAIM_LETTER) {
       // Match: claimletter, claim-letter, claim_letter, claim letter
-      if (/claim[-_\s]?letter/i.test(filename) ||
-          /va[-_\s]?claim/i.test(filename) ||
-          /development[-_\s]?letter/i.test(filename)) {
+      if (
+        /claim[-_\s]?letter/i.test(filename) ||
+        /va[-_\s]?claim/i.test(filename) ||
+        /development[-_\s]?letter/i.test(filename)
+      ) {
         score += 3; // Stronger boost for claim letters
       }
     }
@@ -435,17 +440,28 @@ export const classifyDocument = (text, filename = '') => {
     }
     if (docType === DOCUMENT_TYPES.RATING_DECISION) {
       // Match: rating, decision, ratingdecision
-      if (/rating[-_\s]?decision/i.test(filename) ||
-          /decision[-_\s]?letter/i.test(filename)) {
+      if (
+        /rating[-_\s]?decision/i.test(filename) ||
+        /decision[-_\s]?letter/i.test(filename)
+      ) {
         score += 3;
       }
     }
 
     // Debug output for this doc type
-    if (DEBUG_CLASSIFICATION && (matchedPatterns.length > 0 || matchedNegativePatterns.length > 0)) {
+    if (
+      DEBUG_CLASSIFICATION &&
+      (matchedPatterns.length > 0 || matchedNegativePatterns.length > 0)
+    ) {
       console.log(`🔍 [CLASSIFIER DEBUG] ${docType}:`);
-      console.log(`   ✅ Matched patterns (${matchedPatterns.length}):`, matchedPatterns);
-      console.log(`   ❌ Negative patterns (${matchedNegativePatterns.length}):`, matchedNegativePatterns);
+      console.log(
+        `   ✅ Matched patterns (${matchedPatterns.length}):`,
+        matchedPatterns,
+      );
+      console.log(
+        `   ❌ Negative patterns (${matchedNegativePatterns.length}):`,
+        matchedNegativePatterns,
+      );
       console.log(`   📊 Final score: ${score}`);
     }
 
@@ -453,7 +469,7 @@ export const classifyDocument = (text, filename = '') => {
     debugInfo[docType] = {
       positiveMatches: matchedPatterns,
       negativeMatches: matchedNegativePatterns,
-      rawScore: score
+      rawScore: score,
     };
 
     // IMPORTANT: Only add to scores if score > 0 (after penalties)
@@ -465,13 +481,13 @@ export const classifyDocument = (text, filename = '') => {
   }
 
   if (DEBUG_CLASSIFICATION) {
-    console.log('🔍 [CLASSIFIER DEBUG] Final scores:', scores);
+    console.log("🔍 [CLASSIFIER DEBUG] Final scores:", scores);
   }
 
   // Find best match
   let bestType = DOCUMENT_TYPES.UNKNOWN;
   let bestScore = 0;
-  let bestCategory = 'unknown';
+  let bestCategory = "unknown";
   let bestPriority = 0;
 
   for (const [docType, score] of Object.entries(scores)) {
@@ -492,51 +508,72 @@ export const classifyDocument = (text, filename = '') => {
   // New method: Score relative to the SPECIFIC document type's maximum,
   // with bonuses for finding multiple key indicators.
   // ============================================================
-  
+
   let confidence = 0;
-  
+
   if (bestType !== DOCUMENT_TYPES.UNKNOWN) {
     const docConfig = CLASSIFICATION_PATTERNS[bestType];
     const maxForThisType = docConfig.weight * docConfig.patterns.length;
     const baseConfidence = Math.round((bestScore / maxForThisType) * 100);
-    
+
     // Bonus confidence for finding multiple patterns (more = more certain)
     const matchedCount = matches[bestType]?.length || 0;
     const patternBonus = Math.min(20, matchedCount * 5); // Up to 20% bonus
-    
+
     // Bonus for high-priority document types (DD214, rating decisions)
     const priorityBonus = docConfig.priority >= 9 ? 10 : 0;
-    
+
     // Filename match bonus
-    const filenameBonus = filenameHints.includes(bestType.toLowerCase()) ? 10 : 0;
-    
-    confidence = Math.min(100, baseConfidence + patternBonus + priorityBonus + filenameBonus);
-    
+    const filenameBonus = filenameHints.includes(bestType.toLowerCase())
+      ? 10
+      : 0;
+
+    confidence = Math.min(
+      100,
+      baseConfidence + patternBonus + priorityBonus + filenameBonus,
+    );
+
     // Floor: If we matched ANY DD214/service record pattern, minimum 60% confidence
-    if ((bestType === DOCUMENT_TYPES.DD214 || bestType === DOCUMENT_TYPES.NGB22 ||
-         bestType === DOCUMENT_TYPES.DD215) && matchedCount >= 1) {
+    if (
+      (bestType === DOCUMENT_TYPES.DD214 ||
+        bestType === DOCUMENT_TYPES.NGB22 ||
+        bestType === DOCUMENT_TYPES.DD215) &&
+      matchedCount >= 1
+    ) {
       confidence = Math.max(60, confidence);
     }
-    
+
     // If we matched 2+ patterns on critical docs, minimum 75%
-    if ((bestType === DOCUMENT_TYPES.DD214 || bestType === DOCUMENT_TYPES.RATING_DECISION) && matchedCount >= 2) {
+    if (
+      (bestType === DOCUMENT_TYPES.DD214 ||
+        bestType === DOCUMENT_TYPES.RATING_DECISION) &&
+      matchedCount >= 2
+    ) {
       confidence = Math.max(75, confidence);
     }
   }
 
   // Final debug output showing the winner
   if (DEBUG_CLASSIFICATION) {
-    console.log('🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====');
+    console.log("🏆 [CLASSIFIER DEBUG] ==== CLASSIFICATION RESULT ====");
     console.log(`🏆 [CLASSIFIER DEBUG] WINNER: ${bestType}`);
     console.log(`🏆 [CLASSIFIER DEBUG] Score: ${bestScore}`);
     console.log(`🏆 [CLASSIFIER DEBUG] Confidence: ${confidence}%`);
-    console.log(`🏆 [CLASSIFIER DEBUG] Matched patterns:`, matches[bestType] || []);
-    console.log('🏆 [CLASSIFIER DEBUG] ================================');
-    
+    console.log(
+      `🏆 [CLASSIFIER DEBUG] Matched patterns:`,
+      matches[bestType] || [],
+    );
+    console.log("🏆 [CLASSIFIER DEBUG] ================================");
+
     // Also log if there were close competitors
     const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     if (sortedScores.length > 1) {
-      console.log('🥈 [CLASSIFIER DEBUG] Runner-up:', sortedScores[1]?.[0], 'with score', sortedScores[1]?.[1]);
+      console.log(
+        "🥈 [CLASSIFIER DEBUG] Runner-up:",
+        sortedScores[1]?.[0],
+        "with score",
+        sortedScores[1]?.[1],
+      );
     }
   }
 
@@ -549,7 +586,7 @@ export const classifyDocument = (text, filename = '') => {
     allScores: scores,
     matchedPatternCount: matches[bestType]?.length || 0,
     // Include debug info in result for troubleshooting
-    _debug: DEBUG_CLASSIFICATION ? debugInfo : undefined
+    _debug: DEBUG_CLASSIFICATION ? debugInfo : undefined,
   };
 };
 
@@ -564,7 +601,7 @@ export const classifyDocumentBatch = (documents) => {
     filename: doc.filename || `Document ${index + 1}`,
     text: doc.text,
     classification: classifyDocument(doc.text, doc.filename),
-    size: doc.text.length
+    size: doc.text.length,
   }));
 
   // Group by type
@@ -591,10 +628,14 @@ export const classifyDocumentBatch = (documents) => {
     grouped,
     summary: {
       total: documents.length,
-      classified: classified.filter(d => d.classification.type !== DOCUMENT_TYPES.UNKNOWN).length,
-      unknown: classified.filter(d => d.classification.type === DOCUMENT_TYPES.UNKNOWN).length,
-      types: Object.keys(grouped)
-    }
+      classified: classified.filter(
+        (d) => d.classification.type !== DOCUMENT_TYPES.UNKNOWN,
+      ).length,
+      unknown: classified.filter(
+        (d) => d.classification.type === DOCUMENT_TYPES.UNKNOWN,
+      ).length,
+      types: Object.keys(grouped),
+    },
   };
 };
 
@@ -603,24 +644,24 @@ export const classifyDocumentBatch = (documents) => {
  */
 export const getDocumentTypeLabel = (type) => {
   const labels = {
-    [DOCUMENT_TYPES.DD214]: 'DD214 (Service Record)',
-    [DOCUMENT_TYPES.DD215]: 'DD215 (Corrected DD214)',
-    [DOCUMENT_TYPES.NGB22]: 'NGB22 (National Guard)',
-    [DOCUMENT_TYPES.DD256]: 'DD256 (Reserve Discharge)',
-    [DOCUMENT_TYPES.DD257]: 'DD257 (Reserve Discharge)',
-    [DOCUMENT_TYPES.RATING_DECISION]: 'VA Rating Decision',
-    [DOCUMENT_TYPES.CLAIM_LETTER]: 'VA Claim Letter',
-    [DOCUMENT_TYPES.C_FILE_MEDICAL]: 'C-File Medical Record',
-    [DOCUMENT_TYPES.DBQ]: 'Disability Benefits Questionnaire',
-    [DOCUMENT_TYPES.NEXUS_LETTER]: 'Nexus Letter',
-    [DOCUMENT_TYPES.PERSONAL_STATEMENT]: 'Personal Statement',
-    [DOCUMENT_TYPES.VA_CORRESPONDENCE]: 'VA Correspondence',
-    [DOCUMENT_TYPES.MEDICAL_RECORD]: 'Medical Record',
-    [DOCUMENT_TYPES.EXAM_REPORT]: 'Examination Report',
-    [DOCUMENT_TYPES.UNKNOWN]: 'Unknown Document'
+    [DOCUMENT_TYPES.DD214]: "DD214 (Service Record)",
+    [DOCUMENT_TYPES.DD215]: "DD215 (Corrected DD214)",
+    [DOCUMENT_TYPES.NGB22]: "NGB22 (National Guard)",
+    [DOCUMENT_TYPES.DD256]: "DD256 (Reserve Discharge)",
+    [DOCUMENT_TYPES.DD257]: "DD257 (Reserve Discharge)",
+    [DOCUMENT_TYPES.RATING_DECISION]: "VA Rating Decision",
+    [DOCUMENT_TYPES.CLAIM_LETTER]: "VA Claim Letter",
+    [DOCUMENT_TYPES.C_FILE_MEDICAL]: "C-File Medical Record",
+    [DOCUMENT_TYPES.DBQ]: "Disability Benefits Questionnaire",
+    [DOCUMENT_TYPES.NEXUS_LETTER]: "Nexus Letter",
+    [DOCUMENT_TYPES.PERSONAL_STATEMENT]: "Personal Statement",
+    [DOCUMENT_TYPES.VA_CORRESPONDENCE]: "VA Correspondence",
+    [DOCUMENT_TYPES.MEDICAL_RECORD]: "Medical Record",
+    [DOCUMENT_TYPES.EXAM_REPORT]: "Examination Report",
+    [DOCUMENT_TYPES.UNKNOWN]: "Unknown Document",
   };
-  
-  return labels[type] || 'Unknown Document';
+
+  return labels[type] || "Unknown Document";
 };
 
 /**
@@ -629,47 +670,54 @@ export const getDocumentTypeLabel = (type) => {
 export const getProcessingStrategy = (documentType) => {
   const strategies = {
     [DOCUMENT_TYPES.DD214]: {
-      priority: 'critical',
-      processor: 'dd214Analyzer',
-      extractors: ['serviceInfo', 'awards', 'dates', 'mos'],
-      autoFill: ['branch', 'serviceStartDate', 'serviceEndDate', 'characterOfService']
+      priority: "critical",
+      processor: "dd214Analyzer",
+      extractors: ["serviceInfo", "awards", "dates", "mos"],
+      autoFill: [
+        "branch",
+        "serviceStartDate",
+        "serviceEndDate",
+        "characterOfService",
+      ],
     },
     [DOCUMENT_TYPES.RATING_DECISION]: {
-      priority: 'critical',
-      processor: 'ratingParser',
-      extractors: ['conditions', 'ratings', 'effectiveDate', 'combinedRating'],
-      autoFill: ['currentCombinedRating', 'effectiveDate']
+      priority: "critical",
+      processor: "ratingParser",
+      extractors: ["conditions", "ratings", "effectiveDate", "combinedRating"],
+      autoFill: ["currentCombinedRating", "effectiveDate"],
     },
     [DOCUMENT_TYPES.CLAIM_LETTER]: {
-      priority: 'high',
-      processor: 'claimParser',
-      extractors: ['claimedConditions', 'claimNumber', 'claimDate'],
-      autoFill: ['claimNumber']
+      priority: "high",
+      processor: "claimParser",
+      extractors: ["claimedConditions", "claimNumber", "claimDate"],
+      autoFill: ["claimNumber"],
     },
     [DOCUMENT_TYPES.DBQ]: {
-      priority: 'high',
-      processor: 'dbqParser',
-      extractors: ['condition', 'diagnosis', 'nexusOpinion', 'limitations'],
-      autoFill: []
+      priority: "high",
+      processor: "dbqParser",
+      extractors: ["condition", "diagnosis", "nexusOpinion", "limitations"],
+      autoFill: [],
     },
     [DOCUMENT_TYPES.C_FILE_MEDICAL]: {
-      priority: 'medium',
-      processor: 'medicalRecordParser',
-      extractors: ['diagnoses', 'treatments', 'symptoms', 'dates'],
-      autoFill: []
+      priority: "medium",
+      processor: "medicalRecordParser",
+      extractors: ["diagnoses", "treatments", "symptoms", "dates"],
+      autoFill: [],
     },
     [DOCUMENT_TYPES.NEXUS_LETTER]: {
-      priority: 'high',
-      processor: 'nexusParser',
-      extractors: ['condition', 'opinion', 'rationale', 'provider'],
-      autoFill: []
+      priority: "high",
+      processor: "nexusParser",
+      extractors: ["condition", "opinion", "rationale", "provider"],
+      autoFill: [],
+    },
+  };
+
+  return (
+    strategies[documentType] || {
+      priority: "low",
+      processor: "genericParser",
+      extractors: ["text"],
+      autoFill: [],
     }
-  };
-  
-  return strategies[documentType] || {
-    priority: 'low',
-    processor: 'genericParser',
-    extractors: ['text'],
-    autoFill: []
-  };
+  );
 };

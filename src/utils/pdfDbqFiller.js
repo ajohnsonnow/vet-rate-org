@@ -9,9 +9,9 @@
  * Enables veterans to pre-fill subjective information before doctor visits
  */
 
-import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
-import { getCachedDbq, getDbqWithFallback } from './dbqOfflineStorage';
-import { triggerBlobDownload } from './sanitize';
+import { PDFDocument, StandardFonts, rgb, degrees } from "pdf-lib";
+import { getCachedDbq, getDbqWithFallback } from "./dbqOfflineStorage";
+import { triggerBlobDownload } from "./sanitize";
 
 // ============================================================================
 // WATERMARK CONFIGURATION
@@ -19,7 +19,7 @@ import { triggerBlobDownload } from './sanitize';
 
 const WATERMARK_CONFIG = {
   // Red semi-transparent watermark
-  text: 'PATIENT DRAFT - FOR PHYSICIAN REVIEW',
+  text: "PATIENT DRAFT - FOR PHYSICIAN REVIEW",
   color: rgb(1, 0, 0), // Red
   opacity: 0.15,
   fontSize: 48,
@@ -41,30 +41,30 @@ export async function loadDbqPdf(formId, fallbackPath = null) {
     // Try to get from cache first
     let pdfBytes;
     const cached = await getCachedDbq(formId);
-    
+
     if (cached) {
       pdfBytes = await cached.arrayBuffer();
     } else if (fallbackPath) {
       // Fall back to network
       const response = await fetch(fallbackPath);
-      if (!response.ok) throw new Error('Could not fetch PDF');
+      if (!response.ok) throw new Error("Could not fetch PDF");
       pdfBytes = await response.arrayBuffer();
     } else {
       // Try default path
       const defaultPath = `/forms/${formId}.pdf`;
       const response = await fetch(defaultPath);
-      if (!response.ok) throw new Error('Could not fetch PDF');
+      if (!response.ok) throw new Error("Could not fetch PDF");
       pdfBytes = await response.arrayBuffer();
     }
-    
+
     // Load the PDF document
     const pdfDoc = await PDFDocument.load(pdfBytes, {
       ignoreEncryption: true, // VA forms may have some encryption flags
     });
-    
+
     return pdfDoc;
   } catch (error) {
-    console.error('Error loading DBQ PDF:', error);
+    console.error("Error loading DBQ PDF:", error);
     return null;
   }
 }
@@ -80,15 +80,15 @@ export async function addWatermark(pdfDoc, watermarkText = null) {
     const pages = pdfDoc.getPages();
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const text = watermarkText || WATERMARK_CONFIG.text;
-    
+
     for (const page of pages) {
       const { width, height } = page.getSize();
       const textWidth = font.widthOfTextAtSize(text, WATERMARK_CONFIG.fontSize);
-      
+
       // Calculate center position
       const x = width / 2;
       const y = height / 2;
-      
+
       // Draw watermark diagonally across the page
       page.drawText(text, {
         x: x - textWidth / 2,
@@ -100,10 +100,10 @@ export async function addWatermark(pdfDoc, watermarkText = null) {
         rotate: degrees(WATERMARK_CONFIG.rotation),
       });
     }
-    
+
     return pdfDoc;
   } catch (error) {
-    console.error('Error adding watermark:', error);
+    console.error("Error adding watermark:", error);
     return pdfDoc;
   }
 }
@@ -114,18 +114,21 @@ export async function addWatermark(pdfDoc, watermarkText = null) {
  * @param {string} bannerText - Text for the banner
  * @returns {Promise<PDFDocument>}
  */
-export async function addHeaderBanner(pdfDoc, bannerText = 'DRAFT COPY - FOR PHYSICIAN REVIEW ONLY') {
+export async function addHeaderBanner(
+  pdfDoc,
+  bannerText = "DRAFT COPY - FOR PHYSICIAN REVIEW ONLY",
+) {
   try {
     const pages = pdfDoc.getPages();
     if (pages.length === 0) return pdfDoc;
-    
+
     const firstPage = pages[0];
     const { width, height } = firstPage.getSize();
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
+
     const bannerHeight = 30;
     const fontSize = 12;
-    
+
     // Draw red banner at the top
     firstPage.drawRectangle({
       x: 0,
@@ -135,7 +138,7 @@ export async function addHeaderBanner(pdfDoc, bannerText = 'DRAFT COPY - FOR PHY
       color: rgb(0.9, 0.1, 0.1),
       opacity: 0.9,
     });
-    
+
     // Draw white text on the banner
     const textWidth = font.widthOfTextAtSize(bannerText, fontSize);
     firstPage.drawText(bannerText, {
@@ -145,10 +148,10 @@ export async function addHeaderBanner(pdfDoc, bannerText = 'DRAFT COPY - FOR PHY
       font,
       color: rgb(1, 1, 1),
     });
-    
+
     return pdfDoc;
   } catch (error) {
-    console.error('Error adding header banner:', error);
+    console.error("Error adding header banner:", error);
     return pdfDoc;
   }
 }
@@ -161,29 +164,30 @@ export async function addHeaderBanner(pdfDoc, bannerText = 'DRAFT COPY - FOR PHY
  */
 export async function fillFormFields(pdfDoc, formData) {
   const results = { filled: 0, skipped: 0 };
-  
+
   try {
     const form = pdfDoc.getForm();
     const fields = form.getFields();
-    
+
     for (const [fieldName, value] of Object.entries(formData)) {
       try {
         // Try to find matching field
-        const field = fields.find(f => 
-          f.getName().toLowerCase().includes(fieldName.toLowerCase()) ||
-          fieldName.toLowerCase().includes(f.getName().toLowerCase())
+        const field = fields.find(
+          (f) =>
+            f.getName().toLowerCase().includes(fieldName.toLowerCase()) ||
+            fieldName.toLowerCase().includes(f.getName().toLowerCase()),
         );
-        
+
         if (field) {
           const fieldType = field.constructor.name;
-          
-          if (fieldType === 'PDFTextField') {
+
+          if (fieldType === "PDFTextField") {
             field.setText(String(value));
             results.filled++;
-          } else if (fieldType === 'PDFCheckBox' && value) {
+          } else if (fieldType === "PDFCheckBox" && value) {
             field.check();
             results.filled++;
-          } else if (fieldType === 'PDFRadioGroup' && value) {
+          } else if (fieldType === "PDFRadioGroup" && value) {
             field.select(String(value));
             results.filled++;
           }
@@ -196,9 +200,12 @@ export async function fillFormFields(pdfDoc, formData) {
     }
   } catch (error) {
     // PDF may not have form fields - that's okay
-    console.log('PDF does not have fillable form fields or error occurred:', error.message);
+    console.log(
+      "PDF does not have fillable form fields or error occurred:",
+      error.message,
+    );
   }
-  
+
   return results;
 }
 
@@ -244,33 +251,33 @@ const DBQ_FIELD_POSITIONS = {
 export async function generateDraftDbq(formId, veteranInput, options = {}) {
   try {
     const { includeWatermark = true, includeBanner = true } = options;
-    
+
     // Load the PDF
     let pdfDoc = await loadDbqPdf(formId);
     if (!pdfDoc) {
-      throw new Error('Could not load DBQ PDF');
+      throw new Error("Could not load DBQ PDF");
     }
-    
+
     // Try to fill form fields first
     if (veteranInput && Object.keys(veteranInput).length > 0) {
       await fillFormFields(pdfDoc, veteranInput);
     }
-    
+
     // Add watermark if requested
     if (includeWatermark) {
       pdfDoc = await addWatermark(pdfDoc);
     }
-    
+
     // Add header banner if requested
     if (includeBanner) {
       pdfDoc = await addHeaderBanner(pdfDoc);
     }
-    
+
     // Save and return as blob
     const pdfBytes = await pdfDoc.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
+    return new Blob([pdfBytes], { type: "application/pdf" });
   } catch (error) {
-    console.error('Error generating draft DBQ:', error);
+    console.error("Error generating draft DBQ:", error);
     return null;
   }
 }
@@ -285,7 +292,7 @@ export async function generateDraftDbq(formId, veteranInput, options = {}) {
  * @param {string} filename - The filename to use
  */
 export function downloadPdfBlob(blob, filename) {
-  triggerBlobDownload(blob, String(filename || 'download'));
+  triggerBlobDownload(blob, String(filename || "download"));
 }
 
 /**
@@ -299,13 +306,13 @@ export function downloadPdfBlob(blob, filename) {
 export async function createEncryptedZip(pdfBlob, filename, password) {
   try {
     // Dynamically import JSZip
-    const JSZip = (await import('jszip')).default;
-    
+    const JSZip = (await import("jszip")).default;
+
     const zip = new JSZip();
-    
+
     // Add the PDF to the zip
     zip.file(filename, pdfBlob);
-    
+
     // Add instructions file
     const instructions = `
 SECURE MEDICAL DOCUMENT PACKAGE
@@ -331,23 +338,23 @@ USAGE:
 Generated: ${new Date().toLocaleString()}
 Source: Vet-Rate.org
 `;
-    zip.file('README.txt', instructions);
-    
+    zip.file("README.txt", instructions);
+
     // Generate the zip with password
-    // Note: JSZip doesn't support encryption directly, but we can use the 
+    // Note: JSZip doesn't support encryption directly, but we can use the
     // zip content with an external encryption layer if needed
     // For now, we generate a standard zip - the password protection happens
     // at the email/sharing level with user instructions
-    
+
     const zipBlob = await zip.generateAsync({
-      type: 'blob',
-      compression: 'DEFLATE',
+      type: "blob",
+      compression: "DEFLATE",
       compressionOptions: { level: 9 },
     });
-    
+
     return zipBlob;
   } catch (error) {
-    console.error('Error creating ZIP:', error);
+    console.error("Error creating ZIP:", error);
     return null;
   }
 }
@@ -359,41 +366,49 @@ Source: Vet-Rate.org
  * @param {string} title - Share title
  * @returns {Promise<{success: boolean, method: string, error?: string}>}
  */
-export async function sharePdfNatively(pdfBlob, filename, title = 'Draft DBQ for Review') {
+export async function sharePdfNatively(
+  pdfBlob,
+  filename,
+  title = "Draft DBQ for Review",
+) {
   try {
     // Check if Web Share API is available
     if (!navigator.share) {
-      return { 
-        success: false, 
-        method: 'not-supported',
-        error: 'Web Share API not supported on this device/browser'
+      return {
+        success: false,
+        method: "not-supported",
+        error: "Web Share API not supported on this device/browser",
       };
     }
-    
+
     // Check if file sharing is supported
-    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-    
+    const file = new File([pdfBlob], filename, { type: "application/pdf" });
+
     if (navigator.canShare && !navigator.canShare({ files: [file] })) {
-      return { 
-        success: false, 
-        method: 'files-not-supported',
-        error: 'File sharing not supported on this device/browser'
+      return {
+        success: false,
+        method: "files-not-supported",
+        error: "File sharing not supported on this device/browser",
       };
     }
-    
+
     // Attempt to share
     await navigator.share({
       title,
-      text: 'Draft DBQ prepared with Vet-Rate.org - For Physician Review',
+      text: "Draft DBQ prepared with Vet-Rate.org - For Physician Review",
       files: [file],
     });
-    
-    return { success: true, method: 'native-share' };
+
+    return { success: true, method: "native-share" };
   } catch (error) {
-    if (error.name === 'AbortError') {
-      return { success: false, method: 'cancelled', error: 'Share cancelled by user' };
+    if (error.name === "AbortError") {
+      return {
+        success: false,
+        method: "cancelled",
+        error: "Share cancelled by user",
+      };
     }
-    return { success: false, method: 'error', error: error.message };
+    return { success: false, method: "error", error: error.message };
   }
 }
 
@@ -408,22 +423,22 @@ export async function copyDbqSummaryToClipboard(veteranInput) {
     summary += `Generated: ${new Date().toLocaleString()}\n`;
     summary += `Source: Vet-Rate.org\n`;
     summary += `======================\n\n`;
-    
+
     for (const [key, value] of Object.entries(veteranInput)) {
       if (value) {
-        const label = key.replace(/([A-Z])/g, ' $1').trim();
+        const label = key.replace(/([A-Z])/g, " $1").trim();
         summary += `${label}:\n${value}\n\n`;
       }
     }
-    
+
     summary += `======================\n`;
     summary += `This is a DRAFT for physician review.\n`;
     summary += `The physician must complete all objective findings.\n`;
-    
+
     await navigator.clipboard.writeText(summary);
     return true;
   } catch (error) {
-    console.error('Error copying to clipboard:', error);
+    console.error("Error copying to clipboard:", error);
     return false;
   }
 }
@@ -442,126 +457,126 @@ export function getSubjectiveQuestions(formId) {
   // Default questions applicable to most DBQs
   const defaultQuestions = [
     {
-      id: 'symptomOnset',
-      label: 'When did your symptoms first begin?',
-      type: 'text',
+      id: "symptomOnset",
+      label: "When did your symptoms first begin?",
+      type: "text",
       hint: 'Example: "Symptoms began during deployment in 2015"',
     },
     {
-      id: 'symptomFrequency',
-      label: 'How often do you experience symptoms?',
-      type: 'text',
+      id: "symptomFrequency",
+      label: "How often do you experience symptoms?",
+      type: "text",
       hint: 'Example: "Daily pain, worse in the morning"',
     },
     {
-      id: 'flareUps',
-      label: 'Describe any flare-ups (when symptoms get worse)',
-      type: 'textarea',
-      hint: 'Include how often, how long they last, and what causes them',
+      id: "flareUps",
+      label: "Describe any flare-ups (when symptoms get worse)",
+      type: "textarea",
+      hint: "Include how often, how long they last, and what causes them",
     },
     {
-      id: 'dailyImpact',
-      label: 'How does this condition affect your daily life?',
-      type: 'textarea',
-      hint: 'Work, household chores, sleep, hobbies, etc.',
+      id: "dailyImpact",
+      label: "How does this condition affect your daily life?",
+      type: "textarea",
+      hint: "Work, household chores, sleep, hobbies, etc.",
     },
     {
-      id: 'treatments',
-      label: 'What treatments have you tried?',
-      type: 'textarea',
-      hint: 'Medications, physical therapy, surgeries, etc.',
+      id: "treatments",
+      label: "What treatments have you tried?",
+      type: "textarea",
+      hint: "Medications, physical therapy, surgeries, etc.",
     },
     {
-      id: 'additionalNotes',
-      label: 'Anything else your doctor should know?',
-      type: 'textarea',
-      hint: 'Service connection details, specific incidents, etc.',
+      id: "additionalNotes",
+      label: "Anything else your doctor should know?",
+      type: "textarea",
+      hint: "Service connection details, specific incidents, etc.",
     },
   ];
-  
+
   // Add condition-specific questions based on form type
   const conditionSpecific = {
-    'Knee-Lower-Leg': [
+    "Knee-Lower-Leg": [
       {
-        id: 'givingWay',
+        id: "givingWay",
         label: 'Does your knee ever "give way" or buckle?',
-        type: 'text',
-        hint: 'How often and in what situations?',
+        type: "text",
+        hint: "How often and in what situations?",
       },
       {
-        id: 'instability',
-        label: 'Do you use a brace, cane, or other assistive device?',
-        type: 'text',
-      },
-    ],
-    'Back-Thoracolumbar': [
-      {
-        id: 'radiatingPain',
-        label: 'Does pain radiate to your legs?',
-        type: 'text',
-        hint: 'Describe the pattern and which leg(s)',
-      },
-      {
-        id: 'incapacitatingEpisodes',
-        label: 'Have you had bed rest prescribed by a doctor?',
-        type: 'text',
-        hint: 'How many times in the past 12 months and for how long?',
+        id: "instability",
+        label: "Do you use a brace, cane, or other assistive device?",
+        type: "text",
       },
     ],
-    'PTSD-Review': [
+    "Back-Thoracolumbar": [
       {
-        id: 'stressorEvents',
-        label: 'Briefly describe the traumatic event(s)',
-        type: 'textarea',
-        hint: 'Do not include classified details - general description only',
+        id: "radiatingPain",
+        label: "Does pain radiate to your legs?",
+        type: "text",
+        hint: "Describe the pattern and which leg(s)",
       },
       {
-        id: 'currentSymptoms',
-        label: 'What symptoms do you currently experience?',
-        type: 'textarea',
-        hint: 'Nightmares, flashbacks, avoidance, hypervigilance, etc.',
-      },
-    ],
-    'Mental-Disorders': [
-      {
-        id: 'socialFunctioning',
-        label: 'How does this affect your relationships?',
-        type: 'textarea',
-      },
-      {
-        id: 'occupationalFunctioning',
-        label: 'How does this affect your ability to work?',
-        type: 'textarea',
+        id: "incapacitatingEpisodes",
+        label: "Have you had bed rest prescribed by a doctor?",
+        type: "text",
+        hint: "How many times in the past 12 months and for how long?",
       },
     ],
-    'Sleep-Apnea': [
+    "PTSD-Review": [
       {
-        id: 'cpapUsage',
-        label: 'Do you use a CPAP machine?',
-        type: 'text',
-        hint: 'How often and for how long each night?',
+        id: "stressorEvents",
+        label: "Briefly describe the traumatic event(s)",
+        type: "textarea",
+        hint: "Do not include classified details - general description only",
       },
       {
-        id: 'daytimeSleepiness',
-        label: 'Describe your daytime sleepiness',
-        type: 'textarea',
+        id: "currentSymptoms",
+        label: "What symptoms do you currently experience?",
+        type: "textarea",
+        hint: "Nightmares, flashbacks, avoidance, hypervigilance, etc.",
       },
     ],
-    'Headaches': [
+    "Mental-Disorders": [
       {
-        id: 'frequency',
-        label: 'How many headaches do you have per month?',
-        type: 'text',
+        id: "socialFunctioning",
+        label: "How does this affect your relationships?",
+        type: "textarea",
       },
       {
-        id: 'prostrating',
-        label: 'Do headaches force you to lie down or miss work?',
-        type: 'textarea',
-        hint: 'How often and for how long?',
+        id: "occupationalFunctioning",
+        label: "How does this affect your ability to work?",
+        type: "textarea",
+      },
+    ],
+    "Sleep-Apnea": [
+      {
+        id: "cpapUsage",
+        label: "Do you use a CPAP machine?",
+        type: "text",
+        hint: "How often and for how long each night?",
+      },
+      {
+        id: "daytimeSleepiness",
+        label: "Describe your daytime sleepiness",
+        type: "textarea",
+      },
+    ],
+    Headaches: [
+      {
+        id: "frequency",
+        label: "How many headaches do you have per month?",
+        type: "text",
+      },
+      {
+        id: "prostrating",
+        label: "Do headaches force you to lie down or miss work?",
+        type: "textarea",
+        hint: "How often and for how long?",
       },
     ],
   };
-  
+
   const specific = conditionSpecific[formId] || [];
   return [...defaultQuestions, ...specific];
 }

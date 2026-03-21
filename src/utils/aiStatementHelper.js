@@ -1,30 +1,30 @@
 /**
  * Vet-Rate.org - AI Statement Assistant
  * Powered by Unified AI Service - Cloud (Gemini) or Local (WebLLM)
- * 
+ *
  * PRIVACY NOTE: Users can now choose between:
  * - Cloud AI: Sends condition names/symptoms to Google's Gemini API
  * - Local AI: 100% private, runs entirely in browser via WebGPU
- * 
+ *
  * Users must explicitly consent before any data is sent to the AI service.
- * 
+ *
  * SAFETY-CRITICAL: All user input is scanned for crisis language BEFORE
  * being sent to the AI. If self-harm indicators are detected, the AI call
  * is BLOCKED and the user is immediately redirected to crisis resources.
  */
 
-import { interceptBeforeAICall } from './crisisInterceptor';
-import { 
-  generateAI, 
-  isAnyAIAvailable, 
-  isLocalAIReady, 
+import { interceptBeforeAICall } from "./crisisInterceptor";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  isLocalAIReady,
   isCloudAIAvailable,
   getAIStatus,
-  AI_MODES 
-} from './unifiedAIService';
+  AI_MODES,
+} from "./unifiedAIService";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
-const STORAGE_KEY = 'vetrate_gemini_key';
+const STORAGE_KEY = "vetrate_gemini_key";
 
 /**
  * Check if AI features are available (either cloud or local)
@@ -42,9 +42,9 @@ const getApiKey = () => {
   // Check localStorage first (BYOK)
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
-  
+
   // Fallback to env variable (legacy)
-  return import.meta.env.VITE_GEMINI_API_KEY || '';
+  return import.meta.env.VITE_GEMINI_API_KEY || "";
 };
 
 /**
@@ -53,40 +53,61 @@ const getApiKey = () => {
  * 2. Current Symptoms (what's wrong now)
  * 3. The Nexus/Link (how the event causes the current condition)
  */
-const buildStatementPrompt = (answers, condition, primaryCondition, claimType) => {
-  const isSecondary = claimType === 'secondary';
-  
+const buildStatementPrompt = (
+  answers,
+  condition,
+  primaryCondition,
+  claimType,
+) => {
+  const isSecondary = claimType === "secondary";
+
   // Build the Three Pillars from user input
-  let pillar1_Event = '';
-  let pillar2_Symptoms = '';
-  let pillar3_Nexus = '';
-  
+  let pillar1_Event = "";
+  let pillar2_Symptoms = "";
+  let pillar3_Nexus = "";
+
   if (isSecondary) {
     // For secondary claims, the "event" is the primary condition
     pillar1_Event = `I have a service-connected condition: ${primaryCondition}.`;
-    pillar2_Symptoms = [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : '',
-      answers.socialImpact ? `Social/family impact: ${answers.socialImpact}` : ''
-    ].filter(Boolean).join(' ') || 'Ongoing symptoms affecting daily life.';
-    
+    pillar2_Symptoms =
+      [
+        answers.specificExamples,
+        answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
+        answers.socialImpact
+          ? `Social/family impact: ${answers.socialImpact}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ") || "Ongoing symptoms affecting daily life.";
+
     // The nexus for secondary is how the primary causes/aggravates the secondary
-    const mechanismText = answers.aggravationMechanism || '';
-    const explanationText = answers.aggravationExplanation || '';
-    const incidentText = answers.specificIncident || '';
-    pillar3_Nexus = [mechanismText, explanationText, incidentText].filter(Boolean).join(' ') || 
+    const mechanismText = answers.aggravationMechanism || "";
+    const explanationText = answers.aggravationExplanation || "";
+    const incidentText = answers.specificIncident || "";
+    pillar3_Nexus =
+      [mechanismText, explanationText, incidentText]
+        .filter(Boolean)
+        .join(" ") ||
       `My ${primaryCondition} causes or aggravates my ${condition}.`;
   } else {
     // For primary/direct claims
-    pillar1_Event = answers.inServiceEvent || answers.specificIncident || 
+    pillar1_Event =
+      answers.inServiceEvent ||
+      answers.specificIncident ||
       `During my military service, I developed/experienced issues related to ${condition}.`;
-    pillar2_Symptoms = [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : '',
-      answers.socialImpact ? `Social/family impact: ${answers.socialImpact}` : ''
-    ].filter(Boolean).join(' ') || 'I currently experience ongoing symptoms.';
-    pillar3_Nexus = answers.nexusExplanation || 
-      `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || 'that time'}.`;
+    pillar2_Symptoms =
+      [
+        answers.specificExamples,
+        answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
+        answers.socialImpact
+          ? `Social/family impact: ${answers.socialImpact}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ") || "I currently experience ongoing symptoms.";
+    pillar3_Nexus =
+      answers.nexusExplanation ||
+      `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || "that time"}.`;
   }
 
   return `Draft a Personal Statement in Support of Claim (VA Form 21-4138) based on the following Three Pillars:
@@ -97,7 +118,7 @@ ${pillar1_Event}
 === PILLAR 2: CURRENT SYMPTOMS ===
 Condition: ${condition}
 ${pillar2_Symptoms}
-Treatment: ${answers.hasTreatment === 'yes-va' ? 'Currently receiving VA treatment' : answers.hasTreatment === 'yes-private' ? 'Currently receiving private treatment' : 'Not currently in formal treatment'}
+Treatment: ${answers.hasTreatment === "yes-va" ? "Currently receiving VA treatment" : answers.hasTreatment === "yes-private" ? "Currently receiving private treatment" : "Not currently in formal treatment"}
 
 === PILLAR 3: THE NEXUS/LINK ===
 ${pillar3_Nexus}
@@ -109,7 +130,7 @@ Focus on how this affects my occupation and social/family life.
 Be professional, clear, and factual.
 Do NOT include specific dates, names, addresses, or identifying information.
 The statement should be 3-5 paragraphs.
-${isSecondary ? `Frame this as a SECONDARY claim - ${condition} caused or aggravated by service-connected ${primaryCondition}.` : 'Frame this as a DIRECT service connection claim.'}
+${isSecondary ? `Frame this as a SECONDARY claim - ${condition} caused or aggravated by service-connected ${primaryCondition}.` : "Frame this as a DIRECT service connection claim."}
 End with a respectful request for a C&P examination.
 
 === PROTECTION RULES (CRITICAL) ===
@@ -129,12 +150,19 @@ Write the statement now:`;
  */
 const buildBuddyStatementPrompt = (answers, conditionName) => {
   // Three Pillars adapted for witness perspective
-  const pillar1_Relationship = `${answers.relationship || 'Someone close to'} the veteran, known them for ${answers.knownDuration || 'several years'}.`;
-  const pillar2_Observations = answers.observations || 'Observed changes in the veteran\'s condition and daily life.';
-  const pillar3_Impact = [
-    answers.changesNoticed ? `Changes noticed: ${answers.changesNoticed}` : '',
-    answers.dailyImpact ? `Daily impact: ${answers.dailyImpact}` : ''
-  ].filter(Boolean).join(' ') || 'The condition significantly affects their daily life.';
+  const pillar1_Relationship = `${answers.relationship || "Someone close to"} the veteran, known them for ${answers.knownDuration || "several years"}.`;
+  const pillar2_Observations =
+    answers.observations ||
+    "Observed changes in the veteran's condition and daily life.";
+  const pillar3_Impact =
+    [
+      answers.changesNoticed
+        ? `Changes noticed: ${answers.changesNoticed}`
+        : "",
+      answers.dailyImpact ? `Daily impact: ${answers.dailyImpact}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || "The condition significantly affects their daily life.";
 
   return `Draft a Buddy/Lay Statement (VA Form 21-10210) based on the following:
 
@@ -142,7 +170,7 @@ const buildBuddyStatementPrompt = (answers, conditionName) => {
 ${pillar1_Relationship}
 
 === PILLAR 2: WHAT I HAVE OBSERVED ===
-Veteran's condition: ${conditionName || 'Not specified'}
+Veteran's condition: ${conditionName || "Not specified"}
 ${pillar2_Observations}
 
 === PILLAR 3: IMPACT I HAVE WITNESSED ===
@@ -173,17 +201,26 @@ Write the statement now:`;
  */
 const buildPTSDStressorPrompt = (answers) => {
   // Three Pillars for PTSD
-  const pillar1_Event = answers.eventDescription || answers.stressorType || 'Traumatic event during military service.';
-  const pillar2_Symptoms = [
-    answers.currentSymptoms || '',
-    answers.immediateImpact ? `Initial impact: ${answers.immediateImpact}` : ''
-  ].filter(Boolean).join(' ') || 'Ongoing PTSD symptoms.';
-  const pillar3_Impact = answers.dailyImpact || 'Symptoms continue to affect daily life.';
+  const pillar1_Event =
+    answers.eventDescription ||
+    answers.stressorType ||
+    "Traumatic event during military service.";
+  const pillar2_Symptoms =
+    [
+      answers.currentSymptoms || "",
+      answers.immediateImpact
+        ? `Initial impact: ${answers.immediateImpact}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || "Ongoing PTSD symptoms.";
+  const pillar3_Impact =
+    answers.dailyImpact || "Symptoms continue to affect daily life.";
 
   return `Draft a PTSD Stressor Statement (VA Form 21-0781) based on the following:
 
 === PILLAR 1: THE TRAUMATIC EVENT ===
-Type of stressor: ${answers.stressorType || 'Military service-related trauma'}
+Type of stressor: ${answers.stressorType || "Military service-related trauma"}
 ${pillar1_Event}
 
 === PILLAR 2: CURRENT SYMPTOMS ===
@@ -217,9 +254,9 @@ Write the statement now:`;
 // "THE COOLDOWN" - Built-in Rate Limiting for AI Calls
 // Prevents accidental double-clicks and excessive API usage
 // ═══════════════════════════════════════════════════════════════════════════════
-const RATE_LIMIT_KEY = 'vetrate_ai_ratelimit';
+const RATE_LIMIT_KEY = "vetrate_ai_ratelimit";
 const COOLDOWN_MS = 10000; // 10 seconds between requests
-const HOURLY_LIMIT = 30;   // Max 30 requests per hour
+const HOURLY_LIMIT = 30; // Max 30 requests per hour
 const HOURLY_LOCKOUT_MS = 30 * 60 * 1000; // 30 min lockout if exceeded
 
 /**
@@ -242,7 +279,7 @@ const setRateLimitState = (state) => {
   try {
     localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
   } catch (e) {
-    console.error('Failed to save rate limit state:', e);
+    console.error("Failed to save rate limit state:", e);
   }
 };
 
@@ -253,46 +290,48 @@ const setRateLimitState = (state) => {
 const checkRateLimit = () => {
   const now = Date.now();
   const state = getRateLimitState();
-  const oneHourAgo = now - (60 * 60 * 1000);
-  
+  const oneHourAgo = now - 60 * 60 * 1000;
+
   // Check for active lockout
   if (state.lockoutUntil && state.lockoutUntil > now) {
     const waitTime = Math.ceil((state.lockoutUntil - now) / 1000 / 60);
-    return { 
-      canRequest: false, 
+    return {
+      canRequest: false,
       error: `AI requests paused. Please wait ${waitTime} minutes before trying again.`,
-      waitTime: state.lockoutUntil - now
+      waitTime: state.lockoutUntil - now,
     };
   }
-  
+
   // Clean old timestamps
-  const recentTimestamps = (state.timestamps || []).filter(ts => ts > oneHourAgo);
-  
+  const recentTimestamps = (state.timestamps || []).filter(
+    (ts) => ts > oneHourAgo,
+  );
+
   // Check hourly limit
   if (recentTimestamps.length >= HOURLY_LIMIT) {
     const lockoutUntil = now + HOURLY_LOCKOUT_MS;
     setRateLimitState({ timestamps: recentTimestamps, lockoutUntil });
-    return { 
-      canRequest: false, 
+    return {
+      canRequest: false,
       error: `Hourly AI limit reached (${HOURLY_LIMIT} requests). Please wait 30 minutes and review your drafts.`,
-      waitTime: HOURLY_LOCKOUT_MS
+      waitTime: HOURLY_LOCKOUT_MS,
     };
   }
-  
+
   // Check cooldown from last request
   if (recentTimestamps.length > 0) {
     const lastRequest = Math.max(...recentTimestamps);
     const timeSinceLast = now - lastRequest;
     if (timeSinceLast < COOLDOWN_MS) {
       const waitSeconds = Math.ceil((COOLDOWN_MS - timeSinceLast) / 1000);
-      return { 
-        canRequest: false, 
+      return {
+        canRequest: false,
         error: `AI cooling down... please wait ${waitSeconds} seconds.`,
-        waitTime: COOLDOWN_MS - timeSinceLast
+        waitTime: COOLDOWN_MS - timeSinceLast,
       };
     }
   }
-  
+
   return { canRequest: true };
 };
 
@@ -302,12 +341,12 @@ const checkRateLimit = () => {
 const recordAIRequest = () => {
   const now = Date.now();
   const state = getRateLimitState();
-  const oneHourAgo = now - (60 * 60 * 1000);
-  
+  const oneHourAgo = now - 60 * 60 * 1000;
+
   // Clean old timestamps and add current
-  const timestamps = (state.timestamps || []).filter(ts => ts > oneHourAgo);
+  const timestamps = (state.timestamps || []).filter((ts) => ts > oneHourAgo);
   timestamps.push(now);
-  
+
   setRateLimitState({ ...state, timestamps });
 };
 
@@ -324,39 +363,45 @@ const callGeminiAPI = async (prompt, userInput = null) => {
   if (userInput) {
     const crisisCheck = interceptBeforeAICall(userInput);
     if (crisisCheck.shouldBlock) {
-      console.warn('🚨 CRISIS LANGUAGE DETECTED - Blocking AI call and triggering crisis modal');
-      
+      console.warn(
+        "🚨 CRISIS LANGUAGE DETECTED - Blocking AI call and triggering crisis modal",
+      );
+
       // Dispatch custom event to trigger crisis modal
-      window.dispatchEvent(new CustomEvent('vetrate:crisis', {
-        detail: {
-          severity: crisisCheck.severity,
-          source: 'ai-statement-helper'
-        }
-      }));
-      
+      window.dispatchEvent(
+        new CustomEvent("vetrate:crisis", {
+          detail: {
+            severity: crisisCheck.severity,
+            source: "ai-statement-helper",
+          },
+        }),
+      );
+
       // Return error that prevents AI engagement
       return {
         success: false,
-        error: 'This application has been paused. Please connect with crisis support.',
-        crisisDetected: true
+        error:
+          "This application has been paused. Please connect with crisis support.",
+        crisisDetected: true,
       };
     }
   }
-  
+
   // ═══ RATE LIMIT CHECK ═══
   const rateLimitCheck = checkRateLimit();
   if (!rateLimitCheck.canRequest) {
     return {
       success: false,
-      error: rateLimitCheck.error
+      error: rateLimitCheck.error,
     };
   }
-  
+
   // ═══ CHECK IF ANY AI IS AVAILABLE ═══
   if (!isAnyAIAvailable()) {
     return {
       success: false,
-      error: 'No AI available. Please configure a Gemini API key or initialize Local AI in settings.'
+      error:
+        "No AI available. Please configure a Gemini API key or initialize Local AI in settings.",
     };
   }
 
@@ -366,14 +411,15 @@ const callGeminiAPI = async (prompt, userInput = null) => {
   try {
     // ═══ USE UNIFIED AI SERVICE ═══
     const result = await generateAI(prompt, {
-      systemPrompt: 'You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.',
+      systemPrompt:
+        "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.",
       maxTokens: 2048,
       temperature: 0.7,
       skipCrisisCheck: true, // Already checked above
     });
 
     const status = getAIStatus();
-    
+
     return {
       success: true,
       content: result.text.trim(),
@@ -381,115 +427,135 @@ const callGeminiAPI = async (prompt, userInput = null) => {
       isPrivate: result.mode === AI_MODES.LOCAL,
       statusText: status.statusText,
     };
-
   } catch (error) {
-    console.error('Error calling AI service:', error);
-    const errorMsg = error.message || '';
-    
-    if (errorMsg === 'CRISIS_DETECTED') {
+    console.error("Error calling AI service:", error);
+    const errorMsg = error.message || "";
+
+    if (errorMsg === "CRISIS_DETECTED") {
       return {
         success: false,
-        error: 'This application has been paused. Please connect with crisis support.',
-        crisisDetected: true
+        error:
+          "This application has been paused. Please connect with crisis support.",
+        crisisDetected: true,
       };
     }
-    
+
     // ===== Cloud AI Errors =====
-    if (errorMsg.includes('API key')) {
+    if (errorMsg.includes("API key")) {
       return {
         success: false,
-        error: 'Invalid or missing API key. Please check your Gemini API key in Settings.',
-        errorType: 'api_key'
+        error:
+          "Invalid or missing API key. Please check your Gemini API key in Settings.",
+        errorType: "api_key",
       };
     }
-    
-    if (errorMsg.includes('Rate limit') || errorMsg.includes('429')) {
+
+    if (errorMsg.includes("Rate limit") || errorMsg.includes("429")) {
       return {
         success: false,
-        error: '⏳ Rate limit reached. Please wait a minute before trying again, or switch to Local AI.',
-        errorType: 'rate_limit'
+        error:
+          "⏳ Rate limit reached. Please wait a minute before trying again, or switch to Local AI.",
+        errorType: "rate_limit",
       };
     }
-    
-    if (errorMsg.includes('timed out') || errorMsg.includes('timeout')) {
+
+    if (errorMsg.includes("timed out") || errorMsg.includes("timeout")) {
       return {
         success: false,
-        error: '⏱️ Request timed out. Try a shorter prompt or switch to Local AI.',
-        errorType: 'timeout'
+        error:
+          "⏱️ Request timed out. Try a shorter prompt or switch to Local AI.",
+        errorType: "timeout",
       };
     }
-    
-    if (errorMsg.includes('Network error') || errorMsg.includes('offline')) {
+
+    if (errorMsg.includes("Network error") || errorMsg.includes("offline")) {
       return {
         success: false,
-        error: '📡 Network error. Check your internet connection, or use Local AI which works offline.',
-        errorType: 'network'
+        error:
+          "📡 Network error. Check your internet connection, or use Local AI which works offline.",
+        errorType: "network",
       };
     }
-    
-    if (errorMsg.includes('region') || errorMsg.includes('not available in')) {
+
+    if (errorMsg.includes("region") || errorMsg.includes("not available in")) {
       return {
         success: false,
-        error: '🌍 Gemini may not be available in your region. Try using Local AI for 100% private, offline processing.',
-        errorType: 'region'
+        error:
+          "🌍 Gemini may not be available in your region. Try using Local AI for 100% private, offline processing.",
+        errorType: "region",
       };
     }
-    
-    if (errorMsg.includes('servers') && (errorMsg.includes('500') || errorMsg.includes('unavailable'))) {
+
+    if (
+      errorMsg.includes("servers") &&
+      (errorMsg.includes("500") || errorMsg.includes("unavailable"))
+    ) {
       return {
         success: false,
-        error: '🔧 Google\'s servers are temporarily down. Please try again later or switch to Local AI.',
-        errorType: 'server_error'
+        error:
+          "🔧 Google's servers are temporarily down. Please try again later or switch to Local AI.",
+        errorType: "server_error",
       };
     }
-    
+
     // ===== Local AI Errors =====
-    if (errorMsg.includes('warming up')) {
+    if (errorMsg.includes("warming up")) {
       return {
         success: false,
-        error: '🔄 Local AI is still warming up... Please wait for the loading bar to complete.',
+        error:
+          "🔄 Local AI is still warming up... Please wait for the loading bar to complete.",
         isWarmingUp: true,
-        errorType: 'warming_up'
+        errorType: "warming_up",
       };
     }
-    
-    if (errorMsg.includes('Local AI not initialized') || errorMsg.includes('not ready') || errorMsg.includes('Neural Engine')) {
+
+    if (
+      errorMsg.includes("Local AI not initialized") ||
+      errorMsg.includes("not ready") ||
+      errorMsg.includes("Neural Engine")
+    ) {
       return {
         success: false,
-        error: '🧠 Local AI not ready. Please open Settings and initialize the Neural Engine first.',
-        errorType: 'not_initialized'
+        error:
+          "🧠 Local AI not ready. Please open Settings and initialize the Neural Engine first.",
+        errorType: "not_initialized",
       };
     }
-    
-    if (errorMsg.includes('GPU') || errorMsg.includes('WebGPU')) {
+
+    if (errorMsg.includes("GPU") || errorMsg.includes("WebGPU")) {
       return {
         success: false,
-        error: '💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.',
-        errorType: 'gpu_error'
+        error:
+          "💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.",
+        errorType: "gpu_error",
       };
     }
-    
-    if (errorMsg.includes('out of memory') || errorMsg.includes('OOM')) {
+
+    if (errorMsg.includes("out of memory") || errorMsg.includes("OOM")) {
       return {
         success: false,
-        error: '💾 GPU out of memory. Try a smaller model or close other browser tabs.',
-        errorType: 'memory'
+        error:
+          "💾 GPU out of memory. Try a smaller model or close other browser tabs.",
+        errorType: "memory",
       };
     }
-    
-    if (errorMsg.includes('ModelNotLoaded')) {
+
+    if (errorMsg.includes("ModelNotLoaded")) {
       return {
         success: false,
-        error: '⏳ Model not loaded yet. Please wait for the AI to finish loading.',
-        errorType: 'not_loaded'
+        error:
+          "⏳ Model not loaded yet. Please wait for the AI to finish loading.",
+        errorType: "not_loaded",
       };
     }
-    
+
     // Generic fallback
     return {
       success: false,
-      error: 'AI error: ' + (errorMsg || 'Please try again or use the standard template.'),
-      errorType: 'unknown'
+      error:
+        "AI error: " +
+        (errorMsg || "Please try again or use the standard template."),
+      errorType: "unknown",
     };
   }
 };
@@ -498,9 +564,18 @@ const callGeminiAPI = async (prompt, userInput = null) => {
  * Enhance a personal statement (Nexus Builder) using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhancePersonalStatement = async (answers, condition, primaryCondition = null) => {
-  const claimType = primaryCondition ? 'secondary' : 'primary';
-  const prompt = buildStatementPrompt(answers, condition, primaryCondition, claimType);
+export const enhancePersonalStatement = async (
+  answers,
+  condition,
+  primaryCondition = null,
+) => {
+  const claimType = primaryCondition ? "secondary" : "primary";
+  const prompt = buildStatementPrompt(
+    answers,
+    condition,
+    primaryCondition,
+    claimType,
+  );
   return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
 };
 
@@ -527,31 +602,35 @@ export const enhancePTSDStatement = async (answers) => {
  */
 const buildAppealStatementPrompt = (answers) => {
   const appealTypeLabels = {
-    'nod': 'Notice of Disagreement (NOD) / Board Appeal',
-    'hlr': 'Higher-Level Review (HLR)',
-    'supplemental': 'Supplemental Claim with New Evidence'
+    nod: "Notice of Disagreement (NOD) / Board Appeal",
+    hlr: "Higher-Level Review (HLR)",
+    supplemental: "Supplemental Claim with New Evidence",
   };
 
   return `Draft an Appeal Statement based on the following:
 
 === APPEAL INFORMATION ===
-Appeal Type: ${appealTypeLabels[answers.appealType] || answers.appealType || 'Disability claim appeal'}
-Condition: ${answers.conditionName || 'Not specified'}
-Original Decision Date: ${answers.decisionDate || 'Recent'}
-Original Rating: ${answers.originalRating || 'Not specified'}
-Desired Rating: ${answers.desiredRating || 'Higher rating warranted by evidence'}
+Appeal Type: ${appealTypeLabels[answers.appealType] || answers.appealType || "Disability claim appeal"}
+Condition: ${answers.conditionName || "Not specified"}
+Original Decision Date: ${answers.decisionDate || "Recent"}
+Original Rating: ${answers.originalRating || "Not specified"}
+Desired Rating: ${answers.desiredRating || "Higher rating warranted by evidence"}
 
 === PILLAR 1: WHY THE DECISION IS INCORRECT ===
-${answers.whyIncorrect || 'The evidence in the record supports a higher rating than assigned.'}
+${answers.whyIncorrect || "The evidence in the record supports a higher rating than assigned."}
 
 === PILLAR 2: WHAT EVIDENCE SUPPORTS YOUR APPEAL ===
-${answers.supportingEvidence || 'Medical records and personal statements demonstrate greater severity.'}
+${answers.supportingEvidence || "Medical records and personal statements demonstrate greater severity."}
 
 === PILLAR 3: WHAT OUTCOME YOU ARE SEEKING ===
-${answers.desiredOutcome || 'Request reconsideration with appropriate rating that reflects actual severity of condition.'}
+${answers.desiredOutcome || "Request reconsideration with appropriate rating that reflects actual severity of condition."}
 
-${answers.newEvidence ? `=== NEW/ADDITIONAL EVIDENCE ===
-${answers.newEvidence}` : ''}
+${
+  answers.newEvidence
+    ? `=== NEW/ADDITIONAL EVIDENCE ===
+${answers.newEvidence}`
+    : ""
+}
 
 === OUTPUT FORMAT ===
 Write this in the first person ("I").
@@ -574,20 +653,24 @@ const buildNexusLetterRequestPrompt = (answers) => {
   return `Draft a Nexus Letter Request to help a veteran communicate with their doctor about what to include in a medical opinion letter.
 
 === CLAIM INFORMATION ===
-Condition Being Claimed: ${answers.conditionName || 'Not specified'}
-${isSecondary ? `Primary Service-Connected Condition: ${answers.primaryCondition}
-Connection Theory: ${answers.connectionTheory || 'The primary condition caused or aggravates the claimed condition'}` : `In-Service Event/Cause: ${answers.inServiceEvent || 'Event during military service'}`}
+Condition Being Claimed: ${answers.conditionName || "Not specified"}
+${
+  isSecondary
+    ? `Primary Service-Connected Condition: ${answers.primaryCondition}
+Connection Theory: ${answers.connectionTheory || "The primary condition caused or aggravates the claimed condition"}`
+    : `In-Service Event/Cause: ${answers.inServiceEvent || "Event during military service"}`
+}
 
 === VETERAN'S SYMPTOMS ===
-${answers.symptoms || 'Current symptoms affecting daily life'}
+${answers.symptoms || "Current symptoms affecting daily life"}
 
 === RELEVANT MEDICAL HISTORY ===
-${answers.medicalHistory || 'Treatment history and relevant medical records'}
+${answers.medicalHistory || "Treatment history and relevant medical records"}
 
 === OUTPUT FORMAT ===
 Create a PROFESSIONAL letter the veteran can give to their doctor explaining:
 1. What a nexus letter is and why it's important for VA claims
-2. The specific connection that needs to be established (service connection ${isSecondary ? 'OR secondary connection' : ''})
+2. The specific connection that needs to be established (service connection ${isSecondary ? "OR secondary connection" : ""})
 3. The standard of proof: "at least as likely as not" (50% or greater probability)
 4. What the doctor should include in the letter
 5. Key medical terminology that would strengthen the opinion
@@ -622,35 +705,47 @@ export const generateNexusLetterRequest = async (answers) => {
  */
 export const enhanceFormStatement = async (formType, formData) => {
   switch (formType) {
-    case 'buddy-statement':
-      return enhanceBuddyStatement({
-        relationship: formData.witnessRelation,
-        knownDuration: formData.knownSince,
-        observations: formData.whatObserved,
-        changesNoticed: formData.specificExamples,
-        dailyImpact: formData.dailyImpact
-      }, formData.conditionName);
-      
-    case 'personal-statement':
-      return enhancePersonalStatement({
-        inServiceEvent: formData.inServiceEvent,
-        specificExamples: formData.worstDays,
-        workImpact: formData.workImpact,
-        socialImpact: formData.socialImpact,
-        symptomOnsetDate: formData.onsetDate,
-        hasTreatment: formData.currentTreatment ? 'yes-va' : 'no'
-      }, formData.conditionName, formData.primaryCondition);
-      
-    case 'ptsd-stressor':
+    case "buddy-statement":
+      return enhanceBuddyStatement(
+        {
+          relationship: formData.witnessRelation,
+          knownDuration: formData.knownSince,
+          observations: formData.whatObserved,
+          changesNoticed: formData.specificExamples,
+          dailyImpact: formData.dailyImpact,
+        },
+        formData.conditionName,
+      );
+
+    case "personal-statement":
+      return enhancePersonalStatement(
+        {
+          inServiceEvent: formData.inServiceEvent,
+          specificExamples: formData.worstDays,
+          workImpact: formData.workImpact,
+          socialImpact: formData.socialImpact,
+          symptomOnsetDate: formData.onsetDate,
+          hasTreatment: formData.currentTreatment ? "yes-va" : "no",
+        },
+        formData.conditionName,
+        formData.primaryCondition,
+      );
+
+    case "ptsd-stressor":
       return enhancePTSDStatement({
         stressorType: formData.stressorType,
         eventDescription: formData.eventDescription,
-        currentSymptoms: Array.isArray(formData.symptoms) ? formData.symptoms.join(', ') : formData.symptomDetails,
-        dailyImpact: formData.symptomDetails
+        currentSymptoms: Array.isArray(formData.symptoms)
+          ? formData.symptoms.join(", ")
+          : formData.symptomDetails,
+        dailyImpact: formData.symptomDetails,
       });
-      
+
     default:
-      return { success: false, error: 'Unsupported form type for AI enhancement' };
+      return {
+        success: false,
+        error: "Unsupported form type for AI enhancement",
+      };
   }
 };
 
@@ -661,26 +756,33 @@ export const enhanceFormStatement = async (formType, formData) => {
  */
 export const getAIDataDisclosure = (statementType) => {
   const status = getAIStatus();
-  
+
   // If using Local AI, show privacy-first message
   if (status.effectiveMode === AI_MODES.LOCAL) {
     return {
-      provider: '🔒 Local AI (WebLLM)',
-      purpose: 'To help write a more professional and effective statement using the "Three Pillars" approach',
-      retention: 'ALL PROCESSING HAPPENS ON YOUR DEVICE. No data is sent anywhere.',
+      provider: "🔒 Local AI (WebLLM)",
+      purpose:
+        'To help write a more professional and effective statement using the "Three Pillars" approach',
+      retention:
+        "ALL PROCESSING HAPPENS ON YOUR DEVICE. No data is sent anywhere.",
       isPrivate: true,
-      privacyNote: '✅ 100% Private: Your data never leaves your device. The AI model runs entirely in your browser using WebGPU.',
+      privacyNote:
+        "✅ 100% Private: Your data never leaves your device. The AI model runs entirely in your browser using WebGPU.",
       dataShared: [],
-      notShared: ['ALL DATA STAYS LOCAL - Nothing is transmitted over the network'],
+      notShared: [
+        "ALL DATA STAYS LOCAL - Nothing is transmitted over the network",
+      ],
     };
   }
-  
+
   const baseInfo = {
-    provider: '☁️ Google Gemini (Cloud AI)',
-    purpose: 'To help write a more professional and effective statement using the "Three Pillars" approach',
-    retention: 'Google does not store prompts from free API tier for training',
+    provider: "☁️ Google Gemini (Cloud AI)",
+    purpose:
+      'To help write a more professional and effective statement using the "Three Pillars" approach',
+    retention: "Google does not store prompts from free API tier for training",
     isPrivate: false,
-    privacyNote: '⚠️ Data is sent to Google servers. For 100% privacy, switch to Local AI in settings.',
+    privacyNote:
+      "⚠️ Data is sent to Google servers. For 100% privacy, switch to Local AI in settings.",
   };
 
   const dataByType = {
@@ -688,167 +790,173 @@ export const getAIDataDisclosure = (statementType) => {
       ...baseInfo,
       pillars: [
         {
-          name: 'Pillar 1: The Event',
-          description: 'What happened in service (or your primary condition for secondary claims)',
-          example: 'e.g., "I have service-connected PTSD" or "Injury during deployment"'
+          name: "Pillar 1: The Event",
+          description:
+            "What happened in service (or your primary condition for secondary claims)",
+          example:
+            'e.g., "I have service-connected PTSD" or "Injury during deployment"',
         },
         {
-          name: 'Pillar 2: Current Symptoms',
-          description: 'What is wrong now - your symptom descriptions',
-          example: 'e.g., "Back pain every morning, difficulty standing"'
+          name: "Pillar 2: Current Symptoms",
+          description: "What is wrong now - your symptom descriptions",
+          example: 'e.g., "Back pain every morning, difficulty standing"',
         },
         {
-          name: 'Pillar 3: The Nexus/Link',
-          description: 'How the event causes or aggravates your current condition',
-          example: 'e.g., "The pain started after the injury and never went away"'
-        }
+          name: "Pillar 3: The Nexus/Link",
+          description:
+            "How the event causes or aggravates your current condition",
+          example:
+            'e.g., "The pain started after the injury and never went away"',
+        },
       ],
       dataShared: [
-        'Condition name being claimed',
-        'Primary condition name (if secondary claim)',
-        'Your description of symptoms and impact',
-        'How you describe the connection between service and condition',
-        'Treatment status (VA, private, or none)',
-        'Impact on work and social life (your words)'
+        "Condition name being claimed",
+        "Primary condition name (if secondary claim)",
+        "Your description of symptoms and impact",
+        "How you describe the connection between service and condition",
+        "Treatment status (VA, private, or none)",
+        "Impact on work and social life (your words)",
       ],
       notShared: [
-        'Your name or any identifying information',
-        'Your address, SSN, or VA file number',
-        'Specific dates, locations, or unit names',
-        'Medical record numbers',
-        'Any information you have not entered in the form'
-      ]
+        "Your name or any identifying information",
+        "Your address, SSN, or VA file number",
+        "Specific dates, locations, or unit names",
+        "Medical record numbers",
+        "Any information you have not entered in the form",
+      ],
     },
     buddy: {
       ...baseInfo,
       pillars: [
         {
-          name: 'Pillar 1: Your Relationship',
-          description: 'Who you are and how you know the veteran',
-          example: 'e.g., "Spouse for 15 years" or "Fellow service member"'
+          name: "Pillar 1: Your Relationship",
+          description: "Who you are and how you know the veteran",
+          example: 'e.g., "Spouse for 15 years" or "Fellow service member"',
         },
         {
-          name: 'Pillar 2: What You Observed',
-          description: 'Specific things you personally witnessed',
-          example: 'e.g., "I see them struggle to get out of bed each morning"'
+          name: "Pillar 2: What You Observed",
+          description: "Specific things you personally witnessed",
+          example: 'e.g., "I see them struggle to get out of bed each morning"',
         },
         {
-          name: 'Pillar 3: Impact You\'ve Witnessed',
-          description: 'How the condition affects their daily life',
-          example: 'e.g., "They can no longer play with their children"'
-        }
+          name: "Pillar 3: Impact You've Witnessed",
+          description: "How the condition affects their daily life",
+          example: 'e.g., "They can no longer play with their children"',
+        },
       ],
       dataShared: [
-        'Condition name being supported',
-        'Relationship type (friend, family, coworker)',
-        'Your observations (in your words)',
-        'Changes you have noticed',
-        'Daily impact you have witnessed'
+        "Condition name being supported",
+        "Relationship type (friend, family, coworker)",
+        "Your observations (in your words)",
+        "Changes you have noticed",
+        "Daily impact you have witnessed",
       ],
       notShared: [
-        'Your name or the veteran\'s name',
-        'Addresses or contact information',
-        'Specific dates or locations',
-        'Any information you have not entered'
-      ]
+        "Your name or the veteran's name",
+        "Addresses or contact information",
+        "Specific dates or locations",
+        "Any information you have not entered",
+      ],
     },
     ptsd: {
       ...baseInfo,
       pillars: [
         {
-          name: 'Pillar 1: The Traumatic Event',
-          description: 'General type of stressor experienced',
-          example: 'e.g., "Combat exposure" or "Military sexual trauma"'
+          name: "Pillar 1: The Traumatic Event",
+          description: "General type of stressor experienced",
+          example: 'e.g., "Combat exposure" or "Military sexual trauma"',
         },
         {
-          name: 'Pillar 2: Current Symptoms',
-          description: 'PTSD symptoms you experience now',
-          example: 'e.g., "Nightmares, hypervigilance, avoidance"'
+          name: "Pillar 2: Current Symptoms",
+          description: "PTSD symptoms you experience now",
+          example: 'e.g., "Nightmares, hypervigilance, avoidance"',
         },
         {
-          name: 'Pillar 3: How It Affects Life Now',
-          description: 'Daily impact of your PTSD',
-          example: 'e.g., "Difficulty maintaining relationships, can\'t work in crowds"'
-        }
+          name: "Pillar 3: How It Affects Life Now",
+          description: "Daily impact of your PTSD",
+          example:
+            'e.g., "Difficulty maintaining relationships, can\'t work in crowds"',
+        },
       ],
       dataShared: [
-        'Type of stressor (general category)',
-        'General description of events (as you wrote)',
-        'Current symptoms description',
-        'Daily life impact description'
+        "Type of stressor (general category)",
+        "General description of events (as you wrote)",
+        "Current symptoms description",
+        "Daily life impact description",
       ],
       notShared: [
-        'Your name or identifying information',
-        'Unit names, specific locations, or dates',
-        'Names of others involved',
-        'Any information you have not entered'
-      ]
+        "Your name or identifying information",
+        "Unit names, specific locations, or dates",
+        "Names of others involved",
+        "Any information you have not entered",
+      ],
     },
     appeal: {
       ...baseInfo,
       pillars: [
         {
-          name: 'Pillar 1: Why Decision is Incorrect',
-          description: 'What was wrong with the original decision',
-          example: 'e.g., "Evidence shows severity is greater than 10% rating"'
+          name: "Pillar 1: Why Decision is Incorrect",
+          description: "What was wrong with the original decision",
+          example: 'e.g., "Evidence shows severity is greater than 10% rating"',
         },
         {
-          name: 'Pillar 2: Supporting Evidence',
-          description: 'What evidence supports your appeal',
-          example: 'e.g., "Medical records show daily symptoms"'
+          name: "Pillar 2: Supporting Evidence",
+          description: "What evidence supports your appeal",
+          example: 'e.g., "Medical records show daily symptoms"',
         },
         {
-          name: 'Pillar 3: Desired Outcome',
-          description: 'What you are asking for',
-          example: 'e.g., "Request 30% rating based on rating criteria"'
-        }
+          name: "Pillar 3: Desired Outcome",
+          description: "What you are asking for",
+          example: 'e.g., "Request 30% rating based on rating criteria"',
+        },
       ],
       dataShared: [
-        'Condition name',
-        'Original and desired rating',
-        'Your description of why decision is incorrect',
-        'Summary of supporting evidence'
+        "Condition name",
+        "Original and desired rating",
+        "Your description of why decision is incorrect",
+        "Summary of supporting evidence",
       ],
       notShared: [
-        'Your name or identifying information',
-        'Decision letter details',
-        'Specific dates or claim numbers',
-        'Any information you have not entered'
-      ]
+        "Your name or identifying information",
+        "Decision letter details",
+        "Specific dates or claim numbers",
+        "Any information you have not entered",
+      ],
     },
     nexusRequest: {
       ...baseInfo,
-      purpose: 'To help you communicate with your doctor about VA nexus letter requirements',
+      purpose:
+        "To help you communicate with your doctor about VA nexus letter requirements",
       pillars: [
         {
-          name: 'Pillar 1: The Condition',
-          description: 'What condition needs medical support',
-          example: 'e.g., "Lumbar strain secondary to knee injury"'
+          name: "Pillar 1: The Condition",
+          description: "What condition needs medical support",
+          example: 'e.g., "Lumbar strain secondary to knee injury"',
         },
         {
-          name: 'Pillar 2: The Connection',
-          description: 'How it relates to service or primary condition',
-          example: 'e.g., "Altered gait from knee causes back strain"'
+          name: "Pillar 2: The Connection",
+          description: "How it relates to service or primary condition",
+          example: 'e.g., "Altered gait from knee causes back strain"',
         },
         {
-          name: 'Pillar 3: Medical Support Needed',
-          description: 'What the doctor needs to address',
-          example: 'e.g., "Medical opinion on causation"'
-        }
+          name: "Pillar 3: Medical Support Needed",
+          description: "What the doctor needs to address",
+          example: 'e.g., "Medical opinion on causation"',
+        },
       ],
       dataShared: [
-        'Condition name being claimed',
-        'Primary condition (if secondary)',
-        'Connection theory',
-        'Symptom descriptions'
+        "Condition name being claimed",
+        "Primary condition (if secondary)",
+        "Connection theory",
+        "Symptom descriptions",
       ],
       notShared: [
-        'Your name or doctor\'s name',
-        'Medical record numbers',
-        'Facility names or locations',
-        'Any information you have not entered'
-      ]
-    }
+        "Your name or doctor's name",
+        "Medical record numbers",
+        "Facility names or locations",
+        "Any information you have not entered",
+      ],
+    },
   };
 
   return dataByType[statementType] || dataByType.personal;
@@ -858,15 +966,24 @@ export const getAIDataDisclosure = (statementType) => {
  * Generate AI-assisted text for a specific textarea field
  * Helps veterans articulate their symptoms and impacts
  */
-export const generateFieldSuggestion = async (fieldType, condition, primaryCondition = null, currentText = '') => {
+export const generateFieldSuggestion = async (
+  fieldType,
+  condition,
+  primaryCondition = null,
+  currentText = "",
+) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
-    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
+    return {
+      success: false,
+      error:
+        "No AI available. Configure an API key or enable Local AI in Settings.",
+    };
   }
 
   const prompts = {
     workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work. 
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
 
 Focus on:
 - Concentration and productivity issues
@@ -878,7 +995,7 @@ Focus on:
 Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
 
     socialImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their social and family life.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
 
 Focus on:
 - Relationship strain with spouse/partner
@@ -890,7 +1007,7 @@ Focus on:
 Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
 
     specificExamples: `As a VA claims specialist, help a veteran describe specific examples of how ${condition} limits their daily activities.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
 
 Focus on:
 - Driving limitations
@@ -902,7 +1019,7 @@ Focus on:
 Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
 
     aggravationExplanation: `As a VA claims specialist, help a veteran explain how their service-connected ${primaryCondition} causes or worsens their ${condition}.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
 
 Focus on:
 - The medical/logical connection
@@ -912,8 +1029,8 @@ Focus on:
 
 Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
 
-    specificIncident: `As a VA claims specialist, help a veteran describe a specific recent incident where their ${primaryCondition || 'primary condition'} and ${condition} interacted.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : 'Generate a compelling first-person example.'}
+    specificIncident: `As a VA claims specialist, help a veteran describe a specific recent incident where their ${primaryCondition || "primary condition"} and ${condition} interacted.
+${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
 
 Focus on:
 - Specific date or timeframe ("last month", "two weeks ago")
@@ -922,36 +1039,42 @@ Focus on:
 - Who witnessed it
 - The aftermath
 
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
   };
 
   const prompt = prompts[fieldType];
   if (!prompt) {
-    return { success: false, error: 'Unknown field type' };
+    return { success: false, error: "Unknown field type" };
   }
 
   try {
     // Use unified AI service
     const response = await generateAI(prompt, {
       temperature: 0.7,
-      maxTokens: 300
+      maxTokens: 300,
     });
-    
+
     // generateAI returns { text, mode } object - extract the text content
     const text = response?.text || response;
-    
+
     if (!text) {
-      return { success: false, error: 'No response generated' };
+      return { success: false, error: "No response generated" };
     }
 
-    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+    const textStr = typeof text === "string" ? text : JSON.stringify(text);
     return { success: true, content: textStr.trim() };
   } catch (error) {
-    console.error('Field suggestion error:', error);
-    if (error.message?.includes('API key')) {
-      return { success: false, error: 'Invalid API key. Please check your Gemini API key in Settings.' };
+    console.error("Field suggestion error:", error);
+    if (error.message?.includes("API key")) {
+      return {
+        success: false,
+        error: "Invalid API key. Please check your Gemini API key in Settings.",
+      };
     }
-    return { success: false, error: error.message || 'Network error. Please try again.' };
+    return {
+      success: false,
+      error: error.message || "Network error. Please try again.",
+    };
   }
 };
 
@@ -960,33 +1083,33 @@ Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or 
  * STATE BENEFIT HUNTER - Feature A
  * Finds state-specific veteran benefits
  * ===========================================
- * 
+ *
  * ⚠️ CURRENT IMPLEMENTATION: AI-GENERATED DATA
- * 
+ *
  * This feature currently uses AI to generate state benefit information in real-time.
  * While useful for discovery, this approach has limitations:
  * - May not reflect current state laws
  * - Could miss obscure benefits
  * - Lacks precise dollar amounts
  * - No update mechanism for law changes
- * 
+ *
  * 🚧 RECOMMENDED MIGRATION:
  * Replace with scraped, validated state databases (see src/data/stateBenefits.js)
- * 
+ *
  * FUTURE IMPLEMENTATION PATH:
  * 1. Scrape official state veteran affairs websites (all 50 states + DC)
  * 2. Create structured database in src/data/stateBenefits.js
  * 3. Update searchStateBenefits() to query local data instead of AI
  * 4. Implement quarterly update process for state law changes
  * 5. Add legal citations for each benefit (e.g., "CA Rev & Tax Code §205.5")
- * 
+ *
  * See src/data/stateBenefits.js for complete implementation plan.
  */
 
 /**
  * Build prompt for State Benefits search
  * Uses the "State Expert" system prompt
- * 
+ *
  * ⚠️ This generates AI content - not verified state data
  */
 const buildStateBenefitsPrompt = (state, rating) => {
@@ -1031,28 +1154,28 @@ Important:
 
 /**
  * Search for state-specific veteran benefits using AI
- * 
+ *
  * ⚠️ AI-GENERATED DATA - NOT VERIFIED WITH STATE SOURCES
- * 
+ *
  * This function uses AI to generate benefit information based on general knowledge.
  * Results may be outdated or incomplete. Always verify with official state sources.
- * 
+ *
  * For production use, replace this with a local database of scraped state benefits.
  * See: src/data/stateBenefits.js for implementation plan.
- * 
+ *
  * @param {string} state - Full state name (e.g., "Oregon")
  * @param {string} rating - VA rating (e.g., "100% P&T" or "70%")
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 /**
  * ✅ NOW USING REAL SCRAPED DATA (178 benefits across 51 states)
- * 
+ *
  * Searches the local database of state veteran benefits.
  * Data scraped from official state sources on 2026-01-24.
- * 
+ *
  * See: src/data/stateBenefits.js for the complete database
  * See: scripts/state-benefits-scraper/FINAL_REPORT.md for details
- * 
+ *
  * @param {string} state - State code (e.g., "TX", "CA") or full name
  * @param {number|string} rating - VA rating percentage (e.g., 100, "70%")
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
@@ -1060,22 +1183,30 @@ Important:
 export const searchStateBenefits = async (state, rating) => {
   try {
     // Import the real state benefits database
-    const { searchBenefitsByRating, getStateBenefits, getAllStateData } = await import('../data/stateBenefits.js');
-    
+    const { searchBenefitsByRating, getStateBenefits, getAllStateData } =
+      await import("../data/stateBenefits.js");
+
     // Convert state name to code if needed
-    const stateCode = state.length === 2 ? state.toUpperCase() : 
-      // Simple state name -> code mapping (extend as needed)
-      state === 'Texas' ? 'TX' : 
-      state === 'California' ? 'CA' : 
-      state === 'Florida' ? 'FL' : 
-      state === 'Virginia' ? 'VA' : 
-      state.toUpperCase().substring(0, 2);
-    
+    const stateCode =
+      state.length === 2
+        ? state.toUpperCase()
+        : // Simple state name -> code mapping (extend as needed)
+          state === "Texas"
+          ? "TX"
+          : state === "California"
+            ? "CA"
+            : state === "Florida"
+              ? "FL"
+              : state === "Virginia"
+                ? "VA"
+                : state.toUpperCase().substring(0, 2);
+
     // Convert rating string to number if needed
-    const ratingNum = typeof rating === 'string' 
-      ? parseInt(rating.replace(/[^\d]/g, '')) || 0
-      : rating;
-    
+    const ratingNum =
+      typeof rating === "string"
+        ? parseInt(rating.replace(/[^\d]/g, "")) || 0
+        : rating;
+
     // Search the database
     let benefits;
     if (ratingNum > 0) {
@@ -1083,43 +1214,50 @@ export const searchStateBenefits = async (state, rating) => {
     } else {
       benefits = getStateBenefits(stateCode);
     }
-    
+
     // Format the response to match the expected structure
     const formattedData = {
       state: benefits[0]?.state || state,
       stateCode: stateCode,
       disabilityRating: `${ratingNum}%`,
-      lastUpdated: benefits[0]?.lastUpdated || '2026-01-24',
-      dataSource: 'scraped',
+      lastUpdated: benefits[0]?.lastUpdated || "2026-01-24",
+      dataSource: "scraped",
       verified: benefits[0]?.verified || false,
-      benefits: benefits.map(b => ({
+      benefits: benefits.map((b) => ({
         category: b.category,
         name: b.name || b.benefitName,
         description: b.description,
         estimatedValue: b.estimatedValue || b.value,
         requirements: {
-          minRating: b.requirements?.minRating || b.requirements?.min_rating || 0,
+          minRating:
+            b.requirements?.minRating || b.requirements?.min_rating || 0,
           residency: b.requirements?.residencyRequired !== false,
-          additionalNotes: b.requirements?.additionalNotes || b.requirements?.other_reqs || []
+          additionalNotes:
+            b.requirements?.additionalNotes || b.requirements?.other_reqs || [],
         },
-        howToApply: b.howToApply || b.applicationProcess?.agency || 'Contact your local county office',
+        howToApply:
+          b.howToApply ||
+          b.applicationProcess?.agency ||
+          "Contact your local county office",
         sourceUrl: b.sourceUrl || b.source_url || b.officialSource,
         verified: b.verified || false,
-        quality: b.quality || 'template'
-      }))
+        quality: b.quality || "template",
+      })),
     };
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       data: formattedData,
-      message: benefits.length === 0 ? 'No benefits found for this rating level' : null
+      message:
+        benefits.length === 0
+          ? "No benefits found for this rating level"
+          : null,
     };
-    
   } catch (error) {
-    console.error('State benefits search error:', error);
-    return { 
-      success: false, 
-      error: 'Failed to load state benefits database. Please try again.' 
+    console.error("State benefits search error:", error);
+    return {
+      success: false,
+      error: "Failed to load state benefits database. Please try again.",
     };
   }
 };
@@ -1185,12 +1323,16 @@ Focus on providing accurate, helpful information that will connect the veteran w
 export const searchVSOs = async (zipCode) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
-    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
+    return {
+      success: false,
+      error:
+        "No AI available. Configure an API key or enable Local AI in Settings.",
+    };
   }
 
   // Validate ZIP code format
   if (!/^\d{5}$/.test(zipCode)) {
-    return { success: false, error: 'Please enter a valid 5-digit ZIP code.' };
+    return { success: false, error: "Please enter a valid 5-digit ZIP code." };
   }
 
   const prompt = buildVSOFinderPrompt(zipCode);
@@ -1203,34 +1345,45 @@ export const searchVSOs = async (zipCode) => {
       expectJSON: true,
       skipHallucinationCheck: true, // VSO finder JSON doesn't contain diagnostic codes
     });
-    
+
     // generateAI returns { text, mode } object - extract the text content
     const text = response?.text || response;
-    
+
     if (!text) {
-      return { success: false, error: 'No response generated. Please try again.' };
+      return {
+        success: false,
+        error: "No response generated. Please try again.",
+      };
     }
 
-    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+    const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     // Parse the JSON response
     try {
       let cleanedText = textStr.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      if (cleanedText.startsWith("```json")) {
+        cleanedText = cleanedText
+          .replace(/^```json\n?/, "")
+          .replace(/\n?```$/, "");
+      } else if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```\n?/, "").replace(/\n?```$/, "");
       }
-      
+
       const vsoData = JSON.parse(cleanedText);
       return { success: true, data: vsoData };
     } catch (parseError) {
-      console.error('Failed to parse VSO JSON:', parseError, textStr);
-      return { success: false, error: 'Failed to parse VSO data. Please try again.' };
+      console.error("Failed to parse VSO JSON:", parseError, textStr);
+      return {
+        success: false,
+        error: "Failed to parse VSO data. Please try again.",
+      };
     }
   } catch (error) {
-    console.error('VSO search error:', error);
-    return { success: false, error: 'Network error. Please check your connection and try again.' };
+    console.error("VSO search error:", error);
+    return {
+      success: false,
+      error: "Network error. Please check your connection and try again.",
+    };
   }
 };
 
@@ -1298,7 +1451,11 @@ Be helpful but BLUNT. This veteran needs to hear the truth before the VA denies 
 export const stressTestStatement = async (statement) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
-    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
+    return {
+      success: false,
+      error:
+        "No AI available. Configure an API key or enable Local AI in Settings.",
+    };
   }
 
   const prompt = buildStressTestPrompt(statement);
@@ -1311,33 +1468,44 @@ export const stressTestStatement = async (statement) => {
       expectJSON: true,
       skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
     });
-    
+
     // generateAI returns { text, mode } object - extract the text content
     const text = response?.text || response;
-    
+
     if (!text) {
-      return { success: false, error: 'No response generated. Please try again.' };
+      return {
+        success: false,
+        error: "No response generated. Please try again.",
+      };
     }
 
-    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+    const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     try {
       let cleanedText = textStr.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      if (cleanedText.startsWith("```json")) {
+        cleanedText = cleanedText
+          .replace(/^```json\n?/, "")
+          .replace(/\n?```$/, "");
+      } else if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```\n?/, "").replace(/\n?```$/, "");
       }
-      
+
       const analysisData = JSON.parse(cleanedText);
       return { success: true, data: analysisData };
     } catch (parseError) {
-      console.error('Failed to parse stress test JSON:', parseError, textStr);
-      return { success: false, error: 'Failed to parse analysis. Please try again.' };
+      console.error("Failed to parse stress test JSON:", parseError, textStr);
+      return {
+        success: false,
+        error: "Failed to parse analysis. Please try again.",
+      };
     }
   } catch (error) {
-    console.error('Stress test error:', error);
-    return { success: false, error: 'Network error. Please check your connection and try again.' };
+    console.error("Stress test error:", error);
+    return {
+      success: false,
+      error: "Network error. Please check your connection and try again.",
+    };
   }
 };
 
@@ -1373,41 +1541,45 @@ const estimateTokenCount = (text) => {
  * @returns {{ text: string, wasTruncated: boolean, originalTokens: number }}
  */
 const smartTruncateForAI = (text, maxTokens = 1200) => {
-  if (!text) return { text: '', wasTruncated: false, originalTokens: 0 };
-  
+  if (!text) return { text: "", wasTruncated: false, originalTokens: 0 };
+
   const originalTokens = estimateTokenCount(text);
-  
+
   // If within limit, return as-is
   if (originalTokens <= maxTokens) {
     return { text, wasTruncated: false, originalTokens };
   }
-  
+
   // Calculate max characters (using same ratio)
   const maxChars = Math.floor(maxTokens * 3.5);
-  
+
   // VA decision letters: important content is usually at the beginning (decision)
   // and end (appeal rights, reasons for decision)
   // Strategy: Keep first 60% and last 40% of allowed space
   const firstPartChars = Math.floor(maxChars * 0.6);
   const lastPartChars = maxChars - firstPartChars - 100; // 100 chars for truncation notice
-  
+
   const firstPart = text.slice(0, firstPartChars);
   const lastPart = text.slice(-lastPartChars);
-  
+
   // Find clean break points (sentence endings)
-  const firstPartClean = firstPart.slice(0, firstPart.lastIndexOf('. ') + 1) || firstPart;
-  const lastPartStart = lastPart.indexOf('. ');
-  const lastPartClean = lastPartStart > 0 ? lastPart.slice(lastPartStart + 2) : lastPart;
-  
+  const firstPartClean =
+    firstPart.slice(0, firstPart.lastIndexOf(". ") + 1) || firstPart;
+  const lastPartStart = lastPart.indexOf(". ");
+  const lastPartClean =
+    lastPartStart > 0 ? lastPart.slice(lastPartStart + 2) : lastPart;
+
   const truncatedText = `${firstPartClean.trim()}\n\n[... Document truncated for AI processing - middle section omitted ...]\n\n${lastPartClean.trim()}`;
-  
-  console.log(`📏 Smart truncation: ${originalTokens} tokens → ~${estimateTokenCount(truncatedText)} tokens`);
-  
+
+  console.log(
+    `📏 Smart truncation: ${originalTokens} tokens → ~${estimateTokenCount(truncatedText)} tokens`,
+  );
+
   return {
     text: truncatedText,
     wasTruncated: true,
     originalTokens,
-    truncatedTokens: estimateTokenCount(truncatedText)
+    truncatedTokens: estimateTokenCount(truncatedText),
   };
 };
 
@@ -1480,7 +1652,11 @@ Be empathetic but professional. This veteran is confused and possibly upset. Hel
 export const decodeDecision = async (decisionText) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
-    return { success: false, error: 'No AI available. Configure an API key or enable Local AI in Settings.' };
+    return {
+      success: false,
+      error:
+        "No AI available. Configure an API key or enable Local AI in Settings.",
+    };
   }
 
   // Smart truncation to fit within Local AI context window
@@ -1490,9 +1666,11 @@ export const decodeDecision = async (decisionText) => {
   // BUT generateAI adds its own system prompt (~500 tokens), so we limit input to 1200 tokens
   // to be safe: 1200 (input) + 600 (our prompt) + 500 (system prompt) + 1500 (response) = 3800 < 4096
   const truncation = smartTruncateForAI(decisionText, 1200);
-  
+
   if (truncation.wasTruncated) {
-    console.log(`📏 Decision text truncated: ${truncation.originalTokens} → ${truncation.truncatedTokens} tokens`);
+    console.log(
+      `📏 Decision text truncated: ${truncation.originalTokens} → ${truncation.truncatedTokens} tokens`,
+    );
   }
 
   const prompt = buildDecisionDecoderPrompt(truncation.text, truncation);
@@ -1507,55 +1685,69 @@ export const decodeDecision = async (decisionText) => {
       expectJSON: true,
       timeout: 90000, // 90 seconds - match UI timeout
       // Tell generateAI to use a minimal/empty system prompt since our prompt is self-contained
-      systemPrompt: 'You are a VA claims expert. Respond only with valid JSON.',
-      taskType: 'legal', // Use legal preset for accuracy
+      systemPrompt: "You are a VA claims expert. Respond only with valid JSON.",
+      taskType: "legal", // Use legal preset for accuracy
       skipValidation: true, // We'll validate the JSON ourselves
       skipHallucinationCheck: true, // Decision decoder returns plain_english analysis, NOT diagnostic codes
     });
-    
+
     // generateAI returns { text, mode, fallback?, fallbackReason?, note? } object
     const text = response?.text || response;
     const usedFallback = response?.fallback || false;
     const fallbackReason = response?.fallbackReason || null;
     const fallbackNote = response?.note || null;
-    
+
     if (!text) {
-      return { success: false, error: 'No response generated. Please try again.' };
+      return {
+        success: false,
+        error: "No response generated. Please try again.",
+      };
     }
 
-    const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+    const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     // Better JSON parsing with multiple fallback strategies
     try {
       let cleanedText = textStr.trim();
-      
+
       // Remove markdown code blocks
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      if (cleanedText.startsWith("```json")) {
+        cleanedText = cleanedText
+          .replace(/^```json\n?/, "")
+          .replace(/\n?```$/, "");
+      } else if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```\n?/, "").replace(/\n?```$/, "");
       }
-      
+
       // Try to extract JSON if the response has extra text
       const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanedText = jsonMatch[0];
       }
-      
+
       // Check if response is an error message (not JSON)
       // Note: '[]' is valid JSON (empty array), so we check specifically for error-like patterns
-      if (cleanedText.startsWith('[') && !cleanedText.startsWith('[{') && cleanedText !== '[]') {
+      if (
+        cleanedText.startsWith("[") &&
+        !cleanedText.startsWith("[{") &&
+        cleanedText !== "[]"
+      ) {
         // Likely an error message like "[Warrant Council..."
-        console.error('AI returned error message instead of JSON:', cleanedText.substring(0, 200));
+        console.error(
+          "AI returned error message instead of JSON:",
+          cleanedText.substring(0, 200),
+        );
         return {
           success: false,
-          error: 'AI model is still loading or encountered an error. Please wait a moment and try again.',
-          isModelLoading: cleanedText.includes('loading') || cleanedText.includes('wait')
+          error:
+            "AI model is still loading or encountered an error. Please wait a moment and try again.",
+          isModelLoading:
+            cleanedText.includes("loading") || cleanedText.includes("wait"),
         };
       }
-      
+
       const decodedData = JSON.parse(cleanedText);
-      
+
       // Include fallback info and truncation info in response for UI to show helpful messages
       return {
         success: true,
@@ -1564,74 +1756,103 @@ export const decodeDecision = async (decisionText) => {
         ...(usedFallback && {
           usedFallback: true,
           fallbackReason,
-          fallbackNote
+          fallbackNote,
         }),
         // Pass through truncation info so UI can show notice about truncated content
         ...(truncation.wasTruncated && {
           wasTruncated: true,
           originalTokens: truncation.originalTokens,
           truncatedTokens: truncation.truncatedTokens,
-          truncationNote: `Your document was too large (${truncation.originalTokens} tokens). We analyzed the first and last sections to fit within AI limits.`
-        })
+          truncationNote: `Your document was too large (${truncation.originalTokens} tokens). We analyzed the first and last sections to fit within AI limits.`,
+        }),
       };
     } catch (parseError) {
-      console.error(' Failed to parse decision decoder JSON:', parseError, textStr);
-      
+      console.error(
+        " Failed to parse decision decoder JSON:",
+        parseError,
+        textStr,
+      );
+
       // Check if the AI response indicates it's still loading
       const lowerText = textStr.toLowerCase();
-      if (lowerText.includes('loading') || lowerText.includes('wait') || lowerText.includes('initializing')) {
+      if (
+        lowerText.includes("loading") ||
+        lowerText.includes("wait") ||
+        lowerText.includes("initializing")
+      ) {
         return {
           success: false,
-          error: 'AI model is still loading. Please wait for the model to fully load and try again.',
-          isModelLoading: true
+          error:
+            "AI model is still loading. Please wait for the model to fully load and try again.",
+          isModelLoading: true,
         };
       }
-      
+
       // Check if it looks like a partial/cut-off response
-      if (!textStr.includes('}') || textStr.length < 50) {
+      if (!textStr.includes("}") || textStr.length < 50) {
         return {
           success: false,
-          error: 'AI response was incomplete. This may be due to token limits. Please try with a shorter excerpt of your decision letter.',
-          isIncomplete: true
+          error:
+            "AI response was incomplete. This may be due to token limits. Please try with a shorter excerpt of your decision letter.",
+          isIncomplete: true,
         };
       }
-      
-      return { success: false, error: 'Failed to parse AI response. Please try again.' };
+
+      return {
+        success: false,
+        error: "Failed to parse AI response. Please try again.",
+      };
     }
   } catch (error) {
-    console.error('Decision decoder error:', error);
-    
+    console.error("Decision decoder error:", error);
+
     // Check for context overflow error and provide helpful message
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('too large') || errorMsg.includes('context') || errorMsg.includes('4096') ||
-        errorMsg.includes('ContextWindowSizeExceeded') || errorMsg.includes('prompt tokens exceed')) {
+    const errorMsg = error.message || "";
+    if (
+      errorMsg.includes("too large") ||
+      errorMsg.includes("context") ||
+      errorMsg.includes("4096") ||
+      errorMsg.includes("ContextWindowSizeExceeded") ||
+      errorMsg.includes("prompt tokens exceed")
+    ) {
       return {
         success: false,
-        error: 'Document is too large for AI processing. Please try pasting only the "Reasons for Decision" section of your letter.',
-        isContextOverflow: true
+        error:
+          'Document is too large for AI processing. Please try pasting only the "Reasons for Decision" section of your letter.',
+        isContextOverflow: true,
       };
     }
-    
+
     // Check for model loading errors
-    if (errorMsg.includes('warming up') || errorMsg.includes('not loaded') || errorMsg.includes('not ready')) {
+    if (
+      errorMsg.includes("warming up") ||
+      errorMsg.includes("not loaded") ||
+      errorMsg.includes("not ready")
+    ) {
       return {
         success: false,
-        error: 'AI model is still loading. Please wait for the model to fully load and try again.',
-        isModelLoading: true
+        error:
+          "AI model is still loading. Please wait for the model to fully load and try again.",
+        isModelLoading: true,
       };
     }
-    
-    return { success: false, error: errorMsg || 'Network error. Please check your connection and try again.' };
+
+    return {
+      success: false,
+      error:
+        errorMsg ||
+        "Network error. Please check your connection and try again.",
+    };
   }
 };
 
 // Re-export unified AI service functions for convenience
-export { 
-  isLocalAIReady, 
-  isCloudAIAvailable, 
+export {
+  isLocalAIReady,
+  isCloudAIAvailable,
   getAIStatus,
-  AI_MODES 
-} from './unifiedAIService';
+  AI_MODES,
+} from "./unifiedAIService";
 
 export default {
   isAIAvailable,
@@ -1651,5 +1872,5 @@ export default {
   isLocalAIReady,
   isCloudAIAvailable,
   getAIStatus,
-  AI_MODES
+  AI_MODES,
 };

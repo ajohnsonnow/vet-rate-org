@@ -2,7 +2,7 @@
  * Vet-Rate.org - Rate Limiter Hook
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "The Cooldown" - API Rate Limiting System
  * Prevents users from spamming AI generation buttons.
  * Protects against:
@@ -12,13 +12,13 @@
  * - Hitting API rate limits
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 
 // Configuration
-const DEFAULT_COOLDOWN_MS = 10000;       // 10 seconds between requests
-const HOURLY_LIMIT = 20;                  // Max requests per hour
+const DEFAULT_COOLDOWN_MS = 10000; // 10 seconds between requests
+const HOURLY_LIMIT = 20; // Max requests per hour
 const HOURLY_LOCKOUT_MS = 60 * 60 * 1000; // 60 minute lockout when limit exceeded
-const STORAGE_KEY_PREFIX = 'vetrate_ratelimit_';
+const STORAGE_KEY_PREFIX = "vetrate_ratelimit_";
 
 /**
  * Get timestamps from localStorage
@@ -46,7 +46,7 @@ function setStoredTimestamps(feature, timestamps) {
     const key = `${STORAGE_KEY_PREFIX}${feature}_timestamps`;
     localStorage.setItem(key, JSON.stringify(timestamps));
   } catch (e) {
-    console.error('Failed to store rate limit timestamps:', e);
+    console.error("Failed to store rate limit timestamps:", e);
   }
 }
 
@@ -80,7 +80,7 @@ function setLockoutExpiration(feature, expiration) {
       localStorage.setItem(key, expiration.toString());
     }
   } catch (e) {
-    console.error('Failed to store lockout expiration:', e);
+    console.error("Failed to store lockout expiration:", e);
   }
 }
 
@@ -90,26 +90,26 @@ function setLockoutExpiration(feature, expiration) {
  * @returns {number[]} Filtered timestamps
  */
 function cleanOldTimestamps(timestamps) {
-  const oneHourAgo = Date.now() - (60 * 60 * 1000);
-  return timestamps.filter(ts => ts > oneHourAgo);
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  return timestamps.filter((ts) => ts > oneHourAgo);
 }
 
 /**
  * useRateLimit Hook
- * 
+ *
  * @param {string} feature - Unique identifier for the feature (e.g., 'nexus', 'statement', 'ai')
  * @param {Object} options - Configuration options
  * @param {number} options.cooldownMs - Milliseconds between requests (default: 10000)
  * @param {number} options.hourlyLimit - Max requests per hour (default: 20)
  * @param {number} options.lockoutMs - Lockout duration when limit exceeded (default: 3600000)
- * 
+ *
  * @returns {Object} Rate limit state and controls
  */
-export function useRateLimit(feature = 'default', options = {}) {
+export function useRateLimit(feature = "default", options = {}) {
   const {
     cooldownMs = DEFAULT_COOLDOWN_MS,
     hourlyLimit = HOURLY_LIMIT,
-    lockoutMs = HOURLY_LOCKOUT_MS
+    lockoutMs = HOURLY_LOCKOUT_MS,
   } = options;
 
   // State
@@ -131,7 +131,7 @@ export function useRateLimit(feature = 'default', options = {}) {
     // Check for existing lockout
     const lockoutExpiration = getLockoutExpiration(feature);
     const now = Date.now();
-    
+
     if (lockoutExpiration && lockoutExpiration > now) {
       setIsLocked(true);
       setLockoutEndTime(lockoutExpiration);
@@ -143,12 +143,12 @@ export function useRateLimit(feature = 'default', options = {}) {
     // Load timestamps and count requests in the last hour
     const timestamps = cleanOldTimestamps(getStoredTimestamps(feature));
     setRequestCount(timestamps.length);
-    
+
     // Get the most recent request time
     if (timestamps.length > 0) {
       const mostRecent = Math.max(...timestamps);
       setLastRequestTime(mostRecent);
-      
+
       // Calculate remaining cooldown
       const remaining = cooldownMs - (now - mostRecent);
       if (remaining > 0) {
@@ -176,7 +176,7 @@ export function useRateLimit(feature = 'default', options = {}) {
       const now = Date.now();
       const remaining = Math.max(0, cooldownMs - (now - lastRequestTime));
       setCooldownRemaining(remaining);
-      
+
       if (remaining <= 0) {
         clearInterval(cooldownTimerRef.current);
         cooldownTimerRef.current = null;
@@ -211,7 +211,7 @@ export function useRateLimit(feature = 'default', options = {}) {
       const now = Date.now();
       const remaining = Math.max(0, lockoutEndTime - now);
       setLockoutRemaining(remaining);
-      
+
       if (remaining <= 0) {
         setIsLocked(false);
         setLockoutEndTime(null);
@@ -242,8 +242,8 @@ export function useRateLimit(feature = 'default', options = {}) {
     if (isLocked && lockoutEndTime && lockoutEndTime > now) {
       return {
         canRequest: false,
-        reason: 'hourly_limit',
-        waitTime: lockoutEndTime - now
+        reason: "hourly_limit",
+        waitTime: lockoutEndTime - now,
       };
     }
 
@@ -252,8 +252,8 @@ export function useRateLimit(feature = 'default', options = {}) {
     if (timeSinceLastRequest < cooldownMs) {
       return {
         canRequest: false,
-        reason: 'cooldown',
-        waitTime: cooldownMs - timeSinceLastRequest
+        reason: "cooldown",
+        waitTime: cooldownMs - timeSinceLastRequest,
       };
     }
 
@@ -265,37 +265,45 @@ export function useRateLimit(feature = 'default', options = {}) {
       setIsLocked(true);
       setLockoutEndTime(lockoutExpiration);
       setLockoutExpiration(feature, lockoutExpiration);
-      
+
       return {
         canRequest: false,
-        reason: 'hourly_limit',
-        waitTime: lockoutMs
+        reason: "hourly_limit",
+        waitTime: lockoutMs,
       };
     }
 
     return {
       canRequest: true,
       reason: null,
-      waitTime: 0
+      waitTime: 0,
     };
-  }, [feature, cooldownMs, hourlyLimit, lockoutMs, lastRequestTime, isLocked, lockoutEndTime]);
+  }, [
+    feature,
+    cooldownMs,
+    hourlyLimit,
+    lockoutMs,
+    lastRequestTime,
+    isLocked,
+    lockoutEndTime,
+  ]);
 
   /**
    * Record a request (call this when the request is made)
    */
   const recordRequest = useCallback(() => {
     const now = Date.now();
-    
+
     // Update state
     setLastRequestTime(now);
     setCooldownRemaining(cooldownMs);
-    
+
     // Update stored timestamps
     const timestamps = cleanOldTimestamps(getStoredTimestamps(feature));
     timestamps.push(now);
     setStoredTimestamps(feature, timestamps);
     setRequestCount(timestamps.length);
-    
+
     return timestamps.length;
   }, [feature, cooldownMs]);
 
@@ -305,18 +313,20 @@ export function useRateLimit(feature = 'default', options = {}) {
    * @returns {string} Formatted time string
    */
   const formatTimeRemaining = useCallback((ms) => {
-    if (ms <= 0) return '';
-    
+    if (ms <= 0) return "";
+
     const seconds = Math.ceil(ms / 1000);
     if (seconds < 60) return `${seconds}s`;
-    
+
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    
+
     if (minutes < 60) {
-      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+      return remainingSeconds > 0
+        ? `${minutes}m ${remainingSeconds}s`
+        : `${minutes}m`;
     }
-    
+
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return `${hours}h ${remainingMinutes}m`;
@@ -327,17 +337,20 @@ export function useRateLimit(feature = 'default', options = {}) {
    * @param {string} defaultText - Default button text when not rate limited
    * @returns {string} Button text to display
    */
-  const getButtonText = useCallback((defaultText = 'Generate') => {
-    if (isLocked) {
-      return `Limit Reached (${formatTimeRemaining(lockoutRemaining)})`;
-    }
-    
-    if (cooldownRemaining > 0) {
-      return `AI Cooling Down (${formatTimeRemaining(cooldownRemaining)})...`;
-    }
-    
-    return defaultText;
-  }, [isLocked, cooldownRemaining, lockoutRemaining, formatTimeRemaining]);
+  const getButtonText = useCallback(
+    (defaultText = "Generate") => {
+      if (isLocked) {
+        return `Limit Reached (${formatTimeRemaining(lockoutRemaining)})`;
+      }
+
+      if (cooldownRemaining > 0) {
+        return `AI Cooling Down (${formatTimeRemaining(cooldownRemaining)})...`;
+      }
+
+      return defaultText;
+    },
+    [isLocked, cooldownRemaining, lockoutRemaining, formatTimeRemaining],
+  );
 
   /**
    * Get status message for user feedback
@@ -346,26 +359,32 @@ export function useRateLimit(feature = 'default', options = {}) {
   const getStatusMessage = useCallback(() => {
     if (isLocked) {
       return {
-        type: 'error',
-        icon: '⏳',
-        title: 'Daily Limit Reached',
+        type: "error",
+        icon: "⏳",
+        title: "Daily Limit Reached",
         message: `You've made ${hourlyLimit} AI requests this hour. Please review your existing drafts while waiting.`,
-        timeRemaining: formatTimeRemaining(lockoutRemaining)
+        timeRemaining: formatTimeRemaining(lockoutRemaining),
       };
     }
-    
+
     if (requestCount >= hourlyLimit - 3 && requestCount < hourlyLimit) {
       return {
-        type: 'warning',
-        icon: '⚠️',
-        title: 'Approaching Limit',
+        type: "warning",
+        icon: "⚠️",
+        title: "Approaching Limit",
         message: `${hourlyLimit - requestCount} AI requests remaining this hour.`,
-        timeRemaining: null
+        timeRemaining: null,
       };
     }
-    
+
     return null;
-  }, [isLocked, requestCount, hourlyLimit, lockoutRemaining, formatTimeRemaining]);
+  }, [
+    isLocked,
+    requestCount,
+    hourlyLimit,
+    lockoutRemaining,
+    formatTimeRemaining,
+  ]);
 
   /**
    * Reset the rate limiter (admin/debug function)
@@ -391,16 +410,16 @@ export function useRateLimit(feature = 'default', options = {}) {
     requestCount,
     remainingRequests: Math.max(0, hourlyLimit - requestCount),
     hourlyLimit,
-    
+
     // Actions
     checkCanRequest,
     recordRequest,
     reset,
-    
+
     // Display helpers
     getButtonText,
     getStatusMessage,
-    formatTimeRemaining
+    formatTimeRemaining,
   };
 }
 
@@ -413,18 +432,19 @@ export function useRateLimit(feature = 'default', options = {}) {
 export function withRateLimit(fn, rateLimiter) {
   return async (...args) => {
     const { canRequest, reason, waitTime } = rateLimiter.checkCanRequest();
-    
+
     if (!canRequest) {
-      const errorMessage = reason === 'hourly_limit'
-        ? `Daily limit reached. Please wait ${rateLimiter.formatTimeRemaining(waitTime)} before trying again.`
-        : `Please wait ${rateLimiter.formatTimeRemaining(waitTime)} before making another request.`;
-      
+      const errorMessage =
+        reason === "hourly_limit"
+          ? `Daily limit reached. Please wait ${rateLimiter.formatTimeRemaining(waitTime)} before trying again.`
+          : `Please wait ${rateLimiter.formatTimeRemaining(waitTime)} before making another request.`;
+
       throw new Error(errorMessage);
     }
-    
+
     // Record the request
     rateLimiter.recordRequest();
-    
+
     // Execute the wrapped function
     return fn(...args);
   };

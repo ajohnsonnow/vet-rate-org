@@ -69,9 +69,9 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -84,18 +84,19 @@ body {
 
 /* Large screens (768px+): Fixed header with scrolling body+footer */
 @media (min-width: 768px) {
-  html, body {
+  html,
+  body {
     height: 100%;
     overflow: hidden;
   }
-  
+
   body > div#root {
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-  
+
   /* App container wrapper */
   body > div#root > div {
     height: 100%;
@@ -103,41 +104,41 @@ body {
     flex-direction: column;
     overflow: hidden;
   }
-  
+
   /* Header stays fixed at top */
   body > div#root > div > header,
   body > div#root header {
     flex-shrink: 0;
     z-index: 50;
   }
-  
+
   /* Create a scrollable wrapper for everything after the header */
   body > div#root > div {
     position: relative;
   }
-  
+
   /* Main + Footer scroll together - wrap them in scroll context */
   body > div#root > div > main {
     flex: 1 1 auto;
   }
-  
+
   /* Footer is part of the scrollable area */
   body > div#root > div > footer {
     flex-shrink: 0;
   }
-  
+
   /* The app container minus header scrolls */
   body > div#root > div.min-h-screen {
     min-height: 100%;
     height: 100%;
   }
-  
+
   /* Apply overflow to the app container, make header sticky */
   body > div#root > div.flex-col {
     overflow-y: auto;
     overflow-x: hidden;
   }
-  
+
   /* Sticky header within scrolling container */
   body > div#root > div.flex-col > header {
     position: sticky;
@@ -149,25 +150,26 @@ body {
 
 /* Small screens (below 768px): Natural page scrolling */
 @media (max-width: 767px) {
-  html, body {
+  html,
+  body {
     height: auto;
     min-height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
   }
-  
+
   body > div#root {
     height: auto;
     min-height: 100%;
     overflow: visible;
   }
-  
+
   body > div#root > div {
     height: auto;
     min-height: 100%;
     overflow: visible;
   }
-  
+
   /* Everything scrolls naturally on mobile */
   body > div#root > div > header {
     position: relative;
@@ -188,13 +190,13 @@ html:not(.dark) body {
 :root {
   --va-blue: #2d5016;
   --va-gold: #88b04b;
-  --bg-primary: #e9e9e3;      /* Warm muted gray - darker for eye comfort */
-  --bg-secondary: #f2f2ed;    /* Soft cream for cards */
-  --bg-tertiary: #dfe1db;     /* Muted sage gray */
-  --text-primary: #1a1f16;    /* Soft charcoal with green tint */
-  --text-secondary: #3d453d;  /* Darker olive gray for better contrast */
-  --text-muted: #5a625a;      /* Softer muted text */
-  --border-color: #c8cdc4;    /* Soft sage border */
+  --bg-primary: #e9e9e3; /* Warm muted gray - darker for eye comfort */
+  --bg-secondary: #f2f2ed; /* Soft cream for cards */
+  --bg-tertiary: #dfe1db; /* Muted sage gray */
+  --text-primary: #1a1f16; /* Soft charcoal with green tint */
+  --text-secondary: #3d453d; /* Darker olive gray for better contrast */
+  --text-muted: #5a625a; /* Softer muted text */
+  --border-color: #c8cdc4; /* Soft sage border */
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -218,16 +220,16 @@ html.dark {
    with TBI, migraines, or light sensitivity
    ============================================ */
 html.tbi-comfort {
-  --bg-primary: #1a1a16;       /* Deep warm charcoal */
-  --bg-secondary: #252520;     /* Slightly lighter warm tone */
-  --bg-tertiary: #2f2f28;      /* Surface elevation */
-  --text-primary: #e8d5b5;     /* Soft amber/parchment text */
-  --text-secondary: #c9b896;   /* Muted amber */
-  --text-muted: #a89a78;       /* Warm gray */
-  --border-color: #3d3a30;     /* Warm dark border */
+  --bg-primary: #1a1a16; /* Deep warm charcoal */
+  --bg-secondary: #252520; /* Slightly lighter warm tone */
+  --bg-tertiary: #2f2f28; /* Surface elevation */
+  --text-primary: #e8d5b5; /* Soft amber/parchment text */
+  --text-secondary: #c9b896; /* Muted amber */
+  --text-muted: #a89a78; /* Warm gray */
+  --border-color: #3d3a30; /* Warm dark border */
   --shadow-color: rgba(0, 0, 0, 0.6);
-  --accent-primary: #c5a059;   /* Service Gold accent */
-  --focus-ring: #e8d5b5;       /* Warm focus indicator */
+  --accent-primary: #c5a059; /* Service Gold accent */
+  --focus-ring: #e8d5b5; /* Warm focus indicator */
 }
 
 html.tbi-comfort body {
@@ -466,11 +468,15 @@ html:not(.dark) .border-blue-200 {
 
 /* Shadows - softer */
 html:not(.dark) .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(45, 80, 22, 0.06), 0 4px 6px -4px rgba(45, 80, 22, 0.04) !important;
+  box-shadow:
+    0 10px 15px -3px rgba(45, 80, 22, 0.06),
+    0 4px 6px -4px rgba(45, 80, 22, 0.04) !important;
 }
 
 html:not(.dark) .shadow-md {
-  box-shadow: 0 4px 6px -1px rgba(45, 80, 22, 0.05), 0 2px 4px -2px rgba(45, 80, 22, 0.03) !important;
+  box-shadow:
+    0 4px 6px -1px rgba(45, 80, 22, 0.05),
+    0 2px 4px -2px rgba(45, 80, 22, 0.03) !important;
 }
 
 /* Feature card gradients - warmer tones in light mode */
@@ -693,7 +699,10 @@ html.cb-high-contrast * {
 }
 
 html.cb-high-contrast a,
-html.cb-high-contrast button:not(.bg-emerald-600):not(.bg-amber-600):not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600) {
+html.cb-high-contrast
+  button:not(.bg-emerald-600):not(.bg-amber-600):not(.bg-blue-600):not(
+    .bg-green-600
+  ):not(.bg-red-600) {
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
 }
@@ -857,11 +866,15 @@ html.dark .border-gray-300 {
 }
 
 html.dark .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.5),
+    0 4px 6px -2px rgba(0, 0, 0, 0.4);
 }
 
 html.dark .shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.5),
+    0 10px 10px -5px rgba(0, 0, 0, 0.4);
 }
 
 /* Dark mode for specific components */
@@ -916,43 +929,71 @@ html.dark .border-blue-200 {
 /* Emerald/Teal gradients (Secondary Scout cards) */
 html.dark .bg-gradient-to-br.from-emerald-50.to-teal-50,
 html.dark .bg-gradient-to-r.from-emerald-50.to-teal-50 {
-  background-image: linear-gradient(to bottom right, rgba(6, 78, 59, 0.4), rgba(19, 78, 74, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(6, 78, 59, 0.4),
+    rgba(19, 78, 74, 0.4)
+  ) !important;
 }
 
 /* Amber/Yellow gradients (C&P Simulator cards) */
 html.dark .bg-gradient-to-br.from-amber-50.to-yellow-50,
 html.dark .bg-gradient-to-r.from-amber-50.to-yellow-50 {
-  background-image: linear-gradient(to bottom right, rgba(120, 53, 15, 0.4), rgba(113, 63, 18, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(120, 53, 15, 0.4),
+    rgba(113, 63, 18, 0.4)
+  ) !important;
 }
 
 /* Blue/Indigo gradients */
 html.dark .bg-gradient-to-br.from-blue-50.to-indigo-50,
 html.dark .bg-gradient-to-r.from-blue-50.to-indigo-50 {
-  background-image: linear-gradient(to bottom right, rgba(30, 58, 138, 0.4), rgba(49, 46, 129, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(30, 58, 138, 0.4),
+    rgba(49, 46, 129, 0.4)
+  ) !important;
 }
 
 /* Green gradients */
 html.dark .bg-gradient-to-br.from-green-50.to-emerald-50,
 html.dark .bg-gradient-to-r.from-green-50.to-emerald-50 {
-  background-image: linear-gradient(to bottom right, rgba(20, 83, 45, 0.4), rgba(6, 78, 59, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(20, 83, 45, 0.4),
+    rgba(6, 78, 59, 0.4)
+  ) !important;
 }
 
 /* Slate gradients (My Packet) */
 html.dark .bg-gradient-to-br.from-slate-50.to-gray-50,
 html.dark .bg-gradient-to-r.from-slate-50.to-gray-50 {
-  background-image: linear-gradient(to bottom right, rgba(51, 65, 85, 0.4), rgba(55, 65, 81, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(51, 65, 85, 0.4),
+    rgba(55, 65, 81, 0.4)
+  ) !important;
 }
 
 /* Red/Rose gradients (Warnings/Errors) */
 html.dark .bg-gradient-to-br.from-red-50.to-rose-50,
 html.dark .bg-gradient-to-r.from-red-50.to-rose-50 {
-  background-image: linear-gradient(to bottom right, rgba(127, 29, 29, 0.4), rgba(136, 19, 55, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(127, 29, 29, 0.4),
+    rgba(136, 19, 55, 0.4)
+  ) !important;
 }
 
 /* Orange gradients */
 html.dark .bg-gradient-to-br.from-orange-50.to-amber-50,
 html.dark .bg-gradient-to-r.from-orange-50.to-amber-50 {
-  background-image: linear-gradient(to bottom right, rgba(124, 45, 18, 0.4), rgba(120, 53, 15, 0.4)) !important;
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(124, 45, 18, 0.4),
+    rgba(120, 53, 15, 0.4)
+  ) !important;
 }
 
 /* Icon/Badge backgrounds in dark mode */
@@ -1301,11 +1342,17 @@ html.dark .text-gray-500 {
 }
 
 /* Links in dark mode - ensure visibility (exclude colored funding card backgrounds) */
-html.dark a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(.bg-green-600):not(.bg-sky-600) {
+html.dark
+  a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
+    .bg-green-600
+  ):not(.bg-sky-600) {
   color: #93c5fd;
 }
 
-html.dark a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(.bg-green-600):not(.bg-sky-600):hover {
+html.dark
+  a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
+    .bg-green-600
+  ):not(.bg-sky-600):hover {
   color: #bfdbfe;
 }
 
@@ -1407,34 +1454,66 @@ body.modal-open-with-position {
 
 /* Sparkle animation for special elements */
 @keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
 }
 
 /* Star twinkle effect */
 @keyframes twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.2); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 /* Gentle float animation */
 @keyframes gentle-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 /* Shimmer effect for badges */
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 
 /* Heart beat for donation/support buttons */
 @keyframes heart-beat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.1); }
-  35% { transform: scale(0.9); }
-  45% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  35% {
+    transform: scale(0.9);
+  }
+  45% {
+    transform: scale(1.05);
+  }
 }
 
 .animate-fade-in {
@@ -1458,7 +1537,12 @@ body.modal-open-with-position {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -1469,11 +1553,16 @@ body.modal-open-with-position {
 
 /* Subtle pulse animation for CTA buttons */
 @keyframes pulse-subtle {
-  0%, 100% {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  0%,
+  100% {
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
   50% {
-    box-shadow: 0 10px 15px -3px rgb(253 185 19 / 0.3), 0 4px 6px -4px rgb(253 185 19 / 0.2);
+    box-shadow:
+      0 10px 15px -3px rgb(253 185 19 / 0.3),
+      0 4px 6px -4px rgb(253 185 19 / 0.2);
   }
 }
 
@@ -1483,7 +1572,8 @@ body.modal-open-with-position {
 
 /* Pulse glow animation for Bunker Backup button when unsaved changes exist */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
   }
   50% {
@@ -1505,7 +1595,7 @@ body.modal-open-with-position {
   position: relative;
   text-decoration-line: underline;
   text-decoration-style: dotted;
-  text-decoration-color: theme('colors.blue.500');
+  text-decoration-color: theme("colors.blue.500");
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: help;
@@ -1515,18 +1605,18 @@ body.modal-open-with-position {
 
 .va-term:hover,
 .va-term:focus {
-  text-decoration-color: theme('colors.blue.700');
+  text-decoration-color: theme("colors.blue.700");
   text-decoration-thickness: 2px;
 }
 
 /* Dark mode adjustments */
 .dark .va-term {
-  text-decoration-color: theme('colors.blue.400');
+  text-decoration-color: theme("colors.blue.400");
 }
 
 .dark .va-term:hover,
 .dark .va-term:focus {
-  text-decoration-color: theme('colors.blue.300');
+  text-decoration-color: theme("colors.blue.300");
 }
 
 /* The tooltip popup */
@@ -1535,8 +1625,8 @@ body.modal-open-with-position {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(-8px);
-  background: theme('colors.gray.900');
-  color: theme('colors.white');
+  background: theme("colors.gray.900");
+  color: theme("colors.white");
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -1551,30 +1641,30 @@ body.modal-open-with-position {
 
 /* Tooltip arrow */
 .va-tooltip::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: theme('colors.gray.900');
+  border-top-color: theme("colors.gray.900");
 }
 
 /* Dark mode tooltip */
 .dark .va-tooltip {
-  background: theme('colors.gray.800');
-  border: 1px solid theme('colors.gray.700');
+  background: theme("colors.gray.800");
+  border: 1px solid theme("colors.gray.700");
 }
 
 .dark .va-tooltip::after {
-  border-top-color: theme('colors.gray.800');
+  border-top-color: theme("colors.gray.800");
 }
 
 /* Tooltip term header */
 .va-tooltip-term {
   display: block;
   font-weight: 700;
-  color: theme('colors.blue.400');
+  color: theme("colors.blue.400");
   margin-bottom: 4px;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -1612,11 +1702,11 @@ body.modal-open-with-position {
   top: auto;
   bottom: 100%;
   border-top-color: transparent;
-  border-bottom-color: theme('colors.gray.900');
+  border-bottom-color: theme("colors.gray.900");
 }
 
 .dark .va-tooltip.tooltip-bottom::after {
-  border-bottom-color: theme('colors.gray.800');
+  border-bottom-color: theme("colors.gray.800");
 }
 
 /* Fade-in animation */
@@ -1641,9 +1731,9 @@ body.modal-open-with-position {
   .va-term {
     text-decoration-thickness: 2px;
   }
-  
+
   .va-tooltip {
-    border: 2px solid theme('colors.blue.500');
+    border: 2px solid theme("colors.blue.500");
   }
 }
 
@@ -1679,15 +1769,15 @@ button:not(:disabled):hover {
 }
 
 /* Form Inputs */
-input[type='text'],
-input[type='search'],
+input[type="text"],
+input[type="search"],
 textarea,
 select {
   @apply transition-colors duration-200;
 }
 
-input[type='text']:focus,
-input[type='search']:focus,
+input[type="text"]:focus,
+input[type="search"]:focus,
 textarea:focus,
 select:focus {
   @apply border-va-blue ring-2 ring-va-blue ring-opacity-20;
@@ -1725,7 +1815,7 @@ a {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 16px;
   }
-  
+
   /* Modal optimization - not full screen, but substantial */
   .modal-content {
     max-width: 90vw;
@@ -1733,15 +1823,22 @@ a {
     margin: auto;
     border-radius: 16px;
   }
-  
+
   /* Better spacing for tablet reading */
-  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
     padding-left: 24px;
     padding-right: 24px;
   }
-  
+
   /* Touch targets slightly smaller than phone but still touch-friendly */
-  button, a, input[type="button"], input[type="submit"] {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
     min-height: 44px;
   }
 }
@@ -1752,11 +1849,11 @@ a {
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
     grid-template-columns: repeat(3, 1fr) !important;
   }
-  
+
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
     grid-template-columns: repeat(3, 1fr) !important;
   }
-  
+
   /* Modal slightly narrower in landscape */
   .modal-content {
     max-width: 75vw;
@@ -1764,7 +1861,7 @@ a {
     margin: auto;
     border-radius: 16px;
   }
-  
+
   /* Sidebar-friendly layout */
   .container {
     padding-left: 32px;
@@ -1775,34 +1872,37 @@ a {
 /* iPad/Tablet Touch Optimization */
 @media (hover: none) and (pointer: coarse) and (min-width: 768px) {
   /* Larger touch targets on tablets */
-  button:not(.icon-button), 
+  button:not(.icon-button),
   a:not(.icon-link),
-  input[type="button"], 
+  input[type="button"],
   input[type="submit"] {
     min-height: 44px;
     padding: 10px 16px;
   }
-  
+
   /* Form inputs comfortable for touch */
-  input[type="text"], 
-  input[type="search"], 
+  input[type="text"],
+  input[type="search"],
   input[type="email"],
   input[type="tel"],
   input[type="date"],
-  select, 
+  select,
   textarea {
     min-height: 44px;
     font-size: 16px;
     padding: 10px 14px;
   }
-  
+
   /* Better scrolling on touch devices */
-  .overflow-auto, .overflow-y-auto, .overflow-x-auto {
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
     scroll-behavior: smooth;
   }
-  
+
   /* Disable hover effects that stick on touch */
-  button:hover, a:hover {
+  button:hover,
+  a:hover {
     transform: none;
   }
 }
@@ -1814,14 +1914,16 @@ a {
     .min-h-screen {
       min-height: -webkit-fill-available;
     }
-    
+
     /* Safe area padding for iPad with notch/home indicator */
     .modal-content {
       padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
-    
+
     /* Better scroll momentum handled by modern iOS */
-    .modal-content, .sidebar, .overflow-auto {
+    .modal-content,
+    .sidebar,
+    .overflow-auto {
       scroll-behavior: smooth;
     }
   }
@@ -1835,46 +1937,55 @@ a {
 /* Touch-Optimized Interactions */
 @media (max-width: 768px) {
   /* Minimum touch target size: 48x48px (WCAG AAA) */
-  button, a, input[type="button"], input[type="submit"] {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
     min-height: 48px;
     min-width: 48px;
   }
-  
+
   /* Larger tap padding for interactive elements */
-  button, a {
+  button,
+  a {
     padding: 12px 16px;
   }
-  
+
   /* Increase form input sizes */
-  input[type="text"], 
-  input[type="search"], 
+  input[type="text"],
+  input[type="search"],
   input[type="email"],
   input[type="tel"],
   input[type="date"],
-  select, 
+  select,
   textarea {
     min-height: 48px;
     font-size: 16px; /* Prevents iOS zoom on focus */
     padding: 12px 16px;
   }
-  
+
   /* Better spacing for mobile readability */
-  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
     padding-left: 16px;
     padding-right: 16px;
   }
-  
+
   /* Optimize modal sizes for mobile */
   .modal-content {
     max-height: 90vh;
     border-radius: 16px 16px 0 0;
   }
-  
+
   /* Better line height for reading on small screens */
-  p, li {
+  p,
+  li {
     line-height: 1.7;
   }
-  
+
   /* Scrollable tables on mobile */
   table {
     display: block;
@@ -1901,17 +2012,18 @@ a {
 
 /* Mobile-Optimized Cards */
 @media (max-width: 768px) {
-  .tool-card, .card {
+  .tool-card,
+  .card {
     margin-bottom: 16px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* Stack elements vertically on mobile */
   .flex-row-mobile {
     flex-direction: column;
   }
-  
+
   /* Full-width buttons on mobile */
   .btn-mobile-full {
     width: 100%;
@@ -1935,10 +2047,11 @@ body {
     outline: 3px solid var(--va-gold);
     outline-offset: 2px;
   }
-  
+
   /* Remove hover states on mobile (they stick on tap) */
   @media (hover: none) {
-    button:hover, a:hover {
+    button:hover,
+    a:hover {
       transform: none;
     }
   }
@@ -1946,7 +2059,8 @@ body {
 
 /* Bottom Navigation Safe Area (for iOS notch) */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .mobile-nav, .mobile-footer {
+  .mobile-nav,
+  .mobile-footer {
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
@@ -1957,9 +2071,11 @@ body {
     grid-template-columns: 1fr !important;
     gap: 16px;
   }
-  
+
   /* Single column for tool cards */
-  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
     grid-template-columns: 1fr !important;
   }
 }
@@ -1971,12 +2087,12 @@ body {
     max-width: 100%;
     text-align: left;
   }
-  
+
   /* Better contrast for small screens */
   .text-gray-600 {
     color: #4b5563 !important;
   }
-  
+
   html.dark .text-gray-600 {
     color: #d1d5db !important;
   }
@@ -2002,14 +2118,14 @@ body {
   .modal-overlay {
     align-items: flex-end;
   }
-  
+
   .modal-content {
     width: 100%;
     max-height: 92vh;
     border-radius: 20px 20px 0 0;
     margin: 0;
   }
-  
+
   /* Sticky header in modals */
   .modal-header {
     position: sticky;
@@ -2024,7 +2140,7 @@ body {
 /* Pull-to-Refresh Indicator Area */
 @media (max-width: 768px) {
   body::before {
-    content: '';
+    content: "";
     display: block;
     height: 20px;
   }
@@ -2059,12 +2175,12 @@ body {
     padding: 0.5rem 0.75rem;
     min-width: 70px;
   }
-  
+
   /* Tab containers should scroll smoothly */
   nav {
     scroll-behavior: smooth;
   }
-  
+
   /* Ensure tab text doesn't wrap awkwardly */
   nav button {
     text-overflow: ellipsis;
@@ -2077,12 +2193,12 @@ body {
   .modal-content > div:not(.modal-header):not(.modal-footer) {
     padding: 16px;
   }
-  
+
   /* Modal headers - reduce padding on very small screens */
   .modal-header {
     padding: 12px 16px;
   }
-  
+
   /* Better spacing in stat grids */
   .grid-cols-4 > div,
   .grid-cols-3 > div,
@@ -2099,13 +2215,13 @@ body {
     padding: 12px;
     background-position: right 8px center;
   }
-  
+
   /* Number inputs */
   .modal-content input[type="number"] {
     font-size: 16px;
     padding: 12px;
   }
-  
+
   /* Radio and checkbox labels */
   .modal-content label:has(input[type="radio"]),
   .modal-content label:has(input[type="checkbox"]) {
@@ -2129,7 +2245,7 @@ body {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px;
   }
-  
+
   /* Very small screens - single column for clarity */
   @media (max-width: 360px) {
     .grid.grid-cols-4,
@@ -2146,13 +2262,13 @@ body {
     flex: 1;
     min-width: 120px;
   }
-  
+
   /* If too many buttons, stack them */
   .modal-content .flex.gap-2:has(> button:nth-child(3)),
   .modal-content .flex.gap-3:has(> button:nth-child(3)) {
     flex-direction: column;
   }
-  
+
   .modal-content .flex.gap-2:has(> button:nth-child(3)) > button,
   .modal-content .flex.gap-3:has(> button:nth-child(3)) > button {
     width: 100%;
@@ -2164,12 +2280,12 @@ body {
   .modal-content table {
     font-size: 0.875rem;
   }
-  
+
   .modal-content th,
   .modal-content td {
     padding: 8px 4px;
   }
-  
+
   /* Hide less important columns on small screens */
   .modal-content table th:last-child,
   .modal-content table td:last-child {
@@ -2231,7 +2347,7 @@ body {
   [class*="btn-"] {
     @apply hidden !important;
   }
-  
+
   /* Force professional document styling */
   body {
     @apply bg-white !important;
@@ -2241,7 +2357,7 @@ body {
     line-height: 1.5 !important; /* Double spacing */
     margin: 1in !important; /* Standard 1-inch margins */
   }
-  
+
   /* Print-friendly typography */
   * {
     color: #000000 !important;
@@ -2249,7 +2365,7 @@ body {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  
+
   /* Maintain structure of output containers */
   .prose,
   .statement-output,
@@ -2261,19 +2377,33 @@ body {
     line-height: 1.5 !important;
     color: #000000 !important;
   }
-  
+
   /* Headers in documents */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: "Times New Roman", Times, serif !important;
     color: #000000 !important;
     font-weight: bold !important;
     page-break-after: avoid !important;
   }
-  
-  h1 { font-size: 16pt !important; }
-  h2 { font-size: 14pt !important; }
-  h3, h4, h5, h6 { font-size: 12pt !important; }
-  
+
+  h1 {
+    font-size: 16pt !important;
+  }
+  h2 {
+    font-size: 14pt !important;
+  }
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: 12pt !important;
+  }
+
   /* Preserve whitespace formatting */
   pre {
     font-family: "Times New Roman", Times, serif !important;
@@ -2285,36 +2415,39 @@ body {
     border: none !important;
     padding: 0 !important;
   }
-  
+
   /* Avoid breaking elements across pages */
-  p, blockquote, ul, ol {
+  p,
+  blockquote,
+  ul,
+  ol {
     page-break-inside: avoid !important;
   }
-  
+
   /* Keep critical sections together */
   .statement-section,
   .nexus-letter,
   .doctor-note {
     page-break-inside: avoid !important;
   }
-  
+
   /* Signature blocks should stay together */
   .signature-block {
     page-break-inside: avoid !important;
     margin-top: 2em !important;
   }
-  
+
   /* Remove shadows from containers */
   .print\:shadow-none {
     @apply shadow-none;
   }
-  
+
   /* Links should look normal on paper */
   a {
     color: #000000 !important;
     text-decoration: underline !important;
   }
-  
+
   a[href]:after {
     content: none !important; /* Don't print URLs */
   }

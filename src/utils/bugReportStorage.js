@@ -1,28 +1,28 @@
 /**
  * Vet-Rate.org - Bug Report Storage
  * "Safe-Squash" Architecture - Persistent Bug Report Database
- * 
+ *
  * Uses IndexedDB for reliable, persistent storage of sanitized bug reports.
  * Never loses a report - even if email fails, the report is here.
- * 
+ *
  * Schema:
  * - BugReports: Main table for sanitized error logs
  * - AuditLog: Tracks who accessed what and when
- * 
+ *
  * HIPAA/GDPR compliant: Only stores sanitized data.
  * Built by a fellow veteran. "No bug report left behind."
  */
 
-import { sanitizeErrorPayload, createSanitizedReport } from './bugSanitizer';
+import { sanitizeErrorPayload, createSanitizedReport } from "./bugSanitizer";
 
 // ============================================
 // DATABASE CONFIGURATION
 // ============================================
 
-const DB_NAME = 'VetRateBugSquasher';
+const DB_NAME = "VetRateBugSquasher";
 const DB_VERSION = 1;
-const REPORTS_STORE = 'BugReports';
-const AUDIT_STORE = 'AuditLog';
+const REPORTS_STORE = "BugReports";
+const AUDIT_STORE = "AuditLog";
 
 // ============================================
 // DATABASE SCHEMA
@@ -91,7 +91,7 @@ const openDatabase = () => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      console.error('Failed to open Bug Squasher database:', request.error);
+      console.error("Failed to open Bug Squasher database:", request.error);
       reject(request.error);
     };
 
@@ -105,24 +105,29 @@ const openDatabase = () => {
 
       // Create BugReports store
       if (!database.objectStoreNames.contains(REPORTS_STORE)) {
-        const reportsStore = database.createObjectStore(REPORTS_STORE, { keyPath: 'report_id' });
-        
+        const reportsStore = database.createObjectStore(REPORTS_STORE, {
+          keyPath: "report_id",
+        });
+
         // Indexes for querying
-        reportsStore.createIndex('created_at', 'created_at', { unique: false });
-        reportsStore.createIndex('severity', 'severity', { unique: false });
-        reportsStore.createIndex('resolved', 'resolved', { unique: false });
-        reportsStore.createIndex('category', 'category', { unique: false });
-        reportsStore.createIndex('module', 'module', { unique: false });
+        reportsStore.createIndex("created_at", "created_at", { unique: false });
+        reportsStore.createIndex("severity", "severity", { unique: false });
+        reportsStore.createIndex("resolved", "resolved", { unique: false });
+        reportsStore.createIndex("category", "category", { unique: false });
+        reportsStore.createIndex("module", "module", { unique: false });
       }
 
       // Create AuditLog store
       if (!database.objectStoreNames.contains(AUDIT_STORE)) {
-        const auditStore = database.createObjectStore(AUDIT_STORE, { keyPath: 'id', autoIncrement: true });
-        
+        const auditStore = database.createObjectStore(AUDIT_STORE, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+
         // Indexes for querying
-        auditStore.createIndex('report_id', 'report_id', { unique: false });
-        auditStore.createIndex('timestamp', 'timestamp', { unique: false });
-        auditStore.createIndex('action', 'action', { unique: false });
+        auditStore.createIndex("report_id", "report_id", { unique: false });
+        auditStore.createIndex("timestamp", "timestamp", { unique: false });
+        auditStore.createIndex("action", "action", { unique: false });
       }
     };
   });
@@ -138,8 +143,8 @@ const openDatabase = () => {
  * @returns {string}
  */
 export const generateReportId = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = 'BUG-';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "BUG-";
   for (let i = 0; i < 8; i++) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -154,57 +159,78 @@ export const generateReportId = () => {
  */
 export const saveBugReport = async (reportData) => {
   const database = await openDatabase();
-  
+
   // Generate ID if not provided
   const reportId = reportData.report_id || generateReportId();
-  
+
   // Sanitize the entire payload
   const sanitizedData = createSanitizedReport(reportData);
-  
+
   // Build the report object
   const report = {
     report_id: reportId,
-    stack_trace: sanitizedData.consoleErrors?.[0]?.stack || sanitizedData.stack_trace || '',
-    error_message: sanitizedData.consoleErrors?.[0]?.message || sanitizedData.error_message || '',
-    severity: sanitizedData.severity?.value || sanitizedData.severity || 'medium',
-    category: sanitizedData.category || 'Other',
-    module: sanitizedData.module || 'Unknown',
-    user_description: sanitizedData.userDescription || sanitizedData.user_description || '',
-    steps_to_reproduce: sanitizedData.stepsToReproduce || sanitizedData.steps_to_reproduce || '',
-    expected_behavior: sanitizedData.expectedBehavior || sanitizedData.expected_behavior || '',
-    actual_behavior: sanitizedData.actualBehavior || sanitizedData.actual_behavior || '',
+    stack_trace:
+      sanitizedData.consoleErrors?.[0]?.stack ||
+      sanitizedData.stack_trace ||
+      "",
+    error_message:
+      sanitizedData.consoleErrors?.[0]?.message ||
+      sanitizedData.error_message ||
+      "",
+    severity:
+      sanitizedData.severity?.value || sanitizedData.severity || "medium",
+    category: sanitizedData.category || "Other",
+    module: sanitizedData.module || "Unknown",
+    user_description:
+      sanitizedData.userDescription || sanitizedData.user_description || "",
+    steps_to_reproduce:
+      sanitizedData.stepsToReproduce || sanitizedData.steps_to_reproduce || "",
+    expected_behavior:
+      sanitizedData.expectedBehavior || sanitizedData.expected_behavior || "",
+    actual_behavior:
+      sanitizedData.actualBehavior || sanitizedData.actual_behavior || "",
     client_metadata: {
       browser: sanitizedData.systemInfo?.userAgent || navigator.userAgent,
       os: sanitizedData.systemInfo?.platform || navigator.platform,
-      screen_resolution: sanitizedData.systemInfo?.screenResolution || `${screen.width}x${screen.height}`,
-      window_size: sanitizedData.systemInfo?.windowSize || `${window.innerWidth}x${window.innerHeight}`,
-      app_version: sanitizedData.appVersion || '1.0.0',
-      timezone: sanitizedData.systemInfo?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+      screen_resolution:
+        sanitizedData.systemInfo?.screenResolution ||
+        `${screen.width}x${screen.height}`,
+      window_size:
+        sanitizedData.systemInfo?.windowSize ||
+        `${window.innerWidth}x${window.innerHeight}`,
+      app_version: sanitizedData.appVersion || "1.0.0",
+      timezone:
+        sanitizedData.systemInfo?.timezone ||
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
     app_state: sanitizedData.appState || {},
     console_errors: sanitizedData.consoleErrors || [],
     storage_info: sanitizedData.storageInfo || {},
-    additional_context: sanitizedData.additionalContext || sanitizedData.additional_context || '',
+    additional_context:
+      sanitizedData.additionalContext || sanitizedData.additional_context || "",
     created_at: new Date().toISOString(),
     resolved: false,
     resolved_at: null,
-    resolution_notes: '',
-    _sanitization: sanitizedData._sanitization || { sanitizedAt: new Date().toISOString(), version: '1.0' }
+    resolution_notes: "",
+    _sanitization: sanitizedData._sanitization || {
+      sanitizedAt: new Date().toISOString(),
+      version: "1.0",
+    },
   };
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([REPORTS_STORE], 'readwrite');
+    const transaction = database.transaction([REPORTS_STORE], "readwrite");
     const store = transaction.objectStore(REPORTS_STORE);
     const request = store.put(report);
 
     request.onsuccess = () => {
       // Log the creation in audit log
-      logAuditEvent('CREATE', reportId, 'system');
+      logAuditEvent("CREATE", reportId, "system");
       resolve(report);
     };
 
     request.onerror = () => {
-      console.error('Failed to save bug report:', request.error);
+      console.error("Failed to save bug report:", request.error);
       reject(request.error);
     };
   });
@@ -217,11 +243,11 @@ export const saveBugReport = async (reportData) => {
  * @param {string} accessor - Who is accessing (for audit)
  * @returns {Promise<Object|null>}
  */
-export const getBugReport = async (reportId, accessor = 'admin') => {
+export const getBugReport = async (reportId, accessor = "admin") => {
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([REPORTS_STORE], 'readonly');
+    const transaction = database.transaction([REPORTS_STORE], "readonly");
     const store = transaction.objectStore(REPORTS_STORE);
     const request = store.get(reportId);
 
@@ -229,13 +255,13 @@ export const getBugReport = async (reportId, accessor = 'admin') => {
       const report = request.result;
       if (report) {
         // Log the access in audit log
-        logAuditEvent('VIEW', reportId, accessor);
+        logAuditEvent("VIEW", reportId, accessor);
       }
       resolve(report || null);
     };
 
     request.onerror = () => {
-      console.error('Failed to get bug report:', request.error);
+      console.error("Failed to get bug report:", request.error);
       reject(request.error);
     };
   });
@@ -250,31 +276,37 @@ export const getAllBugReports = async (filters = {}) => {
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([REPORTS_STORE], 'readonly');
+    const transaction = database.transaction([REPORTS_STORE], "readonly");
     const store = transaction.objectStore(REPORTS_STORE);
-    const index = store.index('created_at');
-    const request = index.openCursor(null, 'prev'); // Most recent first
+    const index = store.index("created_at");
+    const request = index.openCursor(null, "prev"); // Most recent first
 
     const reports = [];
     const limit = filters.limit || 100;
 
     request.onsuccess = (event) => {
       const cursor = event.target.result;
-      
+
       if (cursor && reports.length < limit) {
         const report = cursor.value;
-        
+
         // Apply filters
         let include = true;
-        if (filters.resolved !== undefined && report.resolved !== filters.resolved) include = false;
-        if (filters.severity && report.severity !== filters.severity) include = false;
-        if (filters.category && report.category !== filters.category) include = false;
+        if (
+          filters.resolved !== undefined &&
+          report.resolved !== filters.resolved
+        )
+          include = false;
+        if (filters.severity && report.severity !== filters.severity)
+          include = false;
+        if (filters.category && report.category !== filters.category)
+          include = false;
         if (filters.module && report.module !== filters.module) include = false;
-        
+
         if (include) {
           reports.push(report);
         }
-        
+
         cursor.continue();
       } else {
         resolve(reports);
@@ -282,7 +314,7 @@ export const getAllBugReports = async (filters = {}) => {
     };
 
     request.onerror = () => {
-      console.error('Failed to get bug reports:', request.error);
+      console.error("Failed to get bug reports:", request.error);
       reject(request.error);
     };
   });
@@ -295,11 +327,15 @@ export const getAllBugReports = async (filters = {}) => {
  * @param {string} accessor - Who resolved it
  * @returns {Promise<Object>}
  */
-export const resolveBugReport = async (reportId, notes = '', accessor = 'admin') => {
+export const resolveBugReport = async (
+  reportId,
+  notes = "",
+  accessor = "admin",
+) => {
   const database = await openDatabase();
-  
+
   // First get the existing report
-  const existing = await getBugReport(reportId, 'system');
+  const existing = await getBugReport(reportId, "system");
   if (!existing) {
     throw new Error(`Bug report ${reportId} not found`);
   }
@@ -308,21 +344,21 @@ export const resolveBugReport = async (reportId, notes = '', accessor = 'admin')
     ...existing,
     resolved: true,
     resolved_at: new Date().toISOString(),
-    resolution_notes: notes
+    resolution_notes: notes,
   };
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([REPORTS_STORE], 'readwrite');
+    const transaction = database.transaction([REPORTS_STORE], "readwrite");
     const store = transaction.objectStore(REPORTS_STORE);
     const request = store.put(updated);
 
     request.onsuccess = () => {
-      logAuditEvent('RESOLVE', reportId, accessor);
+      logAuditEvent("RESOLVE", reportId, accessor);
       resolve(updated);
     };
 
     request.onerror = () => {
-      console.error('Failed to resolve bug report:', request.error);
+      console.error("Failed to resolve bug report:", request.error);
       reject(request.error);
     };
   });
@@ -334,21 +370,21 @@ export const resolveBugReport = async (reportId, notes = '', accessor = 'admin')
  * @param {string} accessor - Who deleted it
  * @returns {Promise<boolean>}
  */
-export const deleteBugReport = async (reportId, accessor = 'admin') => {
+export const deleteBugReport = async (reportId, accessor = "admin") => {
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([REPORTS_STORE], 'readwrite');
+    const transaction = database.transaction([REPORTS_STORE], "readwrite");
     const store = transaction.objectStore(REPORTS_STORE);
     const request = store.delete(reportId);
 
     request.onsuccess = () => {
-      logAuditEvent('DELETE', reportId, accessor);
+      logAuditEvent("DELETE", reportId, accessor);
       resolve(true);
     };
 
     request.onerror = () => {
-      console.error('Failed to delete bug report:', request.error);
+      console.error("Failed to delete bug report:", request.error);
       reject(request.error);
     };
   });
@@ -362,8 +398,8 @@ export const deleteBugReport = async (reportId, accessor = 'admin') => {
 export const searchBugReports = async (searchText) => {
   const allReports = await getAllBugReports({ limit: 500 });
   const lowerSearch = searchText.toLowerCase();
-  
-  return allReports.filter(report => {
+
+  return allReports.filter((report) => {
     return (
       report.report_id.toLowerCase().includes(lowerSearch) ||
       report.user_description.toLowerCase().includes(lowerSearch) ||
@@ -393,14 +429,14 @@ const logAuditEvent = async (action, reportId, accessor) => {
       report_id: reportId,
       accessor,
       timestamp: new Date().toISOString(),
-      user_agent: navigator.userAgent
+      user_agent: navigator.userAgent,
     };
 
-    const transaction = database.transaction([AUDIT_STORE], 'readwrite');
+    const transaction = database.transaction([AUDIT_STORE], "readwrite");
     const store = transaction.objectStore(AUDIT_STORE);
     store.add(auditEntry);
   } catch (error) {
-    console.error('Failed to log audit event:', error);
+    console.error("Failed to log audit event:", error);
     // Don't throw - audit logging shouldn't break main functionality
   }
 };
@@ -414,9 +450,9 @@ export const getAuditLog = async (reportId) => {
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([AUDIT_STORE], 'readonly');
+    const transaction = database.transaction([AUDIT_STORE], "readonly");
     const store = transaction.objectStore(AUDIT_STORE);
-    const index = store.index('report_id');
+    const index = store.index("report_id");
     const request = index.getAll(reportId);
 
     request.onsuccess = () => {
@@ -438,16 +474,16 @@ export const getAllAuditLogs = async (limit = 100) => {
   const database = await openDatabase();
 
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction([AUDIT_STORE], 'readonly');
+    const transaction = database.transaction([AUDIT_STORE], "readonly");
     const store = transaction.objectStore(AUDIT_STORE);
-    const index = store.index('timestamp');
-    const request = index.openCursor(null, 'prev');
+    const index = store.index("timestamp");
+    const request = index.openCursor(null, "prev");
 
     const logs = [];
 
     request.onsuccess = (event) => {
       const cursor = event.target.result;
-      
+
       if (cursor && logs.length < limit) {
         logs.push(cursor.value);
         cursor.continue();
@@ -472,30 +508,30 @@ export const getAllAuditLogs = async (limit = 100) => {
  */
 export const getBugStatistics = async () => {
   const allReports = await getAllBugReports({ limit: 1000 });
-  
+
   const stats = {
     total: allReports.length,
-    resolved: allReports.filter(r => r.resolved).length,
-    unresolved: allReports.filter(r => !r.resolved).length,
+    resolved: allReports.filter((r) => r.resolved).length,
+    unresolved: allReports.filter((r) => !r.resolved).length,
     bySeverity: {
-      critical: allReports.filter(r => r.severity === 'critical').length,
-      high: allReports.filter(r => r.severity === 'high').length,
-      medium: allReports.filter(r => r.severity === 'medium').length,
-      low: allReports.filter(r => r.severity === 'low').length
+      critical: allReports.filter((r) => r.severity === "critical").length,
+      high: allReports.filter((r) => r.severity === "high").length,
+      medium: allReports.filter((r) => r.severity === "medium").length,
+      low: allReports.filter((r) => r.severity === "low").length,
     },
     byModule: {},
-    last24Hours: allReports.filter(r => {
+    last24Hours: allReports.filter((r) => {
       const created = new Date(r.created_at);
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       return created > dayAgo;
-    }).length
+    }).length,
   };
-  
+
   // Count by module
-  allReports.forEach(r => {
+  allReports.forEach((r) => {
     stats.byModule[r.module] = (stats.byModule[r.module] || 0) + 1;
   });
-  
+
   return stats;
 };
 
@@ -506,17 +542,17 @@ export const getBugStatistics = async () => {
 export const exportBugReports = async () => {
   const reports = await getAllBugReports({ limit: 10000 });
   const auditLogs = await getAllAuditLogs(10000);
-  
+
   const exportData = {
     exportedAt: new Date().toISOString(),
-    version: '1.0',
+    version: "1.0",
     reports,
-    auditLogs
+    auditLogs,
   };
-  
+
   // Log the export
-  logAuditEvent('EXPORT', 'ALL', 'admin');
-  
+  logAuditEvent("EXPORT", "ALL", "admin");
+
   return JSON.stringify(exportData, null, 2);
 };
 
@@ -526,7 +562,7 @@ export const exportBugReports = async () => {
  */
 export const isStorageAvailable = () => {
   try {
-    return 'indexedDB' in window && window.indexedDB !== null;
+    return "indexedDB" in window && window.indexedDB !== null;
   } catch {
     return false;
   }
@@ -536,21 +572,21 @@ export const isStorageAvailable = () => {
 // FALLBACK: LOCALSTORAGE BACKUP
 // ============================================
 
-const LOCALSTORAGE_KEY = 'vet_rate_bug_reports_backup';
+const LOCALSTORAGE_KEY = "vet_rate_bug_reports_backup";
 
 /**
  * Fallback: Save to localStorage if IndexedDB fails
  */
 export const saveToLocalStorage = (report) => {
   try {
-    const existing = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || '[]');
+    const existing = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || "[]");
     existing.push(report);
     // Keep only last 50 reports in localStorage
     const trimmed = existing.slice(-50);
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(trimmed));
     return true;
   } catch (error) {
-    console.error('Failed to save to localStorage:', error);
+    console.error("Failed to save to localStorage:", error);
     return false;
   }
 };
@@ -560,7 +596,7 @@ export const saveToLocalStorage = (report) => {
  */
 export const getFromLocalStorage = () => {
   try {
-    return JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || "[]");
   } catch {
     return [];
   }
@@ -573,24 +609,24 @@ export const getFromLocalStorage = () => {
 export const clearAllBugReports = async () => {
   try {
     const database = await openDatabase();
-    
+
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([REPORTS_STORE], 'readwrite');
+      const transaction = database.transaction([REPORTS_STORE], "readwrite");
       const store = transaction.objectStore(REPORTS_STORE);
       const clearRequest = store.clear();
-      
+
       clearRequest.onsuccess = () => {
-        console.log('✅ All bug reports cleared');
+        console.log("✅ All bug reports cleared");
         resolve(true);
       };
-      
+
       clearRequest.onerror = () => {
-        console.error('Failed to clear bug reports:', clearRequest.error);
+        console.error("Failed to clear bug reports:", clearRequest.error);
         reject(clearRequest.error);
       };
     });
   } catch (error) {
-    console.error('Error clearing bug reports:', error);
+    console.error("Error clearing bug reports:", error);
     return false;
   }
 };
@@ -609,17 +645,17 @@ export default {
   searchBugReports,
   generateReportId,
   clearAllBugReports,
-  
+
   // Audit
   getAuditLog,
   getAllAuditLogs,
-  
+
   // Utilities
   getBugStatistics,
   exportBugReports,
   isStorageAvailable,
-  
+
   // Fallback
   saveToLocalStorage,
-  getFromLocalStorage
+  getFromLocalStorage,
 };

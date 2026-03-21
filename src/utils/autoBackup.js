@@ -1,12 +1,12 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
- * 
+ *
  * Auto-Backup System - "Zero Data Loss Protocol"
- * 
+ *
  * Automatically backs up ALL user data after every action to ensure
  * no veteran ever loses their claim information.
- * 
+ *
  * Features:
  * - Instant backup after every data modification
  * - IndexedDB for persistent browser storage
@@ -22,30 +22,30 @@
 // ============================================================================
 
 const CONFIG = {
-  DB_NAME: 'VetRateAutoBackup',
+  DB_NAME: "VetRateAutoBackup",
   DB_VERSION: 1,
-  BACKUP_STORE: 'backups',
-  MAX_BACKUPS: 10,                    // Keep last 10 backups
-  AUTO_DOWNLOAD_ENABLED_KEY: 'vetrate_auto_download_backups',
-  LAST_BACKUP_KEY: 'vetrate_last_backup_time',
-  BACKUP_INTERVAL_MS: 2000,           // Debounce: backup 2s after last change
-  AUTO_DOWNLOAD_INTERVAL_HOURS: 24,   // Auto-download every 24 hours
+  BACKUP_STORE: "backups",
+  MAX_BACKUPS: 10, // Keep last 10 backups
+  AUTO_DOWNLOAD_ENABLED_KEY: "vetrate_auto_download_backups",
+  LAST_BACKUP_KEY: "vetrate_last_backup_time",
+  BACKUP_INTERVAL_MS: 2000, // Debounce: backup 2s after last change
+  AUTO_DOWNLOAD_INTERVAL_HOURS: 24, // Auto-download every 24 hours
 };
 
 // Storage keys to monitor for changes
 const MONITORED_STORAGE_KEYS = [
-  'vet_rate_veteran_profile',
-  'vet_rate_my_ratings',
-  'vet_rate_saved_claims',
-  'vet_rate_statements',
-  'vet_rate_saved_forms',
-  'vet_rate_service_history',
-  'vet_rate_timeline_events',
-  'vet_rate_pain_maps',
-  'vet_rate_symptom_log',
-  'vet_rate_evidence_timeline',
-  'vet_rate_gap_analyses',
-  'vet_rate_nexus_letters',
+  "vet_rate_veteran_profile",
+  "vet_rate_my_ratings",
+  "vet_rate_saved_claims",
+  "vet_rate_statements",
+  "vet_rate_saved_forms",
+  "vet_rate_service_history",
+  "vet_rate_timeline_events",
+  "vet_rate_pain_maps",
+  "vet_rate_symptom_log",
+  "vet_rate_evidence_timeline",
+  "vet_rate_gap_analyses",
+  "vet_rate_nexus_letters",
 ];
 
 // ============================================================================
@@ -77,9 +77,12 @@ const openBackupDB = () => {
 
       // Create backups store if it doesn't exist
       if (!db.objectStoreNames.contains(CONFIG.BACKUP_STORE)) {
-        const store = db.createObjectStore(CONFIG.BACKUP_STORE, { keyPath: 'id', autoIncrement: true });
-        store.createIndex('timestamp', 'timestamp', { unique: false });
-        store.createIndex('type', 'type', { unique: false });
+        const store = db.createObjectStore(CONFIG.BACKUP_STORE, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("timestamp", "timestamp", { unique: false });
+        store.createIndex("type", "type", { unique: false });
       }
     };
   });
@@ -95,13 +98,13 @@ const openBackupDB = () => {
  */
 const gatherAllData = () => {
   const backup = {
-    version: '1.0.0',
+    version: "1.0.0",
     timestamp: new Date().toISOString(),
-    data: {}
+    data: {},
   };
 
   // Gather all monitored keys
-  MONITORED_STORAGE_KEYS.forEach(key => {
+  MONITORED_STORAGE_KEYS.forEach((key) => {
     try {
       const value = localStorage.getItem(key);
       if (value) {
@@ -126,15 +129,15 @@ const gatherAllData = () => {
  */
 const saveBackupToIndexedDB = async (backup) => {
   const db = await openBackupDB();
-  const transaction = db.transaction([CONFIG.BACKUP_STORE], 'readwrite');
+  const transaction = db.transaction([CONFIG.BACKUP_STORE], "readwrite");
   const store = transaction.objectStore(CONFIG.BACKUP_STORE);
 
   return new Promise((resolve, reject) => {
     const backupRecord = {
       timestamp: backup.timestamp,
-      type: 'auto',
+      type: "auto",
       data: backup,
-      sizeBytes: backup.sizeBytes
+      sizeBytes: backup.sizeBytes,
     };
 
     const request = store.add(backupRecord);
@@ -150,7 +153,7 @@ const saveBackupToIndexedDB = async (backup) => {
 export const getAllBackups = async () => {
   try {
     const db = await openBackupDB();
-    const transaction = db.transaction([CONFIG.BACKUP_STORE], 'readonly');
+    const transaction = db.transaction([CONFIG.BACKUP_STORE], "readonly");
     const store = transaction.objectStore(CONFIG.BACKUP_STORE);
 
     return new Promise((resolve, reject) => {
@@ -159,7 +162,7 @@ export const getAllBackups = async () => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('Error getting backups:', error);
+    console.error("Error getting backups:", error);
     return [];
   }
 };
@@ -170,15 +173,15 @@ export const getAllBackups = async () => {
 const cleanupOldBackups = async () => {
   try {
     const backups = await getAllBackups();
-    
+
     if (backups.length > CONFIG.MAX_BACKUPS) {
       // Sort by timestamp (oldest first)
       backups.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      
+
       // Delete oldest backups
       const toDelete = backups.slice(0, backups.length - CONFIG.MAX_BACKUPS);
       const db = await openBackupDB();
-      const transaction = db.transaction([CONFIG.BACKUP_STORE], 'readwrite');
+      const transaction = db.transaction([CONFIG.BACKUP_STORE], "readwrite");
       const store = transaction.objectStore(CONFIG.BACKUP_STORE);
 
       for (const backup of toDelete) {
@@ -186,7 +189,7 @@ const cleanupOldBackups = async () => {
       }
     }
   } catch (error) {
-    console.error('Error cleaning up backups:', error);
+    console.error("Error cleaning up backups:", error);
   }
 };
 
@@ -195,9 +198,9 @@ const cleanupOldBackups = async () => {
  * @param {string} type - 'auto' or 'manual'
  * @returns {Promise<Object>} Backup result
  */
-export const performBackup = async (type = 'auto') => {
+export const performBackup = async (type = "auto") => {
   if (backupInProgress) {
-    return { success: false, message: 'Backup already in progress' };
+    return { success: false, message: "Backup already in progress" };
   }
 
   backupInProgress = true;
@@ -223,11 +226,12 @@ export const performBackup = async (type = 'auto') => {
       type,
       timestamp: backup.timestamp,
       backupId,
-      sizeBytes: backup.sizeBytes
+      sizeBytes: backup.sizeBytes,
     });
 
     // Auto-download if enabled and it's been long enough
-    const autoDownloadEnabled = localStorage.getItem(CONFIG.AUTO_DOWNLOAD_ENABLED_KEY) === 'true';
+    const autoDownloadEnabled =
+      localStorage.getItem(CONFIG.AUTO_DOWNLOAD_ENABLED_KEY) === "true";
     if (autoDownloadEnabled && shouldAutoDownload()) {
       await downloadBackup(backup);
     }
@@ -238,11 +242,11 @@ export const performBackup = async (type = 'auto') => {
       success: true,
       backupId,
       timestamp: backup.timestamp,
-      sizeBytes: backup.sizeBytes
+      sizeBytes: backup.sizeBytes,
     };
   } catch (error) {
     backupInProgress = false;
-    console.error('Backup failed:', error);
+    console.error("Backup failed:", error);
     return { success: false, message: error.message };
   }
 };
@@ -252,10 +256,11 @@ export const performBackup = async (type = 'auto') => {
  * @returns {boolean}
  */
 const shouldAutoDownload = () => {
-  const lastDownload = localStorage.getItem('vetrate_last_auto_download');
+  const lastDownload = localStorage.getItem("vetrate_last_auto_download");
   if (!lastDownload) return true;
 
-  const hoursSinceDownload = (Date.now() - new Date(lastDownload)) / (1000 * 60 * 60);
+  const hoursSinceDownload =
+    (Date.now() - new Date(lastDownload)) / (1000 * 60 * 60);
   return hoursSinceDownload >= CONFIG.AUTO_DOWNLOAD_INTERVAL_HOURS;
 };
 
@@ -265,20 +270,25 @@ const shouldAutoDownload = () => {
  */
 const downloadBackup = async (backup) => {
   try {
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `VetRate-Backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `VetRate-Backup-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
     // Update last download time
-    localStorage.setItem('vetrate_last_auto_download', new Date().toISOString());
+    localStorage.setItem(
+      "vetrate_last_auto_download",
+      new Date().toISOString(),
+    );
   } catch (error) {
-    console.error('Error downloading backup:', error);
+    console.error("Error downloading backup:", error);
   }
 };
 
@@ -294,16 +304,16 @@ const downloadBackup = async (backup) => {
 export const restoreFromBackup = async (backupId) => {
   try {
     const db = await openBackupDB();
-    const transaction = db.transaction([CONFIG.BACKUP_STORE], 'readonly');
+    const transaction = db.transaction([CONFIG.BACKUP_STORE], "readonly");
     const store = transaction.objectStore(CONFIG.BACKUP_STORE);
 
     return new Promise((resolve, reject) => {
       const request = store.get(backupId);
-      
+
       request.onsuccess = () => {
         const backup = request.result;
         if (!backup) {
-          reject(new Error('Backup not found'));
+          reject(new Error("Backup not found"));
           return;
         }
 
@@ -316,7 +326,7 @@ export const restoreFromBackup = async (backupId) => {
           resolve({
             success: true,
             timestamp: backup.timestamp,
-            message: 'Data restored successfully'
+            message: "Data restored successfully",
           });
 
           // Reload the page to reflect changes
@@ -329,7 +339,7 @@ export const restoreFromBackup = async (backupId) => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('Error restoring backup:', error);
+    console.error("Error restoring backup:", error);
     return { success: false, message: error.message };
   }
 };
@@ -349,7 +359,7 @@ export const importBackupFile = async (file) => {
 
         // Validate backup format
         if (!backup.version || !backup.data || !backup.timestamp) {
-          reject(new Error('Invalid backup file format'));
+          reject(new Error("Invalid backup file format"));
           return;
         }
 
@@ -364,7 +374,7 @@ export const importBackupFile = async (file) => {
         resolve({
           success: true,
           timestamp: backup.timestamp,
-          message: 'Backup imported successfully'
+          message: "Backup imported successfully",
         });
 
         // Reload page
@@ -385,7 +395,7 @@ export const importBackupFile = async (file) => {
  */
 export const exportBackupFile = async () => {
   const backup = gatherAllData();
-  backup.type = 'manual';
+  backup.type = "manual";
   await downloadBackup(backup);
 };
 
@@ -397,7 +407,7 @@ export const exportBackupFile = async () => {
 export const deleteBackup = async (backupId) => {
   try {
     const db = await openBackupDB();
-    const transaction = db.transaction([CONFIG.BACKUP_STORE], 'readwrite');
+    const transaction = db.transaction([CONFIG.BACKUP_STORE], "readwrite");
     const store = transaction.objectStore(CONFIG.BACKUP_STORE);
 
     return new Promise((resolve, reject) => {
@@ -406,7 +416,7 @@ export const deleteBackup = async (backupId) => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('Error deleting backup:', error);
+    console.error("Error deleting backup:", error);
     return false;
   }
 };
@@ -426,7 +436,7 @@ export const triggerBackup = () => {
 
   // Set new timer
   backupTimer = setTimeout(() => {
-    performBackup('auto');
+    performBackup("auto");
   }, CONFIG.BACKUP_INTERVAL_MS);
 };
 
@@ -436,7 +446,7 @@ export const triggerBackup = () => {
 export const startAutoBackup = () => {
   // Override localStorage.setItem to monitor changes
   const originalSetItem = localStorage.setItem;
-  localStorage.setItem = function(key, value) {
+  localStorage.setItem = function (key, value) {
     // Call original method
     originalSetItem.call(localStorage, key, value);
 
@@ -446,7 +456,7 @@ export const startAutoBackup = () => {
     }
   };
 
-  console.log('✅ Auto-backup system started');
+  console.log("✅ Auto-backup system started");
 };
 
 /**
@@ -467,7 +477,7 @@ export const getLastBackupInfo = async () => {
     timestamp: latest.timestamp,
     sizeBytes: latest.sizeBytes,
     type: latest.type,
-    id: latest.id
+    id: latest.id,
   };
 };
 
@@ -477,15 +487,16 @@ export const getLastBackupInfo = async () => {
  */
 export const getBackupStats = async () => {
   const backups = await getAllBackups();
-  
+
   const totalSize = backups.reduce((sum, b) => sum + (b.sizeBytes || 0), 0);
-  
+
   return {
     totalBackups: backups.length,
     totalSizeBytes: totalSize,
     totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-    oldestBackup: backups.length > 0 ? backups[backups.length - 1].timestamp : null,
-    newestBackup: backups.length > 0 ? backups[0].timestamp : null
+    oldestBackup:
+      backups.length > 0 ? backups[backups.length - 1].timestamp : null,
+    newestBackup: backups.length > 0 ? backups[0].timestamp : null,
   };
 };
 
@@ -506,7 +517,7 @@ export const onBackupComplete = (callback) => {
  * @param {Function} callback - Callback function
  */
 export const removeBackupListener = (callback) => {
-  backupListeners = backupListeners.filter(cb => cb !== callback);
+  backupListeners = backupListeners.filter((cb) => cb !== callback);
 };
 
 /**
@@ -514,11 +525,11 @@ export const removeBackupListener = (callback) => {
  * @param {Object} event - Backup event data
  */
 const notifyBackupListeners = (event) => {
-  backupListeners.forEach(callback => {
+  backupListeners.forEach((callback) => {
     try {
       callback(event);
     } catch (error) {
-      console.error('Error in backup listener:', error);
+      console.error("Error in backup listener:", error);
     }
   });
 };
@@ -532,7 +543,10 @@ const notifyBackupListeners = (event) => {
  * @param {boolean} enabled - Whether to enable auto-download
  */
 export const setAutoDownloadEnabled = (enabled) => {
-  localStorage.setItem(CONFIG.AUTO_DOWNLOAD_ENABLED_KEY, enabled ? 'true' : 'false');
+  localStorage.setItem(
+    CONFIG.AUTO_DOWNLOAD_ENABLED_KEY,
+    enabled ? "true" : "false",
+  );
 };
 
 /**
@@ -540,7 +554,7 @@ export const setAutoDownloadEnabled = (enabled) => {
  * @returns {boolean}
  */
 export const isAutoDownloadEnabled = () => {
-  return localStorage.getItem(CONFIG.AUTO_DOWNLOAD_ENABLED_KEY) === 'true';
+  return localStorage.getItem(CONFIG.AUTO_DOWNLOAD_ENABLED_KEY) === "true";
 };
 
 // ============================================================================
@@ -564,12 +578,12 @@ export const initAutoBackup = async () => {
     // Perform initial backup if none exists
     const backups = await getAllBackups();
     if (backups.length === 0) {
-      await performBackup('auto');
+      await performBackup("auto");
     }
 
-    console.log('✅ Auto-backup system initialized');
+    console.log("✅ Auto-backup system initialized");
   } catch (error) {
-    console.error('Error initializing auto-backup:', error);
+    console.error("Error initializing auto-backup:", error);
   }
 };
 
@@ -591,5 +605,5 @@ export default {
   onBackupComplete,
   removeBackupListener,
   setAutoDownloadEnabled,
-  isAutoDownloadEnabled
+  isAutoDownloadEnabled,
 };

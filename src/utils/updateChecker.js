@@ -7,10 +7,10 @@
 
 /**
  * UPDATE CHECKER - "The Sentinel"
- * 
+ *
  * Monitors for new app versions by checking version.json on the server.
  * Ensures users aren't running stale cached code.
- * 
+ *
  * HOW IT WORKS:
  * 1. Every 15 minutes, fetch version.json from server
  * 2. Compare server version with local version
@@ -18,7 +18,7 @@
  * 4. User can click to hard-reload and get fresh code
  */
 
-import { APP_VERSION, UPDATE_CHECK_INTERVAL } from './version';
+import { APP_VERSION, UPDATE_CHECK_INTERVAL } from "./version";
 
 let checkInterval = null;
 let lastCheckTime = null;
@@ -30,9 +30,9 @@ let lastCheckTime = null;
  * @returns {number} -1 if v1 < v2, 0 if equal, 1 if v1 > v2
  */
 const compareVersions = (v1, v2) => {
-  const parts1 = v1.split('.').map(Number);
-  const parts2 = v2.split('.').map(Number);
-  
+  const parts1 = v1.split(".").map(Number);
+  const parts2 = v2.split(".").map(Number);
+
   for (let i = 0; i < 3; i++) {
     const a = parts1[i] || 0;
     const b = parts2[i] || 0;
@@ -52,18 +52,18 @@ export const checkForUpdates = async () => {
 
     // Fetch version.json with cache-busting
     const response = await fetch(`/version.json?t=${Date.now()}`, {
-      cache: 'no-store',
+      cache: "no-store",
       headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
     });
 
     if (!response.ok) {
       // If version.json doesn't exist yet (first deployment), silently ignore
       if (response.status === 404) {
-        console.log('ℹ️ version.json not found (first deployment?)');
-        return { updateAvailable: false, reason: 'version_file_not_found' };
+        console.log("ℹ️ version.json not found (first deployment?)");
+        return { updateAvailable: false, reason: "version_file_not_found" };
       }
       throw new Error(`HTTP ${response.status}`);
     }
@@ -72,35 +72,36 @@ export const checkForUpdates = async () => {
     const serverVersion = data.version;
     const currentVersion = APP_VERSION;
 
-    console.log(`🔍 Update check: Server=${serverVersion}, Local=${currentVersion}`);
+    console.log(
+      `🔍 Update check: Server=${serverVersion}, Local=${currentVersion}`,
+    );
 
     const comparison = compareVersions(serverVersion, currentVersion);
-    
+
     if (comparison > 0) {
       // Server version is newer
-      console.log('🆕 Update available!');
+      console.log("🆕 Update available!");
       return {
         updateAvailable: true,
         currentVersion,
         serverVersion,
         changelog: data.changelog || [],
-        updateDate: data.updateDate
+        updateDate: data.updateDate,
       };
     } else {
       // Already on latest version
-      console.log('✅ App is up to date');
+      console.log("✅ App is up to date");
       return {
         updateAvailable: false,
         currentVersion,
-        serverVersion
+        serverVersion,
       };
     }
-
   } catch (error) {
-    console.error('❌ Update check failed:', error);
+    console.error("❌ Update check failed:", error);
     return {
       updateAvailable: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -110,8 +111,8 @@ export const checkForUpdates = async () => {
  * Clears cache and reloads from server
  */
 export const applyUpdate = () => {
-  console.log('🔄 Applying update - hard reload...');
-  
+  console.log("🔄 Applying update - hard reload...");
+
   // Force hard reload (bypasses cache)
   window.location.reload(true);
 };
@@ -125,10 +126,12 @@ export const startUpdateChecker = (onUpdateAvailable) => {
   // Stop any existing checker
   stopUpdateChecker();
 
-  console.log(`🛡️ Update checker started (checking every ${UPDATE_CHECK_INTERVAL / 60000} minutes)`);
+  console.log(
+    `🛡️ Update checker started (checking every ${UPDATE_CHECK_INTERVAL / 60000} minutes)`,
+  );
 
   // Check immediately on start
-  checkForUpdates().then(result => {
+  checkForUpdates().then((result) => {
     if (result.updateAvailable && onUpdateAvailable) {
       onUpdateAvailable(result);
     }
@@ -150,7 +153,6 @@ export const stopUpdateChecker = () => {
   if (checkInterval) {
     clearInterval(checkInterval);
     checkInterval = null;
-    console.log('🛡️ Update checker stopped');
+    console.log("🛡️ Update checker stopped");
   }
 };
-

@@ -2,15 +2,15 @@
  * Vet-Rate.org - Tone Mapper
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * 🎭 Compassionate Tone Transformation System
- * 
+ *
  * Transforms cold, clinical VA jargon into warm, veteran-friendly "Vet-Speak"
  * for the voice engine. This is the heart of the compassionate peer experience.
  */
 
-import toneMap from '../config/toneMap.json';
-import multilingualTone from '../config/multilingualTone.json';
+import toneMap from "../config/toneMap.json";
+import multilingualTone from "../config/multilingualTone.json";
 
 /**
  * Apply compassionate tone transformation to text
@@ -20,32 +20,40 @@ import multilingualTone from '../config/multilingualTone.json';
  * @param {string} branch - Military branch for honorific
  * @returns {string} - Transformed text ready for speech
  */
-export const applyCompassionateTone = (text, sourceModel = 'GENERAL', langCode = 'en', branch = null) => {
-  if (!text) return '';
-  
+export const applyCompassionateTone = (
+  text,
+  sourceModel = "GENERAL",
+  langCode = "en",
+  branch = null,
+) => {
+  if (!text) return "";
+
   let processedText = text;
-  
+
   // 1. Replace technical terms with spoken replacements
-  toneMap.mappings.forEach(mapping => {
-    const regex = new RegExp(`\\b${escapeRegex(mapping.technical_term)}\\b`, 'gi');
+  toneMap.mappings.forEach((mapping) => {
+    const regex = new RegExp(
+      `\\b${escapeRegex(mapping.technical_term)}\\b`,
+      "gi",
+    );
     processedText = processedText.replace(regex, mapping.spoken_replacement);
   });
-  
+
   // 2. Clean up legal citations for speech
   processedText = cleanCitationsForSpeech(processedText);
-  
+
   // 3. Clean up abbreviations
   processedText = expandAbbreviationsForSpeech(processedText);
-  
+
   // 4. Remove symbols that sound awkward when spoken
   processedText = cleanSymbolsForSpeech(processedText);
-  
+
   // 5. Add conversational anchors based on model
   const starter = getModelStarter(sourceModel);
-  
+
   // 6. Add branch honorific if applicable
-  const honorific = branch ? getBranchHonorific(branch, langCode) : '';
-  
+  const honorific = branch ? getBranchHonorific(branch, langCode) : "";
+
   // Combine: honorific + starter + processed text
   return `${honorific} ${starter} ${processedText}`.trim();
 };
@@ -56,94 +64,95 @@ export const applyCompassionateTone = (text, sourceModel = 'GENERAL', langCode =
  * @returns {string}
  */
 const escapeRegex = (str) => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
 /**
  * Clean legal citations for natural speech
- * @param {string} text 
+ * @param {string} text
  * @returns {string}
  */
 const cleanCitationsForSpeech = (text) => {
   let cleaned = text;
-  
+
   // § → "Section"
-  cleaned = cleaned.replace(/§\s*/g, 'Section ');
-  
+  cleaned = cleaned.replace(/§\s*/g, "Section ");
+
   // 38 CFR § 3.309 → "Section 3 point 3 0 9 of the VA regulations"
   cleaned = cleaned.replace(
     /38\s*CFR\s*§?\s*(\d+)\.(\d+)/gi,
-    (match, part, section) => `Section ${part} point ${section.split('').join(' ')} of the VA regulations`
+    (match, part, section) =>
+      `Section ${part} point ${section.split("").join(" ")} of the VA regulations`,
   );
-  
+
   // Handle remaining section numbers like "(a)(1)(i)"
-  cleaned = cleaned.replace(/\([a-z]\)\(\d+\)\([ivxlcdm]+\)/gi, '');
-  cleaned = cleaned.replace(/\([a-z]\)\(\d+\)/gi, '');
-  cleaned = cleaned.replace(/\([ivxlcdm]+\)/gi, '');
-  
+  cleaned = cleaned.replace(/\([a-z]\)\(\d+\)\([ivxlcdm]+\)/gi, "");
+  cleaned = cleaned.replace(/\([a-z]\)\(\d+\)/gi, "");
+  cleaned = cleaned.replace(/\([ivxlcdm]+\)/gi, "");
+
   return cleaned;
 };
 
 /**
  * Expand abbreviations for natural speech
- * @param {string} text 
+ * @param {string} text
  * @returns {string}
  */
 const expandAbbreviationsForSpeech = (text) => {
   const abbreviations = {
-    'VA': 'V-A',
-    'MOS': 'M-O-S',
-    'DD214': 'D-D 2-1-4',
-    'TDIU': 'T-D-I-U',
-    'SMC': 'S-M-C',
-    'BVA': 'Board of Veterans Appeals',
-    'DRO': 'decision review officer',
-    'FDC': 'fully developed claim',
-    'HLR': 'higher level review',
-    'CUE': 'clear and unmistakable error',
-    'ROM': 'range of motion',
-    'TBI': 'T-B-I',
-    'PTSD': 'P-T-S-D',
-    'MST': 'military sexual trauma',
-    'IMO': 'independent medical opinion',
-    'ACE': 'acceptable clinical evidence',
-    'DBQ': 'D-B-Q',
-    'eCFR': 'electronic code of federal regulations',
-    'PACT': 'PACT'
+    VA: "V-A",
+    MOS: "M-O-S",
+    DD214: "D-D 2-1-4",
+    TDIU: "T-D-I-U",
+    SMC: "S-M-C",
+    BVA: "Board of Veterans Appeals",
+    DRO: "decision review officer",
+    FDC: "fully developed claim",
+    HLR: "higher level review",
+    CUE: "clear and unmistakable error",
+    ROM: "range of motion",
+    TBI: "T-B-I",
+    PTSD: "P-T-S-D",
+    MST: "military sexual trauma",
+    IMO: "independent medical opinion",
+    ACE: "acceptable clinical evidence",
+    DBQ: "D-B-Q",
+    eCFR: "electronic code of federal regulations",
+    PACT: "PACT",
   };
-  
+
   let processed = text;
-  
+
   Object.entries(abbreviations).forEach(([abbr, expansion]) => {
-    const regex = new RegExp(`\\b${abbr}\\b`, 'g');
+    const regex = new RegExp(`\\b${abbr}\\b`, "g");
     processed = processed.replace(regex, expansion);
   });
-  
+
   return processed;
 };
 
 /**
  * Clean symbols that sound awkward when spoken
- * @param {string} text 
+ * @param {string} text
  * @returns {string}
  */
 const cleanSymbolsForSpeech = (text) => {
   let cleaned = text;
-  
+
   // Percentages: 70% → "70 percent"
-  cleaned = cleaned.replace(/(\d+)%/g, '$1 percent');
-  
+  cleaned = cleaned.replace(/(\d+)%/g, "$1 percent");
+
   // Bullets and special characters
-  cleaned = cleaned.replace(/[•·◦▪►→←↑↓]/g, '');
-  
+  cleaned = cleaned.replace(/[•·◦▪►→←↑↓]/g, "");
+
   // Multiple spaces
-  cleaned = cleaned.replace(/\s+/g, ' ');
-  
+  cleaned = cleaned.replace(/\s+/g, " ");
+
   // Remove markdown-style formatting
-  cleaned = cleaned.replace(/\*\*/g, '');
-  cleaned = cleaned.replace(/\*/g, '');
-  cleaned = cleaned.replace(/#+ /g, '');
-  
+  cleaned = cleaned.replace(/\*\*/g, "");
+  cleaned = cleaned.replace(/\*/g, "");
+  cleaned = cleaned.replace(/#+ /g, "");
+
   return cleaned.trim();
 };
 
@@ -153,9 +162,10 @@ const cleanSymbolsForSpeech = (text) => {
  * @returns {string}
  */
 const getModelStarter = (model) => {
-  const modelKey = model?.toLowerCase() || 'general';
-  const starters = toneMap.phrase_starters[modelKey] || toneMap.phrase_starters.general;
-  
+  const modelKey = model?.toLowerCase() || "general";
+  const starters =
+    toneMap.phrase_starters[modelKey] || toneMap.phrase_starters.general;
+
   // Return random starter for variety
   return starters[Math.floor(Math.random() * starters.length)];
 };
@@ -166,19 +176,20 @@ const getModelStarter = (model) => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const getBranchHonorific = (branch, langCode = 'en') => {
+export const getBranchHonorific = (branch, langCode = "en") => {
   const branchKey = capitalizeFirst(branch);
-  const honorifics = toneMap.branch_honorifics[branchKey] || toneMap.branch_honorifics.default;
-  return honorifics[langCode] || honorifics.en || '';
+  const honorifics =
+    toneMap.branch_honorifics[branchKey] || toneMap.branch_honorifics.default;
+  return honorifics[langCode] || honorifics.en || "";
 };
 
 /**
  * Capitalize first letter
- * @param {string} str 
+ * @param {string} str
  * @returns {string}
  */
 const capitalizeFirst = (str) => {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
@@ -206,7 +217,7 @@ export const getCheckInPhrase = (context) => {
  * @returns {string}
  */
 export const getClosingPhrase = (model) => {
-  const key = model?.toLowerCase() || 'general';
+  const key = model?.toLowerCase() || "general";
   return toneMap.closing_phrases[key] || toneMap.closing_phrases.general;
 };
 
@@ -216,11 +227,11 @@ export const getClosingPhrase = (model) => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const translateTerm = (term, langCode = 'en') => {
+export const translateTerm = (term, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
   if (!langData || !langData.terms) return term;
-  
-  const termKey = term.toLowerCase().replace(/[^a-z_]/g, '_');
+
+  const termKey = term.toLowerCase().replace(/[^a-z_]/g, "_");
   return langData.terms[termKey] || term;
 };
 
@@ -230,12 +241,12 @@ export const translateTerm = (term, langCode = 'en') => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const getSupportPhrase = (phraseKey, langCode = 'en') => {
+export const getSupportPhrase = (phraseKey, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
   if (!langData || !langData.support_phrases) {
-    return multilingualTone.languages.en.support_phrases[phraseKey] || '';
+    return multilingualTone.languages.en.support_phrases[phraseKey] || "";
   }
-  return langData.support_phrases[phraseKey] || '';
+  return langData.support_phrases[phraseKey] || "";
 };
 
 /**
@@ -244,11 +255,11 @@ export const getSupportPhrase = (phraseKey, langCode = 'en') => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const getBranchGreeting = (branch, langCode = 'en') => {
+export const getBranchGreeting = (branch, langCode = "en") => {
   const branchKey = capitalizeFirst(branch);
   const greetings = multilingualTone.branch_greetings[branchKey];
-  if (!greetings) return '';
-  return greetings[langCode] || greetings.en || '';
+  if (!greetings) return "";
+  return greetings[langCode] || greetings.en || "";
 };
 
 /**
@@ -257,10 +268,10 @@ export const getBranchGreeting = (branch, langCode = 'en') => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const getAuditorExplanation = (explanationType, langCode = 'en') => {
+export const getAuditorExplanation = (explanationType, langCode = "en") => {
   const explanations = multilingualTone.auditor_explanations[langCode];
-  if (!explanations) return '';
-  return explanations[explanationType] || '';
+  if (!explanations) return "";
+  return explanations[explanationType] || "";
 };
 
 /**
@@ -268,8 +279,11 @@ export const getAuditorExplanation = (explanationType, langCode = 'en') => {
  * @param {string} langCode - Language code
  * @returns {string}
  */
-export const getPrivacyPromise = (langCode = 'en') => {
-  return multilingualTone.privacy_promise[langCode] || multilingualTone.privacy_promise.en;
+export const getPrivacyPromise = (langCode = "en") => {
+  return (
+    multilingualTone.privacy_promise[langCode] ||
+    multilingualTone.privacy_promise.en
+  );
 };
 
 /**
@@ -277,8 +291,8 @@ export const getPrivacyPromise = (langCode = 'en') => {
  * @param {string} langCode - Our internal language code
  * @returns {string} - Browser-compatible language code
  */
-export const getSpeechRecognitionLang = (langCode = 'en') => {
-  return multilingualTone.speech_recognition_lang_codes[langCode] || 'en-US';
+export const getSpeechRecognitionLang = (langCode = "en") => {
+  return multilingualTone.speech_recognition_lang_codes[langCode] || "en-US";
 };
 
 /**
@@ -288,17 +302,19 @@ export const getSpeechRecognitionLang = (langCode = 'en') => {
  */
 export const detectMultilingualCrisis = (text) => {
   if (!text) return { detected: false, language: null };
-  
+
   const normalizedText = text.toLowerCase();
-  
-  for (const [langCode, keywords] of Object.entries(multilingualTone.crisis_keywords)) {
+
+  for (const [langCode, keywords] of Object.entries(
+    multilingualTone.crisis_keywords,
+  )) {
     for (const keyword of keywords) {
       if (normalizedText.includes(keyword.toLowerCase())) {
         return { detected: true, language: langCode };
       }
     }
   }
-  
+
   return { detected: false, language: null };
 };
 
@@ -312,7 +328,7 @@ export const formatBilingualText = (nativeText, englishText) => {
   return {
     native: nativeText,
     english: englishText,
-    combined: `${nativeText}\n\n---\n\n${englishText}`
+    combined: `${nativeText}\n\n---\n\n${englishText}`,
   };
 };
 
@@ -329,5 +345,5 @@ export default {
   getPrivacyPromise,
   getSpeechRecognitionLang,
   detectMultilingualCrisis,
-  formatBilingualText
+  formatBilingualText,
 };

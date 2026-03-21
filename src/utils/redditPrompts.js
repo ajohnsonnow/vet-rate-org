@@ -1,18 +1,18 @@
 /**
  * Vet-Rate.org - Reddit Summary Prompts
  * "The Squared Away Standard" - Diamond-tier Reddit formatting
- * 
+ *
  * These prompts transform verbose AI legal analysis into scannable,
  * shareable Reddit comments with proper citations and markdown.
- * 
+ *
  * @author Vet-Rate.org Development Team
  * @version 1.0.0
  */
 
 /**
- * Specialized prompt for Diamond-Swarm-Writer-7B to compress 
+ * Specialized prompt for Diamond-Swarm-Writer-7B to compress
  * verbose legal analysis into high-impact Reddit comments.
- * 
+ *
  * @param {string} verboseAnalysis - The full analysis from Auditor model
  * @returns {string} The formatted prompt
  */
@@ -57,14 +57,14 @@ export const SUMMARY_TRIGGERS = [
   /reddit/i,
   /summary/i,
   /summarize/i,
-  /tl;?dr/i,           // Matches tldr or tl;dr
-  /bluf/i,              // Bottom Line Up Front
+  /tl;?dr/i, // Matches tldr or tl;dr
+  /bluf/i, // Bottom Line Up Front
   /short version/i,
   /cut the fluff/i,
   /quick version/i,
   /bottom line/i,
   /share this/i,
-  /post this/i
+  /post this/i,
 ];
 
 /**
@@ -110,5 +110,5 @@ export default {
   REDDIT_SUMMARY_PROMPT,
   REDDIT_TABLE_PROMPT,
   REDDIT_QUICK_FORMAT_PROMPT,
-  SUMMARY_TRIGGERS
+  SUMMARY_TRIGGERS,
 };

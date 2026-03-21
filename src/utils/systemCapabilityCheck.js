@@ -2,11 +2,11 @@
  * Vet-Rate.org - System Capability Check
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "The Tech Check" - Browser Compatibility Guard
  * Ensures the user's browser supports all required modern features
  * before loading the main application.
- * 
+ *
  * Prevents cryptic errors for veterans using older devices or library computers.
  */
 
@@ -15,25 +15,25 @@
  */
 const REQUIRED_CAPABILITIES = {
   crypto: {
-    name: 'Web Cryptography API',
-    description: 'Required for secure data encryption',
-    icon: '🔐'
+    name: "Web Cryptography API",
+    description: "Required for secure data encryption",
+    icon: "🔐",
   },
   indexedDB: {
-    name: 'IndexedDB Storage',
-    description: 'Required for offline data storage',
-    icon: '💾'
+    name: "IndexedDB Storage",
+    description: "Required for offline data storage",
+    icon: "💾",
   },
   serviceWorker: {
-    name: 'Service Workers',
-    description: 'Required for offline functionality',
-    icon: '⚡'
+    name: "Service Workers",
+    description: "Required for offline functionality",
+    icon: "⚡",
   },
   es6: {
-    name: 'ES6+ JavaScript',
-    description: 'Required for modern app features',
-    icon: '📜'
-  }
+    name: "ES6+ JavaScript",
+    description: "Required for modern app features",
+    icon: "📜",
+  },
 };
 
 /**
@@ -42,7 +42,11 @@ const REQUIRED_CAPABILITIES = {
  */
 function testCryptoAPI() {
   try {
-    return !!(window.crypto && window.crypto.subtle && typeof window.crypto.subtle.encrypt === 'function');
+    return !!(
+      window.crypto &&
+      window.crypto.subtle &&
+      typeof window.crypto.subtle.encrypt === "function"
+    );
   } catch {
     return false;
   }
@@ -54,7 +58,7 @@ function testCryptoAPI() {
  */
 function testIndexedDB() {
   try {
-    return !!(window.indexedDB && typeof window.indexedDB.open === 'function');
+    return !!(window.indexedDB && typeof window.indexedDB.open === "function");
   } catch {
     return false;
   }
@@ -66,7 +70,7 @@ function testIndexedDB() {
  */
 function testServiceWorker() {
   try {
-    return 'serviceWorker' in navigator;
+    return "serviceWorker" in navigator;
   } catch {
     return false;
   }
@@ -79,24 +83,24 @@ function testServiceWorker() {
 function testES6Support() {
   try {
     // Test Promise
-    if (typeof Promise === 'undefined') return false;
-    
+    if (typeof Promise === "undefined") return false;
+
     // Test arrow functions and const
     const arrowTest = () => true;
     if (!arrowTest()) return false;
-    
+
     // Test template literals
     const templateTest = `test`;
-    if (templateTest !== 'test') return false;
-    
+    if (templateTest !== "test") return false;
+
     // Test destructuring
     const { a } = { a: 1 };
     if (a !== 1) return false;
-    
+
     // Test Array methods
-    if (typeof [].includes !== 'function') return false;
-    if (typeof Object.entries !== 'function') return false;
-    
+    if (typeof [].includes !== "function") return false;
+    if (typeof Object.entries !== "function") return false;
+
     return true;
   } catch {
     return false;
@@ -114,15 +118,15 @@ export function checkSystemCapabilities() {
       crypto: testCryptoAPI(),
       indexedDB: testIndexedDB(),
       serviceWorker: testServiceWorker(),
-      es6: testES6Support()
+      es6: testES6Support(),
     },
     failedTests: [],
     browserInfo: {
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
-      cookiesEnabled: navigator.cookieEnabled
-    }
+      cookiesEnabled: navigator.cookieEnabled,
+    },
   };
 
   // Check which tests failed
@@ -131,7 +135,7 @@ export function checkSystemCapabilities() {
       results.passed = false;
       results.failedTests.push({
         key,
-        ...REQUIRED_CAPABILITIES[key]
+        ...REQUIRED_CAPABILITIES[key],
       });
     }
   });
@@ -145,18 +149,18 @@ export function checkSystemCapabilities() {
  */
 function getBrowserRecommendation() {
   const ua = navigator.userAgent.toLowerCase();
-  
-  if (ua.includes('iphone') || ua.includes('ipad')) {
-    return 'Please update to iOS 15 or newer, or use the latest Safari browser.';
+
+  if (ua.includes("iphone") || ua.includes("ipad")) {
+    return "Please update to iOS 15 or newer, or use the latest Safari browser.";
   }
-  if (ua.includes('android')) {
-    return 'Please update to the latest Chrome or Firefox from the Google Play Store.';
+  if (ua.includes("android")) {
+    return "Please update to the latest Chrome or Firefox from the Google Play Store.";
   }
-  if (ua.includes('msie') || ua.includes('trident')) {
-    return 'Internet Explorer is not supported. Please switch to Microsoft Edge, Chrome, or Firefox.';
+  if (ua.includes("msie") || ua.includes("trident")) {
+    return "Internet Explorer is not supported. Please switch to Microsoft Edge, Chrome, or Firefox.";
   }
-  
-  return 'Please update to the latest version of Chrome, Firefox, or Microsoft Edge.';
+
+  return "Please update to the latest version of Chrome, Firefox, or Microsoft Edge.";
 }
 
 /**
@@ -165,14 +169,16 @@ function getBrowserRecommendation() {
  */
 export function renderBrowserWarning(results) {
   const failedList = results.failedTests
-    .map(test => `
+    .map(
+      (test) => `
       <li class="failed-item">
         <span class="icon">${test.icon}</span>
         <span class="name">${test.name}</span>
         <span class="desc">- ${test.description}</span>
       </li>
-    `)
-    .join('');
+    `,
+    )
+    .join("");
 
   const html = `
 <!DOCTYPE html>
@@ -422,23 +428,23 @@ export function renderBrowserWarning(results) {
  */
 export function initCapabilityCheck() {
   const results = checkSystemCapabilities();
-  
+
   if (!results.passed) {
     // Log for debugging
-    console.warn('Browser compatibility check failed:', results);
-    
+    console.warn("Browser compatibility check failed:", results);
+
     // Show the warning page
     renderBrowserWarning(results);
     return false;
   }
-  
+
   // All checks passed
-  console.log('✅ Browser compatibility check passed');
+  console.log("✅ Browser compatibility check passed");
   return true;
 }
 
 export default {
   checkSystemCapabilities,
   renderBrowserWarning,
-  initCapabilityCheck
+  initCapabilityCheck,
 };

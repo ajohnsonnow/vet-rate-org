@@ -8,17 +8,17 @@
  * Drag-and-drop interface for testing combined rating calculations
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { getMyRatings, hasMyRatings } from '../utils/veteranProfile';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 
 export default function WhatIfSandbox({ onClose }) {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
-  
+
   const [currentConditions, setCurrentConditions] = useState([]);
   const [availableConditions, setAvailableConditions] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
@@ -29,40 +29,76 @@ export default function WhatIfSandbox({ onClose }) {
 
   // Common VA disabilities with typical ratings
   const commonConditions = [
-    { name: 'PTSD', ratings: [10, 30, 50, 70, 100], category: 'mental' },
-    { name: 'Sleep Apnea', ratings: [0, 30, 50, 100], category: 'respiratory' },
-    { name: 'Tinnitus', ratings: [10], category: 'auditory' },
-    { name: 'Migraine', ratings: [0, 30, 50], category: 'neurological' },
-    { name: 'Knee (Left)', ratings: [0, 10, 20, 30, 40, 50, 60], category: 'musculoskeletal' },
-    { name: 'Knee (Right)', ratings: [0, 10, 20, 30, 40, 50, 60], category: 'musculoskeletal' },
-    { name: 'Back (Lumbar)', ratings: [10, 20, 40, 50, 60, 100], category: 'musculoskeletal' },
-    { name: 'Shoulder (Left)', ratings: [0, 10, 20, 30, 40, 50], category: 'musculoskeletal' },
-    { name: 'Shoulder (Right)', ratings: [0, 10, 20, 30, 40, 50], category: 'musculoskeletal' },
-    { name: 'Depression', ratings: [10, 30, 50, 70, 100], category: 'mental' },
-    { name: 'Anxiety', ratings: [10, 30, 50, 70, 100], category: 'mental' },
-    { name: 'TBI', ratings: [0, 10, 40, 70, 100], category: 'neurological' },
-    { name: 'Hypertension', ratings: [0, 10, 20, 40, 60], category: 'cardiovascular' },
-    { name: 'IBS', ratings: [0, 10, 30], category: 'digestive' },
-    { name: 'Diabetes Type II', ratings: [10, 20, 40, 60, 100], category: 'endocrine' },
+    { name: "PTSD", ratings: [10, 30, 50, 70, 100], category: "mental" },
+    { name: "Sleep Apnea", ratings: [0, 30, 50, 100], category: "respiratory" },
+    { name: "Tinnitus", ratings: [10], category: "auditory" },
+    { name: "Migraine", ratings: [0, 30, 50], category: "neurological" },
+    {
+      name: "Knee (Left)",
+      ratings: [0, 10, 20, 30, 40, 50, 60],
+      category: "musculoskeletal",
+    },
+    {
+      name: "Knee (Right)",
+      ratings: [0, 10, 20, 30, 40, 50, 60],
+      category: "musculoskeletal",
+    },
+    {
+      name: "Back (Lumbar)",
+      ratings: [10, 20, 40, 50, 60, 100],
+      category: "musculoskeletal",
+    },
+    {
+      name: "Shoulder (Left)",
+      ratings: [0, 10, 20, 30, 40, 50],
+      category: "musculoskeletal",
+    },
+    {
+      name: "Shoulder (Right)",
+      ratings: [0, 10, 20, 30, 40, 50],
+      category: "musculoskeletal",
+    },
+    { name: "Depression", ratings: [10, 30, 50, 70, 100], category: "mental" },
+    { name: "Anxiety", ratings: [10, 30, 50, 70, 100], category: "mental" },
+    { name: "TBI", ratings: [0, 10, 40, 70, 100], category: "neurological" },
+    {
+      name: "Hypertension",
+      ratings: [0, 10, 20, 40, 60],
+      category: "cardiovascular",
+    },
+    { name: "IBS", ratings: [0, 10, 30], category: "digestive" },
+    {
+      name: "Diabetes Type II",
+      ratings: [10, 20, 40, 60, 100],
+      category: "endocrine",
+    },
   ];
 
   // 2025 VA Compensation Rates (Veterans without dependents)
   const compensationRates = {
-    0: 0, 10: 171.23, 20: 338.49, 30: 524.31, 40: 755.28,
-    50: 1075.16, 60: 1361.88, 70: 1716.28, 80: 1995.01,
-    90: 2241.91, 100: 3737.85
+    0: 0,
+    10: 171.23,
+    20: 338.49,
+    30: 524.31,
+    40: 755.28,
+    50: 1075.16,
+    60: 1361.88,
+    70: 1716.28,
+    80: 1995.01,
+    90: 2241.91,
+    100: 3737.85,
   };
 
   useEffect(() => {
     // Generate all possible condition combinations
     const conditions = [];
-    commonConditions.forEach(condition => {
-      condition.ratings.forEach(rating => {
+    commonConditions.forEach((condition) => {
+      condition.ratings.forEach((rating) => {
         conditions.push({
           id: `${condition.name}-${rating}-${Date.now()}-${Math.random()}`,
           name: condition.name,
           rating: rating,
-          category: condition.category
+          category: condition.category,
         });
       });
     });
@@ -78,36 +114,38 @@ export default function WhatIfSandbox({ onClose }) {
 
   const loadCurrentClaims = () => {
     try {
-      const saved = localStorage.getItem('savedClaims');
+      const saved = localStorage.getItem("savedClaims");
       if (saved) {
         const claims = JSON.parse(saved);
         const conditions = claims
-          .filter(c => c.rating && c.rating > 0)
-          .map(c => ({
+          .filter((c) => c.rating && c.rating > 0)
+          .map((c) => ({
             id: `${c.condition}-${c.rating}-${Date.now()}-${Math.random()}`,
             name: c.condition,
             rating: c.rating,
-            category: 'saved'
+            category: "saved",
           }));
         setCurrentConditions(conditions);
       }
     } catch (e) {
-      console.error('Failed to load saved claims:', e);
+      console.error("Failed to load saved claims:", e);
     }
   };
-  
+
   const handleLoadMyRatings = () => {
     const savedRatings = getMyRatings();
     if (savedRatings && savedRatings.length > 0) {
-      const formatted = savedRatings.map(r => ({
+      const formatted = savedRatings.map((r) => ({
         id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
         name: r.condition,
         rating: r.rating,
-        category: 'user'
+        category: "user",
       }));
       setCurrentConditions(formatted);
     } else {
-      alert('No saved ratings found. Use Secondary Scout to import your VA ratings first.');
+      alert(
+        "No saved ratings found. Use Secondary Scout to import your VA ratings first.",
+      );
     }
   };
 
@@ -121,22 +159,24 @@ export default function WhatIfSandbox({ onClose }) {
     // Sort ratings highest to first
     const ratings = [...currentConditions]
       .sort((a, b) => b.rating - a.rating)
-      .map(c => c.rating);
+      .map((c) => c.rating);
 
     // Check for bilateral conditions
-    const hasBilateralKnees = hasMatchingBilateral('Knee');
-    const hasBilateralShoulders = hasMatchingBilateral('Shoulder');
+    const hasBilateralKnees = hasMatchingBilateral("Knee");
+    const hasBilateralShoulders = hasMatchingBilateral("Shoulder");
 
     let combined = ratings[0];
-    
+
     // Apply bilateral factor if applicable
     if (hasBilateralKnees || hasBilateralShoulders) {
       const bilateralRatings = [];
       const otherRatings = [];
 
-      currentConditions.forEach(c => {
-        if ((c.name.includes('Knee') && hasBilateralKnees) ||
-            (c.name.includes('Shoulder') && hasBilateralShoulders)) {
+      currentConditions.forEach((c) => {
+        if (
+          (c.name.includes("Knee") && hasBilateralKnees) ||
+          (c.name.includes("Shoulder") && hasBilateralShoulders)
+        ) {
           bilateralRatings.push(c.rating);
         } else {
           otherRatings.push(c.rating);
@@ -148,11 +188,11 @@ export default function WhatIfSandbox({ onClose }) {
         bilateralRatings.sort((a, b) => b - a);
         let bilateralCombined = bilateralRatings[0];
         const efficiency = 100 - bilateralCombined;
-        const addition = Math.round(bilateralRatings[1] * efficiency / 100);
+        const addition = Math.round((bilateralRatings[1] * efficiency) / 100);
         bilateralCombined += addition;
 
         // Apply 10% bilateral factor
-        bilateralCombined = Math.round(bilateralCombined * 1.10);
+        bilateralCombined = Math.round(bilateralCombined * 1.1);
 
         // Now combine with other ratings
         otherRatings.sort((a, b) => b - a);
@@ -160,7 +200,7 @@ export default function WhatIfSandbox({ onClose }) {
 
         for (let i = 0; i < otherRatings.length; i++) {
           const efficiency = 100 - combined;
-          const addition = Math.round(otherRatings[i] * efficiency / 100);
+          const addition = Math.round((otherRatings[i] * efficiency) / 100);
           combined += addition;
         }
       }
@@ -168,7 +208,7 @@ export default function WhatIfSandbox({ onClose }) {
       // Standard VA combined rating formula
       for (let i = 1; i < ratings.length; i++) {
         const efficiency = 100 - combined;
-        const addition = Math.round(ratings[i] * efficiency / 100);
+        const addition = Math.round((ratings[i] * efficiency) / 100);
         combined += addition;
       }
     }
@@ -176,7 +216,7 @@ export default function WhatIfSandbox({ onClose }) {
     // Round to nearest 10
     const finalRating = Math.round(combined / 10) * 10;
     setCombinedRating(finalRating);
-    
+
     // Calculate monthly pay
     const pay = compensationRates[finalRating] || 0;
     setMonthlyPay(pay);
@@ -187,14 +227,18 @@ export default function WhatIfSandbox({ onClose }) {
   };
 
   const hasMatchingBilateral = (bodyPart) => {
-    const left = currentConditions.find(c => c.name.includes(bodyPart) && c.name.includes('Left'));
-    const right = currentConditions.find(c => c.name.includes(bodyPart) && c.name.includes('Right'));
+    const left = currentConditions.find(
+      (c) => c.name.includes(bodyPart) && c.name.includes("Left"),
+    );
+    const right = currentConditions.find(
+      (c) => c.name.includes(bodyPart) && c.name.includes("Right"),
+    );
     return left && right && left.rating > 0 && right.rating > 0;
   };
 
   const handleDragStart = (e, condition) => {
     setDraggedItem(condition);
-    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.effectAllowed = "copy";
   };
 
   const handleDragOver = (e, index) => {
@@ -208,7 +252,7 @@ export default function WhatIfSandbox({ onClose }) {
       const newConditions = [...currentConditions];
       const newCondition = {
         ...draggedItem,
-        id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`
+        id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`,
       };
       newConditions.splice(index, 0, newCondition);
       setCurrentConditions(newConditions);
@@ -222,7 +266,7 @@ export default function WhatIfSandbox({ onClose }) {
     if (draggedItem) {
       const newCondition = {
         ...draggedItem,
-        id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`
+        id: `${draggedItem.name}-${draggedItem.rating}-${Date.now()}-${Math.random()}`,
       };
       setCurrentConditions([...currentConditions, newCondition]);
       setDraggedItem(null);
@@ -230,7 +274,7 @@ export default function WhatIfSandbox({ onClose }) {
   };
 
   const removeCondition = (id) => {
-    setCurrentConditions(currentConditions.filter(c => c.id !== id));
+    setCurrentConditions(currentConditions.filter((c) => c.id !== id));
   };
 
   const clearAll = () => {
@@ -239,24 +283,24 @@ export default function WhatIfSandbox({ onClose }) {
 
   const getCategoryColor = (category) => {
     const colors = {
-      mental: 'bg-purple-500',
-      respiratory: 'bg-cyan-500',
-      auditory: 'bg-yellow-500',
-      neurological: 'bg-red-500',
-      musculoskeletal: 'bg-blue-500',
-      cardiovascular: 'bg-pink-500',
-      digestive: 'bg-green-500',
-      endocrine: 'bg-orange-500',
-      saved: 'bg-gray-500'
+      mental: "bg-purple-500",
+      respiratory: "bg-cyan-500",
+      auditory: "bg-yellow-500",
+      neurological: "bg-red-500",
+      musculoskeletal: "bg-blue-500",
+      cardiovascular: "bg-pink-500",
+      digestive: "bg-green-500",
+      endocrine: "bg-orange-500",
+      saved: "bg-gray-500",
     };
-    return colors[category] || 'bg-gray-500';
+    return colors[category] || "bg-gray-500";
   };
 
   const getRatingColor = (rating) => {
-    if (rating >= 70) return 'text-red-600 dark:text-red-400';
-    if (rating >= 50) return 'text-orange-600 dark:text-orange-400';
-    if (rating >= 30) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-green-600 dark:text-green-400';
+    if (rating >= 70) return "text-red-600 dark:text-red-400";
+    if (rating >= 50) return "text-orange-600 dark:text-orange-400";
+    if (rating >= 30) return "text-yellow-600 dark:text-yellow-400";
+    return "text-green-600 dark:text-green-400";
   };
 
   return (
@@ -267,7 +311,10 @@ export default function WhatIfSandbox({ onClose }) {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-3xl font-bold mb-2">
-                🎯 The What-If Sandbox <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                🎯 The What-If Sandbox{" "}
+                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  BETA
+                </span>
               </h2>
               <p className="text-white/90">
                 Visual drag-and-drop scenario planner with real-time VA math
@@ -283,26 +330,36 @@ export default function WhatIfSandbox({ onClose }) {
           </div>
 
           {/* Result Display */}
-          <div className={`mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-6 transition-all duration-300 ${
-            isAnimating ? 'scale-105' : 'scale-100'
-          }`}>
+          <div
+            className={`mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-6 transition-all duration-300 ${
+              isAnimating ? "scale-105" : "scale-100"
+            }`}
+          >
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <p className="text-sm text-white/75 mb-1">Combined VA Rating</p>
-                <p className={`text-5xl font-bold transition-all duration-300 ${
-                  isAnimating ? 'scale-110' : 'scale-100'
-                }`}>
+                <p
+                  className={`text-5xl font-bold transition-all duration-300 ${
+                    isAnimating ? "scale-110" : "scale-100"
+                  }`}
+                >
                   {combinedRating}%
                 </p>
               </div>
               <div>
-                <p className="text-sm text-white/75 mb-1">Monthly Compensation</p>
-                <p className={`text-5xl font-bold transition-all duration-300 ${
-                  isAnimating ? 'scale-110 text-green-300' : 'scale-100'
-                }`}>
+                <p className="text-sm text-white/75 mb-1">
+                  Monthly Compensation
+                </p>
+                <p
+                  className={`text-5xl font-bold transition-all duration-300 ${
+                    isAnimating ? "scale-110 text-green-300" : "scale-100"
+                  }`}
+                >
                   ${monthlyPay.toFixed(2)}
                 </p>
-                <p className="text-xs text-white/60 mt-1">2025 rates (no dependents)</p>
+                <p className="text-xs text-white/60 mt-1">
+                  2025 rates (no dependents)
+                </p>
               </div>
             </div>
           </div>
@@ -320,8 +377,19 @@ export default function WhatIfSandbox({ onClose }) {
             </p>
 
             {/* Group by category */}
-            {['mental', 'musculoskeletal', 'neurological', 'respiratory', 'cardiovascular', 'digestive', 'endocrine', 'auditory'].map(category => {
-              const categoryConditions = availableConditions.filter(c => c.category === category);
+            {[
+              "mental",
+              "musculoskeletal",
+              "neurological",
+              "respiratory",
+              "cardiovascular",
+              "digestive",
+              "endocrine",
+              "auditory",
+            ].map((category) => {
+              const categoryConditions = availableConditions.filter(
+                (c) => c.category === category,
+              );
               if (categoryConditions.length === 0) return null;
 
               return (
@@ -330,7 +398,7 @@ export default function WhatIfSandbox({ onClose }) {
                     {category}
                   </h4>
                   <div className="space-y-1">
-                    {categoryConditions.map(condition => (
+                    {categoryConditions.map((condition) => (
                       <div
                         key={condition.id}
                         draggable
@@ -401,13 +469,21 @@ export default function WhatIfSandbox({ onClose }) {
                         className="h-12 border-2 border-dashed border-blue-400 rounded-lg bg-blue-50 dark:bg-blue-900/20 mb-2"
                       />
                     )}
-                    <div className={`${getCategoryColor(condition.category)} text-white p-4 rounded-lg flex justify-between items-center`}>
+                    <div
+                      className={`${getCategoryColor(condition.category)} text-white p-4 rounded-lg flex justify-between items-center`}
+                    >
                       <div>
-                        <span className="font-bold text-lg">{condition.name}</span>
-                        <span className="ml-3 text-sm opacity-75 capitalize">({condition.category})</span>
+                        <span className="font-bold text-lg">
+                          {condition.name}
+                        </span>
+                        <span className="ml-3 text-sm opacity-75 capitalize">
+                          ({condition.category})
+                        </span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-3xl font-bold">{condition.rating}%</span>
+                        <span className="text-3xl font-bold">
+                          {condition.rating}%
+                        </span>
                         <button
                           onClick={() => removeCondition(condition.id)}
                           className="bg-white/20 hover:bg-white/30 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
@@ -423,17 +499,21 @@ export default function WhatIfSandbox({ onClose }) {
             )}
 
             {/* Bilateral Bonus Indicator */}
-            {(hasMatchingBilateral('Knee') || hasMatchingBilateral('Shoulder')) && (
+            {(hasMatchingBilateral("Knee") ||
+              hasMatchingBilateral("Shoulder")) && (
               <div className="mt-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 p-4 rounded">
                 <h4 className="font-bold text-green-800 dark:text-green-300 mb-2 flex items-center gap-2">
                   <span>🎖️</span> Bilateral Factor Applied!
                 </h4>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  {hasMatchingBilateral('Knee') && 'Both knees rated: 10% bonus applied.'}
-                  {hasMatchingBilateral('Shoulder') && ' Both shoulders rated: 10% bonus applied.'}
+                  {hasMatchingBilateral("Knee") &&
+                    "Both knees rated: 10% bonus applied."}
+                  {hasMatchingBilateral("Shoulder") &&
+                    " Both shoulders rated: 10% bonus applied."}
                 </p>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                  38 CFR § 4.26 - Bilateral factor increases combined rating by 10%
+                  38 CFR § 4.26 - Bilateral factor increases combined rating by
+                  10%
                 </p>
               </div>
             )}
@@ -446,7 +526,9 @@ export default function WhatIfSandbox({ onClose }) {
               <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 <li>• Drag conditions from the library to build scenarios</li>
                 <li>• Combined rating uses official VA math (38 CFR Part 4)</li>
-                <li>• Bilateral factor automatically applied when both sides rated</li>
+                <li>
+                  • Bilateral factor automatically applied when both sides rated
+                </li>
                 <li>• Monthly pay reflects 2025 compensation rates</li>
                 <li>• Test "what-if" scenarios before filing claims</li>
               </ul>

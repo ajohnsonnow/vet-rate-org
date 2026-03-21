@@ -3,9 +3,9 @@
  * Ensures AI models are properly initialized with 38 CFR regulations and veteran data
  * NO HALLUCINATIONS - Only facts from regulations and veteran's records
  */
-import { getTotalToolCount } from '../data/toolkitData';
-import { getDisabilityCount } from './disabilityCount';
-import { getFormsCount } from './formsCount';
+import { getTotalToolCount } from "../data/toolkitData";
+import { getDisabilityCount } from "./disabilityCount";
+import { getFormsCount } from "./formsCount";
 
 /**
  * Vet-Rate.org Application Context Prompt
@@ -620,64 +620,77 @@ export function gatherVeteranContext() {
     };
 
     // Load saved claims
-    const claimsJson = localStorage.getItem('vet_rate_saved_claims');
+    const claimsJson = localStorage.getItem("vet_rate_saved_claims");
     if (claimsJson) {
       try {
         context.claims = JSON.parse(claimsJson) || [];
         context.hasData = context.claims.length > 0;
-      } catch (e) { /* ignore parse errors */ }
+      } catch (e) {
+        /* ignore parse errors */
+      }
     }
 
     // Load saved conditions (from calculator or other sources)
-    const conditionsJson = localStorage.getItem('vet_rate_conditions') || 
-                           localStorage.getItem('vet_rate_my_ratings');
+    const conditionsJson =
+      localStorage.getItem("vet_rate_conditions") ||
+      localStorage.getItem("vet_rate_my_ratings");
     if (conditionsJson) {
       try {
         const parsed = JSON.parse(conditionsJson);
         context.conditions = Array.isArray(parsed) ? parsed : [];
         context.myRatings = context.conditions;
         if (context.conditions.length > 0) context.hasData = true;
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     // Load veteran profile
-    const profileJson = localStorage.getItem('vet_rate_veteran_profile');
+    const profileJson = localStorage.getItem("vet_rate_veteran_profile");
     if (profileJson) {
       try {
         context.veteranProfile = JSON.parse(profileJson);
         if (context.veteranProfile) context.hasData = true;
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     // Load service history
-    const historyJson = localStorage.getItem('vet_rate_service_history');
+    const historyJson = localStorage.getItem("vet_rate_service_history");
     if (historyJson) {
       try {
         context.serviceHistory = JSON.parse(historyJson);
         if (context.serviceHistory) context.hasData = true;
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     // Load statements
-    const statementsJson = localStorage.getItem('vet_rate_statements');
+    const statementsJson = localStorage.getItem("vet_rate_statements");
     if (statementsJson) {
       try {
         context.statements = JSON.parse(statementsJson) || {};
         if (Object.keys(context.statements).length > 0) context.hasData = true;
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     // Load saved forms
-    const formsJson = localStorage.getItem('vet_rate_saved_forms');
+    const formsJson = localStorage.getItem("vet_rate_saved_forms");
     if (formsJson) {
       try {
         context.savedForms = JSON.parse(formsJson) || [];
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
     }
 
     return context;
   } catch (e) {
-    console.warn('Error gathering veteran context:', e);
+    console.warn("Error gathering veteran context:", e);
     return { hasData: false };
   }
 }
@@ -687,7 +700,7 @@ export function gatherVeteranContext() {
  */
 function buildVeteranDataPrompt(veteranContext) {
   if (!veteranContext || !veteranContext.hasData) {
-    return '';
+    return "";
   }
 
   let prompt = `\n\n=== VETERAN'S LOADED DATA ===\n`;
@@ -700,16 +713,19 @@ function buildVeteranDataPrompt(veteranContext) {
     if (sh.branch) prompt += `- Branch: ${sh.branch}\n`;
     if (sh.mos) prompt += `- MOS/Rating: ${sh.mos}\n`;
     if (sh.entryDate) prompt += `- Entry Date: ${sh.entryDate}\n`;
-    if (sh.separationDate) prompt += `- Separation Date: ${sh.separationDate}\n`;
+    if (sh.separationDate)
+      prompt += `- Separation Date: ${sh.separationDate}\n`;
     if (sh.yearsService) prompt += `- Years of Service: ${sh.yearsService}\n`;
-    if (sh.combatService?.hasVerifiedCombat) prompt += `- Combat Service: VERIFIED\n`;
+    if (sh.combatService?.hasVerifiedCombat)
+      prompt += `- Combat Service: VERIFIED\n`;
   }
 
   // Veteran Profile
   if (veteranContext.veteranProfile) {
     const vp = veteranContext.veteranProfile;
     prompt += `\nVETERAN PROFILE:\n`;
-    if (vp.currentRating) prompt += `- Current Combined Rating: ${vp.currentRating}%\n`;
+    if (vp.currentRating)
+      prompt += `- Current Combined Rating: ${vp.currentRating}%\n`;
     if (vp.targetRating) prompt += `- Target Rating: ${vp.targetRating}%\n`;
     if (vp.age) prompt += `- Age: ${vp.age}\n`;
     if (vp.state) prompt += `- State: ${vp.state}\n`;
@@ -719,8 +735,9 @@ function buildVeteranDataPrompt(veteranContext) {
   if (veteranContext.conditions && veteranContext.conditions.length > 0) {
     prompt += `\nCURRENT SERVICE-CONNECTED CONDITIONS:\n`;
     veteranContext.conditions.forEach((c, i) => {
-      prompt += `${i + 1}. ${c.name || c.condition || 'Unknown'} - ${c.rating || 0}%`;
-      if (c.diagnosticCode || c.code) prompt += ` (DC ${c.diagnosticCode || c.code})`;
+      prompt += `${i + 1}. ${c.name || c.condition || "Unknown"} - ${c.rating || 0}%`;
+      if (c.diagnosticCode || c.code)
+        prompt += ` (DC ${c.diagnosticCode || c.code})`;
       if (c.bilateral) prompt += ` [BILATERAL]`;
       prompt += `\n`;
     });
@@ -730,7 +747,7 @@ function buildVeteranDataPrompt(veteranContext) {
   if (veteranContext.claims && veteranContext.claims.length > 0) {
     prompt += `\nPENDING/SAVED CLAIMS:\n`;
     veteranContext.claims.forEach((claim, i) => {
-      prompt += `${i + 1}. ${claim.condition || claim.name || 'Unknown Condition'}`;
+      prompt += `${i + 1}. ${claim.condition || claim.name || "Unknown Condition"}`;
       if (claim.claimType) prompt += ` - Type: ${claim.claimType}`;
       if (claim.status) prompt += ` - Status: ${claim.status}`;
       prompt += `\n`;
@@ -738,7 +755,10 @@ function buildVeteranDataPrompt(veteranContext) {
   }
 
   // Statements prepared
-  if (veteranContext.statements && Object.keys(veteranContext.statements).length > 0) {
+  if (
+    veteranContext.statements &&
+    Object.keys(veteranContext.statements).length > 0
+  ) {
     prompt += `\nSTATEMENTS PREPARED: ${Object.keys(veteranContext.statements).length} statement(s) drafted\n`;
   }
 
@@ -754,7 +774,7 @@ function buildVeteranDataPrompt(veteranContext) {
  */
 export function buildSystemPrompt(options = {}) {
   const {
-    task = 'general', // 'cfile', 'nexus', 'statement', 'decision', 'buddy', 'rating'
+    task = "general", // 'cfile', 'nexus', 'statement', 'decision', 'buddy', 'rating'
     myPacketData = null,
     regulationText = null,
     veteranConditions = [],
@@ -765,15 +785,15 @@ export function buildSystemPrompt(options = {}) {
   } = options;
 
   // Start with Vet-Rate.org app context (so AI knows what app it's in)
-  let systemPrompt = includeAppContext ? VET_RATE_APP_CONTEXT : '';
+  let systemPrompt = includeAppContext ? VET_RATE_APP_CONTEXT : "";
 
   // Add key regulations summary
   if (includeRegulations) {
-    systemPrompt += '\n' + KEY_REGULATIONS_SUMMARY;
+    systemPrompt += "\n" + KEY_REGULATIONS_SUMMARY;
   }
 
   // Add base system prompt (rules and role)
-  systemPrompt += '\n' + BASE_SYSTEM_PROMPT;
+  systemPrompt += "\n" + BASE_SYSTEM_PROMPT;
 
   // Add tool-specific context if provided
   if (toolContext) {
@@ -782,23 +802,23 @@ export function buildSystemPrompt(options = {}) {
 
   // Add task-specific prompt (append to context, don't replace)
   switch (task) {
-    case 'cfile':
-      systemPrompt += '\n\n' + CFILE_ANALYSIS_SYSTEM_PROMPT;
+    case "cfile":
+      systemPrompt += "\n\n" + CFILE_ANALYSIS_SYSTEM_PROMPT;
       break;
-    case 'nexus':
-      systemPrompt += '\n\n' + NEXUS_BUILDER_SYSTEM_PROMPT;
+    case "nexus":
+      systemPrompt += "\n\n" + NEXUS_BUILDER_SYSTEM_PROMPT;
       break;
-    case 'statement':
-      systemPrompt += '\n\n' + STATEMENT_BUILDER_SYSTEM_PROMPT;
+    case "statement":
+      systemPrompt += "\n\n" + STATEMENT_BUILDER_SYSTEM_PROMPT;
       break;
-    case 'decision':
-      systemPrompt += '\n\n' + DECISION_DECODER_SYSTEM_PROMPT;
+    case "decision":
+      systemPrompt += "\n\n" + DECISION_DECODER_SYSTEM_PROMPT;
       break;
-    case 'buddy':
-      systemPrompt += '\n\n' + BUDDY_STATEMENT_SYSTEM_PROMPT;
+    case "buddy":
+      systemPrompt += "\n\n" + BUDDY_STATEMENT_SYSTEM_PROMPT;
       break;
-    case 'rating':
-      systemPrompt += '\n\n' + RATING_CRITERIA_SYSTEM_PROMPT;
+    case "rating":
+      systemPrompt += "\n\n" + RATING_CRITERIA_SYSTEM_PROMPT;
       break;
   }
 
@@ -813,26 +833,26 @@ export function buildSystemPrompt(options = {}) {
   // Add explicit My Packet context if provided (overrides auto-load)
   if (myPacketData) {
     const packetContext = MY_PACKET_CONTEXT_PROMPT.replace(
-      '{MY_PACKET_DATA}',
-      JSON.stringify(myPacketData, null, 2)
+      "{MY_PACKET_DATA}",
+      JSON.stringify(myPacketData, null, 2),
     );
-    systemPrompt += '\n\n' + packetContext;
+    systemPrompt += "\n\n" + packetContext;
   }
 
   // Add regulation grounding if provided
   if (regulationText) {
     const regContext = REGULATION_GROUNDING_PROMPT.replace(
-      '{REGULATION_TEXT}',
-      regulationText
+      "{REGULATION_TEXT}",
+      regulationText,
     );
-    systemPrompt += '\n\n' + regContext;
+    systemPrompt += "\n\n" + regContext;
   }
 
   // Add veteran's conditions context (legacy support)
   if (veteranConditions && veteranConditions.length > 0) {
     systemPrompt += `\n\nVETERAN'S CURRENT CONDITIONS:
 The veteran has the following conditions loaded in their profile:
-${veteranConditions.map(c => `- ${c.name} (${c.rating}%) - DC ${c.code || 'Unknown'}`).join('\n')}
+${veteranConditions.map((c) => `- ${c.name} (${c.rating}%) - DC ${c.code || "Unknown"}`).join("\n")}
 
 Reference these conditions when providing personalized guidance.`;
   }
@@ -853,7 +873,7 @@ You are helping a veteran who served their country. Your guidance could signific
  * ═══════════════════════════════════════════════════════════════════════════════
  * 🚨 STRICT GUARDRAILS - VA CLAIMS AI SAFETY
  * ═══════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * These guardrails prevent the AI from causing harm to veterans by:
  * 1. Blocking medical/legal roleplay
  * 2. Preventing probability-of-approval claims
@@ -916,7 +936,7 @@ export const CITATION_ENFORCEMENT_RULES = {
     /appeals (timeline|deadline)/i,
     /VA (regulation|rule|requirement) (states|says|requires)/i,
   ],
-  
+
   // Valid citation format: "38 CFR § X.XXX" or "38 CFR Part X"
   VALID_CITATION_PATTERN: /38 CFR (§|Part) ?\d+\.?\d*/,
 };
@@ -925,13 +945,13 @@ export const CITATION_ENFORCEMENT_RULES = {
  * ═══════════════════════════════════════════════════════════════════════════════
  * 🔒 "NO DOCUMENT, NO STRATEGY" GATEKEEPER
  * ═══════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * This gatekeeper prevents the AI from providing individualized claim strategy
  * unless the veteran has provided their actual "Reasons for Decision" text.
- * 
+ *
  * Why: Community feedback identified that providing strategy without reading
  * the actual denial rationale leads to "confident guessing" which harms veterans.
- * 
+ *
  * Implementation: Added January 2026 based on r/VAClaims feedback.
  */
 
@@ -1003,22 +1023,22 @@ DO NOT:
  * Keywords that indicate a user has provided actual decision text
  */
 export const DECISION_TEXT_INDICATORS = [
-  'reasons for decision',
-  'service connection is denied',
-  'service connection for',
-  'favorable findings',
-  'the evidence shows',
-  'the evidence does not show',
-  'rating decision',
-  'dbq findings',
-  'c&p exam found',
-  'examiner\'s opinion',
-  'medical opinion',
-  'nexus opinion',
-  'at least as likely as not',
-  'less likely than not',
-  'clearly and unmistakably',
-  'preponderance of the evidence',
+  "reasons for decision",
+  "service connection is denied",
+  "service connection for",
+  "favorable findings",
+  "the evidence shows",
+  "the evidence does not show",
+  "rating decision",
+  "dbq findings",
+  "c&p exam found",
+  "examiner's opinion",
+  "medical opinion",
+  "nexus opinion",
+  "at least as likely as not",
+  "less likely than not",
+  "clearly and unmistakably",
+  "preponderance of the evidence",
 ];
 
 /**
@@ -1027,24 +1047,28 @@ export const DECISION_TEXT_INDICATORS = [
  * @returns {Object} { hasDecisionText: boolean, indicators: string[] }
  */
 export function detectDecisionText(userInput) {
-  if (!userInput || typeof userInput !== 'string') {
+  if (!userInput || typeof userInput !== "string") {
     return { hasDecisionText: false, indicators: [] };
   }
-  
+
   const inputLower = userInput.toLowerCase();
-  const foundIndicators = DECISION_TEXT_INDICATORS.filter(indicator => 
-    inputLower.includes(indicator)
+  const foundIndicators = DECISION_TEXT_INDICATORS.filter((indicator) =>
+    inputLower.includes(indicator),
   );
-  
+
   // Also check for quoted text (often indicates pasted content)
-  const hasQuotedText = userInput.includes('"') || userInput.includes('"') || 
-                        userInput.length > 500; // Long input likely contains pasted text
-  
+  const hasQuotedText =
+    userInput.includes('"') ||
+    userInput.includes('"') ||
+    userInput.length > 500; // Long input likely contains pasted text
+
   return {
-    hasDecisionText: foundIndicators.length >= 2 || (foundIndicators.length >= 1 && hasQuotedText),
+    hasDecisionText:
+      foundIndicators.length >= 2 ||
+      (foundIndicators.length >= 1 && hasQuotedText),
     indicators: foundIndicators,
     inputLength: userInput.length,
-    likelyPastedContent: hasQuotedText
+    likelyPastedContent: hasQuotedText,
   };
 }
 
@@ -1056,10 +1080,10 @@ export function detectDecisionText(userInput) {
  */
 export function constructSafePrompt(userQuery, options = {}) {
   const detection = detectDecisionText(userQuery);
-  
+
   // Inject the status into the prompt context for the AI
-  const contextHeader = detection.hasDecisionText 
-    ? `[SYSTEM NOTICE: User appears to have provided decision text (indicators: ${detection.indicators.join(', ')}). VERIFY content authenticity, then proceed to STRATEGY MODE.]`
+  const contextHeader = detection.hasDecisionText
+    ? `[SYSTEM NOTICE: User appears to have provided decision text (indicators: ${detection.indicators.join(", ")}). VERIFY content authenticity, then proceed to STRATEGY MODE.]`
     : `[SYSTEM NOTICE: User input does NOT appear to contain a decision letter. If they are asking for strategy, TRIGGER REFUSAL MODE. Do not guess or provide boilerplate advice.]`;
 
   return `${STRATEGY_GATEKEEPER_PROMPT}
@@ -1124,9 +1148,11 @@ export function validateAIResponse(response, context = {}) {
 
   // Check for forbidden medical/legal roleplay
   Object.entries(FORBIDDEN_PHRASES).forEach(([category, patterns]) => {
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       if (pattern.test(response)) {
-        errors.push(`BLOCKED: Response contains forbidden ${category.toLowerCase().replace('_', ' ')}`);
+        errors.push(
+          `BLOCKED: Response contains forbidden ${category.toLowerCase().replace("_", " ")}`,
+        );
       }
     });
   });
@@ -1135,38 +1161,47 @@ export function validateAIResponse(response, context = {}) {
   if (context.loadedRegulations) {
     const cfrPattern = /38 CFR § ?\d+\.?\d*/g;
     const citations = response.match(cfrPattern) || [];
-    citations.forEach(cite => {
-      const section = cite.replace('38 CFR ', '').replace('§', '').trim();
+    citations.forEach((cite) => {
+      const section = cite.replace("38 CFR ", "").replace("§", "").trim();
       if (!context.loadedRegulations.includes(section)) {
-        errors.push(`BLOCKED: AI cited ${cite} which is not in loaded regulations`);
+        errors.push(
+          `BLOCKED: AI cited ${cite} which is not in loaded regulations`,
+        );
       }
     });
   }
 
   // Check for regulatory claims without citations
-  CITATION_ENFORCEMENT_RULES.REQUIRES_CITATION.forEach(pattern => {
-    if (pattern.test(response) && !CITATION_ENFORCEMENT_RULES.VALID_CITATION_PATTERN.test(response)) {
-      warnings.push('Response discusses VA regulations but does not cite specific CFR sections');
+  CITATION_ENFORCEMENT_RULES.REQUIRES_CITATION.forEach((pattern) => {
+    if (
+      pattern.test(response) &&
+      !CITATION_ENFORCEMENT_RULES.VALID_CITATION_PATTERN.test(response)
+    ) {
+      warnings.push(
+        "Response discusses VA regulations but does not cite specific CFR sections",
+      );
     }
   });
 
   // === WARNING CHECKS - These flag issues but don't block ===
 
   // Check for missing disclaimers on medical topics
-  const medicalTerms = /diagnos(is|e|ed)|symptom|treatment|condition|medical record|C&P exam/i;
-  if (medicalTerms.test(response) && !response.includes('⚠️')) {
-    warnings.push('Response discusses medical topics but lacks a disclaimer');
+  const medicalTerms =
+    /diagnos(is|e|ed)|symptom|treatment|condition|medical record|C&P exam/i;
+  if (medicalTerms.test(response) && !response.includes("⚠️")) {
+    warnings.push("Response discusses medical topics but lacks a disclaimer");
   }
 
   // Check for invented statistics
   if (response.match(/\d+% of veterans/i) && !context.hasStatistics) {
-    warnings.push('AI cited statistics that may not be from loaded data');
+    warnings.push("AI cited statistics that may not be from loaded data");
   }
 
   // Check for certainty language when predictions are inappropriate
-  const certaintyPhrases = /(will definitely|certainly will|guaranteed to|must approve|cannot deny)/i;
+  const certaintyPhrases =
+    /(will definitely|certainly will|guaranteed to|must approve|cannot deny)/i;
   if (certaintyPhrases.test(response)) {
-    warnings.push('Response uses overly certain language about claim outcomes');
+    warnings.push("Response uses overly certain language about claim outcomes");
   }
 
   return {
@@ -1192,19 +1227,21 @@ let dkbLoadingPromise = null;
 async function loadDKB() {
   if (dkbCache) return dkbCache;
   if (dkbLoadingPromise) return dkbLoadingPromise;
-  
-  dkbLoadingPromise = fetch('/data/diamond_knowledge.json')
-    .then(res => res.json())
-    .then(data => {
+
+  dkbLoadingPromise = fetch("/data/diamond_knowledge.json")
+    .then((res) => res.json())
+    .then((data) => {
       dkbCache = data;
-      console.log(`[DKB] 💎 Loaded ${data.entries?.length || 0} Diamond Knowledge Base entries for AI context`);
+      console.log(
+        `[DKB] 💎 Loaded ${data.entries?.length || 0} Diamond Knowledge Base entries for AI context`,
+      );
       return data;
     })
-    .catch(err => {
-      console.error('[DKB] Failed to load Diamond Knowledge Base:', err);
+    .catch((err) => {
+      console.error("[DKB] Failed to load Diamond Knowledge Base:", err);
       return null;
     });
-  
+
   return dkbLoadingPromise;
 }
 
@@ -1218,59 +1255,81 @@ async function loadDKB() {
 export async function searchDKB(query, topK = 10) {
   const dkb = await loadDKB();
   if (!dkb || !dkb.entries) return [];
-  
-  const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+
+  const queryTerms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
   const queryLower = query.toLowerCase();
-  
+
   // Detect query intent for boosting
-  const isSecondaryQuery = queryLower.includes('secondary') || queryLower.includes('nexus') || queryLower.includes('caused by');
-  const isPACTQuery = queryLower.includes('pact') || queryLower.includes('toxic') || queryLower.includes('burn pit');
-  const isRatingQuery = queryLower.includes('rating') || queryLower.includes('percentage') || queryLower.includes('criteria');
-  const isBVAQuery = queryLower.includes('bva') || queryLower.includes('appeal') || queryLower.includes('board');
+  const isSecondaryQuery =
+    queryLower.includes("secondary") ||
+    queryLower.includes("nexus") ||
+    queryLower.includes("caused by");
+  const isPACTQuery =
+    queryLower.includes("pact") ||
+    queryLower.includes("toxic") ||
+    queryLower.includes("burn pit");
+  const isRatingQuery =
+    queryLower.includes("rating") ||
+    queryLower.includes("percentage") ||
+    queryLower.includes("criteria");
+  const isBVAQuery =
+    queryLower.includes("bva") ||
+    queryLower.includes("appeal") ||
+    queryLower.includes("board");
   const isDCQuery = /\b\d{4}\b/.test(query); // Looking for diagnostic codes
-  
-  const scored = dkb.entries.map(entry => {
-    const instruction = (entry.instruction || '').toLowerCase();
-    const output = (entry.output || '').toLowerCase();
-    const source = entry.metadata?.source || '';
-    const type = entry.metadata?.type || '';
+
+  const scored = dkb.entries.map((entry) => {
+    const instruction = (entry.instruction || "").toLowerCase();
+    const output = (entry.output || "").toLowerCase();
+    const source = entry.metadata?.source || "";
+    const type = entry.metadata?.type || "";
     let score = 0;
-    
+
     // Term matching
     for (const term of queryTerms) {
       if (instruction.includes(term)) score += 2;
       if (output.includes(term)) score += 1;
-      
+
       // Boost for diagnostic code matches
-      if (isDCQuery && entry.metadata?.dc && query.includes(entry.metadata.dc)) {
+      if (
+        isDCQuery &&
+        entry.metadata?.dc &&
+        query.includes(entry.metadata.dc)
+      ) {
         score += 10;
       }
-      
+
       // Boost for condition name matches
       if (entry.metadata?.condition_name?.toLowerCase().includes(term)) {
         score += 3;
       }
     }
-    
+
     // Source-based boosting
-    if (source === 'eCFR_OFFICIAL') score *= 1.3;
-    if (source === 'OGC_PRECEDENT_OPINION') score *= 1.4;
-    if (source === 'BVA_DECISIONS' || source === 'BVA_REPORTS_OFFICIAL') score *= 1.2;
-    
+    if (source === "eCFR_OFFICIAL") score *= 1.3;
+    if (source === "OGC_PRECEDENT_OPINION") score *= 1.4;
+    if (source === "BVA_DECISIONS" || source === "BVA_REPORTS_OFFICIAL")
+      score *= 1.2;
+
     // Intent-based boosting
-    if (isSecondaryQuery && source === 'SECONDARY_CONDITIONS_MATRIX') score *= 2.5;
-    if (isPACTQuery && source === 'PACT_ACT_OFFICIAL') score *= 2.5;
-    if (isRatingQuery && type === 'rating_criteria') score *= 2;
-    if (isBVAQuery && (source.includes('BVA') || source.includes('OGC'))) score *= 2;
-    
+    if (isSecondaryQuery && source === "SECONDARY_CONDITIONS_MATRIX")
+      score *= 2.5;
+    if (isPACTQuery && source === "PACT_ACT_OFFICIAL") score *= 2.5;
+    if (isRatingQuery && type === "rating_criteria") score *= 2;
+    if (isBVAQuery && (source.includes("BVA") || source.includes("OGC")))
+      score *= 2;
+
     return { entry, score };
   });
-  
+
   return scored
-    .filter(s => s.score > 0)
+    .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
-    .map(s => s.entry);
+    .map((s) => s.entry);
 }
 
 /**
@@ -1286,13 +1345,13 @@ export async function buildDKBContext(query, options = {}) {
     maxChars = 8000, // Keep under token limits
     includeSourceUrls = true,
   } = options;
-  
+
   const relevantEntries = await searchDKB(query, maxEntries);
-  
+
   if (relevantEntries.length === 0) {
-    return '';
+    return "";
   }
-  
+
   let context = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
 The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
@@ -1302,18 +1361,18 @@ Use this data to provide accurate, regulation-based answers.
 
   let charCount = context.length;
   let entryCount = 0;
-  
+
   for (const entry of relevantEntries) {
     const entryText = formatDKBEntry(entry, includeSourceUrls);
-    
+
     if (charCount + entryText.length > maxChars) break;
-    
+
     context += entryText;
     charCount += entryText.length;
     entryCount++;
   }
-  
-  context += `\n[${entryCount} relevant DKB entries provided from ${relevantEntries[0]?.metadata?.source || 'official sources'}]
+
+  context += `\n[${entryCount} relevant DKB entries provided from ${relevantEntries[0]?.metadata?.source || "official sources"}]
 === END DKB CONTEXT ===\n`;
 
   return context;
@@ -1326,14 +1385,15 @@ function formatDKBEntry(entry, includeSourceUrl = true) {
   let text = `---\n`;
   text += `Q: ${entry.instruction}\n`;
   text += `A: ${entry.output}\n`;
-  
+
   if (entry.metadata) {
     const m = entry.metadata;
     if (m.cfr_section) text += `Source: ${m.cfr_section}\n`;
     if (m.dc) text += `Diagnostic Code: ${m.dc}\n`;
-    if (includeSourceUrl && m.source_url) text += `Reference: ${m.source_url}\n`;
+    if (includeSourceUrl && m.source_url)
+      text += `Reference: ${m.source_url}\n`;
   }
-  
+
   return text;
 }
 
@@ -1344,14 +1404,14 @@ function formatDKBEntry(entry, includeSourceUrl = true) {
 export async function buildSystemPromptWithDKB(query, options = {}) {
   // Get base system prompt
   const basePrompt = buildSystemPrompt(options);
-  
+
   // Get relevant DKB context
   const dkbContext = await buildDKBContext(query, {
     maxEntries: options.maxDKBEntries || 10,
     maxChars: options.maxDKBChars || 8000,
     includeSourceUrls: options.includeDKBSourceUrls !== false,
   });
-  
+
   // Combine: base + DKB context
   return basePrompt + dkbContext;
 }

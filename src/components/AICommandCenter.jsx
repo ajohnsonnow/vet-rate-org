@@ -1,29 +1,36 @@
 /**
  * Vet-Rate.org - AI Command Center
  * "The Faraday Cage Protocol" - ONE place for ALL AI settings
- * 
+ *
  * Simplified for infantry: Veterans don't need to hunt through multiple panels.
  * Everything AI-related in one mission briefing.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { 
-  getAIStatus, 
-  isLocalAIReady, 
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  getAIStatus,
+  isLocalAIReady,
   unloadLocalAI,
-  registerLocalAIEngine
-} from '../utils/unifiedAIService';
-import { useDeviceCapability, DEVICE_TIERS } from '../utils/useDeviceCapability';
-import { getGPUPreference, GPU_PREFERENCES, setGPUPreference } from './LocalAIPanel';
-import TokenLimitConfig from './TokenLimitConfig';
-import PresetSelector from './PresetSelector';
-import ReportBugLink from './ReportBugLink';
-import GPUSelector from './GPUSelector';
-import { gpuManager } from '../utils/WebGPUManager';
+  registerLocalAIEngine,
+} from "../utils/unifiedAIService";
+import {
+  useDeviceCapability,
+  DEVICE_TIERS,
+} from "../utils/useDeviceCapability";
+import {
+  getGPUPreference,
+  GPU_PREFERENCES,
+  setGPUPreference,
+} from "./LocalAIPanel";
+import TokenLimitConfig from "./TokenLimitConfig";
+import PresetSelector from "./PresetSelector";
+import ReportBugLink from "./ReportBugLink";
+import GPUSelector from "./GPUSelector";
+import { gpuManager } from "../utils/WebGPUManager";
 
-const GEMINI_KEY_STORAGE = 'vetrate_gemini_key';
+const GEMINI_KEY_STORAGE = "vetrate_gemini_key";
 
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
@@ -41,115 +48,127 @@ const MODELS = [
   // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - SCIF-Level Analysis
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    id: 'vetrate-auditor-7b-v2',
+    id: "vetrate-auditor-7b-v2",
     name: '🎖️ CWO3 "HAWKEYE" - 350F All Source Intel',
-    description: 'Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent',
-    size: '4.4 GB',
-    vramRequired: '6 GB',
+    description:
+      "Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent",
+    size: "4.4 GB",
+    vramRequired: "6 GB",
     recommended: true,
-    bestFor: 'Deep claim audits, evidence correlation, multi-source analysis',
-    tier: 'full',
-    callSign: 'HAWKEYE',
-    mos: '350F',
+    bestFor: "Deep claim audits, evidence correlation, multi-source analysis",
+    tier: "full",
+    callSign: "HAWKEYE",
+    mos: "350F",
   },
   {
-    id: 'vetrate-writer-7b-v2',
+    id: "vetrate-writer-7b-v2",
     name: '🎖️ CWO4 "PHANTOM" - 270A Legal Admin',
-    description: 'JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs',
-    size: '4.4 GB',
-    vramRequired: '6 GB',
-    bestFor: 'Legal documents, NODs, HLR scripts, formal correspondence',
-    tier: 'full',
-    callSign: 'PHANTOM',
-    mos: '270A',
+    description:
+      "JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs",
+    size: "4.4 GB",
+    vramRequired: "6 GB",
+    bestFor: "Legal documents, NODs, HLR scripts, formal correspondence",
+    tier: "full",
+    callSign: "PHANTOM",
+    mos: "270A",
   },
   {
-    id: 'vetrate-rater-7b-v2',
+    id: "vetrate-rater-7b-v2",
     name: '🎖️ CWO5 "ORACLE" - 352N SIGINT Analyst',
-    description: 'Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds',
-    size: '4.4 GB',
-    vramRequired: '6 GB',
-    bestFor: 'Complex calculations, pattern analysis, SMC/TDIU strategy',
-    tier: 'full',
-    callSign: 'ORACLE',
-    mos: '352N',
+    description:
+      "Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds",
+    size: "4.4 GB",
+    vramRequired: "6 GB",
+    bestFor: "Complex calculations, pattern analysis, SMC/TDIU strategy",
+    tier: "full",
+    callSign: "ORACLE",
+    mos: "352N",
   },
   // ═══════════════════════════════════════════════════════════════════════════
   // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Field Ops
   // Knowledge-distilled from Senior Warrants for tactical deployment
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    id: 'vetrate-auditor-1.7b-mobile-v1',
+    id: "vetrate-auditor-1.7b-mobile-v1",
     name: '📱 WO1 "SCOUT" - 350F Field Intel',
-    description: 'Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis',
-    size: '0.8 GB',
-    vramRequired: '2 GB',
-    bestFor: 'Fast claim triage, evidence spotting, mobile recon',
-    tier: 'mobile',
+    description:
+      "Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis",
+    size: "0.8 GB",
+    vramRequired: "2 GB",
+    bestFor: "Fast claim triage, evidence spotting, mobile recon",
+    tier: "mobile",
     mobileOptimized: true,
-    callSign: 'SCOUT',
-    mos: '350F',
+    callSign: "SCOUT",
+    mos: "350F",
   },
   {
-    id: 'vetrate-writer-1.7b-mobile-v1',
+    id: "vetrate-writer-1.7b-mobile-v1",
     name: '📱 CWO2 "SCRIBE" - 270A Field Admin',
-    description: 'Rapid field documentation: captures testimony, outlines statements, secures the narrative',
-    size: '0.8 GB',
-    vramRequired: '2 GB',
-    bestFor: 'Quick statement drafts, bullet capture, field notes',
-    tier: 'mobile',
+    description:
+      "Rapid field documentation: captures testimony, outlines statements, secures the narrative",
+    size: "0.8 GB",
+    vramRequired: "2 GB",
+    bestFor: "Quick statement drafts, bullet capture, field notes",
+    tier: "mobile",
     mobileOptimized: true,
-    callSign: 'SCRIBE',
-    mos: '270A',
+    callSign: "SCRIBE",
+    mos: "270A",
   },
   {
-    id: 'vetrate-rater-1.7b-mobile-v1',
+    id: "vetrate-rater-1.7b-mobile-v1",
     name: '📱 CWO2 "CIPHER" - 352N Field SIGINT',
-    description: 'Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move',
-    size: '0.8 GB',
-    vramRequired: '2 GB',
-    bestFor: 'Fast rating estimates, quick math checks, field calculations',
-    tier: 'mobile',
+    description:
+      "Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move",
+    size: "0.8 GB",
+    vramRequired: "2 GB",
+    bestFor: "Fast rating estimates, quick math checks, field calculations",
+    tier: "mobile",
     mobileOptimized: true,
-    callSign: 'CIPHER',
-    mos: '352N',
+    callSign: "CIPHER",
+    mos: "352N",
   },
 ];
 
 const AICommandCenter = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
-  
+
   // Tab state
-  const [activeTab, setActiveTab] = useState('setup'); // 'setup' | 'advanced'
-  
+  const [activeTab, setActiveTab] = useState("setup"); // 'setup' | 'advanced'
+
   // AI Status
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [isUnloading, setIsUnloading] = useState(false);
   const localAIReady = isLocalAIReady();
-  
+
   // API Key
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKeySaved, setApiKeySaved] = useState(false);
-  
+
   // Local AI state
-  const [webGPUStatus, setWebGPUStatus] = useState({ supported: false, checked: false });
+  const [webGPUStatus, setWebGPUStatus] = useState({
+    supported: false,
+    checked: false,
+  });
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadProgress, setLoadProgress] = useState({ progress: 0, text: 'Ready' });
+  const [loadProgress, setLoadProgress] = useState({
+    progress: 0,
+    text: "Ready",
+  });
   const [isReady, setIsReady] = useState(false);
   const [loadedModelId, setLoadedModelId] = useState(null);
   const [installedModels, setInstalledModels] = useState(new Set());
-  
+
   // Test box state
-  const [testPrompt, setTestPrompt] = useState('');
-  const [testResponse, setTestResponse] = useState('');
+  const [testPrompt, setTestPrompt] = useState("");
+  const [testResponse, setTestResponse] = useState("");
   const [isTesting, setIsTesting] = useState(false);
-  
+
   // Preset
-  const [selectedPreset, setSelectedPreset] = useState('BALANCED');
-  
+  const [selectedPreset, setSelectedPreset] = useState("BALANCED");
+
   // Device capability
   const deviceCapability = useDeviceCapability();
 
@@ -157,18 +176,26 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   useEffect(() => {
     const checkWebGPU = async () => {
       if (!navigator.gpu) {
-        setWebGPUStatus({ supported: false, checked: true, reason: 'WebGPU not supported by browser' });
+        setWebGPUStatus({
+          supported: false,
+          checked: true,
+          reason: "WebGPU not supported by browser",
+        });
         return;
       }
-      
+
       try {
         const adapter = await navigator.gpu.requestAdapter();
         if (!adapter) {
-          setWebGPUStatus({ supported: false, checked: true, reason: 'No GPU adapter found' });
+          setWebGPUStatus({
+            supported: false,
+            checked: true,
+            reason: "No GPU adapter found",
+          });
           return;
         }
-        
-        let adapterInfo = { vendor: 'Unknown', device: 'GPU Detected' };
+
+        let adapterInfo = { vendor: "Unknown", device: "GPU Detected" };
         try {
           if (adapter.info) {
             adapterInfo = adapter.info;
@@ -176,33 +203,34 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             adapterInfo = await adapter.requestAdapterInfo();
           }
         } catch (e) {
-          console.log('Could not get adapter info');
+          console.log("Could not get adapter info");
         }
-        
+
         setWebGPUStatus({
           supported: true,
           checked: true,
-          device: adapterInfo.description || adapterInfo.device || 'GPU Detected',
-          vendor: adapterInfo.vendor || 'Unknown',
+          device:
+            adapterInfo.description || adapterInfo.device || "GPU Detected",
+          vendor: adapterInfo.vendor || "Unknown",
         });
       } catch (e) {
         setWebGPUStatus({ supported: false, checked: true, reason: e.message });
       }
     };
-    
+
     checkWebGPU();
-    
+
     // Load API key
     const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE);
     if (savedKey) setApiKey(savedKey);
-    
+
     // Load preset
-    const savedPreset = localStorage.getItem('vetrate_ai_preset');
+    const savedPreset = localStorage.getItem("vetrate_ai_preset");
     if (savedPreset) setSelectedPreset(savedPreset);
-    
+
     // Check if AI is already ready
     const status = getAIStatus();
-    if (status.effectiveMode === 'local') {
+    if (status.effectiveMode === "local") {
       setIsReady(true);
     }
   }, []);
@@ -212,7 +240,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
     const interval = setInterval(() => {
       const status = getAIStatus();
       setAIStatus(status);
-      if (status.effectiveMode === 'local' && !isReady) {
+      if (status.effectiveMode === "local" && !isReady) {
         setIsReady(true);
       }
     }, 500);
@@ -231,7 +259,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   // Clear API Key
   const handleClearApiKey = () => {
     localStorage.removeItem(GEMINI_KEY_STORAGE);
-    setApiKey('');
+    setApiKey("");
   };
 
   // Unload Local AI
@@ -243,7 +271,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
       setLoadedModelId(null);
       setAIStatus(getAIStatus());
     } catch (err) {
-      console.error('Failed to unload AI:', err);
+      console.error("Failed to unload AI:", err);
     } finally {
       setIsUnloading(false);
     }
@@ -252,28 +280,37 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   // Initialize Local AI Engine
   const initializeEngine = async () => {
     if (!webGPUStatus.supported || isLoading) return;
-    
+
     setIsLoading(true);
-    setLoadProgress({ progress: 0, text: 'Starting...' });
-    
+    setLoadProgress({ progress: 0, text: "Starting..." });
+
     try {
       // Dynamically import the Diamond Swarm
-      const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } = await import('../utils/diamondSwarm');
-      
+      const {
+        initializeSwarm,
+        generateWithSwarm,
+        isSwarmReady,
+        getSwarmStatus,
+      } = await import("../utils/diamondSwarm");
+
       // Initialize with selected model
       await initializeSwarm({
         modelId: selectedModel.id,
         onProgress: (report) => {
           // diamondSwarm passes { stage, message, progress } object
-          const progressValue = typeof report === 'object' ? (report.progress || 0) : (report || 0);
-          const textValue = typeof report === 'object' ? (report.message || 'Loading...') : 'Loading...';
-          setLoadProgress({ 
-            progress: Math.round(progressValue), 
-            text: textValue 
+          const progressValue =
+            typeof report === "object" ? report.progress || 0 : report || 0;
+          const textValue =
+            typeof report === "object"
+              ? report.message || "Loading..."
+              : "Loading...";
+          setLoadProgress({
+            progress: Math.round(progressValue),
+            text: textValue,
           });
         },
       });
-      
+
       // Register with unified AI service
       registerLocalAIEngine({
         generate: async (prompt, options) => {
@@ -283,14 +320,13 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
         isReady: isSwarmReady,
         getStatus: getSwarmStatus,
       });
-      
+
       setIsReady(true);
       setLoadedModelId(selectedModel.id);
-      setInstalledModels(prev => new Set([...prev, selectedModel.id]));
+      setInstalledModels((prev) => new Set([...prev, selectedModel.id]));
       setAIStatus(getAIStatus());
-      
     } catch (err) {
-      console.error('Failed to initialize AI:', err);
+      console.error("Failed to initialize AI:", err);
       setLoadProgress({ progress: 0, text: `Error: ${err.message}` });
     } finally {
       setIsLoading(false);
@@ -300,37 +336,37 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   // Handle preset change
   const handlePresetChange = (presetName) => {
     setSelectedPreset(presetName);
-    localStorage.setItem('vetrate_ai_preset', presetName);
+    localStorage.setItem("vetrate_ai_preset", presetName);
   };
 
   // Handle test AI
   const handleTestAI = async () => {
     if (!testPrompt.trim()) return;
-    
+
     setIsTesting(true);
-    setTestResponse(''); // Clear previous response
-    
+    setTestResponse(""); // Clear previous response
+
     try {
-      const { generateWithSwarm } = await import('../utils/diamondSwarm');
-      
+      const { generateWithSwarm } = await import("../utils/diamondSwarm");
+
       // Show response box immediately
-      setTestResponse('⏳ Generating...');
-      
+      setTestResponse("⏳ Generating...");
+
       const result = await generateWithSwarm(testPrompt, {
         temperature: 0.7,
         max_tokens: 200,
         onStream: (delta, fullText) => {
           // Update response in real-time as AI generates
-          setTestResponse(fullText || '');
-        }
+          setTestResponse(fullText || "");
+        },
       });
-      
+
       // Final response (in case streaming didn't capture everything)
       if (result?.text || result) {
         setTestResponse(result?.text || result);
       }
     } catch (err) {
-      console.error('Test failed:', err);
+      console.error("Test failed:", err);
       setTestResponse(`❌ Error: ${err.message}`);
     } finally {
       setIsTesting(false);
@@ -340,50 +376,68 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-gray-700">
-        
         {/* Header */}
         <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 text-white px-6 py-5 rounded-t-2xl relative overflow-hidden flex-shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-          
+
           <div className="relative flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
                 <span className="text-3xl">🛡️</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold">
-                  AI Command Center
-                </h2>
+                <h2 className="text-2xl font-bold">AI Command Center</h2>
                 <p className="text-cyan-200 text-sm mt-1">
                   Faraday Cage Protocol • All AI Settings in One Place
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="AI Command Center" />}
+              {onReportBug && (
+                <ReportBugLink
+                  onClick={onReportBug}
+                  variant="light"
+                  moduleName="AI Command Center"
+                />
+              )}
               <button
                 onClick={onClose}
                 className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                 aria-label="Close"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
           </div>
-          
+
           {/* Status Indicator */}
-          <div className={`mt-4 px-4 py-2 rounded-lg inline-flex items-center gap-2 ${
-            aiStatus.isPrivate 
-              ? 'bg-green-500/30 text-green-200' 
-              : aiStatus.effectiveMode 
-                ? 'bg-blue-500/30 text-blue-200'
-                : 'bg-yellow-500/30 text-yellow-200'
-          }`}>
+          <div
+            className={`mt-4 px-4 py-2 rounded-lg inline-flex items-center gap-2 ${
+              aiStatus.isPrivate
+                ? "bg-green-500/30 text-green-200"
+                : aiStatus.effectiveMode
+                  ? "bg-blue-500/30 text-blue-200"
+                  : "bg-yellow-500/30 text-yellow-200"
+            }`}
+          >
             <span className="text-lg">
-              {aiStatus.effectiveMode === 'local' ? '🔒' : 
-               aiStatus.effectiveMode === 'cloud' ? '☁️' : '⚠️'}
+              {aiStatus.effectiveMode === "local"
+                ? "🔒"
+                : aiStatus.effectiveMode === "cloud"
+                  ? "☁️"
+                  : "⚠️"}
             </span>
             <span className="font-semibold">{aiStatus.statusText}</span>
           </div>
@@ -392,21 +446,21 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-700 bg-gray-800/50 flex-shrink-0">
           <button
-            onClick={() => setActiveTab('setup')}
+            onClick={() => setActiveTab("setup")}
             className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-              activeTab === 'setup'
-                ? 'text-cyan-400 border-b-2 border-cyan-400 bg-gray-900/50'
-                : 'text-gray-400 hover:text-gray-200'
+              activeTab === "setup"
+                ? "text-cyan-400 border-b-2 border-cyan-400 bg-gray-900/50"
+                : "text-gray-400 hover:text-gray-200"
             }`}
           >
             ⚡ Quick Setup
           </button>
           <button
-            onClick={() => setActiveTab('advanced')}
+            onClick={() => setActiveTab("advanced")}
             className={`flex-1 px-6 py-3 font-semibold transition-colors ${
-              activeTab === 'advanced'
-                ? 'text-purple-400 border-b-2 border-purple-400 bg-gray-900/50'
-                : 'text-gray-400 hover:text-gray-200'
+              activeTab === "advanced"
+                ? "text-purple-400 border-b-2 border-purple-400 bg-gray-900/50"
+                : "text-gray-400 hover:text-gray-200"
             }`}
           >
             🔧 Advanced
@@ -415,79 +469,92 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
 
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          
-          {activeTab === 'setup' && (
+          {activeTab === "setup" && (
             <>
               {/* STEP 1: Choose Your AI Mode */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span className="w-8 h-8 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                  <span className="w-8 h-8 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center text-sm font-bold">
+                    1
+                  </span>
                   Choose Your AI
                 </h3>
-                
+
                 {/* Option A: Local AI (Privacy First) */}
-                <div className={`p-4 rounded-xl border-2 transition-all ${
-                  aiStatus.effectiveMode === 'local'
-                    ? 'bg-green-900/30 border-green-500'
-                    : webGPUStatus.supported
-                      ? 'bg-gray-800/50 border-gray-700 hover:border-cyan-500/50'
-                      : 'bg-gray-800/30 border-gray-700 opacity-60'
-                }`}>
+                <div
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    aiStatus.effectiveMode === "local"
+                      ? "bg-green-900/30 border-green-500"
+                      : webGPUStatus.supported
+                        ? "bg-gray-800/50 border-gray-700 hover:border-cyan-500/50"
+                        : "bg-gray-800/30 border-gray-700 opacity-60"
+                  }`}
+                >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                       <span className="text-2xl">🔒</span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-white">Local AI - 100% Private</h4>
+                        <h4 className="font-bold text-white">
+                          Local AI - 100% Private
+                        </h4>
                         {deviceCapability.tier !== DEVICE_TIERS.UNSUPPORTED && (
                           <span className="px-2 py-0.5 bg-green-500/30 text-green-300 text-xs font-bold rounded-full">
                             RECOMMENDED
                           </span>
                         )}
-                        {aiStatus.effectiveMode === 'local' && (
+                        {aiStatus.effectiveMode === "local" && (
                           <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full animate-pulse">
                             ACTIVE
                           </span>
                         )}
                       </div>
                       <p className="text-gray-400 text-sm mt-1">
-                        Runs entirely on your device. Zero data transmitted. Works offline.
+                        Runs entirely on your device. Zero data transmitted.
+                        Works offline.
                       </p>
-                      
+
                       {webGPUStatus.supported && webGPUStatus.device && (
                         <p className="text-cyan-400 text-xs mt-2">
                           🎮 GPU Ready: {webGPUStatus.device}
                         </p>
                       )}
-                      
+
                       {!webGPUStatus.supported && webGPUStatus.checked && (
                         <p className="text-red-400 text-xs mt-2">
                           ❌ WebGPU not available on this device
                         </p>
                       )}
-                      
+
                       {/* Model Selection - Simple */}
                       {webGPUStatus.supported && !isReady && (
                         <div className="mt-4 space-y-3">
-                          <p className="text-gray-300 text-sm font-medium">Select AI Model:</p>
+                          <p className="text-gray-300 text-sm font-medium">
+                            Select AI Model:
+                          </p>
                           <div className="grid gap-2">
-                            {MODELS.map(model => (
+                            {MODELS.map((model) => (
                               <button
                                 key={model.id}
                                 onClick={() => setSelectedModel(model)}
                                 className={`p-3 rounded-lg border-2 text-left transition-all ${
                                   selectedModel.id === model.id
-                                    ? 'bg-cyan-900/30 border-cyan-500'
-                                    : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                                    ? "bg-cyan-900/30 border-cyan-500"
+                                    : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <p className="font-semibold text-white text-sm">{model.name}</p>
-                                    <p className="text-gray-400 text-xs">{model.description}</p>
+                                    <p className="font-semibold text-white text-sm">
+                                      {model.name}
+                                    </p>
+                                    <p className="text-gray-400 text-xs">
+                                      {model.description}
+                                    </p>
                                     <p className="text-gray-500 text-xs mt-1">
-                                      {model.size} download • {model.vramRequired} VRAM
+                                      {model.size} download •{" "}
+                                      {model.vramRequired} VRAM
                                     </p>
                                   </div>
                                   {selectedModel.id === model.id && (
@@ -497,7 +564,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                               </button>
                             ))}
                           </div>
-                          
+
                           <button
                             onClick={initializeEngine}
                             disabled={isLoading}
@@ -505,16 +572,17 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                           >
                             {isLoading ? (
                               <span className="flex items-center justify-center gap-2">
-                                <span className="animate-spin">⏳</span> {loadProgress.text} ({loadProgress.progress}%)
+                                <span className="animate-spin">⏳</span>{" "}
+                                {loadProgress.text} ({loadProgress.progress}%)
                               </span>
                             ) : (
                               <span>🚀 Download & Activate Local AI</span>
                             )}
                           </button>
-                          
+
                           {isLoading && (
                             <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                              <div 
+                              <div
                                 className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-300"
                                 style={{ width: `${loadProgress.progress}%` }}
                               />
@@ -522,7 +590,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                           )}
                         </div>
                       )}
-                      
+
                       {/* Active State */}
                       {isReady && (
                         <>
@@ -535,57 +603,88 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                               disabled={isUnloading}
                               className="py-2 px-4 bg-red-500/20 text-red-400 font-medium rounded-lg hover:bg-red-500/30 transition-colors text-sm disabled:opacity-50"
                             >
-                              {isUnloading ? '⏳' : '⏹️ Unload'}
+                              {isUnloading ? "⏳" : "⏹️ Unload"}
                             </button>
                           </div>
-                          
+
                           {/* Test Box */}
                           <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
                             <div className="flex items-center gap-2 mb-3">
                               <span className="text-cyan-400">🧪</span>
-                              <h4 className="text-white font-semibold text-sm">Test Your AI</h4>
+                              <h4 className="text-white font-semibold text-sm">
+                                Test Your AI
+                              </h4>
                             </div>
-                            
+
                             <div className="space-y-3">
                               {/* Quick Test Examples */}
                               <div className="space-y-2">
-                                <p className="text-xs text-gray-400 font-medium">Quick Test Questions:</p>
+                                <p className="text-xs text-gray-400 font-medium">
+                                  Quick Test Questions:
+                                </p>
                                 <div className="grid gap-2">
                                   <button
-                                    onClick={() => setTestPrompt('What is the VA disability rating for tinnitus?')}
+                                    onClick={() =>
+                                      setTestPrompt(
+                                        "What is the VA disability rating for tinnitus?",
+                                      )
+                                    }
                                     className="text-left px-3 py-2 bg-cyan-900/30 hover:bg-cyan-900/50 border border-cyan-700/50 hover:border-cyan-600 text-cyan-100 rounded-lg transition-all text-sm group"
                                   >
-                                    <span className="font-medium">💰 Rating Question:</span>
-                                    <span className="block text-xs text-cyan-300 mt-0.5 group-hover:text-cyan-200">What is the VA disability rating for tinnitus?</span>
+                                    <span className="font-medium">
+                                      💰 Rating Question:
+                                    </span>
+                                    <span className="block text-xs text-cyan-300 mt-0.5 group-hover:text-cyan-200">
+                                      What is the VA disability rating for
+                                      tinnitus?
+                                    </span>
                                   </button>
                                   <button
-                                    onClick={() => setTestPrompt('Explain PTSD secondary conditions')}
+                                    onClick={() =>
+                                      setTestPrompt(
+                                        "Explain PTSD secondary conditions",
+                                      )
+                                    }
                                     className="text-left px-3 py-2 bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700/50 hover:border-purple-600 text-purple-100 rounded-lg transition-all text-sm group"
                                   >
-                                    <span className="font-medium">🔗 Secondary Conditions:</span>
-                                    <span className="block text-xs text-purple-300 mt-0.5 group-hover:text-purple-200">Explain PTSD secondary conditions</span>
+                                    <span className="font-medium">
+                                      🔗 Secondary Conditions:
+                                    </span>
+                                    <span className="block text-xs text-purple-300 mt-0.5 group-hover:text-purple-200">
+                                      Explain PTSD secondary conditions
+                                    </span>
                                   </button>
                                   <button
-                                    onClick={() => setTestPrompt('How does bilateral factor work?')}
+                                    onClick={() =>
+                                      setTestPrompt(
+                                        "How does bilateral factor work?",
+                                      )
+                                    }
                                     className="text-left px-3 py-2 bg-blue-900/30 hover:bg-blue-900/50 border border-blue-700/50 hover:border-blue-600 text-blue-100 rounded-lg transition-all text-sm group"
                                   >
-                                    <span className="font-medium">🧮 Math Calculation:</span>
-                                    <span className="block text-xs text-blue-300 mt-0.5 group-hover:text-blue-200">How does bilateral factor work?</span>
+                                    <span className="font-medium">
+                                      🧮 Math Calculation:
+                                    </span>
+                                    <span className="block text-xs text-blue-300 mt-0.5 group-hover:text-blue-200">
+                                      How does bilateral factor work?
+                                    </span>
                                   </button>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center gap-2">
                                 <hr className="flex-1 border-gray-600" />
-                                <span className="text-xs text-gray-500">or ask your own</span>
+                                <span className="text-xs text-gray-500">
+                                  or ask your own
+                                </span>
                                 <hr className="flex-1 border-gray-600" />
                               </div>
-                              
+
                               <textarea
                                 value={testPrompt}
                                 onChange={(e) => setTestPrompt(e.target.value)}
                                 onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                  if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
                                     if (testPrompt.trim() && !isTesting) {
                                       handleTestAI();
@@ -597,7 +696,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                                 rows={2}
                                 disabled={isTesting}
                               />
-                              
+
                               <button
                                 onClick={handleTestAI}
                                 disabled={isTesting || !testPrompt.trim()}
@@ -605,22 +704,31 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                               >
                                 {isTesting ? (
                                   <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⏳</span> Testing...
+                                    <span className="animate-spin">⏳</span>{" "}
+                                    Testing...
                                   </span>
                                 ) : (
-                                  '🚀 Send Test Prompt'
+                                  "🚀 Send Test Prompt"
                                 )}
                               </button>
-                              
+
                               {(testResponse || isTesting) && (
                                 <div className="p-3 bg-gray-900/70 border border-gray-600 rounded-lg">
                                   <div className="flex items-center justify-between mb-1">
-                                    <p className="text-xs text-gray-400 font-medium">Response:</p>
-                                    {isTesting && testResponse && testResponse !== '⏳ Generating...' && (
-                                      <span className="text-xs text-cyan-400 animate-pulse">● Generating...</span>
-                                    )}
+                                    <p className="text-xs text-gray-400 font-medium">
+                                      Response:
+                                    </p>
+                                    {isTesting &&
+                                      testResponse &&
+                                      testResponse !== "⏳ Generating..." && (
+                                        <span className="text-xs text-cyan-400 animate-pulse">
+                                          ● Generating...
+                                        </span>
+                                      )}
                                   </div>
-                                  <p className="text-white text-sm whitespace-pre-wrap">{testResponse || '⏳ Generating...'}</p>
+                                  <p className="text-white text-sm whitespace-pre-wrap">
+                                    {testResponse || "⏳ Generating..."}
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -630,54 +738,61 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Divider */}
                 <div className="flex items-center gap-4">
                   <hr className="flex-1 border-gray-700" />
                   <span className="text-gray-500 text-sm">OR</span>
                   <hr className="flex-1 border-gray-700" />
                 </div>
-                
+
                 {/* Option B: Cloud AI (Gemini) */}
-                <div className={`p-4 rounded-xl border-2 transition-all ${
-                  aiStatus.effectiveMode === 'cloud'
-                    ? 'bg-blue-900/30 border-blue-500'
-                    : 'bg-gray-800/50 border-gray-700 hover:border-blue-500/50'
-                }`}>
+                <div
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    aiStatus.effectiveMode === "cloud"
+                      ? "bg-blue-900/30 border-blue-500"
+                      : "bg-gray-800/50 border-gray-700 hover:border-blue-500/50"
+                  }`}
+                >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                       <span className="text-2xl">☁️</span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-white">Cloud AI - Gemini (Free)</h4>
-                        {aiStatus.effectiveMode === 'cloud' && (
+                        <h4 className="font-bold text-white">
+                          Cloud AI - Gemini (Free)
+                        </h4>
+                        {aiStatus.effectiveMode === "cloud" && (
                           <span className="px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full animate-pulse">
                             ACTIVE
                           </span>
                         )}
-                        {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED || deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
+                        {(deviceCapability.tier === DEVICE_TIERS.UNSUPPORTED ||
+                          deviceCapability.tier === DEVICE_TIERS.LEGACY) && (
                           <span className="px-2 py-0.5 bg-blue-500/30 text-blue-300 text-xs font-bold rounded-full">
                             BEST FOR YOUR DEVICE
                           </span>
                         )}
                       </div>
                       <p className="text-gray-400 text-sm mt-1">
-                        Fast responses via Google Gemini. Requires internet connection.
+                        Fast responses via Google Gemini. Requires internet
+                        connection.
                       </p>
-                      
+
                       {/* Warning */}
                       <div className="mt-3 p-2 bg-amber-900/20 border border-amber-500/30 rounded-lg">
                         <p className="text-amber-300 text-xs">
-                          ⚠️ Your queries are sent to Google's servers. API key stays in YOUR browser only.
+                          ⚠️ Your queries are sent to Google's servers. API key
+                          stays in YOUR browser only.
                         </p>
                       </div>
-                      
+
                       {/* API Key Input */}
                       <div className="mt-3 space-y-2">
                         <div className="relative">
                           <input
-                            type={showApiKey ? 'text' : 'password'}
+                            type={showApiKey ? "text" : "password"}
                             value={apiKey}
                             onChange={(e) => setApiKey(e.target.value)}
                             placeholder="Enter Gemini API key..."
@@ -688,17 +803,17 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                             onClick={() => setShowApiKey(!showApiKey)}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1"
                           >
-                            {showApiKey ? '👁️' : '👁️‍🗨️'}
+                            {showApiKey ? "👁️" : "👁️‍🗨️"}
                           </button>
                         </div>
-                        
+
                         <div className="flex gap-2">
                           <button
                             onClick={handleSaveApiKey}
                             disabled={!apiKey.trim()}
                             className="flex-1 py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
                           >
-                            {apiKeySaved ? '✓ Saved!' : '💾 Save Key'}
+                            {apiKeySaved ? "✓ Saved!" : "💾 Save Key"}
                           </button>
                           {apiKey && (
                             <button
@@ -709,7 +824,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                             </button>
                           )}
                         </div>
-                        
+
                         <a
                           href="https://aistudio.google.com/app/apikey"
                           target="_blank"
@@ -730,15 +845,24 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                   <span>💡</span> Quick Tips
                 </h4>
                 <ul className="text-sm text-gray-400 space-y-1">
-                  <li>• <strong className="text-green-400">Local AI</strong> = 100% private, works offline</li>
-                  <li>• <strong className="text-blue-400">Cloud AI</strong> = faster but sends data to Google</li>
-                  <li>• Both use the same Diamond Knowledge Base (130K+ VA entries)</li>
+                  <li>
+                    • <strong className="text-green-400">Local AI</strong> =
+                    100% private, works offline
+                  </li>
+                  <li>
+                    • <strong className="text-blue-400">Cloud AI</strong> =
+                    faster but sends data to Google
+                  </li>
+                  <li>
+                    • Both use the same Diamond Knowledge Base (130K+ VA
+                    entries)
+                  </li>
                 </ul>
               </div>
             </>
           )}
 
-          {activeTab === 'advanced' && (
+          {activeTab === "advanced" && (
             <>
               {/* Token Limit */}
               <div className="space-y-4">
@@ -755,7 +879,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <span>🎯</span> AI Personality
                 </h3>
-                <PresetSelector 
+                <PresetSelector
                   value={selectedPreset}
                   onChange={(name) => handlePresetChange(name)}
                 />
@@ -769,10 +893,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <span>🎮</span> GPU Settings
                   </h3>
-                  <GPUSelector 
-                    onGPUSelected={() => {}}
-                    autoSelect={false}
-                  />
+                  <GPUSelector onGPUSelected={() => {}} autoSelect={false} />
                 </div>
               )}
 
@@ -781,10 +902,12 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💎</span>
                   <div>
-                    <h4 className="font-bold text-purple-300">Diamond Knowledge Base</h4>
+                    <h4 className="font-bold text-purple-300">
+                      Diamond Knowledge Base
+                    </h4>
                     <p className="text-gray-400 text-sm mt-1">
-                      Both Local and Cloud AI use our 130,000+ entry database of VA regulations, 
-                      38 CFR, BVA decisions, and CAVC rulings.
+                      Both Local and Cloud AI use our 130,000+ entry database of
+                      VA regulations, 38 CFR, BVA decisions, and CAVC rulings.
                     </p>
                     <p className="text-purple-400/80 text-xs mt-2">
                       Local AI: 6-8 entries per query (optimized for GPU memory)
@@ -804,22 +927,31 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
                   <div className="bg-gray-900/50 p-3 rounded-lg">
                     <p className="text-gray-500 text-xs">Device Tier</p>
                     <p className="text-white font-semibold">
-                      {deviceCapability.tier === DEVICE_TIERS.HIGH_END ? '🚀 High-End' :
-                       deviceCapability.tier === DEVICE_TIERS.MID_RANGE ? '⚡ Mid-Range' :
-                       deviceCapability.tier === DEVICE_TIERS.LEGACY ? '📱 Legacy' :
-                       '❓ Unknown'}
+                      {deviceCapability.tier === DEVICE_TIERS.HIGH_END
+                        ? "🚀 High-End"
+                        : deviceCapability.tier === DEVICE_TIERS.MID_RANGE
+                          ? "⚡ Mid-Range"
+                          : deviceCapability.tier === DEVICE_TIERS.LEGACY
+                            ? "📱 Legacy"
+                            : "❓ Unknown"}
                     </p>
                   </div>
                   <div className="bg-gray-900/50 p-3 rounded-lg">
                     <p className="text-gray-500 text-xs">WebGPU</p>
-                    <p className={`font-semibold ${webGPUStatus.supported ? 'text-green-400' : 'text-red-400'}`}>
-                      {webGPUStatus.supported ? '✅ Supported' : '❌ Not Available'}
+                    <p
+                      className={`font-semibold ${webGPUStatus.supported ? "text-green-400" : "text-red-400"}`}
+                    >
+                      {webGPUStatus.supported
+                        ? "✅ Supported"
+                        : "❌ Not Available"}
                     </p>
                   </div>
                   {webGPUStatus.supported && webGPUStatus.device && (
                     <div className="bg-gray-900/50 p-3 rounded-lg col-span-2">
                       <p className="text-gray-500 text-xs">Active GPU</p>
-                      <p className="text-cyan-400 font-semibold">{webGPUStatus.device}</p>
+                      <p className="text-cyan-400 font-semibold">
+                        {webGPUStatus.device}
+                      </p>
                     </div>
                   )}
                 </div>

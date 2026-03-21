@@ -2,42 +2,42 @@
  * Vet-Rate.org - Florence-2 Vision OCR Service
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * PURPOSE: High-level service wrapper for Florence-2 Vision LLM
- * 
+ *
  * USAGE:
  * ```javascript
  * import { florenceOCRService } from '../utils/florenceOCRService';
- * 
+ *
  * // Initialize (preload model)
  * await florenceOCRService.initialize();
- * 
+ *
  * // Process a PDF file
  * const { text, parsedData } = await florenceOCRService.processDocument(file);
- * 
+ *
  * // Ask a specific question about a document
  * const answer = await florenceOCRService.askQuestion(file, "What is the separation date?");
  * ```
- * 
+ *
  * FEATURES:
  * - Automatic WebGPU detection
  * - Model preloading with progress tracking
  * - High-resolution PDF rendering (216 DPI)
  * - Structured DD214 parsing
  * - Document VQA (Visual Question Answering)
- * 
+ *
  * PRIVACY: 100% client-side. NO DATA LEAVES BROWSER.
  */
 
-import { 
-  convertPdfPageToBlob, 
-  getPdfMetadata, 
-  getOptimalScale, 
-  isPdfFile, 
+import {
+  convertPdfPageToBlob,
+  getPdfMetadata,
+  getOptimalScale,
+  isPdfFile,
   isImageFile,
-  imageFileToBlob 
-} from './florencePdfUtils';
-import { parseDD214Text } from './dd214VisionParser';
+  imageFileToBlob,
+} from "./florencePdfUtils";
+import { parseDD214Text } from "./dd214VisionParser";
 
 /**
  * Service state
@@ -60,7 +60,7 @@ const eventListeners = {
  * Check if WebGPU is available
  */
 export function isWebGPUSupported() {
-  return typeof navigator !== 'undefined' && !!navigator.gpu;
+  return typeof navigator !== "undefined" && !!navigator.gpu;
 }
 
 /**
@@ -89,7 +89,9 @@ export function addEventListener(event, callback) {
  */
 export function removeEventListener(event, callback) {
   if (eventListeners[event]) {
-    eventListeners[event] = eventListeners[event].filter(cb => cb !== callback);
+    eventListeners[event] = eventListeners[event].filter(
+      (cb) => cb !== callback,
+    );
   }
 }
 
@@ -98,14 +100,14 @@ export function removeEventListener(event, callback) {
  */
 function emit(event, data) {
   if (eventListeners[event]) {
-    eventListeners[event].forEach(cb => cb(data));
+    eventListeners[event].forEach((cb) => cb(data));
   }
 }
 
 /**
  * Initialize the Florence-2 Vision engine
  * Call this early (e.g., on page load) to preload the model
- * 
+ *
  * @returns {Promise<boolean>} True if initialization successful
  */
 export async function initialize() {
@@ -117,15 +119,15 @@ export async function initialize() {
   // Already initializing
   if (isInitializing) {
     return new Promise((resolve) => {
-      addEventListener('ready', () => resolve(true));
-      addEventListener('error', () => resolve(false));
+      addEventListener("ready", () => resolve(true));
+      addEventListener("error", () => resolve(false));
     });
   }
 
   // Check WebGPU support
   if (!isWebGPUSupported()) {
-    lastError = 'WebGPU is not supported in this browser';
-    emit('error', { error: lastError });
+    lastError = "WebGPU is not supported in this browser";
+    emit("error", { error: lastError });
     return false;
   }
 
@@ -136,8 +138,8 @@ export async function initialize() {
     try {
       // Create worker
       worker = new Worker(
-        new URL('../workers/florence-ocr-worker.js', import.meta.url),
-        { type: 'module' }
+        new URL("../workers/florence-ocr-worker.js", import.meta.url),
+        { type: "module" },
       );
 
       // Message handler
@@ -145,21 +147,21 @@ export async function initialize() {
         const { status, progress, message, error, errorType } = e.data;
 
         switch (status) {
-          case 'loading':
-            emit('progress', { progress, message });
+          case "loading":
+            emit("progress", { progress, message });
             break;
 
-          case 'ready':
+          case "ready":
             isReady = true;
             isInitializing = false;
-            emit('ready', {});
+            emit("ready", {});
             resolve(true);
             break;
 
-          case 'error':
+          case "error":
             lastError = error;
             isInitializing = false;
-            emit('error', { error, errorType });
+            emit("error", { error, errorType });
             resolve(false);
             break;
         }
@@ -168,17 +170,16 @@ export async function initialize() {
       worker.onerror = (err) => {
         lastError = err.message;
         isInitializing = false;
-        emit('error', { error: err.message });
+        emit("error", { error: err.message });
         resolve(false);
       };
 
       // Start model loading
-      worker.postMessage({ type: 'LOAD' });
-
+      worker.postMessage({ type: "LOAD" });
     } catch (err) {
       lastError = err.message;
       isInitializing = false;
-      emit('error', { error: err.message });
+      emit("error", { error: err.message });
       resolve(false);
     }
   });
@@ -186,7 +187,7 @@ export async function initialize() {
 
 /**
  * Process a document (PDF or image) and extract text
- * 
+ *
  * @param {File} file - PDF or image file
  * @param {Object} options - Processing options
  * @param {number} options.pageNumber - Page to process (default: 1)
@@ -201,13 +202,13 @@ export async function processDocument(file, options = {}) {
   if (!isReady) {
     const success = await initialize();
     if (!success) {
-      throw new Error(lastError || 'Failed to initialize vision engine');
+      throw new Error(lastError || "Failed to initialize vision engine");
     }
   }
 
   // Convert file to image blob
   let imageBlob;
-  
+
   if (isPdfFile(file)) {
     // Get optimal scale if not specified
     let renderScale = scale;
@@ -215,12 +216,12 @@ export async function processDocument(file, options = {}) {
       const metadata = await getPdfMetadata(file);
       renderScale = getOptimalScale(metadata);
     }
-    
+
     imageBlob = await convertPdfPageToBlob(file, pageNumber, renderScale);
   } else if (isImageFile(file)) {
     imageBlob = await imageFileToBlob(file);
   } else {
-    throw new Error('Unsupported file type. Use PDF or image files.');
+    throw new Error("Unsupported file type. Use PDF or image files.");
   }
 
   // Send to worker and wait for result
@@ -228,54 +229,65 @@ export async function processDocument(file, options = {}) {
     const messageHandler = (e) => {
       const { status, text, error } = e.data;
 
-      if (status === 'complete') {
-        worker.removeEventListener('message', messageHandler);
-        
+      if (status === "complete") {
+        worker.removeEventListener("message", messageHandler);
+
         // Debug: Log raw Florence output to understand format
-        console.log('🔍 [FlorenceOCR] Raw worker response:', e.data);
-        console.log('🔍 [FlorenceOCR] Text type:', typeof text);
-        console.log('🔍 [FlorenceOCR] Text content:', text);
-        
+        console.log("🔍 [FlorenceOCR] Raw worker response:", e.data);
+        console.log("🔍 [FlorenceOCR] Text type:", typeof text);
+        console.log("🔍 [FlorenceOCR] Text content:", text);
+
         // Extract text from result - handle various Florence output formats
         let extractedText;
-        if (typeof text === 'string') {
+        if (typeof text === "string") {
           extractedText = text;
-        } else if (text && typeof text === 'object') {
+        } else if (text && typeof text === "object") {
           // Florence may return { '<OCR>': 'text' } or similar
-          extractedText = text['<OCR>'] || text.text || text.ocr || JSON.stringify(text);
+          extractedText =
+            text["<OCR>"] || text.text || text.ocr || JSON.stringify(text);
         } else {
-          extractedText = String(text || '');
+          extractedText = String(text || "");
         }
-        
-        console.log('🔍 [FlorenceOCR] Extracted text (first 500 chars):', extractedText?.substring(0, 500));
-        
+
+        console.log(
+          "🔍 [FlorenceOCR] Extracted text (first 500 chars):",
+          extractedText?.substring(0, 500),
+        );
+
         // Parse as DD214 if requested
         let parsedData = null;
         if (shouldParse) {
           parsedData = parseDD214Text(extractedText);
-          console.log('🔍 [FlorenceOCR] Parsed DD214 data:', parsedData?.fields ? Object.keys(parsedData.fields).filter(k => parsedData.fields[k]) : 'no fields');
+          console.log(
+            "🔍 [FlorenceOCR] Parsed DD214 data:",
+            parsedData?.fields
+              ? Object.keys(parsedData.fields).filter(
+                  (k) => parsedData.fields[k],
+                )
+              : "no fields",
+          );
         }
 
         resolve({ text: extractedText, parsedData });
       }
 
-      if (status === 'error') {
-        worker.removeEventListener('message', messageHandler);
+      if (status === "error") {
+        worker.removeEventListener("message", messageHandler);
         reject(new Error(error));
       }
     };
 
-    worker.addEventListener('message', messageHandler);
-    worker.postMessage({ type: 'ANALYZE', payload: { imageBlob } });
+    worker.addEventListener("message", messageHandler);
+    worker.postMessage({ type: "ANALYZE", payload: { imageBlob } });
 
     // Debug logging
-    console.log('🔍 [FlorenceOCR] Sent image to worker for analysis...');
+    console.log("🔍 [FlorenceOCR] Sent image to worker for analysis...");
   });
 }
 
 /**
  * Ask a specific question about a document (Document VQA)
- * 
+ *
  * @param {File} file - PDF or image file
  * @param {string} question - Question to ask about the document
  * @param {Object} options - Processing options
@@ -288,13 +300,13 @@ export async function askQuestion(file, question, options = {}) {
   if (!isReady) {
     const success = await initialize();
     if (!success) {
-      throw new Error(lastError || 'Failed to initialize vision engine');
+      throw new Error(lastError || "Failed to initialize vision engine");
     }
   }
 
   // Convert file to image blob
   let imageBlob;
-  
+
   if (isPdfFile(file)) {
     let renderScale = scale;
     if (!renderScale) {
@@ -305,7 +317,7 @@ export async function askQuestion(file, question, options = {}) {
   } else if (isImageFile(file)) {
     imageBlob = await imageFileToBlob(file);
   } else {
-    throw new Error('Unsupported file type. Use PDF or image files.');
+    throw new Error("Unsupported file type. Use PDF or image files.");
   }
 
   // Send to worker
@@ -313,28 +325,28 @@ export async function askQuestion(file, question, options = {}) {
     const messageHandler = (e) => {
       const { status, answer, error } = e.data;
 
-      if (status === 'complete') {
-        worker.removeEventListener('message', messageHandler);
+      if (status === "complete") {
+        worker.removeEventListener("message", messageHandler);
         resolve(answer);
       }
 
-      if (status === 'error') {
-        worker.removeEventListener('message', messageHandler);
+      if (status === "error") {
+        worker.removeEventListener("message", messageHandler);
         reject(new Error(error));
       }
     };
 
-    worker.addEventListener('message', messageHandler);
-    worker.postMessage({ 
-      type: 'DOC_VQA', 
-      payload: { imageBlob, question } 
+    worker.addEventListener("message", messageHandler);
+    worker.postMessage({
+      type: "DOC_VQA",
+      payload: { imageBlob, question },
     });
   });
 }
 
 /**
  * Process multiple pages from a PDF
- * 
+ *
  * @param {File} file - PDF file
  * @param {Object} options - Processing options
  * @param {number[]} options.pages - Page numbers to process (default: all)
@@ -346,33 +358,39 @@ export async function processMultiplePages(file, options = {}) {
   const { pages, maxPages = 10, onPageComplete } = options;
 
   if (!isPdfFile(file)) {
-    throw new Error('Multi-page processing only supports PDF files');
+    throw new Error("Multi-page processing only supports PDF files");
   }
 
   const metadata = await getPdfMetadata(file);
-  const pagesToProcess = pages || 
-    Array.from({ length: Math.min(metadata.numPages, maxPages) }, (_, i) => i + 1);
+  const pagesToProcess =
+    pages ||
+    Array.from(
+      { length: Math.min(metadata.numPages, maxPages) },
+      (_, i) => i + 1,
+    );
 
   const results = [];
   const scale = getOptimalScale(metadata);
 
   for (const pageNum of pagesToProcess) {
-    const result = await processDocument(file, { 
-      pageNumber: pageNum, 
+    const result = await processDocument(file, {
+      pageNumber: pageNum,
       scale,
-      parseDD214: false 
+      parseDD214: false,
     });
-    
+
     results.push({ pageNumber: pageNum, text: result.text });
-    
+
     if (onPageComplete) {
       onPageComplete(pageNum, pagesToProcess.length, result);
     }
   }
 
   // Combine all text
-  const combinedText = results.map(r => r.text).join('\n\n--- Page Break ---\n\n');
-  
+  const combinedText = results
+    .map((r) => r.text)
+    .join("\n\n--- Page Break ---\n\n");
+
   // Parse combined text
   const parsedData = parseDD214Text(combinedText);
 
@@ -390,11 +408,11 @@ export async function processMultiplePages(file, options = {}) {
  */
 export function shutdown() {
   if (worker) {
-    worker.postMessage({ type: 'UNLOAD' });
+    worker.postMessage({ type: "UNLOAD" });
     worker.terminate();
     worker = null;
   }
-  
+
   isReady = false;
   isInitializing = false;
   lastError = null;

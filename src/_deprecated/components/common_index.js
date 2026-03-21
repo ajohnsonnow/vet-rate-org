@@ -3,5 +3,5 @@
  * Re-exports all common/shared components
  */
 
-export { default as RedditCopyButton } from './RedditCopyButton';
-export { default as DiffHighlighter, IssueCard } from './DiffHighlighter';
+export { default as RedditCopyButton } from "./RedditCopyButton";
+export { default as DiffHighlighter, IssueCard } from "./DiffHighlighter";

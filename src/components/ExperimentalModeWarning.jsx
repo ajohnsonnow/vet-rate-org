@@ -3,8 +3,8 @@
  * Displays a warning when experimental WebGPU features are enabled
  */
 
-import React from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const ExperimentalModeWarning = ({ experimentalMode }) => {
   const { t } = useLanguage();
@@ -21,8 +21,9 @@ const ExperimentalModeWarning = ({ experimentalMode }) => {
             Experimental WebGPU Mode Enabled
           </h3>
           <p className="text-gray-300 text-sm mt-1">
-            You've enabled experimental WebGPU features. This may allow additional models
-            to load but could cause instability on some systems.
+            You've enabled experimental WebGPU features. This may allow
+            additional models to load but could cause instability on some
+            systems.
           </p>
           <ul className="text-gray-400 text-xs mt-2 space-y-1 list-disc list-inside">
             <li>Required for Vision models and some advanced features</li>

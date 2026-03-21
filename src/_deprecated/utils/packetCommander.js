@@ -8,7 +8,7 @@
  * Helps VA raters quickly navigate organized claim evidence.
  */
 
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 /**
  * Generate a Claim Cover Sheet / Table of Contents
@@ -22,15 +22,15 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
  */
 export async function generateCoverSheet(options) {
   const {
-    veteranName = 'Veteran Name',
-    ssn = '',
+    veteranName = "Veteran Name",
+    ssn = "",
     documents = [],
-    claimType = 'Disability Claim',
-    date = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })
+    claimType = "Disability Claim",
+    date = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
   } = options;
 
   // Create PDF
@@ -56,7 +56,7 @@ export async function generateCoverSheet(options) {
       size: size,
       font: font,
       color: rgb(0, 0, 0),
-      ...options
+      ...options,
     });
   };
 
@@ -73,7 +73,7 @@ export async function generateCoverSheet(options) {
       start: { x: leftMargin, y },
       end: { x: rightMargin, y },
       thickness: thickness,
-      color: rgb(0, 0, 0)
+      color: rgb(0, 0, 0),
     });
   };
 
@@ -82,10 +82,10 @@ export async function generateCoverSheet(options) {
   // ==========================================
 
   // Main Title
-  drawCenteredText('CLAIM EVIDENCE PACKET', titleFont, 20);
+  drawCenteredText("CLAIM EVIDENCE PACKET", titleFont, 20);
   yPosition -= 30;
 
-  drawCenteredText('TABLE OF CONTENTS', titleFont, 16);
+  drawCenteredText("TABLE OF CONTENTS", titleFont, 16);
   yPosition -= 10;
 
   // Decorative line
@@ -96,27 +96,27 @@ export async function generateCoverSheet(options) {
   // VETERAN INFORMATION SECTION
   // ==========================================
 
-  drawText('CLAIMANT INFORMATION:', headerFont, 12);
+  drawText("CLAIMANT INFORMATION:", headerFont, 12);
   yPosition -= 20;
 
   // Veteran name
-  drawText('Name:', bodyFont, 11);
+  drawText("Name:", bodyFont, 11);
   drawText(veteranName, headerFont, 11, { x: leftMargin + 100 });
   yPosition -= 16;
 
   // SSN (partially masked for security)
-  const maskedSSN = ssn ? `XXX-XX-${ssn.slice(-4)}` : 'XXX-XX-XXXX';
-  drawText('SSN:', bodyFont, 11);
+  const maskedSSN = ssn ? `XXX-XX-${ssn.slice(-4)}` : "XXX-XX-XXXX";
+  drawText("SSN:", bodyFont, 11);
   drawText(maskedSSN, bodyFont, 11, { x: leftMargin + 100 });
   yPosition -= 16;
 
   // Claim Type
-  drawText('Claim Type:', bodyFont, 11);
+  drawText("Claim Type:", bodyFont, 11);
   drawText(claimType, bodyFont, 11, { x: leftMargin + 100 });
   yPosition -= 16;
 
   // Submission Date
-  drawText('Submitted:', bodyFont, 11);
+  drawText("Submitted:", bodyFont, 11);
   drawText(date, bodyFont, 11, { x: leftMargin + 100 });
   yPosition -= 30;
 
@@ -128,15 +128,15 @@ export async function generateCoverSheet(options) {
   // DOCUMENT LIST SECTION
   // ==========================================
 
-  drawText('ENCLOSED EVIDENCE:', headerFont, 12);
+  drawText("ENCLOSED EVIDENCE:", headerFont, 12);
   yPosition -= 25;
 
   if (documents.length === 0) {
-    drawText('No documents listed.', italicFont, 11);
+    drawText("No documents listed.", italicFont, 11);
     yPosition -= 20;
   } else {
-    let exhibitLetter = 'A';
-    
+    let exhibitLetter = "A";
+
     for (const doc of documents) {
       // Check if we need a new page
       if (yPosition < 100) {
@@ -148,17 +148,18 @@ export async function generateCoverSheet(options) {
       // Exhibit label
       const exhibitLabel = `Exhibit ${exhibitLetter}:`;
       drawText(exhibitLabel, headerFont, 11);
-      
+
       // Document name
-      const docName = doc.name || 'Untitled Document';
+      const docName = doc.name || "Untitled Document";
       drawText(docName, bodyFont, 11, { x: leftMargin + 80 });
       yPosition -= 16;
 
       // Page range (if provided)
       if (doc.pages) {
-        const pageInfo = doc.pages === 1 
-          ? `(Page ${doc.startPage || '-'})` 
-          : `(Pages ${doc.startPage || '-'} - ${doc.endPage || '-'})`;
+        const pageInfo =
+          doc.pages === 1
+            ? `(Page ${doc.startPage || "-"})`
+            : `(Pages ${doc.startPage || "-"} - ${doc.endPage || "-"})`;
         drawText(pageInfo, italicFont, 10, { x: leftMargin + 80 });
         yPosition -= 16;
       }
@@ -200,13 +201,13 @@ export async function generateCoverSheet(options) {
   yPosition -= 30;
 
   // Organization statement
-  drawText('CERTIFICATION OF ORGANIZATION:', headerFont, 11);
+  drawText("CERTIFICATION OF ORGANIZATION:", headerFont, 11);
   yPosition -= 20;
 
   const certificationText = [
-    'I certify that the enclosed documents are true and complete copies of the evidence',
-    'referenced in this Table of Contents. Each exhibit is clearly labeled and organized',
-    'for efficient review by the Department of Veterans Affairs.'
+    "I certify that the enclosed documents are true and complete copies of the evidence",
+    "referenced in this Table of Contents. Each exhibit is clearly labeled and organized",
+    "for efficient review by the Department of Veterans Affairs.",
   ];
 
   for (const line of certificationText) {
@@ -217,19 +218,22 @@ export async function generateCoverSheet(options) {
   yPosition -= 30;
 
   // Signature line
-  drawText('Claimant Signature:', bodyFont, 11);
-  drawText('_________________________________', bodyFont, 11, { x: leftMargin + 130 });
+  drawText("Claimant Signature:", bodyFont, 11);
+  drawText("_________________________________", bodyFont, 11, {
+    x: leftMargin + 130,
+  });
   yPosition -= 10;
-  drawText('Date:', bodyFont, 11, { x: leftMargin + 280 });
-  drawText('_______________', bodyFont, 11, { x: leftMargin + 315 });
+  drawText("Date:", bodyFont, 11, { x: leftMargin + 280 });
+  drawText("_______________", bodyFont, 11, { x: leftMargin + 315 });
   yPosition -= 40;
 
   // Footer note
-  const footerText = 'This cover sheet was generated by VetRate.org - A free tool for veterans by veterans.';
+  const footerText =
+    "This cover sheet was generated by VetRate.org - A free tool for veterans by veterans.";
   const footerWidth = bodyFont.widthOfTextAtSize(footerText, 8);
-  drawText(footerText, italicFont, 8, { 
+  drawText(footerText, italicFont, 8, {
     x: (width - footerWidth) / 2,
-    color: rgb(0.4, 0.4, 0.4) 
+    color: rgb(0.4, 0.4, 0.4),
   });
 
   return await pdfDoc.save();
@@ -242,19 +246,19 @@ export async function generateCoverSheet(options) {
  * @returns {string[]} Array of text lines
  */
 function wrapText(text, maxChars) {
-  const words = text.split(' ');
+  const words = text.split(" ");
   const lines = [];
-  let currentLine = '';
+  let currentLine = "";
 
   for (const word of words) {
     if ((currentLine + word).length <= maxChars) {
-      currentLine += (currentLine ? ' ' : '') + word;
+      currentLine += (currentLine ? " " : "") + word;
     } else {
       if (currentLine) lines.push(currentLine);
       currentLine = word;
     }
   }
-  
+
   if (currentLine) lines.push(currentLine);
   return lines;
 }
@@ -270,16 +274,40 @@ export function autoDetectDocuments(savedForms) {
 
   // Common form types
   const formTypes = [
-    { key: 'personal-statement', name: 'Personal Statement (VA Form 21-4138)', pages: 2 },
-    { key: 'buddy-statement', name: 'Lay/Witness Statement (VA Form 21-10210)', pages: 3 },
-    { key: 'ptsd-stressor', name: 'PTSD Stressor Statement (VA Form 21-0781)', pages: 4 },
-    { key: 'medical-release', name: 'Authorization for Medical Records (VA Form 21-4142)', pages: 2 },
-    { key: 'intent-to-file', name: 'Intent to File (VA Form 21-0966)', pages: 1 },
-    { key: 'vso-appointment', name: 'VSO Appointment (VA Form 21-22)', pages: 2 },
-    { key: 'nexus-letter', name: 'Medical Nexus Letter', pages: 1 },
-    { key: 'service-records', name: 'Service Treatment Records', pages: 5 },
-    { key: 'medical-records', name: 'Private Medical Records', pages: 10 },
-    { key: 'buddy-letters', name: 'Additional Buddy Statements', pages: 3 }
+    {
+      key: "personal-statement",
+      name: "Personal Statement (VA Form 21-4138)",
+      pages: 2,
+    },
+    {
+      key: "buddy-statement",
+      name: "Lay/Witness Statement (VA Form 21-10210)",
+      pages: 3,
+    },
+    {
+      key: "ptsd-stressor",
+      name: "PTSD Stressor Statement (VA Form 21-0781)",
+      pages: 4,
+    },
+    {
+      key: "medical-release",
+      name: "Authorization for Medical Records (VA Form 21-4142)",
+      pages: 2,
+    },
+    {
+      key: "intent-to-file",
+      name: "Intent to File (VA Form 21-0966)",
+      pages: 1,
+    },
+    {
+      key: "vso-appointment",
+      name: "VSO Appointment (VA Form 21-22)",
+      pages: 2,
+    },
+    { key: "nexus-letter", name: "Medical Nexus Letter", pages: 1 },
+    { key: "service-records", name: "Service Treatment Records", pages: 5 },
+    { key: "medical-records", name: "Private Medical Records", pages: 10 },
+    { key: "buddy-letters", name: "Additional Buddy Statements", pages: 3 },
   ];
 
   for (const formType of formTypes) {
@@ -289,7 +317,7 @@ export function autoDetectDocuments(savedForms) {
         pages: formType.pages,
         startPage: currentPage,
         endPage: currentPage + formType.pages - 1,
-        description: `Completed ${formType.name}`
+        description: `Completed ${formType.name}`,
       });
       currentPage += formType.pages;
     }
@@ -303,10 +331,10 @@ export function autoDetectDocuments(savedForms) {
  * @param {Uint8Array} pdfBytes - PDF data
  * @param {string} fileName - File name (without extension)
  */
-export function downloadCoverSheet(pdfBytes, fileName = 'Claim_Cover_Sheet') {
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+export function downloadCoverSheet(pdfBytes, fileName = "Claim_Cover_Sheet") {
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `${fileName}.pdf`;
   document.body.appendChild(a);
@@ -322,39 +350,41 @@ export function downloadCoverSheet(pdfBytes, fileName = 'Claim_Cover_Sheet') {
  */
 export function generateCoverSheetHTML(options) {
   const {
-    veteranName = 'Veteran Name',
-    ssn = '',
+    veteranName = "Veteran Name",
+    ssn = "",
     documents = [],
-    claimType = 'Disability Claim',
-    date = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })
+    claimType = "Disability Claim",
+    date = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
   } = options;
 
-  const maskedSSN = ssn ? `XXX-XX-${ssn.slice(-4)}` : 'XXX-XX-XXXX';
-  
-  let documentsList = '';
+  const maskedSSN = ssn ? `XXX-XX-${ssn.slice(-4)}` : "XXX-XX-XXXX";
+
+  let documentsList = "";
   if (documents.length === 0) {
-    documentsList = '<p style="font-style: italic; color: #666;">No documents listed.</p>';
+    documentsList =
+      '<p style="font-style: italic; color: #666;">No documents listed.</p>';
   } else {
-    let exhibitLetter = 'A';
+    let exhibitLetter = "A";
     documentsList = '<div style="margin-top: 20px;">';
     for (const doc of documents) {
-      const pageInfo = doc.pages === 1 
-        ? `(Page ${doc.startPage || '-'})` 
-        : `(Pages ${doc.startPage || '-'} - ${doc.endPage || '-'})`;
-      
+      const pageInfo =
+        doc.pages === 1
+          ? `(Page ${doc.startPage || "-"})`
+          : `(Pages ${doc.startPage || "-"} - ${doc.endPage || "-"})`;
+
       documentsList += `
         <div style="margin-bottom: 16px;">
           <strong>Exhibit ${exhibitLetter}:</strong> ${doc.name} ${pageInfo}
-          ${doc.description ? `<br><span style="font-style: italic; font-size: 0.9em; color: #555; margin-left: 60px;">${doc.description}</span>` : ''}
+          ${doc.description ? `<br><span style="font-style: italic; font-size: 0.9em; color: #555; margin-left: 60px;">${doc.description}</span>` : ""}
         </div>
       `;
       exhibitLetter = String.fromCharCode(exhibitLetter.charCodeAt(0) + 1);
     }
-    documentsList += '</div>';
+    documentsList += "</div>";
   }
 
   return `
@@ -501,5 +531,5 @@ export default {
   generateCoverSheet,
   generateCoverSheetHTML,
   autoDetectDocuments,
-  downloadCoverSheet
+  downloadCoverSheet,
 };

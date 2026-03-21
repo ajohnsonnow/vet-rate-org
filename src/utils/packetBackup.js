@@ -11,17 +11,29 @@
 
 // Valid field names that can exist in a claim object
 const VALID_CLAIM_FIELDS = [
-  'id', 'conditionName', 'parentCondition', 'dateSaved', 'dateUpdated',
-  'status', 'diagnosticCode', 'selectedRating', 'claimType', 'notes'
+  "id",
+  "conditionName",
+  "parentCondition",
+  "dateSaved",
+  "dateUpdated",
+  "status",
+  "diagnosticCode",
+  "selectedRating",
+  "claimType",
+  "notes",
 ];
 
 // Valid field names for statement objects
 const VALID_STATEMENT_FIELDS = [
-  'statement', 'doctorNote', 'savedDate', 'conditionName', 'claimType'
+  "statement",
+  "doctorNote",
+  "savedDate",
+  "conditionName",
+  "claimType",
 ];
 
 // Valid status values
-const VALID_STATUSES = ['Drafting', 'Statement Generated', 'Filed'];
+const VALID_STATUSES = ["Drafting", "Statement Generated", "Filed"];
 
 // Max string lengths for security
 const MAX_STRING_LENGTH = 50000;
@@ -35,20 +47,23 @@ const MAX_ID_LENGTH = 100;
  * @returns {string} - Sanitized string
  */
 const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
-  if (typeof str !== 'string') return '';
-  
+  if (typeof str !== "string") return "";
+
   // Truncate to max length
   let sanitized = str.slice(0, maxLength);
-  
+
   // Remove potential script tags and event handlers
-  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
-  sanitized = sanitized.replace(/javascript:/gi, '');
-  sanitized = sanitized.replace(/data:/gi, 'data-blocked:');
-  
+  sanitized = sanitized.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    "",
+  );
+  sanitized = sanitized.replace(/on\w+\s*=/gi, "");
+  sanitized = sanitized.replace(/javascript:/gi, "");
+  sanitized = sanitized.replace(/data:/gi, "data-blocked:");
+
   // Remove null bytes and control characters (except newlines and tabs)
-  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
   return sanitized;
 };
 
@@ -58,12 +73,12 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
  * @returns {Object|null} - Sanitized claim or null if invalid
  */
 const validateClaim = (claim) => {
-  if (!claim || typeof claim !== 'object' || Array.isArray(claim)) {
+  if (!claim || typeof claim !== "object" || Array.isArray(claim)) {
     return null;
   }
 
   // Require conditionName
-  if (!claim.conditionName || typeof claim.conditionName !== 'string') {
+  if (!claim.conditionName || typeof claim.conditionName !== "string") {
     return null;
   }
 
@@ -73,27 +88,36 @@ const validateClaim = (claim) => {
   for (const field of VALID_CLAIM_FIELDS) {
     if (claim.hasOwnProperty(field)) {
       const value = claim[field];
-      
-      if (field === 'id') {
+
+      if (field === "id") {
         sanitizedClaim[field] = sanitizeString(String(value), MAX_ID_LENGTH);
-      } else if (field === 'conditionName' || field === 'parentCondition') {
-        sanitizedClaim[field] = value ? sanitizeString(String(value), MAX_CONDITION_NAME) : null;
-      } else if (field === 'status') {
+      } else if (field === "conditionName" || field === "parentCondition") {
+        sanitizedClaim[field] = value
+          ? sanitizeString(String(value), MAX_CONDITION_NAME)
+          : null;
+      } else if (field === "status") {
         // Validate status is a valid value
-        sanitizedClaim[field] = VALID_STATUSES.includes(value) ? value : 'Drafting';
-      } else if (field === 'dateSaved' || field === 'dateUpdated') {
+        sanitizedClaim[field] = VALID_STATUSES.includes(value)
+          ? value
+          : "Drafting";
+      } else if (field === "dateSaved" || field === "dateUpdated") {
         // Validate date format
         const date = new Date(value);
-        sanitizedClaim[field] = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
-      } else if (field === 'diagnosticCode' || field === 'selectedRating') {
+        sanitizedClaim[field] = isNaN(date.getTime())
+          ? new Date().toISOString()
+          : date.toISOString();
+      } else if (field === "diagnosticCode" || field === "selectedRating") {
         // Numbers only
         const num = parseInt(value, 10);
         if (!isNaN(num) && num >= 0 && num <= 99999) {
           sanitizedClaim[field] = num;
         }
-      } else if (field === 'notes') {
-        sanitizedClaim[field] = sanitizeString(String(value || ''), MAX_STRING_LENGTH);
-      } else if (typeof value === 'string') {
+      } else if (field === "notes") {
+        sanitizedClaim[field] = sanitizeString(
+          String(value || ""),
+          MAX_STRING_LENGTH,
+        );
+      } else if (typeof value === "string") {
         sanitizedClaim[field] = sanitizeString(value);
       }
     }
@@ -107,7 +131,7 @@ const validateClaim = (claim) => {
     sanitizedClaim.dateSaved = new Date().toISOString();
   }
   if (!sanitizedClaim.status) {
-    sanitizedClaim.status = 'Drafting';
+    sanitizedClaim.status = "Drafting";
   }
 
   return sanitizedClaim;
@@ -119,7 +143,7 @@ const validateClaim = (claim) => {
  * @returns {Object|null} - Sanitized statement or null if invalid
  */
 const validateStatement = (statement) => {
-  if (!statement || typeof statement !== 'object' || Array.isArray(statement)) {
+  if (!statement || typeof statement !== "object" || Array.isArray(statement)) {
     return null;
   }
 
@@ -128,11 +152,13 @@ const validateStatement = (statement) => {
   for (const field of VALID_STATEMENT_FIELDS) {
     if (statement.hasOwnProperty(field)) {
       const value = statement[field];
-      
-      if (field === 'savedDate') {
+
+      if (field === "savedDate") {
         const date = new Date(value);
-        sanitizedStatement[field] = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
-      } else if (typeof value === 'string') {
+        sanitizedStatement[field] = isNaN(date.getTime())
+          ? new Date().toISOString()
+          : date.toISOString();
+      } else if (typeof value === "string") {
         sanitizedStatement[field] = sanitizeString(value, MAX_STRING_LENGTH);
       }
     }
@@ -154,14 +180,15 @@ const validateStatement = (statement) => {
  */
 export const exportPacketData = (claims, statements) => {
   const exportData = {
-    version: '1.0',
+    version: "1.0",
     exportDate: new Date().toISOString(),
-    source: 'Vet-Rate.org',
-    disclaimer: 'This backup contains personal claim data. Keep it secure and private.',
+    source: "Vet-Rate.org",
+    disclaimer:
+      "This backup contains personal claim data. Keep it secure and private.",
     data: {
-      claims: claims.map(claim => validateClaim(claim)).filter(Boolean),
-      statements: {}
-    }
+      claims: claims.map((claim) => validateClaim(claim)).filter(Boolean),
+      statements: {},
+    },
   };
 
   // Validate each statement
@@ -183,12 +210,12 @@ export const exportPacketData = (claims, statements) => {
  */
 export const importPacketData = (jsonString) => {
   // Security check: limit input size (5MB max)
-  if (!jsonString || typeof jsonString !== 'string') {
-    return { success: false, error: 'Invalid input: expected string data' };
+  if (!jsonString || typeof jsonString !== "string") {
+    return { success: false, error: "Invalid input: expected string data" };
   }
-  
+
   if (jsonString.length > 5 * 1024 * 1024) {
-    return { success: false, error: 'File too large: maximum size is 5MB' };
+    return { success: false, error: "File too large: maximum size is 5MB" };
   }
 
   // Check for suspicious patterns before parsing
@@ -200,12 +227,15 @@ export const importPacketData = (jsonString) => {
     /constructor\s*\(/i,
     /prototype/i,
     /eval\s*\(/i,
-    /Function\s*\(/i
+    /Function\s*\(/i,
   ];
 
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(jsonString)) {
-      return { success: false, error: 'Security violation: potentially malicious content detected' };
+      return {
+        success: false,
+        error: "Security violation: potentially malicious content detected",
+      };
     }
   }
 
@@ -213,21 +243,30 @@ export const importPacketData = (jsonString) => {
   try {
     parsed = JSON.parse(jsonString);
   } catch (e) {
-    return { success: false, error: 'Invalid JSON format: unable to parse file' };
+    return {
+      success: false,
+      error: "Invalid JSON format: unable to parse file",
+    };
   }
 
   // Validate structure
-  if (!parsed || typeof parsed !== 'object') {
-    return { success: false, error: 'Invalid format: expected object structure' };
+  if (!parsed || typeof parsed !== "object") {
+    return {
+      success: false,
+      error: "Invalid format: expected object structure",
+    };
   }
 
   // Check for Vet-Rate format
-  if (parsed.source !== 'Vet-Rate.org') {
-    return { success: false, error: 'Invalid backup file: not a Vet-Rate.org backup' };
+  if (parsed.source !== "Vet-Rate.org") {
+    return {
+      success: false,
+      error: "Invalid backup file: not a Vet-Rate.org backup",
+    };
   }
 
-  if (!parsed.data || typeof parsed.data !== 'object') {
-    return { success: false, error: 'Invalid format: missing data section' };
+  if (!parsed.data || typeof parsed.data !== "object") {
+    return { success: false, error: "Invalid format: missing data section" };
   }
 
   // Validate and sanitize claims
@@ -243,7 +282,7 @@ export const importPacketData = (jsonString) => {
 
   // Validate and sanitize statements
   const statements = {};
-  if (parsed.data.statements && typeof parsed.data.statements === 'object') {
+  if (parsed.data.statements && typeof parsed.data.statements === "object") {
     for (const [claimId, statement] of Object.entries(parsed.data.statements)) {
       const sanitizedId = sanitizeString(String(claimId), MAX_ID_LENGTH);
       const validated = validateStatement(statement);
@@ -257,14 +296,14 @@ export const importPacketData = (jsonString) => {
     success: true,
     data: {
       claims,
-      statements
+      statements,
     },
     meta: {
-      version: parsed.version || '1.0',
+      version: parsed.version || "1.0",
       exportDate: parsed.exportDate,
       claimCount: claims.length,
-      statementCount: Object.keys(statements).length
-    }
+      statementCount: Object.keys(statements).length,
+    },
   };
 };
 
@@ -274,14 +313,14 @@ export const importPacketData = (jsonString) => {
  * @param {string} filename - Optional custom filename
  */
 export const downloadPacketBackup = (exportData, filename = null) => {
-  const date = new Date().toISOString().split('T')[0];
+  const date = new Date().toISOString().split("T")[0];
   const defaultFilename = `vet-rate-packet-backup-${date}.json`;
-  
+
   const jsonString = JSON.stringify(exportData, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
+  const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
+
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename || defaultFilename;
   document.body.appendChild(a);
@@ -299,18 +338,24 @@ export const downloadPacketBackup = (exportData, filename = null) => {
  * @param {Array} savedForms - Array of saved forms
  * @returns {Object} - Complete export object
  */
-export const exportCompletePacket = (claims, statements, veteranProfile = null, savedForms = []) => {
+export const exportCompletePacket = (
+  claims,
+  statements,
+  veteranProfile = null,
+  savedForms = [],
+) => {
   const exportData = {
-    version: '2.0',
+    version: "2.0",
     exportDate: new Date().toISOString(),
-    source: 'Vet-Rate.org',
-    disclaimer: 'This backup contains personal claim data and sensitive information. Keep it secure and private. NEVER share this file.',
+    source: "Vet-Rate.org",
+    disclaimer:
+      "This backup contains personal claim data and sensitive information. Keep it secure and private. NEVER share this file.",
     data: {
-      claims: claims.map(claim => validateClaim(claim)).filter(Boolean),
+      claims: claims.map((claim) => validateClaim(claim)).filter(Boolean),
       statements: {},
       veteranProfile: veteranProfile || null,
-      savedForms: savedForms || []
-    }
+      savedForms: savedForms || [],
+    },
   };
 
   // Validate each statement
@@ -333,7 +378,7 @@ export const exportCompletePacket = (claims, statements, veteranProfile = null, 
 export const importCompletePacket = (jsonString) => {
   // First use standard validation
   const baseResult = importPacketData(jsonString);
-  
+
   if (!baseResult.success) {
     return baseResult;
   }
@@ -347,7 +392,10 @@ export const importCompletePacket = (jsonString) => {
   }
 
   // Add veteranProfile if present
-  if (parsed.data?.veteranProfile && typeof parsed.data.veteranProfile === 'object') {
+  if (
+    parsed.data?.veteranProfile &&
+    typeof parsed.data.veteranProfile === "object"
+  ) {
     baseResult.data.veteranProfile = parsed.data.veteranProfile;
     baseResult.meta.hasProfile = true;
   }
@@ -366,5 +414,5 @@ export default {
   importPacketData,
   downloadPacketBackup,
   exportCompletePacket,
-  importCompletePacket
+  importCompletePacket,
 };

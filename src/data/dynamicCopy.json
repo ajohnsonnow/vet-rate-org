@@ -18,7 +18,7 @@
       "content": "Traditional development would cost {{market_value}} at industry rates. AI-assisted development let me build it in {{actual_hours}} hours ({{productivity_multiplier}}x multiplier), but the value remains the same. That's the gift I'm giving to the veteran community: enterprise-grade tools with zero strings attached."
     }
   },
-  
+
   "buyMeACoffee": {
     "captions": [
       "I read {{research_hours}} hours of 38 CFR so you don't have to ☕",
@@ -47,7 +47,7 @@
       "Help Keep It Free ☕"
     ]
   },
-  
+
   "uiMessages": {
     "loadingScreens": [
       "Parsing {{loc_count}} lines of code to find your answer...",
@@ -61,13 +61,13 @@
       "Scanning {{secondary_conditions}}+ secondary conditions...",
       "Initializing {{total_files}} project files..."
     ],
-    
+
     "welcomeModal": {
       "header": "Welcome to {{total_hours}} Hours of Work",
       "subheader": "Built by a veteran, for veterans. Zero cost, zero catch.",
       "body": "You're looking at {{years_dev}} years of full-time development ({{total_hours}} hours), condensed into a tool that actually gives a damn about veterans. No ads, no data mining, no subscriptions.\n\n{{validation_count}} disabilities validated. {{loc_count}} lines of code. All free.\n\nOthers charge ${{competitor_price}}+ per use. We charge nothing."
     },
-    
+
     "footerMicroCopy": [
       "Powered by {{total_hours}} hours of veteran-focused development",
       "{{loc_count}} lines of code. Zero lines of BS.",
@@ -75,27 +75,27 @@
       "{{validation_count}} validated conditions. {{years_dev}} years equivalent work. $0 to you.",
       "Market value: {{market_value}}. Your cost: Free. Forever."
     ],
-    
+
     "tooltips": {
       "dataValidation": "Every one of {{validation_count}} conditions validated against official 38 CFR regulations ({{validation_hours}} hours invested)",
       "codeQuality": "{{loc_count}} lines of production-grade code, not a quick hack job",
       "timeInvestment": "{{total_hours}} hours of traditional development, built in {{actual_hours}} with AI assistance",
       "marketValue": "Worth {{market_value}} at industry rates. Free because you served."
     },
-    
+
     "errorMessages": {
       "generic": "Something went wrong in our {{loc_count}} lines of code. We're on it.",
       "dataLoadFailed": "Failed to load disability data ({{validation_count}} conditions). Trying again...",
       "searchFailed": "Search failed. We'll dig through {{validation_lines}} lines of data manually."
     },
-    
+
     "successMessages": {
       "searchComplete": "Found your answer in {{validation_count}} validated conditions",
       "calculationComplete": "Calculated using {{total_hours}} hours of algorithm development",
       "dataLoaded": "Loaded {{validation_count}} disabilities (all validated against 38 CFR)"
     }
   },
-  
+
   "socialProof": {
     "stats": [
       "{{total_hours}} hours invested",
@@ -112,7 +112,7 @@
       "{{validation_count}} conditions, all validated. Not scraped from Wikipedia."
     ]
   },
-  
+
   "metadata": {
     "description": "VA disability calculator built on {{total_hours}} hours of development. {{validation_count}} validated conditions. {{loc_count}} lines of code. 100% free for veterans.",
     "openGraphDescription": "Free VA disability calculator: {{validation_count}} validated conditions, {{major_tools}}+ tools, {{total_hours}} hours of development. Worth {{market_value}}, costs $0.",

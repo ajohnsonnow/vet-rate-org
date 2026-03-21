@@ -2,24 +2,24 @@
  * Vet-Rate.org - Dossier Export
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "The Bus Factor" Export - Full Data Portability
  * Generates a standalone HTML file containing ALL user data
  * in a human-readable format that works offline forever.
- * 
+ *
  * This ensures veterans own their data independent of the platform.
  */
 
-import { exportData } from './dataBackup';
-import { triggerBlobDownload, safeOpenBlobUrl } from './sanitize';
+import { exportData } from "./dataBackup";
+import { triggerBlobDownload, safeOpenBlobUrl } from "./sanitize";
 
 // Storage keys for different data types
 const DATA_SOURCES = {
-  claims: 'vet_rate_saved_claims',
-  statements: 'vet_rate_statements',
-  profile: 'vet_rate_veteran_profile',
-  forms: 'vet_rate_saved_forms',
-  ratings: 'vet_rate_my_ratings'
+  claims: "vet_rate_saved_claims",
+  statements: "vet_rate_statements",
+  profile: "vet_rate_veteran_profile",
+  forms: "vet_rate_saved_forms",
+  ratings: "vet_rate_my_ratings",
 };
 
 /**
@@ -43,16 +43,16 @@ function safeGetData(key) {
  * @returns {string} Formatted date
  */
 function formatDate(dateValue) {
-  if (!dateValue) return 'N/A';
+  if (!dateValue) return "N/A";
   try {
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) return String(dateValue);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   } catch {
     return String(dateValue);
@@ -65,8 +65,8 @@ function formatDate(dateValue) {
  * @returns {string} Escaped text
  */
 function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
+  if (!text) return "";
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -92,32 +92,40 @@ function generateProfileSection(profile) {
       <div class="profile-grid">
         <div class="profile-item">
           <span class="label">Name:</span>
-          <span class="value">${escapeHtml(profile.name || 'Not provided')}</span>
+          <span class="value">${escapeHtml(profile.name || "Not provided")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Branch:</span>
-          <span class="value">${escapeHtml(profile.branch || 'Not provided')}</span>
+          <span class="value">${escapeHtml(profile.branch || "Not provided")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Service Dates:</span>
-          <span class="value">${escapeHtml(profile.startDate || '?')} - ${escapeHtml(profile.endDate || '?')}</span>
+          <span class="value">${escapeHtml(profile.startDate || "?")} - ${escapeHtml(profile.endDate || "?")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Current Combined Rating:</span>
           <span class="value">${profile.currentRating || 0}%</span>
         </div>
-        ${profile.mos ? `
+        ${
+          profile.mos
+            ? `
         <div class="profile-item">
           <span class="label">MOS/Rating:</span>
           <span class="value">${escapeHtml(profile.mos)}</span>
         </div>
-        ` : ''}
-        ${profile.deployments ? `
+        `
+            : ""
+        }
+        ${
+          profile.deployments
+            ? `
         <div class="profile-item">
           <span class="label">Deployments:</span>
           <span class="value">${escapeHtml(profile.deployments)}</span>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
       </div>
       <p class="timestamp">Last updated: ${formatDate(profile.lastUpdated)}</p>
     </section>
@@ -139,33 +147,57 @@ function generateClaimsSection(claims) {
     `;
   }
 
-  const claimCards = claims.map((claim, index) => `
-    <div class="claim-card ${claim.claimType === 'secondary' ? 'secondary' : 'primary'}">
+  const claimCards = claims
+    .map(
+      (claim, index) => `
+    <div class="claim-card ${claim.claimType === "secondary" ? "secondary" : "primary"}">
       <div class="claim-header">
         <h3>${escapeHtml(claim.name || claim.condition || `Claim ${index + 1}`)}</h3>
-        <span class="badge ${claim.claimType}">${escapeHtml(claim.claimType || 'Primary')}</span>
+        <span class="badge ${claim.claimType}">${escapeHtml(claim.claimType || "Primary")}</span>
       </div>
-      ${claim.primaryCondition ? `
+      ${
+        claim.primaryCondition
+          ? `
         <p class="secondary-link">Secondary to: <strong>${escapeHtml(claim.primaryCondition)}</strong></p>
-      ` : ''}
-      ${claim.diagnosticCode ? `
+      `
+          : ""
+      }
+      ${
+        claim.diagnosticCode
+          ? `
         <p><strong>Diagnostic Code:</strong> ${escapeHtml(claim.diagnosticCode)}</p>
-      ` : ''}
-      ${claim.status ? `
+      `
+          : ""
+      }
+      ${
+        claim.status
+          ? `
         <p><strong>Status:</strong> ${escapeHtml(claim.status)}</p>
-      ` : ''}
-      ${claim.rating ? `
+      `
+          : ""
+      }
+      ${
+        claim.rating
+          ? `
         <p><strong>Expected Rating:</strong> ${claim.rating}%</p>
-      ` : ''}
-      ${claim.notes ? `
+      `
+          : ""
+      }
+      ${
+        claim.notes
+          ? `
         <div class="notes">
           <strong>Notes:</strong>
           <p>${escapeHtml(claim.notes)}</p>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       <p class="timestamp">Added: ${formatDate(claim.dateAdded || claim.createdAt)}</p>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <section class="section">
@@ -192,40 +224,59 @@ function generateStatementsSection(statements) {
     `;
   }
 
-  const statementCards = statements.map((stmt, index) => `
+  const statementCards = statements
+    .map(
+      (stmt, index) => `
     <div class="statement-card">
       <div class="statement-header">
         <h3>${escapeHtml(stmt.condition || stmt.title || `Statement ${index + 1}`)}</h3>
-        ${stmt.aiEnhanced ? '<span class="badge ai">AI Enhanced</span>' : ''}
+        ${stmt.aiEnhanced ? '<span class="badge ai">AI Enhanced</span>' : ""}
       </div>
-      ${stmt.claimType ? `
+      ${
+        stmt.claimType
+          ? `
         <p><strong>Claim Type:</strong> ${escapeHtml(stmt.claimType)}</p>
-      ` : ''}
-      ${stmt.primaryCondition ? `
+      `
+          : ""
+      }
+      ${
+        stmt.primaryCondition
+          ? `
         <p><strong>Primary Condition:</strong> ${escapeHtml(stmt.primaryCondition)}</p>
-      ` : ''}
+      `
+          : ""
+      }
       <div class="statement-content">
         <h4>Statement Text:</h4>
         <div class="statement-text">
-          ${escapeHtml(stmt.statement || stmt.content || 'No content').replace(/\n/g, '<br>')}
+          ${escapeHtml(stmt.statement || stmt.content || "No content").replace(/\n/g, "<br>")}
         </div>
       </div>
-      ${stmt.answers ? `
+      ${
+        stmt.answers
+          ? `
         <div class="statement-answers">
           <h4>Original Answers:</h4>
           <dl>
             ${Object.entries(stmt.answers)
               .filter(([, value]) => value)
-              .map(([key, value]) => `
-                <dt>${escapeHtml(key.replace(/([A-Z])/g, ' $1').trim())}:</dt>
+              .map(
+                ([key, value]) => `
+                <dt>${escapeHtml(key.replace(/([A-Z])/g, " $1").trim())}:</dt>
                 <dd>${escapeHtml(String(value))}</dd>
-              `).join('')}
+              `,
+              )
+              .join("")}
           </dl>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       <p class="timestamp">Created: ${formatDate(stmt.dateCreated || stmt.createdAt)}</p>
     </div>
-  `).join('<hr class="statement-divider">');
+  `,
+    )
+    .join('<hr class="statement-divider">');
 
   return `
     <section class="section">
@@ -252,7 +303,7 @@ function generateRatingsSection(ratings) {
 
   // Handle both array and object formats
   const ratingsList = Array.isArray(ratings) ? ratings : Object.values(ratings);
-  
+
   if (ratingsList.length === 0) {
     return `
       <section class="section">
@@ -262,14 +313,18 @@ function generateRatingsSection(ratings) {
     `;
   }
 
-  const ratingRows = ratingsList.map(rating => `
+  const ratingRows = ratingsList
+    .map(
+      (rating) => `
     <tr>
-      <td>${escapeHtml(rating.condition || rating.name || 'Unknown')}</td>
-      <td>${rating.rating || rating.percentage || 'N/A'}%</td>
-      <td>${escapeHtml(rating.diagnosticCode || rating.dc || 'N/A')}</td>
-      <td>${escapeHtml(rating.status || 'Active')}</td>
+      <td>${escapeHtml(rating.condition || rating.name || "Unknown")}</td>
+      <td>${rating.rating || rating.percentage || "N/A"}%</td>
+      <td>${escapeHtml(rating.diagnosticCode || rating.dc || "N/A")}</td>
+      <td>${escapeHtml(rating.status || "Active")}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <section class="section">
@@ -307,11 +362,13 @@ function generateFormsSection(forms) {
   }
 
   // Handle both array and object formats
-  const formsList = Array.isArray(forms) ? forms : Object.entries(forms).map(([key, value]) => ({
-    id: key,
-    ...value
-  }));
-  
+  const formsList = Array.isArray(forms)
+    ? forms
+    : Object.entries(forms).map(([key, value]) => ({
+        id: key,
+        ...value,
+      }));
+
   if (formsList.length === 0) {
     return `
       <section class="section">
@@ -321,19 +378,27 @@ function generateFormsSection(forms) {
     `;
   }
 
-  const formCards = formsList.map(form => `
+  const formCards = formsList
+    .map(
+      (form) => `
     <div class="form-card">
-      <h4>${escapeHtml(form.formName || form.name || form.id || 'Unnamed Form')}</h4>
-      ${form.description ? `<p>${escapeHtml(form.description)}</p>` : ''}
-      ${form.data ? `
+      <h4>${escapeHtml(form.formName || form.name || form.id || "Unnamed Form")}</h4>
+      ${form.description ? `<p>${escapeHtml(form.description)}</p>` : ""}
+      ${
+        form.data
+          ? `
         <details>
           <summary>Form Data</summary>
           <pre>${escapeHtml(JSON.stringify(form.data, null, 2))}</pre>
         </details>
-      ` : ''}
+      `
+          : ""
+      }
       <p class="timestamp">Saved: ${formatDate(form.savedAt || form.createdAt)}</p>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <section class="section">
@@ -352,14 +417,14 @@ function generateFormsSection(forms) {
 export function generateDossierHTML() {
   const exportDate = new Date().toISOString();
   const formattedDate = formatDate(exportDate);
-  
+
   // Gather all data
   const profile = safeGetData(DATA_SOURCES.profile);
   const claims = safeGetData(DATA_SOURCES.claims);
   const statements = safeGetData(DATA_SOURCES.statements);
   const ratings = safeGetData(DATA_SOURCES.ratings);
   const forms = safeGetData(DATA_SOURCES.forms);
-  
+
   // Get the full backup for raw data reference
   const fullBackup = exportData();
 
@@ -821,16 +886,16 @@ export function generateDossierHTML() {
 export function downloadDossier() {
   try {
     const html = generateDossierHTML();
-    const date = new Date().toISOString().split('T')[0];
+    const date = new Date().toISOString().split("T")[0];
     const filename = `VA-Claims-Dossier-${date}.html`;
-    
+
     // deepcode ignore javascript/DOMXSS: blob is HTML from local data; triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     triggerBlobDownload(blob, filename);
-    
+
     return { success: true, filename };
   } catch (error) {
-    console.error('Error generating dossier:', error);
+    console.error("Error generating dossier:", error);
     return { success: false, error: error.message };
   }
 }
@@ -842,12 +907,12 @@ export function previewDossier() {
   try {
     const html = generateDossierHTML();
     // deepcode ignore javascript/OR: URL.createObjectURL always returns blob: scheme; safeOpenBlobUrl reconstructs from UUID regex capture — window.open receives literal 'blob:' + origin + '/' + UUID
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    if (!safeOpenBlobUrl(url)) throw new Error('Invalid URL');
+    if (!safeOpenBlobUrl(url)) throw new Error("Invalid URL");
     return { success: true };
   } catch (error) {
-    console.error('Error previewing dossier:', error);
+    console.error("Error previewing dossier:", error);
     return { success: false, error: error.message };
   }
 }
@@ -855,5 +920,5 @@ export function previewDossier() {
 export default {
   generateDossierHTML,
   downloadDossier,
-  previewDossier
+  previewDossier,
 };

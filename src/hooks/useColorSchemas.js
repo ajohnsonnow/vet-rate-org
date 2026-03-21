@@ -4,7 +4,7 @@
  * throughout the application
  */
 
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from "../contexts/ThemeContext";
 
 /**
  * Hook to access centralized color schemas
@@ -34,10 +34,10 @@ export function useColorSchemas() {
     // Direct color access
     colors,
     // Convenience shortcuts
-    isDark: theme === 'dark',
-    isLight: theme === 'light',
-    isColorBlind: colorBlindMode !== 'none',
-    isHighContrast: colorBlindMode === 'high-contrast',
+    isDark: theme === "dark",
+    isLight: theme === "light",
+    isColorBlind: colorBlindMode !== "none",
+    isHighContrast: colorBlindMode === "high-contrast",
   };
 }
 
