@@ -18,6 +18,7 @@
 
 import {
   AutoProcessor,
+  AutoTokenizer,
   Florence2ForConditionalGeneration,
   env,
   RawImage,
@@ -33,6 +34,7 @@ const MODEL_ID = "onnx-community/Florence-2-base-ft";
 // Worker state
 let model = null;
 let processor = null;
+let tokenizer = null;
 let isLoading = false;
 
 /**
@@ -91,7 +93,7 @@ self.onmessage = async (e) => {
  * Uses fp16 for vision (accuracy) and q4 for decoder (memory savings)
  */
 async function loadModel() {
-  if (model && processor) {
+  if (model && processor && tokenizer) {
     self.postMessage({ status: "ready", cached: true });
     return;
   }
@@ -111,15 +113,20 @@ async function loadModel() {
       message: "Initializing Florence-2 Vision Engine...",
     });
 
-    // Load processor first (small, fast)
+    // Load processor + tokenizer (small, fast)
     self.postMessage({
       status: "loading",
       progress: 5,
       stage: "processor",
-      message: "Loading image processor...",
+      message: "Loading image processor and tokenizer...",
     });
 
-    processor = await AutoProcessor.from_pretrained(MODEL_ID);
+    // Florence-2 requires a separate tokenizer for batch_decode
+    // (processor.batch_decode does NOT work — use tokenizer.batch_decode)
+    [processor, tokenizer] = await Promise.all([
+      AutoProcessor.from_pretrained(MODEL_ID),
+      AutoTokenizer.from_pretrained(MODEL_ID),
+    ]);
 
     // Load model with mixed precision for optimal memory/quality balance
     // This is the "secret sauce" that prevents browser crashes
@@ -207,7 +214,7 @@ async function loadModel() {
  * @param {Object} payload - { imageBlob: Blob, task?: string }
  */
 async function analyzeImage(payload) {
-  if (!model || !processor) {
+  if (!model || !processor || !tokenizer) {
     self.postMessage({
       status: "error",
       error: "Model not loaded. Call LOAD first.",
@@ -251,8 +258,10 @@ async function analyzeImage(payload) {
       num_beams: 1, // Greedy decoding (faster)
     });
 
-    // Decode tokens to text
-    const generated_text = processor.batch_decode(generated_ids, {
+    // Decode tokens to text — MUST use tokenizer.batch_decode, NOT processor.batch_decode
+    // processor.batch_decode does not exist on Florence-2; it throws silently and returns garbage.
+    // See: https://huggingface.co/blog/transformersjs-v3 Florence-2 example
+    const generated_text = tokenizer.batch_decode(generated_ids, {
       skip_special_tokens: false,
     })[0];
 
@@ -288,7 +297,7 @@ async function analyzeImage(payload) {
  * @param {Object} payload - { imageBlob: Blob, question: string }
  */
 async function askDocumentQuestion(payload) {
-  if (!model || !processor) {
+  if (!model || !processor || !tokenizer) {
     self.postMessage({
       status: "error",
       error: "Model not loaded. Call LOAD first.",
@@ -324,7 +333,7 @@ async function askDocumentQuestion(payload) {
       do_sample: false,
     });
 
-    const generated_text = processor.batch_decode(generated_ids, {
+    const generated_text = tokenizer.batch_decode(generated_ids, {
       skip_special_tokens: false,
     })[0];
 
@@ -357,6 +366,7 @@ function sendStatus() {
     status: "status",
     modelLoaded: !!model,
     processorLoaded: !!processor,
+    tokenizerLoaded: !!tokenizer,
     isLoading,
     modelId: MODEL_ID,
   });
@@ -368,6 +378,7 @@ function sendStatus() {
 function unloadModel() {
   model = null;
   processor = null;
+  tokenizer = null;
   isLoading = false;
 
   // Trigger garbage collection hint
