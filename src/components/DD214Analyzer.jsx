@@ -37,6 +37,10 @@ import {
   renderPDFToImages,
 } from "../utils/documentAnalyzer";
 import {
+  processFormationDocument,
+  PROCESSING_STATES,
+} from "../utils/musterCallProcessor";
+import {
   saveDD214Data,
   getServiceHistory,
   addAward,
@@ -533,10 +537,41 @@ const DD214Analyzer = ({
         });
 
         try {
-          console.log(`🔍 Starting OCR analysis of ${file.name}...`);
-          const result = await analyzeDocument(file, setOcrProgress);
           console.log(
-            `✅ OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
+            `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
+          );
+          // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
+          const musterResult = await processFormationDocument(
+            file,
+            (progress) => {
+              // Map MusterCall progress → OCR progress bar state
+              const mapped = {
+                state:
+                  progress.state === PROCESSING_STATES.EXTRACTING
+                    ? OCR_STATES.OCR_IN_PROGRESS
+                    : progress.state === PROCESSING_STATES.COMPLETE
+                      ? OCR_STATES.COMPLETE
+                      : progress.state === PROCESSING_STATES.ERROR
+                        ? OCR_STATES.ERROR
+                        : OCR_STATES.LOADING,
+                progress: progress.progress || 0,
+                message: progress.message || `Processing ${file.name}...`,
+                currentPage: progress.currentPage,
+                totalPages: progress.totalPages,
+              };
+              setOcrProgress(mapped);
+            },
+          );
+          const result = {
+            text: musterResult.text || "",
+            pageCount: musterResult.pageCount || 1,
+            method: musterResult.method || "ocr",
+            fileType: musterResult.fileType || "pdf",
+            ocrUsed: musterResult.ocrUsed ?? true,
+            ocrConfidence: musterResult.confidence || 0,
+          };
+          console.log(
+            `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
           );
 
           setExtractedTexts((prev) => [
