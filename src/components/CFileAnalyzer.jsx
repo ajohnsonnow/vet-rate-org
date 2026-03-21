@@ -11,11 +11,14 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
-  ripTextFromPdf,
   readFileAsArrayBuffer,
   formatFileSize,
   estimateProcessingTime,
 } from "../utils/pdfExtractor";
+import {
+  processFormationDocument,
+  PROCESSING_STATES,
+} from "../utils/musterCallProcessor";
 import {
   analyzeCFile,
   getCFilePrivacyDisclosure,
@@ -184,22 +187,38 @@ export default function CFileAnalyzer({
     abortControllerRef.current = new AbortController();
 
     try {
-      // Stage 1: Read the file
-      setProcessingStage(t("cfileAnalyzer", "readingPdf"));
-      const arrayBuffer = await readFileAsArrayBuffer(file);
+      // Stage 1: (processFormationDocument accepts the File directly — no pre-read needed)
 
-      // Stage 2: Extract text
+      // Stage 2: Extract text — route through MusterCall pipeline for full
+      // Tesseract OCR support (handles scanned / image-only PDFs)
       setProcessingStage(t("cfileAnalyzer", "extractingText"));
-      const extractionResult = await ripTextFromPdf(
-        arrayBuffer,
-        (current, total) => setExtractionProgress({ current, total }),
-      );
+      const musterResult = await processFormationDocument(file, (progress) => {
+        // Map MusterCall progress events → CFileAnalyzer UI state
+        if (progress.state === PROCESSING_STATES.EXTRACTING) {
+          setExtractionProgress({
+            current: progress.currentPage || 0,
+            total: progress.totalPages || 0,
+          });
+          if (progress.message) setProcessingStage(progress.message);
+        }
+      });
 
-      // Check if the PDF has actual text
+      // Normalise to the shape the rest of handleConsentAndProcess expects
+      const extractionResult = {
+        text: musterResult.text || "",
+        hasText: (musterResult.text || "").trim().length > 100,
+        totalPages: musterResult.pageCount || 1,
+        avgCharsPerPage: musterResult.text
+          ? Math.round(musterResult.text.length / (musterResult.pageCount || 1))
+          : 0,
+        method: musterResult.method || "ocr",
+        ocrUsed: musterResult.ocrUsed ?? true,
+      };
+
       if (!extractionResult.hasText) {
         setError(
-          `${t("cfileAnalyzer", "scannedImageError")} (${extractionResult.avgCharsPerPage} characters per page average). ` +
-            t("cfileAnalyzer", "scannedImageSolution"),
+          `Unable to extract text from this document (${extractionResult.avgCharsPerPage} chars/page avg). ` +
+            `The file may be corrupted or an unsupported scan format.`,
         );
         setIsProcessing(false);
         return;
