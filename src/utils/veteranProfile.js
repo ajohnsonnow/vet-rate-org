@@ -165,7 +165,19 @@ export const saveVeteranProfile = (profile) => {
         profile[field] !== undefined &&
         profile[field] !== ""
       ) {
-        sanitizedProfile[field] = sanitizeString(String(profile[field]));
+        if (
+          Array.isArray(profile[field]) ||
+          (typeof profile[field] === "object" && profile[field] !== null)
+        ) {
+          // Arrays and objects: store as-is (already validated on write)
+          sanitizedProfile[field] = profile[field];
+        } else if (typeof profile[field] === "boolean") {
+          sanitizedProfile[field] = profile[field];
+        } else if (typeof profile[field] === "number") {
+          sanitizedProfile[field] = profile[field];
+        } else {
+          sanitizedProfile[field] = sanitizeString(String(profile[field]));
+        }
       }
     }
 
