@@ -16,20 +16,14 @@
         "minRating": 0,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "California resident",
-          "Honorable discharge"
-        ]
+        "otherReqs": ["California resident", "Honorable discharge"]
       },
       "applicationProcess": {
         "agency": "County Assessor's Office",
         "form": "BOE-261",
         "deadline": "February 15 annually",
         "renewalRequired": true,
-        "documentation": [
-          "DD-214",
-          "Proof of California residency"
-        ],
+        "documentation": ["DD-214", "Proof of California residency"],
         "onlineApplicationAvailable": false,
         "applicationUrl": "https://www.boe.ca.gov/proptaxes/veteransexemption.htm"
       },
@@ -99,10 +93,7 @@
         "minRating": 0,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "California resident",
-          "Service-connected disability"
-        ]
+        "otherReqs": ["California resident", "Service-connected disability"]
       },
       "applicationProcess": {
         "agency": "California DMV",
@@ -182,20 +173,14 @@
         "minRating": 50,
         "maxRating": null,
         "isPermanentTotal": false,
-        "otherReqs": [
-          "California resident",
-          "Service-connected disability"
-        ]
+        "otherReqs": ["California resident", "Service-connected disability"]
       },
       "applicationProcess": {
         "agency": "California Department of Fish and Wildlife",
         "form": null,
         "deadline": null,
         "renewalRequired": false,
-        "documentation": [
-          "DD-214",
-          "VA rating letter"
-        ],
+        "documentation": ["DD-214", "VA rating letter"],
         "onlineApplicationAvailable": false,
         "applicationUrl": "https://wildlife.ca.gov/Licensing/Hunting"
       },

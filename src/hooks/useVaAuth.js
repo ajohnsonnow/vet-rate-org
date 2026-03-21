@@ -1,14 +1,20 @@
 /**
  * VA.gov Authentication Hook
- * 
+ *
  * Main hook for handling VA.gov OAuth 2.0 authentication with PKCE.
  * Provides login, logout, token exchange, and user info fetching.
  */
 
-import { useCallback } from 'react';
-import { useVaAuthContext } from '../contexts/VaAuthContext';
-import { VA_AUTH_CONFIG, VA_ENDPOINTS, VA_SCOPES, STORAGE_KEYS, validateConfig } from '../config/vaAuth';
-import { generatePKCEPair, generateState } from '../utils/pkce';
+import { useCallback } from "react";
+import { useVaAuthContext } from "../contexts/VaAuthContext";
+import {
+  VA_AUTH_CONFIG,
+  VA_ENDPOINTS,
+  VA_SCOPES,
+  STORAGE_KEYS,
+  validateConfig,
+} from "../config/vaAuth";
+import { generatePKCEPair, generateState } from "../utils/pkce";
 
 export function useVaAuth() {
   const {
@@ -27,151 +33,165 @@ export function useVaAuth() {
    * Initiate the OAuth login flow
    * Opens VA.gov login in a popup window to keep the main app running
    */
-  const login = useCallback(async (usePopup = true) => {
-    try {
-      // Validate configuration
-      if (!validateConfig()) {
-        throw new Error('Invalid VA.gov OAuth configuration. Check your environment variables.');
-      }
+  const login = useCallback(
+    async (usePopup = true) => {
+      try {
+        // Validate configuration
+        if (!validateConfig()) {
+          throw new Error(
+            "Invalid VA.gov OAuth configuration. Check your environment variables.",
+          );
+        }
 
-      console.log('[VA Auth] Starting login flow...');
+        console.log("[VA Auth] Starting login flow...");
 
-      // Generate PKCE parameters
-      const { verifier, challenge } = await generatePKCEPair();
-      const state = generateState();
+        // Generate PKCE parameters
+        const { verifier, challenge } = await generatePKCEPair();
+        const state = generateState();
 
-      // Store the code_verifier and state in sessionStorage
-      // We'll need these when handling the callback
-      sessionStorage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier);
-      sessionStorage.setItem(STORAGE_KEYS.STATE, state);
+        // Store the code_verifier and state in sessionStorage
+        // We'll need these when handling the callback
+        sessionStorage.setItem(STORAGE_KEYS.CODE_VERIFIER, verifier);
+        sessionStorage.setItem(STORAGE_KEYS.STATE, state);
 
-      // Build the authorization URL
-      const authUrl = new URL(VA_ENDPOINTS.authorization);
-      authUrl.searchParams.set('client_id', VA_AUTH_CONFIG.clientId);
-      authUrl.searchParams.set('redirect_uri', VA_AUTH_CONFIG.redirectUri);
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('scope', VA_SCOPES);
-      authUrl.searchParams.set('state', state);
-      authUrl.searchParams.set('code_challenge', challenge);
-      authUrl.searchParams.set('code_challenge_method', 'S256');
+        // Build the authorization URL
+        const authUrl = new URL(VA_ENDPOINTS.authorization);
+        authUrl.searchParams.set("client_id", VA_AUTH_CONFIG.clientId);
+        authUrl.searchParams.set("redirect_uri", VA_AUTH_CONFIG.redirectUri);
+        authUrl.searchParams.set("response_type", "code");
+        authUrl.searchParams.set("scope", VA_SCOPES);
+        authUrl.searchParams.set("state", state);
+        authUrl.searchParams.set("code_challenge", challenge);
+        authUrl.searchParams.set("code_challenge_method", "S256");
 
-      console.log('[VA Auth] Opening VA.gov authorization...');
-      
-      if (usePopup) {
-        // Open in popup window - keeps main app running
-        const width = 600;
-        const height = 700;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-        
-        const popup = window.open(
-          authUrl.toString(),
-          'va-login',
-          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-        );
-        
-        if (!popup) {
-          console.warn('[VA Auth] Popup blocked, falling back to redirect');
+        console.log("[VA Auth] Opening VA.gov authorization...");
+
+        if (usePopup) {
+          // Open in popup window - keeps main app running
+          const width = 600;
+          const height = 700;
+          const left = window.screenX + (window.outerWidth - width) / 2;
+          const top = window.screenY + (window.outerHeight - height) / 2;
+
+          const popup = window.open(
+            authUrl.toString(),
+            "va-login",
+            `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
+          );
+
+          if (!popup) {
+            console.warn("[VA Auth] Popup blocked, falling back to redirect");
+            window.location.href = authUrl.toString();
+          }
+        } else {
+          // Traditional redirect
           window.location.href = authUrl.toString();
         }
-      } else {
-        // Traditional redirect
-        window.location.href = authUrl.toString();
+      } catch (err) {
+        console.error("[VA Auth] Login error:", err);
+        setError(err.message);
       }
-    } catch (err) {
-      console.error('[VA Auth] Login error:', err);
-      setError(err.message);
-    }
-  }, [setError]);
+    },
+    [setError],
+  );
 
   /**
    * Handle the OAuth callback after VA.gov redirects back
    * Exchange the authorization code for an access token
    */
-  const handleCallback = useCallback(async (code, state) => {
-    try {
-      console.log('[VA Auth] Handling callback...');
+  const handleCallback = useCallback(
+    async (code, state) => {
+      try {
+        console.log("[VA Auth] Handling callback...");
 
-      // Validate state parameter (CSRF protection)
-      const storedState = sessionStorage.getItem(STORAGE_KEYS.STATE);
-      
-      // If state is already cleared, this might be a duplicate call (React StrictMode)
-      if (!storedState) {
-        console.warn('[VA Auth] State already cleared - possible duplicate callback');
-        // Check if we're already authenticated
-        const existingToken = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        if (existingToken) {
-          return { success: true, message: 'Already authenticated' };
+        // Validate state parameter (CSRF protection)
+        const storedState = sessionStorage.getItem(STORAGE_KEYS.STATE);
+
+        // If state is already cleared, this might be a duplicate call (React StrictMode)
+        if (!storedState) {
+          console.warn(
+            "[VA Auth] State already cleared - possible duplicate callback",
+          );
+          // Check if we're already authenticated
+          const existingToken = sessionStorage.getItem(
+            STORAGE_KEYS.ACCESS_TOKEN,
+          );
+          if (existingToken) {
+            return { success: true, message: "Already authenticated" };
+          }
+          throw new Error(
+            "Authentication session expired. Please try logging in again.",
+          );
         }
-        throw new Error('Authentication session expired. Please try logging in again.');
+
+        if (state !== storedState) {
+          throw new Error("State mismatch - possible CSRF attack");
+        }
+
+        // Retrieve the code_verifier
+        const codeVerifier = sessionStorage.getItem(STORAGE_KEYS.CODE_VERIFIER);
+        if (!codeVerifier) {
+          throw new Error("Code verifier not found - session may have expired");
+        }
+
+        // Exchange the authorization code for tokens FIRST, then clean up
+        console.log("[VA Auth] Exchanging code for tokens...");
+        const tokenResponse = await fetch(VA_ENDPOINTS.token, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "authorization_code",
+            code: code,
+            redirect_uri: VA_AUTH_CONFIG.redirectUri,
+            client_id: VA_AUTH_CONFIG.clientId,
+            code_verifier: codeVerifier,
+          }),
+        });
+
+        if (!tokenResponse.ok) {
+          const errorData = await tokenResponse.json().catch(() => ({}));
+          throw new Error(
+            errorData.error_description ||
+              errorData.error ||
+              `Token exchange failed: ${tokenResponse.status}`,
+          );
+        }
+
+        const tokens = await tokenResponse.json();
+        console.log("[VA Auth] Tokens received successfully");
+
+        // Fetch user info
+        const user = await fetchUserInfo(tokens.access_token);
+
+        // Store authentication
+        setAuth(tokens, user);
+
+        // Clean up PKCE parameters AFTER successful token exchange
+        sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
+        sessionStorage.removeItem(STORAGE_KEYS.STATE);
+
+        return { success: true };
+      } catch (err) {
+        console.error("[VA Auth] Callback error:", err);
+        setError(err.message);
+        return { success: false, error: err.message };
       }
-      
-      if (state !== storedState) {
-        throw new Error('State mismatch - possible CSRF attack');
-      }
-
-      // Retrieve the code_verifier
-      const codeVerifier = sessionStorage.getItem(STORAGE_KEYS.CODE_VERIFIER);
-      if (!codeVerifier) {
-        throw new Error('Code verifier not found - session may have expired');
-      }
-
-      // Exchange the authorization code for tokens FIRST, then clean up
-      console.log('[VA Auth] Exchanging code for tokens...');
-      const tokenResponse = await fetch(VA_ENDPOINTS.token, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code: code,
-          redirect_uri: VA_AUTH_CONFIG.redirectUri,
-          client_id: VA_AUTH_CONFIG.clientId,
-          code_verifier: codeVerifier,
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.json().catch(() => ({}));
-        throw new Error(
-          errorData.error_description || 
-          errorData.error || 
-          `Token exchange failed: ${tokenResponse.status}`
-        );
-      }
-
-      const tokens = await tokenResponse.json();
-      console.log('[VA Auth] Tokens received successfully');
-
-      // Fetch user info
-      const user = await fetchUserInfo(tokens.access_token);
-
-      // Store authentication
-      setAuth(tokens, user);
-      
-      // Clean up PKCE parameters AFTER successful token exchange
-      sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
-      sessionStorage.removeItem(STORAGE_KEYS.STATE);
-
-      return { success: true };
-    } catch (err) {
-      console.error('[VA Auth] Callback error:', err);
-      setError(err.message);
-      return { success: false, error: err.message };
-    }
-  }, [setAuth, setError]);
+    },
+    [setAuth, setError],
+  );
 
   /**
    * Fetch user information from VA.gov
    */
   const fetchUserInfo = async (token) => {
     try {
-      console.log('[VA Auth] Fetching user info...');
-      
+      console.log("[VA Auth] Fetching user info...");
+
       const response = await fetch(VA_ENDPOINTS.userInfo, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -180,11 +200,11 @@ export function useVaAuth() {
       }
 
       const userInfo = await response.json();
-      console.log('[VA Auth] User info retrieved');
-      
+      console.log("[VA Auth] User info retrieved");
+
       return userInfo;
     } catch (err) {
-      console.error('[VA Auth] Error fetching user info:', err);
+      console.error("[VA Auth] Error fetching user info:", err);
       // Don't fail the whole auth flow if user info fails
       return null;
     }
@@ -193,59 +213,62 @@ export function useVaAuth() {
   /**
    * Refresh the access token using the refresh token
    */
-  const refreshAccessToken = useCallback(async (refreshToken) => {
-    try {
-      console.log('[VA Auth] Refreshing access token...');
+  const refreshAccessToken = useCallback(
+    async (refreshToken) => {
+      try {
+        console.log("[VA Auth] Refreshing access token...");
 
-      const response = await fetch(VA_ENDPOINTS.token, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken,
-          client_id: VA_AUTH_CONFIG.clientId,
-          scope: VA_SCOPES,
-        }),
-      });
+        const response = await fetch(VA_ENDPOINTS.token, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: refreshToken,
+            client_id: VA_AUTH_CONFIG.clientId,
+            scope: VA_SCOPES,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Token refresh failed');
+        if (!response.ok) {
+          throw new Error("Token refresh failed");
+        }
+
+        const tokens = await response.json();
+
+        // Fetch updated user info
+        const user = await fetchUserInfo(tokens.access_token);
+
+        // Update stored authentication
+        setAuth(tokens, user);
+
+        console.log("[VA Auth] Token refreshed successfully");
+        return { success: true };
+      } catch (err) {
+        console.error("[VA Auth] Token refresh error:", err);
+        // If refresh fails, user needs to log in again
+        clearAuth();
+        return { success: false, error: err.message };
       }
-
-      const tokens = await response.json();
-      
-      // Fetch updated user info
-      const user = await fetchUserInfo(tokens.access_token);
-      
-      // Update stored authentication
-      setAuth(tokens, user);
-
-      console.log('[VA Auth] Token refreshed successfully');
-      return { success: true };
-    } catch (err) {
-      console.error('[VA Auth] Token refresh error:', err);
-      // If refresh fails, user needs to log in again
-      clearAuth();
-      return { success: false, error: err.message };
-    }
-  }, [setAuth, clearAuth]);
+    },
+    [setAuth, clearAuth],
+  );
 
   /**
    * Revoke the access token and log out
    */
   const logout = useCallback(async () => {
     try {
-      console.log('[VA Auth] Logging out...');
+      console.log("[VA Auth] Logging out...");
 
       // Attempt to revoke the token at VA.gov
       if (accessToken) {
         try {
           await fetch(VA_ENDPOINTS.revoke, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
+              "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({
               token: accessToken,
@@ -254,16 +277,16 @@ export function useVaAuth() {
           });
         } catch (err) {
           // Log but don't fail logout if revocation fails
-          console.warn('[VA Auth] Token revocation failed:', err);
+          console.warn("[VA Auth] Token revocation failed:", err);
         }
       }
 
       // Clear local authentication state
       clearAuth();
-      
-      console.log('[VA Auth] Logout successful');
+
+      console.log("[VA Auth] Logout successful");
     } catch (err) {
-      console.error('[VA Auth] Logout error:', err);
+      console.error("[VA Auth] Logout error:", err);
       // Clear local state even if remote revocation fails
       clearAuth();
     }
@@ -272,38 +295,41 @@ export function useVaAuth() {
   /**
    * Make an authenticated API request to VA.gov
    */
-  const fetchVaApi = useCallback(async (endpoint, options = {}) => {
-    try {
-      // Check if token is expired and try to refresh
-      if (isTokenExpired() && refreshAccessToken) {
-        const refreshResult = await refreshAccessToken();
-        if (!refreshResult.success) {
-          throw new Error('Session expired. Please log in again.');
+  const fetchVaApi = useCallback(
+    async (endpoint, options = {}) => {
+      try {
+        // Check if token is expired and try to refresh
+        if (isTokenExpired() && refreshAccessToken) {
+          const refreshResult = await refreshAccessToken();
+          if (!refreshResult.success) {
+            throw new Error("Session expired. Please log in again.");
+          }
         }
+
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
+
+        const response = await fetch(endpoint, {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (err) {
+        console.error("[VA Auth] API request error:", err);
+        throw err;
       }
-
-      if (!accessToken) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(endpoint, {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (err) {
-      console.error('[VA Auth] API request error:', err);
-      throw err;
-    }
-  }, [accessToken, isTokenExpired, refreshAccessToken]);
+    },
+    [accessToken, isTokenExpired, refreshAccessToken],
+  );
 
   return {
     // Authentication state
@@ -312,13 +338,13 @@ export function useVaAuth() {
     error,
     accessToken,
     userInfo,
-    
+
     // Authentication methods
     login,
     logout,
     handleCallback,
     refreshAccessToken,
-    
+
     // API helper
     fetchVaApi,
   };

@@ -2,7 +2,7 @@
  * Analytics Transparency Widget
  * =============================
  * Shows users exactly what data is collected and displays live visitor stats.
- * 
+ *
  * GoatCounter is privacy-first analytics:
  * - No cookies
  * - No personal data
@@ -10,10 +10,21 @@
  * - Open source
  */
 
-import React, { useState, useEffect } from 'react';
-import { Eye, Shield, Globe, Clock, Monitor, MapPin, ExternalLink, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
-import BRAND from '../config/branding';
-import { sanitizeUrl } from '../../utils/sanitize';
+import React, { useState, useEffect } from "react";
+import {
+  Eye,
+  Shield,
+  Globe,
+  Clock,
+  Monitor,
+  MapPin,
+  ExternalLink,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import BRAND from "../config/branding";
+import { sanitizeUrl } from "../../utils/sanitize";
 
 // GoatCounter public stats endpoint (uses brand config)
 const STATS_URL = BRAND.goatCounterUrl;
@@ -22,50 +33,53 @@ const STATS_URL = BRAND.goatCounterUrl;
  * What GoatCounter collects (and what it DOESN'T)
  */
 const DATA_COLLECTED = [
-  { 
-    icon: Globe, 
-    label: 'Page URL', 
-    description: 'Which page you visited',
-    example: '/calculator',
-    collected: true
+  {
+    icon: Globe,
+    label: "Page URL",
+    description: "Which page you visited",
+    example: "/calculator",
+    collected: true,
   },
-  { 
-    icon: Monitor, 
-    label: 'Screen Size', 
-    description: 'General screen dimensions',
-    example: '1920×1080',
-    collected: true
+  {
+    icon: Monitor,
+    label: "Screen Size",
+    description: "General screen dimensions",
+    example: "1920×1080",
+    collected: true,
   },
-  { 
-    icon: Globe, 
-    label: 'Browser Type', 
-    description: 'Which browser you use',
-    example: 'Chrome, Firefox, Safari',
-    collected: true
+  {
+    icon: Globe,
+    label: "Browser Type",
+    description: "Which browser you use",
+    example: "Chrome, Firefox, Safari",
+    collected: true,
   },
-  { 
-    icon: MapPin, 
-    label: 'Country (rough)', 
-    description: 'Approximate country from IP',
-    example: 'United States',
-    collected: true
+  {
+    icon: MapPin,
+    label: "Country (rough)",
+    description: "Approximate country from IP",
+    example: "United States",
+    collected: true,
   },
-  { 
-    icon: Clock, 
-    label: 'Referrer', 
-    description: 'Where you came from',
-    example: 'google.com, reddit.com',
-    collected: true
+  {
+    icon: Clock,
+    label: "Referrer",
+    description: "Where you came from",
+    example: "google.com, reddit.com",
+    collected: true,
   },
 ];
 
 const DATA_NOT_COLLECTED = [
-  { label: 'Your IP address', reason: 'Never stored or logged' },
-  { label: 'Cookies', reason: 'GoatCounter uses no cookies' },
-  { label: 'Personal information', reason: 'No names, emails, or identifiers' },
-  { label: 'Tracking across sites', reason: 'No cross-site tracking' },
-  { label: 'Fingerprinting', reason: 'No browser fingerprinting' },
-  { label: 'Location (precise)', reason: 'Only country-level, not city/address' },
+  { label: "Your IP address", reason: "Never stored or logged" },
+  { label: "Cookies", reason: "GoatCounter uses no cookies" },
+  { label: "Personal information", reason: "No names, emails, or identifiers" },
+  { label: "Tracking across sites", reason: "No cross-site tracking" },
+  { label: "Fingerprinting", reason: "No browser fingerprinting" },
+  {
+    label: "Location (precise)",
+    reason: "Only country-level, not city/address",
+  },
 ];
 
 /**
@@ -76,16 +90,16 @@ const fetchGoatCounterStats = async () => {
     // GoatCounter provides a public JSON endpoint for basic stats
     // Format: https://SITE.goatcounter.com/counter/PAGE.json
     // For total stats, we can check the public dashboard
-    
+
     // Note: GoatCounter's API requires authentication for detailed stats
     // But we can show a link to the public dashboard
     return {
       available: true,
       dashboardUrl: STATS_URL,
-      message: 'View live stats on our public dashboard'
+      message: "View live stats on our public dashboard",
     };
   } catch (error) {
-    console.error('Failed to fetch GoatCounter stats:', error);
+    console.error("Failed to fetch GoatCounter stats:", error);
     return { available: false, error: error.message };
   }
 };
@@ -116,11 +130,13 @@ function AnalyticsTransparency({ compact = false }) {
         <div className="flex items-center gap-2 text-green-800 dark:text-green-300">
           <Shield className="h-4 w-4" />
           <span className="font-medium">Privacy-First Analytics</span>
-          <span className="text-green-600 dark:text-green-400">• No cookies • No tracking • No personal data</span>
+          <span className="text-green-600 dark:text-green-400">
+            • No cookies • No tracking • No personal data
+          </span>
         </div>
-        <a 
-          href={STATS_URL} 
-          target="_blank" 
+        <a
+          href={STATS_URL}
+          target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 mt-1"
         >
@@ -141,7 +157,9 @@ function AnalyticsTransparency({ compact = false }) {
             </div>
             <div>
               <h3 className="text-lg font-bold">Analytics Transparency</h3>
-              <p className="text-sm text-green-100">See exactly what we collect</p>
+              <p className="text-sm text-green-100">
+                See exactly what we collect
+              </p>
             </div>
           </div>
           <a
@@ -166,7 +184,7 @@ function AnalyticsTransparency({ compact = false }) {
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {DATA_COLLECTED.map((item, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
               >
@@ -174,10 +192,17 @@ function AnalyticsTransparency({ compact = false }) {
                   <item.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white text-sm">{item.label}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{item.description}</div>
+                  <div className="font-medium text-gray-900 dark:text-white text-sm">
+                    {item.label}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {item.description}
+                  </div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    e.g., <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded">{item.example}</code>
+                    e.g.,{" "}
+                    <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded">
+                      {item.example}
+                    </code>
                   </div>
                 </div>
               </div>
@@ -193,7 +218,7 @@ function AnalyticsTransparency({ compact = false }) {
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {DATA_NOT_COLLECTED.map((item, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
               >
@@ -210,11 +235,22 @@ function AnalyticsTransparency({ compact = false }) {
           <div className="flex items-start gap-3">
             <div className="text-2xl">🐐</div>
             <div>
-              <h4 className="font-bold text-blue-900 dark:text-blue-200">Powered by GoatCounter</h4>
+              <h4 className="font-bold text-blue-900 dark:text-blue-200">
+                Powered by GoatCounter
+              </h4>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                We use <a href="https://www.goatcounter.com" target="_blank" rel="noopener noreferrer" className="underline">GoatCounter</a>, 
-                an open-source, privacy-friendly analytics platform. It's GDPR compliant by design - 
-                no consent banners needed because we don't track you.
+                We use{" "}
+                <a
+                  href="https://www.goatcounter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  GoatCounter
+                </a>
+                , an open-source, privacy-friendly analytics platform. It's GDPR
+                compliant by design - no consent banners needed because we don't
+                track you.
               </p>
               <div className="flex flex-wrap gap-3 mt-3">
                 <a
@@ -223,7 +259,8 @@ function AnalyticsTransparency({ compact = false }) {
                   rel="noopener noreferrer"
                   className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
-                  GoatCounter Privacy Policy <ExternalLink className="h-3 w-3" />
+                  GoatCounter Privacy Policy{" "}
+                  <ExternalLink className="h-3 w-3" />
                 </a>
                 <a
                   href={STATS_URL}
@@ -262,8 +299,8 @@ function AnalyticsTransparency({ compact = false }) {
       <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
           <Shield className="h-3 w-3 inline mr-1" />
-          {BRAND.appName} is committed to veteran privacy. Your data stays on YOUR device. 
-          Analytics help us improve the site - nothing more.
+          {BRAND.appName} is committed to veteran privacy. Your data stays on
+          YOUR device. Analytics help us improve the site - nothing more.
         </p>
       </div>
     </div>

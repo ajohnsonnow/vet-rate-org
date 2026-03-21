@@ -6,30 +6,41 @@
  *
  * The Consistency Engine - UI Component
  * Displays contradictions and helps users fix them
- * 
+ *
  * Now includes:
  * - Rules Mode: Automated rule-based checks across stored data
  * - AI Mode: "Cross-Examination" - Compare evidence vs statements with AI
  */
 
-import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import useConsistencyCheck, { getHealthStatus } from '../utils/useConsistencyCheck';
-import AIConsistencyAnalyzer from './AIConsistencyAnalyzer';
+import React, { useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import useConsistencyCheck, {
+  getHealthStatus,
+} from "../utils/useConsistencyCheck";
+import AIConsistencyAnalyzer from "./AIConsistencyAnalyzer";
 
 export default function ConsistencyEngine({ onClose }) {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
-  
-  const [activeTab, setActiveTab] = useState('rules'); // 'rules' or 'ai'
-  const { contradictions, isChecking, lastCheck, refresh, criticalCount, highCount, mediumCount, totalCount } = useConsistencyCheck();
+
+  const [activeTab, setActiveTab] = useState("rules"); // 'rules' or 'ai'
+  const {
+    contradictions,
+    isChecking,
+    lastCheck,
+    refresh,
+    criticalCount,
+    highCount,
+    mediumCount,
+    totalCount,
+  } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);
 
   // If AI tab is selected, render the AI analyzer
-  if (activeTab === 'ai') {
+  if (activeTab === "ai") {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-gray-800 rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
@@ -43,17 +54,21 @@ export default function ConsistencyEngine({ onClose }) {
                 {/* Tabs */}
                 <div className="flex bg-black/20 rounded-lg p-1">
                   <button
-                    onClick={() => setActiveTab('rules')}
+                    onClick={() => setActiveTab("rules")}
                     className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                      activeTab === 'rules' ? 'bg-white text-purple-700' : 'text-white/80 hover:text-white'
+                      activeTab === "rules"
+                        ? "bg-white text-purple-700"
+                        : "text-white/80 hover:text-white"
                     }`}
                   >
                     📋 Rules Check
                   </button>
                   <button
-                    onClick={() => setActiveTab('ai')}
+                    onClick={() => setActiveTab("ai")}
                     className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                      activeTab === 'ai' ? 'bg-white text-purple-700' : 'text-white/80 hover:text-white'
+                      activeTab === "ai"
+                        ? "bg-white text-purple-700"
+                        : "text-white/80 hover:text-white"
                     }`}
                   >
                     🤖 AI Analysis
@@ -71,7 +86,7 @@ export default function ConsistencyEngine({ onClose }) {
           </div>
           {/* AI Content */}
           <div className="overflow-y-auto max-h-[calc(90vh-80px)] bg-gray-900">
-            <AIConsistencyAnalyzer onBack={() => setActiveTab('rules')} />
+            <AIConsistencyAnalyzer onBack={() => setActiveTab("rules")} />
           </div>
         </div>
       </div>
@@ -80,9 +95,9 @@ export default function ConsistencyEngine({ onClose }) {
 
   const getSeverityBadge = (severity) => {
     const badges = {
-      critical: { bg: 'bg-red-600', text: 'CRITICAL', icon: '🚨' },
-      high: { bg: 'bg-orange-600', text: 'HIGH', icon: '⚠️' },
-      medium: { bg: 'bg-yellow-600', text: 'MEDIUM', icon: '⚡' }
+      critical: { bg: "bg-red-600", text: "CRITICAL", icon: "🚨" },
+      high: { bg: "bg-orange-600", text: "HIGH", icon: "⚠️" },
+      medium: { bg: "bg-yellow-600", text: "MEDIUM", icon: "⚡" },
     };
     return badges[severity] || badges.medium;
   };
@@ -91,35 +106,44 @@ export default function ConsistencyEngine({ onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className={`bg-gradient-to-r ${
-          healthStatus.color === 'green' 
-            ? 'from-green-600 to-green-800'
-            : healthStatus.color === 'red'
-            ? 'from-red-600 to-red-800'
-            : healthStatus.color === 'yellow'
-            ? 'from-yellow-600 to-orange-600'
-            : 'from-orange-600 to-red-600'
-        } text-white p-6`}>
+        <div
+          className={`bg-gradient-to-r ${
+            healthStatus.color === "green"
+              ? "from-green-600 to-green-800"
+              : healthStatus.color === "red"
+                ? "from-red-600 to-red-800"
+                : healthStatus.color === "yellow"
+                  ? "from-yellow-600 to-orange-600"
+                  : "from-orange-600 to-red-600"
+          } text-white p-6`}
+        >
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-4 mb-2">
                 <h2 className="text-3xl font-bold">
-                  {healthStatus.icon} The Consistency Engine <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                  {healthStatus.icon} The Consistency Engine{" "}
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                    BETA
+                  </span>
                 </h2>
                 {/* Tabs */}
                 <div className="flex bg-black/20 rounded-lg p-1">
                   <button
-                    onClick={() => setActiveTab('rules')}
+                    onClick={() => setActiveTab("rules")}
                     className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                      activeTab === 'rules' ? 'bg-white text-gray-800' : 'text-white/80 hover:text-white'
+                      activeTab === "rules"
+                        ? "bg-white text-gray-800"
+                        : "text-white/80 hover:text-white"
                     }`}
                   >
                     📋 Rules
                   </button>
                   <button
-                    onClick={() => setActiveTab('ai')}
+                    onClick={() => setActiveTab("ai")}
                     className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                      activeTab === 'ai' ? 'bg-white text-gray-800' : 'text-white/80 hover:text-white'
+                      activeTab === "ai"
+                        ? "bg-white text-gray-800"
+                        : "text-white/80 hover:text-white"
                     }`}
                   >
                     🤖 AI Cross-Exam
@@ -159,7 +183,7 @@ export default function ConsistencyEngine({ onClose }) {
                 <p className="text-2xl font-bold">{mediumCount}</p>
               </div>
             </div>
-            
+
             {lastCheck && (
               <p className="text-xs text-white/75 mt-3">
                 Last checked: {lastCheck.toLocaleTimeString()}
@@ -186,7 +210,8 @@ export default function ConsistencyEngine({ onClose }) {
                 All Clear!
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                No contradictions detected in your data. Your claim packet is internally consistent.
+                No contradictions detected in your data. Your claim packet is
+                internally consistent.
               </p>
               <button
                 onClick={refresh}
@@ -206,9 +231,14 @@ export default function ConsistencyEngine({ onClose }) {
                     🚨 Critical Issues (Fix Immediately)
                   </h3>
                   <div className="space-y-3">
-                    {contradictions.filter(c => c.severity === 'critical').map((contradiction, index) => (
-                      <ContradictionCard key={index} contradiction={contradiction} />
-                    ))}
+                    {contradictions
+                      .filter((c) => c.severity === "critical")
+                      .map((contradiction, index) => (
+                        <ContradictionCard
+                          key={index}
+                          contradiction={contradiction}
+                        />
+                      ))}
                   </div>
                 </div>
               )}
@@ -220,9 +250,14 @@ export default function ConsistencyEngine({ onClose }) {
                     ⚠️ High Priority Issues
                   </h3>
                   <div className="space-y-3">
-                    {contradictions.filter(c => c.severity === 'high').map((contradiction, index) => (
-                      <ContradictionCard key={index} contradiction={contradiction} />
-                    ))}
+                    {contradictions
+                      .filter((c) => c.severity === "high")
+                      .map((contradiction, index) => (
+                        <ContradictionCard
+                          key={index}
+                          contradiction={contradiction}
+                        />
+                      ))}
                   </div>
                 </div>
               )}
@@ -234,9 +269,14 @@ export default function ConsistencyEngine({ onClose }) {
                     ⚡ Medium Priority Issues
                   </h3>
                   <div className="space-y-3">
-                    {contradictions.filter(c => c.severity === 'medium').map((contradiction, index) => (
-                      <ContradictionCard key={index} contradiction={contradiction} />
-                    ))}
+                    {contradictions
+                      .filter((c) => c.severity === "medium")
+                      .map((contradiction, index) => (
+                        <ContradictionCard
+                          key={index}
+                          contradiction={contradiction}
+                        />
+                      ))}
                   </div>
                 </div>
               )}
@@ -259,12 +299,22 @@ export default function ConsistencyEngine({ onClose }) {
               💡 Why This Matters:
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-              The VA looks for <strong>any reason to deny</strong>. Internal contradictions are their favorite ammunition.
+              The VA looks for <strong>any reason to deny</strong>. Internal
+              contradictions are their favorite ammunition.
             </p>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• If you say "constant pain" but your logs show gaps, they'll question your credibility</li>
-              <li>• If you say "left knee" in one place and "right knee" in another, they'll deny everything</li>
-              <li>• If you claim you "can't lift 10 lbs" but logged a gym workout, that's evidence against you</li>
+              <li>
+                • If you say "constant pain" but your logs show gaps, they'll
+                question your credibility
+              </li>
+              <li>
+                • If you say "left knee" in one place and "right knee" in
+                another, they'll deny everything
+              </li>
+              <li>
+                • If you claim you "can't lift 10 lbs" but logged a gym workout,
+                that's evidence against you
+              </li>
             </ul>
           </div>
         </div>
@@ -279,30 +329,34 @@ function ContradictionCard({ contradiction }) {
 
   function getSeverityBadge(severity) {
     const badges = {
-      critical: { bg: 'bg-red-600', text: 'CRITICAL', icon: '🚨' },
-      high: { bg: 'bg-orange-600', text: 'HIGH', icon: '⚠️' },
-      medium: { bg: 'bg-yellow-600', text: 'MEDIUM', icon: '⚡' }
+      critical: { bg: "bg-red-600", text: "CRITICAL", icon: "🚨" },
+      high: { bg: "bg-orange-600", text: "HIGH", icon: "⚠️" },
+      medium: { bg: "bg-yellow-600", text: "MEDIUM", icon: "⚡" },
     };
     return badges[severity] || badges.medium;
   }
 
   return (
-    <div className={`border-l-4 ${
-      contradiction.severity === 'critical' 
-        ? 'border-red-600 bg-red-50 dark:bg-red-900/20'
-        : contradiction.severity === 'high'
-        ? 'border-orange-600 bg-orange-50 dark:bg-orange-900/20'
-        : 'border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
-    } rounded-lg p-4`}>
+    <div
+      className={`border-l-4 ${
+        contradiction.severity === "critical"
+          ? "border-red-600 bg-red-50 dark:bg-red-900/20"
+          : contradiction.severity === "high"
+            ? "border-orange-600 bg-orange-50 dark:bg-orange-900/20"
+            : "border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20"
+      } rounded-lg p-4`}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{badge.icon}</span>
-          <span className={`${badge.bg} text-white text-xs font-bold px-2 py-1 rounded`}>
+          <span
+            className={`${badge.bg} text-white text-xs font-bold px-2 py-1 rounded`}
+          >
             {badge.text}
           </span>
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {contradiction.type.replace('_', ' ').toUpperCase()}
+            {contradiction.type.replace("_", " ").toUpperCase()}
           </span>
         </div>
       </div>
@@ -371,19 +425,21 @@ export function ConsistencyBadge({ onClick }) {
     <button
       onClick={onClick}
       className={`p-2 rounded-lg transition-colors relative ${
-        healthStatus.color === 'green'
-          ? 'bg-green-500/20 hover:bg-green-500/40'
-          : healthStatus.color === 'red'
-          ? 'bg-red-500/20 hover:bg-red-500/40 animate-pulse'
-          : 'bg-yellow-500/20 hover:bg-yellow-500/40'
+        healthStatus.color === "green"
+          ? "bg-green-500/20 hover:bg-green-500/40"
+          : healthStatus.color === "red"
+            ? "bg-red-500/20 hover:bg-red-500/40 animate-pulse"
+            : "bg-yellow-500/20 hover:bg-yellow-500/40"
       }`}
       title={healthStatus.message}
     >
       <span className="text-lg">{healthStatus.icon}</span>
       {totalCount > 0 && (
-        <span className={`absolute -top-1 -right-1 ${
-          criticalCount > 0 ? 'bg-red-600' : 'bg-yellow-600'
-        } text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center`}>
+        <span
+          className={`absolute -top-1 -right-1 ${
+            criticalCount > 0 ? "bg-red-600" : "bg-yellow-600"
+          } text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center`}
+        >
           {totalCount}
         </span>
       )}

@@ -2,27 +2,27 @@
  * Vet-Rate.org - Veteran Knowledge Base (VKB)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * The VKB is a structured, AI-queryable knowledge graph built from:
  * - DD-214 documents
  * - Blue Button medical records
  * - C-File claim documents
  * - Muster Call batch processing
- * 
+ *
  * Purpose: Give LLMs complete context about a veteran's claim without
  * repeatedly parsing documents. One source of truth for all AI agents.
- * 
+ *
  * Storage: Uses IndexedDB as primary storage (unlimited capacity)
  * with localStorage as metadata cache only.
  */
 
-const VKB_STORAGE_KEY = 'vetrate_knowledge_base';
-const VKB_VERSION = '1.0.0';
+const VKB_STORAGE_KEY = "vetrate_knowledge_base";
+const VKB_VERSION = "1.0.0";
 
 // IndexedDB Configuration
-const VKB_DB_NAME = 'VetRateVKB';
+const VKB_DB_NAME = "VetRateVKB";
 const VKB_DB_VERSION = 1;
-const VKB_STORE_NAME = 'knowledge_base';
+const VKB_STORE_NAME = "knowledge_base";
 
 let vkbDB = null;
 
@@ -40,13 +40,13 @@ const openVKBDatabase = () => {
     const request = indexedDB.open(VKB_DB_NAME, VKB_DB_VERSION);
 
     request.onerror = () => {
-      console.error('❌ Failed to open VKB database:', request.error);
+      console.error("❌ Failed to open VKB database:", request.error);
       reject(request.error);
     };
 
     request.onsuccess = () => {
       vkbDB = request.result;
-      console.log('✅ VKB IndexedDB opened successfully');
+      console.log("✅ VKB IndexedDB opened successfully");
       resolve(vkbDB);
     };
 
@@ -55,9 +55,13 @@ const openVKBDatabase = () => {
 
       // Create VKB store
       if (!database.objectStoreNames.contains(VKB_STORE_NAME)) {
-        const vkbStore = database.createObjectStore(VKB_STORE_NAME, { keyPath: 'id' });
-        vkbStore.createIndex('lastUpdated', 'metadata.lastUpdated', { unique: false });
-        console.log('✅ VKB object store created');
+        const vkbStore = database.createObjectStore(VKB_STORE_NAME, {
+          keyPath: "id",
+        });
+        vkbStore.createIndex("lastUpdated", "metadata.lastUpdated", {
+          unique: false,
+        });
+        console.log("✅ VKB object store created");
       }
     };
   });
@@ -65,7 +69,7 @@ const openVKBDatabase = () => {
 
 /**
  * Veteran Knowledge Base Schema
- * 
+ *
  * This structure is optimized for LLM consumption - clear hierarchy,
  * minimal nesting, timestamped entries, source attribution.
  */
@@ -76,7 +80,7 @@ export const VKB_SCHEMA = {
     documentCount: 0,
     completeness: 0, // 0-100 score based on filled fields
   },
-  
+
   personal: {
     fullName: null,
     dateOfBirth: null,
@@ -91,7 +95,7 @@ export const VKB_SCHEMA = {
       zip: null,
     },
   },
-  
+
   serviceHistory: {
     branch: null, // Army, Navy, Air Force, Marines, Coast Guard, Space Force
     entryDate: null,
@@ -108,49 +112,49 @@ export const VKB_SCHEMA = {
     foreignService: false,
     reenlisted: false,
   },
-  
+
   medicalConditions: {
     current: [], // [{name, diagnosisDate, icdCode, severity, ratedPercentage, serviceConnected}]
     past: [], // Historical conditions
     secondary: [], // [{condition, primaryCondition, relationship}]
     presumptive: [], // [{condition, exposureType, eligibleUnder}]
   },
-  
+
   medications: {
     current: [], // [{name, dosage, frequency, startDate, prescribedFor}]
     past: [], // Historical meds
   },
-  
+
   treatments: {
     procedures: [], // [{name, date, provider, outcome, relatedCondition}]
     therapies: [], // [{type, startDate, endDate, frequency, relatedCondition}]
     hospitalizations: [], // [{facility, admitDate, dischargeDate, reason, duration}]
   },
-  
+
   medicalAppointments: {
     cAndPExams: [], // [{date, examiner, conditionsExamined, findings, dbqSubmitted}]
     vaAppointments: [], // [{date, facility, provider, reason, notes}]
     privateDoctor: [], // [{date, provider, specialty, reason, notes}]
   },
-  
+
   vaClaimsHistory: {
     claims: [], // [{claimNumber, filedDate, status, decision, decisionDate, conditions}]
     ratings: [], // [{condition, percentage, effectiveDate, combinedRating}]
     appeals: [], // [{claimNumber, appealDate, status, boardDate, decision}]
   },
-  
+
   exposures: {
     environmental: [], // [{type, location, dates, documentation}] - Agent Orange, burn pits, etc.
     occupational: [], // [{hazard, mos, dates, protectionUsed}]
     combat: [], // [{incident, date, location, injuries, documentation}]
   },
-  
+
   evidenceTimeline: [], // [{date, eventType, description, source, significance}]
-  
+
   keyFacts: [], // [{fact, source, documentId, pageNumber, extractedText, importance}]
-  
+
   nexusStatements: [], // [{condition, statedBy, date, relationship, documentSource}]
-  
+
   documentation: {
     dd214s: [], // [{id, fileName, uploadDate, pageCount, extracted}]
     blueButtonReports: [], // [{id, fileName, uploadDate, dateRange, recordCount}]
@@ -158,7 +162,7 @@ export const VKB_SCHEMA = {
     privateRecords: [], // [{id, fileName, uploadDate, provider, dateRange}]
     otherEvidence: [], // [{id, fileName, uploadDate, category, description}]
   },
-  
+
   aiInsights: {
     strengthsOfClaim: [], // [{condition, strength, reasons}]
     weaknesses: [], // [{condition, weakness, recommendations}]
@@ -183,52 +187,57 @@ export const loadVKB = async () => {
   try {
     // Try IndexedDB first
     const db = await openVKBDatabase();
-    const transaction = db.transaction([VKB_STORE_NAME], 'readonly');
+    const transaction = db.transaction([VKB_STORE_NAME], "readonly");
     const store = transaction.objectStore(VKB_STORE_NAME);
-    const request = store.get('main');
+    const request = store.get("main");
 
     return new Promise((resolve) => {
       request.onsuccess = () => {
         if (request.result) {
-          console.log('📂 Loaded VKB from IndexedDB');
+          console.log("📂 Loaded VKB from IndexedDB");
           // Cache metadata in localStorage for quick access
           try {
-            localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify({ 
-              metadata: request.result.metadata,
-              source: 'indexeddb'
-            }));
+            localStorage.setItem(
+              VKB_STORAGE_KEY,
+              JSON.stringify({
+                metadata: request.result.metadata,
+                source: "indexeddb",
+              }),
+            );
           } catch (e) {
             // Ignore localStorage errors
           }
           resolve(request.result);
         } else {
           // Try localStorage for legacy data
-          console.log('📂 No IndexedDB VKB, checking localStorage...');
+          console.log("📂 No IndexedDB VKB, checking localStorage...");
           try {
             const stored = localStorage.getItem(VKB_STORAGE_KEY);
             if (stored) {
               const parsed = JSON.parse(stored);
-              if (parsed.overflow || parsed.source === 'indexeddb') {
+              if (parsed.overflow || parsed.source === "indexeddb") {
                 // This is just metadata, initialize new VKB
-                console.log('📂 Found metadata only, initializing fresh VKB');
+                console.log("📂 Found metadata only, initializing fresh VKB");
                 resolve(initializeVKB());
               } else {
                 // Legacy full VKB, migrate to IndexedDB
-                console.log('📂 Migrating legacy localStorage VKB to IndexedDB');
+                console.log(
+                  "📂 Migrating legacy localStorage VKB to IndexedDB",
+                );
                 saveVKB(parsed).then(() => resolve(parsed));
               }
             } else {
               resolve(initializeVKB());
             }
           } catch (err) {
-            console.error('Error loading from localStorage:', err);
+            console.error("Error loading from localStorage:", err);
             resolve(initializeVKB());
           }
         }
       };
 
       request.onerror = () => {
-        console.error('Error loading from IndexedDB:', request.error);
+        console.error("Error loading from IndexedDB:", request.error);
         // Fallback to localStorage
         try {
           const stored = localStorage.getItem(VKB_STORAGE_KEY);
@@ -239,7 +248,7 @@ export const loadVKB = async () => {
       };
     });
   } catch (err) {
-    console.error('Error opening VKB database:', err);
+    console.error("Error opening VKB database:", err);
     // Fallback to localStorage
     try {
       const stored = localStorage.getItem(VKB_STORAGE_KEY);
@@ -257,49 +266,56 @@ export const saveVKB = async (vkb) => {
   try {
     vkb.metadata.lastUpdated = new Date().toISOString();
     vkb.metadata.completeness = calculateCompleteness(vkb);
-    
+
     // Add ID for IndexedDB
-    vkb.id = 'main';
-    
+    vkb.id = "main";
+
     // Calculate size
     const vkbString = JSON.stringify(vkb);
     const sizeInBytes = new Blob([vkbString]).size;
     const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
-    
-    console.log(`💾 Saving VKB to IndexedDB (${sizeInMB}MB, ${vkb.metadata.documentCount} documents)`);
-    
+
+    console.log(
+      `💾 Saving VKB to IndexedDB (${sizeInMB}MB, ${vkb.metadata.documentCount} documents)`,
+    );
+
     // Save to IndexedDB (unlimited storage)
     const db = await openVKBDatabase();
-    const transaction = db.transaction([VKB_STORE_NAME], 'readwrite');
+    const transaction = db.transaction([VKB_STORE_NAME], "readwrite");
     const store = transaction.objectStore(VKB_STORE_NAME);
     const request = store.put(vkb);
 
     return new Promise((resolve) => {
       request.onsuccess = () => {
         console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
-        
+
         // Cache metadata in localStorage for quick access
         try {
-          localStorage.setItem(VKB_STORAGE_KEY, JSON.stringify({
-            metadata: vkb.metadata,
-            source: 'indexeddb',
-            size: sizeInMB
-          }));
+          localStorage.setItem(
+            VKB_STORAGE_KEY,
+            JSON.stringify({
+              metadata: vkb.metadata,
+              source: "indexeddb",
+              size: sizeInMB,
+            }),
+          );
         } catch (lsErr) {
           // LocalStorage full, but that's OK - data is in IndexedDB
-          console.log('💡 localStorage full, metadata not cached (data safe in IndexedDB)');
+          console.log(
+            "💡 localStorage full, metadata not cached (data safe in IndexedDB)",
+          );
         }
-        
+
         resolve({ success: true, size: sizeInMB });
       };
 
       request.onerror = () => {
-        console.error('❌ Failed to save VKB to IndexedDB:', request.error);
+        console.error("❌ Failed to save VKB to IndexedDB:", request.error);
         resolve({ success: false, error: request.error.message });
       };
     });
   } catch (err) {
-    console.error('❌ Error saving VKB:', err);
+    console.error("❌ Error saving VKB:", err);
     return { success: false, error: err.message };
   }
 };
@@ -310,51 +326,51 @@ export const saveVKB = async (vkb) => {
  */
 export const addDocumentToVKB = async (documentInfo) => {
   const vkb = await loadVKB();
-  
+
   // Determine document category
-  let category = 'otherEvidence';
+  let category = "otherEvidence";
   switch (documentInfo.classification) {
-    case 'DD214':
-    case 'service_record':
-      category = 'dd214s';
+    case "DD214":
+    case "service_record":
+      category = "dd214s";
       break;
-    case 'blue_button':
-    case 'medical_record':
-      category = 'blueButtonReports';
+    case "blue_button":
+    case "medical_record":
+      category = "blueButtonReports";
       break;
-    case 'c_file':
-    case 'rating_decision':
-    case 'claim_letter':
-    case 'va_decision':
-      category = 'cFiles';
+    case "c_file":
+    case "rating_decision":
+    case "claim_letter":
+    case "va_decision":
+      category = "cFiles";
       break;
-    case 'private_medical':
-    case 'provider_letter':
-    case 'nexus_letter':
-      category = 'privateRecords';
+    case "private_medical":
+    case "provider_letter":
+    case "nexus_letter":
+      category = "privateRecords";
       break;
   }
-  
+
   // Calculate version number (count existing documents of this type + 1)
   const existingDocs = vkb.documentation[category] || [];
   const versionNumber = existingDocs.length + 1;
-  
+
   // Mark all previous documents as NOT most recent
-  existingDocs.forEach(doc => {
+  existingDocs.forEach((doc) => {
     doc.mostRecent = false;
   });
-  
+
   const docEntry = {
     id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     fileName: documentInfo.fileName,
     uploadDate: new Date().toISOString(),
     fileSize: documentInfo.fileSize,
     pageCount: documentInfo.pageCount || 1,
-    classification: documentInfo.classification || 'unknown',
-    extractedText: documentInfo.extractedText || '',
+    classification: documentInfo.classification || "unknown",
+    extractedText: documentInfo.extractedText || "",
     extractedData: documentInfo.extractedData || {},
     ocrUsed: documentInfo.ocrUsed || false,
-    method: documentInfo.method || 'text',
+    method: documentInfo.method || "text",
     version: versionNumber,
     mostRecent: true,
     category: category,
@@ -362,34 +378,34 @@ export const addDocumentToVKB = async (documentInfo) => {
 
   // Route to appropriate documentation category
   switch (documentInfo.classification) {
-    case 'DD214':
-    case 'service_record':
+    case "DD214":
+    case "service_record":
       vkb.documentation.dd214s.push(docEntry);
       break;
-    
-    case 'blue_button':
-    case 'medical_record':
+
+    case "blue_button":
+    case "medical_record":
       vkb.documentation.blueButtonReports.push(docEntry);
       break;
-    
-    case 'c_file':
-    case 'rating_decision':
-    case 'claim_letter':
-    case 'va_decision':
+
+    case "c_file":
+    case "rating_decision":
+    case "claim_letter":
+    case "va_decision":
       vkb.documentation.cFiles.push(docEntry);
       break;
-    
-    case 'private_medical':
-    case 'provider_letter':
-    case 'nexus_letter':
+
+    case "private_medical":
+    case "provider_letter":
+    case "nexus_letter":
       vkb.documentation.privateRecords.push(docEntry);
       break;
-    
+
     default:
       vkb.documentation.otherEvidence.push(docEntry);
   }
 
-  vkb.metadata.documentCount = 
+  vkb.metadata.documentCount =
     vkb.documentation.dd214s.length +
     vkb.documentation.blueButtonReports.length +
     vkb.documentation.cFiles.length +
@@ -397,13 +413,13 @@ export const addDocumentToVKB = async (documentInfo) => {
     vkb.documentation.otherEvidence.length;
 
   const saveResult = await saveVKB(vkb);
-  
+
   // IndexedDB has no storage limits - all documents saved successfully
-  return { 
-    success: saveResult.success, 
-    documentId: docEntry.id, 
+  return {
+    success: saveResult.success,
+    documentId: docEntry.id,
     vkb,
-    size: saveResult.size
+    size: saveResult.size,
   };
 };
 
@@ -429,33 +445,43 @@ export const getAllDocumentsByCategory = async () => {
   const vkb = await loadVKB();
   return {
     dd214s: {
-      label: 'DD-214 Service Records',
-      icon: '🎖️',
-      documents: vkb.documentation.dd214s.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      label: "DD-214 Service Records",
+      icon: "🎖️",
+      documents: vkb.documentation.dd214s.sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      ),
       count: vkb.documentation.dd214s.length,
     },
     blueButtonReports: {
-      label: 'Blue Button Medical Records',
-      icon: '🏥',
-      documents: vkb.documentation.blueButtonReports.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      label: "Blue Button Medical Records",
+      icon: "🏥",
+      documents: vkb.documentation.blueButtonReports.sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      ),
       count: vkb.documentation.blueButtonReports.length,
     },
     cFiles: {
-      label: 'VA Claims & Decisions',
-      icon: '📋',
-      documents: vkb.documentation.cFiles.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      label: "VA Claims & Decisions",
+      icon: "📋",
+      documents: vkb.documentation.cFiles.sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      ),
       count: vkb.documentation.cFiles.length,
     },
     privateRecords: {
-      label: 'Private Medical Records',
-      icon: '🩺',
-      documents: vkb.documentation.privateRecords.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      label: "Private Medical Records",
+      icon: "🩺",
+      documents: vkb.documentation.privateRecords.sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      ),
       count: vkb.documentation.privateRecords.length,
     },
     otherEvidence: {
-      label: 'Other Evidence',
-      icon: '📄',
-      documents: vkb.documentation.otherEvidence.sort((a, b) => (b.version || 0) - (a.version || 0)),
+      label: "Other Evidence",
+      icon: "📄",
+      documents: vkb.documentation.otherEvidence.sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      ),
       count: vkb.documentation.otherEvidence.length,
     },
   };
@@ -466,7 +492,7 @@ export const getAllDocumentsByCategory = async () => {
  */
 export const getDocumentFromVKB = async (documentId) => {
   const allDocs = await getAllDocumentsFromVKB();
-  return allDocs.find(doc => doc.id === documentId);
+  return allDocs.find((doc) => doc.id === documentId);
 };
 
 /**
@@ -478,25 +504,25 @@ export const getDocumentFromVKB = async (documentId) => {
 export const compareDocumentVersions = async (docId1, docId2) => {
   const doc1 = await getDocumentFromVKB(docId1);
   const doc2 = await getDocumentFromVKB(docId2);
-  
+
   if (!doc1 || !doc2) {
-    return { error: 'One or both documents not found' };
+    return { error: "One or both documents not found" };
   }
-  
+
   const differences = [];
   const allFields = new Set([
     ...Object.keys(doc1.extractedData || {}),
-    ...Object.keys(doc2.extractedData || {})
+    ...Object.keys(doc2.extractedData || {}),
   ]);
-  
-  allFields.forEach(field => {
+
+  allFields.forEach((field) => {
     const val1 = doc1.extractedData[field];
     const val2 = doc2.extractedData[field];
-    
+
     // Deep comparison
     const val1Str = JSON.stringify(val1);
     const val2Str = JSON.stringify(val2);
-    
+
     if (val1Str !== val2Str) {
       differences.push({
         field,
@@ -508,7 +534,7 @@ export const compareDocumentVersions = async (docId1, docId2) => {
       });
     }
   });
-  
+
   return {
     doc1: {
       id: doc1.id,
@@ -537,45 +563,54 @@ export const removeDocumentFromVKB = async (documentId) => {
   const vkb = await loadVKB();
   let removed = false;
   let category = null;
-  
+
   // Search all categories
-  const categories = ['dd214s', 'blueButtonReports', 'cFiles', 'privateRecords', 'otherEvidence'];
-  
+  const categories = [
+    "dd214s",
+    "blueButtonReports",
+    "cFiles",
+    "privateRecords",
+    "otherEvidence",
+  ];
+
   for (const cat of categories) {
-    const index = vkb.documentation[cat].findIndex(doc => doc.id === documentId);
+    const index = vkb.documentation[cat].findIndex(
+      (doc) => doc.id === documentId,
+    );
     if (index !== -1) {
       vkb.documentation[cat].splice(index, 1);
       removed = true;
       category = cat;
-      
+
       // Recalculate version numbers
       vkb.documentation[cat].forEach((doc, idx) => {
         doc.version = idx + 1;
       });
-      
+
       // Mark most recent
       if (vkb.documentation[cat].length > 0) {
-        vkb.documentation[cat][vkb.documentation[cat].length - 1].mostRecent = true;
+        vkb.documentation[cat][vkb.documentation[cat].length - 1].mostRecent =
+          true;
       }
-      
+
       break;
     }
   }
-  
+
   if (removed) {
     // Update document count
-    vkb.metadata.documentCount = 
+    vkb.metadata.documentCount =
       vkb.documentation.dd214s.length +
       vkb.documentation.blueButtonReports.length +
       vkb.documentation.cFiles.length +
       vkb.documentation.privateRecords.length +
       vkb.documentation.otherEvidence.length;
-    
+
     const saveResult = await saveVKB(vkb);
     return { success: saveResult.success, category, documentId };
   }
-  
-  return { success: false, error: 'Document not found' };
+
+  return { success: false, error: "Document not found" };
 };
 
 /**
@@ -584,14 +619,14 @@ export const removeDocumentFromVKB = async (documentId) => {
 export const calculateCompleteness = (vkb) => {
   let score = 0;
   let maxScore = 0;
-  
+
   // Personal info (20 points)
   maxScore += 20;
   if (vkb.personal.fullName) score += 5;
   if (vkb.personal.dateOfBirth) score += 5;
   if (vkb.personal.address.state) score += 5;
   if (vkb.personal.email || vkb.personal.phone) score += 5;
-  
+
   // Service history (25 points)
   maxScore += 25;
   if (vkb.serviceHistory.branch) score += 5;
@@ -599,30 +634,30 @@ export const calculateCompleteness = (vkb) => {
   if (vkb.serviceHistory.separationDate) score += 5;
   if (vkb.serviceHistory.mos.length > 0) score += 5;
   if (vkb.serviceHistory.characterOfService) score += 5;
-  
+
   // Medical conditions (30 points)
   maxScore += 30;
   if (vkb.medicalConditions.current.length > 0) score += 15;
   if (vkb.medicalConditions.secondary.length > 0) score += 10;
   if (vkb.medications.current.length > 0) score += 5;
-  
+
   // Evidence (15 points)
   maxScore += 15;
   if (vkb.documentation.dd214s.length > 0) score += 5;
   if (vkb.documentation.blueButtonReports.length > 0) score += 5;
   if (vkb.evidenceTimeline.length > 0) score += 5;
-  
+
   // Claims history (10 points)
   maxScore += 10;
   if (vkb.vaClaimsHistory.claims.length > 0) score += 5;
   if (vkb.vaClaimsHistory.ratings.length > 0) score += 5;
-  
+
   return Math.round((score / maxScore) * 100);
 };
 
 /**
  * Merge data from DD-214 into VKB - DIAMOND STANDARD
- * 
+ *
  * Handles ALL 29 blocks of the DD-214 form:
  *   - Blocks 1-3: Name, Branch, SSN
  *   - Blocks 4a-4b: Grade/Pay Grade
@@ -656,7 +691,7 @@ export const calculateCompleteness = (vkb) => {
  * @returns {Object} Updated VKB
  */
 export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
-  if (!dd214Data || typeof dd214Data !== 'object') return vkb;
+  if (!dd214Data || typeof dd214Data !== "object") return vkb;
 
   // ─── PERSONAL INFO (Blocks 1, 3, 5) ───
   if (dd214Data.fullName || dd214Data.name) {
@@ -666,7 +701,8 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     }
   }
   if (dd214Data.ssn || dd214Data.ssnLast4) {
-    const ssn = dd214Data.ssnLast4 || (dd214Data.ssn ? dd214Data.ssn.slice(-4) : null);
+    const ssn =
+      dd214Data.ssnLast4 || (dd214Data.ssn ? dd214Data.ssn.slice(-4) : null);
     if (ssn && !vkb.personal.ssn) {
       vkb.personal.ssn = ssn;
     }
@@ -680,19 +716,25 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
 
   // Component (Active, Reserve, Guard)
   if (dd214Data.component) {
-    if (!vkb.serviceHistory.component) vkb.serviceHistory.component = dd214Data.component;
+    if (!vkb.serviceHistory.component)
+      vkb.serviceHistory.component = dd214Data.component;
   }
 
   // Dates - use the EARLIEST entry and LATEST separation across all DD214s
   if (dd214Data.entryDate) {
-    if (!vkb.serviceHistory.entryDate || 
-        new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate)) {
+    if (
+      !vkb.serviceHistory.entryDate ||
+      new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate)
+    ) {
       vkb.serviceHistory.entryDate = dd214Data.entryDate;
     }
   }
   if (dd214Data.separationDate) {
-    if (!vkb.serviceHistory.separationDate || 
-        new Date(dd214Data.separationDate) > new Date(vkb.serviceHistory.separationDate)) {
+    if (
+      !vkb.serviceHistory.separationDate ||
+      new Date(dd214Data.separationDate) >
+        new Date(vkb.serviceHistory.separationDate)
+    ) {
       vkb.serviceHistory.separationDate = dd214Data.separationDate;
     }
   }
@@ -704,7 +746,10 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     const years = ((sep - entry) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
     vkb.serviceHistory.yearsOfService = parseFloat(years);
   } else {
-    vkb.serviceHistory.yearsOfService = dd214Data.yearsService || dd214Data.totalService || vkb.serviceHistory.yearsOfService;
+    vkb.serviceHistory.yearsOfService =
+      dd214Data.yearsService ||
+      dd214Data.totalService ||
+      vkb.serviceHistory.yearsOfService;
   }
 
   // Net active service time (Block 9)
@@ -720,7 +765,8 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     }
   }
   if (dd214Data.payGrade) {
-    if (!vkb.serviceHistory.payGrade) vkb.serviceHistory.payGrade = dd214Data.payGrade;
+    if (!vkb.serviceHistory.payGrade)
+      vkb.serviceHistory.payGrade = dd214Data.payGrade;
     // Keep the HIGHEST pay grade
     const currentGrade = parsePayGrade(vkb.serviceHistory.payGrade);
     const newGrade = parsePayGrade(dd214Data.payGrade);
@@ -730,31 +776,52 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   }
 
   // Character of service - keep the most recent
-  vkb.serviceHistory.characterOfService = dd214Data.characterOfService || vkb.serviceHistory.characterOfService;
-  vkb.serviceHistory.reenlisted = dd214Data.reenlisted || vkb.serviceHistory.reenlisted;
-  vkb.serviceHistory.foreignService = dd214Data.foreignService || vkb.serviceHistory.foreignService;
+  vkb.serviceHistory.characterOfService =
+    dd214Data.characterOfService || vkb.serviceHistory.characterOfService;
+  vkb.serviceHistory.reenlisted =
+    dd214Data.reenlisted || vkb.serviceHistory.reenlisted;
+  vkb.serviceHistory.foreignService =
+    dd214Data.foreignService || vkb.serviceHistory.foreignService;
 
   // ─── SEPARATION DETAILS (Blocks 12, 23, 25-28) ───
-  if (dd214Data.separationAuthority || dd214Data.separationType || dd214Data.narrativeReason || dd214Data.reentryCode || dd214Data.spnCode) {
-    if (!vkb.serviceHistory.separationDetails) vkb.serviceHistory.separationDetails = {};
+  if (
+    dd214Data.separationAuthority ||
+    dd214Data.separationType ||
+    dd214Data.narrativeReason ||
+    dd214Data.reentryCode ||
+    dd214Data.spnCode
+  ) {
+    if (!vkb.serviceHistory.separationDetails)
+      vkb.serviceHistory.separationDetails = {};
     vkb.serviceHistory.separationDetails = {
-      authority: dd214Data.separationAuthority || vkb.serviceHistory.separationDetails?.authority,
-      separationType: dd214Data.separationType || vkb.serviceHistory.separationDetails?.separationType,
-      narrativeReason: dd214Data.narrativeReason || vkb.serviceHistory.separationDetails?.narrativeReason,
-      reentryCode: dd214Data.reentryCode || dd214Data.reCode || vkb.serviceHistory.separationDetails?.reentryCode,
-      spnCode: dd214Data.spnCode || vkb.serviceHistory.separationDetails?.spnCode,
+      authority:
+        dd214Data.separationAuthority ||
+        vkb.serviceHistory.separationDetails?.authority,
+      separationType:
+        dd214Data.separationType ||
+        vkb.serviceHistory.separationDetails?.separationType,
+      narrativeReason:
+        dd214Data.narrativeReason ||
+        vkb.serviceHistory.separationDetails?.narrativeReason,
+      reentryCode:
+        dd214Data.reentryCode ||
+        dd214Data.reCode ||
+        vkb.serviceHistory.separationDetails?.reentryCode,
+      spnCode:
+        dd214Data.spnCode || vkb.serviceHistory.separationDetails?.spnCode,
     };
   }
 
   // ─── MOS (Block 14) ───
   const mosCode = dd214Data.mos || dd214Data.primaryMOS;
-  const mosTitle = dd214Data.mosTitle || dd214Data.primaryMOSTitle || dd214Data.dutyMOS;
+  const mosTitle =
+    dd214Data.mosTitle || dd214Data.primaryMOSTitle || dd214Data.dutyMOS;
   if (mosCode) {
-    const existingMOS = vkb.serviceHistory.mos.find(m => m.code === mosCode);
+    const existingMOS = vkb.serviceHistory.mos.find((m) => m.code === mosCode);
     if (!existingMOS) {
       vkb.serviceHistory.mos.push({
         code: mosCode,
-        title: mosTitle || '',
+        title: mosTitle || "",
         dates: {
           start: dd214Data.entryDate || null,
           end: dd214Data.separationDate || null,
@@ -765,12 +832,12 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   }
   // Additional MOS entries
   if (dd214Data.additionalMOS && Array.isArray(dd214Data.additionalMOS)) {
-    dd214Data.additionalMOS.forEach(addMos => {
-      const code = typeof addMos === 'string' ? addMos : addMos.code;
-      if (code && !vkb.serviceHistory.mos.find(m => m.code === code)) {
+    dd214Data.additionalMOS.forEach((addMos) => {
+      const code = typeof addMos === "string" ? addMos : addMos.code;
+      if (code && !vkb.serviceHistory.mos.find((m) => m.code === code)) {
         vkb.serviceHistory.mos.push({
           code,
-          title: addMos.title || '',
+          title: addMos.title || "",
           dates: { start: null, end: null },
           hazards: [],
         });
@@ -783,23 +850,32 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
     if (!vkb.serviceHistory.education) vkb.serviceHistory.education = {};
     vkb.serviceHistory.education = {
       years: dd214Data.educationYears || vkb.serviceHistory.education?.years,
-      description: dd214Data.education || vkb.serviceHistory.education?.description,
+      description:
+        dd214Data.education || vkb.serviceHistory.education?.description,
     };
   }
 
   // ─── AWARDS (Block 13 + Block 18 continuation) ───
   if (dd214Data.awards && Array.isArray(dd214Data.awards)) {
-    dd214Data.awards.forEach(award => {
-      const awardName = typeof award === 'string' ? award : (award.name || award.abbreviation || '');
+    dd214Data.awards.forEach((award) => {
+      const awardName =
+        typeof award === "string"
+          ? award
+          : award.name || award.abbreviation || "";
       if (!awardName) return;
 
       // Normalize for comparison - ignore case, trim, collapse spaces
-      const normalizedNew = awardName.toLowerCase().replace(/\s+/g, ' ').trim();
-      const existingAward = vkb.serviceHistory.awards.find(a => {
-        const normalizedExisting = (a.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
-        return normalizedExisting === normalizedNew || 
-               normalizedExisting.includes(normalizedNew) ||
-               normalizedNew.includes(normalizedExisting);
+      const normalizedNew = awardName.toLowerCase().replace(/\s+/g, " ").trim();
+      const existingAward = vkb.serviceHistory.awards.find((a) => {
+        const normalizedExisting = (a.name || "")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+        return (
+          normalizedExisting === normalizedNew ||
+          normalizedExisting.includes(normalizedNew) ||
+          normalizedNew.includes(normalizedExisting)
+        );
       });
 
       if (!existingAward) {
@@ -808,12 +884,14 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
           date: award.date || null,
           isCombat: award.isCombat || false,
           devices: award.devices || [],
-          source: options.fileName || 'DD-214',
+          source: options.fileName || "DD-214",
         });
-      } else if (typeof award === 'object' && award.devices?.length) {
+      } else if (typeof award === "object" && award.devices?.length) {
         // Merge new devices into existing award
-        const existingDevices = new Set(existingAward.devices?.map(d => d.toLowerCase()) || []);
-        award.devices.forEach(d => {
+        const existingDevices = new Set(
+          existingAward.devices?.map((d) => d.toLowerCase()) || [],
+        );
+        award.devices.forEach((d) => {
           if (!existingDevices.has(d.toLowerCase())) {
             existingAward.devices = existingAward.devices || [];
             existingAward.devices.push(d);
@@ -825,13 +903,14 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
 
   // ─── DEPLOYMENTS (from Block 18 / extracted) ───
   if (dd214Data.deployments && Array.isArray(dd214Data.deployments)) {
-    dd214Data.deployments.forEach(dep => {
-      const location = dep.location || dep.theater || '';
-      const operation = dep.operation || '';
+    dd214Data.deployments.forEach((dep) => {
+      const location = dep.location || dep.theater || "";
+      const operation = dep.operation || "";
       // Avoid duplicate deployments
-      const isDuplicate = vkb.serviceHistory.deployments.some(d => 
-        (d.location || '').toLowerCase() === location.toLowerCase() &&
-        (d.startDate || '') === (dep.startDate || '')
+      const isDuplicate = vkb.serviceHistory.deployments.some(
+        (d) =>
+          (d.location || "").toLowerCase() === location.toLowerCase() &&
+          (d.startDate || "") === (dep.startDate || ""),
       );
       if (!isDuplicate && (location || operation)) {
         vkb.serviceHistory.deployments.push({
@@ -840,7 +919,7 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
           endDate: dep.endDate || null,
           combatZone: dep.combatZone || dep.isHazardous || false,
           operation,
-          source: options.fileName || 'DD-214',
+          source: options.fileName || "DD-214",
         });
       }
     });
@@ -859,14 +938,14 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
       vkb.serviceHistory.combatService.hasVerifiedCombat = true;
     }
     if (dd214Data.combatService.indicators) {
-      dd214Data.combatService.indicators.forEach(ind => {
+      dd214Data.combatService.indicators.forEach((ind) => {
         if (!vkb.serviceHistory.combatService.indicators.includes(ind)) {
           vkb.serviceHistory.combatService.indicators.push(ind);
         }
       });
     }
     if (dd214Data.combatService.campaigns) {
-      dd214Data.combatService.campaigns.forEach(camp => {
+      dd214Data.combatService.campaigns.forEach((camp) => {
         if (!vkb.serviceHistory.combatService.campaigns.includes(camp)) {
           vkb.serviceHistory.combatService.campaigns.push(camp);
         }
@@ -875,9 +954,13 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   }
 
   // ─── SPECIAL QUALIFICATIONS ───
-  if (dd214Data.specialQualifications && Array.isArray(dd214Data.specialQualifications)) {
-    if (!vkb.serviceHistory.specialQualifications) vkb.serviceHistory.specialQualifications = [];
-    dd214Data.specialQualifications.forEach(qual => {
+  if (
+    dd214Data.specialQualifications &&
+    Array.isArray(dd214Data.specialQualifications)
+  ) {
+    if (!vkb.serviceHistory.specialQualifications)
+      vkb.serviceHistory.specialQualifications = [];
+    dd214Data.specialQualifications.forEach((qual) => {
       if (!vkb.serviceHistory.specialQualifications.includes(qual)) {
         vkb.serviceHistory.specialQualifications.push(qual);
       }
@@ -887,14 +970,14 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   // ─── ADDRESSES (Blocks 19-22) ───
   if (dd214Data.mailingAddress || dd214Data.address) {
     const addr = dd214Data.mailingAddress || dd214Data.address;
-    if (typeof addr === 'object') {
+    if (typeof addr === "object") {
       vkb.personal.address = {
         street: addr.street || vkb.personal.address.street,
         city: addr.city || vkb.personal.address.city,
         state: addr.state || vkb.personal.address.state,
         zip: addr.zip || addr.zipCode || vkb.personal.address.zip,
       };
-    } else if (typeof addr === 'string' && addr.trim()) {
+    } else if (typeof addr === "string" && addr.trim()) {
       // Parse string address
       if (!vkb.personal.address.street) {
         vkb.personal.address.street = addr;
@@ -907,39 +990,39 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   if (dd214Data.entryDate) {
     timelineEntries.push({
       date: dd214Data.entryDate,
-      eventType: 'service_entry',
-      description: `Entered active duty (${dd214Data.branch || vkb.serviceHistory.branch || 'Military'})`,
-      source: options.fileName || 'DD-214',
-      significance: 'service_milestone',
+      eventType: "service_entry",
+      description: `Entered active duty (${dd214Data.branch || vkb.serviceHistory.branch || "Military"})`,
+      source: options.fileName || "DD-214",
+      significance: "service_milestone",
     });
   }
   if (dd214Data.separationDate) {
     timelineEntries.push({
       date: dd214Data.separationDate,
-      eventType: 'service_separation',
-      description: `Separated from service - ${dd214Data.characterOfService || 'Honorable'} discharge`,
-      source: options.fileName || 'DD-214',
-      significance: 'service_milestone',
+      eventType: "service_separation",
+      description: `Separated from service - ${dd214Data.characterOfService || "Honorable"} discharge`,
+      source: options.fileName || "DD-214",
+      significance: "service_milestone",
     });
   }
   if (dd214Data.deployments) {
-    dd214Data.deployments.forEach(dep => {
+    dd214Data.deployments.forEach((dep) => {
       if (dep.startDate) {
         timelineEntries.push({
           date: dep.startDate,
-          eventType: 'deployment',
-          description: `Deployed to ${dep.location || dep.operation || 'overseas'}`,
-          source: options.fileName || 'DD-214',
-          significance: 'combat_exposure',
+          eventType: "deployment",
+          description: `Deployed to ${dep.location || dep.operation || "overseas"}`,
+          source: options.fileName || "DD-214",
+          significance: "combat_exposure",
         });
       }
     });
   }
 
   // Add timeline entries (avoid duplicates)
-  timelineEntries.forEach(entry => {
-    const isDuplicate = vkb.evidenceTimeline.some(e => 
-      e.date === entry.date && e.eventType === entry.eventType
+  timelineEntries.forEach((entry) => {
+    const isDuplicate = vkb.evidenceTimeline.some(
+      (e) => e.date === entry.date && e.eventType === entry.eventType,
     );
     if (!isDuplicate) {
       vkb.evidenceTimeline.push(entry);
@@ -954,23 +1037,26 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   });
 
   // ─── SERVICE PERIOD TRACKING (for multi-DD214 sets) ───
-  if (!vkb.serviceHistory.servicePeriods) vkb.serviceHistory.servicePeriods = [];
+  if (!vkb.serviceHistory.servicePeriods)
+    vkb.serviceHistory.servicePeriods = [];
   if (dd214Data.entryDate && dd214Data.separationDate) {
-    const isDuplicate = vkb.serviceHistory.servicePeriods.some(p =>
-      p.entryDate === dd214Data.entryDate && p.separationDate === dd214Data.separationDate
+    const isDuplicate = vkb.serviceHistory.servicePeriods.some(
+      (p) =>
+        p.entryDate === dd214Data.entryDate &&
+        p.separationDate === dd214Data.separationDate,
     );
     if (!isDuplicate) {
       vkb.serviceHistory.servicePeriods.push({
         entryDate: dd214Data.entryDate,
         separationDate: dd214Data.separationDate,
         branch: dd214Data.branch || vkb.serviceHistory.branch,
-        component: dd214Data.component || '',
-        rank: dd214Data.rank || '',
-        payGrade: dd214Data.payGrade || '',
-        mos: mosCode || '',
-        mosTitle: mosTitle || '',
-        characterOfService: dd214Data.characterOfService || '',
-        source: options.fileName || 'DD-214',
+        component: dd214Data.component || "",
+        rank: dd214Data.rank || "",
+        payGrade: dd214Data.payGrade || "",
+        mos: mosCode || "",
+        mosTitle: mosTitle || "",
+        characterOfService: dd214Data.characterOfService || "",
+        source: options.fileName || "DD-214",
       });
     }
   }
@@ -978,15 +1064,16 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
   // ─── DOCUMENTATION ───
   vkb.documentation.dd214s.push({
     id: `dd214-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-    fileName: options.fileName || 'DD-214',
+    fileName: options.fileName || "DD-214",
     uploadDate: new Date().toISOString(),
     pageCount: dd214Data.pageCount || 1,
     extracted: true,
-    servicePeriod: dd214Data.entryDate && dd214Data.separationDate
-      ? `${dd214Data.entryDate} to ${dd214Data.separationDate}`
-      : null,
-    rank: dd214Data.rank || '',
-    branch: dd214Data.branch || '',
+    servicePeriod:
+      dd214Data.entryDate && dd214Data.separationDate
+        ? `${dd214Data.entryDate} to ${dd214Data.separationDate}`
+        : null,
+    rank: dd214Data.rank || "",
+    branch: dd214Data.branch || "",
   });
 
   vkb.metadata.documentCount++;
@@ -1003,7 +1090,7 @@ function parsePayGrade(pg) {
   if (!match) return 0;
   const category = match[1].toUpperCase();
   const level = parseInt(match[2], 10);
-  const base = category === 'E' ? 0 : category === 'W' ? 100 : 200;
+  const base = category === "E" ? 0 : category === "W" ? 100 : 200;
   return base + level;
 }
 
@@ -1013,11 +1100,12 @@ function parsePayGrade(pg) {
 export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   // Medical conditions
   if (blueButtonData.conditions && Array.isArray(blueButtonData.conditions)) {
-    blueButtonData.conditions.forEach(condition => {
-      const existingCondition = vkb.medicalConditions.current.find(c => 
-        c.name.toLowerCase() === condition.standardizedName.toLowerCase()
+    blueButtonData.conditions.forEach((condition) => {
+      const existingCondition = vkb.medicalConditions.current.find(
+        (c) =>
+          c.name.toLowerCase() === condition.standardizedName.toLowerCase(),
       );
-      
+
       if (!existingCondition) {
         vkb.medicalConditions.current.push({
           name: condition.standardizedName,
@@ -1026,36 +1114,36 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
           severity: null,
           ratedPercentage: null,
           serviceConnected: null,
-          source: 'Blue Button',
+          source: "Blue Button",
         });
       }
     });
   }
-  
+
   // Evidence timeline
   if (blueButtonData.conditions && Array.isArray(blueButtonData.conditions)) {
-    blueButtonData.conditions.forEach(condition => {
+    blueButtonData.conditions.forEach((condition) => {
       if (condition.dateFound) {
         vkb.evidenceTimeline.push({
           date: condition.dateFound,
-          eventType: 'diagnosis',
+          eventType: "diagnosis",
           description: `Diagnosed with ${condition.standardizedName}`,
-          source: 'Blue Button Report',
-          significance: 'medical_diagnosis',
+          source: "Blue Button Report",
+          significance: "medical_diagnosis",
         });
       }
     });
   }
-  
+
   // Documentation
   vkb.documentation.blueButtonReports.push({
     id: `bluebutton-${Date.now()}`,
-    fileName: 'VA Blue Button Report',
+    fileName: "VA Blue Button Report",
     uploadDate: new Date().toISOString(),
     dateRange: null,
     recordCount: blueButtonData.conditions?.length || 0,
   });
-  
+
   vkb.metadata.documentCount++;
   return vkb;
 };
@@ -1066,28 +1154,28 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
 export const mergeMusterCallIntoVKB = (vkb, musterCallData) => {
   // Muster Call returns combined data from multiple documents
   // Route to appropriate merge functions based on document type
-  
+
   if (musterCallData.dd214) {
     vkb = mergeDD214IntoVKB(vkb, musterCallData.dd214);
   }
-  
+
   if (musterCallData.blueButton) {
     vkb = mergeBlueButtonIntoVKB(vkb, musterCallData.blueButton);
   }
-  
+
   // Generic document metadata
   if (musterCallData.documents) {
-    musterCallData.documents.forEach(doc => {
+    musterCallData.documents.forEach((doc) => {
       vkb.documentation.otherEvidence.push({
         id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         fileName: doc.fileName,
         uploadDate: new Date().toISOString(),
-        category: doc.type || 'other',
-        description: doc.summary || '',
+        category: doc.type || "other",
+        description: doc.summary || "",
       });
     });
   }
-  
+
   return vkb;
 };
 
@@ -1097,8 +1185,8 @@ export const mergeMusterCallIntoVKB = (vkb, musterCallData) => {
  * knows everything about the veteran - Diamond Standard completeness.
  */
 export const generateLLMContext = (vkb) => {
-  let context = '=== VETERAN KNOWLEDGE BASE ===\n\n';
-  
+  let context = "=== VETERAN KNOWLEDGE BASE ===\n\n";
+
   // ─── PERSONAL ───
   if (vkb.personal.fullName) {
     context += `Veteran: ${vkb.personal.fullName}\n`;
@@ -1109,14 +1197,19 @@ export const generateLLMContext = (vkb) => {
   if (vkb.personal.ssn) {
     context += `SSN (last 4): ${vkb.personal.ssn}\n`;
   }
-  if (vkb.personal.address && (vkb.personal.address.city || vkb.personal.address.state)) {
+  if (
+    vkb.personal.address &&
+    (vkb.personal.address.city || vkb.personal.address.state)
+  ) {
     const addr = vkb.personal.address;
-    const parts = [addr.street, addr.city, addr.state, addr.zip].filter(Boolean);
-    context += `Address: ${parts.join(', ')}\n`;
+    const parts = [addr.street, addr.city, addr.state, addr.zip].filter(
+      Boolean,
+    );
+    context += `Address: ${parts.join(", ")}\n`;
   }
-  
+
   // ─── SERVICE HISTORY ───
-  context += '\n--- SERVICE HISTORY ---\n';
+  context += "\n--- SERVICE HISTORY ---\n";
   if (vkb.serviceHistory.branch) {
     context += `Branch: ${vkb.serviceHistory.branch}\n`;
   }
@@ -1128,15 +1221,16 @@ export const generateLLMContext = (vkb) => {
     if (vkb.serviceHistory.yearsOfService) {
       context += ` (${vkb.serviceHistory.yearsOfService} years)`;
     }
-    context += '\n';
+    context += "\n";
   }
   if (vkb.serviceHistory.rank?.discharge) {
     context += `Rank at Discharge: ${vkb.serviceHistory.rank.discharge}`;
-    if (vkb.serviceHistory.payGrade) context += ` (${vkb.serviceHistory.payGrade})`;
-    context += '\n';
+    if (vkb.serviceHistory.payGrade)
+      context += ` (${vkb.serviceHistory.payGrade})`;
+    context += "\n";
   }
   if (vkb.serviceHistory.mos.length > 0) {
-    context += `MOS: ${vkb.serviceHistory.mos.map(m => `${m.code} (${m.title})`).join(', ')}\n`;
+    context += `MOS: ${vkb.serviceHistory.mos.map((m) => `${m.code} (${m.title})`).join(", ")}\n`;
   }
   if (vkb.serviceHistory.characterOfService) {
     context += `Discharge: ${vkb.serviceHistory.characterOfService}\n`;
@@ -1144,68 +1238,69 @@ export const generateLLMContext = (vkb) => {
 
   // Service periods (multi-DD214)
   if (vkb.serviceHistory.servicePeriods?.length > 1) {
-    context += '\nService Periods:\n';
+    context += "\nService Periods:\n";
     vkb.serviceHistory.servicePeriods.forEach((p, i) => {
-      context += `  Period ${i + 1}: ${p.entryDate} to ${p.separationDate} - ${p.branch || ''} ${p.rank || ''} (${p.mos || ''})\n`;
+      context += `  Period ${i + 1}: ${p.entryDate} to ${p.separationDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
     });
   }
 
   // Separation details
   if (vkb.serviceHistory.separationDetails) {
     const sep = vkb.serviceHistory.separationDetails;
-    if (sep.narrativeReason) context += `Separation Reason: ${sep.narrativeReason}\n`;
+    if (sep.narrativeReason)
+      context += `Separation Reason: ${sep.narrativeReason}\n`;
     if (sep.reentryCode) context += `RE Code: ${sep.reentryCode}\n`;
     if (sep.spnCode) context += `SPN Code: ${sep.spnCode}\n`;
   }
 
   // ─── DEPLOYMENTS ───
   if (vkb.serviceHistory.deployments?.length > 0) {
-    context += '\n--- DEPLOYMENTS ---\n';
-    vkb.serviceHistory.deployments.forEach(dep => {
-      context += `• ${dep.location || dep.operation || 'Unknown'}`;
+    context += "\n--- DEPLOYMENTS ---\n";
+    vkb.serviceHistory.deployments.forEach((dep) => {
+      context += `• ${dep.location || dep.operation || "Unknown"}`;
       if (dep.startDate) context += ` (${dep.startDate}`;
       if (dep.endDate) context += ` to ${dep.endDate}`;
-      if (dep.startDate) context += ')';
-      if (dep.combatZone) context += ' [COMBAT ZONE]';
-      context += '\n';
+      if (dep.startDate) context += ")";
+      if (dep.combatZone) context += " [COMBAT ZONE]";
+      context += "\n";
     });
   }
 
   // ─── COMBAT SERVICE ───
   if (vkb.serviceHistory.combatService?.hasVerifiedCombat) {
-    context += '\n--- COMBAT SERVICE: VERIFIED ---\n';
+    context += "\n--- COMBAT SERVICE: VERIFIED ---\n";
     if (vkb.serviceHistory.combatService.indicators?.length) {
-      context += `Indicators: ${vkb.serviceHistory.combatService.indicators.join(', ')}\n`;
+      context += `Indicators: ${vkb.serviceHistory.combatService.indicators.join(", ")}\n`;
     }
     if (vkb.serviceHistory.combatService.campaigns?.length) {
-      context += `Campaigns: ${vkb.serviceHistory.combatService.campaigns.join(', ')}\n`;
+      context += `Campaigns: ${vkb.serviceHistory.combatService.campaigns.join(", ")}\n`;
     }
   }
 
   // ─── AWARDS ───
   if (vkb.serviceHistory.awards?.length > 0) {
-    context += '\n--- AWARDS & DECORATIONS ---\n';
-    const combatAwards = vkb.serviceHistory.awards.filter(a => a.isCombat);
-    const otherAwards = vkb.serviceHistory.awards.filter(a => !a.isCombat);
-    
+    context += "\n--- AWARDS & DECORATIONS ---\n";
+    const combatAwards = vkb.serviceHistory.awards.filter((a) => a.isCombat);
+    const otherAwards = vkb.serviceHistory.awards.filter((a) => !a.isCombat);
+
     if (combatAwards.length > 0) {
-      context += 'Combat Awards:\n';
-      combatAwards.forEach(a => {
+      context += "Combat Awards:\n";
+      combatAwards.forEach((a) => {
         context += `  ★ ${a.name}`;
-        if (a.devices?.length) context += ` (${a.devices.join(', ')})`;
-        context += '\n';
+        if (a.devices?.length) context += ` (${a.devices.join(", ")})`;
+        context += "\n";
       });
     }
-    otherAwards.forEach(a => {
+    otherAwards.forEach((a) => {
       context += `  • ${a.name}`;
-      if (a.devices?.length) context += ` (${a.devices.join(', ')})`;
-      context += '\n';
+      if (a.devices?.length) context += ` (${a.devices.join(", ")})`;
+      context += "\n";
     });
   }
 
   // ─── SPECIAL QUALIFICATIONS ───
   if (vkb.serviceHistory.specialQualifications?.length > 0) {
-    context += `\nSpecial Qualifications: ${vkb.serviceHistory.specialQualifications.join(', ')}\n`;
+    context += `\nSpecial Qualifications: ${vkb.serviceHistory.specialQualifications.join(", ")}\n`;
   }
 
   // ─── EDUCATION ───
@@ -1213,84 +1308,93 @@ export const generateLLMContext = (vkb) => {
     const edu = vkb.serviceHistory.education;
     if (edu.years) context += `Education: ${edu.years} years`;
     if (edu.description) context += ` - ${edu.description}`;
-    context += '\n';
+    context += "\n";
   }
-  
+
   // ─── MEDICAL CONDITIONS ───
   if (vkb.medicalConditions.current.length > 0) {
-    context += '\n--- CLAIMED CONDITIONS ---\n';
-    vkb.medicalConditions.current.forEach(condition => {
+    context += "\n--- CLAIMED CONDITIONS ---\n";
+    vkb.medicalConditions.current.forEach((condition) => {
       context += `• ${condition.name}`;
-      if (condition.diagnosisDate) context += ` (diagnosed ${condition.diagnosisDate})`;
-      if (condition.ratedPercentage) context += ` [${condition.ratedPercentage}% rated]`;
-      if (condition.serviceConnected) context += ' [SC]';
-      context += '\n';
+      if (condition.diagnosisDate)
+        context += ` (diagnosed ${condition.diagnosisDate})`;
+      if (condition.ratedPercentage)
+        context += ` [${condition.ratedPercentage}% rated]`;
+      if (condition.serviceConnected) context += " [SC]";
+      context += "\n";
     });
   }
-  
+
   // Secondary conditions
   if (vkb.medicalConditions.secondary.length > 0) {
-    context += '\n--- SECONDARY CONDITIONS ---\n';
-    vkb.medicalConditions.secondary.forEach(sec => {
+    context += "\n--- SECONDARY CONDITIONS ---\n";
+    vkb.medicalConditions.secondary.forEach((sec) => {
       context += `• ${sec.condition} (secondary to ${sec.primaryCondition})\n`;
     });
   }
 
   // Presumptive conditions
   if (vkb.medicalConditions.presumptive?.length > 0) {
-    context += '\n--- PRESUMPTIVE CONDITIONS ---\n';
-    vkb.medicalConditions.presumptive.forEach(p => {
+    context += "\n--- PRESUMPTIVE CONDITIONS ---\n";
+    vkb.medicalConditions.presumptive.forEach((p) => {
       context += `• ${p.condition} (${p.exposureType}, eligible under ${p.eligibleUnder})\n`;
     });
   }
 
   // Medications
   if (vkb.medications.current.length > 0) {
-    context += '\n--- CURRENT MEDICATIONS ---\n';
-    vkb.medications.current.forEach(med => {
+    context += "\n--- CURRENT MEDICATIONS ---\n";
+    vkb.medications.current.forEach((med) => {
       context += `• ${med.name}`;
       if (med.dosage) context += ` ${med.dosage}`;
       if (med.frequency) context += ` (${med.frequency})`;
       if (med.prescribedFor) context += ` - for ${med.prescribedFor}`;
-      context += '\n';
+      context += "\n";
     });
   }
 
   // ─── EXPOSURES ───
-  const hasExposures = (vkb.exposures.environmental.length + vkb.exposures.occupational.length + vkb.exposures.combat.length) > 0;
+  const hasExposures =
+    vkb.exposures.environmental.length +
+      vkb.exposures.occupational.length +
+      vkb.exposures.combat.length >
+    0;
   if (hasExposures) {
-    context += '\n--- EXPOSURES ---\n';
-    vkb.exposures.environmental.forEach(e => {
-      context += `• Environmental: ${e.type} at ${e.location} (${e.dates || 'dates unknown'})\n`;
+    context += "\n--- EXPOSURES ---\n";
+    vkb.exposures.environmental.forEach((e) => {
+      context += `• Environmental: ${e.type} at ${e.location} (${e.dates || "dates unknown"})\n`;
     });
-    vkb.exposures.occupational.forEach(e => {
+    vkb.exposures.occupational.forEach((e) => {
       context += `• Occupational: ${e.hazard} - MOS ${e.mos}\n`;
     });
-    vkb.exposures.combat.forEach(e => {
-      context += `• Combat: ${e.incident} at ${e.location} (${e.date || 'date unknown'})\n`;
+    vkb.exposures.combat.forEach((e) => {
+      context += `• Combat: ${e.incident} at ${e.location} (${e.date || "date unknown"})\n`;
     });
   }
 
   // ─── CLAIMS HISTORY ───
-  if (vkb.vaClaimsHistory.claims.length > 0 || vkb.vaClaimsHistory.ratings.length > 0) {
-    context += '\n--- VA CLAIMS HISTORY ---\n';
-    vkb.vaClaimsHistory.claims.forEach(claim => {
+  if (
+    vkb.vaClaimsHistory.claims.length > 0 ||
+    vkb.vaClaimsHistory.ratings.length > 0
+  ) {
+    context += "\n--- VA CLAIMS HISTORY ---\n";
+    vkb.vaClaimsHistory.claims.forEach((claim) => {
       context += `• Claim #${claim.claimNumber}: ${claim.status}`;
       if (claim.filedDate) context += ` (filed ${claim.filedDate})`;
-      context += '\n';
+      context += "\n";
     });
     if (vkb.vaClaimsHistory.ratings.length > 0) {
-      context += 'Current Ratings:\n';
-      vkb.vaClaimsHistory.ratings.forEach(r => {
+      context += "Current Ratings:\n";
+      vkb.vaClaimsHistory.ratings.forEach((r) => {
         context += `  ${r.condition}: ${r.percentage}%`;
         if (r.effectiveDate) context += ` (effective ${r.effectiveDate})`;
-        context += '\n';
+        context += "\n";
       });
     }
   }
-  
+
   // ─── EVIDENCE ───
-  context += '\n--- EVIDENCE ON FILE ---\n';
+  context += "\n--- EVIDENCE ON FILE ---\n";
   context += `DD-214s: ${vkb.documentation.dd214s.length}\n`;
   context += `Blue Button Reports: ${vkb.documentation.blueButtonReports.length}\n`;
   context += `C-Files: ${vkb.documentation.cFiles.length}\n`;
@@ -1299,40 +1403,40 @@ export const generateLLMContext = (vkb) => {
 
   // ─── EVIDENCE TIMELINE ───
   if (vkb.evidenceTimeline.length > 0) {
-    context += '\n--- EVIDENCE TIMELINE ---\n';
-    vkb.evidenceTimeline.slice(0, 20).forEach(e => {
-      context += `  ${e.date || '???'}: ${e.description} [${e.source || ''}]\n`;
+    context += "\n--- EVIDENCE TIMELINE ---\n";
+    vkb.evidenceTimeline.slice(0, 20).forEach((e) => {
+      context += `  ${e.date || "???"}: ${e.description} [${e.source || ""}]\n`;
     });
     if (vkb.evidenceTimeline.length > 20) {
       context += `  ... and ${vkb.evidenceTimeline.length - 20} more events\n`;
     }
   }
-  
+
   // Key facts
   if (vkb.keyFacts.length > 0) {
-    context += '\n--- KEY FACTS ---\n';
-    vkb.keyFacts.slice(0, 10).forEach(fact => {
+    context += "\n--- KEY FACTS ---\n";
+    vkb.keyFacts.slice(0, 10).forEach((fact) => {
       context += `• ${fact.fact} [Source: ${fact.source}]\n`;
     });
   }
 
   // Nexus statements
   if (vkb.nexusStatements?.length > 0) {
-    context += '\n--- NEXUS STATEMENTS ---\n';
-    vkb.nexusStatements.forEach(ns => {
-      context += `• ${ns.condition}: "${ns.relationship}" (by ${ns.statedBy || 'unknown'}, ${ns.date || ''})\n`;
+    context += "\n--- NEXUS STATEMENTS ---\n";
+    vkb.nexusStatements.forEach((ns) => {
+      context += `• ${ns.condition}: "${ns.relationship}" (by ${ns.statedBy || "unknown"}, ${ns.date || ""})\n`;
     });
   }
-  
+
   // AI Insights
   if (vkb.aiInsights.missingEvidence.length > 0) {
-    context += '\n--- MISSING EVIDENCE ---\n';
-    vkb.aiInsights.missingEvidence.slice(0, 5).forEach(missing => {
+    context += "\n--- MISSING EVIDENCE ---\n";
+    vkb.aiInsights.missingEvidence.slice(0, 5).forEach((missing) => {
       context += `• ${missing.condition}: Need ${missing.evidenceType}\n`;
     });
   }
-  
-  context += '\n=== END KNOWLEDGE BASE ===\n';
+
+  context += "\n=== END KNOWLEDGE BASE ===\n";
   return context;
 };
 
@@ -1341,11 +1445,13 @@ export const generateLLMContext = (vkb) => {
  */
 export const exportVKB = async () => {
   const vkb = await loadVKB();
-  const blob = new Blob([JSON.stringify(vkb, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(vkb, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
-  link.download = `vetrate-knowledge-base-${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `vetrate-knowledge-base-${new Date().toISOString().split("T")[0]}.json`;
   link.click();
   URL.revokeObjectURL(url);
 };

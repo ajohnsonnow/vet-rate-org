@@ -1,17 +1,17 @@
 /**
  * Vet-Rate.org - PWA Install Button
- * 
+ *
  * Allows users to install Vet-Rate as a native-feeling app on their device.
  * Shows up only when the browser supports installation.
- * 
+ *
  * Built by a fellow veteran. "Your field manual, always accessible."
  */
 
-import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Check } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import { Download, X, Smartphone, Check } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const PWAInstallButton = ({ className = '' }) => {
+const PWAInstallButton = ({ className = "" }) => {
   const { t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -21,13 +21,14 @@ const PWAInstallButton = ({ className = '' }) => {
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
       return;
     }
 
     // Check if iOS
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const ios =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(ios);
 
     // Listen for the beforeinstallprompt event (Android/Chrome)
@@ -40,21 +41,24 @@ const PWAInstallButton = ({ className = '' }) => {
       setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      console.log("PWA was installed");
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
     };
 
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
@@ -76,8 +80,8 @@ const PWAInstallButton = ({ className = '' }) => {
 
     // Clear the saved prompt
     setDeferredPrompt(null);
-    
-    if (outcome === 'accepted') {
+
+    if (outcome === "accepted") {
       setShowPrompt(false);
     }
   };
@@ -85,7 +89,7 @@ const PWAInstallButton = ({ className = '' }) => {
   const handleDismiss = () => {
     setShowPrompt(false);
     // Remember dismissal for 7 days
-    localStorage.setItem('pwa_install_dismissed', Date.now().toString());
+    localStorage.setItem("pwa_install_dismissed", Date.now().toString());
   };
 
   // Don't show if already installed
@@ -94,9 +98,10 @@ const PWAInstallButton = ({ className = '' }) => {
   }
 
   // Check if dismissed recently
-  const dismissedTime = localStorage.getItem('pwa_install_dismissed');
+  const dismissedTime = localStorage.getItem("pwa_install_dismissed");
   if (dismissedTime) {
-    const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+    const daysSinceDismissed =
+      (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
     if (daysSinceDismissed < 7) {
       return null;
     }
@@ -116,30 +121,45 @@ const PWAInstallButton = ({ className = '' }) => {
               <X className="w-6 h-6" />
             </button>
           </div>
-          
+
           <div className="space-y-4">
             <p className="text-sm text-gray-700">
               To install Vet-Rate.org on your iPhone or iPad:
             </p>
-            
+
             <ol className="space-y-3 text-sm text-gray-800">
               <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">1.</span>
-                <span>Tap the <strong>Share</strong> button <span className="text-2xl">⎋</span> at the bottom of Safari</span>
+                <span className="font-bold text-blue-600 flex-shrink-0">
+                  1.
+                </span>
+                <span>
+                  Tap the <strong>Share</strong> button{" "}
+                  <span className="text-2xl">⎋</span> at the bottom of Safari
+                </span>
               </li>
               <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">2.</span>
-                <span>Scroll down and tap <strong>"Add to Home Screen"</strong> <span className="text-xl">➕</span></span>
+                <span className="font-bold text-blue-600 flex-shrink-0">
+                  2.
+                </span>
+                <span>
+                  Scroll down and tap <strong>"Add to Home Screen"</strong>{" "}
+                  <span className="text-xl">➕</span>
+                </span>
               </li>
               <li className="flex gap-3">
-                <span className="font-bold text-blue-600 flex-shrink-0">3.</span>
-                <span>Tap <strong>"Add"</strong> in the top right corner</span>
+                <span className="font-bold text-blue-600 flex-shrink-0">
+                  3.
+                </span>
+                <span>
+                  Tap <strong>"Add"</strong> in the top right corner
+                </span>
               </li>
             </ol>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
               <p className="text-xs text-blue-900">
-                <strong>Note:</strong> This only works in Safari browser, not Chrome or other browsers on iOS.
+                <strong>Note:</strong> This only works in Safari browser, not
+                Chrome or other browsers on iOS.
               </p>
             </div>
           </div>
@@ -161,7 +181,7 @@ const PWAInstallButton = ({ className = '' }) => {
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <div className="flex items-start gap-3 pr-6">
               <Smartphone className="w-8 h-8 flex-shrink-0 mt-1" />
               <div className="flex-1">
@@ -190,7 +210,7 @@ const PWAInstallButton = ({ className = '' }) => {
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <div className="pr-8">
               <div className="flex items-center gap-2 mb-2">
                 <Smartphone className="w-6 h-6" />
@@ -204,7 +224,7 @@ const PWAInstallButton = ({ className = '' }) => {
                 className="w-full bg-white text-blue-700 font-bold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                {isIOS ? 'See Instructions' : 'Install App'}
+                {isIOS ? "See Instructions" : "Install App"}
               </button>
             </div>
           </div>

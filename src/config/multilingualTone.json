@@ -2,7 +2,7 @@
   "category": "Multilingual Veterans Support - Inclusive Voice System",
   "version": "2.0.0",
   "description": "Culturally-aware language mappings for ALL veteran communities worldwide - 40+ languages",
-  
+
   "languages": {
     "en": {
       "name": "English",
@@ -34,7 +34,7 @@
         "spaceforce": "Semper Supra, Guardian!"
       }
     },
-    
+
     "es": {
       "name": "Spanish",
       "nativeName": "Español",
@@ -65,7 +65,7 @@
         "spaceforce": "¡Semper Supra, Guardián!"
       }
     },
-    
+
     "ch": {
       "name": "Chamorro",
       "nativeName": "Chamoru",
@@ -182,7 +182,7 @@
       },
       "crisis_message": "Sandali lang. Mas mahalaga ang iyong kaligtasan kaysa sa anumang claim. Mangyaring makipag-usap sa isang tao ngayon. Tumawag sa 9-8-8 at pindutin ang 1. Nariyan sila para sa iyo 24/7."
     },
-    
+
     "vi": {
       "name": "Vietnamese",
       "nativeName": "Tiếng Việt",
@@ -205,7 +205,7 @@
       },
       "crisis_message": "Tôi sẽ dừng lại ở đây. Sự an toàn của bạn quan trọng hơn bất kỳ yêu cầu bồi thường nào. Xin hãy nói chuyện với ai đó ngay bây giờ. Gọi 9-8-8 và nhấn 1. Họ ở đó vì bạn 24/7."
     },
-    
+
     "ko": {
       "name": "Korean",
       "nativeName": "한국어",
@@ -955,9 +955,30 @@
   },
 
   "crisis_keywords": {
-    "universal": ["suicide", "kill myself", "end it", "can't go on", "no point", "want to die", "better off dead", "don't want to live", "end my life"],
-    "es": ["suicidio", "matarme", "no puedo más", "quiero morir", "terminar con todo"],
-    "tl": ["pagpapakamatay", "patayin ang sarili", "ayaw ko na", "gusto ko nang mamatay"],
+    "universal": [
+      "suicide",
+      "kill myself",
+      "end it",
+      "can't go on",
+      "no point",
+      "want to die",
+      "better off dead",
+      "don't want to live",
+      "end my life"
+    ],
+    "es": [
+      "suicidio",
+      "matarme",
+      "no puedo más",
+      "quiero morir",
+      "terminar con todo"
+    ],
+    "tl": [
+      "pagpapakamatay",
+      "patayin ang sarili",
+      "ayaw ko na",
+      "gusto ko nang mamatay"
+    ],
     "vi": ["tự tử", "muốn chết", "không muốn sống", "kết thúc tất cả"],
     "ko": ["자살", "죽고 싶어", "살기 싫어", "끝내고 싶어"],
     "zh": ["自杀", "想死", "不想活", "结束一切"],
@@ -1141,7 +1162,16 @@
 
   "metadata": {
     "total_languages": 40,
-    "regions_covered": ["primary", "pacific", "asian", "african", "middle-eastern", "native-american", "caribbean", "european"],
+    "regions_covered": [
+      "primary",
+      "pacific",
+      "asian",
+      "african",
+      "middle-eastern",
+      "native-american",
+      "caribbean",
+      "european"
+    ],
     "rtl_languages": ["ar", "fa", "prs", "ps"],
     "last_updated": "2025-01-01",
     "notes": [

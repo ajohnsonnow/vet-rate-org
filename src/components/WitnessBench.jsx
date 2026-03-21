@@ -2,42 +2,58 @@
  * Vet-Rate.org - The Witness Bench Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "Buddy Letter Wizard" - AI-powered interview for spouses, family members, and battle buddies
  * Generates VA Form 21-10210 (Lay/Witness Statement) focusing on observable behaviors
- * 
+ *
  * The key insight: Veterans downplay their symptoms. Witnesses see the truth.
  * This tool asks the RIGHT questions to get powerful buddy statements.
  */
 
-import React, { useState, useCallback, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
-import jsPDF from 'jspdf';
-import { saveClaim, generateId } from '../utils/claimsStorage';
-import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from '../utils/unifiedAIService';
-import { AIStatusBadge } from './AIModeSelector';
-import { LLMRecommendationBadge } from './LLMRecommendation';
-import SmartAILoadButton from './SmartAILoadButton';
-import ShareButton from './ShareButton';
-import ReportBugLink from './ReportBugLink';
-import VoiceInputButton from './VoiceInput';
-import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
+import React, { useState, useCallback, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+} from "docx";
+import jsPDF from "jspdf";
+import { saveClaim, generateId } from "../utils/claimsStorage";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getAIStatus,
+  AI_MODES,
+} from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
+import { LLMRecommendationBadge } from "./LLMRecommendation";
+import SmartAILoadButton from "./SmartAILoadButton";
+import ShareButton from "./ShareButton";
+import ReportBugLink from "./ReportBugLink";
+import VoiceInputButton from "./VoiceInput";
+import {
+  getVeteranAIContext,
+  saveAnalysisResults,
+  PACKET_DOC_TYPES,
+} from "../utils/veteranContextProvider";
 
 /**
  * Relationship types that affect the interview questions
  * Labels are translation keys that get resolved via getRelationshipLabel()
  */
 const RELATIONSHIP_TYPES = [
-  { value: 'spouse', labelKey: 'relationshipSpouse', icon: '💑' },
-  { value: 'parent', labelKey: 'relationshipParent', icon: '👨‍👩‍👧' },
-  { value: 'child', labelKey: 'relationshipChild', icon: '👨‍👧' },
-  { value: 'sibling', labelKey: 'relationshipSibling', icon: '👫' },
-  { value: 'friend', labelKey: 'relationshipFriend', icon: '🤝' },
-  { value: 'buddy', labelKey: 'relationshipBuddy', icon: '🎖️' },
-  { value: 'coworker', labelKey: 'relationshipCoworker', icon: '💼' },
-  { value: 'neighbor', labelKey: 'relationshipNeighbor', icon: '🏠' },
+  { value: "spouse", labelKey: "relationshipSpouse", icon: "💑" },
+  { value: "parent", labelKey: "relationshipParent", icon: "👨‍👩‍👧" },
+  { value: "child", labelKey: "relationshipChild", icon: "👨‍👧" },
+  { value: "sibling", labelKey: "relationshipSibling", icon: "👫" },
+  { value: "friend", labelKey: "relationshipFriend", icon: "🤝" },
+  { value: "buddy", labelKey: "relationshipBuddy", icon: "🎖️" },
+  { value: "coworker", labelKey: "relationshipCoworker", icon: "💼" },
+  { value: "neighbor", labelKey: "relationshipNeighbor", icon: "🏠" },
 ];
 
 /**
@@ -46,29 +62,56 @@ const RELATIONSHIP_TYPES = [
  */
 const CONDITION_CATEGORIES = {
   mental: {
-    labelKey: 'categoryMental',
-    conditions: ['ptsd', 'depression', 'anxiety', 'bipolar', 'panic', 'sleep', 'insomnia', 'nightmare']
+    labelKey: "categoryMental",
+    conditions: [
+      "ptsd",
+      "depression",
+      "anxiety",
+      "bipolar",
+      "panic",
+      "sleep",
+      "insomnia",
+      "nightmare",
+    ],
   },
   physical: {
-    labelKey: 'categoryPhysical',
-    conditions: ['back', 'spine', 'knee', 'shoulder', 'neck', 'arthritis', 'pain', 'mobility', 'fibromyalgia']
+    labelKey: "categoryPhysical",
+    conditions: [
+      "back",
+      "spine",
+      "knee",
+      "shoulder",
+      "neck",
+      "arthritis",
+      "pain",
+      "mobility",
+      "fibromyalgia",
+    ],
   },
   neurological: {
-    labelKey: 'categoryNeurological',
-    conditions: ['tbi', 'headache', 'migraine', 'neuropathy', 'tremor', 'memory', 'cognitive']
+    labelKey: "categoryNeurological",
+    conditions: [
+      "tbi",
+      "headache",
+      "migraine",
+      "neuropathy",
+      "tremor",
+      "memory",
+      "cognitive",
+    ],
   },
   hearing: {
-    labelKey: 'categoryHearing',
-    conditions: ['hearing', 'tinnitus', 'deaf', 'ear']
+    labelKey: "categoryHearing",
+    conditions: ["hearing", "tinnitus", "deaf", "ear"],
   },
   respiratory: {
-    labelKey: 'categoryRespiratory',
-    conditions: ['asthma', 'breathing', 'sleep apnea', 'copd', 'lung']
+    labelKey: "categoryRespiratory",
+    conditions: ["asthma", "breathing", "sleep apnea", "copd", "lung"],
   },
   other: {
-    labelKey: 'categoryOther',
-    conditions: []
-  }
+    labelKey: "categoryOther",
+    conditions: [],
+  },
 };
 
 /**
@@ -77,146 +120,173 @@ const CONDITION_CATEGORIES = {
  */
 const getBaseQuestions = (relationship, conditionCategory) => {
   const questions = [];
-  
+
   // Universal opening question
   questions.push({
-    id: 'relationship_context',
+    id: "relationship_context",
     question: `How long have you known the veteran, and in what capacity? (living together, see each other daily, etc.)`,
-    placeholder: 'Example: "I have been married to [Veteran] for 15 years and we live together."'
+    placeholder:
+      'Example: "I have been married to [Veteran] for 15 years and we live together."',
   });
-  
+
   // Mental health specific questions
-  if (conditionCategory === 'mental') {
-    if (['spouse', 'parent', 'child', 'sibling'].includes(relationship)) {
+  if (conditionCategory === "mental") {
+    if (["spouse", "parent", "child", "sibling"].includes(relationship)) {
       questions.push({
-        id: 'sleep_behavior',
+        id: "sleep_behavior",
         question: `Describe the veteran's sleep behavior. Do they have nightmares? Do they talk or scream in their sleep? Do they sleep separately from others?`,
-        placeholder: 'Example: "He often wakes up drenched in sweat, yelling. I sleep in a separate room now because he once struck out in his sleep."'
+        placeholder:
+          'Example: "He often wakes up drenched in sweat, yelling. I sleep in a separate room now because he once struck out in his sleep."',
       });
       questions.push({
-        id: 'social_withdrawal',
+        id: "social_withdrawal",
         question: `Tell me about a time you had to cancel plans or leave a social event because of the veteran's condition. Does the veteran avoid crowds or public places?`,
-        placeholder: 'Example: "We haven\'t been to a restaurant in 3 years. Last time we tried, he became agitated when seated with his back to the door."'
+        placeholder:
+          'Example: "We haven\'t been to a restaurant in 3 years. Last time we tried, he became agitated when seated with his back to the door."',
       });
       questions.push({
-        id: 'emotional_changes',
+        id: "emotional_changes",
         question: `How has the veteran's personality changed since their service? Are there hobbies or activities they used to enjoy but stopped doing?`,
-        placeholder: 'Example: "He used to love coaching our kids\' baseball team. Now he won\'t go near the field because he says the loud noises trigger him."'
+        placeholder:
+          "Example: \"He used to love coaching our kids' baseball team. Now he won't go near the field because he says the loud noises trigger him.\"",
       });
     }
-    
-    if (relationship === 'buddy') {
+
+    if (relationship === "buddy") {
       questions.push({
-        id: 'service_comparison',
+        id: "service_comparison",
         question: `How was the veteran during your time serving together? How is that different from how they are now?`,
-        placeholder: 'Example: "In country, he was sharp, always on point. Now when we meet up, he seems distant, jumpy at loud noises."'
+        placeholder:
+          'Example: "In country, he was sharp, always on point. Now when we meet up, he seems distant, jumpy at loud noises."',
       });
     }
-    
+
     questions.push({
-      id: 'anger_irritability',
+      id: "anger_irritability",
       question: `Have you witnessed outbursts of anger, irritability, or emotional reactions that seem out of proportion? Describe a specific incident.`,
-      placeholder: 'Example: "Last month, when a car backfired, he dropped to the ground and it took 10 minutes to calm him down."'
+      placeholder:
+        'Example: "Last month, when a car backfired, he dropped to the ground and it took 10 minutes to calm him down."',
     });
   }
-  
+
   // Physical / musculoskeletal questions
-  if (conditionCategory === 'physical') {
+  if (conditionCategory === "physical") {
     questions.push({
-      id: 'daily_tasks',
+      id: "daily_tasks",
       question: `What everyday tasks have you observed the veteran struggling with? Does the veteran need help with things like putting on socks, tying shoes, or getting out of bed?`,
-      placeholder: 'Example: "I have to help him put on his socks every morning because he cannot bend over. He uses a grabber tool for anything on the floor."'
+      placeholder:
+        'Example: "I have to help him put on his socks every morning because he cannot bend over. He uses a grabber tool for anything on the floor."',
     });
     questions.push({
-      id: 'mobility_changes',
+      id: "mobility_changes",
       question: `How has the veteran's ability to move around changed? Do they use any assistive devices? How far can they walk before needing to rest?`,
-      placeholder: 'Example: "He used to run marathons. Now he uses a cane and can only walk about 100 yards before his back seizes up."'
+      placeholder:
+        'Example: "He used to run marathons. Now he uses a cane and can only walk about 100 yards before his back seizes up."',
     });
     questions.push({
-      id: 'pain_observations',
+      id: "pain_observations",
       question: `Describe how you can tell when the veteran is in pain. What does their body language look like? Do they take medications frequently?`,
-      placeholder: 'Example: "He grimaces when getting up from chairs. I see him reach for his back constantly. He takes ibuprofen like candy."'
+      placeholder:
+        'Example: "He grimaces when getting up from chairs. I see him reach for his back constantly. He takes ibuprofen like candy."',
     });
     questions.push({
-      id: 'activity_limitations',
+      id: "activity_limitations",
       question: `What activities has the veteran had to give up because of their physical condition? What do they avoid doing?`,
-      placeholder: 'Example: "He can no longer play with our grandchildren on the floor. He avoids stairs and hasn\'t been able to mow the lawn in 3 years."'
+      placeholder:
+        'Example: "He can no longer play with our grandchildren on the floor. He avoids stairs and hasn\'t been able to mow the lawn in 3 years."',
     });
   }
-  
+
   // Neurological questions
-  if (conditionCategory === 'neurological') {
+  if (conditionCategory === "neurological") {
     questions.push({
-      id: 'memory_issues',
+      id: "memory_issues",
       question: `Have you noticed memory problems? Does the veteran forget conversations, appointments, or important dates? Give a specific example.`,
-      placeholder: 'Example: "He forgot our daughter\'s birthday last year. He often repeats the same story in a single conversation without realizing it."'
+      placeholder:
+        'Example: "He forgot our daughter\'s birthday last year. He often repeats the same story in a single conversation without realizing it."',
     });
     questions.push({
-      id: 'headache_frequency',
+      id: "headache_frequency",
       question: `How often do you see the veteran suffering from headaches or migraines? What do they do when they have one?`,
-      placeholder: 'Example: "At least 3-4 times a week, he goes to a dark room for hours. He can\'t tolerate any light or noise during these episodes."'
+      placeholder:
+        'Example: "At least 3-4 times a week, he goes to a dark room for hours. He can\'t tolerate any light or noise during these episodes."',
     });
     questions.push({
-      id: 'cognitive_changes',
+      id: "cognitive_changes",
       question: `Have you noticed changes in the veteran's ability to concentrate, make decisions, or process information?`,
-      placeholder: 'Example: "He used to be so sharp with finances. Now I handle all the bills because he gets confused and overwhelmed."'
+      placeholder:
+        'Example: "He used to be so sharp with finances. Now I handle all the bills because he gets confused and overwhelmed."',
     });
   }
-  
+
   // Hearing / Tinnitus questions
-  if (conditionCategory === 'hearing') {
+  if (conditionCategory === "hearing") {
     questions.push({
-      id: 'communication_struggles',
+      id: "communication_struggles",
       question: `How does the veteran's hearing affect your daily communication? Do they ask you to repeat yourself? Do you have to face them when speaking?`,
-      placeholder: 'Example: "I have to tap his shoulder before speaking and face him directly. He misses phone calls constantly."'
+      placeholder:
+        'Example: "I have to tap his shoulder before speaking and face him directly. He misses phone calls constantly."',
     });
     questions.push({
-      id: 'tinnitus_impact',
+      id: "tinnitus_impact",
       question: `If they have tinnitus (ringing in ears), how does it affect them? Do they need background noise to sleep? Do they seem distracted by it?`,
-      placeholder: 'Example: "He sleeps with a fan on full blast. In quiet rooms, I see him rubbing his ears and looking distressed."'
+      placeholder:
+        'Example: "He sleeps with a fan on full blast. In quiet rooms, I see him rubbing his ears and looking distressed."',
     });
   }
-  
+
   // Respiratory questions
-  if (conditionCategory === 'respiratory') {
+  if (conditionCategory === "respiratory") {
     questions.push({
-      id: 'breathing_observations',
+      id: "breathing_observations",
       question: `Describe the veteran's breathing difficulties you have witnessed. When do they occur? What does it look like?`,
-      placeholder: 'Example: "He gets winded just walking up the stairs. I hear him wheezing at night even with his CPAP machine."'
+      placeholder:
+        'Example: "He gets winded just walking up the stairs. I hear him wheezing at night even with his CPAP machine."',
     });
   }
-  
+
   // Universal closing questions
   questions.push({
-    id: 'work_impact',
+    id: "work_impact",
     question: `How has the veteran's condition affected their ability to work? Have they missed work, been written up, or lost jobs?`,
-    placeholder: 'Example: "He\'s lost two jobs in the past year. He can\'t sit for long periods and has to call out frequently for medical appointments."'
+    placeholder:
+      "Example: \"He's lost two jobs in the past year. He can't sit for long periods and has to call out frequently for medical appointments.\"",
   });
-  
+
   questions.push({
-    id: 'overall_impact',
+    id: "overall_impact",
     question: `In your own words, how has this condition changed the veteran's quality of life? What is the one thing you most want the VA to understand?`,
-    placeholder: 'Example: "He is not the same person who left for deployment. The strong, confident man I married now barely leaves the house."'
+    placeholder:
+      'Example: "He is not the same person who left for deployment. The strong, confident man I married now barely leaves the house."',
   });
-  
+
   return questions;
 };
 
 /**
  * Generate interview questions using AI based on relationship and condition
  */
-const generateAIQuestions = async (relationship, condition, conditionCategory, veteranContext = '') => {
+const generateAIQuestions = async (
+  relationship,
+  condition,
+  conditionCategory,
+  veteranContext = "",
+) => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
-    throw new Error('No AI available. Please configure an API key or enable Local AI.');
+    throw new Error(
+      "No AI available. Please configure an API key or enable Local AI.",
+    );
   }
-  
-  const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
+
+  const relationshipLabel =
+    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
+    relationship;
 
   const contextBlock = veteranContext
     ? `\nVETERAN CASE DATA (use for accurate service details and condition specifics):\n${veteranContext}\n`
-    : '';
-  
+    : "";
+
   const prompt = `You are a Gentle Interviewer helping a veteran's family member write a "Lay Statement" (VA Form 21-10210).
 
 CONTEXT:
@@ -254,19 +324,19 @@ Return EXACTLY 4 questions in this JSON format:
   const response = await generateAI(prompt, {
     temperature: 0.7,
     maxTokens: 1024,
-    expectJSON: true
+    expectJSON: true,
   });
-  
+
   // generateAI returns { text, mode } object - extract the text content
   const text = response?.text || response;
-  const textStr = typeof text === 'string' ? text : JSON.stringify(text);
-  
+  const textStr = typeof text === "string" ? text : JSON.stringify(text);
+
   // Extract JSON from response
   const jsonMatch = textStr.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error('Invalid response format');
+    throw new Error("Invalid response format");
   }
-  
+
   const parsed = JSON.parse(jsonMatch[0]);
   return parsed.questions;
 };
@@ -277,17 +347,21 @@ Return EXACTLY 4 questions in this JSON format:
 const compileStatementWithAI = async (relationship, condition, answers) => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
-    throw new Error('No AI available. Please configure an API key or enable Local AI.');
+    throw new Error(
+      "No AI available. Please configure an API key or enable Local AI.",
+    );
   }
-  
-  const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
-  
+
+  const relationshipLabel =
+    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
+    relationship;
+
   // Format answers for the prompt
   const answersText = Object.entries(answers)
     .filter(([_, value]) => value && value.trim())
     .map(([key, value]) => `${key}: ${value}`)
-    .join('\n\n');
-  
+    .join("\n\n");
+
   const prompt = `You are drafting a Buddy/Lay Statement (VA Form 21-10210) for a veteran's ${relationshipLabel.toLowerCase()}.
 
 CONDITION BEING CLAIMED: ${condition}
@@ -310,53 +384,55 @@ Write the complete buddy statement now:`;
   // Use unified AI service
   const response = await generateAI(prompt, {
     temperature: 0.6,
-    maxTokens: 2048
+    maxTokens: 2048,
   });
-  
+
   // generateAI returns { text, mode } object - extract the text content
   const text = response?.text || response;
-  return typeof text === 'string' ? text : JSON.stringify(text);
+  return typeof text === "string" ? text : JSON.stringify(text);
 };
 
 /**
  * Generate statement without AI (template-based)
  */
 const compileStatementWithoutAI = (relationship, condition, answers) => {
-  const relationshipLabel = RELATIONSHIP_TYPES.find(r => r.value === relationship)?.label || relationship;
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const relationshipLabel =
+    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
+    relationship;
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
-  
+
   let statement = `STATEMENT IN SUPPORT OF CLAIM (VA FORM 21-10210)\n`;
   statement += `Witness Type: ${relationshipLabel}\n`;
   statement += `Regarding: ${condition}\n`;
   statement += `Date: ${currentDate}\n\n`;
   statement += `---\n\n`;
-  
+
   if (answers.relationship_context) {
     statement += `${answers.relationship_context}\n\n`;
   }
-  
+
   statement += `I am writing to provide my personal observations regarding [Veteran]'s ${condition}.\n\n`;
-  
+
   // Add all answered questions
   const observationParts = [];
-  
+
   Object.entries(answers).forEach(([key, value]) => {
-    if (value && value.trim() && key !== 'relationship_context') {
+    if (value && value.trim() && key !== "relationship_context") {
       observationParts.push(value.trim());
     }
   });
-  
+
   if (observationParts.length > 0) {
     statement += `Based on my direct observations:\n\n`;
-    observationParts.forEach(part => {
+    observationParts.forEach((part) => {
       statement += `${part}\n\n`;
     });
   }
-  
+
   statement += `I certify that the statements above are true and correct to the best of my knowledge and belief.\n\n`;
   statement += `Respectfully submitted,\n\n`;
   statement += `_______________________________\n`;
@@ -368,36 +444,40 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   statement += `Contact Information:\n`;
   statement += `Phone: ___________________\n`;
   statement += `Email: ___________________\n`;
-  
+
   return statement;
 };
 
-export default function WitnessBench({ onClose, onReportBug, onOpenAISettings }) {
+export default function WitnessBench({
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+}) {
   const { t } = useLanguage();
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
-  
+
   // Helper function to get translated relationship label
   const getRelationshipLabel = (relationshipValue) => {
-    const rel = RELATIONSHIP_TYPES.find(r => r.value === relationshipValue);
-    return rel ? t('witnessBench', rel.labelKey) : relationshipValue;
+    const rel = RELATIONSHIP_TYPES.find((r) => r.value === relationshipValue);
+    return rel ? t("witnessBench", rel.labelKey) : relationshipValue;
   };
-  
+
   // Ref for screenshot/share functionality
   const witnessContentRef = useRef(null);
-  
+
   // Wizard state
   const [step, setStep] = useState(1);
-  const [relationship, setRelationship] = useState('');
-  const [condition, setCondition] = useState('');
-  const [conditionCategory, setConditionCategory] = useState('');
-  const [witnessName, setWitnessName] = useState('');
-  
+  const [relationship, setRelationship] = useState("");
+  const [condition, setCondition] = useState("");
+  const [conditionCategory, setConditionCategory] = useState("");
+  const [witnessName, setWitnessName] = useState("");
+
   // Interview state
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  
+
   // AI state - now checks actual availability
   const aiAvailable = isAnyAIAvailable();
   const aiStatus = getAIStatus();
@@ -405,12 +485,12 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [isGeneratingStatement, setIsGeneratingStatement] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Output state
-  const [generatedStatement, setGeneratedStatement] = useState('');
+  const [generatedStatement, setGeneratedStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedToPacket, setSavedToPacket] = useState(false);
-  
+
   /**
    * Save buddy statement to My Packet
    */
@@ -418,75 +498,84 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
     try {
       const claim = {
         conditionName: condition,
-        status: 'Evidence Gathered',
-        evidence: [{
-          type: 'Buddy Statement',
-          description: `Lay/Witness Statement (Form 21-10210) from ${getRelationshipLabel(relationship)}`,
-          statement: generatedStatement,
-          relationship: relationship,
-          witness: witnessName,
-          dateSaved: new Date().toISOString()
-        }],
-        notes: `Buddy statement from ${getRelationshipLabel(relationship)} regarding observable behaviors and functional impacts.`
+        status: "Evidence Gathered",
+        evidence: [
+          {
+            type: "Buddy Statement",
+            description: `Lay/Witness Statement (Form 21-10210) from ${getRelationshipLabel(relationship)}`,
+            statement: generatedStatement,
+            relationship: relationship,
+            witness: witnessName,
+            dateSaved: new Date().toISOString(),
+          },
+        ],
+        notes: `Buddy statement from ${getRelationshipLabel(relationship)} regarding observable behaviors and functional impacts.`,
       };
-      
+
       const success = saveClaim(claim);
       if (success) {
         setSavedToPacket(true);
         setTimeout(() => setSavedToPacket(false), 3000); // Reset after 3 seconds
       }
     } catch (error) {
-      console.error('Error saving to My Packet:', error);
+      console.error("Error saving to My Packet:", error);
     }
   };
-  
+
   /**
    * Determine condition category from condition name
    */
   const detectConditionCategory = useCallback((conditionName) => {
     const lowerCondition = conditionName.toLowerCase();
-    
+
     for (const [category, data] of Object.entries(CONDITION_CATEGORIES)) {
-      if (data.conditions.some(c => lowerCondition.includes(c))) {
+      if (data.conditions.some((c) => lowerCondition.includes(c))) {
         return category;
       }
     }
-    return 'other';
+    return "other";
   }, []);
-  
+
   /**
    * Move to interview step - load questions
    */
   const startInterview = useCallback(async () => {
     if (!relationship || !condition) {
-      setError(t('witnessBench', 'selectRelationshipAndCondition'));
+      setError(t("witnessBench", "selectRelationshipAndCondition"));
       return;
     }
-    
+
     setError(null);
     const category = detectConditionCategory(condition);
     setConditionCategory(category);
-    
+
     // Try AI questions first if available and enabled
     if (useAI && aiAvailable) {
       setIsLoadingQuestions(true);
       try {
         // Load veteran context for smarter questions
-        const veteranContext = await getVeteranAIContext({ maxPacketTokens: 500 });
-        const aiQuestions = await generateAIQuestions(relationship, condition, category, veteranContext);
-        
+        const veteranContext = await getVeteranAIContext({
+          maxPacketTokens: 500,
+        });
+        const aiQuestions = await generateAIQuestions(
+          relationship,
+          condition,
+          category,
+          veteranContext,
+        );
+
         // Combine AI questions with base questions
         const baseQuestions = getBaseQuestions(relationship, category);
         const combinedQuestions = [
           baseQuestions[0], // Always start with relationship context
           ...aiQuestions,
-          ...baseQuestions.slice(-2) // Always end with work impact and overall impact
+          ...baseQuestions.slice(-2), // Always end with work impact and overall impact
         ];
-        
+
         setQuestions(combinedQuestions);
         setStep(2);
       } catch (err) {
-        console.error('AI question generation failed:', err);
+        console.error("AI question generation failed:", err);
         // Fall back to base questions
         setQuestions(getBaseQuestions(relationship, category));
         setStep(2);
@@ -499,36 +588,40 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       setStep(2);
     }
   }, [relationship, condition, useAI, aiAvailable, detectConditionCategory]);
-  
+
   /**
    * Update answer for current question
    */
   const updateAnswer = (questionId, value) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
-  
+
   /**
    * Generate the final statement
    */
   const generateStatement = useCallback(async () => {
     setError(null);
     setIsGeneratingStatement(true);
-    
+
     try {
       let statement;
-      
+
       if (useAI && aiAvailable) {
-        statement = await compileStatementWithAI(relationship, condition, answers);
+        statement = await compileStatementWithAI(
+          relationship,
+          condition,
+          answers,
+        );
       } else {
         statement = compileStatementWithoutAI(relationship, condition, answers);
       }
-      
+
       setGeneratedStatement(statement);
       setStep(3);
 
       // Save buddy statement to My Packet
       saveAnalysisResults({
-        toolName: 'Witness Bench',
+        toolName: "Witness Bench",
         classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
         rawText: statement,
         extractedData: {
@@ -537,26 +630,30 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
           answers,
           statementLength: statement.length,
         },
-      }).catch(err => console.warn('Failed to save buddy statement:', err));
+      }).catch((err) => console.warn("Failed to save buddy statement:", err));
     } catch (err) {
-      console.error('Statement generation failed:', err);
+      console.error("Statement generation failed:", err);
       // Fall back to template
-      const statement = compileStatementWithoutAI(relationship, condition, answers);
+      const statement = compileStatementWithoutAI(
+        relationship,
+        condition,
+        answers,
+      );
       setGeneratedStatement(statement);
       setStep(3);
 
       // Still save even template-based output
       saveAnalysisResults({
-        toolName: 'Witness Bench',
+        toolName: "Witness Bench",
         classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
         rawText: statement,
         extractedData: { relationship, condition, answers },
-      }).catch(err => console.warn('Failed to save buddy statement:', err));
+      }).catch((err) => console.warn("Failed to save buddy statement:", err));
     } finally {
       setIsGeneratingStatement(false);
     }
   }, [relationship, condition, answers, useAI]);
-  
+
   /**
    * Download as PDF
    */
@@ -565,18 +662,18 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     const maxWidth = pageWidth - margin * 2;
-    
+
     doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Lay/Witness Statement (VA Form 21-10210)', margin, 20);
-    
+    doc.setFont("helvetica", "bold");
+    doc.text("Lay/Witness Statement (VA Form 21-10210)", margin, 20);
+
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    
+    doc.setFont("helvetica", "normal");
+
     const lines = doc.splitTextToSize(generatedStatement, maxWidth);
     let yPosition = 35;
-    
-    lines.forEach(line => {
+
+    lines.forEach((line) => {
       if (yPosition > 280) {
         doc.addPage();
         yPosition = 20;
@@ -584,61 +681,64 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       doc.text(line, margin, yPosition);
       yPosition += 5;
     });
-    
-    doc.save(`Buddy_Statement_${condition.replace(/\s+/g, '_')}.pdf`);
+
+    doc.save(`Buddy_Statement_${condition.replace(/\s+/g, "_")}.pdf`);
   };
-  
+
   /**
    * Download as DOCX
    */
   const downloadDOCX = async () => {
     const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Lay/Witness Statement (VA Form 21-10210)',
-                bold: true,
-                size: 28
-              })
-            ],
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER
-          }),
-          new Paragraph({ text: '' }),
-          ...generatedStatement.split('\n').map(line => 
+      sections: [
+        {
+          properties: {},
+          children: [
             new Paragraph({
-              children: [new TextRun({ text: line, size: 24 })],
-              spacing: { after: 120 }
-            })
-          )
-        ]
-      }]
+              children: [
+                new TextRun({
+                  text: "Lay/Witness Statement (VA Form 21-10210)",
+                  bold: true,
+                  size: 28,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+            }),
+            new Paragraph({ text: "" }),
+            ...generatedStatement.split("\n").map(
+              (line) =>
+                new Paragraph({
+                  children: [new TextRun({ text: line, size: 24 })],
+                  spacing: { after: 120 },
+                }),
+            ),
+          ],
+        },
+      ],
     });
-    
+
     const blob = await Packer.toBlob(doc);
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `Buddy_Statement_${condition.replace(/\s+/g, '_')}.docx`;
+    a.download = `Buddy_Statement_${condition.replace(/\s+/g, "_")}.docx`;
     a.click();
     URL.revokeObjectURL(url);
   };
-  
+
   /**
    * Copy to clipboard
    */
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedStatement);
-      alert(t('witnessBench', 'statementCopied'));
+      alert(t("witnessBench", "statementCopied"));
     } catch (err) {
-      console.error('Copy failed:', err);
+      console.error("Copy failed:", err);
     }
   };
-  
+
   /**
    * Render Step 1: Setup
    */
@@ -647,7 +747,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       {/* Who is writing this? */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          {t('witnessBench', 'step1Title')}
+          {t("witnessBench", "step1Title")}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {RELATIONSHIP_TYPES.map((type) => (
@@ -656,67 +756,70 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               onClick={() => setRelationship(type.value)}
               className={`p-4 rounded-xl border-2 transition-all text-center ${
                 relationship === type.value
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
-                  : 'border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-700'
+                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30"
+                  : "border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-700"
               }`}
             >
               <span className="text-2xl block mb-1">{type.icon}</span>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('witnessBench', type.labelKey)}</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {t("witnessBench", type.labelKey)}
+              </span>
             </button>
           ))}
         </div>
       </div>
-      
+
       {/* What condition? */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          {t('witnessBench', 'step2Title')}
+          {t("witnessBench", "step2Title")}
         </h3>
         <input
           type="text"
           value={condition}
           onChange={(e) => setCondition(e.target.value)}
-          placeholder={t('witnessBench', 'conditionPlaceholder')}
+          placeholder={t("witnessBench", "conditionPlaceholder")}
           className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all"
         />
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          {t('witnessBench', 'conditionHelpText')}
+          {t("witnessBench", "conditionHelpText")}
         </p>
       </div>
-      
+
       {/* Witness Name */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-          {t('witnessBench', 'step3Title')}
+          {t("witnessBench", "step3Title")}
         </h3>
         <input
           type="text"
           value={witnessName}
           onChange={(e) => setWitnessName(e.target.value)}
-          placeholder={t('witnessBench', 'witnessNamePlaceholder')}
+          placeholder={t("witnessBench", "witnessNamePlaceholder")}
           className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none transition-all"
         />
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          {t('witnessBench', 'witnessNameHelpText')}
+          {t("witnessBench", "witnessNameHelpText")}
         </p>
       </div>
-      
+
       {/* AI Toggle - Always show, but with different states */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-              🤖 {t('witnessBench', 'aiPoweredInterview')}
+              🤖 {t("witnessBench", "aiPoweredInterview")}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {aiAvailable 
-                ? t('witnessBench', 'aiAvailableDesc')
-                : t('witnessBench', 'aiNotConfigured')
-              }
+              {aiAvailable
+                ? t("witnessBench", "aiAvailableDesc")
+                : t("witnessBench", "aiNotConfigured")}
             </p>
             {aiAvailable && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                {aiStatus.mode === AI_MODES.LOCAL ? t('witnessBench', 'usingLocalAI') : t('witnessBench', 'usingCloudAI')}
+                {aiStatus.mode === AI_MODES.LOCAL
+                  ? t("witnessBench", "usingLocalAI")
+                  : t("witnessBench", "usingCloudAI")}
               </p>
             )}
           </div>
@@ -724,77 +827,86 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             <button
               onClick={() => setUseAI(!useAI)}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                useAI ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                useAI ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-600"
               }`}
             >
-              <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
-                useAI ? 'translate-x-7' : 'translate-x-1'
-              }`} />
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                  useAI ? "translate-x-7" : "translate-x-1"
+                }`}
+              />
             </button>
           ) : (
             <button
               onClick={onOpenAISettings}
               className="px-3 py-2 text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/40 transition-colors"
             >
-              ⚙️ {t('witnessBench', 'configureAI')}
+              ⚙️ {t("witnessBench", "configureAI")}
             </button>
           )}
         </div>
         {!aiAvailable && (
           <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              💡 <strong>{t('witnessBench', 'standardQuestionsWork')}</strong> {t('witnessBench', 'aiOptionalNote')}
+              💡 <strong>{t("witnessBench", "standardQuestionsWork")}</strong>{" "}
+              {t("witnessBench", "aiOptionalNote")}
             </p>
           </div>
         )}
       </div>
-      
+
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r-lg">
           <p className="text-red-700 dark:text-red-300">{error}</p>
         </div>
       )}
-      
+
       {/* Start Button */}
       <button
         onClick={startInterview}
-        disabled={!relationship || !condition || !witnessName || isLoadingQuestions}
+        disabled={
+          !relationship || !condition || !witnessName || isLoadingQuestions
+        }
         className="w-full px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-violet-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoadingQuestions ? (
           <>
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-            <span>{t('witnessBench', 'preparingInterview')}</span>
+            <span>{t("witnessBench", "preparingInterview")}</span>
           </>
         ) : (
           <>
             <span>📝</span>
-            <span>{t('witnessBench', 'startInterview')}</span>
+            <span>{t("witnessBench", "startInterview")}</span>
           </>
         )}
       </button>
     </div>
   );
-  
+
   /**
    * Render Step 2: Interview
    */
   const renderInterviewStep = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    const answeredCount = Object.values(answers).filter(a => a && a.trim()).length;
+    const answeredCount = Object.values(answers).filter(
+      (a) => a && a.trim(),
+    ).length;
     const progress = (currentQuestionIndex / questions.length) * 100;
-    
+
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Progress Bar */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              {t('witnessBench', 'questionOf').replace('{current}', currentQuestionIndex + 1).replace('{total}', questions.length)}
+              {t("witnessBench", "questionOf")
+                .replace("{current}", currentQuestionIndex + 1)
+                .replace("{total}", questions.length)}
             </span>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              {answeredCount} {t('witnessBench', 'answered')}
+              {answeredCount} {t("witnessBench", "answered")}
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -804,7 +916,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             ></div>
           </div>
         </div>
-        
+
         {/* Current Question */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-start gap-3 mb-4">
@@ -813,16 +925,16 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               {currentQuestion.question}
             </h3>
           </div>
-          
+
           <div className="relative">
             <textarea
-              value={answers[currentQuestion.id] || ''}
+              value={answers[currentQuestion.id] || ""}
               onChange={(e) => updateAnswer(currentQuestion.id, e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
+                if (e.key === "Enter" && e.ctrlKey) {
                   e.preventDefault();
                   if (currentQuestionIndex < questions.length - 1) {
-                    setCurrentQuestionIndex(prev => prev + 1);
+                    setCurrentQuestionIndex((prev) => prev + 1);
                   } else if (answeredCount >= 3 && !isGeneratingStatement) {
                     generateStatement();
                   }
@@ -836,35 +948,41 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             <div className="absolute right-3 top-3">
               <VoiceInputButton
                 onTranscript={(text) => {
-                  const current = answers[currentQuestion.id] || '';
-                  updateAnswer(currentQuestion.id, current ? `${current} ${text}` : text);
+                  const current = answers[currentQuestion.id] || "";
+                  updateAnswer(
+                    currentQuestion.id,
+                    current ? `${current} ${text}` : text,
+                  );
                 }}
                 size="md"
               />
             </div>
           </div>
-          
+
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            🎤 <strong>{t('voice', 'enableVoice').split(' ')[0]}:</strong> {t('witnessBench', 'voiceInputTip')}
+            🎤 <strong>{t("voice", "enableVoice").split(" ")[0]}:</strong>{" "}
+            {t("witnessBench", "voiceInputTip")}
           </p>
         </div>
-        
+
         {/* Navigation Buttons */}
         <div className="flex gap-3">
           <button
-            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+            onClick={() =>
+              setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
+            }
             disabled={currentQuestionIndex === 0}
             className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t('witnessBench', 'previous')}
+            {t("witnessBench", "previous")}
           </button>
-          
+
           {currentQuestionIndex < questions.length - 1 ? (
             <button
-              onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+              onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
               className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
             >
-              {t('witnessBench', 'next')}
+              {t("witnessBench", "next")}
             </button>
           ) : (
             <button
@@ -875,21 +993,23 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               {isGeneratingStatement ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  <span>{t('witnessBench', 'generating')}</span>
+                  <span>{t("witnessBench", "generating")}</span>
                 </>
               ) : (
                 <>
                   <span>📄</span>
-                  <span>{t('witnessBench', 'generateStatement')}</span>
+                  <span>{t("witnessBench", "generateStatement")}</span>
                 </>
               )}
             </button>
           )}
         </div>
-        
+
         {/* Question Navigator */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">{t('witnessBench', 'jumpToQuestion')}</p>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
+            {t("witnessBench", "jumpToQuestion")}
+          </p>
           <div className="flex flex-wrap gap-2">
             {questions.map((q, index) => (
               <button
@@ -897,10 +1017,10 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
                 onClick={() => setCurrentQuestionIndex(index)}
                 className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
                   index === currentQuestionIndex
-                    ? 'bg-purple-600 text-white'
+                    ? "bg-purple-600 text-white"
                     : answers[q.id]
-                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
                 {index + 1}
@@ -911,7 +1031,7 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
       </div>
     );
   };
-  
+
   /**
    * Render Step 3: Output
    */
@@ -924,68 +1044,91 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
             <span className="text-4xl">✅</span>
           </div>
           <div>
-            <h3 className="text-2xl font-bold">{t('witnessBench', 'statementGenerated')}</h3>
+            <h3 className="text-2xl font-bold">
+              {t("witnessBench", "statementGenerated")}
+            </h3>
             <p className="text-green-100">
-              {t('witnessBench', 'reviewEditDownload')}
+              {t("witnessBench", "reviewEditDownload")}
             </p>
           </div>
         </div>
       </div>
-      
+
       {/* Statement Preview */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
         <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-            📄 {t('witnessBench', 'yourBuddyStatement')}
+            📄 {t("witnessBench", "yourBuddyStatement")}
           </h3>
           <div className="flex gap-2">
             <button
               onClick={copyToClipboard}
               className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
             >
-              📋 {t('witnessBench', 'copy')}
+              📋 {t("witnessBench", "copy")}
             </button>
             <div className="relative">
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                 className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
               >
-                📥 {t('witnessBench', 'download')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                📥 {t("witnessBench", "download")}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
-              
+
               {showDownloadMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
                   <button
-                    onClick={() => { saveToMyPacket(); setShowDownloadMenu(false); }}
+                    onClick={() => {
+                      saveToMyPacket();
+                      setShowDownloadMenu(false);
+                    }}
                     className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors rounded-t-lg ${
-                      savedToPacket 
-                        ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30' 
-                        : 'text-gray-700 dark:text-gray-200'
+                      savedToPacket
+                        ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
+                        : "text-gray-700 dark:text-gray-200"
                     }`}
                   >
-                    {savedToPacket ? `✅ ${t('witnessBench', 'savedToMyPacket')}` : `📁 ${t('witnessBench', 'saveToMyPacket')}`}
+                    {savedToPacket
+                      ? `✅ ${t("witnessBench", "savedToMyPacket")}`
+                      : `📁 ${t("witnessBench", "saveToMyPacket")}`}
                   </button>
                   <button
-                    onClick={() => { downloadPDF(); setShowDownloadMenu(false); }}
+                    onClick={() => {
+                      downloadPDF();
+                      setShowDownloadMenu(false);
+                    }}
                     className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
-                    📑 {t('witnessBench', 'downloadAsPDF')}
+                    📑 {t("witnessBench", "downloadAsPDF")}
                   </button>
                   <button
-                    onClick={() => { downloadDOCX(); setShowDownloadMenu(false); }}
+                    onClick={() => {
+                      downloadDOCX();
+                      setShowDownloadMenu(false);
+                    }}
                     className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-b-lg transition-colors"
                   >
-                    📝 {t('witnessBench', 'downloadAsDOCX')}
+                    📝 {t("witnessBench", "downloadAsDOCX")}
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-        
+
         <div className="p-6">
           <textarea
             value={generatedStatement}
@@ -995,47 +1138,49 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
           />
         </div>
       </div>
-      
+
       {/* Next Steps */}
       <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-r-lg">
         <div className="flex items-start gap-3">
           <span className="text-2xl">📋</span>
           <div>
-            <h3 className="font-bold text-amber-800 dark:text-amber-200">{t('witnessBench', 'nextStepsTitle')}</h3>
+            <h3 className="font-bold text-amber-800 dark:text-amber-200">
+              {t("witnessBench", "nextStepsTitle")}
+            </h3>
             <ol className="text-amber-700 dark:text-amber-300 text-sm mt-2 list-decimal list-inside space-y-1">
-              <li>{t('witnessBench', 'nextStep1')}</li>
-              <li>{t('witnessBench', 'nextStep2')}</li>
-              <li>{t('witnessBench', 'nextStep3')}</li>
-              <li>{t('witnessBench', 'nextStep4')}</li>
+              <li>{t("witnessBench", "nextStep1")}</li>
+              <li>{t("witnessBench", "nextStep2")}</li>
+              <li>{t("witnessBench", "nextStep3")}</li>
+              <li>{t("witnessBench", "nextStep4")}</li>
             </ol>
           </div>
         </div>
       </div>
-      
+
       {/* Start Over Button */}
       <button
         onClick={() => {
           setStep(1);
-          setRelationship('');
-          setCondition('');
+          setRelationship("");
+          setCondition("");
           setQuestions([]);
           setAnswers({});
           setCurrentQuestionIndex(0);
-          setGeneratedStatement('');
+          setGeneratedStatement("");
         }}
         className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
       >
-        🔄 {t('witnessBench', 'startNewStatement')}
+        🔄 {t("witnessBench", "startNewStatement")}
       </button>
     </div>
   );
-  
+
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
     >
-      <div 
+      <div
         ref={witnessContentRef}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -1047,63 +1192,91 @@ export default function WitnessBench({ onClose, onReportBug, onOpenAISettings })
               <span className="text-3xl">👥</span>
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  {t('witnessBench', 'title')}
-                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">{t('witnessBench', 'aiBadge')}</span>
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">{t('witnessBench', 'betaBadge')}</span>
+                  {t("witnessBench", "title")}
+                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                    {t("witnessBench", "aiBadge")}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    {t("witnessBench", "betaBadge")}
+                  </span>
                 </h2>
-                <p className="text-sm text-violet-100">{t('witnessBench', 'subtitle')}</p>
+                <p className="text-sm text-violet-100">
+                  {t("witnessBench", "subtitle")}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {/* AI Status & LLM Recommendation Badges */}
               <LLMRecommendationBadge toolId="witness-bench" />
               <AIStatusBadge onClick={onOpenAISettings} />
-              <ShareButton 
+              <ShareButton
                 targetRef={witnessContentRef}
                 filename="witness-statement"
                 variant="icon"
               />
-              {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="The Witness Bench" />}
+              {onReportBug && (
+                <ReportBugLink
+                  onClick={onReportBug}
+                  variant="light"
+                  moduleName="The Witness Bench"
+                />
+              )}
               <button
                 onClick={onClose}
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                 aria-label="Close"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
           </div>
         </div>
-        
+
         <div className="overflow-y-auto flex-1 p-4">
           {/* Main Content */}
-          <div className="max-w-4xl mx-auto">{/* Info Banner */}
+          <div className="max-w-4xl mx-auto">
+            {/* Info Banner */}
             <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-500 p-4 mb-6 rounded-r-lg">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-bold text-purple-800 dark:text-purple-200">{t('witnessBench', 'whyBuddyStatementsMatter')}</h3>
+                  <h3 className="font-bold text-purple-800 dark:text-purple-200">
+                    {t("witnessBench", "whyBuddyStatementsMatter")}
+                  </h3>
                   <p className="text-purple-700 dark:text-purple-300 text-sm mt-1">
-                    {t('witnessBench', 'buddyStatementExplanation')}
+                    {t("witnessBench", "buddyStatementExplanation")}
                   </p>
                 </div>
               </div>
             </div>
-            
+
             {/* Smart AI Load Button */}
             {!isAnyAIAvailable() && (
               <div className="mb-6">
-                <SmartAILoadButton 
+                <SmartAILoadButton
                   toolId="witness-bench"
                   onLoadComplete={(model) => {
-                    console.log('Smart AI loaded for Witness Bench:', model?.name);
+                    console.log(
+                      "Smart AI loaded for Witness Bench:",
+                      model?.name,
+                    );
                   }}
                 />
               </div>
             )}
-            
+
             {/* Step Content */}
             {step === 1 && renderSetupStep()}
             {step === 2 && renderInterviewStep()}

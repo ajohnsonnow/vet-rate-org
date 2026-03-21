@@ -37,23 +37,23 @@ class VetRateAssistant {
   async ask(question) {
     // Step 1: Find relevant knowledge with RAG
     const ragResult = await this.rag.answer(question);
-    
+
     // Step 2: If WebLLM available, enhance with LLM
     if (this.useWebLLM && ragResult.sources.length > 0) {
       const context = ragResult.answer;
       const llmResponse = await this.llm.chat(question, context);
-      
+
       return {
         answer: llmResponse,
         sources: ragResult.sources,
-        method: "RAG + WebLLM"
+        method: "RAG + WebLLM",
       };
     }
-    
+
     // Fallback to RAG only
     return {
       ...ragResult,
-      method: "RAG only"
+      method: "RAG only",
     };
   }
 }

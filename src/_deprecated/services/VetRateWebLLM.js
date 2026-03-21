@@ -12,7 +12,7 @@ class VetRateWebLLM {
     this.systemPrompt = `You are a VA Claims Assistant helping veterans understand their disability benefits.
 You specialize in:
 - 38 CFR regulations and diagnostic codes
-- Secondary service connection under 38 CFR § 3.310
+- Secondary service connection under 38 CFR ï¿½ 3.310
 - Rating criteria and schedules
 - PACT Act presumptive conditions
 
@@ -20,14 +20,13 @@ Always cite specific regulations when possible. Be accurate and helpful.`;
   }
 
   async initialize(onProgress) {
-    this.engine = await webllm.CreateMLCEngine(
-      this.modelId,
-      {
-        initProgressCallback: onProgress || ((progress) => {
+    this.engine = await webllm.CreateMLCEngine(this.modelId, {
+      initProgressCallback:
+        onProgress ||
+        ((progress) => {
           console.log(`Loading: ${(progress.progress * 100).toFixed(1)}%`);
-        })
-      }
-    );
+        }),
+    });
     console.log("WebLLM engine initialized");
   }
 
@@ -36,14 +35,12 @@ Always cite specific regulations when possible. Be accurate and helpful.`;
       throw new Error("Engine not initialized. Call initialize() first.");
     }
 
-    const messages = [
-      { role: "system", content: this.systemPrompt },
-    ];
+    const messages = [{ role: "system", content: this.systemPrompt }];
 
     if (knowledgeContext) {
       messages.push({
         role: "system",
-        content: `Relevant VA regulations:\n${knowledgeContext}`
+        content: `Relevant VA regulations:\n${knowledgeContext}`,
       });
     }
 
@@ -52,7 +49,7 @@ Always cite specific regulations when possible. Be accurate and helpful.`;
     const response = await this.engine.chat.completions.create({
       messages,
       temperature: 0.7,
-      max_tokens: 512
+      max_tokens: 512,
     });
 
     return response.choices[0].message.content;
@@ -63,14 +60,12 @@ Always cite specific regulations when possible. Be accurate and helpful.`;
       throw new Error("Engine not initialized");
     }
 
-    const messages = [
-      { role: "system", content: this.systemPrompt },
-    ];
+    const messages = [{ role: "system", content: this.systemPrompt }];
 
     if (knowledgeContext) {
       messages.push({
         role: "system",
-        content: `Relevant VA regulations:\n${knowledgeContext}`
+        content: `Relevant VA regulations:\n${knowledgeContext}`,
       });
     }
 
@@ -80,7 +75,7 @@ Always cite specific regulations when possible. Be accurate and helpful.`;
       messages,
       temperature: 0.7,
       max_tokens: 512,
-      stream: true
+      stream: true,
     });
 
     let fullResponse = "";

@@ -7,11 +7,7 @@
     {
       "id": "medal_of_honor",
       "name": "Medal of Honor",
-      "aliases": [
-        "MOH",
-        "MEDAL OF HONOR",
-        "CONGRESSIONAL MEDAL OF HONOR"
-      ],
+      "aliases": ["MOH", "MEDAL OF HONOR", "CONGRESSIONAL MEDAL OF HONOR"],
       "branch": [
         "Army",
         "Navy",
@@ -35,14 +31,8 @@
     {
       "id": "distinguished_service_cross",
       "name": "Distinguished Service Cross",
-      "aliases": [
-        "DSC",
-        "DIST SVC CROSS",
-        "DISTINGUISHED SERVICE CROSS"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["DSC", "DIST SVC CROSS", "DISTINGUISHED SERVICE CROSS"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 2
       },
@@ -53,15 +43,8 @@
     {
       "id": "navy_cross",
       "name": "Navy Cross",
-      "aliases": [
-        "NC",
-        "NAVY CROSS"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["NC", "NAVY CROSS"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 2,
         "Marines": 2,
@@ -74,15 +57,8 @@
     {
       "id": "air_force_cross",
       "name": "Air Force Cross",
-      "aliases": [
-        "AFC",
-        "AF CROSS",
-        "AIR FORCE CROSS"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFC", "AF CROSS", "AIR FORCE CROSS"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 2,
         "Space Force": 2
@@ -94,11 +70,7 @@
     {
       "id": "defense_distinguished_service_medal",
       "name": "Defense Distinguished Service Medal",
-      "aliases": [
-        "DDSM",
-        "DEF DIST SVC MDL",
-        "DEFENSE DSM"
-      ],
+      "aliases": ["DDSM", "DEF DIST SVC MDL", "DEFENSE DSM"],
       "branch": [
         "Army",
         "Navy",
@@ -122,14 +94,8 @@
     {
       "id": "army_distinguished_service_medal",
       "name": "Army Distinguished Service Medal",
-      "aliases": [
-        "ADSM",
-        "ARMY DSM",
-        "DISTINGUISHED SERVICE MEDAL"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["ADSM", "ARMY DSM", "DISTINGUISHED SERVICE MEDAL"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 4
       },
@@ -140,15 +106,8 @@
     {
       "id": "navy_distinguished_service_medal",
       "name": "Navy Distinguished Service Medal",
-      "aliases": [
-        "NDSM",
-        "NAVY DSM"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["NDSM", "NAVY DSM"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 4,
         "Marines": 4,
@@ -161,14 +120,8 @@
     {
       "id": "air_force_distinguished_service_medal",
       "name": "Air Force Distinguished Service Medal",
-      "aliases": [
-        "AFDSM",
-        "AF DSM"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFDSM", "AF DSM"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 4,
         "Space Force": 4
@@ -180,13 +133,8 @@
     {
       "id": "coast_guard_distinguished_service_medal",
       "name": "Coast Guard Distinguished Service Medal",
-      "aliases": [
-        "CGDSM",
-        "CG DSM"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["CGDSM", "CG DSM"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 5
       },
@@ -197,12 +145,7 @@
     {
       "id": "silver_star",
       "name": "Silver Star",
-      "aliases": [
-        "SS",
-        "SILVER STAR",
-        "SLVR STR",
-        "SSM"
-      ],
+      "aliases": ["SS", "SILVER STAR", "SLVR STR", "SSM"],
       "branch": [
         "Army",
         "Navy",
@@ -226,10 +169,7 @@
     {
       "id": "defense_superior_service_medal",
       "name": "Defense Superior Service Medal",
-      "aliases": [
-        "DSSM",
-        "DEF SUP SVC MDL"
-      ],
+      "aliases": ["DSSM", "DEF SUP SVC MDL"],
       "branch": [
         "Army",
         "Navy",
@@ -253,12 +193,7 @@
     {
       "id": "legion_of_merit",
       "name": "Legion of Merit",
-      "aliases": [
-        "LOM",
-        "LM",
-        "LEGION OF MERIT",
-        "LEG OF MERIT"
-      ],
+      "aliases": ["LOM", "LM", "LEGION OF MERIT", "LEG OF MERIT"],
       "branch": [
         "Army",
         "Navy",
@@ -282,11 +217,7 @@
     {
       "id": "distinguished_flying_cross",
       "name": "Distinguished Flying Cross",
-      "aliases": [
-        "DFC",
-        "DIST FLY CROSS",
-        "DISTINGUISHED FLYING CROSS"
-      ],
+      "aliases": ["DFC", "DIST FLY CROSS", "DISTINGUISHED FLYING CROSS"],
       "branch": [
         "Army",
         "Navy",
@@ -310,14 +241,8 @@
     {
       "id": "soldiers_medal",
       "name": "Soldier's Medal",
-      "aliases": [
-        "SM",
-        "SOLDIERS MEDAL",
-        "SOLDIER'S MEDAL"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["SM", "SOLDIERS MEDAL", "SOLDIER'S MEDAL"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 9
       },
@@ -328,15 +253,8 @@
     {
       "id": "navy_marine_corps_medal",
       "name": "Navy and Marine Corps Medal",
-      "aliases": [
-        "NMCM",
-        "NMC MEDAL",
-        "NAVY MARINE CORPS MEDAL"
-      ],
-      "branch": [
-        "Navy",
-        "Marines"
-      ],
+      "aliases": ["NMCM", "NMC MEDAL", "NAVY MARINE CORPS MEDAL"],
+      "branch": ["Navy", "Marines"],
       "precedence": {
         "Navy": 9,
         "Marines": 9
@@ -348,15 +266,8 @@
     {
       "id": "airman_medal",
       "name": "Airman's Medal",
-      "aliases": [
-        "AM",
-        "AIRMANS MEDAL",
-        "AIRMAN'S MEDAL"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AM", "AIRMANS MEDAL", "AIRMAN'S MEDAL"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 9,
         "Space Force": 9
@@ -368,13 +279,8 @@
     {
       "id": "coast_guard_medal",
       "name": "Coast Guard Medal",
-      "aliases": [
-        "CGM",
-        "CG MEDAL"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["CGM", "CG MEDAL"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 10
       },
@@ -416,11 +322,7 @@
     {
       "id": "purple_heart",
       "name": "Purple Heart",
-      "aliases": [
-        "PH",
-        "PURPLE HEART",
-        "PRPL HRT"
-      ],
+      "aliases": ["PH", "PURPLE HEART", "PRPL HRT"],
       "branch": [
         "Army",
         "Navy",
@@ -444,10 +346,7 @@
     {
       "id": "defense_meritorious_service_medal",
       "name": "Defense Meritorious Service Medal",
-      "aliases": [
-        "DMSM",
-        "DEF MSM"
-      ],
+      "aliases": ["DMSM", "DEF MSM"],
       "branch": [
         "Army",
         "Navy",
@@ -471,11 +370,7 @@
     {
       "id": "meritorious_service_medal",
       "name": "Meritorious Service Medal",
-      "aliases": [
-        "MSM",
-        "MRT SVC MDL",
-        "MERITORIOUS SERVICE MEDAL"
-      ],
+      "aliases": ["MSM", "MRT SVC MDL", "MERITORIOUS SERVICE MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -499,11 +394,7 @@
     {
       "id": "air_medal",
       "name": "Air Medal",
-      "aliases": [
-        "AM",
-        "AIR MEDAL",
-        "AIR MDL"
-      ],
+      "aliases": ["AM", "AIR MEDAL", "AIR MDL"],
       "branch": [
         "Army",
         "Navy",
@@ -527,11 +418,7 @@
     {
       "id": "joint_service_commendation_medal",
       "name": "Joint Service Commendation Medal",
-      "aliases": [
-        "JSCM",
-        "JT SVC COM MDL",
-        "JOINT SERVICE COMMENDATION"
-      ],
+      "aliases": ["JSCM", "JT SVC COM MDL", "JOINT SERVICE COMMENDATION"],
       "branch": [
         "Army",
         "Navy",
@@ -555,15 +442,8 @@
     {
       "id": "army_commendation_medal",
       "name": "Army Commendation Medal",
-      "aliases": [
-        "ARCOM",
-        "ACM",
-        "ARMY COM MDL",
-        "ARMY COMMENDATION MEDAL"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["ARCOM", "ACM", "ARMY COM MDL", "ARMY COMMENDATION MEDAL"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 16
       },
@@ -580,11 +460,7 @@
         "NAVY COMMENDATION MEDAL",
         "NAVY COM"
       ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 16,
         "Marines": 16,
@@ -597,15 +473,8 @@
     {
       "id": "air_force_commendation_medal",
       "name": "Air Force Commendation Medal",
-      "aliases": [
-        "AFCM",
-        "AF COM MDL",
-        "AIR FORCE COMMENDATION MEDAL"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFCM", "AF COM MDL", "AIR FORCE COMMENDATION MEDAL"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 16,
         "Space Force": 16
@@ -617,13 +486,8 @@
     {
       "id": "coast_guard_commendation_medal",
       "name": "Coast Guard Commendation Medal",
-      "aliases": [
-        "CGCM",
-        "CG COM MDL"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["CGCM", "CG COM MDL"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 18
       },
@@ -634,11 +498,7 @@
     {
       "id": "joint_service_achievement_medal",
       "name": "Joint Service Achievement Medal",
-      "aliases": [
-        "JSAM",
-        "JT SVC ACH MDL",
-        "JOINT SERVICE ACHIEVEMENT"
-      ],
+      "aliases": ["JSAM", "JT SVC ACH MDL", "JOINT SERVICE ACHIEVEMENT"],
       "branch": [
         "Army",
         "Navy",
@@ -662,14 +522,8 @@
     {
       "id": "army_achievement_medal",
       "name": "Army Achievement Medal",
-      "aliases": [
-        "AAM",
-        "ARMY ACH MDL",
-        "ARMY ACHIEVEMENT MEDAL"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["AAM", "ARMY ACH MDL", "ARMY ACHIEVEMENT MEDAL"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 18
       },
@@ -680,16 +534,8 @@
     {
       "id": "navy_marine_corps_achievement_medal",
       "name": "Navy and Marine Corps Achievement Medal",
-      "aliases": [
-        "NMCAM",
-        "NAV ACH MDL",
-        "NAVY ACHIEVEMENT MEDAL",
-        "NAVY ACH"
-      ],
-      "branch": [
-        "Navy",
-        "Marines"
-      ],
+      "aliases": ["NMCAM", "NAV ACH MDL", "NAVY ACHIEVEMENT MEDAL", "NAVY ACH"],
+      "branch": ["Navy", "Marines"],
       "precedence": {
         "Navy": 18,
         "Marines": 18
@@ -701,15 +547,8 @@
     {
       "id": "air_force_achievement_medal",
       "name": "Air Force Achievement Medal",
-      "aliases": [
-        "AFAM",
-        "AF ACH MDL",
-        "AIR FORCE ACHIEVEMENT MEDAL"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFAM", "AF ACH MDL", "AIR FORCE ACHIEVEMENT MEDAL"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 18,
         "Space Force": 18
@@ -721,13 +560,8 @@
     {
       "id": "coast_guard_achievement_medal",
       "name": "Coast Guard Achievement Medal",
-      "aliases": [
-        "CGAM",
-        "CG ACH MDL"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["CGAM", "CG ACH MDL"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 20
       },
@@ -738,15 +572,8 @@
     {
       "id": "combat_action_ribbon",
       "name": "Combat Action Ribbon",
-      "aliases": [
-        "CAR",
-        "COMBAT ACTION RIBBON"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["CAR", "COMBAT ACTION RIBBON"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 19,
         "Marines": 19,
@@ -759,13 +586,8 @@
     {
       "id": "combat_action_badge",
       "name": "Combat Action Badge",
-      "aliases": [
-        "CAB",
-        "COMBAT ACTION BADGE"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["CAB", "COMBAT ACTION BADGE"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 19
       },
@@ -776,14 +598,8 @@
     {
       "id": "combat_infantryman_badge",
       "name": "Combat Infantryman Badge",
-      "aliases": [
-        "CIB",
-        "COMBAT INFANTRY BADGE",
-        "COMBAT INFANTRYMAN BADGE"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["CIB", "COMBAT INFANTRY BADGE", "COMBAT INFANTRYMAN BADGE"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 20
       },
@@ -794,13 +610,8 @@
     {
       "id": "presidential_unit_citation_army",
       "name": "Presidential Unit Citation (Army)",
-      "aliases": [
-        "PUC",
-        "PRESIDENTIAL UNIT CITATION"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["PUC", "PRESIDENTIAL UNIT CITATION"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 25
       },
@@ -811,15 +622,8 @@
     {
       "id": "presidential_unit_citation_navy",
       "name": "Presidential Unit Citation (Navy)",
-      "aliases": [
-        "PUC",
-        "PRESIDENTIAL UNIT CITATION"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["PUC", "PRESIDENTIAL UNIT CITATION"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 25,
         "Marines": 25,
@@ -832,14 +636,8 @@
     {
       "id": "air_force_presidential_unit_citation",
       "name": "Air Force Presidential Unit Citation",
-      "aliases": [
-        "PUC",
-        "AF PUC"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["PUC", "AF PUC"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 25,
         "Space Force": 25
@@ -851,13 +649,8 @@
     {
       "id": "valorous_unit_award",
       "name": "Valorous Unit Award",
-      "aliases": [
-        "VUA",
-        "VALOROUS UNIT AWARD"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["VUA", "VALOROUS UNIT AWARD"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 26
       },
@@ -868,15 +661,8 @@
     {
       "id": "navy_unit_commendation",
       "name": "Navy Unit Commendation",
-      "aliases": [
-        "NUC",
-        "NAVY UNIT COMMENDATION"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["NUC", "NAVY UNIT COMMENDATION"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 26,
         "Marines": 26,
@@ -889,14 +675,8 @@
     {
       "id": "air_force_gallant_unit_citation",
       "name": "Air Force Gallant Unit Citation",
-      "aliases": [
-        "AFGUC",
-        "GALLANT UNIT CITATION"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFGUC", "GALLANT UNIT CITATION"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 26,
         "Space Force": 26
@@ -908,13 +688,8 @@
     {
       "id": "meritorious_unit_commendation_army",
       "name": "Meritorious Unit Commendation (Army)",
-      "aliases": [
-        "MUC",
-        "MERITORIOUS UNIT COMMENDATION"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["MUC", "MERITORIOUS UNIT COMMENDATION"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 27
       },
@@ -925,15 +700,8 @@
     {
       "id": "meritorious_unit_commendation_navy",
       "name": "Meritorious Unit Commendation (Navy)",
-      "aliases": [
-        "MUC",
-        "NAVY MUC"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["MUC", "NAVY MUC"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 27,
         "Marines": 27,
@@ -946,14 +714,8 @@
     {
       "id": "air_force_meritorious_unit_award",
       "name": "Air Force Meritorious Unit Award",
-      "aliases": [
-        "AFMUA",
-        "AF MUA"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFMUA", "AF MUA"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 27,
         "Space Force": 27
@@ -965,13 +727,8 @@
     {
       "id": "army_superior_unit_award",
       "name": "Army Superior Unit Award",
-      "aliases": [
-        "ASUA",
-        "SUP UNIT AWARD"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["ASUA", "SUP UNIT AWARD"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 28
       },
@@ -982,11 +739,7 @@
     {
       "id": "prisoner_of_war_medal",
       "name": "Prisoner of War Medal",
-      "aliases": [
-        "POW",
-        "POW MEDAL",
-        "PRISONER OF WAR MEDAL"
-      ],
+      "aliases": ["POW", "POW MEDAL", "PRISONER OF WAR MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1010,14 +763,8 @@
     {
       "id": "good_conduct_medal_army",
       "name": "Good Conduct Medal (Army)",
-      "aliases": [
-        "GCM",
-        "GOOD CONDUCT MEDAL",
-        "ARMY GCM"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["GCM", "GOOD CONDUCT MEDAL", "ARMY GCM"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 31
       },
@@ -1028,13 +775,8 @@
     {
       "id": "good_conduct_medal_navy",
       "name": "Good Conduct Medal (Navy)",
-      "aliases": [
-        "GCM",
-        "NAVY GCM"
-      ],
-      "branch": [
-        "Navy"
-      ],
+      "aliases": ["GCM", "NAVY GCM"],
+      "branch": ["Navy"],
       "precedence": {
         "Navy": 31
       },
@@ -1045,13 +787,8 @@
     {
       "id": "good_conduct_medal_marine",
       "name": "Good Conduct Medal (Marine Corps)",
-      "aliases": [
-        "GCM",
-        "MARINE GCM"
-      ],
-      "branch": [
-        "Marines"
-      ],
+      "aliases": ["GCM", "MARINE GCM"],
+      "branch": ["Marines"],
       "precedence": {
         "Marines": 31
       },
@@ -1062,14 +799,8 @@
     {
       "id": "good_conduct_medal_air_force",
       "name": "Good Conduct Medal (Air Force)",
-      "aliases": [
-        "GCM",
-        "AF GCM"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["GCM", "AF GCM"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 31,
         "Space Force": 31
@@ -1081,13 +812,8 @@
     {
       "id": "good_conduct_medal_coast_guard",
       "name": "Good Conduct Medal (Coast Guard)",
-      "aliases": [
-        "GCM",
-        "CG GCM"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["GCM", "CG GCM"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 31
       },
@@ -1098,13 +824,8 @@
     {
       "id": "army_reserve_components_achievement_medal",
       "name": "Army Reserve Components Achievement Medal",
-      "aliases": [
-        "ARCAM",
-        "RESERVE ACHIEVEMENT"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["ARCAM", "RESERVE ACHIEVEMENT"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 32
       },
@@ -1115,13 +836,8 @@
     {
       "id": "naval_reserve_meritorious_service_medal",
       "name": "Naval Reserve Meritorious Service Medal",
-      "aliases": [
-        "NRMSM"
-      ],
-      "branch": [
-        "Navy",
-        "Marines"
-      ],
+      "aliases": ["NRMSM"],
+      "branch": ["Navy", "Marines"],
       "precedence": {
         "Navy": 32,
         "Marines": 32
@@ -1133,12 +849,8 @@
     {
       "id": "selected_marine_corps_reserve_medal",
       "name": "Selected Marine Corps Reserve Medal",
-      "aliases": [
-        "SMCRM"
-      ],
-      "branch": [
-        "Marines"
-      ],
+      "aliases": ["SMCRM"],
+      "branch": ["Marines"],
       "precedence": {
         "Marines": 33
       },
@@ -1149,13 +861,8 @@
     {
       "id": "air_reserve_forces_meritorious_service_medal",
       "name": "Air Reserve Forces Meritorious Service Medal",
-      "aliases": [
-        "ARFMSM"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["ARFMSM"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 32,
         "Space Force": 32
@@ -1167,12 +874,8 @@
     {
       "id": "coast_guard_reserve_good_conduct_medal",
       "name": "Coast Guard Reserve Good Conduct Medal",
-      "aliases": [
-        "CGRGCM"
-      ],
-      "branch": [
-        "Coast Guard"
-      ],
+      "aliases": ["CGRGCM"],
+      "branch": ["Coast Guard"],
       "precedence": {
         "Coast Guard": 32
       },
@@ -1272,10 +975,7 @@
     {
       "id": "inherent_resolve_campaign_medal",
       "name": "Inherent Resolve Campaign Medal",
-      "aliases": [
-        "IRCM",
-        "OIR"
-      ],
+      "aliases": ["IRCM", "OIR"],
       "branch": [
         "Army",
         "Navy",
@@ -1299,11 +999,7 @@
     {
       "id": "global_war_on_terrorism_expeditionary_medal",
       "name": "Global War on Terrorism Expeditionary Medal",
-      "aliases": [
-        "GWOTEM",
-        "GWOT EXP",
-        "GWOT EXPEDITIONARY"
-      ],
+      "aliases": ["GWOTEM", "GWOT EXP", "GWOT EXPEDITIONARY"],
       "branch": [
         "Army",
         "Navy",
@@ -1327,11 +1023,7 @@
     {
       "id": "global_war_on_terrorism_service_medal",
       "name": "Global War on Terrorism Service Medal",
-      "aliases": [
-        "GWOTSM",
-        "GWOT SVC",
-        "GWOT SERVICE"
-      ],
+      "aliases": ["GWOTSM", "GWOT SVC", "GWOT SERVICE"],
       "branch": [
         "Army",
         "Navy",
@@ -1355,10 +1047,7 @@
     {
       "id": "korean_defense_service_medal",
       "name": "Korean Defense Service Medal",
-      "aliases": [
-        "KDSM",
-        "KOREAN DEFENSE"
-      ],
+      "aliases": ["KDSM", "KOREAN DEFENSE"],
       "branch": [
         "Army",
         "Navy",
@@ -1382,11 +1071,7 @@
     {
       "id": "armed_forces_expeditionary_medal",
       "name": "Armed Forces Expeditionary Medal",
-      "aliases": [
-        "AFEM",
-        "ARMED FORCES EXP",
-        "AFE MEDAL"
-      ],
+      "aliases": ["AFEM", "ARMED FORCES EXP", "AFE MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1410,11 +1095,7 @@
     {
       "id": "armed_forces_service_medal",
       "name": "Armed Forces Service Medal",
-      "aliases": [
-        "AFSM",
-        "ARMED FORCES SVC",
-        "AFS MEDAL"
-      ],
+      "aliases": ["AFSM", "ARMED FORCES SVC", "AFS MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1438,11 +1119,7 @@
     {
       "id": "humanitarian_service_medal",
       "name": "Humanitarian Service Medal",
-      "aliases": [
-        "HSM",
-        "HUMANITARIAN SVC",
-        "HUMANITARIAN SERVICE MEDAL"
-      ],
+      "aliases": ["HSM", "HUMANITARIAN SVC", "HUMANITARIAN SERVICE MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1466,11 +1143,7 @@
     {
       "id": "military_outstanding_volunteer_service_medal",
       "name": "Military Outstanding Volunteer Service Medal",
-      "aliases": [
-        "MOVSM",
-        "VOLUNTEER SVC",
-        "VOLUNTEER SERVICE MEDAL"
-      ],
+      "aliases": ["MOVSM", "VOLUNTEER SVC", "VOLUNTEER SERVICE MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1494,10 +1167,7 @@
     {
       "id": "armed_forces_reserve_medal",
       "name": "Armed Forces Reserve Medal",
-      "aliases": [
-        "AFRM",
-        "AF RESERVE MEDAL"
-      ],
+      "aliases": ["AFRM", "AF RESERVE MEDAL"],
       "branch": [
         "Army",
         "Navy",
@@ -1521,13 +1191,8 @@
     {
       "id": "nco_professional_development_ribbon",
       "name": "NCO Professional Development Ribbon",
-      "aliases": [
-        "NCOPDR",
-        "NCO DEV RIBBON"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["NCOPDR", "NCO DEV RIBBON"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 56
       },
@@ -1538,13 +1203,8 @@
     {
       "id": "army_service_ribbon",
       "name": "Army Service Ribbon",
-      "aliases": [
-        "ASR",
-        "ARMY SVC RIBBON"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["ASR", "ARMY SVC RIBBON"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 57
       },
@@ -1555,15 +1215,8 @@
     {
       "id": "navy_sea_service_ribbon",
       "name": "Navy Sea Service Deployment Ribbon",
-      "aliases": [
-        "SSDR",
-        "SEA SERVICE"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["SSDR", "SEA SERVICE"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 56,
         "Marines": 56,
@@ -1576,14 +1229,8 @@
     {
       "id": "air_force_overseas_ribbon_short",
       "name": "Air Force Overseas Ribbon (Short Tour)",
-      "aliases": [
-        "AFOSR SHORT",
-        "AF OVERSEAS SHORT"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFOSR SHORT", "AF OVERSEAS SHORT"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 56,
         "Space Force": 56
@@ -1595,14 +1242,8 @@
     {
       "id": "air_force_overseas_ribbon_long",
       "name": "Air Force Overseas Ribbon (Long Tour)",
-      "aliases": [
-        "AFOSR LONG",
-        "AF OVERSEAS LONG"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFOSR LONG", "AF OVERSEAS LONG"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 57,
         "Space Force": 57
@@ -1614,13 +1255,8 @@
     {
       "id": "overseas_service_ribbon_army",
       "name": "Overseas Service Ribbon (Army)",
-      "aliases": [
-        "OSR",
-        "ARMY OVERSEAS"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["OSR", "ARMY OVERSEAS"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 58
       },
@@ -1631,14 +1267,8 @@
     {
       "id": "air_force_expeditionary_service_ribbon",
       "name": "Air Force Expeditionary Service Ribbon",
-      "aliases": [
-        "AFESR",
-        "AF EXP SVC"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFESR", "AF EXP SVC"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 58,
         "Space Force": 58
@@ -1650,14 +1280,8 @@
     {
       "id": "air_force_longevity_service_award",
       "name": "Air Force Longevity Service Award",
-      "aliases": [
-        "AFLSA",
-        "LONGEVITY SVC"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFLSA", "LONGEVITY SVC"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 59,
         "Space Force": 59
@@ -1669,15 +1293,8 @@
     {
       "id": "navy_arctic_service_ribbon",
       "name": "Navy Arctic Service Ribbon",
-      "aliases": [
-        "ASR",
-        "ARCTIC SERVICE"
-      ],
-      "branch": [
-        "Navy",
-        "Marines",
-        "Coast Guard"
-      ],
+      "aliases": ["ASR", "ARCTIC SERVICE"],
+      "branch": ["Navy", "Marines", "Coast Guard"],
       "precedence": {
         "Navy": 57,
         "Marines": 57,
@@ -1690,14 +1307,8 @@
     {
       "id": "navy_reserve_sea_service_ribbon",
       "name": "Navy and Marine Corps Overseas Service Ribbon",
-      "aliases": [
-        "NMCOSR",
-        "OVERSEAS SVC"
-      ],
-      "branch": [
-        "Navy",
-        "Marines"
-      ],
+      "aliases": ["NMCOSR", "OVERSEAS SVC"],
+      "branch": ["Navy", "Marines"],
       "precedence": {
         "Navy": 58,
         "Marines": 58
@@ -1709,13 +1320,8 @@
     {
       "id": "navy_recruiting_service_ribbon",
       "name": "Navy Recruiting Service Ribbon",
-      "aliases": [
-        "NRSR",
-        "RECRUITING"
-      ],
-      "branch": [
-        "Navy"
-      ],
+      "aliases": ["NRSR", "RECRUITING"],
+      "branch": ["Navy"],
       "precedence": {
         "Navy": 59
       },
@@ -1726,12 +1332,8 @@
     {
       "id": "marine_corps_recruiting_ribbon",
       "name": "Marine Corps Recruiting Ribbon",
-      "aliases": [
-        "MCRR"
-      ],
-      "branch": [
-        "Marines"
-      ],
+      "aliases": ["MCRR"],
+      "branch": ["Marines"],
       "precedence": {
         "Marines": 59
       },
@@ -1742,12 +1344,8 @@
     {
       "id": "army_recruiter_badge",
       "name": "Army Recruiter Badge",
-      "aliases": [
-        "RECRUITER"
-      ],
-      "branch": [
-        "Army"
-      ],
+      "aliases": ["RECRUITER"],
+      "branch": ["Army"],
       "precedence": {
         "Army": 59
       },
@@ -1758,13 +1356,8 @@
     {
       "id": "air_force_recruiter_ribbon",
       "name": "Air Force Recruiter Ribbon",
-      "aliases": [
-        "AFRR"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFRR"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 60,
         "Space Force": 60
@@ -1776,14 +1369,8 @@
     {
       "id": "air_force_training_ribbon",
       "name": "Air Force Training Ribbon",
-      "aliases": [
-        "AFTR",
-        "AF TRAINING"
-      ],
-      "branch": [
-        "Air Force",
-        "Space Force"
-      ],
+      "aliases": ["AFTR", "AF TRAINING"],
+      "branch": ["Air Force", "Space Force"],
       "precedence": {
         "Air Force": 61,
         "Space Force": 61
@@ -1795,11 +1382,7 @@
     {
       "id": "nato_medal",
       "name": "NATO Medal",
-      "aliases": [
-        "NATO",
-        "NATO MEDAL",
-        "NATO SVC"
-      ],
+      "aliases": ["NATO", "NATO MEDAL", "NATO SVC"],
       "branch": [
         "Army",
         "Navy",
@@ -1823,10 +1406,7 @@
     {
       "id": "multinational_force_observers_medal",
       "name": "Multinational Force and Observers Medal",
-      "aliases": [
-        "MFO",
-        "MULTINATIONAL FORCE"
-      ],
+      "aliases": ["MFO", "MULTINATIONAL FORCE"],
       "branch": [
         "Army",
         "Navy",
@@ -1850,10 +1430,7 @@
     {
       "id": "united_nations_medal",
       "name": "United Nations Medal",
-      "aliases": [
-        "UN MEDAL",
-        "UNITED NATIONS"
-      ],
+      "aliases": ["UN MEDAL", "UNITED NATIONS"],
       "branch": [
         "Army",
         "Navy",
@@ -1877,18 +1454,8 @@
     {
       "id": "republic_of_vietnam_campaign_medal",
       "name": "Republic of Vietnam Campaign Medal",
-      "aliases": [
-        "RVNCM",
-        "RVN CAMPAIGN",
-        "VIETNAM CAMPAIGN"
-      ],
-      "branch": [
-        "Army",
-        "Navy",
-        "Marines",
-        "Air Force",
-        "Coast Guard"
-      ],
+      "aliases": ["RVNCM", "RVN CAMPAIGN", "VIETNAM CAMPAIGN"],
+      "branch": ["Army", "Navy", "Marines", "Air Force", "Coast Guard"],
       "precedence": {
         "Army": 73,
         "Navy": 73,
@@ -1903,17 +1470,8 @@
     {
       "id": "kuwait_liberation_medal_saudi",
       "name": "Kuwait Liberation Medal (Saudi Arabia)",
-      "aliases": [
-        "KLM SAUDI",
-        "KUWAIT LIB SAUDI"
-      ],
-      "branch": [
-        "Army",
-        "Navy",
-        "Marines",
-        "Air Force",
-        "Coast Guard"
-      ],
+      "aliases": ["KLM SAUDI", "KUWAIT LIB SAUDI"],
+      "branch": ["Army", "Navy", "Marines", "Air Force", "Coast Guard"],
       "precedence": {
         "Army": 74,
         "Navy": 74,
@@ -1928,17 +1486,8 @@
     {
       "id": "kuwait_liberation_medal_kuwait",
       "name": "Kuwait Liberation Medal (Kuwait)",
-      "aliases": [
-        "KLM KUWAIT",
-        "KUWAIT LIB KUWAIT"
-      ],
-      "branch": [
-        "Army",
-        "Navy",
-        "Marines",
-        "Air Force",
-        "Coast Guard"
-      ],
+      "aliases": ["KLM KUWAIT", "KUWAIT LIB KUWAIT"],
+      "branch": ["Army", "Navy", "Marines", "Air Force", "Coast Guard"],
       "precedence": {
         "Army": 75,
         "Navy": 75,
@@ -1955,11 +1504,7 @@
     {
       "id": "bronze_star_device",
       "name": "Bronze Service Star",
-      "aliases": [
-        "*",
-        "BRONZE STAR",
-        "BSS"
-      ],
+      "aliases": ["*", "BRONZE STAR", "BSS"],
       "wiki_file": "Bronze-service-star-3d.png",
       "represents": "additional_award",
       "asset_filename": "bronze_service_star.png"
@@ -1967,10 +1512,7 @@
     {
       "id": "silver_star_device",
       "name": "Silver Service Star",
-      "aliases": [
-        "SILVER STAR DEVICE",
-        "SSS"
-      ],
+      "aliases": ["SILVER STAR DEVICE", "SSS"],
       "wiki_file": "Silver-service-star-3d.png",
       "represents": "5_bronze_stars",
       "asset_filename": "silver_service_star.png"
@@ -1978,10 +1520,7 @@
     {
       "id": "gold_star_device",
       "name": "Gold Service Star",
-      "aliases": [
-        "GOLD STAR DEVICE",
-        "GSS"
-      ],
+      "aliases": ["GOLD STAR DEVICE", "GSS"],
       "wiki_file": "Gold-service-star.png",
       "represents": "5_silver_stars",
       "asset_filename": "gold_service_star.png"
@@ -1989,11 +1528,7 @@
     {
       "id": "bronze_oak_leaf_cluster",
       "name": "Bronze Oak Leaf Cluster",
-      "aliases": [
-        "OLC",
-        "BRONZE OLC",
-        "BOLC"
-      ],
+      "aliases": ["OLC", "BRONZE OLC", "BOLC"],
       "wiki_file": "Bronze_oak_leaf-3d.svg",
       "represents": "additional_award_army_af",
       "asset_filename": "bronze_oak_leaf_cluster.svg"
@@ -2001,10 +1536,7 @@
     {
       "id": "silver_oak_leaf_cluster",
       "name": "Silver Oak Leaf Cluster",
-      "aliases": [
-        "SILVER OLC",
-        "SOLC"
-      ],
+      "aliases": ["SILVER OLC", "SOLC"],
       "wiki_file": "Silver_oakleaf-3d.svg",
       "represents": "5_bronze_olc",
       "asset_filename": "silver_oak_leaf_cluster.svg"
@@ -2012,13 +1544,7 @@
     {
       "id": "v_device",
       "name": "V Device (Valor)",
-      "aliases": [
-        "V",
-        "W/V",
-        "WITH V",
-        "V DEVICE",
-        "VALOR"
-      ],
+      "aliases": ["V", "W/V", "WITH V", "V DEVICE", "VALOR"],
       "wiki_file": "\"V\"_device,_brass.svg",
       "represents": "valor_in_combat",
       "asset_filename": "v_device_valor.svg"
@@ -2026,11 +1552,7 @@
     {
       "id": "c_device",
       "name": "C Device (Combat)",
-      "aliases": [
-        "C",
-        "W/C",
-        "COMBAT DISTINGUISHING DEVICE"
-      ],
+      "aliases": ["C", "W/C", "COMBAT DISTINGUISHING DEVICE"],
       "wiki_file": "Combat_Distinguishing_Device.png",
       "represents": "combat_conditions",
       "asset_filename": "c_device_combat.png"
@@ -2038,11 +1560,7 @@
     {
       "id": "r_device",
       "name": "R Device (Remote)",
-      "aliases": [
-        "R",
-        "W/R",
-        "REMOTE"
-      ],
+      "aliases": ["R", "W/R", "REMOTE"],
       "wiki_file": "Ribbon_Device_R_Bronze.png",
       "represents": "remote_impact",
       "asset_filename": "r_device_remote.png"
@@ -2050,10 +1568,7 @@
     {
       "id": "arrowhead_device",
       "name": "Arrowhead Device",
-      "aliases": [
-        "ARROWHEAD",
-        "ARROW"
-      ],
+      "aliases": ["ARROWHEAD", "ARROW"],
       "wiki_file": "Arrowhead_device.svg",
       "represents": "combat_assault",
       "asset_filename": "arrowhead_device.svg"
@@ -2061,10 +1576,7 @@
     {
       "id": "hourglass_device",
       "name": "Hourglass Device",
-      "aliases": [
-        "HOURGLASS",
-        "10 YEARS"
-      ],
+      "aliases": ["HOURGLASS", "10 YEARS"],
       "wiki_file": "Hourglass_Device_Bronze.svg",
       "represents": "10_years_reserve",
       "asset_filename": "hourglass_device.svg"
@@ -2072,13 +1584,7 @@
     {
       "id": "numeral_device",
       "name": "Numeral Device",
-      "aliases": [
-        "2",
-        "3",
-        "4",
-        "5",
-        "NUMERAL"
-      ],
+      "aliases": ["2", "3", "4", "5", "NUMERAL"],
       "wiki_file": "Award_numeral_2.svg",
       "represents": "multiple_awards",
       "asset_filename": "numeral_device.svg"

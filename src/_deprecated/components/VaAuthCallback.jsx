@@ -1,34 +1,34 @@
 /**
  * VA.gov OAuth Callback Component
- * 
+ *
  * Handles the redirect back from VA.gov after user authorization.
  * Extracts the authorization code and exchanges it for tokens.
- * 
+ *
  * Add this route to your React Router:
  * <Route path="/callback" element={<VaAuthCallback />} />
  */
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useVaAuth } from '../hooks/useVaAuth';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useVaAuth } from "../hooks/useVaAuth";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function VaAuthCallback() {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { handleCallback } = useVaAuth();
-  const [status, setStatus] = useState('processing');
+  const [status, setStatus] = useState("processing");
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     const processCallback = async () => {
       try {
         // Extract parameters from URL
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        const code = searchParams.get("code");
+        const state = searchParams.get("state");
+        const error = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
 
         // Check for authorization errors
         if (error) {
@@ -37,24 +37,24 @@ export default function VaAuthCallback() {
 
         // Validate required parameters
         if (!code || !state) {
-          throw new Error('Missing authorization code or state parameter');
+          throw new Error("Missing authorization code or state parameter");
         }
 
         // Exchange code for tokens
         const result = await handleCallback(code, state);
 
         if (result.success) {
-          setStatus('success');
+          setStatus("success");
           // Redirect to the main app after successful authentication
           setTimeout(() => {
-            navigate('/', { replace: true });
+            navigate("/", { replace: true });
           }, 1500);
         } else {
-          throw new Error(result.error || 'Authentication failed');
+          throw new Error(result.error || "Authentication failed");
         }
       } catch (err) {
-        console.error('[VA Auth Callback] Error:', err);
-        setStatus('error');
+        console.error("[VA Auth Callback] Error:", err);
+        setStatus("error");
         setErrorMessage(err.message);
       }
     };
@@ -65,7 +65,7 @@ export default function VaAuthCallback() {
   return (
     <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-        {status === 'processing' && (
+        {status === "processing" && (
           <div className="text-center">
             <div className="mb-4">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-va-blue"></div>
@@ -79,11 +79,21 @@ export default function VaAuthCallback() {
           </div>
         )}
 
-        {status === 'success' && (
+        {status === "success" && (
           <div className="text-center">
             <div className="mb-4">
-              <svg className="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="mx-auto h-12 w-12 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -95,21 +105,31 @@ export default function VaAuthCallback() {
           </div>
         )}
 
-        {status === 'error' && (
+        {status === "error" && (
           <div className="text-center">
             <div className="mb-4">
-              <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="mx-auto h-12 w-12 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Authentication Failed
             </h2>
             <p className="text-red-600 dark:text-red-400 mb-4">
-              {errorMessage || 'An error occurred during sign in'}
+              {errorMessage || "An error occurred during sign in"}
             </p>
             <button
-              onClick={() => navigate('/', { replace: true })}
+              onClick={() => navigate("/", { replace: true })}
               className="px-6 py-2 bg-va-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Return to Home

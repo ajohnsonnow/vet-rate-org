@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { BASE_COLORS } from '../../utils/colorSchemas';
+import { describe, it, expect } from "vitest";
+import { BASE_COLORS } from "../../utils/colorSchemas";
 
-describe('BASE_COLORS', () => {
-  it('has backdrop for all vision modes', () => {
+describe("BASE_COLORS", () => {
+  it("has backdrop for all vision modes", () => {
     expect(BASE_COLORS.backdrop.light).toBeDefined();
     expect(BASE_COLORS.backdrop.dark).toBeDefined();
     expect(BASE_COLORS.backdrop.protanopia).toBeDefined();
@@ -11,22 +11,22 @@ describe('BASE_COLORS', () => {
     expect(BASE_COLORS.backdrop.highContrast).toBeDefined();
   });
 
-  it('has modal colors', () => {
+  it("has modal colors", () => {
     expect(BASE_COLORS.modal.light).toBeDefined();
     expect(BASE_COLORS.modal.dark).toBeDefined();
   });
 
-  it('has section colors', () => {
+  it("has section colors", () => {
     expect(BASE_COLORS.section.light).toBeDefined();
   });
 
-  it('has card colors', () => {
+  it("has card colors", () => {
     expect(BASE_COLORS.card.light).toBeDefined();
   });
 
-  it('all color values are strings', () => {
-    Object.values(BASE_COLORS.backdrop).forEach(v => {
-      expect(typeof v).toBe('string');
+  it("all color values are strings", () => {
+    Object.values(BASE_COLORS.backdrop).forEach((v) => {
+      expect(typeof v).toBe("string");
     });
   });
 });

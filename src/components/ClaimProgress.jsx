@@ -1,94 +1,108 @@
 /**
  * Vet-Rate.org - The Readiness Gauge (Claim Completeness Tracker)
- * 
+ *
  * Visual indicator showing how "complete" a veteran's claim packet is.
  * Checks for the "Holy Trinity" of a strong claim:
  * 1. Current Diagnosis (medical evidence)
  * 2. In-Service Event/Stressor (what happened)
  * 3. Nexus Letter (the link between 1 and 2)
- * 
+ *
  * INTEGRATED with ClaimNavigator - syncs evidence state bidirectionally
- * 
+ *
  * Built by a fellow veteran. "Know when you're ready to file."
  */
 
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Circle, FileText, Stethoscope, Link as LinkIcon, Map } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import {
+  CheckCircle,
+  AlertCircle,
+  Circle,
+  FileText,
+  Stethoscope,
+  Link as LinkIcon,
+  Map,
+} from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Integration bridge for ClaimNavigator sync
-import { 
-  getBigThreeStatus, 
-  dispatchNavigatorUpdate 
-} from '../utils/claimIntegration';
+import {
+  getBigThreeStatus,
+  dispatchNavigatorUpdate,
+} from "../utils/claimIntegration";
 
-const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
+const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
   const { t } = useLanguage();
   const [completeness, setCompleteness] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
   const [checklist, setChecklist] = useState({
     hasDiagnosis: false,
     hasInServiceEvent: false,
-    hasNexus: false
+    hasNexus: false,
   });
 
   useEffect(() => {
     calculateCompleteness();
-    
+
     // Listen for updates from ClaimNavigator
     const handleNavigatorUpdate = (e) => {
-      if (e.detail?.type === 'evidence_sync') {
+      if (e.detail?.type === "evidence_sync") {
         calculateCompleteness();
       }
     };
-    
+
     // Listen for Big 3 updates from any source
     const handleBigThreeUpdate = () => {
       calculateCompleteness();
     };
-    
-    window.addEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
-    window.addEventListener('bigThreeUpdate', handleBigThreeUpdate);
-    
+
+    window.addEventListener("claimNavigatorUpdate", handleNavigatorUpdate);
+    window.addEventListener("bigThreeUpdate", handleBigThreeUpdate);
+
     return () => {
-      window.removeEventListener('claimNavigatorUpdate', handleNavigatorUpdate);
-      window.removeEventListener('bigThreeUpdate', handleBigThreeUpdate);
+      window.removeEventListener("claimNavigatorUpdate", handleNavigatorUpdate);
+      window.removeEventListener("bigThreeUpdate", handleBigThreeUpdate);
     };
   }, [conditionCode, conditionName]);
 
   const calculateCompleteness = () => {
     if (!conditionCode && !conditionName) {
       setCompleteness(0);
-      setMissingItems(['Select a condition to begin']);
+      setMissingItems(["Select a condition to begin"]);
       return;
     }
 
     // Check localStorage for saved claim data
-    const storageKey = conditionCode || conditionName?.toLowerCase().replace(/\s+/g, '-');
-    
+    const storageKey =
+      conditionCode || conditionName?.toLowerCase().replace(/\s+/g, "-");
+
     // First check if ClaimNavigator has Big 3 data via integration bridge
     const navigatorBig3 = getBigThreeStatus(conditionName || conditionCode);
-    
+
     // 1. Check for Diagnosis/Medical Description
     const diagnosisKey = `${storageKey}_diagnosis`;
-    const medicalDescription = localStorage.getItem(diagnosisKey) || '';
-    const hasDiagnosis = navigatorBig3.diagnosis || (medicalDescription && medicalDescription.trim().length > 50);
+    const medicalDescription = localStorage.getItem(diagnosisKey) || "";
+    const hasDiagnosis =
+      navigatorBig3.diagnosis ||
+      (medicalDescription && medicalDescription.trim().length > 50);
 
     // 2. Check for In-Service Event/Stressor
     const eventKey = `${storageKey}_event`;
-    const inServiceEvent = localStorage.getItem(eventKey) || '';
-    const hasInServiceEvent = navigatorBig3.event || (inServiceEvent && inServiceEvent.trim().length > 50);
+    const inServiceEvent = localStorage.getItem(eventKey) || "";
+    const hasInServiceEvent =
+      navigatorBig3.event ||
+      (inServiceEvent && inServiceEvent.trim().length > 50);
 
     // 3. Check for Nexus Letter
     const nexusKey = `${storageKey}_nexus`;
-    const nexusLetter = localStorage.getItem(nexusKey) || '';
-    const hasNexus = navigatorBig3.nexus || (nexusLetter && nexusLetter.trim().length > 100);
+    const nexusLetter = localStorage.getItem(nexusKey) || "";
+    const hasNexus =
+      navigatorBig3.nexus || (nexusLetter && nexusLetter.trim().length > 100);
 
     // Update checklist
     setChecklist({
       hasDiagnosis,
       hasInServiceEvent,
-      hasNexus
+      hasNexus,
     });
 
     // Calculate score
@@ -100,8 +114,8 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
     } else {
       missing.push({
         icon: Stethoscope,
-        label: 'Medical Diagnosis/Symptoms',
-        description: 'Describe your current condition and symptoms in detail'
+        label: "Medical Diagnosis/Symptoms",
+        description: "Describe your current condition and symptoms in detail",
       });
     }
 
@@ -110,8 +124,9 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
     } else {
       missing.push({
         icon: FileText,
-        label: 'In-Service Event/Stressor',
-        description: 'Document what happened during your service that caused this condition'
+        label: "In-Service Event/Stressor",
+        description:
+          "Document what happened during your service that caused this condition",
       });
     }
 
@@ -120,8 +135,9 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
     } else {
       missing.push({
         icon: LinkIcon,
-        label: 'Nexus Letter Draft',
-        description: 'Generate a medical nexus letter linking your condition to service'
+        label: "Nexus Letter Draft",
+        description:
+          "Generate a medical nexus letter linking your condition to service",
       });
     }
 
@@ -131,10 +147,25 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
 
   // Get color based on completeness
   const getColor = () => {
-    if (completeness === 0) return { stroke: 'text-gray-300', fill: 'text-gray-400', bg: 'bg-gray-100' };
-    if (completeness < 50) return { stroke: 'text-red-500', fill: 'text-red-600', bg: 'bg-red-50' };
-    if (completeness < 100) return { stroke: 'text-yellow-500', fill: 'text-yellow-600', bg: 'bg-yellow-50' };
-    return { stroke: 'text-green-500', fill: 'text-green-600', bg: 'bg-green-50' };
+    if (completeness === 0)
+      return {
+        stroke: "text-gray-300",
+        fill: "text-gray-400",
+        bg: "bg-gray-100",
+      };
+    if (completeness < 50)
+      return { stroke: "text-red-500", fill: "text-red-600", bg: "bg-red-50" };
+    if (completeness < 100)
+      return {
+        stroke: "text-yellow-500",
+        fill: "text-yellow-600",
+        bg: "bg-yellow-50",
+      };
+    return {
+      stroke: "text-green-500",
+      fill: "text-green-600",
+      bg: "bg-green-50",
+    };
   };
 
   const color = getColor();
@@ -150,7 +181,9 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
     <div className={`claim-progress ${className}`}>
       {/* Header */}
       <div className="mb-6 text-center">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Claim Readiness</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">
+          Claim Readiness
+        </h3>
         {conditionName && (
           <p className="text-sm text-gray-600">{conditionName}</p>
         )}
@@ -184,27 +217,28 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
               className={`${color.stroke} transition-all duration-1000 ease-out`}
             />
           </svg>
-          
+
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className={`text-5xl font-bold ${color.fill}`}>
               {completeness}%
             </div>
-            <div className="text-sm text-gray-500 mt-1">
-              Complete
-            </div>
+            <div className="text-sm text-gray-500 mt-1">Complete</div>
           </div>
         </div>
       </div>
 
       {/* Status Message */}
-      <div className={`${color.bg} border border-current rounded-lg p-4 mb-4 ${color.stroke}`}>
+      <div
+        className={`${color.bg} border border-current rounded-lg p-4 mb-4 ${color.stroke}`}
+      >
         {completeness === 100 ? (
           <div className="text-center">
             <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="font-bold text-green-900">Ready to File!</p>
             <p className="text-sm text-green-800 mt-1">
-              You have all three essential components. Your claim packet is complete.
+              You have all three essential components. Your claim packet is
+              complete.
             </p>
           </div>
         ) : completeness === 0 ? (
@@ -242,9 +276,7 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
                 <p className="font-semibold text-gray-900 text-sm">
                   {item.label}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {item.description}
-                </p>
+                <p className="text-xs text-gray-600 mt-1">{item.description}</p>
               </div>
             </div>
           ))}
@@ -252,7 +284,9 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
       )}
 
       {/* Completed Items (if any) */}
-      {(checklist.hasDiagnosis || checklist.hasInServiceEvent || checklist.hasNexus) && (
+      {(checklist.hasDiagnosis ||
+        checklist.hasInServiceEvent ||
+        checklist.hasNexus) && (
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide mb-3">
             ✅ Completed:
@@ -287,12 +321,20 @@ const ClaimProgress = ({ conditionCode, conditionName, className = '' }) => {
             <strong>The "Holy Trinity" of VA Claims:</strong>
           </p>
           <ul className="text-xs text-blue-800 mt-2 space-y-1 ml-4 list-disc">
-            <li><strong>Diagnosis:</strong> Medical proof you have the condition</li>
-            <li><strong>In-Service Event:</strong> Proof something happened in service</li>
-            <li><strong>Nexus:</strong> Medical opinion linking the two together</li>
+            <li>
+              <strong>Diagnosis:</strong> Medical proof you have the condition
+            </li>
+            <li>
+              <strong>In-Service Event:</strong> Proof something happened in
+              service
+            </li>
+            <li>
+              <strong>Nexus:</strong> Medical opinion linking the two together
+            </li>
           </ul>
           <p className="text-xs text-blue-800 mt-3">
-            All three are required for a successful claim. Don't file until you hit 100%.
+            All three are required for a successful claim. Don't file until you
+            hit 100%.
           </p>
         </div>
       </div>

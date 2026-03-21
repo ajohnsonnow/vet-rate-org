@@ -1,63 +1,74 @@
 /**
  * 🎮 Stress Relief Division - Doom Easter Egg
- * 
+ *
  * "Section 9.4: Behavioral Stress-Testing Hook (Experimental)"
- * 
+ *
  * A WebAssembly-based implementation of the id Tech 1 engine,
  * disguised as a "User Resiliency & High-Load Testing Module"
  * for grant application purposes.
- * 
+ *
  * Activation: Type "IDDQD" anywhere on the site
- * 
+ *
  * Legal: Uses shareware DOOM assets which are freely distributable.
- * 
+ *
  * @author Vet-Rate.org Stress Relief Division
  */
 
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
-import { useIDDQD, useGamepadBridge, useDoomPerformance } from '../utils/easterEggs';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
+import {
+  useIDDQD,
+  useGamepadBridge,
+  useDoomPerformance,
+} from "../utils/easterEggs";
 
 // Lazy load the heavy iframe only when activated
-const DoomFrame = lazy(() => Promise.resolve({
-  default: ({ onClose }) => (
-    <iframe
-      src="https://archive.org/embed/msdos_DOOM_1993"
-      title="DOOM - Stress Relief Division"
-      className="w-full h-full border-0"
-      allow="autoplay; fullscreen; gamepad"
-      allowFullScreen
-    />
-  )
-}));
+const DoomFrame = lazy(() =>
+  Promise.resolve({
+    default: ({ onClose }) => (
+      <iframe
+        src="https://archive.org/embed/msdos_DOOM_1993"
+        title="DOOM - Stress Relief Division"
+        className="w-full h-full border-0"
+        allow="autoplay; fullscreen; gamepad"
+        allowFullScreen
+      />
+    ),
+  }),
+);
 
 /**
  * The Retro-Terminal Launcher Component
  * Styled like an old CRT monitor from 1993
  */
-const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName }) => {
+const DoomLauncher = ({
+  onStart,
+  onClose,
+  isControllerConnected,
+  controllerName,
+}) => {
   const [isBooting, setIsBooting] = useState(true);
   const [bootText, setBootText] = useState([]);
 
   // Simulate boot sequence
   useEffect(() => {
     const bootMessages = [
-      '> INITIALIZING VET-RATE DIAGNOSTIC TOOL...',
-      '> LOADING WASM BINARY: doom.wasm',
-      '> CHECKING SharedArrayBuffer: OK',
-      '> DETECTING INPUT DEVICES...',
-      isControllerConnected 
-        ? `> GAMEPAD DETECTED: ${controllerName?.split(' ')[0] || 'XBOX'} CONTROLLER`
-        : '> NO GAMEPAD DETECTED - KEYBOARD MODE',
-      '> LOADING STRESS RELIEF PROTOCOL v1.0',
-      '> STATUS: READY',
-      '',
+      "> INITIALIZING VET-RATE DIAGNOSTIC TOOL...",
+      "> LOADING WASM BINARY: doom.wasm",
+      "> CHECKING SharedArrayBuffer: OK",
+      "> DETECTING INPUT DEVICES...",
+      isControllerConnected
+        ? `> GAMEPAD DETECTED: ${controllerName?.split(" ")[0] || "XBOX"} CONTROLLER`
+        : "> NO GAMEPAD DETECTED - KEYBOARD MODE",
+      "> LOADING STRESS RELIEF PROTOCOL v1.0",
+      "> STATUS: READY",
+      "",
       '> TYPE "START" OR PRESS [A] TO BEGIN THERAPY SESSION',
     ];
 
     let i = 0;
     const interval = setInterval(() => {
       if (i < bootMessages.length) {
-        setBootText(prev => [...prev, bootMessages[i]]);
+        setBootText((prev) => [...prev, bootMessages[i]]);
         i++;
       } else {
         setIsBooting(false);
@@ -73,13 +84,14 @@ const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName 
       {/* CRT Screen Effect */}
       <div className="relative overflow-hidden">
         {/* Scanlines */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none z-10"
           style={{
-            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+            background:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)",
           }}
         />
-        
+
         {/* Content */}
         <div className="relative z-0 p-4 min-h-[300px]">
           {/* Header */}
@@ -88,12 +100,17 @@ const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName 
             VET-RATE STRESS RELIEF DIVISION
             <span className="text-red-500">█</span>
           </div>
-          
+
           {/* Boot sequence */}
           <div className="text-green-400 text-sm space-y-1 mb-6">
             {bootText.map((line, i) => (
-              <div key={i} className={line?.includes?.('READY') ? 'text-green-300 font-bold' : ''}>
-                {line || ''}
+              <div
+                key={i}
+                className={
+                  line?.includes?.("READY") ? "text-green-300 font-bold" : ""
+                }
+              >
+                {line || ""}
               </div>
             ))}
             {isBooting && <span className="animate-pulse">▌</span>}
@@ -102,16 +119,20 @@ const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName 
           {/* Disclaimer */}
           {!isBooting && (
             <div className="bg-green-950/50 p-4 mb-6 border border-green-600 text-xs text-green-300">
-              <p className="font-bold mb-2 text-yellow-400">** LEGAL DISCLAIMER **</p>
+              <p className="font-bold mb-2 text-yellow-400">
+                ** LEGAL DISCLAIMER **
+              </p>
               <p>
-                Pursuant to the Articles of Incorporation for Vet-Rate.org, this 
-                "Stress Reduction Module" is intended for therapeutic demon-slaying only. 
-                Vet-Rate.org is not liable for any productivity loss, sudden urges to 
-                hunt for blue keycards, or delayed VA form submissions.
+                Pursuant to the Articles of Incorporation for Vet-Rate.org, this
+                "Stress Reduction Module" is intended for therapeutic
+                demon-slaying only. Vet-Rate.org is not liable for any
+                productivity loss, sudden urges to hunt for blue keycards, or
+                delayed VA form submissions.
               </p>
               <p className="mt-2 text-green-400">
-                By pressing START, you acknowledge that demon-slaying is a recognized 
-                (though totally unofficial) form of therapeutic relief.
+                By pressing START, you acknowledge that demon-slaying is a
+                recognized (though totally unofficial) form of therapeutic
+                relief.
               </p>
             </div>
           )}
@@ -137,10 +158,9 @@ const DoomLauncher = ({ onStart, onClose, isControllerConnected, controllerName 
           {/* Controller status */}
           <div className="mt-4 text-xs text-green-600 flex justify-between">
             <span>
-              {isControllerConnected 
-                ? `🎮 ${controllerName?.split(' ')[0] || 'CONTROLLER'}: READY` 
-                : '⌨️ KEYBOARD MODE'
-              }
+              {isControllerConnected
+                ? `🎮 ${controllerName?.split(" ")[0] || "CONTROLLER"}: READY`
+                : "⌨️ KEYBOARD MODE"}
             </span>
             <span>DOOM v1.9 SHAREWARE</span>
           </div>
@@ -158,7 +178,8 @@ const StressReliefDivision = () => {
   const { isActive, deactivate, activationCount } = useIDDQD();
   const [gameStarted, setGameStarted] = useState(false);
   const [showGlitch, setShowGlitch] = useState(false);
-  const { isConnected: isControllerConnected, controllerName } = useGamepadBridge(isActive);
+  const { isConnected: isControllerConnected, controllerName } =
+    useGamepadBridge(isActive);
   const { fps } = useDoomPerformance(gameStarted);
 
   // Trigger glitch effect on activation
@@ -174,13 +195,13 @@ const StressReliefDivision = () => {
     if (!isActive) return;
 
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && !gameStarted) {
+      if (e.key === "Escape" && !gameStarted) {
         deactivate();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [isActive, gameStarted, deactivate]);
 
   const handleClose = useCallback(() => {
@@ -198,18 +219,19 @@ const StressReliefDivision = () => {
     <>
       {/* CRT Glitch Effect Overlay */}
       {showGlitch && (
-        <div 
+        <div
           className="fixed inset-0 z-[9998] pointer-events-none animate-crt-glitch"
           style={{
-            background: 'linear-gradient(rgba(255,0,0,0.1), rgba(0,255,0,0.1), rgba(0,0,255,0.1))',
-            mixBlendMode: 'overlay',
+            background:
+              "linear-gradient(rgba(255,0,0,0.1), rgba(0,255,0,0.1), rgba(0,0,255,0.1))",
+            mixBlendMode: "overlay",
           }}
         />
       )}
 
       {/* Main Overlay */}
-      <div 
-        className={`fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 transition-opacity duration-300 ${showGlitch ? 'animate-crt-glitch' : ''}`}
+      <div
+        className={`fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 transition-opacity duration-300 ${showGlitch ? "animate-crt-glitch" : ""}`}
         role="dialog"
         aria-label="Stress Relief Division - Doom Easter Egg"
       >
@@ -217,7 +239,7 @@ const StressReliefDivision = () => {
         <div className="absolute top-4 right-4 flex items-center gap-4">
           {gameStarted && (
             <span className="text-green-500 font-mono text-sm">
-              {fps > 0 ? `${fps} FPS` : 'LOADING...'}
+              {fps > 0 ? `${fps} FPS` : "LOADING..."}
             </span>
           )}
           <button
@@ -236,7 +258,7 @@ const StressReliefDivision = () => {
 
         {/* Content */}
         {!gameStarted ? (
-          <DoomLauncher 
+          <DoomLauncher
             onStart={handleStart}
             onClose={handleClose}
             isControllerConnected={isControllerConnected}
@@ -244,11 +266,13 @@ const StressReliefDivision = () => {
           />
         ) : (
           <div className="w-full max-w-4xl aspect-[4/3] bg-black border-4 border-green-800 shadow-[0_0_30px_rgba(0,255,0,0.3)]">
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center text-green-500 font-mono animate-pulse">
-                LOADING DEMON-SLAYER MODE...
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="w-full h-full flex items-center justify-center text-green-500 font-mono animate-pulse">
+                  LOADING DEMON-SLAYER MODE...
+                </div>
+              }
+            >
               <DoomFrame onClose={handleClose} />
             </Suspense>
           </div>
@@ -257,8 +281,13 @@ const StressReliefDivision = () => {
         {/* Instructions */}
         {gameStarted && (
           <div className="mt-4 text-green-600 font-mono text-xs text-center max-w-xl">
-            <p>CONTROLS: Arrow Keys = Move | Ctrl = Fire | Space = Use/Open | Shift = Run</p>
-            <p className="mt-1 text-green-800">Press ESC inside game for menu • Click game area to capture input</p>
+            <p>
+              CONTROLS: Arrow Keys = Move | Ctrl = Fire | Space = Use/Open |
+              Shift = Run
+            </p>
+            <p className="mt-1 text-green-800">
+              Press ESC inside game for menu • Click game area to capture input
+            </p>
           </div>
         )}
       </div>

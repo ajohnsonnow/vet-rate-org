@@ -2,21 +2,21 @@
  * Vet-Rate.org - VKB Document Integration
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * PURPOSE: Connect extracted VA documents to the Veteran Knowledge Base
- * 
+ *
  * This module bridges:
  * - VA Document Parser → Condition data
  * - C-File Segmentation → Document inventory
  * - Evidence Gap Finder → Gap alerts
  * - Adversarial Drafting → Legal arguments
- * 
+ *
  * TO:
  * - Veteran Profile (personal data)
  * - Evidence Timeline (chronological view)
  * - Secondary Scout (condition relationships)
  * - My Ratings (current status)
- * 
+ *
  * DATA FLOW:
  * ┌─────────────────┐
  * │  MusterCall     │ → Ingest documents
@@ -39,23 +39,27 @@
  * └─────────────────┘
  */
 
-import { parseDecisionLetter, parseVADocument, extractBigThree } from './vaDocumentParser.js';
-import { segmentCFile, quickScanCFile } from './cFileSegmentation.js';
-import { findEvidenceGaps, quickGapCheck } from './evidenceGapFinder.js';
-import { generateAdversarialArguments } from './adversarialDrafting.js';
-import { getVeteranProfile, saveVeteranProfile } from './veteranProfile.js';
-import { markAsModified } from './persistentStorage.js';
+import {
+  parseDecisionLetter,
+  parseVADocument,
+  extractBigThree,
+} from "./vaDocumentParser.js";
+import { segmentCFile, quickScanCFile } from "./cFileSegmentation.js";
+import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder.js";
+import { generateAdversarialArguments } from "./adversarialDrafting.js";
+import { getVeteranProfile, saveVeteranProfile } from "./veteranProfile.js";
+import { markAsModified } from "./persistentStorage.js";
 
 /**
  * VKB Storage Keys
  */
 const VKB_KEYS = {
-  DOCUMENT_INVENTORY: 'vetrate_vkb_documents',
-  EVIDENCE_TIMELINE: 'vetrate_vkb_timeline',
-  CONDITIONS_MAP: 'vetrate_vkb_conditions',
-  GAP_ALERTS: 'vetrate_vkb_gaps',
-  LEGAL_NOTES: 'vetrate_vkb_legal',
-  LAST_SYNC: 'vetrate_vkb_sync',
+  DOCUMENT_INVENTORY: "vetrate_vkb_documents",
+  EVIDENCE_TIMELINE: "vetrate_vkb_timeline",
+  CONDITIONS_MAP: "vetrate_vkb_conditions",
+  GAP_ALERTS: "vetrate_vkb_gaps",
+  LEGAL_NOTES: "vetrate_vkb_legal",
+  LAST_SYNC: "vetrate_vkb_sync",
 };
 
 /**
@@ -88,7 +92,7 @@ function saveVKBData(key, data) {
 /**
  * Process a batch of documents and integrate into VKB
  * This is the main entry point from MusterCall
- * 
+ *
  * @param {Array} documents - Array of {text, type, filename, date}
  * @returns {Object} Processing results
  */
@@ -113,7 +117,7 @@ export async function processDocumentsToVKB(documents) {
     try {
       // === PARSE DOCUMENT ===
       const parsed = parseVADocument(doc.text);
-      
+
       // === ADD TO INVENTORY ===
       const inventoryEntry = {
         id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -124,7 +128,7 @@ export async function processDocumentsToVKB(documents) {
         parsedData: parsed,
       };
       inventory.push(inventoryEntry);
-      
+
       // === EXTRACT CONDITIONS ===
       if (parsed.conditions && parsed.conditions.length > 0) {
         for (const condition of parsed.conditions) {
@@ -137,7 +141,7 @@ export async function processDocumentsToVKB(documents) {
               relatedDocuments: [],
             };
           }
-          
+
           // Add rating history entry
           conditionsMap[condition.name].history.push({
             date: parsed.extractedAt,
@@ -146,9 +150,11 @@ export async function processDocumentsToVKB(documents) {
             effectiveDate: condition.effectiveDate,
             documentId: inventoryEntry.id,
           });
-          
-          conditionsMap[condition.name].relatedDocuments.push(inventoryEntry.id);
-          
+
+          conditionsMap[condition.name].relatedDocuments.push(
+            inventoryEntry.id,
+          );
+
           results.conditionsExtracted.push(condition.name);
         }
       }
@@ -166,20 +172,26 @@ export async function processDocumentsToVKB(documents) {
       results.evidenceAdded.push(timelineEntry.description);
 
       // === DETECT GAPS (if this is a decision letter) ===
-      if (parsed.documentType === 'DECISION_LETTER' && parsed.evidenceConsidered) {
+      if (
+        parsed.documentType === "DECISION_LETTER" &&
+        parsed.evidenceConsidered
+      ) {
         // Compare against existing inventory
         const quickGap = {
           decisionEvidence: parsed.evidenceConsidered.length,
           inventoryCount: inventory.length,
-          possibleGaps: Math.max(0, inventory.length - parsed.evidenceConsidered.length - 1),
+          possibleGaps: Math.max(
+            0,
+            inventory.length - parsed.evidenceConsidered.length - 1,
+          ),
         };
-        
+
         if (quickGap.possibleGaps > 2) {
           const gapAlert = {
             id: `gap_${Date.now()}`,
             createdAt: new Date().toISOString(),
-            type: 'POTENTIAL_MISSED_EVIDENCE',
-            severity: quickGap.possibleGaps > 5 ? 'HIGH' : 'MEDIUM',
+            type: "POTENTIAL_MISSED_EVIDENCE",
+            severity: quickGap.possibleGaps > 5 ? "HIGH" : "MEDIUM",
             message: `Decision letter may have missed ${quickGap.possibleGaps} documents in your C-File`,
             relatedDocumentId: inventoryEntry.id,
           };
@@ -189,7 +201,6 @@ export async function processDocumentsToVKB(documents) {
       }
 
       results.documentsProcessed++;
-
     } catch (err) {
       results.errors.push({
         filename: doc.filename,
@@ -200,9 +211,10 @@ export async function processDocumentsToVKB(documents) {
 
   // === SAVE UPDATED VKB ===
   saveVKBData(VKB_KEYS.DOCUMENT_INVENTORY, inventory);
-  saveVKBData(VKB_KEYS.EVIDENCE_TIMELINE, timeline.sort((a, b) => 
-    new Date(a.date) - new Date(b.date)
-  ));
+  saveVKBData(
+    VKB_KEYS.EVIDENCE_TIMELINE,
+    timeline.sort((a, b) => new Date(a.date) - new Date(b.date)),
+  );
   saveVKBData(VKB_KEYS.CONDITIONS_MAP, conditionsMap);
   saveVKBData(VKB_KEYS.GAP_ALERTS, gapAlerts);
   saveVKBData(VKB_KEYS.LAST_SYNC, new Date().toISOString());
@@ -218,15 +230,15 @@ export async function processDocumentsToVKB(documents) {
  */
 function getTimelineDescription(parsed) {
   switch (parsed.documentType) {
-    case 'DECISION_LETTER':
-      return `Rating Decision: ${parsed.combinedRating || 'N/A'}% combined`;
-    case 'DBQ_EXAM':
-      return `C&P Exam: ${parsed.diagnoses?.[0]?.name || 'Medical examination'}`;
-    case 'CODE_SHEET':
+    case "DECISION_LETTER":
+      return `Rating Decision: ${parsed.combinedRating || "N/A"}% combined`;
+    case "DBQ_EXAM":
+      return `C&P Exam: ${parsed.diagnoses?.[0]?.name || "Medical examination"}`;
+    case "CODE_SHEET":
       return `Code Sheet: ${parsed.conditions?.length || 0} conditions listed`;
-    case 'BVA_DECISION':
-      return `BVA Decision: ${parsed.outcome || 'Pending'}`;
-    case 'STATEMENT_OF_CASE':
+    case "BVA_DECISION":
+      return `BVA Decision: ${parsed.outcome || "Pending"}`;
+    case "STATEMENT_OF_CASE":
       return `SOC: ${parsed.issuesOnAppeal?.length || 0} issues`;
     default:
       return `Document processed: ${parsed.documentType}`;
@@ -238,12 +250,18 @@ function getTimelineDescription(parsed) {
  */
 function getEvidenceImportance(parsed) {
   switch (parsed.documentType) {
-    case 'DECISION_LETTER': return 10;
-    case 'CODE_SHEET': return 10;
-    case 'BVA_DECISION': return 9;
-    case 'DBQ_EXAM': return 8;
-    case 'STATEMENT_OF_CASE': return 7;
-    default: return 5;
+    case "DECISION_LETTER":
+      return 10;
+    case "CODE_SHEET":
+      return 10;
+    case "BVA_DECISION":
+      return 9;
+    case "DBQ_EXAM":
+      return 8;
+    case "STATEMENT_OF_CASE":
+      return 7;
+    default:
+      return 5;
   }
 }
 
@@ -253,7 +271,7 @@ function getEvidenceImportance(parsed) {
 function updateVeteranProfileFromDocuments(documents, conditionsMap) {
   try {
     const profile = getVeteranProfile();
-    
+
     // Update current combined rating if available
     for (const doc of documents) {
       const parsed = parseVADocument(doc.text);
@@ -276,7 +294,7 @@ function updateVeteranProfileFromDocuments(documents, conditionsMap) {
       saveVeteranProfile(profile);
     }
   } catch (err) {
-    console.error('[VKB] Error updating veteran profile:', err);
+    console.error("[VKB] Error updating veteran profile:", err);
   }
 }
 
@@ -313,7 +331,7 @@ export function getDocumentInventory() {
  * Clear all VKB data (for privacy/reset)
  */
 export function clearVKB() {
-  Object.values(VKB_KEYS).forEach(key => {
+  Object.values(VKB_KEYS).forEach((key) => {
     localStorage.removeItem(key);
   });
   return true;
@@ -338,7 +356,7 @@ export function exportVKB() {
  */
 export function importVKB(data) {
   if (!data || !data.exportedAt) {
-    throw new Error('Invalid VKB backup data');
+    throw new Error("Invalid VKB backup data");
   }
 
   if (data.inventory) saveVKBData(VKB_KEYS.DOCUMENT_INVENTORY, data.inventory);
@@ -362,14 +380,14 @@ export function generateIntelligenceReport() {
 
   return {
     generatedAt: new Date().toISOString(),
-    
+
     // Veteran summary
     veteran: {
-      name: profile.fullName || 'Unknown',
+      name: profile.fullName || "Unknown",
       currentRating: profile.currentCombinedRating || null,
       claimNumber: profile.claimNumber || null,
     },
-    
+
     // Document stats
     documents: {
       total: inventory.length,
@@ -378,7 +396,7 @@ export function generateIntelligenceReport() {
         return acc;
       }, {}),
     },
-    
+
     // Condition summary
     conditions: {
       total: Object.keys(conditions).length,
@@ -388,14 +406,14 @@ export function generateIntelligenceReport() {
         historyCount: data.history?.length || 0,
       })),
     },
-    
+
     // Alert summary
     alerts: {
       total: gaps.length,
-      highPriority: gaps.filter(g => g.severity === 'HIGH').length,
+      highPriority: gaps.filter((g) => g.severity === "HIGH").length,
       items: gaps.slice(0, 5), // Top 5 alerts
     },
-    
+
     // Timeline highlights
     timeline: {
       total: timeline.length,
@@ -415,7 +433,7 @@ export async function findSecondaryConditions(conditionName) {
   return {
     primaryCondition: conditionName,
     potentialSecondaries: [],
-    message: 'Use Secondary Scout tool for detailed analysis',
+    message: "Use Secondary Scout tool for detailed analysis",
   };
 }
 
@@ -424,25 +442,25 @@ export async function findSecondaryConditions(conditionName) {
  */
 export function syncToMyRatings() {
   const conditions = getConditionsMap();
-  const ratingsKey = 'vet_rate_my_ratings';
-  
+  const ratingsKey = "vet_rate_my_ratings";
+
   const ratings = {};
-  
+
   for (const [name, data] of Object.entries(conditions)) {
     const latestHistory = data.history?.[data.history.length - 1];
-    if (latestHistory && latestHistory.status === 'GRANTED') {
+    if (latestHistory && latestHistory.status === "GRANTED") {
       ratings[name] = {
         percent: latestHistory.percent,
         diagnosticCode: data.diagnosticCode,
         effectiveDate: latestHistory.effectiveDate,
-        source: 'VKB_EXTRACTION',
+        source: "VKB_EXTRACTION",
       };
     }
   }
 
   localStorage.setItem(ratingsKey, JSON.stringify(ratings));
   markAsModified();
-  
+
   return Object.keys(ratings).length;
 }
 

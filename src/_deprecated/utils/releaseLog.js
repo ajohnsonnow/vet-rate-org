@@ -1,14 +1,14 @@
 /**
  * Vet-Rate.org - Release Log
- * 
+ *
  * This file tracks resolved ticket IDs (FEAT-xxxx, BUG-xxxx) so veterans can
  * see when their reported issues have been fixed or features implemented.
- * 
+ *
  * HOW TO USE (Developer Workflow):
  * 1. When you fix a bug or implement a feature request, add the ticket ID here
  * 2. Optionally add the version it was released in
  * 3. Push to GitHub - veterans will see their tickets marked as "Completed" automatically!
- * 
+ *
  * Built by a fellow veteran. "Every ticket gets an answer."
  */
 
@@ -31,7 +31,7 @@ export const resolvedTickets = [
  * Quick lookup Set for efficient checking
  * @type {Set<string>}
  */
-export const resolvedTicketIds = new Set(resolvedTickets.map(t => t.id));
+export const resolvedTicketIds = new Set(resolvedTickets.map((t) => t.id));
 
 /**
  * Check if a ticket has been resolved
@@ -48,7 +48,7 @@ export const isTicketResolved = (ticketId) => {
  * @returns {Object|null} - Resolution details or null if not resolved
  */
 export const getTicketResolution = (ticketId) => {
-  return resolvedTickets.find(t => t.id === ticketId) || null;
+  return resolvedTickets.find((t) => t.id === ticketId) || null;
 };
 
 /**
@@ -57,7 +57,7 @@ export const getTicketResolution = (ticketId) => {
  * @returns {Array}
  */
 export const getResolvedByVersion = (version) => {
-  return resolvedTickets.filter(t => t.version === version);
+  return resolvedTickets.filter((t) => t.version === version);
 };
 
 /**
@@ -68,18 +68,18 @@ export const getResolvedByVersion = (version) => {
 export const checkMultipleTickets = (ticketIds) => {
   const resolved = [];
   const pending = [];
-  
+
   for (const id of ticketIds) {
     if (resolvedTicketIds.has(id)) {
       resolved.push({
         id,
-        ...getTicketResolution(id)
+        ...getTicketResolution(id),
       });
     } else {
       pending.push(id);
     }
   }
-  
+
   return { resolved, pending };
 };
 
@@ -89,5 +89,5 @@ export default {
   isTicketResolved,
   getTicketResolution,
   getResolvedByVersion,
-  checkMultipleTickets
+  checkMultipleTickets,
 };

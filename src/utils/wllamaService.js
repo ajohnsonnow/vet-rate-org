@@ -1,9 +1,9 @@
 /**
  * Wllama Browser Integration for Warrant Council
- * 
+ *
  * Enables 100% local LLM inference in the browser using WebAssembly.
  * Falls back to llama.cpp server if available, then to Gemini cloud.
- * 
+ *
  * Models: VetRate Auditor, Writer, Rater (GGUF Q4_K_M)
  */
 
@@ -16,61 +16,64 @@ let wllamaLoadError = null;
 const loadWllama = async () => {
   if (Wllama) return Wllama;
   if (wllamaLoadError) throw wllamaLoadError;
-  
+
   try {
-    const module = await import('@wllama/wllama/esm/index.js');
+    const module = await import("@wllama/wllama/esm/index.js");
     Wllama = module.Wllama;
     return Wllama;
   } catch (error) {
-    console.error('[Wllama] Failed to load library:', error);
+    console.error("[Wllama] Failed to load library:", error);
     wllamaLoadError = error;
     throw error;
   }
 };
 
 // Storage keys
-const WLLAMA_CACHE_KEY = 'vetrate_wllama_cache';
-const WLLAMA_CONFIG_KEY = 'vetrate_wllama_config';
+const WLLAMA_CACHE_KEY = "vetrate_wllama_cache";
+const WLLAMA_CONFIG_KEY = "vetrate_wllama_config";
 
 /**
  * Model configurations for Warrant Council agents
  */
 export const WLLAMA_MODELS = {
   auditor: {
-    name: 'VetRate Auditor',
-    description: 'Reviews claims for accuracy and compliance',
+    name: "VetRate Auditor",
+    description: "Reviews claims for accuracy and compliance",
     // Model URL - can be local server or CDN
-    url: '/models/vetrate-auditor-7b-v2-Q4_K_M.gguf',
+    url: "/models/vetrate-auditor-7b-v2-Q4_K_M.gguf",
     // Fallback to HuggingFace or other CDN
-    fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-auditor-7b-v2-gguf/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf',
+    fallbackUrl:
+      "https://huggingface.co/ajohnsonnow/vetrate-auditor-7b-v2-gguf/resolve/main/vetrate-auditor-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claims reviewer.
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
 Always cite specific CFR sections. Never fabricate regulatory information.
-Be thorough but compassionate - veterans deserve accurate guidance.`
+Be thorough but compassionate - veterans deserve accurate guidance.`,
   },
   writer: {
-    name: 'VetRate Writer',
-    description: 'Creates compelling personal statements',
-    url: '/models/vetrate-writer-7b-v2-Q4_K_M.gguf',
-    fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-writer-7b-v2-gguf/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf',
+    name: "VetRate Writer",
+    description: "Creates compelling personal statements",
+    url: "/models/vetrate-writer-7b-v2-Q4_K_M.gguf",
+    fallbackUrl:
+      "https://huggingface.co/ajohnsonnow/vetrate-writer-7b-v2-gguf/resolve/main/vetrate-writer-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW4 Writer, a Chief Warrant Officer Four specializing in VA claims documentation.
 Write compelling, truthful personal statements from the veteran's perspective.
 Include specific dates, locations, and details. Connect symptoms to daily life impact.
-Use medical terminology correctly. Balance emotional resonance with factual accuracy.`
+Use medical terminology correctly. Balance emotional resonance with factual accuracy.`,
   },
   rater: {
-    name: 'VetRate Rater',
-    description: 'Calculates VA disability ratings',
-    url: '/models/vetrate-rater-7b-v2-Q4_K_M.gguf',
-    fallbackUrl: 'https://huggingface.co/ajohnsonnow/vetrate-rater-7b-v2-gguf/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf',
+    name: "VetRate Rater",
+    description: "Calculates VA disability ratings",
+    url: "/models/vetrate-rater-7b-v2-Q4_K_M.gguf",
+    fallbackUrl:
+      "https://huggingface.co/ajohnsonnow/vetrate-rater-7b-v2-gguf/resolve/main/vetrate-rater-7b-v2-Q4_K_M.gguf",
     contextSize: 4096,
     systemPrompt: `You are the VetRate CW3 Rater, a Chief Warrant Officer Three expert in VA disability calculations.
 Calculate combined ratings using the official VA bilateral factor formula.
 Explain rating criteria for specific conditions. Identify potential rating increases.
-Always show your work and cite 38 CFR Part 4 rating criteria.`
-  }
+Always show your work and cite 38 CFR Part 4 rating criteria.`,
+  },
 };
 
 /**
@@ -79,7 +82,7 @@ Always show your work and cite 38 CFR Part 4 rating criteria.`
 let wllamaInstance = null;
 let currentModel = null;
 let isInitializing = false;
-let loadProgress = { progress: 0, text: '' };
+let loadProgress = { progress: 0, text: "" };
 
 /**
  * Get download progress callback
@@ -89,12 +92,12 @@ const createProgressCallback = (onProgress) => {
     const progress = total > 0 ? (loaded / total) * 100 : 0;
     const loadedMB = (loaded / 1024 / 1024).toFixed(1);
     const totalMB = (total / 1024 / 1024).toFixed(1);
-    
+
     loadProgress = {
       progress,
-      text: `Downloading: ${loadedMB}MB / ${totalMB}MB`
+      text: `Downloading: ${loadedMB}MB / ${totalMB}MB`,
     };
-    
+
     if (onProgress) {
       onProgress(loadProgress);
     }
@@ -104,55 +107,55 @@ const createProgressCallback = (onProgress) => {
 /**
  * Initialize Wllama with a specific model
  */
-export const initializeWllama = async (modelId = 'auditor', options = {}) => {
+export const initializeWllama = async (modelId = "auditor", options = {}) => {
   const { onProgress, useCache = true } = options;
-  
+
   if (isInitializing) {
-    console.log('[Wllama] Already initializing...');
+    console.log("[Wllama] Already initializing...");
     return false;
   }
-  
+
   if (wllamaInstance && currentModel === modelId) {
-    console.log('[Wllama] Model already loaded:', modelId);
+    console.log("[Wllama] Model already loaded:", modelId);
     return true;
   }
-  
+
   isInitializing = true;
-  
+
   try {
     // Load Wllama library dynamically
     const WllamaClass = await loadWllama();
-    
+
     const modelConfig = WLLAMA_MODELS[modelId];
     if (!modelConfig) {
       throw new Error(`Unknown model: ${modelId}`);
     }
-    
+
     console.log(`[Wllama] Initializing ${modelConfig.name}...`);
-    
+
     // Create Wllama instance
     wllamaInstance = new WllamaClass({
       // Use multi-threaded WASM for better performance
-      'multi-thread/wllama.js': '/wasm/multi-thread/wllama.js',
-      'multi-thread/wllama.wasm': '/wasm/multi-thread/wllama.wasm',
-      'multi-thread/wllama.worker.mjs': '/wasm/multi-thread/wllama.worker.mjs',
+      "multi-thread/wllama.js": "/wasm/multi-thread/wllama.js",
+      "multi-thread/wllama.wasm": "/wasm/multi-thread/wllama.wasm",
+      "multi-thread/wllama.worker.mjs": "/wasm/multi-thread/wllama.worker.mjs",
       // Single-thread fallback
-      'single-thread/wllama.js': '/wasm/single-thread/wllama.js',
-      'single-thread/wllama.wasm': '/wasm/single-thread/wllama.wasm',
+      "single-thread/wllama.js": "/wasm/single-thread/wllama.js",
+      "single-thread/wllama.wasm": "/wasm/single-thread/wllama.wasm",
     });
-    
+
     // Try primary URL first, then fallback
     let modelUrl = modelConfig.url;
     try {
-      const response = await fetch(modelUrl, { method: 'HEAD' });
+      const response = await fetch(modelUrl, { method: "HEAD" });
       if (!response.ok) {
-        console.log('[Wllama] Primary URL not available, using fallback');
+        console.log("[Wllama] Primary URL not available, using fallback");
         modelUrl = modelConfig.fallbackUrl;
       }
     } catch {
       modelUrl = modelConfig.fallbackUrl;
     }
-    
+
     // Load the model
     await wllamaInstance.loadModelFromUrl(modelUrl, {
       progressCallback: createProgressCallback(onProgress),
@@ -160,15 +163,14 @@ export const initializeWllama = async (modelId = 'auditor', options = {}) => {
       n_ctx: modelConfig.contextSize,
       n_threads: navigator.hardwareConcurrency || 4,
     });
-    
+
     currentModel = modelId;
     isInitializing = false;
-    
+
     console.log(`[Wllama] ${modelConfig.name} loaded successfully`);
     return true;
-    
   } catch (error) {
-    console.error('[Wllama] Initialization failed:', error);
+    console.error("[Wllama] Initialization failed:", error);
     isInitializing = false;
     wllamaInstance = null;
     currentModel = null;
@@ -181,21 +183,21 @@ export const initializeWllama = async (modelId = 'auditor', options = {}) => {
  */
 export const generateCompletion = async (prompt, options = {}) => {
   const {
-    modelId = 'auditor',
+    modelId = "auditor",
     maxTokens = 1024,
     temperature = 0.7,
     topP = 0.9,
     onToken,
-    signal
+    signal,
   } = options;
-  
+
   // Initialize if needed
   if (!wllamaInstance || currentModel !== modelId) {
     await initializeWllama(modelId);
   }
-  
+
   const modelConfig = WLLAMA_MODELS[modelId];
-  
+
   // Build full prompt with system message
   const fullPrompt = `<|system|>
 ${modelConfig.systemPrompt}
@@ -205,29 +207,28 @@ ${prompt}
 <|end|>
 <|assistant|>
 `;
-  
+
   try {
-    let result = '';
-    
+    let result = "";
+
     await wllamaInstance.createCompletion(fullPrompt, {
       nPredict: maxTokens,
       temperature,
       topP,
-      stopTokens: ['<|end|>', '<|user|>'],
+      stopTokens: ["<|end|>", "<|user|>"],
       onToken: (token) => {
         result += token;
         if (onToken) {
           onToken(token);
         }
       },
-      signal
+      signal,
     });
-    
+
     return result.trim();
-    
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('[Wllama] Generation aborted');
+    if (error.name === "AbortError") {
+      console.log("[Wllama] Generation aborted");
       return null;
     }
     throw error;
@@ -239,39 +240,39 @@ ${prompt}
  */
 export const chatCompletion = async (messages, options = {}) => {
   const {
-    modelId = 'auditor',
+    modelId = "auditor",
     maxTokens = 1024,
     temperature = 0.7,
     onToken,
-    signal
+    signal,
   } = options;
-  
+
   // Initialize if needed
   if (!wllamaInstance || currentModel !== modelId) {
     await initializeWllama(modelId);
   }
-  
+
   const modelConfig = WLLAMA_MODELS[modelId];
-  
+
   // Build conversation prompt
   let prompt = `<|system|>\n${modelConfig.systemPrompt}\n<|end|>\n`;
-  
+
   for (const msg of messages) {
-    if (msg.role === 'user') {
+    if (msg.role === "user") {
       prompt += `<|user|>\n${msg.content}\n<|end|>\n`;
-    } else if (msg.role === 'assistant') {
+    } else if (msg.role === "assistant") {
       prompt += `<|assistant|>\n${msg.content}\n<|end|>\n`;
     }
   }
-  
-  prompt += '<|assistant|>\n';
-  
+
+  prompt += "<|assistant|>\n";
+
   return generateCompletion(prompt, {
     modelId,
     maxTokens,
     temperature,
     onToken,
-    signal
+    signal,
   });
 };
 
@@ -287,7 +288,7 @@ export const getCurrentModelInfo = () => {
   if (!currentModel) return null;
   return {
     id: currentModel,
-    ...WLLAMA_MODELS[currentModel]
+    ...WLLAMA_MODELS[currentModel],
   };
 };
 
@@ -311,17 +312,17 @@ export const unloadModel = async () => {
  * Check WebAssembly support
  */
 export const checkWasmSupport = () => {
-  const hasWasm = typeof WebAssembly === 'object';
-  const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-  
+  const hasWasm = typeof WebAssembly === "object";
+  const hasSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
+
   return {
     supported: hasWasm,
     multiThread: hasWasm && hasSharedArrayBuffer,
-    reason: !hasWasm 
-      ? 'WebAssembly not supported' 
-      : !hasSharedArrayBuffer 
-        ? 'SharedArrayBuffer not available (COOP/COEP headers needed for multi-threading)'
-        : null
+    reason: !hasWasm
+      ? "WebAssembly not supported"
+      : !hasSharedArrayBuffer
+        ? "SharedArrayBuffer not available (COOP/COEP headers needed for multi-threading)"
+        : null,
   };
 };
 
@@ -332,7 +333,7 @@ export const getModelSize = (modelId) => {
   // Q4_K_M 7B models are approximately 4.4GB
   return {
     bytes: 4683073600,
-    formatted: '4.4 GB'
+    formatted: "4.4 GB",
   };
 };
 
@@ -346,5 +347,5 @@ export default {
   unloadModel,
   checkWasmSupport,
   getModelSize,
-  WLLAMA_MODELS
+  WLLAMA_MODELS,
 };

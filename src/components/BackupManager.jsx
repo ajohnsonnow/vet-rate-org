@@ -9,9 +9,9 @@
  * Prevents catastrophic data loss from cache clearing
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import React, { useState, useRef, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   exportData,
   downloadBackup,
@@ -19,27 +19,27 @@ import {
   parseBackupFile,
   validateBackup,
   getStorageStats,
-  clearAllData
-} from '../utils/dataBackup';
-import { markBackupCreated } from '../utils/dataPersistence';
-import { downloadDossier, previewDossier } from '../utils/dossierExport';
-import CloudSyncManager from './CloudSyncManager';
-import DbqBrowser from './DbqBrowser';
-import { getCacheStats } from '../utils/dbqOfflineStorage';
+  clearAllData,
+} from "../utils/dataBackup";
+import { markBackupCreated } from "../utils/dataPersistence";
+import { downloadDossier, previewDossier } from "../utils/dossierExport";
+import CloudSyncManager from "./CloudSyncManager";
+import DbqBrowser from "./DbqBrowser";
+import { getCacheStats } from "../utils/dbqOfflineStorage";
 
 export default function BackupManager({ onClose }) {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
-  
+
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success'|'error'|'info', message: '', details: {} }
   const [showStats, setShowStats] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [showDbqBrowser, setShowDbqBrowser] = useState(false);
   const [dbqCacheStats, setDbqCacheStats] = useState(null);
-  
+
   // Load DBQ cache stats on mount
   useEffect(() => {
     const loadDbqStats = async () => {
@@ -47,38 +47,38 @@ export default function BackupManager({ onClose }) {
         const stats = await getCacheStats();
         setDbqCacheStats(stats);
       } catch (e) {
-        console.error('Error loading DBQ stats:', e);
+        console.error("Error loading DBQ stats:", e);
       }
     };
     loadDbqStats();
   }, []);
   const [showCloudSync, setShowCloudSync] = useState(false);
-  const [importMode, setImportMode] = useState('replace'); // 'replace' or 'merge'
+  const [importMode, setImportMode] = useState("replace"); // 'replace' or 'merge'
   const fileInputRef = useRef(null);
 
   // Handle export
   const handleExport = async () => {
     try {
-      setStatus({ type: 'info', message: 'Preparing backup...' });
-      
+      setStatus({ type: "info", message: "Preparing backup..." });
+
       const backup = exportData();
       downloadBackup(backup);
-      
+
       // Mark that a backup was created to stop pulse animation
       markBackupCreated();
-      
+
       setStatus({
-        type: 'success',
-        message: '✅ Backup downloaded successfully!',
+        type: "success",
+        message: "✅ Backup downloaded successfully!",
         details: {
           keys: backup.metadata.totalKeys,
-          date: new Date().toLocaleDateString()
-        }
+          date: new Date().toLocaleDateString(),
+        },
       });
     } catch (error) {
       setStatus({
-        type: 'error',
-        message: '❌ Export failed: ' + error.message
+        type: "error",
+        message: "❌ Export failed: " + error.message,
       });
     }
   };
@@ -86,48 +86,48 @@ export default function BackupManager({ onClose }) {
   // Handle file selection
   const handleFileSelect = async (file) => {
     try {
-      setStatus({ type: 'info', message: 'Reading backup file...' });
-      
+      setStatus({ type: "info", message: "Reading backup file..." });
+
       const backup = await parseBackupFile(file);
       const validation = validateBackup(backup);
-      
+
       if (!validation.success) {
         setStatus({
-          type: 'error',
-          message: '❌ ' + validation.message
+          type: "error",
+          message: "❌ " + validation.message,
         });
         return;
       }
 
-      setStatus({ type: 'info', message: 'Importing data...' });
-      
-      const result = importData(backup, importMode === 'merge');
-      
+      setStatus({ type: "info", message: "Importing data..." });
+
+      const result = importData(backup, importMode === "merge");
+
       if (result.success) {
         setStatus({
-          type: 'success',
-          message: '✅ ' + result.message,
+          type: "success",
+          message: "✅ " + result.message,
           details: {
             imported: result.importedKeys,
             skipped: result.skippedKeys,
-            exportDate: new Date(result.exportDate).toLocaleDateString()
-          }
+            exportDate: new Date(result.exportDate).toLocaleDateString(),
+          },
         });
-        
+
         // Reload after 2 seconds to apply changes
         setTimeout(() => {
           window.location.reload();
         }, 2000);
       } else {
         setStatus({
-          type: 'error',
-          message: '❌ ' + result.message
+          type: "error",
+          message: "❌ " + result.message,
         });
       }
     } catch (error) {
       setStatus({
-        type: 'error',
-        message: '❌ Import failed: ' + error.message
+        type: "error",
+        message: "❌ Import failed: " + error.message,
       });
     }
   };
@@ -153,12 +153,12 @@ export default function BackupManager({ onClose }) {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (file.type === 'application/json' || file.name.endsWith('.json')) {
+      if (file.type === "application/json" || file.name.endsWith(".json")) {
         handleFileSelect(file);
       } else {
         setStatus({
-          type: 'error',
-          message: '❌ Please drop in a valid JSON backup file.'
+          type: "error",
+          message: "❌ Please drop in a valid JSON backup file.",
         });
       }
     }
@@ -177,8 +177,8 @@ export default function BackupManager({ onClose }) {
     const cleared = clearAllData();
     setShowConfirmClear(false);
     setStatus({
-      type: 'success',
-      message: `✅ Cleared ${cleared} data items. Page will reload.`
+      type: "success",
+      message: `✅ Cleared ${cleared} data items. Page will reload.`,
     });
     setTimeout(() => {
       window.location.reload();
@@ -198,7 +198,12 @@ export default function BackupManager({ onClose }) {
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-lg">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-3xl font-bold mb-2">🏰 The Bunker <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h2>
+              <h2 className="text-3xl font-bold mb-2">
+                🏰 The Bunker{" "}
+                <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                  BETA
+                </span>
+              </h2>
               <p className="text-blue-100">
                 Your data is YOURS. Never lose it again.
               </p>
@@ -218,11 +223,11 @@ export default function BackupManager({ onClose }) {
           {status && (
             <div
               className={`p-4 rounded-lg ${
-                status.type === 'success'
-                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                  : status.type === 'error'
-                  ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                  : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                status.type === "success"
+                  ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                  : status.type === "error"
+                    ? "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+                    : "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
               }`}
             >
               <p className="font-semibold">{status.message}</p>
@@ -230,7 +235,8 @@ export default function BackupManager({ onClose }) {
                 <div className="mt-2 text-sm space-y-1">
                   {Object.entries(status.details).map(([key, value]) => (
                     <p key={key}>
-                      <span className="font-medium capitalize">{key}:</span> {value}
+                      <span className="font-medium capitalize">{key}:</span>{" "}
+                      {value}
                     </p>
                   ))}
                 </div>
@@ -246,7 +252,8 @@ export default function BackupManager({ onClose }) {
                   ☁️ Google Drive Sync
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  <strong>Encrypted backup to YOUR Google Drive.</strong> We never see your data.
+                  <strong>Encrypted backup to YOUR Google Drive.</strong> We
+                  never see your data.
                 </p>
               </div>
               <button
@@ -256,15 +263,32 @@ export default function BackupManager({ onClose }) {
                 <span>☁️</span> Connect Drive
               </button>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4">
-              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Why Cloud Sync?</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                Why Cloud Sync?
+              </h4>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                <li>🔐 <strong>Your Cloud, Your Keys:</strong> Data goes to YOUR Google Drive, not ours</li>
-                <li>🔄 <strong>Auto-Backup:</strong> Never lose progress again (computer crashes, cache clears)</li>
-                <li>📱 <strong>Cross-Device:</strong> Start on desktop, continue on mobile</li>
-                <li>🏠 <strong>Always Available:</strong> Access your claims from anywhere</li>
-                <li>🆓 <strong>Free Storage:</strong> 15GB free with every Google account</li>
+                <li>
+                  🔐 <strong>Your Cloud, Your Keys:</strong> Data goes to YOUR
+                  Google Drive, not ours
+                </li>
+                <li>
+                  🔄 <strong>Auto-Backup:</strong> Never lose progress again
+                  (computer crashes, cache clears)
+                </li>
+                <li>
+                  📱 <strong>Cross-Device:</strong> Start on desktop, continue
+                  on mobile
+                </li>
+                <li>
+                  🏠 <strong>Always Available:</strong> Access your claims from
+                  anywhere
+                </li>
+                <li>
+                  🆓 <strong>Free Storage:</strong> 15GB free with every Google
+                  account
+                </li>
               </ul>
             </div>
           </div>
@@ -277,7 +301,8 @@ export default function BackupManager({ onClose }) {
                   📦 Export Your Data
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Download a complete backup of all your claims, forms, and settings.
+                  Download a complete backup of all your claims, forms, and
+                  settings.
                 </p>
               </div>
               <button
@@ -287,9 +312,11 @@ export default function BackupManager({ onClose }) {
                 Download Backup
               </button>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4">
-              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">What's Included:</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                What's Included:
+              </h4>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 <li>✓ All saved claims and statements</li>
                 <li>✓ Veteran profile and form data</li>
@@ -307,7 +334,8 @@ export default function BackupManager({ onClose }) {
                   📋 Download Full Dossier (HTML)
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Export everything as a readable report you can open anywhere, forever.
+                  Export everything as a readable report you can open anywhere,
+                  forever.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -315,7 +343,10 @@ export default function BackupManager({ onClose }) {
                   onClick={() => {
                     const result = previewDossier();
                     if (!result.success) {
-                      setStatus({ type: 'error', message: '❌ Preview failed: ' + result.error });
+                      setStatus({
+                        type: "error",
+                        message: "❌ Preview failed: " + result.error,
+                      });
                     }
                   }}
                   className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
@@ -326,12 +357,15 @@ export default function BackupManager({ onClose }) {
                   onClick={() => {
                     const result = downloadDossier();
                     if (result.success) {
-                      setStatus({ 
-                        type: 'success', 
-                        message: '✅ Dossier downloaded: ' + result.filename
+                      setStatus({
+                        type: "success",
+                        message: "✅ Dossier downloaded: " + result.filename,
                       });
                     } else {
-                      setStatus({ type: 'error', message: '❌ Export failed: ' + result.error });
+                      setStatus({
+                        type: "error",
+                        message: "❌ Export failed: " + result.error,
+                      });
                     }
                   }}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg"
@@ -340,15 +374,32 @@ export default function BackupManager({ onClose }) {
                 </button>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4">
-              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Why Use This?</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                Why Use This?
+              </h4>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                <li>📄 <strong>Human Readable:</strong> Formatted report, not technical JSON</li>
-                <li>🌐 <strong>Works Offline:</strong> Opens in any browser without internet</li>
-                <li>🏛️ <strong>VSO Ready:</strong> Share with your Veterans Service Officer</li>
-                <li>♿ <strong>Printable:</strong> Print directly from your browser</li>
-                <li>🔒 <strong>You Own It:</strong> Your data, independent of Vet-Rate</li>
+                <li>
+                  📄 <strong>Human Readable:</strong> Formatted report, not
+                  technical JSON
+                </li>
+                <li>
+                  🌐 <strong>Works Offline:</strong> Opens in any browser
+                  without internet
+                </li>
+                <li>
+                  🏛️ <strong>VSO Ready:</strong> Share with your Veterans
+                  Service Officer
+                </li>
+                <li>
+                  ♿ <strong>Printable:</strong> Print directly from your
+                  browser
+                </li>
+                <li>
+                  🔒 <strong>You Own It:</strong> Your data, independent of
+                  Vet-Rate
+                </li>
               </ul>
             </div>
           </div>
@@ -361,8 +412,8 @@ export default function BackupManager({ onClose }) {
                   📋 DBQ Library (Offline Forms)
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Download Disability Benefits Questionnaires for offline access. 
-                  Pre-fill your information before doctor visits.
+                  Download Disability Benefits Questionnaires for offline
+                  access. Pre-fill your information before doctor visits.
                 </p>
               </div>
               <button
@@ -372,7 +423,7 @@ export default function BackupManager({ onClose }) {
                 <span>📋</span> Open Library
               </button>
             </div>
-            
+
             {/* DBQ Cache Stats */}
             {dbqCacheStats && (
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 flex flex-wrap gap-4">
@@ -382,7 +433,9 @@ export default function BackupManager({ onClose }) {
                     <p className="text-sm font-semibold text-gray-800 dark:text-white">
                       {dbqCacheStats.cachedCount} forms
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">saved offline</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      saved offline
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -391,20 +444,39 @@ export default function BackupManager({ onClose }) {
                     <p className="text-sm font-semibold text-gray-800 dark:text-white">
                       {dbqCacheStats.totalSizeMB} MB
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">storage used</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      storage used
+                    </p>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Features:</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">
+                Features:
+              </h4>
               <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                <li>📱 <strong>Works Offline:</strong> Access forms without internet</li>
-                <li>✏️ <strong>Pre-Fill Drafts:</strong> Enter subjective info before appointments</li>
-                <li>🔐 <strong>Secure Sharing:</strong> Download, encrypt, or AirDrop to doctor</li>
-                <li>📋 <strong>69+ DBQs:</strong> All official VA questionnaires available</li>
-                <li>⚠️ <strong>Draft Watermarks:</strong> All pre-filled docs clearly marked</li>
+                <li>
+                  📱 <strong>Works Offline:</strong> Access forms without
+                  internet
+                </li>
+                <li>
+                  ✏️ <strong>Pre-Fill Drafts:</strong> Enter subjective info
+                  before appointments
+                </li>
+                <li>
+                  🔐 <strong>Secure Sharing:</strong> Download, encrypt, or
+                  AirDrop to doctor
+                </li>
+                <li>
+                  📋 <strong>69+ DBQs:</strong> All official VA questionnaires
+                  available
+                </li>
+                <li>
+                  ⚠️ <strong>Draft Watermarks:</strong> All pre-filled docs
+                  clearly marked
+                </li>
               </ul>
             </div>
           </div>
@@ -428,7 +500,7 @@ export default function BackupManager({ onClose }) {
                   <input
                     type="radio"
                     value="replace"
-                    checked={importMode === 'replace'}
+                    checked={importMode === "replace"}
                     onChange={(e) => setImportMode(e.target.value)}
                     className="mr-2"
                   />
@@ -440,7 +512,7 @@ export default function BackupManager({ onClose }) {
                   <input
                     type="radio"
                     value="merge"
-                    checked={importMode === 'merge'}
+                    checked={importMode === "merge"}
                     onChange={(e) => setImportMode(e.target.value)}
                     className="mr-2"
                   />
@@ -459,13 +531,15 @@ export default function BackupManager({ onClose }) {
               onClick={() => fileInputRef.current?.click()}
               className={`border-4 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? 'border-blue-600 bg-blue-100 dark:bg-blue-900/40'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
+                  ? "border-blue-600 bg-blue-100 dark:bg-blue-900/40"
+                  : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500"
               }`}
             >
               <div className="text-5xl mb-3">📂</div>
               <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {isDragging ? 'Drop your backup file here!' : 'Drag & Drop backup file here'}
+                {isDragging
+                  ? "Drop your backup file here!"
+                  : "Drag & Drop backup file here"}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 or click to browse (.json files only)
@@ -485,7 +559,7 @@ export default function BackupManager({ onClose }) {
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
               🔧 Utilities
             </h3>
-            
+
             <div className="flex gap-4 flex-wrap">
               <button
                 onClick={handleViewStats}
@@ -493,7 +567,7 @@ export default function BackupManager({ onClose }) {
               >
                 View Storage Stats
               </button>
-              
+
               <button
                 onClick={() => setShowConfirmClear(true)}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -510,19 +584,23 @@ export default function BackupManager({ onClose }) {
                 </h4>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Keys:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Keys:
+                    </p>
                     <p className="text-lg font-bold text-gray-800 dark:text-white">
                       {showStats.totalKeys}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Size:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Size:
+                    </p>
                     <p className="text-lg font-bold text-gray-800 dark:text-white">
                       {showStats.totalSizeKB} KB
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="max-h-48 overflow-y-auto">
                   <h5 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">
                     Breakdown by Key:
@@ -539,7 +617,7 @@ export default function BackupManager({ onClose }) {
                     ))}
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => setShowStats(false)}
                   className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:underline"
@@ -557,9 +635,14 @@ export default function BackupManager({ onClose }) {
             </h4>
             <ul className="space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
               <li>• Export your data regularly (weekly recommended)</li>
-              <li>• Store backups in cloud storage (Dropbox, Google Drive, etc.)</li>
+              <li>
+                • Store backups in cloud storage (Dropbox, Google Drive, etc.)
+              </li>
               <li>• You can transfer backups between computers and browsers</li>
-              <li>• Your backup file is plain JSON - you can inspect it in any text editor</li>
+              <li>
+                • Your backup file is plain JSON - you can inspect it in any
+                text editor
+              </li>
             </ul>
           </div>
         </div>
@@ -573,7 +656,8 @@ export default function BackupManager({ onClose }) {
               ⚠️ Clear All Data?
             </h3>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              This will permanently delete ALL your data from this browser. This cannot be undone.
+              This will permanently delete ALL your data from this browser. This
+              cannot be undone.
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-6 font-semibold">
               Make sure you have exported a backup first!
@@ -595,25 +679,27 @@ export default function BackupManager({ onClose }) {
           </div>
         </div>
       )}
-      
+
       {/* Cloud Sync Modal */}
       {showCloudSync && (
         <CloudSyncManager onClose={() => setShowCloudSync(false)} />
       )}
-      
+
       {/* DBQ Browser Modal */}
       {showDbqBrowser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <DbqBrowser onClose={async () => {
-            setShowDbqBrowser(false);
-            // Refresh DBQ cache stats when closing
-            try {
-              const stats = await getCacheStats();
-              setDbqCacheStats(stats);
-            } catch (e) {
-              console.error('Error refreshing DBQ stats:', e);
-            }
-          }} />
+          <DbqBrowser
+            onClose={async () => {
+              setShowDbqBrowser(false);
+              // Refresh DBQ cache stats when closing
+              try {
+                const stats = await getCacheStats();
+                setDbqCacheStats(stats);
+              } catch (e) {
+                console.error("Error refreshing DBQ stats:", e);
+              }
+            }}
+          />
         </div>
       )}
     </div>

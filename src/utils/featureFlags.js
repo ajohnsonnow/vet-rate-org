@@ -3,10 +3,10 @@
  * Allows instant disabling of features without redeployment
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-const STATUS_URL = '/status.json';
-const CACHE_KEY = 'vetrate_system_status';
+const STATUS_URL = "/status.json";
+const CACHE_KEY = "vetrate_system_status";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
@@ -19,9 +19,9 @@ export const useSystemStatus = () => {
     localAIEnabled: true,
     cloudAIEnabled: true,
     warning: null,
-    systemStatus: 'nominal',
+    systemStatus: "nominal",
     isLoading: true,
-    lastChecked: null
+    lastChecked: null,
   });
 
   useEffect(() => {
@@ -33,20 +33,20 @@ export const useSystemStatus = () => {
           setStatus({
             ...cached.data,
             isLoading: false,
-            lastChecked: new Date(cached.timestamp)
+            lastChecked: new Date(cached.timestamp),
           });
           return;
         }
 
         // Fetch fresh status with cache-busting
         const response = await fetch(`${STATUS_URL}?t=${Date.now()}`, {
-          cache: 'no-cache'
+          cache: "no-cache",
         });
 
         if (!response.ok) {
           // Fail-open: If status check fails, allow features to work
-          console.warn('Status check failed, using defaults');
-          setStatus(prev => ({ ...prev, isLoading: false }));
+          console.warn("Status check failed, using defaults");
+          setStatus((prev) => ({ ...prev, isLoading: false }));
           return;
         }
 
@@ -57,20 +57,19 @@ export const useSystemStatus = () => {
           localAIEnabled: config.features?.local_ai !== false,
           cloudAIEnabled: config.features?.cloud_ai !== false,
           warning: config.maintenance_message || null,
-          systemStatus: config.system_status || 'nominal',
+          systemStatus: config.system_status || "nominal",
           isLoading: false,
-          lastChecked: new Date()
+          lastChecked: new Date(),
         };
 
         // Cache the result
         cacheStatus(newStatus);
-        
-        setStatus(newStatus);
 
+        setStatus(newStatus);
       } catch (err) {
-        console.warn('System status check error (failing open):', err);
+        console.warn("System status check error (failing open):", err);
         // Fail-open: Allow features to work if check fails
-        setStatus(prev => ({ ...prev, isLoading: false }));
+        setStatus((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
@@ -78,7 +77,7 @@ export const useSystemStatus = () => {
 
     // Re-check every 5 minutes
     const interval = setInterval(checkStatus, CACHE_DURATION);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -95,7 +94,7 @@ const getCachedStatus = () => {
       return JSON.parse(cached);
     }
   } catch (e) {
-    console.warn('Failed to read cached status:', e);
+    console.warn("Failed to read cached status:", e);
   }
   return null;
 };
@@ -116,11 +115,11 @@ const cacheStatus = (status) => {
   try {
     const toCache = {
       data: status,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(toCache));
   } catch (e) {
-    console.warn('Failed to cache status:', e);
+    console.warn("Failed to cache status:", e);
   }
 };
 
@@ -131,21 +130,21 @@ export const refreshSystemStatus = async () => {
   try {
     localStorage.removeItem(CACHE_KEY);
     const response = await fetch(`${STATUS_URL}?t=${Date.now()}`, {
-      cache: 'no-cache'
+      cache: "no-cache",
     });
-    
+
     if (!response.ok) return null;
-    
+
     const config = await response.json();
     return {
       aiEnabled: config.ai_enabled !== false,
       localAIEnabled: config.features?.local_ai !== false,
       cloudAIEnabled: config.features?.cloud_ai !== false,
       warning: config.maintenance_message || null,
-      systemStatus: config.system_status || 'nominal'
+      systemStatus: config.system_status || "nominal",
     };
   } catch (err) {
-    console.error('Failed to refresh status:', err);
+    console.error("Failed to refresh status:", err);
     return null;
   }
 };
@@ -162,22 +161,22 @@ export const isFeatureEnabled = (featureName) => {
       // If no valid cache, assume enabled (fail-open)
       return true;
     }
-    
+
     const status = cached.data;
-    
+
     switch (featureName.toLowerCase()) {
-      case 'ai':
-      case 'all_ai':
+      case "ai":
+      case "all_ai":
         return status.aiEnabled !== false;
-      case 'local_ai':
+      case "local_ai":
         return status.localAIEnabled !== false && status.aiEnabled !== false;
-      case 'cloud_ai':
+      case "cloud_ai":
         return status.cloudAIEnabled !== false && status.aiEnabled !== false;
       default:
         return true; // Unknown features default to enabled
     }
   } catch (e) {
-    console.warn('Feature check error (defaulting to enabled):', e);
+    console.warn("Feature check error (defaulting to enabled):", e);
     return true;
   }
 };
@@ -185,5 +184,5 @@ export const isFeatureEnabled = (featureName) => {
 export default {
   useSystemStatus,
   refreshSystemStatus,
-  isFeatureEnabled
+  isFeatureEnabled,
 };

@@ -1,35 +1,48 @@
 /**
  * Vet-Rate.org - Admin Panel Component
  * Unified admin dashboard for managing bug reports and feature requests
- * 
+ *
  * Security Features:
  * - Only accessible after authentication
  * - Session timeout display
  * - Logout button always visible
  * - Audit log viewer
- * 
+ *
  * This component is ONLY shown to authenticated admins.
- * 
+ *
  * Built by a fellow veteran. "Command and control for the mission."
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useAdminAuth, getAuthAuditLog } from '../contexts/AdminAuthContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useAdminAuth, getAuthAuditLog } from "../contexts/AdminAuthContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
-  Shield, Bug, Lightbulb, LogOut, Clock, User, History,
-  X, ChevronRight, Database, Download, AlertTriangle,
-  Settings, RefreshCw, Search, Filter
-} from 'lucide-react';
+  Shield,
+  Bug,
+  Lightbulb,
+  LogOut,
+  Clock,
+  User,
+  History,
+  X,
+  ChevronRight,
+  Database,
+  Download,
+  AlertTriangle,
+  Settings,
+  RefreshCw,
+  Search,
+  Filter,
+} from "lucide-react";
 
 // Import lookup components
-import BugLookup from './BugLookup';
-import FeatureLookup from './FeatureLookup';
+import BugLookup from "./BugLookup";
+import FeatureLookup from "./FeatureLookup";
 
 // Import storage utilities for stats
-import { getBugStatistics } from '../utils/bugReportStorage';
-import { getFeatureStatistics } from '../utils/featureRequestStorage';
+import { getBugStatistics } from "../utils/bugReportStorage";
+import { getFeatureStatistics } from "../utils/featureRequestStorage";
 
 export default function AdminPanel() {
   const { t } = useLanguage();
@@ -39,12 +52,12 @@ export default function AdminPanel() {
     logout,
     currentAdmin,
     sessionExpiry,
-    isAuthenticated
+    isAuthenticated,
   } = useAdminAuth();
 
   useBodyScrollLock(showAdminPanel);
 
-  const [activeView, setActiveView] = useState('dashboard'); // dashboard, bugs, features, audit, settings
+  const [activeView, setActiveView] = useState("dashboard"); // dashboard, bugs, features, audit, settings
   const [bugStats, setBugStats] = useState(null);
   const [featureStats, setFeatureStats] = useState(null);
   const [sessionTimeLeft, setSessionTimeLeft] = useState(0);
@@ -79,7 +92,7 @@ export default function AdminPanel() {
       setBugStats(bugs);
       setFeatureStats(features);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error("Failed to load stats:", error);
     }
   };
 
@@ -91,24 +104,24 @@ export default function AdminPanel() {
   const formatTime = (ms) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout('Manual logout');
+    if (window.confirm("Are you sure you want to logout?")) {
+      logout("Manual logout");
     }
   };
 
   if (!showAdminPanel || !isAuthenticated) return null;
 
   // Render full-screen bug/feature lookup if selected
-  if (activeView === 'bugs') {
-    return <BugLookup onClose={() => setActiveView('dashboard')} />;
+  if (activeView === "bugs") {
+    return <BugLookup onClose={() => setActiveView("dashboard")} />;
   }
 
-  if (activeView === 'features') {
-    return <FeatureLookup onClose={() => setActiveView('dashboard')} />;
+  if (activeView === "features") {
+    return <FeatureLookup onClose={() => setActiveView("dashboard")} />;
   }
 
   return (
@@ -121,20 +134,29 @@ export default function AdminPanel() {
               <Shield className="w-6 h-6 text-amber-500" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">Admin Control Panel</h1>
+              <h1 className="text-lg font-bold text-white">
+                Admin Control Panel
+              </h1>
               <p className="text-xs text-slate-400">
-                Logged in as: <span className="text-amber-400">{currentAdmin?.name}</span>
+                Logged in as:{" "}
+                <span className="text-amber-400">{currentAdmin?.name}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             {/* Session Timer */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              sessionTimeLeft < 300000 ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-300'
-            }`}>
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                sessionTimeLeft < 300000
+                  ? "bg-red-500/20 text-red-400"
+                  : "bg-slate-800 text-slate-300"
+              }`}
+            >
               <Clock className="w-4 h-4" />
-              <span className="font-mono text-sm">{formatTime(sessionTimeLeft)}</span>
+              <span className="font-mono text-sm">
+                {formatTime(sessionTimeLeft)}
+              </span>
             </div>
 
             {/* Logout Button */}
@@ -162,13 +184,13 @@ export default function AdminPanel() {
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Dashboard View */}
-          {activeView === 'dashboard' && (
+          {activeView === "dashboard" && (
             <>
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Bug Reports Card */}
                 <button
-                  onClick={() => setActiveView('bugs')}
+                  onClick={() => setActiveView("bugs")}
                   className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 text-left hover:bg-slate-800 hover:border-slate-600 transition-all group"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -177,7 +199,9 @@ export default function AdminPanel() {
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{bugStats?.total || 0}</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    {bugStats?.total || 0}
+                  </h3>
                   <p className="text-slate-400 text-sm">Bug Reports</p>
                   <div className="mt-2 flex gap-2">
                     <span className="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded">
@@ -188,7 +212,7 @@ export default function AdminPanel() {
 
                 {/* Feature Requests Card */}
                 <button
-                  onClick={() => setActiveView('features')}
+                  onClick={() => setActiveView("features")}
                   className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 text-left hover:bg-slate-800 hover:border-slate-600 transition-all group"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -197,7 +221,9 @@ export default function AdminPanel() {
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{featureStats?.total || 0}</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    {featureStats?.total || 0}
+                  </h3>
                   <p className="text-slate-400 text-sm">Feature Requests</p>
                   <div className="mt-2 flex gap-2">
                     <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">
@@ -208,7 +234,7 @@ export default function AdminPanel() {
 
                 {/* Audit Log Card */}
                 <button
-                  onClick={() => setActiveView('audit')}
+                  onClick={() => setActiveView("audit")}
                   className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 text-left hover:bg-slate-800 hover:border-slate-600 transition-all group"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -217,10 +243,14 @@ export default function AdminPanel() {
                     </div>
                     <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{auditLog.length}</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    {auditLog.length}
+                  </h3>
                   <p className="text-slate-400 text-sm">Audit Events</p>
                   <div className="mt-2">
-                    <span className="text-xs text-slate-500">Session activity log</span>
+                    <span className="text-xs text-slate-500">
+                      Session activity log
+                    </span>
                   </div>
                 </button>
 
@@ -231,11 +261,15 @@ export default function AdminPanel() {
                       <User className="w-6 h-6 text-green-400" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white truncate">{currentAdmin?.name}</h3>
-                  <p className="text-slate-400 text-sm truncate">{currentAdmin?.email}</p>
+                  <h3 className="text-lg font-bold text-white truncate">
+                    {currentAdmin?.name}
+                  </h3>
+                  <p className="text-slate-400 text-sm truncate">
+                    {currentAdmin?.email}
+                  </p>
                   <div className="mt-2">
                     <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded capitalize">
-                      {currentAdmin?.role?.replace('_', ' ')}
+                      {currentAdmin?.role?.replace("_", " ")}
                     </span>
                   </div>
                 </div>
@@ -249,14 +283,14 @@ export default function AdminPanel() {
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <button
-                    onClick={() => setActiveView('bugs')}
+                    onClick={() => setActiveView("bugs")}
                     className="flex flex-col items-center gap-2 p-4 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
                   >
                     <Bug className="w-6 h-6 text-red-400" />
                     <span className="text-sm text-white">View Bugs</span>
                   </button>
                   <button
-                    onClick={() => setActiveView('features')}
+                    onClick={() => setActiveView("features")}
                     className="flex flex-col items-center gap-2 p-4 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
                   >
                     <Lightbulb className="w-6 h-6 text-purple-400" />
@@ -270,7 +304,7 @@ export default function AdminPanel() {
                     <span className="text-sm text-white">Refresh Stats</span>
                   </button>
                   <button
-                    onClick={() => setActiveView('audit')}
+                    onClick={() => setActiveView("audit")}
                     className="flex flex-col items-center gap-2 p-4 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors"
                   >
                     <History className="w-6 h-6 text-amber-400" />
@@ -287,7 +321,9 @@ export default function AdminPanel() {
                 </h2>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {auditLog.length === 0 ? (
-                    <p className="text-slate-500 text-sm text-center py-4">No activity logged yet</p>
+                    <p className="text-slate-500 text-sm text-center py-4">
+                      No activity logged yet
+                    </p>
                   ) : (
                     auditLog.slice(0, 10).map((entry, idx) => (
                       <div
@@ -295,12 +331,19 @@ export default function AdminPanel() {
                         className="flex items-center justify-between py-2 px-3 bg-slate-700/30 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
-                          <span className={`w-2 h-2 rounded-full ${
-                            entry.event.includes('SUCCESS') ? 'bg-green-500' :
-                            entry.event.includes('FAILED') || entry.event.includes('LOCKED') ? 'bg-red-500' :
-                            'bg-blue-500'
-                          }`} />
-                          <span className="text-white text-sm">{entry.event}</span>
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              entry.event.includes("SUCCESS")
+                                ? "bg-green-500"
+                                : entry.event.includes("FAILED") ||
+                                    entry.event.includes("LOCKED")
+                                  ? "bg-red-500"
+                                  : "bg-blue-500"
+                            }`}
+                          />
+                          <span className="text-white text-sm">
+                            {entry.event}
+                          </span>
                         </div>
                         <span className="text-slate-500 text-xs">
                           {new Date(entry.timestamp).toLocaleTimeString()}
@@ -316,11 +359,13 @@ export default function AdminPanel() {
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-amber-400 font-medium text-sm">Security Reminder</p>
+                    <p className="text-amber-400 font-medium text-sm">
+                      Security Reminder
+                    </p>
                     <p className="text-amber-300/70 text-xs mt-1">
-                      You are accessing sensitive admin functions. All actions are logged.
-                      Session will automatically expire after 30 minutes of inactivity.
-                      Always logout when finished.
+                      You are accessing sensitive admin functions. All actions
+                      are logged. Session will automatically expire after 30
+                      minutes of inactivity. Always logout when finished.
                     </p>
                   </div>
                 </div>
@@ -329,7 +374,7 @@ export default function AdminPanel() {
           )}
 
           {/* Audit Log View */}
-          {activeView === 'audit' && (
+          {activeView === "audit" && (
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -337,7 +382,7 @@ export default function AdminPanel() {
                   Session Audit Log
                 </h2>
                 <button
-                  onClick={() => setActiveView('dashboard')}
+                  onClick={() => setActiveView("dashboard")}
                   className="text-slate-400 hover:text-white transition-colors"
                 >
                   ← Back to Dashboard
@@ -346,7 +391,9 @@ export default function AdminPanel() {
               <div className="p-6">
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                   {auditLog.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">No audit events recorded</p>
+                    <p className="text-slate-500 text-center py-8">
+                      No audit events recorded
+                    </p>
                   ) : (
                     auditLog.map((entry, idx) => (
                       <div
@@ -355,20 +402,30 @@ export default function AdminPanel() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                              entry.event.includes('SUCCESS') ? 'bg-green-500/20 text-green-400' :
-                              entry.event.includes('FAILED') || entry.event.includes('LOCKED') ? 'bg-red-500/20 text-red-400' :
-                              entry.event.includes('LOGOUT') ? 'bg-orange-500/20 text-orange-400' :
-                              'bg-blue-500/20 text-blue-400'
-                            }`}>
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                entry.event.includes("SUCCESS")
+                                  ? "bg-green-500/20 text-green-400"
+                                  : entry.event.includes("FAILED") ||
+                                      entry.event.includes("LOCKED")
+                                    ? "bg-red-500/20 text-red-400"
+                                    : entry.event.includes("LOGOUT")
+                                      ? "bg-orange-500/20 text-orange-400"
+                                      : "bg-blue-500/20 text-blue-400"
+                              }`}
+                            >
                               {entry.event}
                             </span>
                             {entry.adminId && (
-                              <span className="text-slate-500 text-xs">{entry.adminId}</span>
+                              <span className="text-slate-500 text-xs">
+                                {entry.adminId}
+                              </span>
                             )}
                           </div>
                           {entry.reason && (
-                            <p className="text-slate-400 text-xs mt-1">Reason: {entry.reason}</p>
+                            <p className="text-slate-400 text-xs mt-1">
+                              Reason: {entry.reason}
+                            </p>
                           )}
                         </div>
                         <span className="text-slate-500 text-xs whitespace-nowrap">

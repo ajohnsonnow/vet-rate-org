@@ -4,17 +4,17 @@
  * One-click solution for veterans
  */
 
-import { getToolRecommendation } from './llmRecommendations';
-import { isMobilePhone, isTabletDevice } from './persistentStorage';
-import { getAIStatus, isLocalAIReady } from './unifiedAIService';
+import { getToolRecommendation } from "./llmRecommendations";
+import { isMobilePhone, isTabletDevice } from "./persistentStorage";
+import { getAIStatus, isLocalAIReady } from "./unifiedAIService";
 
 /**
  * Get device type
  */
 export const getDeviceType = () => {
-  if (isMobilePhone()) return 'mobile';
-  if (isTabletDevice()) return 'tablet';
-  return 'desktop';
+  if (isMobilePhone()) return "mobile";
+  if (isTabletDevice()) return "tablet";
+  return "desktop";
 };
 
 /**
@@ -25,13 +25,13 @@ export const getDeviceType = () => {
 export const getRecommendedModelForDevice = (toolId) => {
   const deviceType = getDeviceType();
   const toolRec = getToolRecommendation(toolId);
-  
+
   if (!toolRec) {
     // Default fallback
     return {
-      id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-      name: 'CWO3 HAWKEYE (3B)',
-      reason: 'Balanced performance for general tasks'
+      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+      name: "CWO3 HAWKEYE (3B)",
+      reason: "Balanced performance for general tasks",
     };
   }
 
@@ -40,18 +40,18 @@ export const getRecommendedModelForDevice = (toolId) => {
   if (!primaryModel || !primaryModel.modelId) {
     // Fallback if primary doesn't have modelId
     return {
-      id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
-      name: 'CWO3 HAWKEYE (3B)',
-      reason: 'Balanced performance for general tasks'
+      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+      name: "CWO3 HAWKEYE (3B)",
+      reason: "Balanced performance for general tasks",
     };
   }
 
   // Mobile/Tablet: Still use the primary model but note the device context
-  if (deviceType === 'mobile' || deviceType === 'tablet') {
+  if (deviceType === "mobile" || deviceType === "tablet") {
     return {
       id: primaryModel.modelId,
       name: primaryModel.modelName || primaryModel.modelId,
-      reason: `Optimized for ${toolRec.name}: ${primaryModel.reason || 'Recommended model'}`
+      reason: `Optimized for ${toolRec.name}: ${primaryModel.reason || "Recommended model"}`,
     };
   }
 
@@ -59,7 +59,7 @@ export const getRecommendedModelForDevice = (toolId) => {
   return {
     id: primaryModel.modelId,
     name: primaryModel.modelName || primaryModel.modelId,
-    reason: `Recommended for ${toolRec.name}: ${primaryModel.reason || 'Best match'}`
+    reason: `Recommended for ${toolRec.name}: ${primaryModel.reason || "Best match"}`,
   };
 };
 
@@ -71,28 +71,28 @@ export const getRecommendedModelForDevice = (toolId) => {
 export const checkModelMatch = (toolId) => {
   const aiStatus = getAIStatus();
   const recommended = getRecommendedModelForDevice(toolId);
-  
+
   // No AI loaded
   if (!aiStatus.isLocal || !aiStatus.modelId) {
     return {
       isCorrect: false,
       currentModel: null,
       recommendedModel: recommended,
-      action: 'load',
-      message: `Load ${recommended.name} for this tool`
+      action: "load",
+      message: `Load ${recommended.name} for this tool`,
     };
   }
 
   // Check if current model matches recommendation
   const isMatch = aiStatus.modelId === recommended.id;
-  
+
   if (isMatch) {
     return {
       isCorrect: true,
       currentModel: aiStatus.modelId,
       recommendedModel: recommended,
-      action: 'none',
-      message: `✓ ${recommended.name} ready`
+      action: "none",
+      message: `✓ ${recommended.name} ready`,
     };
   }
 
@@ -101,8 +101,8 @@ export const checkModelMatch = (toolId) => {
     isCorrect: false,
     currentModel: aiStatus.modelId,
     recommendedModel: recommended,
-    action: 'switch',
-    message: `Switch to ${recommended.name} for better performance`
+    action: "switch",
+    message: `Switch to ${recommended.name} for better performance`,
   };
 };
 
@@ -124,28 +124,32 @@ export const smartLoadAI = async (toolId, onProgress = null) => {
     }
 
     // Need to unload current model first
-    if (check.action === 'switch') {
-      onProgress?.(10, 'Unloading current model...');
-      
-      const { unloadSwarm } = await import('./diamondSwarm');
+    if (check.action === "switch") {
+      onProgress?.(10, "Unloading current model...");
+
+      const { unloadSwarm } = await import("./diamondSwarm");
       await unloadSwarm();
-      
+
       // Wait a moment for cleanup
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     // Load recommended model
     onProgress?.(20, `Loading ${recommended.name}...`);
-    
-    const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } = 
-      await import('./diamondSwarm');
-    const { registerLocalAIEngine } = await import('./unifiedAIService');
-    
+
+    const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } =
+      await import("./diamondSwarm");
+    const { registerLocalAIEngine } = await import("./unifiedAIService");
+
     await initializeSwarm({
       modelId: recommended.id,
       onProgress: (report) => {
-        const progressValue = typeof report === 'object' ? (report.progress || 0) : (report || 0);
-        const textValue = typeof report === 'object' ? (report.message || 'Loading...') : 'Loading...';
+        const progressValue =
+          typeof report === "object" ? report.progress || 0 : report || 0;
+        const textValue =
+          typeof report === "object"
+            ? report.message || "Loading..."
+            : "Loading...";
         onProgress?.(progressValue, textValue);
       },
     });
@@ -162,11 +166,9 @@ export const smartLoadAI = async (toolId, onProgress = null) => {
 
     onProgress?.(100, `${recommended.name} ready!`);
     return true;
-
   } catch (err) {
-    console.error('Smart load failed:', err);
+    console.error("Smart load failed:", err);
     onProgress?.(-1, `Error: ${err.message}`);
     return false;
   }
 };
-

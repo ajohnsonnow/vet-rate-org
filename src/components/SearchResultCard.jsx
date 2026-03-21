@@ -1,7 +1,7 @@
-import React from 'react';
-import { PACTActBadge } from './PACTActIndicator';
-import StaleDataIndicator from './StaleDataIndicator';
-import { useLanguage } from '../contexts/LanguageContext';
+import React from "react";
+import { PACTActBadge } from "./PACTActIndicator";
+import StaleDataIndicator from "./StaleDataIndicator";
+import { useLanguage } from "../contexts/LanguageContext";
 
 function SearchResultCard({ result, onSelect, isSelected }) {
   const { t } = useLanguage();
@@ -10,8 +10,8 @@ function SearchResultCard({ result, onSelect, isSelected }) {
       onClick={onSelect}
       className={`w-full text-left border-2 rounded-lg p-5 transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-va-blue focus:ring-offset-2 ${
         isSelected
-          ? 'border-va-blue bg-green-50 dark:bg-green-900/30 shadow-md'
-          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-va-blue'
+          ? "border-va-blue bg-green-50 dark:bg-green-900/30 shadow-md"
+          : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-va-blue"
       }`}
       aria-pressed={isSelected}
       aria-label={`View details for ${result.conditionName}, diagnostic code ${result.diagnosticCode}`}
@@ -37,7 +37,9 @@ function SearchResultCard({ result, onSelect, isSelected }) {
 
       {result.aliases && result.aliases.length > 0 && (
         <div className="mb-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">Also known as:</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">
+            Also known as:
+          </p>
           <div className="flex flex-wrap gap-1">
             {result.aliases.slice(0, 2).map((alias, idx) => (
               <span

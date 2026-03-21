@@ -2,19 +2,20 @@
  * Vet-Rate.org - C-File PDF Text Extraction Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * Client-side PDF text extraction using pdf.js
  * Converts large PDF files to searchable text without uploading to servers
  */
 
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 // Configure pdf.js worker - use bundled worker from npm package for version compatibility
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Standard fonts CDN path (suppresses font warnings)
-const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/';
+const STANDARD_FONT_DATA_URL =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/standard_fonts/";
 
 /**
  * Extract text from a PDF file client-side
@@ -24,38 +25,38 @@ const STANDARD_FONT_DATA_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/
  */
 export async function ripTextFromPdf(fileData, onProgress = () => {}) {
   try {
-    const pdf = await pdfjsLib.getDocument({ 
-      data: fileData, 
-      standardFontDataUrl: STANDARD_FONT_DATA_URL 
+    const pdf = await pdfjsLib.getDocument({
+      data: fileData,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
     }).promise;
     const numPages = pdf.numPages;
     let fullText = "";
     let totalCharacters = 0;
-    
+
     // Loop through all pages
     for (let i = 1; i <= numPages; i++) {
       try {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        
+
         // Extract text items and join with proper spacing
         const pageText = textContent.items
-          .map(item => item.str)
-          .join(' ')
-          .replace(/\s+/g, ' ')
+          .map((item) => item.str)
+          .join(" ")
+          .replace(/\s+/g, " ")
           .trim();
-        
+
         totalCharacters += pageText.length;
-        
+
         // Add page marker for AI citation (CRITICAL for source tracking)
         fullText += `--- PAGE ${i} ---\n${pageText}\n\n`;
-        
+
         // Report progress
         onProgress(i, numPages);
-        
+
         // Yield to browser to prevent UI freezing on large files
         if (i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
       } catch (pageError) {
         console.warn(`Error extracting page ${i}:`, pageError);
@@ -63,20 +64,20 @@ export async function ripTextFromPdf(fileData, onProgress = () => {}) {
         onProgress(i, numPages);
       }
     }
-    
+
     // Determine if the PDF actually has text (vs scanned images)
     const avgCharsPerPage = totalCharacters / numPages;
     const hasText = avgCharsPerPage > 50; // If less than 50 chars/page, likely scanned images
-    
+
     return {
       text: fullText,
       pageCount: numPages,
       hasText,
       avgCharsPerPage: Math.round(avgCharsPerPage),
-      totalCharacters
+      totalCharacters,
     };
   } catch (error) {
-    console.error('PDF extraction error:', error);
+    console.error("PDF extraction error:", error);
     throw new Error(`Failed to read PDF: ${error.message}`);
   }
 }
@@ -90,7 +91,7 @@ export function readFileAsArrayBuffer(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsArrayBuffer(file);
   });
 }
@@ -101,10 +102,11 @@ export function readFileAsArrayBuffer(file) {
  * @returns {string}
  */
 export function formatFileSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  if (bytes < 1024 * 1024 * 1024)
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
 }
 
 /**
@@ -117,11 +119,9 @@ export function estimateProcessingTime(pageCount) {
   const extractionMinutes = Math.ceil((pageCount * 50) / 60000);
   const aiMinutes = Math.ceil(pageCount / 100);
   const totalMinutes = extractionMinutes + aiMinutes;
-  
-  if (totalMinutes < 1) return 'Less than 1 minute';
-  if (totalMinutes === 1) return 'About 1 minute';
+
+  if (totalMinutes < 1) return "Less than 1 minute";
+  if (totalMinutes === 1) return "About 1 minute";
   if (totalMinutes < 5) return `About ${totalMinutes} minutes`;
   return `${totalMinutes}-${totalMinutes + 2} minutes`;
 }
-
-

@@ -17,17 +17,17 @@
  * All data stays 100% on the veteran's device — never sent to servers.
  */
 
-import { markAsModified } from './persistentStorage';
+import { markAsModified } from "./persistentStorage";
 
 // ============================================================
 // DATABASE CONFIGURATION
 // ============================================================
 
-const PACKET_DB_NAME = 'VetRateMyPacket';
+const PACKET_DB_NAME = "VetRateMyPacket";
 const PACKET_DB_VERSION = 2; // Bump when schema changes
-const PACKET_STORE_NAME = 'documents';
-const PACKET_INDEX_STORE = 'document_index';
-const PACKET_META_KEY = 'vetrate_my_packet_meta';
+const PACKET_STORE_NAME = "documents";
+const PACKET_INDEX_STORE = "document_index";
+const PACKET_META_KEY = "vetrate_my_packet_meta";
 
 let packetDB = null;
 
@@ -50,7 +50,7 @@ const openPacketDB = () => {
     const request = indexedDB.open(PACKET_DB_NAME, PACKET_DB_VERSION);
 
     request.onerror = () => {
-      console.error('Failed to open My Packet database:', request.error);
+      console.error("Failed to open My Packet database:", request.error);
       reject(request.error);
     };
 
@@ -64,16 +64,24 @@ const openPacketDB = () => {
 
       // Main documents store
       if (!db.objectStoreNames.contains(PACKET_STORE_NAME)) {
-        const store = db.createObjectStore(PACKET_STORE_NAME, { keyPath: 'id' });
-        store.createIndex('classification', 'classification', { unique: false });
-        store.createIndex('uploadDate', 'uploadDate', { unique: false });
-        store.createIndex('fileName', 'fileName', { unique: false });
+        const store = db.createObjectStore(PACKET_STORE_NAME, {
+          keyPath: "id",
+        });
+        store.createIndex("classification", "classification", {
+          unique: false,
+        });
+        store.createIndex("uploadDate", "uploadDate", { unique: false });
+        store.createIndex("fileName", "fileName", { unique: false });
       }
 
       // Lightweight index store (for fast lookups without loading full text)
       if (!db.objectStoreNames.contains(PACKET_INDEX_STORE)) {
-        const indexStore = db.createObjectStore(PACKET_INDEX_STORE, { keyPath: 'id' });
-        indexStore.createIndex('classification', 'classification', { unique: false });
+        const indexStore = db.createObjectStore(PACKET_INDEX_STORE, {
+          keyPath: "id",
+        });
+        indexStore.createIndex("classification", "classification", {
+          unique: false,
+        });
       }
     };
   });
@@ -84,63 +92,63 @@ const openPacketDB = () => {
 // ============================================================
 
 export const PACKET_DOC_TYPES = {
-  DD214: 'DD214',
-  DD215: 'DD215',
-  NGB22: 'NGB22',
-  DD256: 'DD256',
-  DD257: 'DD257',
-  RATING_DECISION: 'RATING_DECISION',
-  CLAIM_LETTER: 'CLAIM_LETTER',
-  C_FILE: 'C_FILE',
-  BLUE_BUTTON: 'BLUE_BUTTON',
-  MEDICAL_RECORD: 'MEDICAL_RECORD',
-  DBQ: 'DBQ',
-  NEXUS_LETTER: 'NEXUS_LETTER',
-  PERSONAL_STATEMENT: 'PERSONAL_STATEMENT',
-  BUDDY_STATEMENT: 'BUDDY_STATEMENT',
-  VA_CORRESPONDENCE: 'VA_CORRESPONDENCE',
-  EXAM_REPORT: 'EXAM_REPORT',
-  OTHER: 'OTHER',
+  DD214: "DD214",
+  DD215: "DD215",
+  NGB22: "NGB22",
+  DD256: "DD256",
+  DD257: "DD257",
+  RATING_DECISION: "RATING_DECISION",
+  CLAIM_LETTER: "CLAIM_LETTER",
+  C_FILE: "C_FILE",
+  BLUE_BUTTON: "BLUE_BUTTON",
+  MEDICAL_RECORD: "MEDICAL_RECORD",
+  DBQ: "DBQ",
+  NEXUS_LETTER: "NEXUS_LETTER",
+  PERSONAL_STATEMENT: "PERSONAL_STATEMENT",
+  BUDDY_STATEMENT: "BUDDY_STATEMENT",
+  VA_CORRESPONDENCE: "VA_CORRESPONDENCE",
+  EXAM_REPORT: "EXAM_REPORT",
+  OTHER: "OTHER",
 };
 
 export const PACKET_DOC_LABELS = {
-  [PACKET_DOC_TYPES.DD214]: 'DD-214 (Service Record)',
-  [PACKET_DOC_TYPES.DD215]: 'DD-215 (Correction to DD-214)',
-  [PACKET_DOC_TYPES.NGB22]: 'NGB-22 (Guard Service Record)',
-  [PACKET_DOC_TYPES.DD256]: 'DD-256 (Reserve Discharge)',
-  [PACKET_DOC_TYPES.DD257]: 'DD-257 (Reserve General Discharge)',
-  [PACKET_DOC_TYPES.RATING_DECISION]: 'VA Rating Decision',
-  [PACKET_DOC_TYPES.CLAIM_LETTER]: 'VA Claim Letter',
-  [PACKET_DOC_TYPES.C_FILE]: 'C-File (Claims File)',
-  [PACKET_DOC_TYPES.BLUE_BUTTON]: 'VA Blue Button Report',
-  [PACKET_DOC_TYPES.MEDICAL_RECORD]: 'Medical Record',
-  [PACKET_DOC_TYPES.DBQ]: 'DBQ (Disability Benefits Questionnaire)',
-  [PACKET_DOC_TYPES.NEXUS_LETTER]: 'Nexus Letter',
-  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: 'Personal Statement',
-  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: 'Buddy Statement',
-  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: 'VA Correspondence',
-  [PACKET_DOC_TYPES.EXAM_REPORT]: 'C&P Exam Report',
-  [PACKET_DOC_TYPES.OTHER]: 'Other Document',
+  [PACKET_DOC_TYPES.DD214]: "DD-214 (Service Record)",
+  [PACKET_DOC_TYPES.DD215]: "DD-215 (Correction to DD-214)",
+  [PACKET_DOC_TYPES.NGB22]: "NGB-22 (Guard Service Record)",
+  [PACKET_DOC_TYPES.DD256]: "DD-256 (Reserve Discharge)",
+  [PACKET_DOC_TYPES.DD257]: "DD-257 (Reserve General Discharge)",
+  [PACKET_DOC_TYPES.RATING_DECISION]: "VA Rating Decision",
+  [PACKET_DOC_TYPES.CLAIM_LETTER]: "VA Claim Letter",
+  [PACKET_DOC_TYPES.C_FILE]: "C-File (Claims File)",
+  [PACKET_DOC_TYPES.BLUE_BUTTON]: "VA Blue Button Report",
+  [PACKET_DOC_TYPES.MEDICAL_RECORD]: "Medical Record",
+  [PACKET_DOC_TYPES.DBQ]: "DBQ (Disability Benefits Questionnaire)",
+  [PACKET_DOC_TYPES.NEXUS_LETTER]: "Nexus Letter",
+  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: "Personal Statement",
+  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: "Buddy Statement",
+  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: "VA Correspondence",
+  [PACKET_DOC_TYPES.EXAM_REPORT]: "C&P Exam Report",
+  [PACKET_DOC_TYPES.OTHER]: "Other Document",
 };
 
 export const PACKET_DOC_ICONS = {
-  [PACKET_DOC_TYPES.DD214]: '🎖️',
-  [PACKET_DOC_TYPES.DD215]: '📝',
-  [PACKET_DOC_TYPES.NGB22]: '🏛️',
-  [PACKET_DOC_TYPES.DD256]: '📜',
-  [PACKET_DOC_TYPES.DD257]: '📜',
-  [PACKET_DOC_TYPES.RATING_DECISION]: '⚖️',
-  [PACKET_DOC_TYPES.CLAIM_LETTER]: '📬',
-  [PACKET_DOC_TYPES.C_FILE]: '📋',
-  [PACKET_DOC_TYPES.BLUE_BUTTON]: '💊',
-  [PACKET_DOC_TYPES.MEDICAL_RECORD]: '🏥',
-  [PACKET_DOC_TYPES.DBQ]: '📊',
-  [PACKET_DOC_TYPES.NEXUS_LETTER]: '🔗',
-  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: '✍️',
-  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: '🤝',
-  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: '📮',
-  [PACKET_DOC_TYPES.EXAM_REPORT]: '🩺',
-  [PACKET_DOC_TYPES.OTHER]: '📄',
+  [PACKET_DOC_TYPES.DD214]: "🎖️",
+  [PACKET_DOC_TYPES.DD215]: "📝",
+  [PACKET_DOC_TYPES.NGB22]: "🏛️",
+  [PACKET_DOC_TYPES.DD256]: "📜",
+  [PACKET_DOC_TYPES.DD257]: "📜",
+  [PACKET_DOC_TYPES.RATING_DECISION]: "⚖️",
+  [PACKET_DOC_TYPES.CLAIM_LETTER]: "📬",
+  [PACKET_DOC_TYPES.C_FILE]: "📋",
+  [PACKET_DOC_TYPES.BLUE_BUTTON]: "💊",
+  [PACKET_DOC_TYPES.MEDICAL_RECORD]: "🏥",
+  [PACKET_DOC_TYPES.DBQ]: "📊",
+  [PACKET_DOC_TYPES.NEXUS_LETTER]: "🔗",
+  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: "✍️",
+  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: "🤝",
+  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: "📮",
+  [PACKET_DOC_TYPES.EXAM_REPORT]: "🩺",
+  [PACKET_DOC_TYPES.OTHER]: "📄",
 };
 
 // ============================================================
@@ -170,13 +178,13 @@ export const saveDocumentToPacket = async (doc) => {
 
     const document = {
       id,
-      fileName: sanitize(doc.fileName || 'Unknown Document', 500),
+      fileName: sanitize(doc.fileName || "Unknown Document", 500),
       classification: doc.classification || PACKET_DOC_TYPES.OTHER,
       uploadDate: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
 
       // The raw text — this is what AI tools can re-read at any time
-      rawText: doc.rawText || '',
+      rawText: doc.rawText || "",
 
       // Structured extracted data — differs by document type
       extractedData: doc.extractedData || {},
@@ -188,9 +196,9 @@ export const saveDocumentToPacket = async (doc) => {
       metadata: {
         pageCount: doc.pageCount || 1,
         fileSize: doc.fileSize || 0,
-        ocrMethod: doc.ocrMethod || 'unknown',
+        ocrMethod: doc.ocrMethod || "unknown",
         ocrConfidence: doc.ocrConfidence || 0,
-        fileType: doc.fileType || 'pdf',
+        fileType: doc.fileType || "pdf",
         processingTime: doc.processingTime || 0,
       },
 
@@ -200,13 +208,16 @@ export const saveDocumentToPacket = async (doc) => {
 
       // Tags for organization
       tags: doc.tags || [],
-      notes: sanitize(doc.notes || '', 5000),
+      notes: sanitize(doc.notes || "", 5000),
     };
 
     // Save the full document to IndexedDB
     await new Promise((resolve, reject) => {
-      const tx = db.transaction([PACKET_STORE_NAME, PACKET_INDEX_STORE], 'readwrite');
-      
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
+
       // Save full document
       tx.objectStore(PACKET_STORE_NAME).put(document);
 
@@ -236,9 +247,8 @@ export const saveDocumentToPacket = async (doc) => {
 
     console.log(`📁 Saved to My Packet: ${document.fileName} (${id})`);
     return { success: true, documentId: id };
-
   } catch (error) {
-    console.error('Failed to save document to My Packet:', error);
+    console.error("Failed to save document to My Packet:", error);
     return { success: false, error: error.message };
   }
 };
@@ -250,13 +260,13 @@ export const getPacketDocument = async (documentId) => {
   try {
     const db = await openPacketDB();
     return new Promise((resolve) => {
-      const tx = db.transaction([PACKET_STORE_NAME], 'readonly');
+      const tx = db.transaction([PACKET_STORE_NAME], "readonly");
       const request = tx.objectStore(PACKET_STORE_NAME).get(documentId);
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => resolve(null);
     });
   } catch (error) {
-    console.error('Failed to get packet document:', error);
+    console.error("Failed to get packet document:", error);
     return null;
   }
 };
@@ -269,7 +279,7 @@ export const getPacketIndex = async () => {
   try {
     const db = await openPacketDB();
     return new Promise((resolve) => {
-      const tx = db.transaction([PACKET_INDEX_STORE], 'readonly');
+      const tx = db.transaction([PACKET_INDEX_STORE], "readonly");
       const request = tx.objectStore(PACKET_INDEX_STORE).getAll();
       request.onsuccess = () => {
         const results = request.result || [];
@@ -280,7 +290,7 @@ export const getPacketIndex = async () => {
       request.onerror = () => resolve([]);
     });
   } catch (error) {
-    console.error('Failed to get packet index:', error);
+    console.error("Failed to get packet index:", error);
     return [];
   }
 };
@@ -292,14 +302,14 @@ export const getPacketDocumentsByType = async (classification) => {
   try {
     const db = await openPacketDB();
     return new Promise((resolve) => {
-      const tx = db.transaction([PACKET_INDEX_STORE], 'readonly');
-      const index = tx.objectStore(PACKET_INDEX_STORE).index('classification');
+      const tx = db.transaction([PACKET_INDEX_STORE], "readonly");
+      const index = tx.objectStore(PACKET_INDEX_STORE).index("classification");
       const request = index.getAll(classification);
       request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => resolve([]);
     });
   } catch (error) {
-    console.error('Failed to get documents by type:', error);
+    console.error("Failed to get documents by type:", error);
     return [];
   }
 };
@@ -311,13 +321,13 @@ export const getAllPacketDocuments = async () => {
   try {
     const db = await openPacketDB();
     return new Promise((resolve) => {
-      const tx = db.transaction([PACKET_STORE_NAME], 'readonly');
+      const tx = db.transaction([PACKET_STORE_NAME], "readonly");
       const request = tx.objectStore(PACKET_STORE_NAME).getAll();
       request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => resolve([]);
     });
   } catch (error) {
-    console.error('Failed to get all packet documents:', error);
+    console.error("Failed to get all packet documents:", error);
     return [];
   }
 };
@@ -328,7 +338,7 @@ export const getAllPacketDocuments = async () => {
 export const updatePacketDocument = async (documentId, updates) => {
   try {
     const existing = await getPacketDocument(documentId);
-    if (!existing) return { success: false, error: 'Document not found' };
+    if (!existing) return { success: false, error: "Document not found" };
 
     const updated = {
       ...existing,
@@ -340,7 +350,10 @@ export const updatePacketDocument = async (documentId, updates) => {
 
     const db = await openPacketDB();
     await new Promise((resolve, reject) => {
-      const tx = db.transaction([PACKET_STORE_NAME, PACKET_INDEX_STORE], 'readwrite');
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
       tx.objectStore(PACKET_STORE_NAME).put(updated);
 
       // Update index too
@@ -366,9 +379,8 @@ export const updatePacketDocument = async (documentId, updates) => {
     await updatePacketMetadata();
     markAsModified();
     return { success: true };
-
   } catch (error) {
-    console.error('Failed to update packet document:', error);
+    console.error("Failed to update packet document:", error);
     return { success: false, error: error.message };
   }
 };
@@ -380,7 +392,10 @@ export const deletePacketDocument = async (documentId) => {
   try {
     const db = await openPacketDB();
     await new Promise((resolve, reject) => {
-      const tx = db.transaction([PACKET_STORE_NAME, PACKET_INDEX_STORE], 'readwrite');
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
       tx.objectStore(PACKET_STORE_NAME).delete(documentId);
       tx.objectStore(PACKET_INDEX_STORE).delete(documentId);
       tx.oncomplete = () => resolve();
@@ -390,9 +405,8 @@ export const deletePacketDocument = async (documentId) => {
     await updatePacketMetadata();
     markAsModified();
     return { success: true };
-
   } catch (error) {
-    console.error('Failed to delete packet document:', error);
+    console.error("Failed to delete packet document:", error);
     return { success: false, error: error.message };
   }
 };
@@ -422,16 +436,22 @@ export const searchPacketDocuments = async (query, options = {}) => {
 
     for (const doc of allDocs) {
       // Filter by classification if specified
-      if (options.classification && doc.classification !== options.classification) continue;
+      if (
+        options.classification &&
+        doc.classification !== options.classification
+      )
+        continue;
 
-      const rawText = options.caseSensitive ? doc.rawText : (doc.rawText || '').toLowerCase();
+      const rawText = options.caseSensitive
+        ? doc.rawText
+        : (doc.rawText || "").toLowerCase();
       const matchIndex = rawText.indexOf(searchText);
 
       if (matchIndex !== -1) {
         // Extract a snippet around the match
         const start = Math.max(0, matchIndex - 100);
         const end = Math.min(rawText.length, matchIndex + query.length + 100);
-        const snippet = (doc.rawText || '').substring(start, end);
+        const snippet = (doc.rawText || "").substring(start, end);
 
         results.push({
           id: doc.id,
@@ -445,9 +465,8 @@ export const searchPacketDocuments = async (query, options = {}) => {
     }
 
     return results;
-
   } catch (error) {
-    console.error('Failed to search packet documents:', error);
+    console.error("Failed to search packet documents:", error);
     return [];
   }
 };
@@ -458,7 +477,7 @@ export const searchPacketDocuments = async (query, options = {}) => {
  */
 export const getDocumentRawText = async (documentId) => {
   const doc = await getPacketDocument(documentId);
-  return doc?.rawText || '';
+  return doc?.rawText || "";
 };
 
 /**
@@ -485,31 +504,38 @@ export const getAllDocumentText = async (options = {}) => {
 
     // Filter by type if specified
     if (options.types) {
-      const typeArray = Array.isArray(options.types) ? options.types : [options.types];
-      filteredDocs = allDocs.filter(d => typeArray.includes(d.classification));
+      const typeArray = Array.isArray(options.types)
+        ? options.types
+        : [options.types];
+      filteredDocs = allDocs.filter((d) =>
+        typeArray.includes(d.classification),
+      );
     }
 
     // Sort by upload date (oldest first for chronological context)
-    filteredDocs.sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
+    filteredDocs.sort(
+      (a, b) => new Date(a.uploadDate) - new Date(b.uploadDate),
+    );
 
-    let combinedText = '';
+    let combinedText = "";
     for (const doc of filteredDocs) {
       const label = PACKET_DOC_LABELS[doc.classification] || doc.classification;
-      const header = `\n=== ${label}: ${doc.fileName} (${doc.uploadDate.split('T')[0]}) ===\n`;
-      combinedText += header + (doc.rawText || '') + '\n\n';
+      const header = `\n=== ${label}: ${doc.fileName} (${doc.uploadDate.split("T")[0]}) ===\n`;
+      combinedText += header + (doc.rawText || "") + "\n\n";
 
       // Check size limit
       if (options.maxChars && combinedText.length > options.maxChars) {
         combinedText = combinedText.substring(0, options.maxChars);
-        combinedText += '\n\n[... DOCUMENT TEXT TRUNCATED FOR AI PROCESSING ...]\n';
+        combinedText +=
+          "\n\n[... DOCUMENT TEXT TRUNCATED FOR AI PROCESSING ...]\n";
         break;
       }
     }
 
     return combinedText;
   } catch (error) {
-    console.error('Failed to get all document text:', error);
-    return '';
+    console.error("Failed to get all document text:", error);
+    return "";
   }
 };
 
@@ -572,8 +598,16 @@ export const getAllExtractedData = async () => {
 
     return data;
   } catch (error) {
-    console.error('Failed to get all extracted data:', error);
-    return { dd214s: [], claimLetters: [], ratingDecisions: [], medicalRecords: [], blueButton: [], cFiles: [], other: [] };
+    console.error("Failed to get all extracted data:", error);
+    return {
+      dd214s: [],
+      claimLetters: [],
+      ratingDecisions: [],
+      medicalRecords: [],
+      blueButton: [],
+      cFiles: [],
+      other: [],
+    };
   }
 };
 
@@ -595,13 +629,14 @@ const updatePacketMetadata = async () => {
     };
 
     for (const doc of index) {
-      meta.byType[doc.classification] = (meta.byType[doc.classification] || 0) + 1;
+      meta.byType[doc.classification] =
+        (meta.byType[doc.classification] || 0) + 1;
       meta.totalSize += doc.fileSize || 0;
     }
 
     localStorage.setItem(PACKET_META_KEY, JSON.stringify(meta));
   } catch (error) {
-    console.error('Failed to update packet metadata:', error);
+    console.error("Failed to update packet metadata:", error);
   }
 };
 
@@ -646,21 +681,23 @@ export const exportPacket = async () => {
     const allDocs = await getAllPacketDocuments();
     const exportData = {
       exportDate: new Date().toISOString(),
-      version: '1.0',
+      version: "1.0",
       documentCount: allDocs.length,
       documents: allDocs,
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `vetrate-my-packet-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `vetrate-my-packet-${new Date().toISOString().split("T")[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
     return { success: true, documentCount: allDocs.length };
   } catch (error) {
-    console.error('Failed to export packet:', error);
+    console.error("Failed to export packet:", error);
     return { success: false, error: error.message };
   }
 };
@@ -668,18 +705,18 @@ export const exportPacket = async () => {
 /**
  * Import documents from a packet backup file
  */
-export const importPacket = async (jsonData, mode = 'merge') => {
+export const importPacket = async (jsonData, mode = "merge") => {
   try {
-    const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+    const data = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
     if (!data.documents || !Array.isArray(data.documents)) {
-      return { success: false, error: 'Invalid packet backup file' };
+      return { success: false, error: "Invalid packet backup file" };
     }
 
     let imported = 0;
     let skipped = 0;
 
     for (const doc of data.documents) {
-      if (mode === 'merge') {
+      if (mode === "merge") {
         // Check if document already exists
         const existing = await getPacketDocument(doc.id);
         if (existing) {
@@ -690,7 +727,10 @@ export const importPacket = async (jsonData, mode = 'merge') => {
 
       const db = await openPacketDB();
       await new Promise((resolve, reject) => {
-        const tx = db.transaction([PACKET_STORE_NAME, PACKET_INDEX_STORE], 'readwrite');
+        const tx = db.transaction(
+          [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+          "readwrite",
+        );
         tx.objectStore(PACKET_STORE_NAME).put(doc);
         tx.objectStore(PACKET_INDEX_STORE).put({
           id: doc.id,
@@ -715,9 +755,8 @@ export const importPacket = async (jsonData, mode = 'merge') => {
     await updatePacketMetadata();
     markAsModified();
     return { success: true, imported, skipped };
-
   } catch (error) {
-    console.error('Failed to import packet:', error);
+    console.error("Failed to import packet:", error);
     return { success: false, error: error.message };
   }
 };
@@ -729,7 +768,10 @@ export const clearPacket = async () => {
   try {
     const db = await openPacketDB();
     await new Promise((resolve, reject) => {
-      const tx = db.transaction([PACKET_STORE_NAME, PACKET_INDEX_STORE], 'readwrite');
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
       tx.objectStore(PACKET_STORE_NAME).clear();
       tx.objectStore(PACKET_INDEX_STORE).clear();
       tx.oncomplete = () => resolve();
@@ -740,7 +782,7 @@ export const clearPacket = async () => {
     markAsModified();
     return { success: true };
   } catch (error) {
-    console.error('Failed to clear packet:', error);
+    console.error("Failed to clear packet:", error);
     return { success: false, error: error.message };
   }
 };
@@ -763,22 +805,27 @@ export const clearPacket = async () => {
 export const generatePacketContext = async (options = {}) => {
   try {
     const allDocs = await getAllPacketDocuments();
-    if (allDocs.length === 0) return '';
+    if (allDocs.length === 0) return "";
 
     const maxChars = (options.maxTokens || 4000) * 2;
-    let context = '=== MY PACKET: VETERAN DOCUMENT SUMMARY ===\n\n';
+    let context = "=== MY PACKET: VETERAN DOCUMENT SUMMARY ===\n\n";
     context += `Documents on file: ${allDocs.length}\n\n`;
 
     // Group by type
     const grouped = {};
     for (const doc of allDocs) {
-      if (options.types && !options.types.includes(doc.classification)) continue;
+      if (options.types && !options.types.includes(doc.classification))
+        continue;
       if (!grouped[doc.classification]) grouped[doc.classification] = [];
       grouped[doc.classification].push(doc);
     }
 
     // DD214s first (most important for claims)
-    const serviceRecordTypes = [PACKET_DOC_TYPES.DD214, PACKET_DOC_TYPES.NGB22, PACKET_DOC_TYPES.DD256];
+    const serviceRecordTypes = [
+      PACKET_DOC_TYPES.DD214,
+      PACKET_DOC_TYPES.NGB22,
+      PACKET_DOC_TYPES.DD256,
+    ];
     for (const type of serviceRecordTypes) {
       if (!grouped[type]) continue;
       const label = PACKET_DOC_LABELS[type];
@@ -791,24 +838,28 @@ export const generatePacketContext = async (options = {}) => {
           if (data.fullName) context += `  Name: ${data.fullName}\n`;
           if (data.branch) context += `  Branch: ${data.branch}\n`;
           if (data.component) context += `  Component: ${data.component}\n`;
-          if (data.rank) context += `  Rank: ${data.rank} (${data.payGrade || ''})\n`;
-          if (data.mos) context += `  MOS: ${data.mos} - ${data.mosTitle || ''}\n`;
+          if (data.rank)
+            context += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
+          if (data.mos)
+            context += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
           if (data.entryDate) context += `  Entry: ${data.entryDate}\n`;
-          if (data.separationDate) context += `  Separation: ${data.separationDate}\n`;
-          if (data.characterOfService) context += `  Character: ${data.characterOfService}\n`;
+          if (data.separationDate)
+            context += `  Separation: ${data.separationDate}\n`;
+          if (data.characterOfService)
+            context += `  Character: ${data.characterOfService}\n`;
           if (data.awards?.length) {
-            context += `  Awards: ${data.awards.map(a => a.name || a).join('; ')}\n`;
+            context += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
           }
           if (data.combatService?.hasVerifiedCombat) {
-            context += `  Combat: YES (${data.combatService.indicators?.join(', ') || 'verified'})\n`;
+            context += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
           }
           if (data.deployments?.length) {
-            context += `  Deployments: ${data.deployments.map(d => `${d.location || d.operation || ''} ${d.startDate || ''}-${d.endDate || ''}`).join('; ')}\n`;
+            context += `  Deployments: ${data.deployments.map((d) => `${d.location || d.operation || ""} ${d.startDate || ""}-${d.endDate || ""}`).join("; ")}\n`;
           }
           if (data.specialQualifications?.length) {
-            context += `  Qualifications: ${data.specialQualifications.join(', ')}\n`;
+            context += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
           }
-          context += '\n';
+          context += "\n";
         } else if (options.includeRawText && doc.rawText) {
           context += `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
         }
@@ -819,28 +870,27 @@ export const generatePacketContext = async (options = {}) => {
     // Other document types
     for (const [type, docs] of Object.entries(grouped)) {
       const label = PACKET_DOC_LABELS[type] || type;
-      context += `--- ${label} (${docs.length} document${docs.length > 1 ? 's' : ''}) ---\n`;
+      context += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
       for (const doc of docs) {
-        context += `  ${doc.fileName} (${doc.uploadDate.split('T')[0]})\n`;
+        context += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
         if (doc.extractedData && Object.keys(doc.extractedData).length > 0) {
           const summary = JSON.stringify(doc.extractedData).substring(0, 500);
           context += `  Data: ${summary}\n`;
         }
       }
-      context += '\n';
+      context += "\n";
     }
 
     // Trim to max size
     if (context.length > maxChars) {
-      context = context.substring(0, maxChars) + '\n[... TRUNCATED ...]\n';
+      context = context.substring(0, maxChars) + "\n[... TRUNCATED ...]\n";
     }
 
-    context += '=== END MY PACKET ===\n';
+    context += "=== END MY PACKET ===\n";
     return context;
-
   } catch (error) {
-    console.error('Failed to generate packet context:', error);
-    return '';
+    console.error("Failed to generate packet context:", error);
+    return "";
   }
 };
 
@@ -852,12 +902,12 @@ export const generatePacketContext = async (options = {}) => {
  * Simple string sanitizer
  */
 function sanitize(str, maxLength = 500) {
-  if (typeof str !== 'string') return '';
+  if (typeof str !== "string") return "";
   let s = str.slice(0, maxLength);
-  s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  s = s.replace(/on\w+\s*=/gi, '');
-  s = s.replace(/javascript:/gi, '');
-  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  s = s.replace(/on\w+\s*=/gi, "");
+  s = s.replace(/javascript:/gi, "");
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
   return s.trim();
 }
 

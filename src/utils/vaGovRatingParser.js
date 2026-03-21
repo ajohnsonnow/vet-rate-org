@@ -1,19 +1,19 @@
 /**
  * VA.gov Rating Parser
  * Parses rating data copied directly from va.gov/disability/view-disability-rating/rating
- * 
+ *
  * Handles full page copy (CTRL+A, CTRL+C, CTRL+V) including:
  * - Combined disability rating
  * - Service-connected ratings with percentages
  * - Non-service-connected conditions (parsed separately)
  * - Effective dates
  * - Website navigation/chrome (automatically filtered out)
- * 
+ *
  * Expected format:
  * "Your combined disability rating is 80%"
  * "20% rating for radiculopathy, left lower extremity (femoral)"
  * "Effective date: September 15, 2023"
- * 
+ *
  * Also handles simpler formats:
  * "PTSD 50%"
  * "Tinnitus - 10%"
@@ -25,48 +25,59 @@
  * @returns {Object} Object with combinedRating, serviceConnected, notServiceConnected arrays
  */
 export function parseVAGovRatings(text) {
-  if (!text || typeof text !== 'string') {
-    return { combinedRating: null, serviceConnected: [], notServiceConnected: [] };
+  if (!text || typeof text !== "string") {
+    return {
+      combinedRating: null,
+      serviceConnected: [],
+      notServiceConnected: [],
+    };
   }
 
   // Extract combined rating directly from text
   const combinedRating = extractCombinedRating(text);
-  
+
   // Find the service-connected section
-  const serviceConnectedMatch = text.match(/Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is);
-  
+  const serviceConnectedMatch = text.match(
+    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is,
+  );
+
   const serviceConnected = [];
-  
+
   if (serviceConnectedMatch && serviceConnectedMatch[1]) {
     const serviceConnectedText = serviceConnectedMatch[1];
-    
+
     // Find all rating patterns: "X% rating for [condition]"
     // Improved regex to handle newlines and effective dates better
     const ratingPattern = /(\d+)%\s+rating\s+for\s+([^\n\r]+?)(?=\s*\n|$)/gi;
     let match;
-    
+
     while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
       const rating = parseInt(match[1], 10);
       let condition = match[2].trim();
-      
+
       // Clean up condition name - remove any trailing punctuation or dates
       condition = condition
-        .replace(/\s*Effective\s+date:.*$/i, '') // Remove effective date if captured
-        .replace(/\(previously rated as .+?\)/gi, '') // Remove "previously rated as" text
-        .replace(/\(claimed as .+?\)/gi, '') // Remove "claimed as" text  
+        .replace(/\s*Effective\s+date:.*$/i, "") // Remove effective date if captured
+        .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
+        .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
         .trim();
-      
+
       // Skip if condition name is empty or too short
       if (!condition || condition.length < 2) {
         continue;
       }
-      
+
       // Try to find effective date on the next line
       const effectiveDateMatch = serviceConnectedText
-        .substring(match.index + match[0].length, match.index + match[0].length + 200)
+        .substring(
+          match.index + match[0].length,
+          match.index + match[0].length + 200,
+        )
         .match(/Effective\s+date:\s*([^\n]+)/i);
-      const effectiveDate = effectiveDateMatch ? parseDate(effectiveDateMatch[1].trim()) : null;
-      
+      const effectiveDate = effectiveDateMatch
+        ? parseDate(effectiveDateMatch[1].trim())
+        : null;
+
       serviceConnected.push({
         rating,
         condition,
@@ -75,24 +86,27 @@ export function parseVAGovRatings(text) {
       });
     }
   }
-  
+
   // Find the non-service-connected section
-  const notServiceConnectedMatch = text.match(/Conditions?\s+VA\s+determined\s+aren't\s+service-connected(.*?)(?:Learn\s+about\s+VA\s+disability|Need\s+help\?|Feedback|Veteran\s+programs|$)/is);
-  
+  const notServiceConnectedMatch = text.match(
+    /Conditions?\s+VA\s+determined\s+aren't\s+service-connected(.*?)(?:Learn\s+about\s+VA\s+disability|Need\s+help\?|Feedback|Veteran\s+programs|$)/is,
+  );
+
   const notServiceConnected = [];
-  
+
   if (notServiceConnectedMatch && notServiceConnectedMatch[1]) {
     const notServiceConnectedText = notServiceConnectedMatch[1];
-    const lines = notServiceConnectedText.split('\n')
-      .map(line => line.trim())
-      .filter(line => {
+    const lines = notServiceConnectedText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => {
         // Filter out empty lines and navigation/chrome
         if (line.length < 3 || line.length > 200) return false;
         if (isNavigationOrChrome(line)) return false;
         return true;
       });
-    
-    lines.forEach(line => {
+
+    lines.forEach((line) => {
       if (line) {
         notServiceConnected.push({
           rating: null,
@@ -105,9 +119,12 @@ export function parseVAGovRatings(text) {
     });
   }
 
-  console.log('Parser: Combined rating:', combinedRating);
-  console.log('Parser: Service-connected found:', serviceConnected.length);
-  console.log('Parser: Not service-connected found:', notServiceConnected.length);
+  console.log("Parser: Combined rating:", combinedRating);
+  console.log("Parser: Service-connected found:", serviceConnected.length);
+  console.log(
+    "Parser: Not service-connected found:",
+    notServiceConnected.length,
+  );
 
   return {
     combinedRating,
@@ -122,7 +139,9 @@ export function parseVAGovRatings(text) {
  * @returns {number|null} Combined rating percentage or null
  */
 function extractCombinedRating(text) {
-  const match = text.match(/Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i);
+  const match = text.match(
+    /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i,
+  );
   return match ? parseInt(match[1], 10) : null;
 }
 
@@ -205,8 +224,8 @@ function isNavigationOrChrome(line) {
     /^Your\s+VA\s+welcome\s+kit/i,
     /^Feedback$/i,
   ];
-  
-  return chromePatterns.some(pattern => pattern.test(line));
+
+  return chromePatterns.some((pattern) => pattern.test(line));
 }
 
 /**
@@ -220,7 +239,7 @@ function parseDate(dateStr) {
     if (isNaN(date.getTime())) {
       return null;
     }
-    return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+    return date.toISOString().split("T")[0]; // Return YYYY-MM-DD format
   } catch (e) {
     return null;
   }
@@ -232,27 +251,29 @@ function parseDate(dateStr) {
  * @returns {Array} Cleaned and validated ratings
  */
 export function validateParsedRatings(ratings) {
-  return ratings.filter(r => {
-    // Must have a condition name
-    if (!r.condition || r.condition.length < 2) {
-      return false;
-    }
-    
-    // If rating is present, must be valid (0-100)
-    if (r.rating !== null && (r.rating < 0 || r.rating > 100)) {
-      return false;
-    }
-    
-    return true;
-  }).map(r => ({
-    ...r,
-    // Clean up condition name
-    condition: r.condition
-      .replace(/\s+/g, ' ')
-      .replace(/\(previously rated as .+?\)/gi, '') // Remove "previously rated as" text
-      .replace(/\(claimed as .+?\)/gi, '') // Remove "claimed as" text
-      .trim(),
-  }));
+  return ratings
+    .filter((r) => {
+      // Must have a condition name
+      if (!r.condition || r.condition.length < 2) {
+        return false;
+      }
+
+      // If rating is present, must be valid (0-100)
+      if (r.rating !== null && (r.rating < 0 || r.rating > 100)) {
+        return false;
+      }
+
+      return true;
+    })
+    .map((r) => ({
+      ...r,
+      // Clean up condition name
+      condition: r.condition
+        .replace(/\s+/g, " ")
+        .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
+        .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
+        .trim(),
+    }));
 }
 
 /**
@@ -265,11 +286,11 @@ export function formatParsedRatings(parseResult) {
   if (Array.isArray(parseResult)) {
     const ratings = parseResult;
     if (ratings.length === 0) {
-      return 'No ratings found in pasted text.';
+      return "No ratings found in pasted text.";
     }
 
-    let text = `Found ${ratings.length} rating${ratings.length === 1 ? '' : 's'}:\n\n`;
-    
+    let text = `Found ${ratings.length} rating${ratings.length === 1 ? "" : "s"}:\n\n`;
+
     ratings.forEach((r, i) => {
       text += `${i + 1}. ${r.condition}`;
       if (r.rating !== null) {
@@ -280,7 +301,7 @@ export function formatParsedRatings(parseResult) {
       if (r.effectiveDate) {
         text += ` (Effective: ${new Date(r.effectiveDate).toLocaleDateString()})`;
       }
-      text += '\n';
+      text += "\n";
     });
 
     return text;
@@ -288,22 +309,22 @@ export function formatParsedRatings(parseResult) {
 
   // New object format
   const { combinedRating, serviceConnected, notServiceConnected } = parseResult;
-  
+
   if (serviceConnected.length === 0 && notServiceConnected.length === 0) {
-    return 'No ratings found in pasted text.';
+    return "No ratings found in pasted text.";
   }
 
-  let text = '';
-  
+  let text = "";
+
   // Show combined rating if found
   if (combinedRating !== null) {
     text += `✓ Combined VA Disability Rating: ${combinedRating}%\n\n`;
   }
-  
+
   // Show service-connected ratings
   if (serviceConnected.length > 0) {
-    text += `Found ${serviceConnected.length} service-connected rating${serviceConnected.length === 1 ? '' : 's'}:\n\n`;
-    
+    text += `Found ${serviceConnected.length} service-connected rating${serviceConnected.length === 1 ? "" : "s"}:\n\n`;
+
     serviceConnected.forEach((r, i) => {
       text += `${i + 1}. ${r.condition}`;
       if (r.rating !== null) {
@@ -312,18 +333,18 @@ export function formatParsedRatings(parseResult) {
       if (r.effectiveDate) {
         text += ` (Effective: ${new Date(r.effectiveDate).toLocaleDateString()})`;
       }
-      text += '\n';
+      text += "\n";
     });
   }
-  
+
   // Show non-service-connected conditions
   if (notServiceConnected.length > 0) {
     if (serviceConnected.length > 0) {
-      text += '\n';
+      text += "\n";
     }
-    text += `Found ${notServiceConnected.length} non-service-connected condition${notServiceConnected.length === 1 ? '' : 's'}:\n`;
-    text += '(These will not be imported as they have no rating)\n\n';
-    
+    text += `Found ${notServiceConnected.length} non-service-connected condition${notServiceConnected.length === 1 ? "" : "s"}:\n`;
+    text += "(These will not be imported as they have no rating)\n\n";
+
     notServiceConnected.forEach((r, i) => {
       text += `${i + 1}. ${r.condition}\n`;
     });

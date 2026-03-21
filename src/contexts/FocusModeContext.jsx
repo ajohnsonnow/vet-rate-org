@@ -2,21 +2,21 @@
  * Vet-Rate.org - Focus Mode Context
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "The Blinders" - Reduces cognitive load for TBI/ADHD users
- * 
+ *
  * Many veterans have Traumatic Brain Injury or ADHD. A cluttered screen is their enemy.
  * This context provides a Focus Mode that dims everything except the current input field.
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const FocusModeContext = createContext();
 
 export function useFocusMode() {
   const context = useContext(FocusModeContext);
   if (!context) {
-    throw new Error('useFocusMode must be used within FocusModeProvider');
+    throw new Error("useFocusMode must be used within FocusModeProvider");
   }
   return context;
 }
@@ -24,42 +24,47 @@ export function useFocusMode() {
 export function FocusModeProvider({ children }) {
   const [focusMode, setFocusMode] = useState(() => {
     // Load from localStorage
-    const saved = localStorage.getItem('vetrate-focus-mode');
-    return saved === 'true';
+    const saved = localStorage.getItem("vetrate-focus-mode");
+    return saved === "true";
   });
-  
+
   const [focusedElement, setFocusedElement] = useState(null);
 
   // Save to localStorage when changed
   useEffect(() => {
-    localStorage.setItem('vetrate-focus-mode', focusMode.toString());
+    localStorage.setItem("vetrate-focus-mode", focusMode.toString());
   }, [focusMode]);
 
   // Apply CSS class to body
   useEffect(() => {
     if (focusMode) {
-      document.body.classList.add('focus-mode');
+      document.body.classList.add("focus-mode");
     } else {
-      document.body.classList.remove('focus-mode');
+      document.body.classList.remove("focus-mode");
     }
   }, [focusMode]);
 
   // ESC key to exit focus mode
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && focusMode) {
-        console.log('🎯 ESC pressed - exiting focus mode');
+      if (e.key === "Escape" && focusMode) {
+        console.log("🎯 ESC pressed - exiting focus mode");
         setFocusMode(false);
       }
     };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [focusMode]);
 
   const toggleFocusMode = () => {
-    console.log('🎯 Toggle clicked, current:', focusMode, '-> new:', !focusMode);
-    setFocusMode(prev => !prev);
+    console.log(
+      "🎯 Toggle clicked, current:",
+      focusMode,
+      "-> new:",
+      !focusMode,
+    );
+    setFocusMode((prev) => !prev);
   };
 
   const setFocus = (elementId) => {
@@ -77,7 +82,7 @@ export function FocusModeProvider({ children }) {
         toggleFocusMode,
         focusedElement,
         setFocus,
-        clearFocus
+        clearFocus,
       }}
     >
       {children}
@@ -88,7 +93,7 @@ export function FocusModeProvider({ children }) {
 /**
  * FocusWrapper Component
  * Wrap any input/textarea with this to enable focus mode dimming
- * 
+ *
  * @example
  * <FocusWrapper id="claim-description">
  *   <textarea />
@@ -102,7 +107,7 @@ export function FocusWrapper({ id, children }) {
 
   return (
     <div
-      className={`transition-opacity duration-300 ${isDimmed ? 'opacity-10' : 'opacity-100'}`}
+      className={`transition-opacity duration-300 ${isDimmed ? "opacity-10" : "opacity-100"}`}
       onFocus={() => focusMode && setFocus(id)}
       onBlur={() => focusMode && clearFocus()}
     >
@@ -115,33 +120,40 @@ export function FocusWrapper({ id, children }) {
  * FocusToggle Component
  * Modal header focus toggle with variant support
  */
-export function FocusToggle({ variant = 'dark', className = '' }) {
+export function FocusToggle({ variant = "dark", className = "" }) {
   const { focusMode, toggleFocusMode } = useFocusMode();
 
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎯 Focus toggle clicked, current mode:', focusMode);
+    console.log("🎯 Focus toggle clicked, current mode:", focusMode);
     toggleFocusMode();
   };
 
-  const styles = variant === 'light' 
-    ? 'text-white/90 hover:text-white hover:bg-white/20' 
-    : 'text-gray-400 hover:text-white hover:bg-gray-700';
+  const styles =
+    variant === "light"
+      ? "text-white/90 hover:text-white hover:bg-white/20"
+      : "text-gray-400 hover:text-white hover:bg-gray-700";
 
   return (
     <button
       onClick={handleClick}
       onMouseDown={(e) => e.stopPropagation()}
       className={`focus-exempt p-2 rounded-lg transition-all duration-200 ${styles} ${className} ${
-        focusMode ? 'ring-2 ring-blue-400 bg-blue-600/20' : ''
+        focusMode ? "ring-2 ring-blue-400 bg-blue-600/20" : ""
       }`}
-      title={focusMode ? 'Exit Focus Mode (ESC)' : 'Enable Focus Mode (TBI/ADHD Friendly)'}
-      aria-label={focusMode ? 'Disable Focus Mode' : 'Enable Focus Mode'}
-      style={{ zIndex: 9999, position: 'relative' }}
+      title={
+        focusMode
+          ? "Exit Focus Mode (ESC)"
+          : "Enable Focus Mode (TBI/ADHD Friendly)"
+      }
+      aria-label={focusMode ? "Disable Focus Mode" : "Enable Focus Mode"}
+      style={{ zIndex: 9999, position: "relative" }}
     >
-      <span className="text-lg">{focusMode ? '🔍' : '👁️'}</span>
-      {focusMode && <span className="sr-only">Focus mode active - Press ESC to exit</span>}
+      <span className="text-lg">{focusMode ? "🔍" : "👁️"}</span>
+      {focusMode && (
+        <span className="sr-only">Focus mode active - Press ESC to exit</span>
+      )}
     </button>
   );
 }
@@ -156,7 +168,7 @@ export function FocusModeToggle() {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎯 Focus toggle button clicked!');
+    console.log("🎯 Focus toggle button clicked!");
     toggleFocusMode();
   };
 
@@ -167,23 +179,29 @@ export function FocusModeToggle() {
       onClick={handleClick}
       onMouseDown={(e) => e.stopPropagation()}
       className={`focus-mode-toggle fixed p-3 rounded-full shadow-lg transition-all ${
-        focusMode 
-          ? 'top-24 right-4 bg-red-600 hover:bg-red-500 text-white ring-4 ring-red-300 ring-opacity-70 animate-pulse' 
-          : 'top-24 right-4 bg-gray-700 hover:bg-gray-600 text-gray-300'
+        focusMode
+          ? "top-24 right-4 bg-red-600 hover:bg-red-500 text-white ring-4 ring-red-300 ring-opacity-70 animate-pulse"
+          : "top-24 right-4 bg-gray-700 hover:bg-gray-600 text-gray-300"
       }`}
-      style={{ 
-        zIndex: 99999, 
-        pointerEvents: 'auto',
+      style={{
+        zIndex: 99999,
+        pointerEvents: "auto",
         opacity: 1,
-        position: 'fixed'
+        position: "fixed",
       }}
-      title={focusMode ? 'Click to EXIT Focus Mode (or press ESC)' : 'Enable Focus Mode (TBI/ADHD Friendly)'}
-      aria-label={focusMode ? 'Disable Focus Mode' : 'Enable Focus Mode'}
+      title={
+        focusMode
+          ? "Click to EXIT Focus Mode (or press ESC)"
+          : "Enable Focus Mode (TBI/ADHD Friendly)"
+      }
+      aria-label={focusMode ? "Disable Focus Mode" : "Enable Focus Mode"}
     >
       <div className="flex items-center gap-2 pointer-events-none">
-        <span className="text-2xl">{focusMode ? '❌' : '👁️'}</span>
-        <span className={`text-sm font-bold ${focusMode ? 'inline' : 'hidden sm:inline'}`}>
-          {focusMode ? 'EXIT FOCUS' : 'Focus'}
+        <span className="text-2xl">{focusMode ? "❌" : "👁️"}</span>
+        <span
+          className={`text-sm font-bold ${focusMode ? "inline" : "hidden sm:inline"}`}
+        >
+          {focusMode ? "EXIT FOCUS" : "Focus"}
         </span>
       </div>
     </button>
@@ -192,11 +210,11 @@ export function FocusModeToggle() {
 
 /**
  * Add CSS for focus mode to your global CSS:
- * 
+ *
  * .focus-mode {
  *   // Base dimming for all elements
  * }
- * 
+ *
  * .focus-mode .focus-exempt {
  *   // Elements that should never be dimmed
  *   opacity: 1 !important;

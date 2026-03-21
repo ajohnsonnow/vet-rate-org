@@ -1,9 +1,9 @@
 /**
  * VA.gov API Service
- * 
+ *
  * Utility functions for fetching data from VA.gov Sandbox APIs.
  * All functions require a valid access token from the OAuth flow.
- * 
+ *
  * API Documentation:
  * - Service History: https://developer.va.gov/explore/verification/docs/veteran_verification
  * - Claims: https://developer.va.gov/explore/benefits/docs/claims
@@ -11,28 +11,29 @@
  * - Facilities: https://developer.va.gov/explore/facilities/docs/va_facilities
  */
 
-import { VA_AUTH_CONFIG } from '../config/vaAuth';
-import { startApiLog, API_CATEGORIES } from '../utils/vaSyncLogger';
+import { VA_AUTH_CONFIG } from "../config/vaAuth";
+import { startApiLog, API_CATEGORIES } from "../utils/vaSyncLogger";
 
 // Base URLs for VA.gov APIs
 const VA_API_BASE = {
-  sandbox: 'https://sandbox-api.va.gov',
-  production: 'https://api.va.gov',
+  sandbox: "https://sandbox-api.va.gov",
+  production: "https://api.va.gov",
 };
 
 // Proxy path for development (to bypass CORS)
 // Vite proxies /va-api/* to https://sandbox-api.va.gov/*
-const VA_PROXY_PATH = '/va-api';
+const VA_PROXY_PATH = "/va-api";
 
 // Detect if running in development mode
 const isDevelopment = import.meta.env.DEV;
 
 // Get the base URL based on environment
 // In development, use the proxy to bypass CORS for authenticated APIs
-const getBaseUrl = () => VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+const getBaseUrl = () =>
+  VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
 
 // Get the proxied URL for authenticated requests (bypasses CORS in development)
-const getProxiedUrl = () => isDevelopment ? VA_PROXY_PATH : getBaseUrl();
+const getProxiedUrl = () => (isDevelopment ? VA_PROXY_PATH : getBaseUrl());
 
 // ============================================================================
 // RATE LIMITER
@@ -44,42 +45,47 @@ const rateLimiter = {
   requests: [],
   maxRequests: 30, // Conservative limit (half of VA's 60/min)
   windowMs: 60000, // 1 minute window
-  
+
   /**
    * Check if we can make a request, throws if rate limited
    */
   checkLimit() {
     const now = Date.now();
     // Remove requests outside the window
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
-    
+    this.requests = this.requests.filter((time) => now - time < this.windowMs);
+
     if (this.requests.length >= this.maxRequests) {
       const oldestRequest = this.requests[0];
-      const waitTime = Math.ceil((this.windowMs - (now - oldestRequest)) / 1000);
-      const error = new Error(`Rate limit reached. Please wait ${waitTime} seconds before making more requests.`);
-      error.code = 'RATE_LIMITED';
+      const waitTime = Math.ceil(
+        (this.windowMs - (now - oldestRequest)) / 1000,
+      );
+      const error = new Error(
+        `Rate limit reached. Please wait ${waitTime} seconds before making more requests.`,
+      );
+      error.code = "RATE_LIMITED";
       error.retryAfter = waitTime;
       throw error;
     }
-    
+
     this.requests.push(now);
     return true;
   },
-  
+
   /**
    * Get current rate limit status
    */
   getStatus() {
     const now = Date.now();
-    this.requests = this.requests.filter(time => now - time < this.windowMs);
+    this.requests = this.requests.filter((time) => now - time < this.windowMs);
     return {
       remaining: this.maxRequests - this.requests.length,
       total: this.maxRequests,
-      resetsIn: this.requests.length > 0 
-        ? Math.ceil((this.windowMs - (now - this.requests[0])) / 1000)
-        : 0
+      resetsIn:
+        this.requests.length > 0
+          ? Math.ceil((this.windowMs - (now - this.requests[0])) / 1000)
+          : 0,
     };
-  }
+  },
 };
 
 // Export rate limiter status for UI display
@@ -93,51 +99,55 @@ export const getApiRateLimitStatus = () => rateLimiter.getStatus();
 async function authenticatedFetch(endpoint, accessToken, options = {}) {
   // Check rate limit before making request
   rateLimiter.checkLimit();
-  
+
   if (!accessToken) {
-    throw new Error('No access token provided. Please log in first.');
+    throw new Error("No access token provided. Please log in first.");
   }
 
   // Use proxied URL in development to bypass CORS
   const url = `${getProxiedUrl()}${endpoint}`;
-  
-  console.log(`[VA API] Fetching: ${endpoint}${isDevelopment ? ' (via proxy)' : ''}`);
-  
+
+  console.log(
+    `[VA API] Fetching: ${endpoint}${isDevelopment ? " (via proxy)" : ""}`,
+  );
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
       ...options.headers,
     },
   });
 
   // Handle 401 Unauthorized - token may be expired
   if (response.status === 401) {
-    const error = new Error('Session expired. Please log in again.');
-    error.code = 'UNAUTHORIZED';
+    const error = new Error("Session expired. Please log in again.");
+    error.code = "UNAUTHORIZED";
     throw error;
   }
 
   // Handle 403 Forbidden - missing required scope
   if (response.status === 403) {
-    const error = new Error('Access denied. You may not have the required permissions for this data.');
-    error.code = 'FORBIDDEN';
+    const error = new Error(
+      "Access denied. You may not have the required permissions for this data.",
+    );
+    error.code = "FORBIDDEN";
     throw error;
   }
 
   // Handle other errors
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
     let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
-    
+
     try {
       const errorJson = JSON.parse(errorBody);
       errorMessage = errorJson.message || errorJson.error || errorMessage;
     } catch {
       // If body isn't JSON, use the default message
     }
-    
+
     const error = new Error(errorMessage);
     error.status = response.status;
     error.body = errorBody;
@@ -155,10 +165,10 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
 /**
  * Get veteran's military service history
  * Returns branches served, service dates, discharge status, etc.
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Service history data
- * 
+ *
  * Example response:
  * {
  *   "data": [
@@ -179,9 +189,13 @@ async function authenticatedFetch(endpoint, accessToken, options = {}) {
  * }
  */
 export async function getServiceHistory(accessToken) {
-  const endpoint = '/services/veteran_verification/v2/service_history';
-  const { complete, fail } = startApiLog(API_CATEGORIES.SERVICE_HISTORY, endpoint, 'OAuth');
-  
+  const endpoint = "/services/veteran_verification/v2/service_history";
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.SERVICE_HISTORY,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, data?.data?.length || 0);
@@ -198,9 +212,13 @@ export async function getServiceHistory(accessToken) {
  * @returns {Promise<Object>} Disability rating data
  */
 export async function getDisabilityRating(accessToken) {
-  const endpoint = '/services/veteran_verification/v2/disability_rating';
-  const { complete, fail } = startApiLog(API_CATEGORIES.DISABILITY_RATING, endpoint, 'OAuth');
-  
+  const endpoint = "/services/veteran_verification/v2/disability_rating";
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.DISABILITY_RATING,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, 1);
@@ -218,10 +236,10 @@ export async function getDisabilityRating(accessToken) {
 
 /**
  * Get all claims for the authenticated veteran
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Claims list
- * 
+ *
  * Example response:
  * {
  *   "data": [
@@ -241,9 +259,13 @@ export async function getDisabilityRating(accessToken) {
  * }
  */
 export async function getClaims(accessToken) {
-  const endpoint = '/services/claims/v2/veterans/me/claims';
-  const { complete, fail } = startApiLog(API_CATEGORIES.CLAIMS, endpoint, 'OAuth');
-  
+  const endpoint = "/services/claims/v2/veterans/me/claims";
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.CLAIMS,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, data?.data?.length || 0);
@@ -256,15 +278,19 @@ export async function getClaims(accessToken) {
 
 /**
  * Get details for a specific claim
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @param {string} claimId - The ID of the claim
  * @returns {Promise<Object>} Claim details
  */
 export async function getClaimById(accessToken, claimId) {
   const endpoint = `/services/claims/v2/veterans/me/claims/${claimId}`;
-  const { complete, fail } = startApiLog(API_CATEGORIES.CLAIMS, endpoint, 'OAuth');
-  
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.CLAIMS,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, 1);
@@ -277,7 +303,7 @@ export async function getClaimById(accessToken, claimId) {
 
 /**
  * Upload a supporting document to a specific claim
- * 
+ *
  * Used for submitting:
  * - DBQs (Disability Benefits Questionnaires)
  * - Nexus Letters / Independent Medical Opinions (IMOs)
@@ -285,13 +311,13 @@ export async function getClaimById(accessToken, claimId) {
  * - Medical Records
  * - Service Records
  * - Other supporting evidence
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @param {string} claimId - The ID of the claim to upload to
  * @param {File} file - The PDF file to upload
  * @param {string} documentType - VA document type code (e.g., 'L049' for DBQ)
  * @returns {Promise<Object>} Upload confirmation
- * 
+ *
  * Document Type Codes:
  * - L049: Disability Benefits Questionnaire (DBQ)
  * - L229: Independent Medical Opinion / Nexus Letter
@@ -299,88 +325,99 @@ export async function getClaimById(accessToken, claimId) {
  * - L015: Medical Treatment Records
  * - L107: Service Records
  * - L023: Other Evidence
- * 
+ *
  * @see https://developer.va.gov/explore/benefits/docs/claims
  */
-export async function uploadClaimDocument(accessToken, claimId, file, documentType = 'L049') {
+export async function uploadClaimDocument(
+  accessToken,
+  claimId,
+  file,
+  documentType = "L049",
+) {
   if (!accessToken) {
-    throw new Error('No access token provided. Please log in first.');
+    throw new Error("No access token provided. Please log in first.");
   }
-  
+
   if (!claimId) {
-    throw new Error('No claim ID provided.');
+    throw new Error("No claim ID provided.");
   }
-  
+
   if (!file) {
-    throw new Error('No file provided.');
+    throw new Error("No file provided.");
   }
 
   const endpoint = `/services/claims/v2/veterans/me/claims/${claimId}/documents`;
   const url = `${getProxiedUrl()}${endpoint}`;
-  
+
   console.log(`[VA API] Uploading document to claim ${claimId}`);
   console.log(`[VA API] Document type: ${documentType}`);
   console.log(`[VA API] File: ${file.name} (${file.size} bytes)`);
 
   // Create FormData for multipart upload
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('documentType', documentType);
-  
+  formData.append("file", file);
+  formData.append("documentType", documentType);
+
   // Add metadata as JSON
   const metadata = {
     documentType: documentType,
     fileName: file.name,
     description: `Supporting evidence: ${file.name}`,
   };
-  formData.append('metadata', JSON.stringify(metadata));
+  formData.append("metadata", JSON.stringify(metadata));
 
-  const { complete, fail } = startApiLog(API_CATEGORIES.CLAIMS, endpoint, 'OAuth (Upload)');
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.CLAIMS,
+    endpoint,
+    "OAuth (Upload)",
+  );
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         // Note: Do NOT set Content-Type for FormData - browser sets it with boundary
       },
       body: formData,
     });
 
     if (response.status === 401) {
-      const error = new Error('Session expired. Please log in again.');
-      error.code = 'UNAUTHORIZED';
+      const error = new Error("Session expired. Please log in again.");
+      error.code = "UNAUTHORIZED";
       throw error;
     }
 
     if (response.status === 403) {
-      const error = new Error('Access denied. You may not have permission to upload to this claim.');
-      error.code = 'FORBIDDEN';
+      const error = new Error(
+        "Access denied. You may not have permission to upload to this claim.",
+      );
+      error.code = "FORBIDDEN";
       throw error;
     }
 
     if (response.status === 413) {
-      throw new Error('File too large. Maximum file size is 25MB.');
+      throw new Error("File too large. Maximum file size is 25MB.");
     }
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
+      const errorBody = await response.text().catch(() => "");
       let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
-      
+
       try {
         const errorJson = JSON.parse(errorBody);
         errorMessage = errorJson.message || errorJson.error || errorMessage;
       } catch {
         // Use default message
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
     complete(data, 1);
-    
-    console.log('[VA API] Document uploaded successfully');
+
+    console.log("[VA API] Document uploaded successfully");
     return data;
   } catch (error) {
     fail(error.message);
@@ -396,13 +433,13 @@ export async function uploadClaimDocument(accessToken, claimId, file, documentTy
 /**
  * Get appealable issues for the authenticated veteran
  * These are decisions that can be appealed through various lanes.
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @param {Object} options - Query parameters
  * @param {string} options.decisionReviewType - Type of appeal (e.g., 'higher_level_reviews', 'notice_of_disagreements', 'supplemental_claims')
  * @param {string} options.benefitType - Type of benefit (default: 'compensation')
  * @returns {Promise<Object>} Appealable issues
- * 
+ *
  * Example response:
  * {
  *   "data": [
@@ -424,13 +461,17 @@ export async function uploadClaimDocument(accessToken, claimId, file, documentTy
  */
 export async function getAppealableIssues(accessToken, options = {}) {
   const params = new URLSearchParams({
-    decisionReviewType: options.decisionReviewType || 'higher_level_reviews',
-    benefitType: options.benefitType || 'compensation',
+    decisionReviewType: options.decisionReviewType || "higher_level_reviews",
+    benefitType: options.benefitType || "compensation",
   });
-  
+
   const endpoint = `/services/appeals/appealable-issues/v0/appealable-issues?${params}`;
-  const { complete, fail } = startApiLog(API_CATEGORIES.APPEALS, endpoint, 'OAuth');
-  
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.APPEALS,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, data?.data?.length || 0);
@@ -448,7 +489,7 @@ export async function getAppealableIssues(accessToken, options = {}) {
 /**
  * Get VA facilities near a location
  * NOTE: This endpoint uses API Key authentication, NOT OAuth
- * 
+ *
  * @param {string} apiKey - VA API Key (from developer.va.gov)
  * @param {Object} options - Search parameters
  * @param {string} options.zip - ZIP code to search near
@@ -459,52 +500,59 @@ export async function getAppealableIssues(accessToken, options = {}) {
  */
 export async function getFacilities(apiKey, options = {}) {
   if (!apiKey) {
-    throw new Error('VA API Key is required for facility search');
+    throw new Error("VA API Key is required for facility search");
   }
 
   const params = new URLSearchParams();
-  
+
   if (options.zip) {
-    params.set('zip', options.zip);
+    params.set("zip", options.zip);
   }
   if (options.lat && options.lng) {
-    params.set('lat', options.lat);
-    params.set('long', options.lng);
+    params.set("lat", options.lat);
+    params.set("long", options.lng);
   }
   if (options.radius) {
-    params.set('radius', options.radius.toString());
+    params.set("radius", options.radius.toString());
   }
   if (options.type) {
-    params.set('type', options.type);
+    params.set("type", options.type);
   }
   if (options.services && options.services.length > 0) {
-    params.set('services[]', options.services.join(','));
+    params.set("services[]", options.services.join(","));
   }
   if (options.page) {
-    params.set('page', options.page.toString());
+    params.set("page", options.page.toString());
   }
   if (options.perPage) {
-    params.set('per_page', options.perPage.toString());
+    params.set("per_page", options.perPage.toString());
   }
 
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
   const endpoint = `/services/va_facilities/v1/facilities?${params}`;
   const url = `${baseUrl}${endpoint}`;
-  const { complete, fail } = startApiLog(API_CATEGORIES.FACILITIES, endpoint, 'API Key');
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.FACILITIES,
+    endpoint,
+    "API Key",
+  );
 
   console.log(`[VA Facilities API] Fetching: ${url}`);
 
   try {
     const response = await fetch(url, {
       headers: {
-        'apikey': apiKey,
-        'Accept': 'application/json',
+        apikey: apiKey,
+        Accept: "application/json",
       },
     });
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
-      throw new Error(`Facilities API error: ${response.status} - ${errorBody}`);
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        `Facilities API error: ${response.status} - ${errorBody}`,
+      );
     }
 
     const data = await response.json();
@@ -518,23 +566,24 @@ export async function getFacilities(apiKey, options = {}) {
 
 /**
  * Get a specific facility by ID
- * 
+ *
  * @param {string} apiKey - VA API Key
  * @param {string} facilityId - The facility ID (e.g., 'vha_648')
  * @returns {Promise<Object>} Facility details
  */
 export async function getFacilityById(apiKey, facilityId) {
   if (!apiKey) {
-    throw new Error('VA API Key is required');
+    throw new Error("VA API Key is required");
   }
 
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
   const url = `${baseUrl}/services/va_facilities/v1/facilities/${facilityId}`;
 
   const response = await fetch(url, {
     headers: {
-      'apikey': apiKey,
-      'Accept': 'application/json',
+      apikey: apiKey,
+      Accept: "application/json",
     },
   });
 
@@ -553,10 +602,10 @@ export async function getFacilityById(apiKey, facilityId) {
 /**
  * Get all appeals for the authenticated veteran
  * Returns the status of all appeals (legacy, HLR, NOD, SC)
- * 
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Appeals status data
- * 
+ *
  * Example response:
  * {
  *   "data": [
@@ -580,9 +629,13 @@ export async function getFacilityById(apiKey, facilityId) {
  * }
  */
 export async function getAppealsStatus(accessToken) {
-  const endpoint = '/services/appeals/v0/appeals';
-  const { complete, fail } = startApiLog(API_CATEGORIES.APPEALS, endpoint, 'OAuth');
-  
+  const endpoint = "/services/appeals/v0/appeals";
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.APPEALS,
+    endpoint,
+    "OAuth",
+  );
+
   try {
     const data = await authenticatedFetch(endpoint, accessToken);
     complete(data, data?.data?.length || 0);
@@ -599,11 +652,11 @@ export async function getAppealsStatus(accessToken) {
 
 /**
  * Search VA forms by query string
- * 
+ *
  * @param {string} apiKey - VA API Key
  * @param {string} query - Search query (e.g., "21-526EZ")
  * @returns {Promise<Object>} Forms matching the query
- * 
+ *
  * Example response:
  * {
  *   "data": [
@@ -626,27 +679,32 @@ export async function getAppealsStatus(accessToken) {
  */
 export async function searchForms(apiKey, query) {
   if (!apiKey) {
-    throw new Error('VA API Key is required for forms search');
+    throw new Error("VA API Key is required for forms search");
   }
 
   const params = new URLSearchParams({ query });
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
   const endpoint = `/services/va_forms/v0/forms?${params}`;
   const url = `${baseUrl}${endpoint}`;
-  const { complete, fail } = startApiLog(API_CATEGORIES.FORMS, endpoint, 'API Key');
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.FORMS,
+    endpoint,
+    "API Key",
+  );
 
   console.log(`[VA Forms API] Searching: ${query}`);
 
   try {
     const response = await fetch(url, {
       headers: {
-        'apikey': apiKey,
-        'Accept': 'application/json',
+        apikey: apiKey,
+        Accept: "application/json",
       },
     });
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
+      const errorBody = await response.text().catch(() => "");
       throw new Error(`Forms API error: ${response.status} - ${errorBody}`);
     }
 
@@ -661,23 +719,24 @@ export async function searchForms(apiKey, query) {
 
 /**
  * Get a specific form by form name
- * 
+ *
  * @param {string} apiKey - VA API Key
  * @param {string} formName - The form name (e.g., "21-526EZ")
  * @returns {Promise<Object>} Form details
  */
 export async function getFormByName(apiKey, formName) {
   if (!apiKey) {
-    throw new Error('VA API Key is required');
+    throw new Error("VA API Key is required");
   }
 
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
   const url = `${baseUrl}/services/va_forms/v0/forms/${formName}`;
 
   const response = await fetch(url, {
     headers: {
-      'apikey': apiKey,
-      'Accept': 'application/json',
+      apikey: apiKey,
+      Accept: "application/json",
     },
   });
 
@@ -694,10 +753,10 @@ export async function getFormByName(apiKey, formName) {
 
 /**
  * Get list of disabilities from Benefits Reference Data
- * 
+ *
  * @param {string} apiKey - VA API Key
  * @returns {Promise<Object>} List of disabilities
- * 
+ *
  * Example response:
  * {
  *   "items": [
@@ -711,27 +770,34 @@ export async function getFormByName(apiKey, formName) {
  */
 export async function getBenefitsReferenceDisabilities(apiKey) {
   if (!apiKey) {
-    throw new Error('VA API Key is required for benefits reference data');
+    throw new Error("VA API Key is required for benefits reference data");
   }
 
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
-  const endpoint = '/services/benefits-reference-data/v1/disabilities';
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const endpoint = "/services/benefits-reference-data/v1/disabilities";
   const url = `${baseUrl}${endpoint}`;
-  const { complete, fail } = startApiLog(API_CATEGORIES.BENEFITS_REF, endpoint, 'API Key');
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.BENEFITS_REF,
+    endpoint,
+    "API Key",
+  );
 
   console.log(`[VA Benefits Reference API] Fetching disabilities list`);
 
   try {
     const response = await fetch(url, {
       headers: {
-        'apikey': apiKey,
-        'Accept': 'application/json',
+        apikey: apiKey,
+        Accept: "application/json",
       },
     });
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
-      throw new Error(`Benefits Reference API error: ${response.status} - ${errorBody}`);
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        `Benefits Reference API error: ${response.status} - ${errorBody}`,
+      );
     }
 
     const data = await response.json();
@@ -745,22 +811,23 @@ export async function getBenefitsReferenceDisabilities(apiKey) {
 
 /**
  * Get intake sites from Benefits Reference Data
- * 
+ *
  * @param {string} apiKey - VA API Key
  * @returns {Promise<Object>} List of intake sites
  */
 export async function getBenefitsReferenceIntakeSites(apiKey) {
   if (!apiKey) {
-    throw new Error('VA API Key is required');
+    throw new Error("VA API Key is required");
   }
 
-  const baseUrl = VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
+  const baseUrl =
+    VA_API_BASE[VA_AUTH_CONFIG.environment] || VA_API_BASE.sandbox;
   const url = `${baseUrl}/services/benefits-reference-data/v1/intake-sites`;
 
   const response = await fetch(url, {
     headers: {
-      'apikey': apiKey,
-      'Accept': 'application/json',
+      apikey: apiKey,
+      Accept: "application/json",
     },
   });
 
@@ -783,9 +850,9 @@ export function formatServiceHistory(data) {
     return [];
   }
 
-  return data.data.map(episode => ({
+  return data.data.map((episode) => ({
     id: episode.id,
-    branch: episode.attributes?.branch_of_service || 'Unknown',
+    branch: episode.attributes?.branch_of_service || "Unknown",
     startDate: episode.attributes?.start_date,
     endDate: episode.attributes?.end_date,
     dischargeStatus: episode.attributes?.discharge_status,
@@ -803,9 +870,9 @@ export function formatClaims(data) {
     return [];
   }
 
-  return data.data.map(claim => ({
+  return data.data.map((claim) => ({
     id: claim.id,
-    type: claim.attributes?.claimType || 'Unknown',
+    type: claim.attributes?.claimType || "Unknown",
     status: claim.attributes?.status,
     phase: getClaimPhase(claim.attributes?.status),
     dateFiled: claim.attributes?.claimDate,
@@ -825,21 +892,24 @@ export function formatClaims(data) {
  */
 function getClaimPhase(status) {
   const phases = {
-    'CLAIM_RECEIVED': { number: 1, name: 'Claim Received' },
-    'UNDER_REVIEW': { number: 2, name: 'Initial Review' },
-    'INITIAL_REVIEW': { number: 2, name: 'Initial Review' },
-    'GATHERING_OF_EVIDENCE': { number: 3, name: 'Evidence Gathering' },
-    'EVIDENCE_GATHERING_REVIEW_DECISION': { number: 3, name: 'Evidence Gathering' },
-    'REVIEW_OF_EVIDENCE': { number: 4, name: 'Review of Evidence' },
-    'PREPARATION_FOR_DECISION': { number: 5, name: 'Preparation for Decision' },
-    'PENDING_DECISION_APPROVAL': { number: 6, name: 'Pending Decision' },
-    'PREPARATION_FOR_NOTIFICATION': { number: 7, name: 'Preparing Notification' },
-    'COMPLETE': { number: 8, name: 'Complete' },
-    'ERRORED': { number: 0, name: 'Error' },
-    'CANCELED': { number: 0, name: 'Canceled' },
+    CLAIM_RECEIVED: { number: 1, name: "Claim Received" },
+    UNDER_REVIEW: { number: 2, name: "Initial Review" },
+    INITIAL_REVIEW: { number: 2, name: "Initial Review" },
+    GATHERING_OF_EVIDENCE: { number: 3, name: "Evidence Gathering" },
+    EVIDENCE_GATHERING_REVIEW_DECISION: {
+      number: 3,
+      name: "Evidence Gathering",
+    },
+    REVIEW_OF_EVIDENCE: { number: 4, name: "Review of Evidence" },
+    PREPARATION_FOR_DECISION: { number: 5, name: "Preparation for Decision" },
+    PENDING_DECISION_APPROVAL: { number: 6, name: "Pending Decision" },
+    PREPARATION_FOR_NOTIFICATION: { number: 7, name: "Preparing Notification" },
+    COMPLETE: { number: 8, name: "Complete" },
+    ERRORED: { number: 0, name: "Error" },
+    CANCELED: { number: 0, name: "Canceled" },
   };
 
-  return phases[status] || { number: 0, name: status || 'Unknown' };
+  return phases[status] || { number: 0, name: status || "Unknown" };
 }
 
 /**
@@ -850,9 +920,9 @@ export function formatAppealableIssues(data) {
     return [];
   }
 
-  return data.data.map(issue => ({
+  return data.data.map((issue) => ({
     id: issue.id,
-    subject: issue.attributes?.ratingIssueSubjectText || 'Unknown Issue',
+    subject: issue.attributes?.ratingIssueSubjectText || "Unknown Issue",
     description: issue.attributes?.description,
     decisionDate: issue.attributes?.approxDecisionDate,
     percentNumber: issue.attributes?.ratingIssuePercentNumber,
@@ -870,9 +940,9 @@ export function formatAppealsStatus(data) {
     return [];
   }
 
-  return data.data.map(appeal => ({
+  return data.data.map((appeal) => ({
     id: appeal.id,
-    type: appeal.attributes?.type || 'Unknown',
+    type: appeal.attributes?.type || "Unknown",
     active: appeal.attributes?.active,
     programArea: appeal.attributes?.programArea,
     aoj: appeal.attributes?.aoj,
@@ -896,7 +966,7 @@ export function formatForms(data) {
     return [];
   }
 
-  return data.data.map(form => ({
+  return data.data.map((form) => ({
     id: form.id,
     formName: form.attributes?.form_name,
     title: form.attributes?.title,
@@ -920,7 +990,7 @@ export function formatBenefitsDisabilities(data) {
     return [];
   }
 
-  return data.items.map(item => ({
+  return data.items.map((item) => ({
     id: item.id,
     name: item.name,
     endDateTime: item.endDateTime,
@@ -935,7 +1005,7 @@ export function formatFacilities(data) {
     return [];
   }
 
-  return data.data.map(facility => ({
+  return data.data.map((facility) => ({
     id: facility.id,
     name: facility.attributes?.name,
     type: facility.attributes?.facilityType,
@@ -966,7 +1036,7 @@ export default {
   getClaimById,
   getAppealableIssues,
   getAppealsStatus,
-  
+
   // API Key endpoints (Open Data)
   getFacilities,
   getFacilityById,
@@ -974,7 +1044,7 @@ export default {
   getFormByName,
   getBenefitsReferenceDisabilities,
   getBenefitsReferenceIntakeSites,
-  
+
   // Formatters
   formatServiceHistory,
   formatClaims,

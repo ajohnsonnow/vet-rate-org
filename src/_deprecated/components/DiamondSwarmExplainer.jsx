@@ -3,21 +3,22 @@
  * Explains the Warrant Council AI in veteran-friendly terms
  */
 
-import React, { useState } from 'react';
-import { SWARM_AGENTS } from '../utils/diamondSwarm';
+import React, { useState } from "react";
+import { SWARM_AGENTS } from "../utils/diamondSwarm";
 
-export default function DiamondSwarmExplainer({ variant = 'compact' }) {
+export default function DiamondSwarmExplainer({ variant = "compact" }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (variant === 'inline') {
+  if (variant === "inline") {
     return (
       <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-        🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical experts trained to analyze your claim, write statements, and calculate ratings
+        🎖️ Three Chief Warrant Officers (CW3-CW5) - Technical experts trained to
+        analyze your claim, write statements, and calculate ratings
       </div>
     );
   }
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border-l-4 border-blue-500">
         <button
@@ -36,20 +37,24 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
             </div>
           </div>
           <span className="text-blue-600 dark:text-blue-400">
-            {expanded ? '▼' : '▶'}
+            {expanded ? "▼" : "▶"}
           </span>
         </button>
-        
+
         {expanded && (
           <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800 space-y-3">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              Chief Warrant Officers are technical experts in their field - across all branches they're the go-to for specialized knowledge. 
+              Chief Warrant Officers are technical experts in their field -
+              across all branches they're the go-to for specialized knowledge.
               Warrant Council has three CWO-level AI agents:
             </p>
-            
+
             <div className="space-y-3">
-              {Object.values(SWARM_AGENTS).map(agent => (
-                <div key={agent.id} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
+              {Object.values(SWARM_AGENTS).map((agent) => (
+                <div
+                  key={agent.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm"
+                >
                   <div className="flex items-start space-x-2">
                     <span className="text-xl">{agent.icon}</span>
                     <div className="flex-1">
@@ -67,15 +72,23 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
                 </div>
               ))}
             </div>
-            
+
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 mt-4">
               <p className="text-xs text-yellow-800 dark:text-yellow-200">
                 <strong>Chief Warrant Officer Across Branches:</strong>
               </p>
               <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-2 space-y-1">
-                <li>🪖 <strong>Army/Marines:</strong> CW2-CW5 (Technical specialists)</li>
-                <li>✈️ <strong>Air Force:</strong> No warrant officer rank</li>
-                <li>⚓ <strong>Navy/Coast Guard:</strong> CWO2-CWO5 (Technical experts)</li>
+                <li>
+                  🪖 <strong>Army/Marines:</strong> CW2-CW5 (Technical
+                  specialists)
+                </li>
+                <li>
+                  ✈️ <strong>Air Force:</strong> No warrant officer rank
+                </li>
+                <li>
+                  ⚓ <strong>Navy/Coast Guard:</strong> CWO2-CWO5 (Technical
+                  experts)
+                </li>
               </ul>
             </div>
           </div>
@@ -101,15 +114,20 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
 
       <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
         <p className="text-gray-700 dark:text-gray-300">
-          Remember the Chief Warrant Officers in your unit? The technical experts who knew their specialty 
-          inside-out - the intel CWO who could break down any situation, the logistics CWO who kept everything 
-          running? That's what Warrant Council is - but specialized for VA claims.
+          Remember the Chief Warrant Officers in your unit? The technical
+          experts who knew their specialty inside-out - the intel CWO who could
+          break down any situation, the logistics CWO who kept everything
+          running? That's what Warrant Council is - but specialized for VA
+          claims.
         </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        {Object.values(SWARM_AGENTS).map(agent => (
-          <div key={agent.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
+        {Object.values(SWARM_AGENTS).map((agent) => (
+          <div
+            key={agent.id}
+            className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow"
+          >
             <div className="text-3xl mb-3">{agent.icon}</div>
             <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
               {agent.name}
@@ -150,7 +168,8 @@ export default function DiamondSwarmExplainer({ variant = 'compact' }) {
             <strong>⚓ Navy:</strong> Senior Chief Petty Officer (SCPO - SEL)
           </div>
           <div>
-            <strong>⚓ Coast Guard:</strong> Senior Chief Petty Officer (SCPO - SEL)
+            <strong>⚓ Coast Guard:</strong> Senior Chief Petty Officer (SCPO -
+            SEL)
           </div>
         </div>
       </div>

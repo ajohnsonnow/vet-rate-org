@@ -1,14 +1,14 @@
 /**
  * Vet-Rate.org - Publications Library Component
  * ==============================================
- * 
+ *
  * Reference library of official military and VA publications
  * essential for understanding disability claims.
- * 
+ *
  * "Know your regs, know your rights."
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BookOpen,
   Download,
@@ -21,72 +21,76 @@ import {
   Info,
   Shield,
   X,
-} from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+} from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Branch colors
 const BRANCH_COLORS = {
-  'Army': 'bg-green-700 text-white',
-  'Navy': 'bg-blue-800 text-white',
-  'Air Force': 'bg-sky-600 text-white',
-  'Marines': 'bg-red-700 text-white',
-  'Coast Guard': 'bg-orange-500 text-white',
-  'Space Force': 'bg-gray-800 text-white',
-  'DoD': 'bg-gray-600 text-white',
-  'VA': 'bg-blue-900 text-white',
+  Army: "bg-green-700 text-white",
+  Navy: "bg-blue-800 text-white",
+  "Air Force": "bg-sky-600 text-white",
+  Marines: "bg-red-700 text-white",
+  "Coast Guard": "bg-orange-500 text-white",
+  "Space Force": "bg-gray-800 text-white",
+  DoD: "bg-gray-600 text-white",
+  VA: "bg-blue-900 text-white",
 };
 
 const BRANCH_ICONS = {
-  'Army': '🪖',
-  'Navy': '⚓',
-  'Air Force': '✈️',
-  'Marines': '🦅',
-  'Coast Guard': '🛟',
-  'Space Force': '🚀',
-  'DoD': '🏛️',
-  'VA': '🇺🇸',
+  Army: "🪖",
+  Navy: "⚓",
+  "Air Force": "✈️",
+  Marines: "🦅",
+  "Coast Guard": "🛟",
+  "Space Force": "🚀",
+  DoD: "🏛️",
+  VA: "🇺🇸",
 };
 
 const CATEGORY_ICONS = {
-  'separations': '📋',
-  'disability': '🏥',
-  'medical': '⚕️',
-  'awards': '🎖️',
-  'occupational': '👷',
-  'va-rating': '📊',
-  'assignments': '🗺️',
+  separations: "📋",
+  disability: "🏥",
+  medical: "⚕️",
+  awards: "🎖️",
+  occupational: "👷",
+  "va-rating": "📊",
+  assignments: "🗺️",
 };
 
 const CATEGORY_NAMES = {
-  'separations': 'Separations & Discharges',
-  'disability': 'Disability Evaluation',
-  'medical': 'Medical Standards',
-  'awards': 'Awards & Decorations',
-  'occupational': 'Occupational Information',
-  'va-rating': 'VA Rating & Claims',
-  'assignments': 'Assignments & Deployments',
+  separations: "Separations & Discharges",
+  disability: "Disability Evaluation",
+  medical: "Medical Standards",
+  awards: "Awards & Decorations",
+  occupational: "Occupational Information",
+  "va-rating": "VA Rating & Claims",
+  assignments: "Assignments & Deployments",
 };
 
 /**
  * Publication Card Component
  */
 const PublicationCard = ({ publication, onViewDetails }) => {
-  const hasLocalFile = publication.filename && !publication.filename.includes('null');
-  
+  const hasLocalFile =
+    publication.filename && !publication.filename.includes("null");
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
       {/* Header */}
-      <div className={`px-4 py-2 ${BRANCH_COLORS[publication.branch] || 'bg-gray-600 text-white'}`}>
+      <div
+        className={`px-4 py-2 ${BRANCH_COLORS[publication.branch] || "bg-gray-600 text-white"}`}
+      >
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">
             {BRANCH_ICONS[publication.branch]} {publication.branch}
           </span>
           <span className="text-xs opacity-80">
-            {CATEGORY_ICONS[publication.category]} {CATEGORY_NAMES[publication.category]}
+            {CATEGORY_ICONS[publication.category]}{" "}
+            {CATEGORY_NAMES[publication.category]}
           </span>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-4">
         <h3 className="font-bold text-gray-900 dark:text-white mb-1">
@@ -98,11 +102,11 @@ const PublicationCard = ({ publication, onViewDetails }) => {
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
           {publication.description}
         </p>
-        
+
         {/* Use For Tags */}
         <div className="flex flex-wrap gap-1 mb-3">
           {publication.useFor?.slice(0, 3).map((use, idx) => (
-            <span 
+            <span
               key={idx}
               className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-300 rounded-full"
             >
@@ -115,7 +119,7 @@ const PublicationCard = ({ publication, onViewDetails }) => {
             </span>
           )}
         </div>
-        
+
         {/* Actions */}
         <div className="flex gap-2">
           {hasLocalFile ? (
@@ -156,15 +160,19 @@ const PublicationCard = ({ publication, onViewDetails }) => {
  */
 const PublicationDetailsModal = ({ publication, onClose }) => {
   if (!publication) return null;
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]} rounded-t-xl`}>
+        <div
+          className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]} rounded-t-xl`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-lg">{BRANCH_ICONS[publication.branch]}</span>
+              <span className="text-lg">
+                {BRANCH_ICONS[publication.branch]}
+              </span>
               <span className="ml-2 font-bold">{publication.branch}</span>
             </div>
             <button
@@ -175,17 +183,17 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
             </button>
           </div>
         </div>
-        
+
         {/* Content */}
         <div className="p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
             {publication.title}
           </h2>
-          
+
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             {publication.description}
           </p>
-          
+
           <div className="space-y-4">
             {/* Category */}
             <div>
@@ -193,10 +201,11 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
                 Category
               </h4>
               <p className="text-gray-900 dark:text-white">
-                {CATEGORY_ICONS[publication.category]} {CATEGORY_NAMES[publication.category]}
+                {CATEGORY_ICONS[publication.category]}{" "}
+                {CATEGORY_NAMES[publication.category]}
               </p>
             </div>
-            
+
             {/* Use For */}
             <div>
               <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
@@ -204,7 +213,7 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
               </h4>
               <div className="flex flex-wrap gap-2">
                 {publication.useFor?.map((use, idx) => (
-                  <span 
+                  <span
                     key={idx}
                     className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm"
                   >
@@ -213,7 +222,7 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
                 ))}
               </div>
             </div>
-            
+
             {/* Links */}
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex gap-3">
@@ -254,26 +263,26 @@ export default function PublicationsLibrary() {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Details modal
   const [selectedPublication, setSelectedPublication] = useState(null);
-  
+
   // Load publications index
   useEffect(() => {
     async function loadPublications() {
       try {
-        const response = await fetch('/pubs/publications-index.json');
-        if (!response.ok) throw new Error('Failed to load publications index');
+        const response = await fetch("/pubs/publications-index.json");
+        if (!response.ok) throw new Error("Failed to load publications index");
         const data = await response.json();
         setPublications(data.publications || []);
       } catch (err) {
-        console.error('Error loading publications:', err);
+        console.error("Error loading publications:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -281,50 +290,50 @@ export default function PublicationsLibrary() {
     }
     loadPublications();
   }, []);
-  
+
   // Get unique branches and categories
   const branches = useMemo(() => {
-    const unique = [...new Set(publications.map(p => p.branch))];
+    const unique = [...new Set(publications.map((p) => p.branch))];
     return unique.sort();
   }, [publications]);
-  
+
   const categories = useMemo(() => {
-    const unique = [...new Set(publications.map(p => p.category))];
+    const unique = [...new Set(publications.map((p) => p.category))];
     return unique.sort();
   }, [publications]);
-  
+
   // Filter publications
   const filteredPublications = useMemo(() => {
-    return publications.filter(pub => {
+    return publications.filter((pub) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           pub.title.toLowerCase().includes(query) ||
           pub.shortTitle.toLowerCase().includes(query) ||
           pub.description.toLowerCase().includes(query) ||
-          pub.useFor?.some(u => u.toLowerCase().includes(query));
+          pub.useFor?.some((u) => u.toLowerCase().includes(query));
         if (!matchesSearch) return false;
       }
-      
+
       // Branch filter
-      if (selectedBranch !== 'all' && pub.branch !== selectedBranch) {
+      if (selectedBranch !== "all" && pub.branch !== selectedBranch) {
         return false;
       }
-      
+
       // Category filter
-      if (selectedCategory !== 'all' && pub.category !== selectedCategory) {
+      if (selectedCategory !== "all" && pub.category !== selectedCategory) {
         return false;
       }
-      
+
       return true;
     });
   }, [publications, searchQuery, selectedBranch, selectedCategory]);
-  
+
   // Group by category for display
   const groupedPublications = useMemo(() => {
     const groups = {};
-    filteredPublications.forEach(pub => {
+    filteredPublications.forEach((pub) => {
       if (!groups[pub.category]) {
         groups[pub.category] = [];
       }
@@ -332,7 +341,7 @@ export default function PublicationsLibrary() {
     });
     return groups;
   }, [filteredPublications]);
-  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -340,7 +349,7 @@ export default function PublicationsLibrary() {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-300">
@@ -349,21 +358,26 @@ export default function PublicationsLibrary() {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">Publications Library <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span></h1>
+          <h1 className="text-2xl font-bold">
+            Publications Library{" "}
+            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h1>
         </div>
         <p className="text-blue-100">
-          Official military and VA regulations essential for understanding disability claims.
-          Know your regs, know your rights.
+          Official military and VA regulations essential for understanding
+          disability claims. Know your regs, know your rights.
         </p>
       </div>
-      
+
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         {/* Search */}
@@ -377,7 +391,7 @@ export default function PublicationsLibrary() {
             className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </div>
-        
+
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -385,9 +399,13 @@ export default function PublicationsLibrary() {
         >
           <Filter className="w-4 h-4" />
           Filters
-          {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {showFilters ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
         </button>
-        
+
         {/* Filter Options */}
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -402,14 +420,14 @@ export default function PublicationsLibrary() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">All Branches</option>
-                {branches.map(branch => (
+                {branches.map((branch) => (
                   <option key={branch} value={branch}>
                     {BRANCH_ICONS[branch]} {branch}
                   </option>
                 ))}
               </select>
             </div>
-            
+
             {/* Category Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -421,7 +439,7 @@ export default function PublicationsLibrary() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">All Categories</option>
-                {categories.map(cat => (
+                {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {CATEGORY_ICONS[cat]} {CATEGORY_NAMES[cat]}
                   </option>
@@ -431,12 +449,13 @@ export default function PublicationsLibrary() {
           </div>
         )}
       </div>
-      
+
       {/* Results Count */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Showing {filteredPublications.length} of {publications.length} publications
+        Showing {filteredPublications.length} of {publications.length}{" "}
+        publications
       </div>
-      
+
       {/* Publications Grid */}
       {Object.keys(groupedPublications).length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -450,10 +469,12 @@ export default function PublicationsLibrary() {
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="text-2xl">{CATEGORY_ICONS[category]}</span>
                 {CATEGORY_NAMES[category]}
-                <span className="text-sm font-normal text-gray-500">({pubs.length})</span>
+                <span className="text-sm font-normal text-gray-500">
+                  ({pubs.length})
+                </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pubs.map(pub => (
+                {pubs.map((pub) => (
                   <PublicationCard
                     key={pub.id}
                     publication={pub}
@@ -465,7 +486,7 @@ export default function PublicationsLibrary() {
           ))}
         </div>
       )}
-      
+
       {/* VA Online Resources */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
         <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
@@ -529,7 +550,7 @@ export default function PublicationsLibrary() {
           </a>
         </div>
       </div>
-      
+
       {/* Details Modal */}
       {selectedPublication && (
         <PublicationDetailsModal

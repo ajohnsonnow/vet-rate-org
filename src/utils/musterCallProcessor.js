@@ -2,14 +2,14 @@
  * Vet-Rate.org - Mass Document Processor (Muster Call System)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * Handles large-scale document ingestion for veteran claim files:
  * - Multiple DD214s
  * - VA Rating Decisions
  * - Claim Letters (32+ files, 10+ MB)
  * - C-Files (320+ MB medical records)
  * - Poor-quality scanned documents
- * 
+ *
  * Processing Pipeline:
  * 1. File validation & size checking
  * 2. Parallel document loading (Web Workers)
@@ -19,38 +19,58 @@
  * 6. Profile auto-population
  * 7. LLM analysis & recommendations
  * 8. Comprehensive report generation
- * 
+ *
  * All processing is 100% client-side for maximum privacy.
  */
 
-import { analyzeDocument, isFileSupported } from './documentAnalyzer';
-import { formatFileSize } from './ocr';
-import { classifyDocument, classifyDocumentBatch, DOCUMENT_TYPES, getDocumentTypeLabel, getProcessingStrategy } from './documentClassifier';
-import { parseDD214Text } from './ribbonRackData';
-import { updateVeteranProfile, getVeteranProfile } from './veteranProfile';
-import { generateAI, isAnyAIAvailable } from './unifiedAIService';
-import { addDocumentToVKB, loadVKB } from './veteranKnowledgeBase';
-import { saveDocumentToPacket, PACKET_DOC_TYPES } from './myPacketManager';
+import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
+import { formatFileSize } from "./ocr";
+import {
+  classifyDocument,
+  classifyDocumentBatch,
+  DOCUMENT_TYPES,
+  getDocumentTypeLabel,
+  getProcessingStrategy,
+} from "./documentClassifier";
+import { parseDD214Text } from "./ribbonRackData";
+import { updateVeteranProfile, getVeteranProfile } from "./veteranProfile";
+import { generateAI, isAnyAIAvailable } from "./unifiedAIService";
+import { addDocumentToVKB, loadVKB } from "./veteranKnowledgeBase";
+import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
 // ============================================================
-import { attemptJSONRepair } from './cfileAnalyzer';
+import { attemptJSONRepair } from "./cfileAnalyzer";
 // ============================================================
 // FLORENCE-2 VISION AI SERVICE (v1.16.2)
 // Fallback for poor OCR quality on scanned/aged documents
 // ============================================================
-import { 
-  florenceOCRService, 
-  isWebGPUSupported 
-} from './florenceOCRService';
+import { florenceOCRService, isWebGPUSupported } from "./florenceOCRService";
 // ============================================================
 // NEW DOCUMENT INTELLIGENCE PARSERS (v1.16.0)
 // Enhanced VA document understanding with "Header-First Extraction"
 // ============================================================
-import { parseVADocument, parseDecisionLetter, parseDBQReport, parseCodeSheet, extractBigThree } from './vaDocumentParser';
-import { segmentCFile, quickScanCFile, buildDocumentInventory, extractDBQs, extractDecisions } from './cFileSegmentation';
-import { findEvidenceGaps, quickGapCheck, EVIDENCE_TYPES, DTA_VIOLATIONS } from './evidenceGapFinder';
+import {
+  parseVADocument,
+  parseDecisionLetter,
+  parseDBQReport,
+  parseCodeSheet,
+  extractBigThree,
+} from "./vaDocumentParser";
+import {
+  segmentCFile,
+  quickScanCFile,
+  buildDocumentInventory,
+  extractDBQs,
+  extractDecisions,
+} from "./cFileSegmentation";
+import {
+  findEvidenceGaps,
+  quickGapCheck,
+  EVIDENCE_TYPES,
+  DTA_VIOLATIONS,
+} from "./evidenceGapFinder";
 
 // Vision AI confidence threshold - below this, try vision fallback
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
@@ -74,12 +94,12 @@ export { formatFileSize };
  */
 const analyzeCFileWithAI = async (text) => {
   if (!isAnyAIAvailable()) {
-    console.log('⚠️ No AI available for C-File analysis');
+    console.log("⚠️ No AI available for C-File analysis");
     return null;
   }
-  
-  console.log('🤖 Starting AI-enhanced C-File analysis...');
-  
+
+  console.log("🤖 Starting AI-enhanced C-File analysis...");
+
   // Compact prompt for local AI compatibility
   const systemPrompt = `You are a VA Claims Auditor. Analyze C-File text and extract claims evidence.
 
@@ -94,7 +114,7 @@ OUTPUT FORMAT: Valid JSON only. Structure:
 RULES: Only include findings present in text. Be concise.`;
 
   const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${text.substring(0, 15000)}`;
-  
+
   try {
     const response = await generateAI(userPrompt, {
       systemPrompt,
@@ -103,42 +123,45 @@ RULES: Only include findings present in text. Be concise.`;
       expectJSON: true,
       skipCrisisCheck: true,
       skipHallucinationCheck: true,
-      toolContext: 'Muster Call C-File Analysis'
+      toolContext: "Muster Call C-File Analysis",
     });
-    
+
     const content = response?.text || response;
     if (!content) return null;
-    
+
     // Parse JSON response
     let cleanContent = content.trim();
-    if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
-    if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
-    if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
+    if (cleanContent.startsWith("```json"))
+      cleanContent = cleanContent.slice(7);
+    if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+    if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
     cleanContent = cleanContent.trim();
-    
+
     let result;
     try {
       result = JSON.parse(cleanContent);
     } catch (parseErr) {
-      console.warn('⚠️ JSON parse failed, attempting repair...');
+      console.warn("⚠️ JSON parse failed, attempting repair...");
       result = attemptJSONRepair(cleanContent);
       if (result) {
-        console.log('✅ Successfully repaired truncated AI response');
+        console.log("✅ Successfully repaired truncated AI response");
       }
     }
-    
+
     if (result) {
-      console.log(`✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`);
+      console.log(
+        `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
+      );
       return {
         ...result,
         analyzedAt: new Date().toISOString(),
-        aiPowered: true
+        aiPowered: true,
       };
     }
-    
+
     return null;
   } catch (err) {
-    console.error('❌ AI C-File analysis error:', err);
+    console.error("❌ AI C-File analysis error:", err);
     return null;
   }
 };
@@ -147,15 +170,15 @@ RULES: Only include findings present in text. Be concise.`;
  * Processing states for UI feedback
  */
 export const PROCESSING_STATES = {
-  IDLE: 'idle',
-  VALIDATING: 'validating',
-  LOADING: 'loading',
-  EXTRACTING: 'extracting',
-  CLASSIFYING: 'classifying',
-  ANALYZING: 'analyzing',
-  POPULATING: 'populating',
-  COMPLETE: 'complete',
-  ERROR: 'error'
+  IDLE: "idle",
+  VALIDATING: "validating",
+  LOADING: "loading",
+  EXTRACTING: "extracting",
+  CLASSIFYING: "classifying",
+  ANALYZING: "analyzing",
+  POPULATING: "populating",
+  COMPLETE: "complete",
+  ERROR: "error",
 };
 
 /**
@@ -163,9 +186,9 @@ export const PROCESSING_STATES = {
  * NO SINGLE FILE LIMIT - C-Files and medical records can be massive
  */
 const SIZE_LIMITS = {
-  MAX_SINGLE_FILE: Infinity,          // NO LIMIT - handle any file size
-  MAX_TOTAL_SIZE: 2 * 1024 * 1024 * 1024,  // 2 GB total batch
-  WARN_THRESHOLD: 100 * 1024 * 1024   // Warn at 100 MB (informational only)
+  MAX_SINGLE_FILE: Infinity, // NO LIMIT - handle any file size
+  MAX_TOTAL_SIZE: 2 * 1024 * 1024 * 1024, // 2 GB total batch
+  WARN_THRESHOLD: 100 * 1024 * 1024, // Warn at 100 MB (informational only)
 };
 
 /**
@@ -177,11 +200,11 @@ export const validateFilesBatch = (files) => {
     invalid: [],
     warnings: [],
     totalSize: 0,
-    errors: []
+    errors: [],
   };
 
   if (!files || files.length === 0) {
-    results.errors.push('No files provided');
+    results.errors.push("No files provided");
     return results;
   }
 
@@ -193,7 +216,7 @@ export const validateFilesBatch = (files) => {
     if (!isFileSupported(file)) {
       results.invalid.push({
         file,
-        reason: 'Unsupported file type. Please use PDF, DOCX, or TXT files.'
+        reason: "Unsupported file type. Please use PDF, DOCX, or TXT files.",
       });
       continue;
     }
@@ -202,7 +225,7 @@ export const validateFilesBatch = (files) => {
     if (fileSize > SIZE_LIMITS.MAX_SINGLE_FILE) {
       results.invalid.push({
         file,
-        reason: `File too large (${formatFileSize(fileSize)}). Maximum ${formatFileSize(SIZE_LIMITS.MAX_SINGLE_FILE)} per file.`
+        reason: `File too large (${formatFileSize(fileSize)}). Maximum ${formatFileSize(SIZE_LIMITS.MAX_SINGLE_FILE)} per file.`,
       });
       continue;
     }
@@ -211,7 +234,7 @@ export const validateFilesBatch = (files) => {
     if (fileSize > SIZE_LIMITS.WARN_THRESHOLD) {
       results.warnings.push({
         file,
-        message: `Large file (${formatFileSize(fileSize)}) may take several minutes to process.`
+        message: `Large file (${formatFileSize(fileSize)}) may take several minutes to process.`,
       });
     }
 
@@ -220,7 +243,9 @@ export const validateFilesBatch = (files) => {
 
   // Check total size
   if (results.totalSize > SIZE_LIMITS.MAX_TOTAL_SIZE) {
-    results.errors.push(`Total size (${formatFileSize(results.totalSize)}) exceeds limit of ${formatFileSize(SIZE_LIMITS.MAX_TOTAL_SIZE)}. Please split into smaller batches.`);
+    results.errors.push(
+      `Total size (${formatFileSize(results.totalSize)}) exceeds limit of ${formatFileSize(SIZE_LIMITS.MAX_TOTAL_SIZE)}. Please split into smaller batches.`,
+    );
   }
 
   return results;
@@ -234,7 +259,7 @@ const processSingleDocument = async (file, onProgress) => {
   const result = {
     filename: file.name,
     size: file.size,
-    status: 'processing',
+    status: "processing",
     text: null,
     classification: null,
     extractedData: null,
@@ -245,7 +270,7 @@ const processSingleDocument = async (file, onProgress) => {
     ocrUsed: false,
     visionUsed: false, // Track if Florence vision was used
     quality: null,
-    confidence: null
+    confidence: null,
   };
 
   const startTime = Date.now();
@@ -256,8 +281,9 @@ const processSingleDocument = async (file, onProgress) => {
     // For DD214s: Use Florence-2 Vision AI as PRIMARY extraction
     // For other docs: Use OCR with vision fallback
     // ============================================================
-    const isPDF = file.name.toLowerCase().endsWith('.pdf');
-    const looksLikeDD214 = /dd[-_]?214|service.?record|discharge|dd256|dd257|ngb22/i.test(file.name);
+    const isPDF = file.name.toLowerCase().endsWith(".pdf");
+    const looksLikeDD214 =
+      /dd[-_]?214|service.?record|discharge|dd256|dd257|ngb22/i.test(file.name);
     const useVisionPrimary = isPDF && looksLikeDD214 && isWebGPUSupported();
 
     let extractionResult;
@@ -266,14 +292,16 @@ const processSingleDocument = async (file, onProgress) => {
       // ============================================================
       // VISION-FIRST PATH: DD214s get Florence-2 treatment
       // ============================================================
-      console.log(`👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`);
-      
+      console.log(
+        `👁️ DD214 detected - using Florence-2 Vision AI as primary extraction`,
+      );
+
       onProgress?.({
         filename: file.name,
         state: PROCESSING_STATES.EXTRACTING,
         progress: 25,
-        stage: 'vision_primary',
-        message: '👁️ DD214 detected - engaging Vision AI...'
+        stage: "vision_primary",
+        message: "👁️ DD214 detected - engaging Vision AI...",
       });
 
       try {
@@ -284,16 +312,18 @@ const processSingleDocument = async (file, onProgress) => {
             filename: file.name,
             state: PROCESSING_STATES.EXTRACTING,
             progress: 30,
-            stage: 'vision_init',
-            message: '⚡ Loading Florence-2 Vision engine (first time only)...'
+            stage: "vision_init",
+            message: "⚡ Loading Florence-2 Vision engine (first time only)...",
           });
-          
+
           const initSuccess = await florenceOCRService.initialize();
           visionInitialized = initSuccess;
           visionInitializing = false;
-          
+
           if (!initSuccess) {
-            console.warn('⚠️ Florence Vision initialization failed, falling back to OCR');
+            console.warn(
+              "⚠️ Florence Vision initialization failed, falling back to OCR",
+            );
           }
         }
 
@@ -303,12 +333,12 @@ const processSingleDocument = async (file, onProgress) => {
             filename: file.name,
             state: PROCESSING_STATES.EXTRACTING,
             progress: 35,
-            stage: 'vision_wait',
-            message: '⏳ Waiting for Vision engine to load...'
+            stage: "vision_wait",
+            message: "⏳ Waiting for Vision engine to load...",
           });
           // Wait for initialization to complete
           while (visionInitializing) {
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
           }
         }
 
@@ -317,76 +347,89 @@ const processSingleDocument = async (file, onProgress) => {
             filename: file.name,
             state: PROCESSING_STATES.EXTRACTING,
             progress: 40,
-            stage: 'vision_process',
-            message: '👁️ Florence-2 Vision analyzing DD214...'
+            stage: "vision_process",
+            message: "👁️ Florence-2 Vision analyzing DD214...",
           });
 
           // Process all pages for multi-page DD214s
-          const visionResult = await florenceOCRService.processMultiplePages(file, {
-            maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
-            onPageComplete: (pageNum, total, pageResult) => {
-              const progress = 40 + (pageNum / total) * 30; // 40-70%
-              onProgress?.({
-                filename: file.name,
-                state: PROCESSING_STATES.EXTRACTING,
-                progress: Math.round(progress),
-                stage: 'vision_page',
-                message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
-                currentPage: pageNum,
-                totalPages: total
-              });
-            }
-          });
+          const visionResult = await florenceOCRService.processMultiplePages(
+            file,
+            {
+              maxPages: 4, // DD214s are typically 1-2 pages, but handle multi-page
+              onPageComplete: (pageNum, total, pageResult) => {
+                const progress = 40 + (pageNum / total) * 30; // 40-70%
+                onProgress?.({
+                  filename: file.name,
+                  state: PROCESSING_STATES.EXTRACTING,
+                  progress: Math.round(progress),
+                  stage: "vision_page",
+                  message: `👁️ Vision AI reading page ${pageNum}/${total}...`,
+                  currentPage: pageNum,
+                  totalPages: total,
+                });
+              },
+            },
+          );
 
-          if (visionResult.combinedText && visionResult.combinedText.trim().length > 100) {
-            console.log(`✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`);
-            
+          if (
+            visionResult.combinedText &&
+            visionResult.combinedText.trim().length > 100
+          ) {
+            console.log(
+              `✅ Florence Vision extracted ${visionResult.combinedText.length} chars from ${visionResult.processedPages} page(s)`,
+            );
+
             // Log the parsed data from vision
             if (visionResult.parsedData?.fields) {
               const fields = visionResult.parsedData.fields;
-              console.log('🔍 Vision parsed fields:', {
+              console.log("🔍 Vision parsed fields:", {
                 name: fields.name,
                 branch: fields.branch,
                 rank: fields.rank,
                 mos: fields.mos,
                 awards: fields.awardCount,
-                confidence: fields.overallConfidence
+                confidence: fields.overallConfidence,
               });
             }
-            
+
             extractionResult = {
               text: visionResult.combinedText,
               pageCount: visionResult.totalPages,
-              method: 'vision_florence',
+              method: "vision_florence",
               confidence: 90, // Florence vision is highly accurate
               ocrUsed: false,
               visionUsed: true,
               // Pass through the parsed data from vision!
-              visionParsedData: visionResult.parsedData
+              visionParsedData: visionResult.parsedData,
             };
             result.visionUsed = true;
             result.confidence = 90;
           } else {
-            console.warn('⚠️ Vision extraction returned minimal text, falling back to OCR');
+            console.warn(
+              "⚠️ Vision extraction returned minimal text, falling back to OCR",
+            );
             extractionResult = null; // Will trigger OCR fallback
           }
         }
       } catch (visionError) {
-        console.warn('⚠️ Vision primary extraction failed:', visionError.message);
+        console.warn(
+          "⚠️ Vision primary extraction failed:",
+          visionError.message,
+        );
         extractionResult = null; // Will trigger OCR fallback
       }
 
       // Fall back to OCR if vision failed
       if (!extractionResult) {
-        console.log('📷 Falling back to OCR extraction...');
+        console.log("📷 Falling back to OCR extraction...");
         onProgress?.({
           filename: file.name,
           state: PROCESSING_STATES.EXTRACTING,
           progress: 45,
-          stage: 'ocr_fallback',
-          message: '📷 Vision unavailable - using OCR...'
+          stage: "ocr_fallback",
+          message: "📷 Vision unavailable - using OCR...",
         });
-        
+
         extractionResult = await analyzeDocument(file, (state) => {
           onProgress?.({
             filename: file.name,
@@ -397,7 +440,7 @@ const processSingleDocument = async (file, onProgress) => {
             totalPages: state.totalPages,
             quality: state.quality,
             confidence: state.confidence,
-            stage: 'platoon_sergeant'
+            stage: "platoon_sergeant",
           });
         });
       }
@@ -409,7 +452,7 @@ const processSingleDocument = async (file, onProgress) => {
         filename: file.name,
         state: PROCESSING_STATES.EXTRACTING,
         progress: 25,
-        stage: 'platoon_sergeant'
+        stage: "platoon_sergeant",
       });
 
       extractionResult = await analyzeDocument(file, (state) => {
@@ -422,7 +465,7 @@ const processSingleDocument = async (file, onProgress) => {
           totalPages: state.totalPages,
           quality: state.quality,
           confidence: state.confidence,
-          stage: 'platoon_sergeant'
+          stage: "platoon_sergeant",
         });
       });
 
@@ -431,20 +474,23 @@ const processSingleDocument = async (file, onProgress) => {
       result.confidence = ocrConfidence;
 
       // Vision fallback for poor OCR quality on any PDF
-      const shouldTryVisionFallback = isPDF && 
-                                      ocrConfidence < VISION_FALLBACK_THRESHOLD && 
-                                      isWebGPUSupported() &&
-                                      extractionResult.ocrUsed;
+      const shouldTryVisionFallback =
+        isPDF &&
+        ocrConfidence < VISION_FALLBACK_THRESHOLD &&
+        isWebGPUSupported() &&
+        extractionResult.ocrUsed;
 
       if (shouldTryVisionFallback) {
-        console.log(`👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`);
-        
+        console.log(
+          `👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`,
+        );
+
         onProgress?.({
           filename: file.name,
           state: PROCESSING_STATES.EXTRACTING,
           progress: 65,
-          stage: 'vision_fallback',
-          message: '🔬 Low OCR quality detected - engaging Vision AI...'
+          stage: "vision_fallback",
+          message: "🔬 Low OCR quality detected - engaging Vision AI...",
         });
 
         try {
@@ -457,37 +503,46 @@ const processSingleDocument = async (file, onProgress) => {
           }
 
           if (visionInitialized) {
-            const visionResult = await florenceOCRService.processDocument(file, {
-              pageNumber: 1,
-              parseDD214: false
-            });
+            const visionResult = await florenceOCRService.processDocument(
+              file,
+              {
+                pageNumber: 1,
+                parseDD214: false,
+              },
+            );
 
-            if (visionResult.text && visionResult.text.trim().length > extractionResult.text.trim().length * 0.5) {
-              console.log(`✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`);
+            if (
+              visionResult.text &&
+              visionResult.text.trim().length >
+                extractionResult.text.trim().length * 0.5
+            ) {
+              console.log(
+                `✅ Florence Vision extracted ${visionResult.text.length} chars (OCR got ${extractionResult.text.length})`,
+              );
               extractionResult = {
                 ...extractionResult,
                 text: visionResult.text,
-                method: 'vision_florence',
+                method: "vision_florence",
                 confidence: 85,
-                visionUsed: true
+                visionUsed: true,
               };
               result.visionUsed = true;
             }
           }
         } catch (visionError) {
-          console.warn('⚠️ Vision fallback failed:', visionError.message);
+          console.warn("⚠️ Vision fallback failed:", visionError.message);
         }
       }
     }
 
     // analyzeDocument throws on error, no need to check .success
     if (!extractionResult.text || extractionResult.text.trim().length === 0) {
-      throw new Error('No text could be extracted from document');
+      throw new Error("No text could be extracted from document");
     }
 
     result.text = extractionResult.text;
     result.pageCount = extractionResult.pageCount || 1;
-    result.method = extractionResult.method || 'text';
+    result.method = extractionResult.method || "text";
     result.ocrUsed = extractionResult.ocrUsed || false;
 
     // Step 2: Classify document (SecOps Intelligence Briefing - Part 1)
@@ -495,7 +550,7 @@ const processSingleDocument = async (file, onProgress) => {
       filename: file.name,
       state: PROCESSING_STATES.CLASSIFYING,
       progress: 75,
-      stage: 'intel_classify'
+      stage: "intel_classify",
     });
 
     result.classification = classifyDocument(result.text, file.name);
@@ -505,16 +560,16 @@ const processSingleDocument = async (file, onProgress) => {
       filename: file.name,
       state: PROCESSING_STATES.ANALYZING,
       progress: 85,
-      stage: 'intel_extract',
+      stage: "intel_extract",
       docType: result.classification.type,
-      confidence: result.classification.confidence
+      confidence: result.classification.confidence,
     });
 
     result.extractedData = await parseDocumentByType(
       result.text,
       result.classification.type,
       file.name,
-      extractionResult.visionParsedData // Pass vision-parsed data if available
+      extractionResult.visionParsedData, // Pass vision-parsed data if available
     );
 
     // Step 4: Store document in VKB (keeps data separate per document)
@@ -526,13 +581,13 @@ const processSingleDocument = async (file, onProgress) => {
       extractedText: result.text,
       extractedData: result.extractedData,
       ocrUsed: result.ocrUsed || false,
-      method: result.method || 'text',
+      method: result.method || "text",
     });
 
     if (vkbResult.success) {
       result.vkbDocumentId = vkbResult.documentId;
       console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
-      
+
       if (vkbResult.storageWarning) {
         console.warn(`⚠️ ${vkbResult.storageWarning}`);
         result.storageWarning = vkbResult.storageWarning;
@@ -542,64 +597,70 @@ const processSingleDocument = async (file, onProgress) => {
     // Step 5: Also save to My Packet (permanent document archive)
     try {
       const classToPacketType = {
-        'DD214': PACKET_DOC_TYPES.DD214,
-        'service_record': PACKET_DOC_TYPES.DD214,
-        'NGB22': PACKET_DOC_TYPES.NGB22,
-        'DD256': PACKET_DOC_TYPES.DD256,
-        'DD257': PACKET_DOC_TYPES.DD257,
-        'rating_decision': PACKET_DOC_TYPES.RATING_DECISION,
-        'claim_letter': PACKET_DOC_TYPES.CLAIM_LETTER,
-        'c_file': PACKET_DOC_TYPES.C_FILE,
-        'blue_button': PACKET_DOC_TYPES.BLUE_BUTTON,
-        'medical_record': PACKET_DOC_TYPES.MEDICAL_RECORD,
-        'dbq': PACKET_DOC_TYPES.DBQ,
-        'nexus_letter': PACKET_DOC_TYPES.NEXUS_LETTER,
-        'personal_statement': PACKET_DOC_TYPES.PERSONAL_STATEMENT,
-        'buddy_statement': PACKET_DOC_TYPES.BUDDY_STATEMENT,
-        'va_decision': PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+        DD214: PACKET_DOC_TYPES.DD214,
+        service_record: PACKET_DOC_TYPES.DD214,
+        NGB22: PACKET_DOC_TYPES.NGB22,
+        DD256: PACKET_DOC_TYPES.DD256,
+        DD257: PACKET_DOC_TYPES.DD257,
+        rating_decision: PACKET_DOC_TYPES.RATING_DECISION,
+        claim_letter: PACKET_DOC_TYPES.CLAIM_LETTER,
+        c_file: PACKET_DOC_TYPES.C_FILE,
+        blue_button: PACKET_DOC_TYPES.BLUE_BUTTON,
+        medical_record: PACKET_DOC_TYPES.MEDICAL_RECORD,
+        dbq: PACKET_DOC_TYPES.DBQ,
+        nexus_letter: PACKET_DOC_TYPES.NEXUS_LETTER,
+        personal_statement: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+        buddy_statement: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        va_decision: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
       };
-      const packetType = classToPacketType[result.classification.type] || PACKET_DOC_TYPES.OTHER;
+      const packetType =
+        classToPacketType[result.classification.type] || PACKET_DOC_TYPES.OTHER;
 
       await saveDocumentToPacket({
         fileName: file.name,
         classification: packetType,
-        rawText: result.text || '',
+        rawText: result.text || "",
         extractedData: result.extractedData || {},
         pageCount: result.pageCount || 1,
         fileSize: file.size || 0,
-        ocrMethod: result.method || 'text',
+        ocrMethod: result.method || "text",
         ocrConfidence: result.classification?.confidence || 0,
-        tags: [result.classification?.type, result.classification?.subtype].filter(Boolean),
+        tags: [
+          result.classification?.type,
+          result.classification?.subtype,
+        ].filter(Boolean),
       });
       console.log(`📁 Archived ${file.name} in My Packet`);
     } catch (packetErr) {
-      console.warn(`My Packet save failed for ${file.name} (non-fatal):`, packetErr.message);
+      console.warn(
+        `My Packet save failed for ${file.name} (non-fatal):`,
+        packetErr.message,
+      );
     }
 
-    result.status = 'complete';
+    result.status = "complete";
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.COMPLETE,
       progress: 100,
-      stage: 'complete',
+      stage: "complete",
       result: {
         classification: result.classification,
         extractedData: result.extractedData,
         pageCount: result.pageCount,
         method: result.method,
-        ocrUsed: result.ocrUsed
-      }
+        ocrUsed: result.ocrUsed,
+      },
     });
-
   } catch (error) {
     console.error(`Error processing ${file.name}:`, error);
-    result.status = 'error';
+    result.status = "error";
     result.error = error.message;
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.ERROR,
       error: error.message,
-      stage: 'error'
+      stage: "error",
     });
   }
 
@@ -613,16 +674,16 @@ const processSingleDocument = async (file, onProgress) => {
  */
 export const processFormationDocument = async (file, onProgress) => {
   console.log(`🎖️ Platoon Sergeant inspecting: ${file.name}`);
-  
+
   // Use enhanced single document processor
   const result = await processSingleDocument(file, onProgress);
-  
+
   // Return result ready for intelligence briefing
   return {
     ...result,
-    readyForReview: result.status === 'complete',
+    readyForReview: result.status === "complete",
     requiresVerification: true,
-    vkbSaved: !!result.vkbDocumentId
+    vkbSaved: !!result.vkbDocumentId,
   };
 };
 
@@ -634,36 +695,37 @@ export const processFormationDocument = async (file, onProgress) => {
 const splitMultipleDD214s = (text) => {
   // Split by page markers first
   const pagePattern = /---\s*PAGE\s+(\d+).*?---/gi;
-  
+
   // Find all page boundaries
   const pageMatches = [...text.matchAll(pagePattern)];
-  
+
   if (pageMatches.length === 0) {
     // No page markers, return as single document
-    return [{ text, pages: '1', startPage: 1 }];
+    return [{ text, pages: "1", startPage: 1 }];
   }
-  
+
   // Group pages by DD214 (look for "CERTIFICATE OF RELEASE" to start a new one)
   const dd214Segments = [];
-  let currentSegment = '';
+  let currentSegment = "";
   let segmentPageStart = 1;
-  
+
   for (let i = 0; i < pageMatches.length; i++) {
     const pageNum = parseInt(pageMatches[i][1]);
     const pageStart = pageMatches[i].index;
     const pageEnd = pageMatches[i + 1]?.index || text.length;
     const pageText = text.substring(pageStart, pageEnd);
-    
+
     // Check if this page starts a new DD214
-    const isNewDD214 = /CERTIFICATE\s+OF\s+RELEASE\s+OR\s+DISCHARGE/i.test(pageText) &&
-                       pageText.indexOf('CERTIFICATE OF RELEASE') < 200; // Near start of page
-    
+    const isNewDD214 =
+      /CERTIFICATE\s+OF\s+RELEASE\s+OR\s+DISCHARGE/i.test(pageText) &&
+      pageText.indexOf("CERTIFICATE OF RELEASE") < 200; // Near start of page
+
     if (isNewDD214 && currentSegment.length > 0) {
       // Save previous segment
       dd214Segments.push({
         text: currentSegment.trim(),
         pages: `${segmentPageStart}-${pageNum - 1}`,
-        startPage: segmentPageStart
+        startPage: segmentPageStart,
       });
       currentSegment = pageText;
       segmentPageStart = pageNum;
@@ -671,16 +733,19 @@ const splitMultipleDD214s = (text) => {
       currentSegment += pageText;
     }
   }
-  
+
   // Add final segment
   if (currentSegment.length > 0) {
     dd214Segments.push({
       text: currentSegment.trim(),
-      pages: segmentPageStart === pageMatches.length ? `${segmentPageStart}` : `${segmentPageStart}-${pageMatches.length}`,
-      startPage: segmentPageStart
+      pages:
+        segmentPageStart === pageMatches.length
+          ? `${segmentPageStart}`
+          : `${segmentPageStart}-${pageMatches.length}`,
+      startPage: segmentPageStart,
     });
   }
-  
+
   console.log(`📄 Detected ${dd214Segments.length} DD214(s) in document`);
   return dd214Segments;
 };
@@ -691,24 +756,43 @@ const splitMultipleDD214s = (text) => {
  */
 const extractQuickName = (text) => {
   // Clean the text first
-  const cleanedText = text.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ');
-  
+  const cleanedText = text.replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ");
+
   const namePatterns = [
     // "1. NAME" followed by name: WILLIAMS, ROBERT
     /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s*/i,
     // Name pattern: LASTNAME, FIRSTNAME
     /\b([A-Z]{3,})\s*[,;]\s*[A-Z]{2,}/,
   ];
-  
+
   for (const pattern of namePatterns) {
     const match = cleanedText.match(pattern);
     if (match) {
       const lastName = match[1]?.trim().toUpperCase();
       // Validate it's not a form field label
-      const FIELD_LABELS = ['DEPARTMENT', 'COMPONENT', 'BRANCH', 'GRADE', 'RANK',
-                            'SERVICE', 'SOCIAL', 'SECURITY', 'NUMBER', 'NAME', 'DATE',
-                            'CERTIFICATE', 'RELEASE', 'DISCHARGE', 'ACTIVE', 'DUTY'];
-      if (lastName && lastName.length >= 3 && !FIELD_LABELS.includes(lastName)) {
+      const FIELD_LABELS = [
+        "DEPARTMENT",
+        "COMPONENT",
+        "BRANCH",
+        "GRADE",
+        "RANK",
+        "SERVICE",
+        "SOCIAL",
+        "SECURITY",
+        "NUMBER",
+        "NAME",
+        "DATE",
+        "CERTIFICATE",
+        "RELEASE",
+        "DISCHARGE",
+        "ACTIVE",
+        "DUTY",
+      ];
+      if (
+        lastName &&
+        lastName.length >= 3 &&
+        !FIELD_LABELS.includes(lastName)
+      ) {
         return lastName;
       }
     }
@@ -723,30 +807,48 @@ const extractQuickName = (text) => {
 const selectBestDD214Segment = (segments, filename) => {
   if (segments.length === 0) return null;
   if (segments.length === 1) return segments[0];
-  
-  console.log(`🎯 Multiple DD214s found (${segments.length}), selecting best match for filename: ${filename}`);
-  
+
+  console.log(
+    `🎯 Multiple DD214s found (${segments.length}), selecting best match for filename: ${filename}`,
+  );
+
   // Extract potential names from filename
   // "Johnson Service Records DD214 ALL.pdf" -> "JOHNSON"
   // "Smith_John_DD214.pdf" -> "SMITH"
   const filenameUpper = filename.toUpperCase();
-  const filenameWords = filenameUpper.replace(/[_\-\.]/g, ' ').split(/\s+/);
-  
+  const filenameWords = filenameUpper.replace(/[_\-\.]/g, " ").split(/\s+/);
+
   // Common words to ignore in filename
-  const IGNORE_WORDS = ['SERVICE', 'RECORDS', 'DD214', 'DD', '214', 'ALL', 'PDF',
-                        'MILITARY', 'DISCHARGE', 'COPY', 'MEMBER', 'SCAN', 'FILE'];
-  const potentialNames = filenameWords.filter(word =>
-    word.length >= 3 && !IGNORE_WORDS.includes(word) && /^[A-Z]+$/.test(word)
+  const IGNORE_WORDS = [
+    "SERVICE",
+    "RECORDS",
+    "DD214",
+    "DD",
+    "214",
+    "ALL",
+    "PDF",
+    "MILITARY",
+    "DISCHARGE",
+    "COPY",
+    "MEMBER",
+    "SCAN",
+    "FILE",
+  ];
+  const potentialNames = filenameWords.filter(
+    (word) =>
+      word.length >= 3 && !IGNORE_WORDS.includes(word) && /^[A-Z]+$/.test(word),
   );
-  
-  console.log(`📛 Potential name(s) from filename: [${potentialNames.join(', ')}]`);
-  
+
+  console.log(
+    `📛 Potential name(s) from filename: [${potentialNames.join(", ")}]`,
+  );
+
   // Score each segment
   const scoredSegments = segments.map((segment, index) => {
     const extractedName = extractQuickName(segment.text);
     let score = 0;
-    let matchReason = 'default';
-    
+    let matchReason = "default";
+
     // Check if extracted name matches any potential name from filename
     if (extractedName && potentialNames.length > 0) {
       for (const potentialName of potentialNames) {
@@ -754,41 +856,52 @@ const selectBestDD214Segment = (segments, filename) => {
           score += 100; // Exact match
           matchReason = `exact match: ${extractedName}`;
           break;
-        } else if (extractedName.startsWith(potentialName) || potentialName.startsWith(extractedName)) {
+        } else if (
+          extractedName.startsWith(potentialName) ||
+          potentialName.startsWith(extractedName)
+        ) {
           score += 50; // Partial match
           matchReason = `partial match: ${extractedName} ~ ${potentialName}`;
         }
       }
     }
-    
+
     // Bonus for data completeness (look for key fields)
-    const hasRank = /4[aA]?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(segment.text);
-    const hasBranch = /ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD/i.test(segment.text);
+    const hasRank = /4[aA]?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(
+      segment.text,
+    );
+    const hasBranch = /ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD/i.test(
+      segment.text,
+    );
     const hasDates = /\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/g.test(segment.text);
     const hasAwards = /MEDAL|RIBBON|BADGE|AWARD/i.test(segment.text);
-    
+
     if (hasRank) score += 5;
     if (hasBranch) score += 5;
     if (hasDates) score += 5;
     if (hasAwards) score += 5;
-    
+
     // Small bonus for earlier segments if no strong match found
     // (first DD214 is often the "primary" one)
     if (score < 50) {
-      score += (segments.length - index);
+      score += segments.length - index;
     }
-    
-    console.log(`  Segment ${index + 1} (pages ${segment.pages}): name="${extractedName}", score=${score}, reason="${matchReason}"`);
-    
+
+    console.log(
+      `  Segment ${index + 1} (pages ${segment.pages}): name="${extractedName}", score=${score}, reason="${matchReason}"`,
+    );
+
     return { ...segment, score, extractedName, matchReason };
   });
-  
+
   // Sort by score (highest first)
   scoredSegments.sort((a, b) => b.score - a.score);
-  
+
   const best = scoredSegments[0];
-  console.log(`✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) with name "${best.extractedName}" - ${best.matchReason}`);
-  
+  console.log(
+    `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) with name "${best.extractedName}" - ${best.matchReason}`,
+  );
+
   return best;
 };
 
@@ -799,9 +912,14 @@ const selectBestDD214Segment = (segments, filename) => {
  * @param {string} filename - Original filename
  * @param {Object} visionParsedData - Pre-parsed data from Florence Vision (optional)
  */
-const parseDocumentByType = async (text, docType, filename, visionParsedData = null) => {
+const parseDocumentByType = async (
+  text,
+  docType,
+  filename,
+  visionParsedData = null,
+) => {
   const strategy = getProcessingStrategy(docType);
-  
+
   switch (docType) {
     case DOCUMENT_TYPES.DD214:
     case DOCUMENT_TYPES.NGB22:
@@ -813,14 +931,19 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
       // This avoids re-parsing with regex which may fail on vision output.
       // ============================================================
       if (visionParsedData?.fields) {
-        console.log('👁️ Using pre-parsed Vision data for DD214');
+        console.log("👁️ Using pre-parsed Vision data for DD214");
         const vf = visionParsedData.fields;
-        
+
         // Convert vision parser format to parseServiceRecord format
         const visionData = {
-          type: 'service_record',
+          type: "service_record",
           // Name
-          veteranName: vf.name || `${vf.lastName || ''}, ${vf.firstName || ''} ${vf.middleName || ''}`.replace(/,\s*$/, '').trim() || null,
+          veteranName:
+            vf.name ||
+            `${vf.lastName || ""}, ${vf.firstName || ""} ${vf.middleName || ""}`
+              .replace(/,\s*$/, "")
+              .trim() ||
+            null,
           lastName: vf.lastName || null,
           firstName: vf.firstName || null,
           middleName: vf.middleName || null,
@@ -835,7 +958,8 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
           mosTitle: vf.mosTitle || null,
           // Dates
           serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
-          serviceEndDate: vf.separationDateFormatted || vf.separationDate || null,
+          serviceEndDate:
+            vf.separationDateFormatted || vf.separationDate || null,
           dateOfBirth: vf.dateOfBirth || null,
           // Awards
           awards: vf.awards || [],
@@ -850,136 +974,154 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
           foreignService: vf.foreignService || null,
           foreignServiceLocations: vf.foreignServiceLocations || [],
           // Metadata
-          method: 'vision_florence',
+          method: "vision_florence",
           visionConfidence: vf.overallConfidence || 0,
-          raw: text.substring(0, 1000)
+          raw: text.substring(0, 1000),
         };
-        
+
         console.log(`✅ Vision-parsed DD214:`, {
           name: visionData.veteranName,
           branch: visionData.branch,
           rank: visionData.rank,
           mos: visionData.mos,
-          awards: visionData.awards?.length || 0
+          awards: visionData.awards?.length || 0,
         });
-        
+
         return visionData;
       }
-      
+
       // Standard path: regex-based parsing
       // Check for multiple DD214s in the document
       const dd214Segments = splitMultipleDD214s(text);
-      
+
       if (dd214Segments.length > 1) {
         // Multiple DD214s found - use intelligent selection based on filename
-        console.log(`🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`);
-        
+        console.log(
+          `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
+        );
+
         // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
         const bestSegment = selectBestDD214Segment(dd214Segments, filename);
-        
+
         if (bestSegment) {
           // Parse just the selected DD214
           const parsed = await parseServiceRecord(bestSegment.text);
           parsed.sourcePages = bestSegment.pages;
           parsed.multiDocument = true;
           parsed.selectedFromCount = dd214Segments.length;
-          parsed.selectionReason = bestSegment.matchReason || 'filename match';
-          
+          parsed.selectionReason = bestSegment.matchReason || "filename match";
+
           // Also store info about other DD214s found (but don't parse them in detail)
           parsed.otherDD214sFound = dd214Segments
-            .filter(seg => seg !== bestSegment)
-            .map(seg => ({
+            .filter((seg) => seg !== bestSegment)
+            .map((seg) => ({
               pages: seg.pages,
-              extractedName: extractQuickName(seg.text)
+              extractedName: extractQuickName(seg.text),
             }));
-          
-          console.log(`✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || 'name TBD'})`);
+
+          console.log(
+            `✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || "name TBD"})`,
+          );
           return parsed;
         }
-        
+
         // Fallback: if selection fails, parse first one
-        console.warn('⚠️ Selection failed, falling back to first DD214');
+        console.warn("⚠️ Selection failed, falling back to first DD214");
         return await parseServiceRecord(dd214Segments[0].text);
       }
-      
+
       // Single DD214
       return await parseServiceRecord(dd214Segments[0]?.text || text);
-      
+
     case DOCUMENT_TYPES.RATING_DECISION:
       // Enhanced: Use new VA Document Parser for Decision Letters
-      console.log('📋 Using enhanced VA Document Parser for Rating Decision...');
+      console.log(
+        "📋 Using enhanced VA Document Parser for Rating Decision...",
+      );
       const decisionData = parseDecisionLetter(text);
-      
+
       // If new parser found data, use it; otherwise fall back to legacy parser
-      if (decisionData.success && (decisionData.conditions.length > 0 || decisionData.combinedRating)) {
-        console.log(`✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || 'N/A'}% combined`);
-        
+      if (
+        decisionData.success &&
+        (decisionData.conditions.length > 0 || decisionData.combinedRating)
+      ) {
+        console.log(
+          `✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || "N/A"}% combined`,
+        );
+
         // Also extract the "Big Three" for each condition
         const bigThree = extractBigThree(text);
-        
+
         return {
-          type: 'rating_decision',
+          type: "rating_decision",
           ...decisionData,
           bigThree,
-          parserVersion: 'v1.16.0-enhanced',
+          parserVersion: "v1.16.0-enhanced",
         };
       }
-      console.log('⚠️ Enhanced parser found limited data, using legacy parser');
+      console.log("⚠️ Enhanced parser found limited data, using legacy parser");
       return await parseRatingDecision(text);
-      
+
     case DOCUMENT_TYPES.CLAIM_LETTER:
       return await parseClaimLetter(text);
-      
+
     case DOCUMENT_TYPES.DBQ:
       // Enhanced: Use new VA Document Parser for DBQs
-      console.log('🩺 Using enhanced VA Document Parser for DBQ...');
+      console.log("🩺 Using enhanced VA Document Parser for DBQ...");
       const dbqData = parseDBQReport(text);
-      
+
       if (dbqData.success && dbqData.diagnosis) {
         console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
         return {
-          type: 'dbq',
+          type: "dbq",
           ...dbqData,
-          parserVersion: 'v1.16.0-enhanced',
+          parserVersion: "v1.16.0-enhanced",
         };
       }
-      console.log('⚠️ Enhanced parser found limited data, using legacy parser');
+      console.log("⚠️ Enhanced parser found limited data, using legacy parser");
       return await parseDBQ(text);
-      
+
     case DOCUMENT_TYPES.C_FILE_MEDICAL:
       // Enhanced: Use C-File Segmentation for large claim files
-      console.log('📚 Using enhanced C-File Segmentation...');
-      
+      console.log("📚 Using enhanced C-File Segmentation...");
+
       // Quick scan to determine file structure
       const cFileSummary = quickScanCFile(text);
-      console.log(`📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(', ')}`);
-      
+      console.log(
+        `📊 C-File scan: ${cFileSummary.estimatedDocCount} documents, ${cFileSummary.categories.join(", ")}`,
+      );
+
       // Check if this is actually a large C-File (multi-document)
       if (cFileSummary.estimatedDocCount > 5) {
         // Full segmentation for large files
         const segments = segmentCFile(text, { maxSegments: 100 });
-        console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
-        
+        console.log(
+          `✅ Segmented C-File into ${segments.segments.length} documents`,
+        );
+
         // Build inventory for the user
         const inventory = buildDocumentInventory(text);
-        
+
         // Extract Code Sheet (at END) for current ratings
         const codeSheet = parseCodeSheet(text);
-        
+
         // Attempt AI-enhanced analysis for potential claims (if AI available)
         let aiAnalysis = null;
         if (isAnyAIAvailable()) {
           try {
             aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
           } catch (aiErr) {
-            console.warn('⚠️ AI C-File analysis failed, continuing with basic parsing:', aiErr.message);
+            console.warn(
+              "⚠️ AI C-File analysis failed, continuing with basic parsing:",
+              aiErr.message,
+            );
           }
         }
-        
+
         return {
-          type: 'c_file',
+          type: "c_file",
           summary: cFileSummary,
-          segments: segments.segments.map(s => ({
+          segments: segments.segments.map((s) => ({
             type: s.type,
             startPage: s.startPage,
             endPage: s.endPage,
@@ -989,19 +1131,19 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
           inventory,
           codeSheet: codeSheet.success ? codeSheet : null,
           aiAnalysis, // Include AI-enhanced analysis if available
-          parserVersion: 'v1.18.3-enhanced',
+          parserVersion: "v1.18.3-enhanced",
         };
       }
-      
+
       // Small file - parse as regular medical record
       return await parseMedicalRecord(text);
-      
+
     case DOCUMENT_TYPES.MEDICAL_RECORD:
       return await parseMedicalRecord(text);
-      
+
     case DOCUMENT_TYPES.NEXUS_LETTER:
       return await parseNexusLetter(text);
-      
+
     default:
       return { raw: text.substring(0, 1000) };
   }
@@ -1014,7 +1156,7 @@ const parseDocumentByType = async (text, docType, filename, visionParsedData = n
  */
 const parseServiceRecord = async (text) => {
   const data = {
-    type: 'service_record',
+    type: "service_record",
     // ============================================================
     // DD214 FORM BOX STRUCTURE (VERIFIED FROM ACTUAL FORMS):
     // Box 1: Name (Last, first, middle)
@@ -1042,7 +1184,7 @@ const parseServiceRecord = async (text) => {
     // Box 27: Reentry Code
     // Box 28: Narrative Reason
     // ============================================================
-    
+
     // Box 1: Name (matches collectionRules: veteranName)
     veteranName: null,
     lastName: null,
@@ -1092,16 +1234,16 @@ const parseServiceRecord = async (text) => {
     // Box 28: Narrative Reason
     narrativeReason: null,
     // Metadata
-    raw: text.substring(0, 1000)
+    raw: text.substring(0, 1000),
   };
 
   try {
     const upperText = text.toUpperCase();
-    const normalizedText = text.replace(/\s+/g, ' ').trim();
-    
+    const normalizedText = text.replace(/\s+/g, " ").trim();
+
     // ============================================================
     // DD214 FORM STRUCTURE (Critical for parsing):
-    // 
+    //
     // 1. FIELD LABELS = BOLD ALL CAPS (e.g., "NAME", "GRADE", "DECORATIONS")
     // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
     //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
@@ -1111,111 +1253,111 @@ const parseServiceRecord = async (text) => {
     // Key insight: Remove EVERYTHING in parentheses - that's instructional!
     // Then look for ALL CAPS text that's NOT a field label.
     // ============================================================
-    
+
     let cleanedText = text;
-    
+
     // ============================================================
     // OCR ERROR CORRECTION
     // Common character substitutions from low-quality scans:
     // - 0 → O (zeros mistaken for letter O)
-    // - 1 → I or L (ones mistaken for I or L)  
+    // - 1 → I or L (ones mistaken for I or L)
     // - 5 → S (fives mistaken for S)
     // - 8 → B (eights mistaken for B)
     // - $ → S (dollar sign mistaken for S)
     // Only apply to specific DD214 field labels, not numeric data!
     // ============================================================
-    
+
     // Fix common OCR substitutions in DD214 field labels and keywords
     const ocrFixPatterns = [
       // "CAUTI0N" → "CAUTION"
-      [/CAUTI0N/g, 'CAUTION'],
-      [/N0T\s+T0\s+BE/g, 'NOT TO BE'],
-      [/IMP0RTANT/g, 'IMPORTANT'],
+      [/CAUTI0N/g, "CAUTION"],
+      [/N0T\s+T0\s+BE/g, "NOT TO BE"],
+      [/IMP0RTANT/g, "IMPORTANT"],
       // "CERT1FICATE" → "CERTIFICATE"
-      [/CERT1F1CATE/gi, 'CERTIFICATE'],
-      [/CERT1FICATE/gi, 'CERTIFICATE'],
-      [/CERTIF1CATE/gi, 'CERTIFICATE'],
+      [/CERT1F1CATE/gi, "CERTIFICATE"],
+      [/CERT1FICATE/gi, "CERTIFICATE"],
+      [/CERTIF1CATE/gi, "CERTIFICATE"],
       // "DISCH4RGE" → "DISCHARGE"
-      [/D1SCHARGE/gi, 'DISCHARGE'],
-      [/DISCH4RGE/gi, 'DISCHARGE'],
-      [/DISCHARG3/gi, 'DISCHARGE'],
+      [/D1SCHARGE/gi, "DISCHARGE"],
+      [/DISCH4RGE/gi, "DISCHARGE"],
+      [/DISCHARG3/gi, "DISCHARGE"],
       // "ACT1VE" → "ACTIVE"
-      [/ACT1VE/gi, 'ACTIVE'],
-      [/ACTIV3/gi, 'ACTIVE'],
+      [/ACT1VE/gi, "ACTIVE"],
+      [/ACTIV3/gi, "ACTIVE"],
       // "REL3ASE" → "RELEASE"
-      [/REL3ASE/gi, 'RELEASE'],
-      [/RELEAS3/gi, 'RELEASE'],
+      [/REL3ASE/gi, "RELEASE"],
+      [/RELEAS3/gi, "RELEASE"],
       // "D4TE" → "DATE"
-      [/D4TE/gi, 'DATE'],
-      [/DAT3/gi, 'DATE'],
+      [/D4TE/gi, "DATE"],
+      [/DAT3/gi, "DATE"],
       // "SER1AL" / "SERI4L" → "SERIAL"
-      [/SER1AL/gi, 'SERIAL'],
-      [/SERI4L/gi, 'SERIAL'],
+      [/SER1AL/gi, "SERIAL"],
+      [/SERI4L/gi, "SERIAL"],
       // "S0CIAL" → "SOCIAL"
-      [/S0CIAL/gi, 'SOCIAL'],
-      [/SOCI4L/gi, 'SOCIAL'],
+      [/S0CIAL/gi, "SOCIAL"],
+      [/SOCI4L/gi, "SOCIAL"],
       // "SECUR1TY" → "SECURITY"
-      [/SECUR1TY/gi, 'SECURITY'],
-      [/S3CURITY/gi, 'SECURITY'],
+      [/SECUR1TY/gi, "SECURITY"],
+      [/S3CURITY/gi, "SECURITY"],
       // "SEPARAT10N" → "SEPARATION"
-      [/SEPARAT10N/gi, 'SEPARATION'],
-      [/S3PARATION/gi, 'SEPARATION'],
+      [/SEPARAT10N/gi, "SEPARATION"],
+      [/S3PARATION/gi, "SEPARATION"],
       // "GR4DE" → "GRADE"
-      [/GR4DE/gi, 'GRADE'],
-      [/GRAD3/gi, 'GRADE'],
+      [/GR4DE/gi, "GRADE"],
+      [/GRAD3/gi, "GRADE"],
       // "N4ME" / "NAM3" → "NAME"
-      [/N4ME/gi, 'NAME'],
-      [/NAM3/gi, 'NAME'],
+      [/N4ME/gi, "NAME"],
+      [/NAM3/gi, "NAME"],
       // "BR4NCH" → "BRANCH"
-      [/BR4NCH/gi, 'BRANCH'],
-      [/8RANCH/gi, 'BRANCH'],
+      [/BR4NCH/gi, "BRANCH"],
+      [/8RANCH/gi, "BRANCH"],
       // "SERV1CE" → "SERVICE"
-      [/SERV1CE/gi, 'SERVICE'],
-      [/S3RVICE/gi, 'SERVICE'],
-      [/SERVIC3/gi, 'SERVICE'],
+      [/SERV1CE/gi, "SERVICE"],
+      [/S3RVICE/gi, "SERVICE"],
+      [/SERVIC3/gi, "SERVICE"],
       // "AUTH0RITY" → "AUTHORITY"
-      [/AUTH0RITY/gi, 'AUTHORITY'],
-      [/AUTHORIT¥/gi, 'AUTHORITY'],
+      [/AUTH0RITY/gi, "AUTHORITY"],
+      [/AUTHORIT¥/gi, "AUTHORITY"],
       // "DECORAT10NS" → "DECORATIONS"
-      [/DECORAT10NS/gi, 'DECORATIONS'],
-      [/DEC0RATIONS/gi, 'DECORATIONS'],
+      [/DECORAT10NS/gi, "DECORATIONS"],
+      [/DEC0RATIONS/gi, "DECORATIONS"],
       // "HONORAB1E" → "HONORABLE"
-      [/HONORAB1E/gi, 'HONORABLE'],
-      [/H0NORABLE/gi, 'HONORABLE'],
+      [/HONORAB1E/gi, "HONORABLE"],
+      [/H0NORABLE/gi, "HONORABLE"],
       // General patterns - but be careful with context
       // Only fix 0→O in words (not numbers)
-      [/\b([A-Z]+)0([A-Z]+)\b/g, '$1O$2'],
-      [/\b0([A-Z]{2,})\b/g, 'O$1'],
-      [/\b([A-Z]{2,})0\b/g, '$1O'],
+      [/\b([A-Z]+)0([A-Z]+)\b/g, "$1O$2"],
+      [/\b0([A-Z]{2,})\b/g, "O$1"],
+      [/\b([A-Z]{2,})0\b/g, "$1O"],
       // Fix 1→I in words (not numbers)
-      [/\b([A-Z]+)1([A-Z]+)\b/g, '$1I$2'],
-      [/\b1([A-Z]{2,})\b/g, 'I$1'],
-      [/\b([A-Z]{2,})1\b/g, '$1I'],
-      // Fix 3→E in words  
-      [/\b([A-Z]+)3([A-Z]+)\b/g, '$1E$2'],
-      [/\b([A-Z])3\b/g, '$1E'],
+      [/\b([A-Z]+)1([A-Z]+)\b/g, "$1I$2"],
+      [/\b1([A-Z]{2,})\b/g, "I$1"],
+      [/\b([A-Z]{2,})1\b/g, "$1I"],
+      // Fix 3→E in words
+      [/\b([A-Z]+)3([A-Z]+)\b/g, "$1E$2"],
+      [/\b([A-Z])3\b/g, "$1E"],
       // Fix 4→A in words
-      [/\b([A-Z]+)4([A-Z]+)\b/g, '$1A$2'],
+      [/\b([A-Z]+)4([A-Z]+)\b/g, "$1A$2"],
       // Fix 5→S at word boundaries
-      [/\b5([A-Z]{2,})\b/g, 'S$1'],
+      [/\b5([A-Z]{2,})\b/g, "S$1"],
       // Fix 8→B at word boundaries (but not inside MOS codes)
-      [/\b8([A-Z]{2,})\b/g, 'B$1'],
+      [/\b8([A-Z]{2,})\b/g, "B$1"],
     ];
-    
+
     for (const [pattern, replacement] of ocrFixPatterns) {
       cleanedText = cleanedText.replace(pattern, replacement);
     }
-    
-    console.log('🔧 OCR normalization applied to DD214 text');
-    
+
+    console.log("🔧 OCR normalization applied to DD214 text");
+
     // STEP 1: Remove ALL parenthetical content (instructions/examples)
     // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
-    cleanedText = cleanedText.replace(/\([^)]*\)/g, ' ');
-    
+    cleanedText = cleanedText.replace(/\([^)]*\)/g, " ");
+
     // STEP 2: Remove common instructional phrases (not always in parentheses)
     const INSTRUCTIONAL_PATTERNS = [
-      /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi,  // Example awards list
-      /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi,            // "Decorations awarded such as"
+      /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi, // Example awards list
+      /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi, // "Decorations awarded such as"
       /EXAMPLE[S]?:/gi,
       /\bE\.?G\.?\b/gi,
       /FOR\s+EXAMPLE/gi,
@@ -1224,72 +1366,142 @@ const parseServiceRecord = async (text) => {
       /INCLUDING\s+BUT\s+NOT\s+LIMITED/gi,
       /SEE\s+INSTRUCTIONS/gi,
       // Mixed case phrases are likely instructions (real data is ALL CAPS)
-      /[a-z]{3,}/g,  // Remove any word with 3+ lowercase letters
+      /[a-z]{3,}/g, // Remove any word with 3+ lowercase letters
     ];
-    
+
     for (const pattern of INSTRUCTIONAL_PATTERNS) {
-      cleanedText = cleanedText.replace(pattern, ' ');
+      cleanedText = cleanedText.replace(pattern, " ");
     }
-    
+
     // STEP 3: Clean up multiple spaces
-    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
-    
+    cleanedText = cleanedText.replace(/\s+/g, " ").trim();
+
     // === BOX 1: NAME ===
     // Look for name after "1. NAME" heading - the actual veteran name
     // Format is typically: LAST, FIRST MIDDLE or LAST; FIRST MIDDLE
-    // 
+    //
     // CRITICAL: DD214 forms have field LABELS like "DEPARTMENT, COMPONENT AND BRANCH"
     // that look like names (LASTNAME, FIRSTNAME MIDDLE) but are NOT names!
     // Also exclude address components (counties, cities, states) that look like names
     const DD214_FIELD_LABELS = [
       // Field labels
-      'DEPARTMENT', 'COMPONENT', 'BRANCH', 'GRADE', 'RANK', 'RATE',
-      'SERVICE', 'SOCIAL', 'SECURITY', 'NUMBER', 'NAME', 'DATE',
-      'BIRTH', 'PLACE', 'ENTRY', 'HOME', 'RECORD', 'RESERVE',
-      'ACTIVE', 'DUTY', 'SEPARATION', 'AUTHORITY', 'CODE',
-      'MEMBER', 'COPY', 'MILITARY', 'COMMAND', 'REMARKS',
-      'DECORATIONS', 'MEDALS', 'BADGES', 'CITATIONS', 'CAMPAIGN',
-      'RIBBONS', 'AWARDED', 'EDUCATION', 'TRAINING', 'PRIMARY',
-      'SPECIALTY', 'FOREIGN', 'SEA', 'LAST', 'FIRST', 'MIDDLE',
-      'TYPE', 'CHARACTER', 'NARRATIVE', 'REASON', 'REENTRY',
-      'MEMBER', 'VETERAN', 'CERTIFICATE', 'RELEASE', 'DISCHARGE',
+      "DEPARTMENT",
+      "COMPONENT",
+      "BRANCH",
+      "GRADE",
+      "RANK",
+      "RATE",
+      "SERVICE",
+      "SOCIAL",
+      "SECURITY",
+      "NUMBER",
+      "NAME",
+      "DATE",
+      "BIRTH",
+      "PLACE",
+      "ENTRY",
+      "HOME",
+      "RECORD",
+      "RESERVE",
+      "ACTIVE",
+      "DUTY",
+      "SEPARATION",
+      "AUTHORITY",
+      "CODE",
+      "MEMBER",
+      "COPY",
+      "MILITARY",
+      "COMMAND",
+      "REMARKS",
+      "DECORATIONS",
+      "MEDALS",
+      "BADGES",
+      "CITATIONS",
+      "CAMPAIGN",
+      "RIBBONS",
+      "AWARDED",
+      "EDUCATION",
+      "TRAINING",
+      "PRIMARY",
+      "SPECIALTY",
+      "FOREIGN",
+      "SEA",
+      "LAST",
+      "FIRST",
+      "MIDDLE",
+      "TYPE",
+      "CHARACTER",
+      "NARRATIVE",
+      "REASON",
+      "REENTRY",
+      "MEMBER",
+      "VETERAN",
+      "CERTIFICATE",
+      "RELEASE",
+      "DISCHARGE",
       // Address components that look like names
-      'COUNTY', 'CITY', 'STATE', 'TOWN', 'VILLAGE', 'TOWNSHIP',
-      'OREGON', 'WASHINGTON', 'CALIFORNIA', 'TEXAS', 'FLORIDA',
-      'LINN', 'MARION', 'LANE', 'POLK', 'BENTON', 'CLACKAMAS',
-      'MULTNOMAH', 'JACKSON', 'DOUGLAS', 'CLARK', 'LEWIS',
+      "COUNTY",
+      "CITY",
+      "STATE",
+      "TOWN",
+      "VILLAGE",
+      "TOWNSHIP",
+      "OREGON",
+      "WASHINGTON",
+      "CALIFORNIA",
+      "TEXAS",
+      "FLORIDA",
+      "LINN",
+      "MARION",
+      "LANE",
+      "POLK",
+      "BENTON",
+      "CLACKAMAS",
+      "MULTNOMAH",
+      "JACKSON",
+      "DOUGLAS",
+      "CLARK",
+      "LEWIS",
       // Common location words
-      'FORT', 'CAMP', 'BASE', 'AIR', 'FORCE', 'NAVAL', 'STATION'
+      "FORT",
+      "CAMP",
+      "BASE",
+      "AIR",
+      "FORCE",
+      "NAVAL",
+      "STATION",
     ];
-    
+
     // ============================================================
     // COMMON NAME ABBREVIATIONS TO EXPAND
     // OCR often truncates names - expand common abbreviations
     // ============================================================
     const NAME_EXPANSIONS = {
-      'CR': ['CRAIG', 'CHRISTOPHER', 'CRYSTAL'],
-      'JR': ['JUNIOR', 'JAMES'],
-      'WM': ['WILLIAM'],
-      'JN': ['JOHN'],
-      'JS': ['JAMES'],
-      'RB': ['ROBERT'],
-      'RD': ['RICHARD'],
-      'MD': ['MICHAEL', 'DAVID'],
-      'TH': ['THOMAS'],
-      'ED': ['EDWARD', 'EDWIN'],
-      'GR': ['GREGORY'],
-      'DN': ['DANIEL'],
-      'AN': ['ANTHONY'],
+      CR: ["CRAIG", "CHRISTOPHER", "CRYSTAL"],
+      JR: ["JUNIOR", "JAMES"],
+      WM: ["WILLIAM"],
+      JN: ["JOHN"],
+      JS: ["JAMES"],
+      RB: ["ROBERT"],
+      RD: ["RICHARD"],
+      MD: ["MICHAEL", "DAVID"],
+      TH: ["THOMAS"],
+      ED: ["EDWARD", "EDWIN"],
+      GR: ["GREGORY"],
+      DN: ["DANIEL"],
+      AN: ["ANTHONY"],
     };
-    
+
     // === BOX 1 NAME EXTRACTION ===
     // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
     // Box 1 is always near the top of the document, before "2. DEPARTMENT"
-    
+
     // First, try to isolate Box 1 content (everything between "1. NAME" and "2. DEPARTMENT")
-    const box1Match = cleanedText.match(/1\.\s*NAME[^2]*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is);
+    const box1Match = cleanedText.match(
+      /1\.\s*NAME[^2]*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is,
+    );
     const box1Text = box1Match ? box1Match[0] : cleanedText.substring(0, 500); // Fallback: first 500 chars
-    
+
     const namePatterns = [
       // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
       /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
@@ -1298,7 +1510,7 @@ const parseServiceRecord = async (text) => {
       // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
       /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
     ];
-    
+
     // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
     for (const pattern of namePatterns) {
       const match = box1Text.match(pattern);
@@ -1306,25 +1518,27 @@ const parseServiceRecord = async (text) => {
         let potentialLastName = match[1]?.trim().toUpperCase();
         let potentialFirstName = match[2]?.trim().toUpperCase();
         let potentialMiddleName = match[3]?.trim().toUpperCase() || null;
-        
+
         // === VALIDATION ===
         // Reject if ANY part matches a DD214 field label
-        const isFieldLabel = DD214_FIELD_LABELS.some(label =>
-          potentialLastName === label ||
-          potentialFirstName === label ||
-          potentialMiddleName === label
+        const isFieldLabel = DD214_FIELD_LABELS.some(
+          (label) =>
+            potentialLastName === label ||
+            potentialFirstName === label ||
+            potentialMiddleName === label,
         );
-        
+
         // Reject garbage: too short, or looks like form text
-        const isGarbage = !potentialLastName ||
-                         potentialLastName.length < 3 ||
-                         !potentialFirstName ||
-                         /^\d+$/.test(potentialLastName) ||  // Just numbers
-                         /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
-        
+        const isGarbage =
+          !potentialLastName ||
+          potentialLastName.length < 3 ||
+          !potentialFirstName ||
+          /^\d+$/.test(potentialLastName) || // Just numbers
+          /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
+
         if (!isFieldLabel && !isGarbage) {
           data.lastName = potentialLastName;
-          
+
           // Check if first name is a common abbreviation that needs expansion hint
           if (potentialFirstName && potentialFirstName.length <= 2) {
             // Very short first name - might be truncated
@@ -1339,16 +1553,18 @@ const parseServiceRecord = async (text) => {
           } else {
             data.firstName = potentialFirstName;
           }
-          
+
           data.middleName = potentialMiddleName;
-          data.veteranName = `${data.lastName}, ${data.firstName}${data.middleName ? ' ' + data.middleName : ''}`;
-          
+          data.veteranName = `${data.lastName}, ${data.firstName}${data.middleName ? " " + data.middleName : ""}`;
+
           // Flag if first name looks like it might be abbreviated
           if (potentialFirstName && potentialFirstName.length <= 2) {
             data.nameNeedsVerification = true;
-            console.warn(`⚠️ Short first name detected: "${potentialFirstName}" - may be OCR abbreviation`);
+            console.warn(
+              `⚠️ Short first name detected: "${potentialFirstName}" - may be OCR abbreviation`,
+            );
           }
-          
+
           break;
         }
       }
@@ -1367,27 +1583,39 @@ const parseServiceRecord = async (text) => {
       if (match) {
         const branchText = match[1]?.toUpperCase().trim();
         // Detect branch from abbreviations
-        if (branchText?.includes('ARMY') || /ARN|USAR/i.test(branchText)) {
-          data.branch = 'Army';
-        } else if (branchText?.includes('NAVY') || /USN/i.test(branchText)) {
-          data.branch = 'Navy';
-        } else if (branchText?.includes('AIR FORCE') || /USAF/i.test(branchText)) {
-          data.branch = 'Air Force';
-        } else if (branchText?.includes('MARINE') || /USMC/i.test(branchText)) {
-          data.branch = 'Marine Corps';
-        } else if (branchText?.includes('COAST GUARD') || /USCG/i.test(branchText)) {
-          data.branch = 'Coast Guard';
-        } else if (branchText?.includes('SPACE FORCE') || /USSF/i.test(branchText)) {
-          data.branch = 'Space Force';
+        if (branchText?.includes("ARMY") || /ARN|USAR/i.test(branchText)) {
+          data.branch = "Army";
+        } else if (branchText?.includes("NAVY") || /USN/i.test(branchText)) {
+          data.branch = "Navy";
+        } else if (
+          branchText?.includes("AIR FORCE") ||
+          /USAF/i.test(branchText)
+        ) {
+          data.branch = "Air Force";
+        } else if (branchText?.includes("MARINE") || /USMC/i.test(branchText)) {
+          data.branch = "Marine Corps";
+        } else if (
+          branchText?.includes("COAST GUARD") ||
+          /USCG/i.test(branchText)
+        ) {
+          data.branch = "Coast Guard";
+        } else if (
+          branchText?.includes("SPACE FORCE") ||
+          /USSF/i.test(branchText)
+        ) {
+          data.branch = "Space Force";
         }
-        
+
         // Detect component
-        if (branchText?.includes('RESERVE') || /US[A-Z]R\b/.test(branchText)) {
-          data.component = 'Reserve';
-        } else if (branchText?.includes('GUARD') || /ARNG|[A-Z]{2}ARNG/.test(branchText)) {
-          data.component = 'National Guard';
+        if (branchText?.includes("RESERVE") || /US[A-Z]R\b/.test(branchText)) {
+          data.component = "Reserve";
+        } else if (
+          branchText?.includes("GUARD") ||
+          /ARNG|[A-Z]{2}ARNG/.test(branchText)
+        ) {
+          data.component = "National Guard";
         } else {
-          data.component = 'Active Duty';
+          data.component = "Active Duty";
         }
         if (data.branch) break;
       }
@@ -1410,10 +1638,47 @@ const parseServiceRecord = async (text) => {
       if (match) {
         const rank = match[1]?.trim().toUpperCase();
         // Validate it's a real rank, not garbage like "AN" or "oe"
-        const validRanks = ['PVT','PV2','PFC','SPC','CPL','SGT','SSG','SFC','MSG','1SG','SGM','CSM',
-                          '2LT','1LT','CPT','MAJ','LTC','COL','BG','MG','LTG','GEN',
-                          'SN','SA','SR','AA','AN','PO3','PO2','PO1','CPO','SCPO','MCPO',
-                          'ENS','LTJG','LT','LCDR','CDR','CAPT'];
+        const validRanks = [
+          "PVT",
+          "PV2",
+          "PFC",
+          "SPC",
+          "CPL",
+          "SGT",
+          "SSG",
+          "SFC",
+          "MSG",
+          "1SG",
+          "SGM",
+          "CSM",
+          "2LT",
+          "1LT",
+          "CPT",
+          "MAJ",
+          "LTC",
+          "COL",
+          "BG",
+          "MG",
+          "LTG",
+          "GEN",
+          "SN",
+          "SA",
+          "SR",
+          "AA",
+          "AN",
+          "PO3",
+          "PO2",
+          "PO1",
+          "CPO",
+          "SCPO",
+          "MCPO",
+          "ENS",
+          "LTJG",
+          "LT",
+          "LCDR",
+          "CDR",
+          "CAPT",
+        ];
         if (validRanks.includes(rank)) {
           data.rank = rank;
           break;
@@ -1434,12 +1699,13 @@ const parseServiceRecord = async (text) => {
       if (match) {
         let grade = match[1]?.toUpperCase();
         // Attempt to fix OCR garbling: Ed->E4, Eb->E8, etc.
-        grade = grade?.replace(/ED$/i, 'E4')
-                     .replace(/EB$/i, 'E8')
-                     .replace(/EG$/i, 'E6')
-                     .replace(/ES$/i, 'E5');
+        grade = grade
+          ?.replace(/ED$/i, "E4")
+          .replace(/EB$/i, "E8")
+          .replace(/EG$/i, "E6")
+          .replace(/ES$/i, "E5");
         if (grade && /^[EO]-?\d$/.test(grade)) {
-          data.payGrade = grade.replace(/([EO])(\d)/, '$1-$2'); // Normalize E4 to E-4
+          data.payGrade = grade.replace(/([EO])(\d)/, "$1-$2"); // Normalize E4 to E-4
           break;
         }
       }
@@ -1507,7 +1773,7 @@ const parseServiceRecord = async (text) => {
       const match = cleanedText.match(pattern);
       if (match) {
         let dateStr;
-        
+
         // Handle table format (year, month, day in separate groups)
         if (match[2] && match[3]) {
           let year = match[1];
@@ -1530,7 +1796,7 @@ const parseServiceRecord = async (text) => {
             }
           }
         }
-        
+
         // Sanity check: Entry date should NOT be same as DOB
         if (dateStr !== data.dateOfBirth) {
           data.serviceStartDate = dateStr;
@@ -1539,8 +1805,10 @@ const parseServiceRecord = async (text) => {
       }
     }
 
-    // Box 8: Place of Entry  
-    const placeMatch = cleanedText.match(/8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Za-z\s,]+?)(?:\s+9\.|$)/i);
+    // Box 8: Place of Entry
+    const placeMatch = cleanedText.match(
+      /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Za-z\s,]+?)(?:\s+9\.|$)/i,
+    );
     if (placeMatch) {
       data.placeOfEntry = placeMatch[1]?.trim();
     }
@@ -1569,7 +1837,7 @@ const parseServiceRecord = async (text) => {
         let title = match[2]?.trim();
         if (title) {
           // Remove numbers and noise at end, keep just the job title
-          title = title.replace(/\s+\d+.*$/, '').trim();
+          title = title.replace(/\s+\d+.*$/, "").trim();
           if (title.length >= 5 && title.length <= 50) {
             data.mosTitle = title;
           }
@@ -1598,7 +1866,7 @@ const parseServiceRecord = async (text) => {
       const match = cleanedText.match(pattern);
       if (match) {
         let dateStr;
-        
+
         // Handle table format (year, month, day in separate groups)
         if (match[2] && match[3]) {
           let year = match[1];
@@ -1621,7 +1889,7 @@ const parseServiceRecord = async (text) => {
             }
           }
         }
-        
+
         // Sanity check: Separation date should be AFTER entry date
         // And should NOT be same as DOB
         if (dateStr !== data.dateOfBirth && dateStr !== data.serviceStartDate) {
@@ -1637,7 +1905,7 @@ const parseServiceRecord = async (text) => {
     // Box 12d is "TOTAL PRIOR INACTIVE SERVICE" - reserve/guard time (not active duty)
     // Box 12e is "FOREIGN SERVICE" - overseas time
     // We need to be VERY specific about which box we're reading
-    
+
     // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
     const netActivePatterns = [
       /12[bB]\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
@@ -1653,16 +1921,19 @@ const parseServiceRecord = async (text) => {
         const days = parseInt(match[3]) || 0;
         // Sanity check: active duty period should be reasonable (< 40 years)
         if (years < 40 && months <= 12) {
-          data.totalActiveService = days > 0 
-            ? `${years} years, ${months} months, ${days} days`
-            : `${years} years, ${months} months`;
+          data.totalActiveService =
+            days > 0
+              ? `${years} years, ${months} months, ${days} days`
+              : `${years} years, ${months} months`;
           break;
         }
       }
     }
-    
+
     // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
-    const priorActiveMatch = cleanedText.match(/12[cC]\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i);
+    const priorActiveMatch = cleanedText.match(
+      /12[cC]\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+    );
     if (priorActiveMatch) {
       const years = parseInt(priorActiveMatch[1]) || 0;
       const months = parseInt(priorActiveMatch[2]) || 0;
@@ -1670,9 +1941,11 @@ const parseServiceRecord = async (text) => {
         data.totalPriorActiveService = `${years} years, ${months} months`;
       }
     }
-    
+
     // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
-    const priorInactiveMatch = cleanedText.match(/12[dD]\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i);
+    const priorInactiveMatch = cleanedText.match(
+      /12[dD]\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+    );
     if (priorInactiveMatch) {
       const years = parseInt(priorInactiveMatch[1]) || 0;
       const months = parseInt(priorInactiveMatch[2]) || 0;
@@ -1686,60 +1959,94 @@ const parseServiceRecord = async (text) => {
     // DD214 forms have INSTRUCTIONAL TEXT listing example awards on the blank form
     // Common instructional awards: Silver Star, Bronze Star, Air Medal, Purple Heart
     // These are NOT the veteran's awards unless they appear WITHOUT the instructional context
-    
+
     // Awards that commonly appear in DD214 instructions (should be filtered unless clearly real)
-    const INSTRUCTIONAL_AWARDS = ['SILVER STAR', 'BRONZE STAR', 'AIR MEDAL', 'PURPLE HEART', 
-                                   'DISTINGUISHED FLYING CROSS', 'ARMY COMMENDATION'];
-    
+    const INSTRUCTIONAL_AWARDS = [
+      "SILVER STAR",
+      "BRONZE STAR",
+      "AIR MEDAL",
+      "PURPLE HEART",
+      "DISTINGUISHED FLYING CROSS",
+      "ARMY COMMENDATION",
+    ];
+
     // Look specifically for Block 13 content
-    const block13Match = cleanedText.match(/13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is);
-    
+    const block13Match = cleanedText.match(
+      /13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is,
+    );
+
     if (block13Match) {
       const block13Text = block13Match[1];
-      
+
       // Check if this looks like instructional text
-      const hasInstructionalPattern = /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(block13Text);
-      const hasMultipleHighAwards = (block13Text.match(/SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi) || []).length >= 3;
-      
+      const hasInstructionalPattern =
+        /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(
+          block13Text,
+        );
+      const hasMultipleHighAwards =
+        (
+          block13Text.match(
+            /SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi,
+          ) || []
+        ).length >= 3;
+
       // Only parse if it doesn't look like instructional text
-      if (block13Text && block13Text.length > 20 && !hasInstructionalPattern && !hasMultipleHighAwards) {
-        const parsedAwards = parseDD214Text(block13Text, data.branch || 'Army');
+      if (
+        block13Text &&
+        block13Text.length > 20 &&
+        !hasInstructionalPattern &&
+        !hasMultipleHighAwards
+      ) {
+        const parsedAwards = parseDD214Text(block13Text, data.branch || "Army");
         if (parsedAwards && parsedAwards.length > 0) {
           // Filter out awards that are likely instructional (high valor awards are rare)
-          data.awards = parsedAwards.filter(award => {
-            const awardName = award.award?.name?.toUpperCase() || award.matchedText?.toUpperCase() || '';
+          data.awards = parsedAwards.filter((award) => {
+            const awardName =
+              award.award?.name?.toUpperCase() ||
+              award.matchedText?.toUpperCase() ||
+              "";
             // Keep service ribbons, campaign medals, marksmanship - these are common real awards
             // Be skeptical of high valor awards appearing with other instructional patterns
-            return !INSTRUCTIONAL_AWARDS.some(ia => awardName.includes(ia)) || 
-                   // Unless it's the ONLY high-value award found (might be real)
-                   parsedAwards.filter(a => INSTRUCTIONAL_AWARDS.some(ia => 
-                     (a.award?.name?.toUpperCase() || '').includes(ia))).length === 1;
+            return (
+              !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia)) ||
+              // Unless it's the ONLY high-value award found (might be real)
+              parsedAwards.filter((a) =>
+                INSTRUCTIONAL_AWARDS.some((ia) =>
+                  (a.award?.name?.toUpperCase() || "").includes(ia),
+                ),
+              ).length === 1
+            );
           });
         }
       }
     }
-    
+
     // Fallback: If no awards found in Block 13, look for award patterns in general
     // but be very conservative about what we accept
     if (!data.awards || data.awards.length === 0) {
       // Only parse if we DON'T see ANY classic instructional patterns
-      const hasAnyInstructionalText = /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(cleanedText);
-      
+      const hasAnyInstructionalText =
+        /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(
+          cleanedText,
+        );
+
       if (!hasAnyInstructionalText) {
-        const parsedAwards = parseDD214Text(cleanedText, data.branch || 'Army');
+        const parsedAwards = parseDD214Text(cleanedText, data.branch || "Army");
         if (parsedAwards && parsedAwards.length > 0) {
           // Only keep clearly real awards (service ribbons, qualification badges, etc.)
-          data.awards = parsedAwards.filter(award => {
-            const awardName = award.award?.name?.toUpperCase() || '';
+          data.awards = parsedAwards.filter((award) => {
+            const awardName = award.award?.name?.toUpperCase() || "";
             // Service ribbons and campaign medals are almost always real
-            return awardName.includes('SERVICE RIBBON') || 
-                   awardName.includes('CAMPAIGN') ||
-                   awardName.includes('QUALIFICATION') ||
-                   awardName.includes('MARKSMAN') ||
-                   awardName.includes('EXPERT') ||
-                   awardName.includes('GOOD CONDUCT') ||
-                   // Or it's explicitly NOT an instructional award
-                   !INSTRUCTIONAL_AWARDS.some(ia => awardName.includes(ia));
+            return (
+              awardName.includes("SERVICE RIBBON") ||
+              awardName.includes("CAMPAIGN") ||
+              awardName.includes("QUALIFICATION") ||
+              awardName.includes("MARKSMAN") ||
+              awardName.includes("EXPERT") ||
+              awardName.includes("GOOD CONDUCT") ||
+              // Or it's explicitly NOT an instructional award
+              !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia))
+            );
           });
         }
       }
@@ -1754,11 +2061,16 @@ const parseServiceRecord = async (text) => {
       const eduMatch = text.match(pattern);
       if (eduMatch) {
         // Clean up: remove noise, limit length
-        let edu = eduMatch[1]?.replace(/\s+/g, ' ').trim();
+        let edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
         // Only keep if it looks like actual education (course names, durations)
-        if (edu && edu.length > 10 && edu.length < 500 && /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)) {
+        if (
+          edu &&
+          edu.length > 10 &&
+          edu.length < 500 &&
+          /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)
+        ) {
           // Remove trailing noise like NOTHING FOLLOWS
-          edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, '').trim();
+          edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, "").trim();
           data.militaryEducation = edu;
         }
         break;
@@ -1768,26 +2080,32 @@ const parseServiceRecord = async (text) => {
     // Box 18: Remarks - Extract only key deployment/service info, not entire text
     // Look for specific valuable info in remarks rather than dumping entire section
     const remarksKeyInfo = [];
-    
+
     // Check for deployment info
-    const deploymentInfo = text.match(/(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s,]+?)(?:\.|\/\/|$)/gi);
+    const deploymentInfo = text.match(
+      /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s,]+?)(?:\.|\/\/|$)/gi,
+    );
     if (deploymentInfo) {
-      remarksKeyInfo.push(...deploymentInfo.map(d => d.trim()));
+      remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
     }
-    
+
     // Check for OEF/OIF/OND service
     if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(text)) {
-      const opMatch = text.match(/(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i);
+      const opMatch = text.match(
+        /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
+      );
       if (opMatch) remarksKeyInfo.push(opMatch[1]);
     }
-    
+
     // Only store remarks if we found valuable info
     if (remarksKeyInfo.length > 0) {
-      data.remarks = remarksKeyInfo.join(' | ');
+      data.remarks = remarksKeyInfo.join(" | ");
     }
 
     // Box 23: Type of Separation
-    const sepTypeMatch = text.match(/23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Za-z\s]+?)(?:\s+24\.|$)/i);
+    const sepTypeMatch = text.match(
+      /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Za-z\s]+?)(?:\s+24\.|$)/i,
+    );
     if (sepTypeMatch) {
       data.separationType = sepTypeMatch[1]?.trim();
     }
@@ -1807,14 +2125,18 @@ const parseServiceRecord = async (text) => {
     }
 
     // Box 25: Separation Authority (regulation)
-    const authMatch = text.match(/25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Za-z0-9\s.-]+?)(?:\s+26\.|$)/i);
+    const authMatch = text.match(
+      /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Za-z0-9\s.-]+?)(?:\s+26\.|$)/i,
+    );
     if (authMatch) {
       data.separationAuthority = authMatch[1]?.trim();
     }
 
     // Box 26: SPD Code
-    const spdMatch = text.match(/26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i) ||
-                     text.match(/SPD[:\s]+([A-Z]{3})/i);
+    const spdMatch =
+      text.match(
+        /26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i,
+      ) || text.match(/SPD[:\s]+([A-Z]{3})/i);
     if (spdMatch) {
       data.spdCode = spdMatch[1]?.toUpperCase();
     }
@@ -1829,16 +2151,16 @@ const parseServiceRecord = async (text) => {
     for (const pattern of rePatterns) {
       const reMatch = text.match(pattern);
       if (reMatch) {
-        const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, "");
         // Validate it's a real RE code format (RE-1, RE-2A, NA, etc) not OCR garbage
         if (code && /^(?:RE-?[1-4][A-Z]?|NA|[1-4][A-Z]?)$/.test(code)) {
           // Normalize format
           if (/^[1-4][A-Z]?$/.test(code)) {
             data.reentryCode = `RE-${code}`;
-          } else if (code === 'NA') {
-            data.reentryCode = 'NA';
+          } else if (code === "NA") {
+            data.reentryCode = "NA";
           } else {
-            data.reentryCode = code.replace(/RE-?/, 'RE-');
+            data.reentryCode = code.replace(/RE-?/, "RE-");
           }
           break;
         }
@@ -1846,7 +2168,9 @@ const parseServiceRecord = async (text) => {
     }
 
     // Box 28: Narrative Reason
-    const narrativeMatch = text.match(/28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i);
+    const narrativeMatch = text.match(
+      /28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i,
+    );
     if (narrativeMatch) {
       data.narrativeReason = narrativeMatch[1]?.trim();
     }
@@ -1854,7 +2178,7 @@ const parseServiceRecord = async (text) => {
     // Extract deployments from remarks (Box 18) - common locations
     const deploymentPatterns = [
       /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Za-z\s]+?)(?:\.|,|$)/gi,
-      /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi
+      /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
     ];
     for (const pattern of deploymentPatterns) {
       let match;
@@ -1866,7 +2190,7 @@ const parseServiceRecord = async (text) => {
       }
     }
 
-    console.log('📋 DD214 parsed fields:', {
+    console.log("📋 DD214 parsed fields:", {
       veteranName: data.veteranName,
       branch: data.branch,
       rank: data.rank,
@@ -1875,12 +2199,12 @@ const parseServiceRecord = async (text) => {
       serviceEndDate: data.serviceEndDate,
       dischargeType: data.dischargeType,
       awardsCount: data.awards?.length || 0,
-      deploymentsCount: data.deployments?.length || 0
+      deploymentsCount: data.deployments?.length || 0,
     });
 
     return data;
   } catch (error) {
-    console.error('Service record parsing error:', error);
+    console.error("Service record parsing error:", error);
     return { ...data, error: error.message };
   }
 };
@@ -1890,12 +2214,12 @@ const parseServiceRecord = async (text) => {
  */
 const parseRatingDecision = async (text) => {
   const data = {
-    type: 'rating_decision',
+    type: "rating_decision",
     conditions: [],
     combinedRating: null,
     effectiveDate: null,
     decisionDate: null,
-    raw: text.substring(0, 500)
+    raw: text.substring(0, 500),
   };
 
   try {
@@ -1906,19 +2230,24 @@ const parseRatingDecision = async (text) => {
     }
 
     // Extract effective date
-    const effectiveDateMatch = text.match(/EFFECTIVE\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+    const effectiveDateMatch = text.match(
+      /EFFECTIVE\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
     if (effectiveDateMatch) {
       data.effectiveDate = effectiveDateMatch[1];
     }
 
     // Extract decision date
-    const decisionDateMatch = text.match(/DECISION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+    const decisionDateMatch = text.match(
+      /DECISION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
     if (decisionDateMatch) {
       data.decisionDate = decisionDateMatch[1];
     }
 
     // Extract conditions with diagnostic codes
-    const conditionPattern = /(?:DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4}))?[\s\S]{0,200}?([A-Z][A-Za-z\s,]+?)[\s-]+(\d+)%/gi;
+    const conditionPattern =
+      /(?:DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4}))?[\s\S]{0,200}?([A-Z][A-Za-z\s,]+?)[\s-]+(\d+)%/gi;
     let match;
     while ((match = conditionPattern.exec(text)) !== null) {
       const [, diagnosticCode, condition, rating] = match;
@@ -1926,12 +2255,11 @@ const parseRatingDecision = async (text) => {
         name: condition.trim(),
         rating: parseInt(rating),
         diagnosticCode: diagnosticCode || null,
-        serviceConnected: true
+        serviceConnected: true,
       });
     }
-
   } catch (error) {
-    console.error('Rating decision parsing error:', error);
+    console.error("Rating decision parsing error:", error);
     data.error = error.message;
   }
 
@@ -1943,12 +2271,12 @@ const parseRatingDecision = async (text) => {
  */
 const parseClaimLetter = async (text) => {
   const data = {
-    type: 'claim_letter',
+    type: "claim_letter",
     claimNumber: null,
     claimDate: null,
     contentions: [],
     status: null,
-    raw: text.substring(0, 500)
+    raw: text.substring(0, 500),
   };
 
   try {
@@ -1959,32 +2287,35 @@ const parseClaimLetter = async (text) => {
     }
 
     // Extract claim date
-    const claimDateMatch = text.match(/(?:DATE\s+OF\s+CLAIM|CLAIM\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+    const claimDateMatch = text.match(
+      /(?:DATE\s+OF\s+CLAIM|CLAIM\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
     if (claimDateMatch) {
       data.claimDate = claimDateMatch[1];
     }
 
     // Extract contentions (claimed conditions)
-    const contentionMatch = text.match(/CONTENTION[S]?\s*[:=]?\s*([\s\S]{0,500}?)(?:\n\n|\r\n\r\n)/i);
+    const contentionMatch = text.match(
+      /CONTENTION[S]?\s*[:=]?\s*([\s\S]{0,500}?)(?:\n\n|\r\n\r\n)/i,
+    );
     if (contentionMatch) {
       const contentions = contentionMatch[1]
         .split(/[\n\r]+/)
-        .map(line => line.trim())
-        .filter(line => line.length > 3 && /^[A-Z]/.test(line));
+        .map((line) => line.trim())
+        .filter((line) => line.length > 3 && /^[A-Z]/.test(line));
       data.contentions = contentions;
     }
 
     // Extract status
     if (/PENDING/i.test(text)) {
-      data.status = 'pending';
+      data.status = "pending";
     } else if (/APPROVED/i.test(text)) {
-      data.status = 'approved';
+      data.status = "approved";
     } else if (/DENIED/i.test(text)) {
-      data.status = 'denied';
+      data.status = "denied";
     }
-
   } catch (error) {
-    console.error('Claim letter parsing error:', error);
+    console.error("Claim letter parsing error:", error);
     data.error = error.message;
   }
 
@@ -1996,45 +2327,50 @@ const parseClaimLetter = async (text) => {
  */
 const parseDBQ = async (text) => {
   const data = {
-    type: 'dbq',
+    type: "dbq",
     condition: null,
     diagnosis: null,
     nexusOpinion: null,
     examDate: null,
     examiner: null,
-    raw: text.substring(0, 500)
+    raw: text.substring(0, 500),
   };
 
   try {
     // Extract condition name
-    const conditionMatch = text.match(/DBQ\s+FOR\s+([A-Z][A-Za-z\s]+?)(?:\n|$)/i);
+    const conditionMatch = text.match(
+      /DBQ\s+FOR\s+([A-Z][A-Za-z\s]+?)(?:\n|$)/i,
+    );
     if (conditionMatch) {
       data.condition = conditionMatch[1].trim();
     }
 
     // Extract diagnosis
-    const diagnosisMatch = text.match(/DIAGNOSIS\s*[:=]?\s*([\s\S]{0,300}?)(?:\n\n|\r\n\r\n)/i);
+    const diagnosisMatch = text.match(
+      /DIAGNOSIS\s*[:=]?\s*([\s\S]{0,300}?)(?:\n\n|\r\n\r\n)/i,
+    );
     if (diagnosisMatch) {
       data.diagnosis = diagnosisMatch[1].trim();
     }
 
     // Extract nexus opinion
     if (/MORE\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
-      data.nexusOpinion = 'more_likely_than_not';
+      data.nexusOpinion = "more_likely_than_not";
     } else if (/AS\s+LIKELY\s+AS\s+NOT/i.test(text)) {
-      data.nexusOpinion = 'as_likely_as_not';
+      data.nexusOpinion = "as_likely_as_not";
     } else if (/LESS\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
-      data.nexusOpinion = 'less_likely_than_not';
+      data.nexusOpinion = "less_likely_than_not";
     }
 
     // Extract exam date
-    const examDateMatch = text.match(/EXAMINATION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+    const examDateMatch = text.match(
+      /EXAMINATION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
     if (examDateMatch) {
       data.examDate = examDateMatch[1];
     }
-
   } catch (error) {
-    console.error('DBQ parsing error:', error);
+    console.error("DBQ parsing error:", error);
     data.error = error.message;
   }
 
@@ -2046,34 +2382,36 @@ const parseDBQ = async (text) => {
  */
 const parseMedicalRecord = async (text) => {
   const data = {
-    type: 'medical_record',
+    type: "medical_record",
     diagnoses: [],
     treatments: [],
     medications: [],
     dateOfService: null,
     provider: null,
-    raw: text.substring(0, 500)
+    raw: text.substring(0, 500),
   };
 
   try {
     // Extract date of service
-    const dateMatch = text.match(/(?:DATE\s+OF\s+SERVICE|VISIT\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+    const dateMatch = text.match(
+      /(?:DATE\s+OF\s+SERVICE|VISIT\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
     if (dateMatch) {
       data.dateOfService = dateMatch[1];
     }
 
     // Extract diagnoses (ICD codes)
-    const icdPattern = /(?:ICD-?\d{1,2}\s*[:=]?\s*)?([A-Z]\d{2}(?:\.\d{1,2})?)\s+[–-]\s+([A-Za-z\s,]+)/g;
+    const icdPattern =
+      /(?:ICD-?\d{1,2}\s*[:=]?\s*)?([A-Z]\d{2}(?:\.\d{1,2})?)\s+[–-]\s+([A-Za-z\s,]+)/g;
     let match;
     while ((match = icdPattern.exec(text)) !== null) {
       data.diagnoses.push({
         code: match[1],
-        description: match[2].trim()
+        description: match[2].trim(),
       });
     }
-
   } catch (error) {
-    console.error('Medical record parsing error:', error);
+    console.error("Medical record parsing error:", error);
     data.error = error.message;
   }
 
@@ -2085,30 +2423,31 @@ const parseMedicalRecord = async (text) => {
  */
 const parseNexusLetter = async (text) => {
   const data = {
-    type: 'nexus_letter',
+    type: "nexus_letter",
     condition: null,
     opinion: null,
     rationale: null,
     provider: null,
-    raw: text.substring(0, 500)
+    raw: text.substring(0, 500),
   };
 
   try {
     // Extract nexus opinion strength
     if (/MORE\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
-      data.opinion = 'more_likely_than_not';
+      data.opinion = "more_likely_than_not";
     } else if (/AS\s+LIKELY\s+AS\s+NOT/i.test(text)) {
-      data.opinion = 'as_likely_as_not';
+      data.opinion = "as_likely_as_not";
     }
 
     // Extract provider info
-    const providerMatch = text.match(/(?:Sincerely|Respectfully),?\s*\n\s*([A-Z][A-Za-z\s.]+,?\s+M\.?D\.?)/i);
+    const providerMatch = text.match(
+      /(?:Sincerely|Respectfully),?\s*\n\s*([A-Z][A-Za-z\s.]+,?\s+M\.?D\.?)/i,
+    );
     if (providerMatch) {
       data.provider = providerMatch[1].trim();
     }
-
   } catch (error) {
-    console.error('Nexus letter parsing error:', error);
+    console.error("Nexus letter parsing error:", error);
     data.error = error.message;
   }
 
@@ -2122,13 +2461,13 @@ export const processMusterCallBatch = async (files, options = {}) => {
   const {
     onProgress,
     onComplete,
-    signal,  // AbortSignal from abort controller
-    maxConcurrent = 3  // Process 3 files at a time to avoid memory issues
+    signal, // AbortSignal from abort controller
+    maxConcurrent = 3, // Process 3 files at a time to avoid memory issues
   } = options;
 
   // Check if already aborted
   if (signal?.aborted) {
-    throw new DOMException('Processing aborted', 'AbortError');
+    throw new DOMException("Processing aborted", "AbortError");
   }
 
   // Validation
@@ -2137,7 +2476,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
     return {
       success: false,
       validation,
-      results: []
+      results: [],
     };
   }
 
@@ -2151,16 +2490,16 @@ export const processMusterCallBatch = async (files, options = {}) => {
     state: PROCESSING_STATES.LOADING,
     total: queue.length,
     completed: 0,
-    processing: 0
+    processing: 0,
   });
 
   // Process files with concurrency limit
   const processNext = async () => {
     // Check for abort signal
     if (signal?.aborted) {
-      throw new DOMException('Processing aborted', 'AbortError');
+      throw new DOMException("Processing aborted", "AbortError");
     }
-    
+
     if (queue.length === 0) return null;
 
     const file = queue.shift();
@@ -2172,7 +2511,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
           ...fileProgress,
           total: validation.valid.length,
           completed,
-          processing
+          processing,
         });
       });
 
@@ -2184,7 +2523,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
         state: PROCESSING_STATES.LOADING,
         total: validation.valid.length,
         completed,
-        processing
+        processing,
       });
 
       return result;
@@ -2193,13 +2532,13 @@ export const processMusterCallBatch = async (files, options = {}) => {
       console.error(`Failed to process ${file.name}:`, error);
       processing--;
       completed++;
-      
+
       // Add error result
       results.push({
         filename: file.name,
-        status: 'error',
-        error: error.message || 'Unknown error',
-        fileSize: file.size
+        status: "error",
+        error: error.message || "Unknown error",
+        fileSize: file.size,
       });
 
       onProgress?.({
@@ -2208,7 +2547,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
         completed,
         processing,
         filename: file.name,
-        error: error.message
+        error: error.message,
       });
 
       return null;
@@ -2218,17 +2557,19 @@ export const processMusterCallBatch = async (files, options = {}) => {
   // Start processing with concurrency limit
   const workers = [];
   for (let i = 0; i < Math.min(maxConcurrent, validation.valid.length); i++) {
-    workers.push((async () => {
-      while (true) {
-        if (queue.length === 0) {
-          if (processing === 0) break;
-          await new Promise(resolve => setTimeout(resolve, 100));
-          continue;
+    workers.push(
+      (async () => {
+        while (true) {
+          if (queue.length === 0) {
+            if (processing === 0) break;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            continue;
+          }
+          const result = await processNext();
+          if (result === null && queue.length === 0) break;
         }
-        const result = await processNext();
-        if (result === null && queue.length === 0) break;
-      }
-    })());
+      })(),
+    );
   }
 
   await Promise.all(workers);
@@ -2237,19 +2578,21 @@ export const processMusterCallBatch = async (files, options = {}) => {
   onProgress?.({
     state: PROCESSING_STATES.CLASSIFYING,
     total: results.length,
-    completed: results.length
+    completed: results.length,
   });
 
   const classified = classifyDocumentBatch(
-    results.map(r => ({ text: r.text, filename: r.filename }))
+    results.map((r) => ({ text: r.text, filename: r.filename })),
   );
 
   // Merge classified data back into results
   results.forEach((result, index) => {
-    const classifiedDoc = classified.grouped[Object.keys(classified.grouped).find(key =>
-      classified.grouped[key].some(d => d.index === index)
-    )]?.find(d => d.index === index);
-    
+    const classifiedDoc = classified.grouped[
+      Object.keys(classified.grouped).find((key) =>
+        classified.grouped[key].some((d) => d.index === index),
+      )
+    ]?.find((d) => d.index === index);
+
     if (classifiedDoc) {
       result.classification = classifiedDoc.classification;
     }
@@ -2258,7 +2601,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
   onComplete?.({
     results,
     classified,
-    validation
+    validation,
   });
 
   return {
@@ -2269,10 +2612,10 @@ export const processMusterCallBatch = async (files, options = {}) => {
     summary: {
       totalFiles: validation.valid.length,
       totalSize: validation.totalSize,
-      successful: results.filter(r => r.status === 'complete').length,
-      failed: results.filter(r => r.status === 'error').length,
-      processingTime: results.reduce((sum, r) => sum + r.processingTime, 0)
-    }
+      successful: results.filter((r) => r.status === "complete").length,
+      failed: results.filter((r) => r.status === "error").length,
+      processingTime: results.reduce((sum, r) => sum + r.processingTime, 0),
+    },
   };
 };
 
@@ -2280,9 +2623,9 @@ export const processMusterCallBatch = async (files, options = {}) => {
  * Auto-populate veteran profile from processed documents
  */
 export const autoPopulateProfile = async (processedResults) => {
-  console.log('📋 Auto-populate Profile starting...');
-  console.log('📊 Total results to process:', processedResults?.length);
-  
+  console.log("📋 Auto-populate Profile starting...");
+  console.log("📊 Total results to process:", processedResults?.length);
+
   const currentProfile = getVeteranProfile();
   const updates = { ...currentProfile };
 
@@ -2293,11 +2636,13 @@ export const autoPopulateProfile = async (processedResults) => {
       status: result.status,
       hasExtractedData: !!result.extractedData,
       extractedDataType: result.extractedData?.type,
-      classification: result.classification?.type
+      classification: result.classification?.type,
     });
-    
-    if (result.status !== 'complete' || !result.extractedData) {
-      console.log(`⏭️ Skipping ${result.filename} - status: ${result.status}, hasData: ${!!result.extractedData}`);
+
+    if (result.status !== "complete" || !result.extractedData) {
+      console.log(
+        `⏭️ Skipping ${result.filename} - status: ${result.status}, hasData: ${!!result.extractedData}`,
+      );
       continue;
     }
 
@@ -2305,49 +2650,67 @@ export const autoPopulateProfile = async (processedResults) => {
     console.log(`🔍 Processing ${result.filename} with type: ${type}`);
 
     switch (type) {
-      case 'service_record':
+      case "service_record":
         // Populate from DD214
-        console.log('📝 Found service record, extracting data:', result.extractedData);
-        if (result.extractedData.branch) updates.branch = result.extractedData.branch;
-        if (result.extractedData.entryDate) updates.serviceStartDate = result.extractedData.entryDate;
-        if (result.extractedData.separationDate) updates.serviceEndDate = result.extractedData.separationDate;
+        console.log(
+          "📝 Found service record, extracting data:",
+          result.extractedData,
+        );
+        if (result.extractedData.branch)
+          updates.branch = result.extractedData.branch;
+        if (result.extractedData.entryDate)
+          updates.serviceStartDate = result.extractedData.entryDate;
+        if (result.extractedData.separationDate)
+          updates.serviceEndDate = result.extractedData.separationDate;
         if (result.extractedData.mos) updates.mos = result.extractedData.mos;
-        if (result.extractedData.mosTitle) updates.mosTitle = result.extractedData.mosTitle;
-        if (result.extractedData.characterOfService) updates.characterOfService = result.extractedData.characterOfService;
-        if (result.extractedData.separationType) updates.separationType = result.extractedData.separationType;
+        if (result.extractedData.mosTitle)
+          updates.mosTitle = result.extractedData.mosTitle;
+        if (result.extractedData.characterOfService)
+          updates.characterOfService = result.extractedData.characterOfService;
+        if (result.extractedData.separationType)
+          updates.separationType = result.extractedData.separationType;
         updateCount++;
         break;
 
-      case 'rating_decision':
+      case "rating_decision":
         // Populate from rating decision
-        console.log('📊 Found rating decision, extracting data:', result.extractedData);
-        if (result.extractedData.combinedRating) updates.currentCombinedRating = result.extractedData.combinedRating;
-        if (result.extractedData.effectiveDate) updates.effectiveDate = result.extractedData.effectiveDate;
+        console.log(
+          "📊 Found rating decision, extracting data:",
+          result.extractedData,
+        );
+        if (result.extractedData.combinedRating)
+          updates.currentCombinedRating = result.extractedData.combinedRating;
+        if (result.extractedData.effectiveDate)
+          updates.effectiveDate = result.extractedData.effectiveDate;
         updateCount++;
         break;
 
-      case 'claim_letter':
+      case "claim_letter":
         // Populate from claim letter
-        console.log('📬 Found claim letter, extracting data:', result.extractedData);
-        if (result.extractedData.claimNumber) updates.claimNumber = result.extractedData.claimNumber;
+        console.log(
+          "📬 Found claim letter, extracting data:",
+          result.extractedData,
+        );
+        if (result.extractedData.claimNumber)
+          updates.claimNumber = result.extractedData.claimNumber;
         updateCount++;
         break;
-        
+
       default:
         console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
     }
   }
 
   console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
-  console.log('📝 Profile updates:', updates);
+  console.log("📝 Profile updates:", updates);
 
   if (updateCount > 0) {
     const success = updateVeteranProfile(updates);
-    console.log(`✅ Profile update ${success ? 'successful' : 'failed'}`);
+    console.log(`✅ Profile update ${success ? "successful" : "failed"}`);
     return { success, updates, count: updateCount };
   }
 
-  console.log('⚠️ No profile updates made');
+  console.log("⚠️ No profile updates made");
   return { success: false, updates: {}, count: 0 };
 };
 
@@ -2356,15 +2719,15 @@ export const autoPopulateProfile = async (processedResults) => {
  * Transforms processed document results into structured data for review
  */
 export const extractIntelligenceBriefingData = (processedResults) => {
-  console.log('📋 Extracting Intelligence Briefing data...');
-  
+  console.log("📋 Extracting Intelligence Briefing data...");
+
   const briefingData = {
     // Personal Information
     fullName: null,
     dob: null,
     ssnLast4: null,
     vaFileNumber: null,
-    
+
     // Service History
     branch: null,
     serviceStart: null,
@@ -2372,27 +2735,27 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     characterOfService: null,
     mos: null,
     mosTitle: null,
-    
+
     // Ratings & Claims
     currentCombinedRating: null,
     conditions: [],
     claimNumbers: [],
-    
+
     // Documents processed
     documentsProcessed: processedResults?.length || 0,
-    documentTypes: {}
+    documentTypes: {},
   };
 
   if (!processedResults || processedResults.length === 0) {
-    console.warn('⚠️ No results to extract from');
+    console.warn("⚠️ No results to extract from");
     return briefingData;
   }
 
   for (const result of processedResults) {
-    if (result.status !== 'complete' || !result.extractedData) continue;
+    if (result.status !== "complete" || !result.extractedData) continue;
 
     const { type } = result.extractedData;
-    
+
     // Count document types
     if (!briefingData.documentTypes[type]) {
       briefingData.documentTypes[type] = 0;
@@ -2400,133 +2763,151 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     briefingData.documentTypes[type]++;
 
     switch (type) {
-      case 'service_record':
+      case "service_record":
         // Extract from DD214 - data might be in array format
         const serviceData = result.extractedData;
-        console.log('📝 Extracting service record:', serviceData);
-        
+        console.log("📝 Extracting service record:", serviceData);
+
         // Handle array-structured data (indexed 0, 1, 2, etc.)
         if (serviceData[0]) {
           // Data is in numbered keys
-          Object.keys(serviceData).forEach(key => {
+          Object.keys(serviceData).forEach((key) => {
             if (!isNaN(key) && serviceData[key]) {
               const entry = serviceData[key];
               if (entry.branch) briefingData.branch = entry.branch;
               if (entry.entryDate) briefingData.serviceStart = entry.entryDate;
-              if (entry.separationDate) briefingData.serviceEnd = entry.separationDate;
+              if (entry.separationDate)
+                briefingData.serviceEnd = entry.separationDate;
               if (entry.mos) briefingData.mos = entry.mos;
               if (entry.mosTitle) briefingData.mosTitle = entry.mosTitle;
-              if (entry.characterOfService) briefingData.characterOfService = entry.characterOfService;
+              if (entry.characterOfService)
+                briefingData.characterOfService = entry.characterOfService;
             }
           });
         } else {
           // Direct field structure
           if (serviceData.branch) briefingData.branch = serviceData.branch;
-          if (serviceData.entryDate) briefingData.serviceStart = serviceData.entryDate;
-          if (serviceData.separationDate) briefingData.serviceEnd = serviceData.separationDate;
+          if (serviceData.entryDate)
+            briefingData.serviceStart = serviceData.entryDate;
+          if (serviceData.separationDate)
+            briefingData.serviceEnd = serviceData.separationDate;
           if (serviceData.mos) briefingData.mos = serviceData.mos;
-          if (serviceData.mosTitle) briefingData.mosTitle = serviceData.mosTitle;
-          if (serviceData.characterOfService) briefingData.characterOfService = serviceData.characterOfService;
+          if (serviceData.mosTitle)
+            briefingData.mosTitle = serviceData.mosTitle;
+          if (serviceData.characterOfService)
+            briefingData.characterOfService = serviceData.characterOfService;
         }
         break;
 
-      case 'rating_decision':
-        console.log('📊 Extracting rating decision:', result.extractedData);
+      case "rating_decision":
+        console.log("📊 Extracting rating decision:", result.extractedData);
         if (result.extractedData.combinedRating) {
-          briefingData.currentCombinedRating = result.extractedData.combinedRating;
+          briefingData.currentCombinedRating =
+            result.extractedData.combinedRating;
         }
-        if (result.extractedData.conditions && Array.isArray(result.extractedData.conditions)) {
-          result.extractedData.conditions.forEach(condition => {
+        if (
+          result.extractedData.conditions &&
+          Array.isArray(result.extractedData.conditions)
+        ) {
+          result.extractedData.conditions.forEach((condition) => {
             // Check if condition already exists
-            const exists = briefingData.conditions.find(c => 
-              c.name?.toLowerCase() === condition.name?.toLowerCase()
+            const exists = briefingData.conditions.find(
+              (c) => c.name?.toLowerCase() === condition.name?.toLowerCase(),
             );
             if (!exists && condition.name) {
               briefingData.conditions.push({
                 name: condition.name,
                 rating: condition.rating || null,
                 diagnosticCode: condition.diagnosticCode || null,
-                effectiveDate: condition.effectiveDate || result.extractedData.effectiveDate || null
+                effectiveDate:
+                  condition.effectiveDate ||
+                  result.extractedData.effectiveDate ||
+                  null,
               });
             }
           });
         }
         break;
 
-      case 'claim_letter':
-        console.log('📬 Extracting claim letter:', result.extractedData);
-        if (result.extractedData.claimNumber && !briefingData.claimNumbers.includes(result.extractedData.claimNumber)) {
+      case "claim_letter":
+        console.log("📬 Extracting claim letter:", result.extractedData);
+        if (
+          result.extractedData.claimNumber &&
+          !briefingData.claimNumbers.includes(result.extractedData.claimNumber)
+        ) {
           briefingData.claimNumbers.push(result.extractedData.claimNumber);
         }
         break;
     }
   }
 
-  console.log('✅ Intelligence Briefing data extracted:', briefingData);
+  console.log("✅ Intelligence Briefing data extracted:", briefingData);
   return briefingData;
 };
 
 /**
  * Analyze processed documents for Evidence Gaps and DTA Violations
  * (NEW in v1.16.0)
- * 
+ *
  * This runs automatically if we have both a Decision Letter and medical evidence
  * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
  */
 export const analyzeEvidenceGaps = (processedResults) => {
-  console.log('🔍 Analyzing evidence gaps across processed documents...');
-  
+  console.log("🔍 Analyzing evidence gaps across processed documents...");
+
   // Find decision letters
-  const decisionLetters = processedResults.filter(r => 
-    r.classification?.type === DOCUMENT_TYPES.RATING_DECISION && 
-    r.status === 'complete' &&
-    r.text
+  const decisionLetters = processedResults.filter(
+    (r) =>
+      r.classification?.type === DOCUMENT_TYPES.RATING_DECISION &&
+      r.status === "complete" &&
+      r.text,
   );
-  
+
   // Find all medical/service evidence
-  const evidenceDocs = processedResults.filter(r => 
-    r.status === 'complete' &&
-    r.text &&
-    r.classification?.category !== 'correspondence'
+  const evidenceDocs = processedResults.filter(
+    (r) =>
+      r.status === "complete" &&
+      r.text &&
+      r.classification?.category !== "correspondence",
   );
-  
+
   if (decisionLetters.length === 0) {
-    console.log('ℹ️ No Decision Letters found - skipping gap analysis');
+    console.log("ℹ️ No Decision Letters found - skipping gap analysis");
     return {
       success: false,
-      reason: 'No Decision Letters found in processed documents',
+      reason: "No Decision Letters found in processed documents",
       gapsFound: [],
     };
   }
-  
+
   if (evidenceDocs.length < 2) {
-    console.log('ℹ️ Insufficient evidence documents for gap analysis');
+    console.log("ℹ️ Insufficient evidence documents for gap analysis");
     return {
       success: false,
-      reason: 'Need at least 2 documents for meaningful gap analysis',
+      reason: "Need at least 2 documents for meaningful gap analysis",
       gapsFound: [],
     };
   }
-  
+
   const allGaps = [];
-  
+
   // For each decision letter, check against all other evidence
   for (const decision of decisionLetters) {
     console.log(`📋 Analyzing Decision: ${decision.filename}`);
-    
+
     // Combine all non-decision text as the "C-File equivalent"
     const combinedEvidence = evidenceDocs
-      .filter(d => d.filename !== decision.filename)
-      .map(d => d.text)
-      .join('\n\n--- DOCUMENT BREAK ---\n\n');
-    
+      .filter((d) => d.filename !== decision.filename)
+      .map((d) => d.text)
+      .join("\n\n--- DOCUMENT BREAK ---\n\n");
+
     try {
       // Use quickGapCheck for faster analysis
-      const quickGaps = quickGapCheck(decision.text, { 
-        documentTypes: evidenceDocs.map(d => d.classification?.type),
+      const quickGaps = quickGapCheck(decision.text, {
+        documentTypes: evidenceDocs.map((d) => d.classification?.type),
         estimatedDocCount: evidenceDocs.length,
       });
-      
+
       if (quickGaps.gaps && quickGaps.gaps.length > 0) {
         allGaps.push({
           decisionLetter: decision.filename,
@@ -2535,14 +2916,16 @@ export const analyzeEvidenceGaps = (processedResults) => {
           recommendations: quickGaps.recommendations,
         });
       }
-      
+
       // If we have substantial evidence, do full gap analysis
       if (combinedEvidence.length > 5000 && combinedEvidence.length < 500000) {
         const fullAnalysis = findEvidenceGaps(decision.text, combinedEvidence);
-        
+
         if (fullAnalysis.gapsFound && fullAnalysis.gapsFound.length > 0) {
           // Merge with quick check results
-          const existingEntry = allGaps.find(g => g.decisionLetter === decision.filename);
+          const existingEntry = allGaps.find(
+            (g) => g.decisionLetter === decision.filename,
+          );
           if (existingEntry) {
             existingEntry.fullAnalysis = fullAnalysis;
             existingEntry.dtaViolations = fullAnalysis.dtaViolations;
@@ -2556,64 +2939,82 @@ export const analyzeEvidenceGaps = (processedResults) => {
         }
       }
     } catch (err) {
-      console.warn(`⚠️ Gap analysis error for ${decision.filename}:`, err.message);
+      console.warn(
+        `⚠️ Gap analysis error for ${decision.filename}:`,
+        err.message,
+      );
     }
   }
-  
+
   const result = {
     success: true,
     gapsFound: allGaps,
     totalGaps: allGaps.reduce((sum, g) => sum + (g.gaps?.length || 0), 0),
-    hasDTAViolations: allGaps.some(g => g.dtaViolations && g.dtaViolations.length > 0),
+    hasDTAViolations: allGaps.some(
+      (g) => g.dtaViolations && g.dtaViolations.length > 0,
+    ),
     analyzedAt: new Date().toISOString(),
-    parserVersion: 'v1.16.0',
+    parserVersion: "v1.16.0",
   };
-  
-  console.log(`🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`);
+
+  console.log(
+    `🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`,
+  );
   return result;
 };
 
 /**
  * Generate comprehensive analysis report using LLM
  */
-export const generateMusterCallReport = async (processedResults, classified) => {
-  console.log('🎖️ Starting Muster Call Report generation...');
-  console.log('📊 Total processed results:', processedResults?.length);
-  
+export const generateMusterCallReport = async (
+  processedResults,
+  classified,
+) => {
+  console.log("🎖️ Starting Muster Call Report generation...");
+  console.log("📊 Total processed results:", processedResults?.length);
+
   if (!isAnyAIAvailable()) {
-    console.warn('⚠️ AI not available for report generation');
+    console.warn("⚠️ AI not available for report generation");
     return {
       success: false,
-      error: 'AI service not available. Report generation requires AI.'
+      error: "AI service not available. Report generation requires AI.",
     };
   }
 
-  const serviceRecords = processedResults.filter(r => 
-    r.classification?.category === 'service_record' && r.status === 'complete'
+  const serviceRecords = processedResults.filter(
+    (r) =>
+      r.classification?.category === "service_record" &&
+      r.status === "complete",
   );
 
-  const ratingDocs = processedResults.filter(r => 
-    r.classification?.category === 'rating' && r.status === 'complete'
+  const ratingDocs = processedResults.filter(
+    (r) => r.classification?.category === "rating" && r.status === "complete",
   );
 
-  const medicalDocs = processedResults.filter(r => 
-    r.classification?.category === 'medical' && r.status === 'complete'
+  const medicalDocs = processedResults.filter(
+    (r) => r.classification?.category === "medical" && r.status === "complete",
   );
 
-  console.log(`📝 Document counts: ${serviceRecords.length} service, ${ratingDocs.length} rating, ${medicalDocs.length} medical`);
+  console.log(
+    `📝 Document counts: ${serviceRecords.length} service, ${ratingDocs.length} rating, ${medicalDocs.length} medical`,
+  );
 
   // Check if we have any documents to analyze
-  if (serviceRecords.length === 0 && ratingDocs.length === 0 && medicalDocs.length === 0) {
-    console.warn('⚠️ No completed documents to analyze');
+  if (
+    serviceRecords.length === 0 &&
+    ratingDocs.length === 0 &&
+    medicalDocs.length === 0
+  ) {
+    console.warn("⚠️ No completed documents to analyze");
     return {
       success: false,
-      error: 'No completed documents available for analysis.'
+      error: "No completed documents available for analysis.",
     };
   }
 
   // Summarize extracted data to avoid token overflow
   const summarizeData = (data) => {
-    if (!data) return 'No data extracted';
+    if (!data) return "No data extracted";
     const summary = [];
     if (data.name) summary.push(`Name: ${data.name}`);
     if (data.serviceNumber) summary.push(`Service #: ${data.serviceNumber}`);
@@ -2623,23 +3024,28 @@ export const generateMusterCallReport = async (processedResults, classified) => 
     if (data.mos) summary.push(`MOS: ${data.mos}`);
     if (data.rank) summary.push(`Rank: ${data.rank}`);
     if (data.conditions && Array.isArray(data.conditions)) {
-      summary.push(`Conditions (${data.conditions.length}): ${data.conditions.slice(0, 10).map(c => c.name || c).join(', ')}`);
+      summary.push(
+        `Conditions (${data.conditions.length}): ${data.conditions
+          .slice(0, 10)
+          .map((c) => c.name || c)
+          .join(", ")}`,
+      );
     }
     if (data.rating) summary.push(`Rating: ${data.rating}%`);
     if (data.effectiveDate) summary.push(`Effective: ${data.effectiveDate}`);
-    return summary.length > 0 ? summary.join(', ') : 'Limited data';
+    return summary.length > 0 ? summary.join(", ") : "Limited data";
   };
 
   const prompt = `Analyze this veteran's complete file and provide comprehensive recommendations:
 
 SERVICE RECORDS (${serviceRecords.length} documents):
-${serviceRecords.map(r => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join('\n')}
+${serviceRecords.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 RATING DECISIONS (${ratingDocs.length} documents):
-${ratingDocs.map(r => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join('\n')}
+${ratingDocs.map((r) => `- ${r.filename}: ${summarizeData(r.extractedData)}`).join("\n")}
 
 MEDICAL RECORDS (${medicalDocs.length} documents):
-${medicalDocs.map(r => `- ${r.filename}: ${r.classification.type}`).join('\n')}
+${medicalDocs.map((r) => `- ${r.filename}: ${r.classification.type}`).join("\n")}
 
 Provide:
 1. **Service Connection Opportunities**: What conditions should be claimed based on service records?
@@ -2654,22 +3060,25 @@ Format as markdown with clear sections.`;
 
   try {
     const response = await generateAI(prompt, {
-      systemPrompt: 'You are a VA disability claims expert. Provide actionable, regulation-based guidance.',
-      temperature: 0.3
+      systemPrompt:
+        "You are a VA disability claims expert. Provide actionable, regulation-based guidance.",
+      temperature: 0.3,
     });
 
-    console.log(`✅ Report generated successfully (${response?.length || 0} chars)`);
+    console.log(
+      `✅ Report generated successfully (${response?.length || 0} chars)`,
+    );
 
     return {
       success: true,
       report: response,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error('❌ Report generation error:', error);
+    console.error("❌ Report generation error:", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };

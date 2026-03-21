@@ -2,22 +2,22 @@
  * Vet-Rate.org - The Needle Component
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * "Find the Evidence" - PDF Keyword Search Interface
- * 
+ *
  * Helps veterans find specific mentions in 2,000+ page Service Treatment Records
  */
 
-import React, { useState, useCallback, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { 
-  searchPdfForKeyword, 
+import React, { useState, useCallback, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  searchPdfForKeyword,
   searchPdfForMultipleKeywords,
   highlightSearchTerm,
-  COMMON_MEDICAL_KEYWORDS 
-} from '../utils/pdfSearchEngine';
-import { escapeHtml } from '../utils/sanitize';
+  COMMON_MEDICAL_KEYWORDS,
+} from "../utils/pdfSearchEngine";
+import { escapeHtml } from "../utils/sanitize";
 
 const RecordSearch = ({ onClose }) => {
   const { t } = useLanguage();
@@ -30,7 +30,7 @@ const RecordSearch = ({ onClose }) => {
   const fileInputRef = useRef(null);
 
   // Search state
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState(0);
   const [results, setResults] = useState([]);
@@ -39,7 +39,7 @@ const RecordSearch = ({ onClose }) => {
   // Options
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
-  
+
   // Error handling
   const [error, setError] = useState(null);
 
@@ -47,12 +47,12 @@ const RecordSearch = ({ onClose }) => {
   const handleFileDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile && droppedFile.type === 'application/pdf') {
+    if (droppedFile && droppedFile.type === "application/pdf") {
       loadFile(droppedFile);
     } else {
-      setError('Please drop in a PDF file.');
+      setError("Please drop in a PDF file.");
     }
   }, []);
 
@@ -67,7 +67,7 @@ const RecordSearch = ({ onClose }) => {
     setError(null);
     setFile(pdfFile);
     setResults([]);
-    
+
     try {
       const arrayBuffer = await pdfFile.arrayBuffer();
       setFileData(arrayBuffer);
@@ -86,24 +86,22 @@ const RecordSearch = ({ onClose }) => {
     setSearchProgress(0);
 
     try {
-      const searchResults = await searchPdfForKeyword(
-        fileData,
-        searchTerm,
-        {
-          caseSensitive,
-          wholeWord,
-          contextLength: 200,
-          onProgress: (current, total) => {
-            setSearchProgress(Math.round((current / total) * 100));
-          }
-        }
-      );
+      const searchResults = await searchPdfForKeyword(fileData, searchTerm, {
+        caseSensitive,
+        wholeWord,
+        contextLength: 200,
+        onProgress: (current, total) => {
+          setSearchProgress(Math.round((current / total) * 100));
+        },
+      });
 
       setResults(searchResults.results);
       setTotalMatches(searchResults.totalMatches);
-      
+
       if (searchResults.results.length === 0) {
-        setError(`No matches found for "${searchTerm}". Try a different keyword or check spelling.`);
+        setError(
+          `No matches found for "${searchTerm}". Try a different keyword or check spelling.`,
+        );
       }
     } catch (err) {
       setError(`Search failed: ${err.message}`);
@@ -114,7 +112,7 @@ const RecordSearch = ({ onClose }) => {
 
   const handleQuickSearch = async (category) => {
     if (!fileData) {
-      setError('Please drop in a PDF file first.');
+      setError("Please drop in a PDF file first.");
       return;
     }
 
@@ -136,20 +134,20 @@ const RecordSearch = ({ onClose }) => {
           contextLength: 200,
           onProgress: (current, total) => {
             setSearchProgress(Math.round((current / total) * 100));
-          }
-        }
+          },
+        },
       );
 
       // Combine all results
       const allResults = [];
       let totalCount = 0;
-      
+
       resultsMap.forEach((keywordResults, keyword) => {
         totalCount += keywordResults.length;
-        keywordResults.forEach(result => {
+        keywordResults.forEach((result) => {
           allResults.push({
             ...result,
-            keyword: keyword
+            keyword: keyword,
           });
         });
       });
@@ -159,9 +157,11 @@ const RecordSearch = ({ onClose }) => {
 
       setResults(allResults);
       setTotalMatches(totalCount);
-      
+
       if (allResults.length === 0) {
-        setError(`No matches found for ${category} keywords. Try dropping in the correct record file.`);
+        setError(
+          `No matches found for ${category} keywords. Try dropping in the correct record file.`,
+        );
       }
     } catch (err) {
       setError(`Search failed: ${err.message}`);
@@ -171,7 +171,7 @@ const RecordSearch = ({ onClose }) => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -180,7 +180,6 @@ const RecordSearch = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-blue-500/30">
-        
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -205,7 +204,6 @@ const RecordSearch = ({ onClose }) => {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          
           {/* Explainer */}
           {!file && (
             <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-400/30 rounded-lg p-6 mb-6">
@@ -216,11 +214,16 @@ const RecordSearch = ({ onClose }) => {
                     Find Evidence Instantly
                   </h2>
                   <p className="text-gray-300 mb-3">
-                    Your Service Treatment Record (STR) or C-File might be thousands of pages. You know you hurt your 
-                    back in 2006, but which page documents it?
+                    Your Service Treatment Record (STR) or C-File might be
+                    thousands of pages. You know you hurt your back in 2006, but
+                    which page documents it?
                   </p>
                   <p className="text-gray-300 font-semibold">
-                    This tool searches the entire PDF in seconds and shows you <span className="text-white">exact page numbers + context</span>.
+                    This tool searches the entire PDF in seconds and shows you{" "}
+                    <span className="text-white">
+                      exact page numbers + context
+                    </span>
+                    .
                   </p>
                 </div>
               </div>
@@ -231,24 +234,26 @@ const RecordSearch = ({ onClose }) => {
           {!file && (
             <div
               onDrop={handleFileDrop}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
               onDragLeave={() => setIsDragging(false)}
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${
-                isDragging 
-                  ? 'border-blue-500 bg-blue-500/10' 
-                  : 'border-gray-600 hover:border-gray-500 bg-gray-800/50'
+                isDragging
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-gray-600 hover:border-gray-500 bg-gray-800/50"
               }`}
             >
               <div className="text-6xl mb-4">📄</div>
               <p className="text-xl text-gray-300 mb-2">
                 Drop your STR or C-File PDF here
               </p>
-              <p className="text-sm text-gray-400 mb-4">
-                or click to browse
-              </p>
+              <p className="text-sm text-gray-400 mb-4">or click to browse</p>
               <p className="text-xs text-gray-500">
-                All processing happens locally in your browser. No upload to servers.
+                All processing happens locally in your browser. No upload to
+                servers.
               </p>
               <input
                 ref={fileInputRef}
@@ -263,7 +268,6 @@ const RecordSearch = ({ onClose }) => {
           {/* File Loaded */}
           {file && (
             <div className="space-y-6">
-              
               {/* File Info */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -307,7 +311,7 @@ const RecordSearch = ({ onClose }) => {
                     disabled={isSearching || !searchTerm.trim()}
                     className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
                   >
-                    {isSearching ? 'Searching...' : 'Search'}
+                    {isSearching ? "Searching..." : "Search"}
                   </button>
                 </div>
 
@@ -347,7 +351,7 @@ const RecordSearch = ({ onClose }) => {
                       disabled={isSearching}
                       className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white text-sm rounded transition-colors capitalize"
                     >
-                      {category.replace('_', ' ')}
+                      {category.replace("_", " ")}
                     </button>
                   ))}
                 </div>
@@ -358,7 +362,9 @@ const RecordSearch = ({ onClose }) => {
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="animate-spin text-2xl">🔄</div>
-                    <p className="text-gray-300">Searching... {searchProgress}%</p>
+                    <p className="text-gray-300">
+                      Searching... {searchProgress}%
+                    </p>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
                     <div
@@ -372,9 +378,7 @@ const RecordSearch = ({ onClose }) => {
               {/* Error Display */}
               {error && (
                 <div className="bg-yellow-500/10 border border-yellow-400/30 rounded-lg p-4">
-                  <p className="text-yellow-300 text-sm">
-                    ⚠️ {error}
-                  </p>
+                  <p className="text-yellow-300 text-sm">⚠️ {error}</p>
                 </div>
               )}
 
@@ -382,7 +386,9 @@ const RecordSearch = ({ onClose }) => {
               {results.length > 0 && (
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                   <h3 className="text-lg font-bold text-green-400 mb-4">
-                    ✅ Found {totalMatches} {totalMatches === 1 ? 'match' : 'matches'} across {results.length} locations
+                    ✅ Found {totalMatches}{" "}
+                    {totalMatches === 1 ? "match" : "matches"} across{" "}
+                    {results.length} locations
                   </h3>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {results.map((result, index) => (
@@ -405,8 +411,8 @@ const RecordSearch = ({ onClose }) => {
                           dangerouslySetInnerHTML={{
                             __html: highlightSearchTerm(
                               escapeHtml(result.context),
-                              escapeHtml(result.matchText || searchTerm)
-                            )
+                              escapeHtml(result.matchText || searchTerm),
+                            ),
                           }}
                         />
                       </div>
@@ -425,19 +431,23 @@ const RecordSearch = ({ onClose }) => {
                     <li className="flex items-start gap-2">
                       <span className="text-green-400">✓</span>
                       <span>
-                        <strong>In your personal statement:</strong> "As documented on Page {results[0].page} of my Service Treatment Records..."
+                        <strong>In your personal statement:</strong> "As
+                        documented on Page {results[0].page} of my Service
+                        Treatment Records..."
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-green-400">✓</span>
                       <span>
-                        <strong>For your VSO:</strong> Give them the page numbers to attach as evidence
+                        <strong>For your VSO:</strong> Give them the page
+                        numbers to attach as evidence
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-green-400">✓</span>
                       <span>
-                        <strong>In your nexus letter:</strong> Ask your doctor to reference these specific pages
+                        <strong>In your nexus letter:</strong> Ask your doctor
+                        to reference these specific pages
                       </span>
                     </li>
                   </ul>

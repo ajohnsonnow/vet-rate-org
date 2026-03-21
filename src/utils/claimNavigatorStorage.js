@@ -1,22 +1,22 @@
 /**
  * Vet-Rate.org - Claim Navigator Storage
  * Persistent storage for claim navigator state
- * 
+ *
  * Privacy-first: All data stays on user's device (localStorage)
  * Supports multi-claim tracking and version migration
- * 
+ *
  * Built by a fellow veteran. "Your data, your device."
  */
 
 import {
   createClaimSchema,
   calculateItfExpiration,
-  calculateAppealDeadline
-} from '../data/claimNavigatorSchema';
+  calculateAppealDeadline,
+} from "../data/claimNavigatorSchema";
 
 // Storage keys
-const CLAIMS_KEY = 'vet_rate_claim_navigator_claims';
-const SETTINGS_KEY = 'vet_rate_claim_navigator_settings';
+const CLAIMS_KEY = "vet_rate_claim_navigator_claims";
+const SETTINGS_KEY = "vet_rate_claim_navigator_settings";
 const SCHEMA_VERSION = 1;
 
 // ============================================
@@ -38,17 +38,17 @@ export const getAllClaims = () => {
   try {
     const stored = localStorage.getItem(CLAIMS_KEY);
     if (!stored) return [];
-    
+
     const data = JSON.parse(stored);
-    
+
     // Handle version migration if needed
     if (data.version !== SCHEMA_VERSION) {
       return migrateClaims(data);
     }
-    
+
     return data.claims || [];
   } catch (error) {
-    console.error('Error reading claims:', error);
+    console.error("Error reading claims:", error);
     return [];
   }
 };
@@ -60,7 +60,7 @@ export const getAllClaims = () => {
  */
 export const getClaimById = (claimId) => {
   const claims = getAllClaims();
-  return claims.find(c => c.id === claimId) || null;
+  return claims.find((c) => c.id === claimId) || null;
 };
 
 /**
@@ -71,7 +71,7 @@ export const getClaimById = (claimId) => {
 export const createClaim = (claimData) => {
   try {
     const claims = getAllClaims();
-    
+
     // Create new claim with schema defaults
     const newClaim = {
       ...createClaimSchema(),
@@ -80,21 +80,26 @@ export const createClaim = (claimData) => {
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: SCHEMA_VERSION
-      }
+        version: SCHEMA_VERSION,
+      },
     };
-    
+
     // Auto-calculate ITF expiration if ITF date provided
-    if (newClaim.criticalDates?.itfDate && !newClaim.criticalDates.itfExpirationDate) {
-      newClaim.criticalDates.itfExpirationDate = calculateItfExpiration(newClaim.criticalDates.itfDate);
+    if (
+      newClaim.criticalDates?.itfDate &&
+      !newClaim.criticalDates.itfExpirationDate
+    ) {
+      newClaim.criticalDates.itfExpirationDate = calculateItfExpiration(
+        newClaim.criticalDates.itfDate,
+      );
     }
-    
+
     claims.push(newClaim);
     saveClaims(claims);
-    
+
     return newClaim;
   } catch (error) {
-    console.error('Error creating claim:', error);
+    console.error("Error creating claim:", error);
     throw error;
   }
 };
@@ -108,32 +113,42 @@ export const createClaim = (claimData) => {
 export const updateClaim = (claimId, updates) => {
   try {
     const claims = getAllClaims();
-    const index = claims.findIndex(c => c.id === claimId);
-    
+    const index = claims.findIndex((c) => c.id === claimId);
+
     if (index === -1) {
-      console.warn('Claim not found:', claimId);
+      console.warn("Claim not found:", claimId);
       return null;
     }
-    
+
     // Deep merge updates
     const updatedClaim = deepMerge(claims[index], updates);
     updatedClaim.metadata.updatedAt = new Date().toISOString();
-    
+
     // Auto-calculate dates
-    if (updates.criticalDates?.itfDate && !updatedClaim.criticalDates.itfExpirationDate) {
-      updatedClaim.criticalDates.itfExpirationDate = calculateItfExpiration(updatedClaim.criticalDates.itfDate);
+    if (
+      updates.criticalDates?.itfDate &&
+      !updatedClaim.criticalDates.itfExpirationDate
+    ) {
+      updatedClaim.criticalDates.itfExpirationDate = calculateItfExpiration(
+        updatedClaim.criticalDates.itfDate,
+      );
     }
-    
-    if (updates.criticalDates?.decisionDate && !updatedClaim.criticalDates.appealDeadline) {
-      updatedClaim.criticalDates.appealDeadline = calculateAppealDeadline(updatedClaim.criticalDates.decisionDate);
+
+    if (
+      updates.criticalDates?.decisionDate &&
+      !updatedClaim.criticalDates.appealDeadline
+    ) {
+      updatedClaim.criticalDates.appealDeadline = calculateAppealDeadline(
+        updatedClaim.criticalDates.decisionDate,
+      );
     }
-    
+
     claims[index] = updatedClaim;
     saveClaims(claims);
-    
+
     return updatedClaim;
   } catch (error) {
-    console.error('Error updating claim:', error);
+    console.error("Error updating claim:", error);
     throw error;
   }
 };
@@ -146,17 +161,17 @@ export const updateClaim = (claimId, updates) => {
 export const deleteClaim = (claimId) => {
   try {
     const claims = getAllClaims();
-    const filtered = claims.filter(c => c.id !== claimId);
-    
+    const filtered = claims.filter((c) => c.id !== claimId);
+
     if (filtered.length === claims.length) {
-      console.warn('Claim not found for deletion:', claimId);
+      console.warn("Claim not found for deletion:", claimId);
       return false;
     }
-    
+
     saveClaims(filtered);
     return true;
   } catch (error) {
-    console.error('Error deleting claim:', error);
+    console.error("Error deleting claim:", error);
     return false;
   }
 };
@@ -168,17 +183,17 @@ export const deleteClaim = (claimId) => {
  * @param {string} noteType - Type of note (user, system, milestone)
  * @returns {Object|null} The updated claim
  */
-export const addClaimNote = (claimId, noteText, noteType = 'user') => {
+export const addClaimNote = (claimId, noteText, noteType = "user") => {
   const claim = getClaimById(claimId);
   if (!claim) return null;
-  
+
   const note = {
     id: `note_${Date.now()}`,
     date: new Date().toISOString(),
     text: noteText,
-    type: noteType
+    type: noteType,
   };
-  
+
   const notes = [...(claim.notes || []), note];
   return updateClaim(claimId, { notes });
 };
@@ -194,22 +209,26 @@ export const addClaimNote = (claimId, noteText, noteType = 'user') => {
  * @param {Object} additionalUpdates - Additional updates to apply
  * @returns {Object|null} The updated claim
  */
-export const advanceClaimPhase = (claimId, newPhase, additionalUpdates = {}) => {
+export const advanceClaimPhase = (
+  claimId,
+  newPhase,
+  additionalUpdates = {},
+) => {
   const claim = getClaimById(claimId);
   if (!claim) return null;
-  
+
   // Add phase transition note
   const note = {
     id: `note_${Date.now()}`,
     date: new Date().toISOString(),
     text: `Phase changed to: ${newPhase}`,
-    type: 'milestone'
+    type: "milestone",
   };
-  
+
   return updateClaim(claimId, {
     currentPhase: newPhase,
     notes: [...(claim.notes || []), note],
-    ...additionalUpdates
+    ...additionalUpdates,
   });
 };
 
@@ -223,12 +242,12 @@ export const advanceClaimPhase = (claimId, newPhase, additionalUpdates = {}) => 
 export const updateEvidenceItem = (claimId, evidenceItem, value) => {
   const claim = getClaimById(claimId);
   if (!claim) return null;
-  
+
   const evidenceChecklist = {
     ...claim.evidenceChecklist,
-    [evidenceItem]: value
+    [evidenceItem]: value,
   };
-  
+
   return updateClaim(claimId, { evidenceChecklist });
 };
 
@@ -241,37 +260,43 @@ export const updateEvidenceItem = (claimId, evidenceItem, value) => {
 export const recordDecision = (claimId, decisionData) => {
   const claim = getClaimById(claimId);
   if (!claim) return null;
-  
-  const { outcome, ratingPercentage, effectiveDate, denialReason, denialDetails } = decisionData;
+
+  const {
+    outcome,
+    ratingPercentage,
+    effectiveDate,
+    denialReason,
+    denialDetails,
+  } = decisionData;
   const decisionDate = decisionData.decisionDate || new Date().toISOString();
-  
+
   const updates = {
-    currentPhase: 'DECISION',
+    currentPhase: "DECISION",
     decisionInfo: {
       ...claim.decisionInfo,
       outcome,
       ratingPercentage,
       effectiveDate,
       denialReason,
-      denialDetails
+      denialDetails,
     },
     criticalDates: {
       ...claim.criticalDates,
       decisionDate,
-      appealDeadline: calculateAppealDeadline(decisionDate)
-    }
+      appealDeadline: calculateAppealDeadline(decisionDate),
+    },
   };
-  
+
   // Add decision note
   const note = {
     id: `note_${Date.now()}`,
     date: new Date().toISOString(),
-    text: `Decision received: ${outcome}${ratingPercentage ? ` at ${ratingPercentage}%` : ''}`,
-    type: 'milestone'
+    text: `Decision received: ${outcome}${ratingPercentage ? ` at ${ratingPercentage}%` : ""}`,
+    type: "milestone",
   };
-  
+
   updates.notes = [...(claim.notes || []), note];
-  
+
   return updateClaim(claimId, updates);
 };
 
@@ -288,7 +313,7 @@ export const getSettings = () => {
     const stored = localStorage.getItem(SETTINGS_KEY);
     return stored ? JSON.parse(stored) : getDefaultSettings();
   } catch (error) {
-    console.error('Error reading settings:', error);
+    console.error("Error reading settings:", error);
     return getDefaultSettings();
   }
 };
@@ -304,7 +329,7 @@ export const updateSettings = (updates) => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     return settings;
   } catch (error) {
-    console.error('Error saving settings:', error);
+    console.error("Error saving settings:", error);
     throw error;
   }
 };
@@ -315,12 +340,12 @@ export const updateSettings = (updates) => {
 const getDefaultSettings = () => ({
   deadlineWarningDays: 30,
   showCompletedClaims: true,
-  defaultView: 'dashboard',
+  defaultView: "dashboard",
   notifications: {
     deadlineReminders: true,
-    statusChanges: true
+    statusChanges: true,
   },
-  lastSeenVersion: SCHEMA_VERSION
+  lastSeenVersion: SCHEMA_VERSION,
 });
 
 // ============================================
@@ -335,17 +360,17 @@ export const exportClaimsData = () => {
   try {
     const claims = getAllClaims();
     const settings = getSettings();
-    
+
     const exportData = {
       version: SCHEMA_VERSION,
       exportDate: new Date().toISOString(),
       claims,
-      settings
+      settings,
     };
-    
+
     return JSON.stringify(exportData, null, 2);
   } catch (error) {
-    console.error('Error exporting claims:', error);
+    console.error("Error exporting claims:", error);
     throw error;
   }
 };
@@ -359,41 +384,41 @@ export const exportClaimsData = () => {
 export const importClaimsData = (jsonData, merge = false) => {
   try {
     const data = JSON.parse(jsonData);
-    
+
     if (!data.claims || !Array.isArray(data.claims)) {
-      throw new Error('Invalid import data format');
+      throw new Error("Invalid import data format");
     }
-    
+
     if (merge) {
       const existing = getAllClaims();
-      const existingIds = new Set(existing.map(c => c.id));
-      
+      const existingIds = new Set(existing.map((c) => c.id));
+
       // Add new claims, skip duplicates
-      const newClaims = data.claims.filter(c => !existingIds.has(c.id));
+      const newClaims = data.claims.filter((c) => !existingIds.has(c.id));
       saveClaims([...existing, ...newClaims]);
-      
+
       return {
         success: true,
         imported: newClaims.length,
-        skipped: data.claims.length - newClaims.length
+        skipped: data.claims.length - newClaims.length,
       };
     } else {
       saveClaims(data.claims);
       if (data.settings) {
         updateSettings(data.settings);
       }
-      
+
       return {
         success: true,
         imported: data.claims.length,
-        skipped: 0
+        skipped: 0,
       };
     }
   } catch (error) {
-    console.error('Error importing claims:', error);
+    console.error("Error importing claims:", error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -409,7 +434,7 @@ const saveClaims = (claims) => {
   const data = {
     version: SCHEMA_VERSION,
     lastUpdated: new Date().toISOString(),
-    claims
+    claims,
   };
   localStorage.setItem(CLAIMS_KEY, JSON.stringify(data));
 };
@@ -419,15 +444,19 @@ const saveClaims = (claims) => {
  */
 const deepMerge = (target, source) => {
   const result = { ...target };
-  
+
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === "object" &&
+      !Array.isArray(source[key])
+    ) {
       result[key] = deepMerge(target[key] || {}, source[key]);
     } else {
       result[key] = source[key];
     }
   }
-  
+
   return result;
 };
 
@@ -436,24 +465,29 @@ const deepMerge = (target, source) => {
  */
 const migrateClaims = (data) => {
   // Add migration logic as schema evolves
-  console.log('Migrating claims from version', data.version, 'to', SCHEMA_VERSION);
-  
+  console.log(
+    "Migrating claims from version",
+    data.version,
+    "to",
+    SCHEMA_VERSION,
+  );
+
   const claims = data.claims || [];
-  
+
   // Apply migrations based on version
-  claims.forEach(claim => {
+  claims.forEach((claim) => {
     if (!claim.metadata) {
       claim.metadata = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: SCHEMA_VERSION
+        version: SCHEMA_VERSION,
       };
     }
   });
-  
+
   // Save migrated data
   saveClaims(claims);
-  
+
   return claims;
 };
 
@@ -475,7 +509,7 @@ export const clearAllNavigatorData = () => {
  */
 export const getClaimStatistics = () => {
   const claims = getAllClaims();
-  
+
   const stats = {
     totalClaims: claims.length,
     byStatus: {
@@ -484,7 +518,7 @@ export const getClaimStatistics = () => {
       pending: 0,
       granted: 0,
       denied: 0,
-      appealing: 0
+      appealing: 0,
     },
     byType: {
       ORIGINAL: 0,
@@ -492,35 +526,47 @@ export const getClaimStatistics = () => {
       SECONDARY: 0,
       SUPPLEMENTAL: 0,
       HLR: 0,
-      BOARD_APPEAL: 0
+      BOARD_APPEAL: 0,
     },
     deadlinesApproaching: 0,
-    averageCompleteness: 0
+    averageCompleteness: 0,
   };
-  
+
   let totalCompleteness = 0;
-  
-  claims.forEach(claim => {
+
+  claims.forEach((claim) => {
     // Count by type
     if (claim.claimType && stats.byType[claim.claimType] !== undefined) {
       stats.byType[claim.claimType]++;
     }
-    
+
     // Count by status/phase
-    if (claim.currentPhase === 'TRIAGE' || claim.currentPhase === 'GATHERING_EVIDENCE') {
+    if (
+      claim.currentPhase === "TRIAGE" ||
+      claim.currentPhase === "GATHERING_EVIDENCE"
+    ) {
       stats.byStatus.drafting++;
-    } else if (claim.currentPhase === 'CLAIM_SUBMITTED' || claim.currentPhase === 'INITIAL_REVIEW') {
+    } else if (
+      claim.currentPhase === "CLAIM_SUBMITTED" ||
+      claim.currentPhase === "INITIAL_REVIEW"
+    ) {
       stats.byStatus.submitted++;
-    } else if (['EVIDENCE_GATHERING', 'CP_EXAM_SCHEDULED', 'PREPARATION_FOR_DECISION'].includes(claim.currentPhase)) {
+    } else if (
+      [
+        "EVIDENCE_GATHERING",
+        "CP_EXAM_SCHEDULED",
+        "PREPARATION_FOR_DECISION",
+      ].includes(claim.currentPhase)
+    ) {
       stats.byStatus.pending++;
-    } else if (claim.decisionInfo?.outcome === 'GRANTED') {
+    } else if (claim.decisionInfo?.outcome === "GRANTED") {
       stats.byStatus.granted++;
-    } else if (claim.decisionInfo?.outcome === 'DENIED') {
+    } else if (claim.decisionInfo?.outcome === "DENIED") {
       stats.byStatus.denied++;
-    } else if (claim.currentPhase === 'APPEAL') {
+    } else if (claim.currentPhase === "APPEAL") {
       stats.byStatus.appealing++;
     }
-    
+
     // Check deadlines
     if (claim.criticalDates?.appealDeadline) {
       const days = daysUntil(claim.criticalDates.appealDeadline);
@@ -534,19 +580,18 @@ export const getClaimStatistics = () => {
         stats.deadlinesApproaching++;
       }
     }
-    
+
     // Calculate completeness
     if (claim.evidenceChecklist) {
       const items = Object.values(claim.evidenceChecklist);
-      const complete = items.filter(v => v === true).length;
+      const complete = items.filter((v) => v === true).length;
       totalCompleteness += (complete / items.length) * 100;
     }
   });
-  
-  stats.averageCompleteness = claims.length > 0 
-    ? Math.round(totalCompleteness / claims.length) 
-    : 0;
-  
+
+  stats.averageCompleteness =
+    claims.length > 0 ? Math.round(totalCompleteness / claims.length) : 0;
+
   return stats;
 };
 
@@ -572,5 +617,5 @@ export default {
   exportClaimsData,
   importClaimsData,
   clearAllNavigatorData,
-  getClaimStatistics
+  getClaimStatistics,
 };

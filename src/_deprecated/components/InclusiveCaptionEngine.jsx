@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * InclusiveCaptionEngine Component
- * 
+ *
  * Real-time captioning system for accessibility:
  * - Shows native language text from peer voice
  * - Shows English translation for forms
@@ -11,41 +11,56 @@ import { useLanguage } from '../contexts/LanguageContext';
  * - Syncs with voice output
  */
 const InclusiveCaptionEngine = ({
-  nativeText = '',
-  englishText = '',
+  nativeText = "",
+  englishText = "",
   isActive = false,
   isTranslation = false,
-  sourceModel = 'GENERAL',
+  sourceModel = "GENERAL",
   onApprove,
-  className = ''
+  className = "",
 }) => {
   const { t } = useLanguage();
   const [isMinimized, setIsMinimized] = useState(false);
-  const [highlightedWord, setHighlightedWord] = useState('');
+  const [highlightedWord, setHighlightedWord] = useState("");
   const captionRef = useRef(null);
-  
+
   // Auto-scroll to keep latest text visible
   useEffect(() => {
     if (captionRef.current) {
       captionRef.current.scrollTop = captionRef.current.scrollHeight;
     }
   }, [nativeText, englishText]);
-  
+
   if (!isActive || (!nativeText && !englishText)) {
     return null;
   }
-  
+
   // Model badges
   const modelLabels = {
-    AUDITOR: { label: 'Evidence Auditor', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    SCRIBE: { label: 'Statement Writer', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-    RATER: { label: 'Rating Calculator', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    DKB: { label: 'Knowledge Base', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-    GENERAL: { label: 'AI Assistant', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' }
+    AUDITOR: {
+      label: "Evidence Auditor",
+      color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    },
+    SCRIBE: {
+      label: "Statement Writer",
+      color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    },
+    RATER: {
+      label: "Rating Calculator",
+      color: "bg-green-500/20 text-green-400 border-green-500/30",
+    },
+    DKB: {
+      label: "Knowledge Base",
+      color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    },
+    GENERAL: {
+      label: "AI Assistant",
+      color: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    },
   };
-  
+
   const modelInfo = modelLabels[sourceModel] || modelLabels.GENERAL;
-  
+
   if (isMinimized) {
     return (
       <button
@@ -56,14 +71,18 @@ const InclusiveCaptionEngine = ({
       </button>
     );
   }
-  
+
   return (
-    <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50 px-4 ${className}`}>
+    <div
+      className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50 px-4 ${className}`}
+    >
       <div className="bg-slate-900/95 border-2 border-blue-500/50 rounded-xl p-4 shadow-2xl backdrop-blur-sm">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${modelInfo.color}`}>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full border ${modelInfo.color}`}
+            >
               {modelInfo.label}
             </span>
             {isTranslation && (
@@ -79,9 +98,12 @@ const InclusiveCaptionEngine = ({
             ─ Minimize
           </button>
         </div>
-        
+
         {/* Caption Content */}
-        <div ref={captionRef} className="max-h-40 overflow-y-auto custom-scrollbar">
+        <div
+          ref={captionRef}
+          className="max-h-40 overflow-y-auto custom-scrollbar"
+        >
           {/* Native Language Text (what peer voice is saying) */}
           {nativeText && (
             <div className="mb-3">
@@ -93,12 +115,12 @@ const InclusiveCaptionEngine = ({
               </p>
             </div>
           )}
-          
+
           {/* Divider if both texts present */}
           {nativeText && englishText && isTranslation && (
             <hr className="border-slate-700 my-3" />
           )}
-          
+
           {/* English Translation (what goes in forms) */}
           {englishText && isTranslation && (
             <div>
@@ -111,7 +133,7 @@ const InclusiveCaptionEngine = ({
             </div>
           )}
         </div>
-        
+
         {/* Approve Button (for translations going to forms) */}
         {isTranslation && englishText && onApprove && (
           <div className="mt-4 flex gap-2">
@@ -129,11 +151,13 @@ const InclusiveCaptionEngine = ({
             </button>
           </div>
         )}
-        
+
         {/* Accessibility Settings */}
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-slate-500">
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 bg-slate-800 rounded text-[10px]">Esc×3</kbd>
+            <kbd className="px-1 py-0.5 bg-slate-800 rounded text-[10px]">
+              Esc×3
+            </kbd>
             Quick Exit
           </span>
           <span>|</span>
@@ -150,41 +174,41 @@ const InclusiveCaptionEngine = ({
 export const useCaptions = () => {
   const [captionState, setCaptionState] = useState({
     isActive: false,
-    nativeText: '',
-    englishText: '',
+    nativeText: "",
+    englishText: "",
     isTranslation: false,
-    sourceModel: 'GENERAL'
+    sourceModel: "GENERAL",
   });
-  
+
   const showCaption = (options) => {
     setCaptionState({
       isActive: true,
-      nativeText: options.nativeText || '',
-      englishText: options.englishText || '',
+      nativeText: options.nativeText || "",
+      englishText: options.englishText || "",
       isTranslation: options.isTranslation || false,
-      sourceModel: options.sourceModel || 'GENERAL'
+      sourceModel: options.sourceModel || "GENERAL",
     });
   };
-  
+
   const hideCaption = () => {
-    setCaptionState(prev => ({
+    setCaptionState((prev) => ({
       ...prev,
-      isActive: false
+      isActive: false,
     }));
   };
-  
+
   const updateCaption = (text, isEnglish = false) => {
-    setCaptionState(prev => ({
+    setCaptionState((prev) => ({
       ...prev,
-      [isEnglish ? 'englishText' : 'nativeText']: text
+      [isEnglish ? "englishText" : "nativeText"]: text,
     }));
   };
-  
+
   return {
     ...captionState,
     showCaption,
     hideCaption,
-    updateCaption
+    updateCaption,
   };
 };
 

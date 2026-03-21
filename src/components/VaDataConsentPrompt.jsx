@@ -4,8 +4,8 @@
  * Asks veteran for permission to save VA data locally
  */
 
-import React, { useState } from 'react';
-import { Shield, Save, X, Lock, Database, FileText } from 'lucide-react';
+import React, { useState } from "react";
+import { Shield, Save, X, Lock, Database, FileText } from "lucide-react";
 
 const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
   const [saveToPacket, setSaveToPacket] = useState(true);
@@ -26,27 +26,36 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
               <Shield className="text-blue-600 dark:text-blue-400" size={24} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Save Your VA Data?</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Save Your VA Data?
+            </h2>
           </div>
           <p className="text-gray-600 dark:text-gray-300">
-            We successfully fetched your data from VA.gov. Would you like to save it locally?
+            We successfully fetched your data from VA.gov. Would you like to
+            save it locally?
           </p>
         </div>
 
         {/* Data Summary */}
         <div className="p-6 bg-gray-50 dark:bg-gray-900/50">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Available Data:</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+            Available Data:
+          </h3>
           <div className="space-y-2 text-sm">
             {claimsCount > 0 && (
               <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <FileText size={16} className="text-blue-500" />
-                <span>{claimsCount} active claim{claimsCount !== 1 ? 's' : ''}</span>
+                <span>
+                  {claimsCount} active claim{claimsCount !== 1 ? "s" : ""}
+                </span>
               </div>
             )}
             {appealsCount > 0 && (
               <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <FileText size={16} className="text-purple-500" />
-                <span>{appealsCount} appeal{appealsCount !== 1 ? 's' : ''}</span>
+                <span>
+                  {appealsCount} appeal{appealsCount !== 1 ? "s" : ""}
+                </span>
               </div>
             )}
             {hasServiceHistory && (
@@ -58,7 +67,10 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             {appealableIssuesCount > 0 && (
               <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <FileText size={16} className="text-orange-500" />
-                <span>{appealableIssuesCount} appealable issue{appealableIssuesCount !== 1 ? 's' : ''}</span>
+                <span>
+                  {appealableIssuesCount} appealable issue
+                  {appealableIssuesCount !== 1 ? "s" : ""}
+                </span>
               </div>
             )}
           </div>
@@ -79,7 +91,8 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
                 Save to My Packet
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Store claims and appeals in your personal packet for tracking and management
+                Store claims and appeals in your personal packet for tracking
+                and management
               </div>
             </div>
           </label>
@@ -106,9 +119,14 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
         {/* Privacy Notice */}
         <div className="mx-6 mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <Lock className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" size={20} />
+            <Lock
+              className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+              size={20}
+            />
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              <div className="font-semibold text-gray-900 dark:text-white mb-1">Your Privacy Guaranteed:</div>
+              <div className="font-semibold text-gray-900 dark:text-white mb-1">
+                Your Privacy Guaranteed:
+              </div>
               <ul className="space-y-1 list-disc list-inside">
                 <li>All data stays on YOUR device (no server uploads)</li>
                 <li>Stored in browser localStorage/IndexedDB</li>
@@ -127,7 +145,9 @@ const VaDataConsentPrompt = ({ onConsent, onSkip, vaData }) => {
             className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <Save size={20} />
-            {saveToPacket || saveToVKB ? 'Save & Continue' : 'Select at least one option'}
+            {saveToPacket || saveToVKB
+              ? "Save & Continue"
+              : "Select at least one option"}
           </button>
           <button
             onClick={onSkip}

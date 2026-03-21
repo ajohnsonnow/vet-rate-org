@@ -47,10 +47,11 @@
                     "va-data:bva":  ".venv/Scripts/python.exe scripts/scrapers/va_data_pipeline.py --condition",
                     "test":  "vitest run",
                     "test:coverage":  "vitest run --coverage",
+                    "prepare":  "husky",
                     "preflight":  "node scripts/preflight.js",
-                    "preflight:fast":  "node scripts/preflight.js --skip-e2e --skip-build",
+                    "preflight:fast":  "node scripts/preflight.js --fast",
                     "preflight:full":  "node scripts/preflight.js --report",
-                    "prepare":  "husky"
+                    "preflight:push":  "node scripts/preflight.js --push"
                 },
     "dependencies":  {
                          "@huggingface/transformers":  "^3.8.1",

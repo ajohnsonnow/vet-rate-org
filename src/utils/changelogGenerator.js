@@ -1,16 +1,20 @@
 /**
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved. Proprietary and Confidential.
- * 
+ *
  * CHANGELOG GENERATOR
- * 
+ *
  * Dynamically generates changelog data from README.md
  * This ensures the What's New modal always reflects the current features
  */
 
-import { APP_VERSION } from './version';
-import { getSquashedBugsForChangelog, getSquashedBugCount, getRecentSquashedBugs } from '../data/squashedBugs';
-import { PROJECT_STATS, getTotalToolCount } from '../data/projectStats';
+import { APP_VERSION } from "./version";
+import {
+  getSquashedBugsForChangelog,
+  getSquashedBugCount,
+  getRecentSquashedBugs,
+} from "../data/squashedBugs";
+import { PROJECT_STATS, getTotalToolCount } from "../data/projectStats";
 
 /**
  * Parse the README.md file and extract features organized by section
@@ -19,49 +23,51 @@ import { PROJECT_STATS, getTotalToolCount } from '../data/projectStats';
  */
 export function parseReadmeForChangelog(readmeContent) {
   const changelog = [];
-  
+
   // Feature patterns to extract from README
   const sectionPatterns = [
-    { 
+    {
       regex: /###\s*🔍[-\s]*Core Intelligence Tools([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Core Intelligence'
+      type: "feature",
+      category: "Core Intelligence",
     },
-    { 
-      regex: /###\s*💰[-\s]*Rating & Benefits Calculators([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Calculators'
+    {
+      regex:
+        /###\s*💰[-\s]*Rating & Benefits Calculators([\s\S]*?)(?=###|\n##|$)/i,
+      type: "feature",
+      category: "Calculators",
     },
-    { 
-      regex: /###\s*🔍[-\s]*Discovery & Research Tools([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Discovery'
+    {
+      regex:
+        /###\s*🔍[-\s]*Discovery & Research Tools([\s\S]*?)(?=###|\n##|$)/i,
+      type: "feature",
+      category: "Discovery",
     },
-    { 
+    {
       regex: /###\s*📝[-\s]*Evidence Building Suite([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Evidence Building'
+      type: "feature",
+      category: "Evidence Building",
     },
-    { 
+    {
       regex: /###\s*🎯[-\s]*Quality Control Tools([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'improvement',
-      category: 'Quality Control'
+      type: "improvement",
+      category: "Quality Control",
     },
-    { 
+    {
       regex: /###\s*⚡[-\s]*Advanced Strategy Tools([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Strategy'
+      type: "feature",
+      category: "Strategy",
     },
-    { 
+    {
       regex: /###\s*🤝[-\s]*Support & Resources([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'feature',
-      category: 'Support'
+      type: "feature",
+      category: "Support",
     },
-    { 
+    {
       regex: /###\s*Privacy & Security([\s\S]*?)(?=###|\n##|$)/i,
-      type: 'security',
-      category: 'Security'
-    }
+      type: "security",
+      category: "Security",
+    },
   ];
 
   // Extract features from each section
@@ -69,26 +75,27 @@ export function parseReadmeForChangelog(readmeContent) {
     const match = readmeContent.match(regex);
     if (match) {
       const sectionContent = match[1];
-      
+
       // Extract bullet points with ** bold titles **
       const featureRegex = /-\s*\*\*([^*]+)\*\*[:\s]*(.+?)(?=\n-|\n\n|$)/g;
       let featureMatch;
-      
+
       while ((featureMatch = featureRegex.exec(sectionContent)) !== null) {
         const title = featureMatch[1].trim();
-        const description = featureMatch[2].trim()
-          .replace(/\*\*/g, '') // Remove remaining bold markers
-          .replace(/\s+/g, ' '); // Normalize whitespace
-        
+        const description = featureMatch[2]
+          .trim()
+          .replace(/\*\*/g, "") // Remove remaining bold markers
+          .replace(/\s+/g, " "); // Normalize whitespace
+
         // Check for NEW tag
-        const isNew = title.includes('🆕') || description.includes('🆕');
-        
+        const isNew = title.includes("🆕") || description.includes("🆕");
+
         changelog.push({
-          type: isNew ? 'feature' : type,
-          title: title.replace(/🆕/g, '').trim(),
-          description: description.replace(/🆕/g, '').trim(),
+          type: isNew ? "feature" : type,
+          title: title.replace(/🆕/g, "").trim(),
+          description: description.replace(/🆕/g, "").trim(),
           category,
-          isNew
+          isNew,
         });
       }
     }
@@ -106,13 +113,15 @@ export function parseReadmeForChangelog(readmeContent) {
  */
 export function getHighlightedChangelog(allChangelog, limit = 10) {
   // Prioritize NEW features first
-  const newFeatures = allChangelog.filter(item => item.isNew);
-  const otherFeatures = allChangelog.filter(item => !item.isNew);
-  
+  const newFeatures = allChangelog.filter((item) => item.isNew);
+  const otherFeatures = allChangelog.filter((item) => !item.isNew);
+
   // Sort others by type priority: security > feature > improvement
   const typePriority = { security: 0, feature: 1, improvement: 2, change: 3 };
-  otherFeatures.sort((a, b) => (typePriority[a.type] || 3) - (typePriority[b.type] || 3));
-  
+  otherFeatures.sort(
+    (a, b) => (typePriority[a.type] || 3) - (typePriority[b.type] || 3),
+  );
+
   // Combine and limit
   return [...newFeatures, ...otherFeatures].slice(0, limit);
 }
@@ -126,84 +135,97 @@ export function generateWhatsNewChangelog() {
   // Curated changelog highlighting the most important features
   // This is manually curated for the best user experience
   // Update this array when deploying new features
-  
+
   const curatedChangelog = [
     // v1.6.1 - DIAMOND SWARM - ELITE AI SQUADRON
     {
-      type: 'feature',
-      title: '🎖️ Warrant Council - 3 Specialized AI Agents',
-      description: 'Fine-tuned Qwen2.5-7B models: Auditor (legal analysis), Writer (statement generation), Rater (disability assessment) - purpose-built for VA claims, not generic chat!',
-      isNew: true
+      type: "feature",
+      title: "🎖️ Warrant Council - 3 Specialized AI Agents",
+      description:
+        "Fine-tuned Qwen2.5-7B models: Auditor (legal analysis), Writer (statement generation), Rater (disability assessment) - purpose-built for VA claims, not generic chat!",
+      isNew: true,
     },
     {
-      type: 'feature',
-      title: '🌐 Wllama Browser Engine',
-      description: 'New WASM-based AI backend runs entirely in your browser - no server required, works offline, maximum privacy. Your data NEVER leaves your device.',
-      isNew: true
+      type: "feature",
+      title: "🌐 Wllama Browser Engine",
+      description:
+        "New WASM-based AI backend runs entirely in your browser - no server required, works offline, maximum privacy. Your data NEVER leaves your device.",
+      isNew: true,
     },
     {
-      type: 'feature',
-      title: '🖥️ Local Server Support',
-      description: 'Connect to llama.cpp, Ollama, or any OpenAI-compatible local server - bring your own hardware for maximum power!',
-      isNew: true
+      type: "feature",
+      title: "🖥️ Local Server Support",
+      description:
+        "Connect to llama.cpp, Ollama, or any OpenAI-compatible local server - bring your own hardware for maximum power!",
+      isNew: true,
     },
     {
-      type: 'improvement',
-      title: '🧹 Streamlined Model Selection',
-      description: 'Removed 16 generic models to focus exclusively on Warrant Council agents. No more choice paralysis - just elite, purpose-built AI for veterans.',
-      isNew: true
+      type: "improvement",
+      title: "🧹 Streamlined Model Selection",
+      description:
+        "Removed 16 generic models to focus exclusively on Warrant Council agents. No more choice paralysis - just elite, purpose-built AI for veterans.",
+      isNew: true,
     },
     {
-      type: 'improvement',
-      title: '⚡ Optimized Bundle Size',
-      description: 'Cleaned up legacy WebLLM model configurations - faster load times and reduced memory footprint.',
-      isNew: true
+      type: "improvement",
+      title: "⚡ Optimized Bundle Size",
+      description:
+        "Cleaned up legacy WebLLM model configurations - faster load times and reduced memory footprint.",
+      isNew: true,
     },
     // v1.4.0 - CRASH-PROOF STORAGE SYSTEM "The Bunker" + GPU SELECTION
     {
-      type: 'security',
+      type: "security",
       title: '🛡️ CRASH-PROOF STORAGE - "The Bunker"',
-      description: 'Your data now survives browser crashes, cache clears, and power outages! Click "💾 Save My Packet" in My Packet to create a crash-proof file on your device.',
-      isNew: false
+      description:
+        'Your data now survives browser crashes, cache clears, and power outages! Click "💾 Save My Packet" in My Packet to create a crash-proof file on your device.',
+      isNew: false,
     },
     {
-      type: 'feature',
-      title: '🎮 GPU Selection for Dual-GPU Systems',
-      description: 'Laptops with dual GPUs (integrated + discrete) can now choose which GPU runs Local AI! Force "High Performance" for speed or "Power Saver" for battery life.',
-      isNew: false
+      type: "feature",
+      title: "🎮 GPU Selection for Dual-GPU Systems",
+      description:
+        'Laptops with dual GPUs (integrated + discrete) can now choose which GPU runs Local AI! Force "High Performance" for speed or "Power Saver" for battery life.',
+      isNew: false,
     },
-    
+
     // EXISTING HIGHLIGHTS
     {
-      type: 'feature',
+      type: "feature",
       title: `${getTotalToolCount()} Professional Tools`,
-      description: 'Complete VA claims arsenal - C-File Analyzer, C&P Simulator, Secondary Scout, and more'
+      description:
+        "Complete VA claims arsenal - C-File Analyzer, C&P Simulator, Secondary Scout, and more",
     },
     {
-      type: 'feature',
+      type: "feature",
       title: `${PROJECT_STATS.disabilitiesValidated} Validated Conditions`,
-      description: 'Every condition from 38 CFR Part 4 with detailed rating criteria and diagnostic codes'
+      description:
+        "Every condition from 38 CFR Part 4 with detailed rating criteria and diagnostic codes",
     },
     {
-      type: 'feature',
-      title: 'AI-Powered Analysis',
-      description: 'Optional Google Gemini/Anthropic integration for statement enhancement, with explicit consent'
+      type: "feature",
+      title: "AI-Powered Analysis",
+      description:
+        "Optional Google Gemini/Anthropic integration for statement enhancement, with explicit consent",
     },
     {
-      type: 'security',
-      title: '100% Client-Side Processing',
-      description: 'All processing happens in YOUR browser. No accounts, no tracking, no PII storage'
+      type: "security",
+      title: "100% Client-Side Processing",
+      description:
+        "All processing happens in YOUR browser. No accounts, no tracking, no PII storage",
     },
     {
-      type: 'feature',
-      title: 'Secondary Scout',
-      description: 'Discover 65+ medically-recognized secondary conditions with probability ratings'
+      type: "feature",
+      title: "Secondary Scout",
+      description:
+        "Discover 65+ medically-recognized secondary conditions with probability ratings",
     },
     {
-      type: 'feature',
-      title: 'Million Dollar Dashboard',
-      description: 'Calculate lifetime benefit value and retirement projections with 2026 pay rates'
-    }
+      type: "feature",
+      title: "Million Dollar Dashboard",
+      description:
+        "Calculate lifetime benefit value and retirement projections with 2026 pay rates",
+    },
   ];
 
   // Add recent squashed bugs to changelog
@@ -211,10 +233,10 @@ export function generateWhatsNewChangelog() {
 
   return {
     version: APP_VERSION,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     changelog: curatedChangelog,
     bugFixes: recentBugFixes,
-    totalBugsSquashed: getSquashedBugCount()
+    totalBugsSquashed: getSquashedBugCount(),
   };
 }
 
@@ -234,5 +256,5 @@ export default {
   generateWhatsNewChangelog,
   shouldShowWhatsNew,
   getSquashedBugsForChangelog,
-  getSquashedBugCount
+  getSquashedBugCount,
 };

@@ -1,8 +1,8 @@
 // ToolCardButton.jsx
 // Generic, color-schema-compliant tool card button for all modes
-import React from 'react';
-import { getHeaderGradient } from '../utils/colorSchemas';
-import { useLanguage } from '../contexts/LanguageContext';
+import React from "react";
+import { getHeaderGradient } from "../utils/colorSchemas";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * ToolCardButton - Consistent button for tool cards using color schema
@@ -15,10 +15,10 @@ import { useLanguage } from '../contexts/LanguageContext';
  * @param {any} rest - Other button props
  */
 export default function ToolCardButton({
-  gradientType = 'resources',
+  gradientType = "resources",
   theme,
   colorBlindMode,
-  className = '',
+  className = "",
   children,
   ...rest
 }) {

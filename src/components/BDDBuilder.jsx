@@ -9,11 +9,11 @@
  * 38 CFR § 3.326 - Pre-discharge claims
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import ReportBugLink from './ReportBugLink';
-import BuyMeCoffee from './BuyMeCoffee';
+import React, { useState, useEffect, useMemo } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ReportBugLink from "./ReportBugLink";
+import BuyMeCoffee from "./BuyMeCoffee";
 import {
   BDD_MILESTONES,
   BDD_CHECKLIST,
@@ -22,31 +22,31 @@ import {
   getRelevantMilestones,
   saveBDDProgress,
   loadBDDProgress,
-  getChecklistCompletion
-} from '../utils/bddData.js';
+  getChecklistCompletion,
+} from "../utils/bddData.js";
 
 // ─────────────────────────────────────────────────────────────
 // SERVICE BRANCHES
 // ─────────────────────────────────────────────────────────────
 const SERVICE_BRANCHES = [
-  { id: 'army', label: 'U.S. Army', icon: '⭐' },
-  { id: 'navy', label: 'U.S. Navy', icon: '⚓' },
-  { id: 'air-force', label: 'U.S. Air Force', icon: '🛩️' },
-  { id: 'marines', label: 'U.S. Marine Corps', icon: '🦅' },
-  { id: 'coast-guard', label: 'U.S. Coast Guard', icon: '⚓' },
-  { id: 'space-force', label: 'U.S. Space Force', icon: '🚀' },
-  { id: 'national-guard', label: 'National Guard (Title 10)', icon: '🏛️' },
-  { id: 'reserves', label: 'Reserves (Title 10)', icon: '🎖️' },
+  { id: "army", label: "U.S. Army", icon: "⭐" },
+  { id: "navy", label: "U.S. Navy", icon: "⚓" },
+  { id: "air-force", label: "U.S. Air Force", icon: "🛩️" },
+  { id: "marines", label: "U.S. Marine Corps", icon: "🦅" },
+  { id: "coast-guard", label: "U.S. Coast Guard", icon: "⚓" },
+  { id: "space-force", label: "U.S. Space Force", icon: "🚀" },
+  { id: "national-guard", label: "National Guard (Title 10)", icon: "🏛️" },
+  { id: "reserves", label: "Reserves (Title 10)", icon: "🎖️" },
 ];
 
 // ─────────────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────────────
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'timeline', label: 'Timeline', icon: '📅' },
-  { id: 'checklist', label: 'Checklist', icon: '✅' },
-  { id: 'pitfalls', label: 'Common Mistakes', icon: '⚠️' },
+  { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "timeline", label: "Timeline", icon: "📅" },
+  { id: "checklist", label: "Checklist", icon: "✅" },
+  { id: "pitfalls", label: "Common Mistakes", icon: "⚠️" },
 ];
 
 const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
@@ -54,13 +54,17 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   const { t } = useLanguage();
 
   // ── State ──────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [savedData, setSavedData] = useState(() => loadBDDProgress());
-  const [separationDate, setSeparationDate] = useState(savedData.separationDate || '');
-  const [branch, setBranch] = useState(savedData.branch || '');
-  const [checkedItems, setCheckedItems] = useState(new Set(savedData.checkedItems || []));
+  const [separationDate, setSeparationDate] = useState(
+    savedData.separationDate || "",
+  );
+  const [branch, setBranch] = useState(savedData.branch || "");
+  const [checkedItems, setCheckedItems] = useState(
+    new Set(savedData.checkedItems || []),
+  );
   const [conditions, setConditions] = useState(savedData.conditions || []);
-  const [newCondition, setNewCondition] = useState('');
+  const [newCondition, setNewCondition] = useState("");
   const [expandedMilestone, setExpandedMilestone] = useState(null);
   const [expandedMistake, setExpandedMistake] = useState(null);
   const [showSetup, setShowSetup] = useState(!savedData.separationDate);
@@ -68,22 +72,30 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   // ── Computed ───────────────────────────────────────────────
   const eligibility = useMemo(
     () => calculateBDDEligibility(separationDate),
-    [separationDate]
+    [separationDate],
   );
 
   const milestones = useMemo(
-    () => (eligibility.daysUntilSep != null ? getRelevantMilestones(eligibility.daysUntilSep) : []),
-    [eligibility.daysUntilSep]
+    () =>
+      eligibility.daysUntilSep != null
+        ? getRelevantMilestones(eligibility.daysUntilSep)
+        : [],
+    [eligibility.daysUntilSep],
   );
 
   const checklistCompletion = useMemo(
     () => getChecklistCompletion([...checkedItems]),
-    [checkedItems]
+    [checkedItems],
   );
 
   // ── Auto-save ──────────────────────────────────────────────
   useEffect(() => {
-    if (separationDate || branch || checkedItems.size > 0 || conditions.length > 0) {
+    if (
+      separationDate ||
+      branch ||
+      checkedItems.size > 0 ||
+      conditions.length > 0
+    ) {
       saveBDDProgress({
         separationDate,
         branch,
@@ -100,7 +112,7 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   };
 
   const toggleCheckItem = (id) => {
-    setCheckedItems(prev => {
+    setCheckedItems((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -111,13 +123,13 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   const addCondition = () => {
     const trimmed = newCondition.trim();
     if (trimmed && !conditions.includes(trimmed)) {
-      setConditions(prev => [...prev, trimmed]);
-      setNewCondition('');
+      setConditions((prev) => [...prev, trimmed]);
+      setNewCondition("");
     }
   };
 
   const removeCondition = (c) => {
-    setConditions(prev => prev.filter(x => x !== c));
+    setConditions((prev) => prev.filter((x) => x !== c));
   };
 
   const handleToolNavigation = (toolId) => {
@@ -130,10 +142,16 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
   const getPhaseBadge = () => {
     if (!eligibility.phase) return null;
     const badges = {
-      'pre-window': { text: 'PREPARING', color: 'bg-blue-500' },
-      'bdd-window': { text: 'BDD WINDOW OPEN', color: 'bg-green-500 animate-pulse' },
-      'post-window': { text: 'BDD CLOSED - FILE NOW', color: 'bg-red-500 animate-pulse' },
-      'post-separation': { text: 'POST-SEPARATION', color: 'bg-gray-500' },
+      "pre-window": { text: "PREPARING", color: "bg-blue-500" },
+      "bdd-window": {
+        text: "BDD WINDOW OPEN",
+        color: "bg-green-500 animate-pulse",
+      },
+      "post-window": {
+        text: "BDD CLOSED - FILE NOW",
+        color: "bg-red-500 animate-pulse",
+      },
+      "post-separation": { text: "POST-SEPARATION", color: "bg-gray-500" },
     };
     return badges[eligibility.phase] || null;
   };
@@ -158,7 +176,9 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   BDD Builder
-                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">NEW</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">
+                    NEW
+                  </span>
                 </h2>
                 <p className="text-sm text-emerald-100">
                   Pre-Discharge Claims Planner (38 CFR § 3.326)
@@ -167,7 +187,10 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
             </div>
             <div className="flex items-center gap-2">
               <ReportBugLink
-                onClick={() => { onClose(); onReportBug?.(); }}
+                onClick={() => {
+                  onClose();
+                  onReportBug?.();
+                }}
                 variant="light"
                 moduleName="BDD Builder"
               />
@@ -176,8 +199,18 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
                 className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                 aria-label="Close BDD Builder"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -189,16 +222,19 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
               {(() => {
                 const badge = getPhaseBadge();
                 return badge ? (
-                  <span className={`px-3 py-1 ${badge.color} text-white text-xs font-bold rounded-full`}>
+                  <span
+                    className={`px-3 py-1 ${badge.color} text-white text-xs font-bold rounded-full`}
+                  >
                     {badge.text}
                   </span>
                 ) : null;
               })()}
-              {eligibility.daysUntilSep != null && eligibility.daysUntilSep >= 0 && (
-                <span className="text-emerald-100 text-sm">
-                  {eligibility.daysUntilSep} days until separation
-                </span>
-              )}
+              {eligibility.daysUntilSep != null &&
+                eligibility.daysUntilSep >= 0 && (
+                  <span className="text-emerald-100 text-sm">
+                    {eligibility.daysUntilSep} days until separation
+                  </span>
+                )}
               {checklistCompletion > 0 && (
                 <span className="text-emerald-200 text-sm ml-auto">
                   Checklist: {checklistCompletion}% complete
@@ -210,14 +246,14 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
           {/* Tab Bar */}
           {!showSetup && (
             <div className="flex gap-1 mt-3 overflow-x-auto pb-1 -mb-4">
-              {TABS.map(tab => (
+              {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
-                      : 'text-emerald-100 hover:bg-white/10'
+                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      : "text-emerald-100 hover:bg-white/10"
                   }`}
                 >
                   <span>{tab.icon}</span>
@@ -230,7 +266,6 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
 
         {/* ── Body ──────────────────────────────────────── */}
         <div className="overflow-y-auto flex-1 p-4 sm:p-6">
-
           {/* ── SETUP VIEW ────────────────────────────── */}
           {showSetup && (
             <SetupView
@@ -242,7 +277,7 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
           )}
 
           {/* ── DASHBOARD TAB ─────────────────────────── */}
-          {!showSetup && activeTab === 'dashboard' && (
+          {!showSetup && activeTab === "dashboard" && (
             <DashboardTab
               eligibility={eligibility}
               milestones={milestones}
@@ -261,18 +296,20 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
           )}
 
           {/* ── TIMELINE TAB ──────────────────────────── */}
-          {!showSetup && activeTab === 'timeline' && (
+          {!showSetup && activeTab === "timeline" && (
             <TimelineTab
               milestones={milestones}
               eligibility={eligibility}
               expandedMilestone={expandedMilestone}
-              onToggleMilestone={(id) => setExpandedMilestone(expandedMilestone === id ? null : id)}
+              onToggleMilestone={(id) =>
+                setExpandedMilestone(expandedMilestone === id ? null : id)
+              }
               onNavigateToTool={handleToolNavigation}
             />
           )}
 
           {/* ── CHECKLIST TAB ─────────────────────────── */}
-          {!showSetup && activeTab === 'checklist' && (
+          {!showSetup && activeTab === "checklist" && (
             <ChecklistTab
               checkedItems={checkedItems}
               onToggleItem={toggleCheckItem}
@@ -281,10 +318,12 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
           )}
 
           {/* ── PITFALLS TAB ──────────────────────────── */}
-          {!showSetup && activeTab === 'pitfalls' && (
+          {!showSetup && activeTab === "pitfalls" && (
             <PitfallsTab
               expandedMistake={expandedMistake}
-              onToggleMistake={(id) => setExpandedMistake(expandedMistake === id ? null : id)}
+              onToggleMistake={(id) =>
+                setExpandedMistake(expandedMistake === id ? null : id)
+              }
             />
           )}
 
@@ -311,8 +350,8 @@ const BDDBuilder = ({ onClose, onReportBug, onNavigateToTool }) => {
  * Setup View - first-run date picker + branch selector
  */
 const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
-  const [localDate, setLocalDate] = useState(separationDate || '');
-  const [localBranch, setLocalBranch] = useState(branch || '');
+  const [localDate, setLocalDate] = useState(separationDate || "");
+  const [localBranch, setLocalBranch] = useState(branch || "");
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -336,11 +375,17 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
         <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
           <li className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">&#x2713;</span>
-            <span>File VA claims <strong>180-90 days</strong> before your separation date</span>
+            <span>
+              File VA claims <strong>180-90 days</strong> before your separation
+              date
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">&#x2713;</span>
-            <span>C&P exams happen <strong>while you're still on active duty</strong></span>
+            <span>
+              C&P exams happen{" "}
+              <strong>while you're still on active duty</strong>
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">&#x2713;</span>
@@ -348,7 +393,10 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">&#x2713;</span>
-            <span>Benefits start <strong>the day after separation</strong> - no waiting months</span>
+            <span>
+              Benefits start <strong>the day after separation</strong> - no
+              waiting months
+            </span>
           </li>
         </ul>
         <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 italic">
@@ -362,14 +410,14 @@ const SetupView = ({ separationDate, branch, onSetDate, onSetBranch }) => {
           Service Branch
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {SERVICE_BRANCHES.map(b => (
+          {SERVICE_BRANCHES.map((b) => (
             <button
               key={b.id}
               onClick={() => setLocalBranch(b.id)}
               className={`p-3 rounded-lg border-2 text-center transition-all text-sm ${
                 localBranch === b.id
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200'
-                  : 'border-gray-200 dark:border-gray-600 hover:border-emerald-300 text-gray-700 dark:text-gray-300'
+                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200"
+                  : "border-gray-200 dark:border-gray-600 hover:border-emerald-300 text-gray-700 dark:text-gray-300"
               }`}
             >
               <span className="text-2xl block mb-1">{b.icon}</span>
@@ -429,30 +477,41 @@ const DashboardTab = ({
   branch,
 }) => {
   // Find the next actionable milestone
-  const nextMilestone = milestones.find(m => m.isCurrent) || milestones.find(m => m.isUpcoming);
+  const nextMilestone =
+    milestones.find((m) => m.isCurrent) || milestones.find((m) => m.isUpcoming);
 
   return (
     <div className="space-y-6">
       {/* ── Eligibility Status Card ─── */}
-      <div className={`rounded-xl p-5 border-2 ${
-        eligibility.eligible
-          ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
-          : eligibility.phase === 'pre-window'
-            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
-            : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'
-      }`}>
+      <div
+        className={`rounded-xl p-5 border-2 ${
+          eligibility.eligible
+            ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+            : eligibility.phase === "pre-window"
+              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+              : "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
+        }`}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className={`text-lg font-bold ${
-              eligibility.eligible
-                ? 'text-green-800 dark:text-green-200'
-                : eligibility.phase === 'pre-window'
-                  ? 'text-blue-800 dark:text-blue-200'
-                  : 'text-red-800 dark:text-red-200'
-            }`}>
-              {eligibility.eligible ? '✅ You Are Eligible for BDD!' : eligibility.phase === 'pre-window' ? '📋 Preparation Phase' : '⚠️ BDD Window Status'}
+            <h3
+              className={`text-lg font-bold ${
+                eligibility.eligible
+                  ? "text-green-800 dark:text-green-200"
+                  : eligibility.phase === "pre-window"
+                    ? "text-blue-800 dark:text-blue-200"
+                    : "text-red-800 dark:text-red-200"
+              }`}
+            >
+              {eligibility.eligible
+                ? "✅ You Are Eligible for BDD!"
+                : eligibility.phase === "pre-window"
+                  ? "📋 Preparation Phase"
+                  : "⚠️ BDD Window Status"}
             </h3>
-            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{eligibility.reason}</p>
+            <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+              {eligibility.reason}
+            </p>
           </div>
           <button
             onClick={onChangeDate}
@@ -474,7 +533,9 @@ const DashboardTab = ({
               <CountdownCard
                 number={eligibility.daysLeft}
                 label="BDD Days Left"
-                color={eligibility.daysLeft < 30 ? 'text-red-600' : 'text-green-600'}
+                color={
+                  eligibility.daysLeft < 30 ? "text-red-600" : "text-green-600"
+                }
               />
             )}
             {eligibility.daysUntilWindowOpens > 0 && (
@@ -499,10 +560,14 @@ const DashboardTab = ({
         {/* Next Action */}
         {nextMilestone && (
           <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border-l-4 border-emerald-500">
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Next Action</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
+              Next Action
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-xl">{nextMilestone.icon}</span>
-              <span className="font-semibold text-gray-900 dark:text-white text-sm">{nextMilestone.title}</span>
+              <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                {nextMilestone.title}
+              </span>
             </div>
             {nextMilestone.critical && (
               <span className="mt-1 inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-full font-bold">
@@ -514,19 +579,31 @@ const DashboardTab = ({
 
         {/* Conditions Count */}
         <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border-l-4 border-blue-500">
-          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Conditions to Claim</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{conditions.length}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
+            Conditions to Claim
+          </div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            {conditions.length}
+          </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {conditions.length === 0 ? 'Add conditions below' : 'conditions tracked'}
+            {conditions.length === 0
+              ? "Add conditions below"
+              : "conditions tracked"}
           </p>
         </div>
 
         {/* Checklist Progress */}
         <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border-l-4 border-amber-500">
-          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">Checklist Progress</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold mb-1">
+            Checklist Progress
+          </div>
           <div className="flex items-end gap-2">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{checkedItems.size}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">/ {BDD_CHECKLIST.length}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {checkedItems.size}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">
+              / {BDD_CHECKLIST.length}
+            </div>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-2">
             <div
@@ -543,7 +620,21 @@ const DashboardTab = ({
           🩺 My Conditions to Claim
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          Track the conditions you plan to file. Use <button onClick={() => onNavigateToTool('secondary-scout')} className="text-emerald-600 dark:text-emerald-400 underline font-medium hover:text-emerald-500">Secondary Scout</button> and <button onClick={() => onNavigateToTool('mos-hazard')} className="text-emerald-600 dark:text-emerald-400 underline font-medium hover:text-emerald-500">MOS Hazard Matcher</button> to find conditions you may be missing.
+          Track the conditions you plan to file. Use{" "}
+          <button
+            onClick={() => onNavigateToTool("secondary-scout")}
+            className="text-emerald-600 dark:text-emerald-400 underline font-medium hover:text-emerald-500"
+          >
+            Secondary Scout
+          </button>{" "}
+          and{" "}
+          <button
+            onClick={() => onNavigateToTool("mos-hazard")}
+            className="text-emerald-600 dark:text-emerald-400 underline font-medium hover:text-emerald-500"
+          >
+            MOS Hazard Matcher
+          </button>{" "}
+          to find conditions you may be missing.
         </p>
 
         {/* Add condition input */}
@@ -552,7 +643,7 @@ const DashboardTab = ({
             type="text"
             value={newCondition}
             onChange={(e) => onNewConditionChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onAddCondition()}
+            onKeyDown={(e) => e.key === "Enter" && onAddCondition()}
             placeholder="e.g., Lumbar Strain, Tinnitus, PTSD..."
             className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500"
           />
@@ -579,8 +670,18 @@ const DashboardTab = ({
                   className="hover:text-red-500 transition-colors"
                   aria-label={`Remove ${c}`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </span>
@@ -594,10 +695,26 @@ const DashboardTab = ({
 
         {/* Tool Links */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <ToolLink icon="🔍" label="Secondary Scout" onClick={() => onNavigateToTool('secondary-scout')} />
-          <ToolLink icon="🎖️" label="MOS Hazard Matcher" onClick={() => onNavigateToTool('mos-hazard')} />
-          <ToolLink icon="☢️" label="PACT Act Navigator" onClick={() => onNavigateToTool('pact-act')} />
-          <ToolLink icon="🕸️" label="Web of Conditions" onClick={() => onNavigateToTool('web-of-conditions')} />
+          <ToolLink
+            icon="🔍"
+            label="Secondary Scout"
+            onClick={() => onNavigateToTool("secondary-scout")}
+          />
+          <ToolLink
+            icon="🎖️"
+            label="MOS Hazard Matcher"
+            onClick={() => onNavigateToTool("mos-hazard")}
+          />
+          <ToolLink
+            icon="☢️"
+            label="PACT Act Navigator"
+            onClick={() => onNavigateToTool("pact-act")}
+          />
+          <ToolLink
+            icon="🕸️"
+            label="Web of Conditions"
+            onClick={() => onNavigateToTool("web-of-conditions")}
+          />
         </div>
       </div>
 
@@ -610,7 +727,11 @@ const DashboardTab = ({
           <div className="space-y-3">
             <DateRow
               label="Today"
-              date={new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              date={new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
               icon="📍"
               highlight
             />
@@ -633,7 +754,10 @@ const DashboardTab = ({
             )}
             <DateRow
               label="Separation / ETS Date"
-              date={new Date(separationDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              date={new Date(separationDate + "T00:00:00").toLocaleDateString(
+                "en-US",
+                { month: "short", day: "numeric", year: "numeric" },
+              )}
               icon="🎖️"
               subLabel={`${eligibility.daysUntilSep} days`}
             />
@@ -647,14 +771,21 @@ const DashboardTab = ({
 /**
  * Timeline Tab - visual milestone tracker
  */
-const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMilestone, onNavigateToTool }) => (
+const TimelineTab = ({
+  milestones,
+  eligibility,
+  expandedMilestone,
+  onToggleMilestone,
+  onNavigateToTool,
+}) => (
   <div className="max-w-3xl mx-auto">
     <div className="mb-6">
       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
         BDD Timeline
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">
-        Step-by-step milestones from preparation through post-separation. Green means completed, amber means current, and gray means upcoming.
+        Step-by-step milestones from preparation through post-separation. Green
+        means completed, amber means current, and gray means upcoming.
       </p>
     </div>
 
@@ -668,29 +799,33 @@ const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMiles
           return (
             <div key={m.id} className="relative pl-14">
               {/* Timeline dot */}
-              <div className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
-                m.isPast
-                  ? 'bg-green-500 border-green-500'
-                  : m.isCurrent
-                    ? 'bg-amber-500 border-amber-500 ring-4 ring-amber-200 dark:ring-amber-900'
-                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500'
-              }`} />
+              <div
+                className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
+                  m.isPast
+                    ? "bg-green-500 border-green-500"
+                    : m.isCurrent
+                      ? "bg-amber-500 border-amber-500 ring-4 ring-amber-200 dark:ring-amber-900"
+                      : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500"
+                }`}
+              />
 
               <button
                 onClick={() => onToggleMilestone(m.id)}
                 className={`w-full text-left rounded-lg border-2 p-4 transition-all hover:shadow-md ${
                   m.isCurrent
-                    ? 'border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20'
+                    ? "border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20"
                     : m.isPast
-                      ? 'border-green-200 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10'
-                      : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
-                } ${m.critical ? 'ring-2 ring-red-200 dark:ring-red-900' : ''}`}
+                      ? "border-green-200 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10"
+                      : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700"
+                } ${m.critical ? "ring-2 ring-red-200 dark:ring-red-900" : ""}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{m.icon}</span>
                     <div>
-                      <span className="font-semibold text-gray-900 dark:text-white text-sm">{m.title}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                        {m.title}
+                      </span>
                       {m.critical && (
                         <span className="ml-2 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-[10px] font-bold rounded">
                           CRITICAL
@@ -700,14 +835,30 @@ const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMiles
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {m.daysBeforeSep > 0 ? `${m.daysBeforeSep}d before` : m.daysBeforeSep === 0 ? 'ETS Day' : `${Math.abs(m.daysBeforeSep)}d after`}
+                      {m.daysBeforeSep > 0
+                        ? `${m.daysBeforeSep}d before`
+                        : m.daysBeforeSep === 0
+                          ? "ETS Day"
+                          : `${Math.abs(m.daysBeforeSep)}d after`}
                     </span>
-                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{m.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {m.description}
+                </p>
               </button>
 
               {/* Expanded details */}
@@ -716,8 +867,13 @@ const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMiles
                   {m.details && (
                     <ul className="space-y-1.5 mb-3">
                       {m.details.map((d, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                          <span className="text-emerald-500 mt-0.5 flex-shrink-0">&#x2713;</span>
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                        >
+                          <span className="text-emerald-500 mt-0.5 flex-shrink-0">
+                            &#x2713;
+                          </span>
                           <span>{d}</span>
                         </li>
                       ))}
@@ -730,14 +886,22 @@ const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMiles
                   )}
                   {m.tools && m.tools.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Vet-Rate Tools:</span>
-                      {m.tools.map(toolId => (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Vet-Rate Tools:
+                      </span>
+                      {m.tools.map((toolId) => (
                         <button
                           key={toolId}
-                          onClick={(e) => { e.stopPropagation(); onNavigateToTool(toolId); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNavigateToTool(toolId);
+                          }}
                           className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-800/40 transition-colors font-medium"
                         >
-                          Open {toolId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                          Open{" "}
+                          {toolId
+                            .replace(/-/g, " ")
+                            .replace(/\b\w/g, (c) => c.toUpperCase())}
                         </button>
                       ))}
                     </div>
@@ -757,13 +921,13 @@ const TimelineTab = ({ milestones, eligibility, expandedMilestone, onToggleMiles
  */
 const ChecklistTab = ({ checkedItems, onToggleItem, completion }) => {
   const categories = [
-    { id: 'eligibility', label: 'Eligibility', icon: '🎯' },
-    { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'preparation', label: 'Preparation', icon: '📋' },
-    { id: 'filing', label: 'Filing', icon: '📬' },
-    { id: 'evidence', label: 'Evidence', icon: '📎' },
-    { id: 'exams', label: 'C&P Exams', icon: '🏥' },
-    { id: 'transition', label: 'Transition', icon: '🎓' },
+    { id: "eligibility", label: "Eligibility", icon: "🎯" },
+    { id: "documents", label: "Documents", icon: "📄" },
+    { id: "preparation", label: "Preparation", icon: "📋" },
+    { id: "filing", label: "Filing", icon: "📬" },
+    { id: "evidence", label: "Evidence", icon: "📎" },
+    { id: "exams", label: "C&P Exams", icon: "🏥" },
+    { id: "transition", label: "Transition", icon: "🎓" },
   ];
 
   return (
@@ -781,7 +945,7 @@ const ChecklistTab = ({ checkedItems, onToggleItem, completion }) => {
         <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
           <div
             className={`h-3 rounded-full transition-all ${
-              completion === 100 ? 'bg-green-500' : 'bg-emerald-500'
+              completion === 100 ? "bg-green-500" : "bg-emerald-500"
             }`}
             style={{ width: `${completion}%` }}
           />
@@ -790,28 +954,32 @@ const ChecklistTab = ({ checkedItems, onToggleItem, completion }) => {
 
       {/* Checklist by category */}
       <div className="space-y-6">
-        {categories.map(cat => {
-          const items = BDD_CHECKLIST.filter(i => i.category === cat.id);
+        {categories.map((cat) => {
+          const items = BDD_CHECKLIST.filter((i) => i.category === cat.id);
           if (items.length === 0) return null;
-          const catDone = items.every(i => checkedItems.has(i.id));
+          const catDone = items.every((i) => checkedItems.has(i.id));
 
           return (
             <div key={cat.id}>
-              <h4 className={`text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 ${
-                catDone ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
-              }`}>
+              <h4
+                className={`text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 ${
+                  catDone
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
                 <span>{cat.icon}</span>
                 {cat.label}
                 {catDone && <span className="text-green-500">&#x2714;</span>}
               </h4>
               <div className="space-y-2">
-                {items.map(item => (
+                {items.map((item) => (
                   <label
                     key={item.id}
                     className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       checkedItems.has(item.id)
-                        ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
-                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600'
+                        ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600"
                     }`}
                   >
                     <input
@@ -821,17 +989,23 @@ const ChecklistTab = ({ checkedItems, onToggleItem, completion }) => {
                       className="mt-0.5 w-5 h-5 rounded border-gray-300 dark:border-gray-500 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div className="flex-1">
-                      <span className={`font-medium text-sm ${
-                        checkedItems.has(item.id)
-                          ? 'text-green-800 dark:text-green-200 line-through'
-                          : 'text-gray-900 dark:text-white'
-                      }`}>
+                      <span
+                        className={`font-medium text-sm ${
+                          checkedItems.has(item.id)
+                            ? "text-green-800 dark:text-green-200 line-through"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
                         {item.label}
                         {item.required && (
-                          <span className="ml-1 text-red-500 text-xs font-bold">*Required</span>
+                          <span className="ml-1 text-red-500 text-xs font-bold">
+                            *Required
+                          </span>
                         )}
                       </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.helpText}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {item.helpText}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -854,7 +1028,8 @@ const PitfallsTab = ({ expandedMistake, onToggleMistake }) => (
         Common BDD Mistakes to Avoid
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">
-        These are the mistakes that cost transitioning service members thousands in lost benefits. Don't make them.
+        These are the mistakes that cost transitioning service members thousands
+        in lost benefits. Don't make them.
       </p>
     </div>
 
@@ -862,33 +1037,56 @@ const PitfallsTab = ({ expandedMistake, onToggleMistake }) => (
       {BDD_COMMON_MISTAKES.map((mistake) => {
         const isExpanded = expandedMistake === mistake.id;
         return (
-          <div key={mistake.id} className="rounded-lg border-2 border-gray-200 dark:border-gray-600 overflow-hidden">
+          <div
+            key={mistake.id}
+            className="rounded-lg border-2 border-gray-200 dark:border-gray-600 overflow-hidden"
+          >
             <button
               onClick={() => onToggleMistake(mistake.id)}
               className="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className={`px-2 py-0.5 text-xs font-bold rounded ${
-                  mistake.impact === 'CRITICAL'
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
-                    : mistake.impact === 'HIGH'
-                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
-                }`}>
+                <span
+                  className={`px-2 py-0.5 text-xs font-bold rounded ${
+                    mistake.impact === "CRITICAL"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                      : mistake.impact === "HIGH"
+                        ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300"
+                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"
+                  }`}
+                >
                   {mistake.impact}
                 </span>
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">{mistake.title}</span>
+                <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {mistake.title}
+                </span>
               </div>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
             {isExpanded && (
               <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-600 pt-3">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">{mistake.description}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  {mistake.description}
+                </p>
                 <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-700">
-                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase">Fix: </span>
-                  <span className="text-sm text-emerald-700 dark:text-emerald-300">{mistake.fix}</span>
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase">
+                    Fix:{" "}
+                  </span>
+                  <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                    {mistake.fix}
+                  </span>
                 </div>
               </div>
             )}
@@ -903,23 +1101,40 @@ const PitfallsTab = ({ expandedMistake, onToggleMistake }) => (
 // SMALL REUSABLE COMPONENTS
 // ══════════════════════════════════════════════════════════════
 
-const CountdownCard = ({ number, label, color, suffix = '' }) => (
+const CountdownCard = ({ number, label, color, suffix = "" }) => (
   <div className="bg-white dark:bg-gray-700 rounded-lg p-3 text-center border border-gray-200 dark:border-gray-600">
-    <div className={`text-2xl font-bold ${color}`}>{number}{suffix}</div>
+    <div className={`text-2xl font-bold ${color}`}>
+      {number}
+      {suffix}
+    </div>
     <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
   </div>
 );
 
 const DateRow = ({ label, date, icon, subLabel, highlight, warn }) => (
-  <div className={`flex items-center gap-3 p-2 rounded-lg ${
-    highlight ? 'bg-emerald-50 dark:bg-emerald-900/20' : warn ? 'bg-red-50 dark:bg-red-900/20' : ''
-  }`}>
+  <div
+    className={`flex items-center gap-3 p-2 rounded-lg ${
+      highlight
+        ? "bg-emerald-50 dark:bg-emerald-900/20"
+        : warn
+          ? "bg-red-50 dark:bg-red-900/20"
+          : ""
+    }`}
+  >
     <span className="text-lg">{icon}</span>
     <div className="flex-1">
-      <span className="font-medium text-gray-900 dark:text-white text-sm">{label}</span>
-      {subLabel && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({subLabel})</span>}
+      <span className="font-medium text-gray-900 dark:text-white text-sm">
+        {label}
+      </span>
+      {subLabel && (
+        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+          ({subLabel})
+        </span>
+      )}
     </div>
-    <span className={`text-sm font-mono ${warn ? 'text-red-600 font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
+    <span
+      className={`text-sm font-mono ${warn ? "text-red-600 font-bold" : "text-gray-700 dark:text-gray-300"}`}
+    >
       {date}
     </span>
   </div>
@@ -939,7 +1154,11 @@ const ToolLink = ({ icon, label, onClick }) => (
 function getDateNDaysFromNow(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export default BDDBuilder;

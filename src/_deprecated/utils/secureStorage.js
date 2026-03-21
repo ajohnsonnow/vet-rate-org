@@ -10,11 +10,11 @@
  */
 
 // Storage keys
-const ENCRYPTION_KEY_STORAGE = 'vet_rate_enc_key';
-const ENCRYPTED_DATA_PREFIX = 'vet_rate_encrypted_';
-const SALT_STORAGE = 'vet_rate_salt';
-const PIN_HASH_STORAGE = 'vet_rate_pin_hash';
-const MIGRATION_FLAG = 'vet_rate_vault_migrated';
+const ENCRYPTION_KEY_STORAGE = "vet_rate_enc_key";
+const ENCRYPTED_DATA_PREFIX = "vet_rate_encrypted_";
+const SALT_STORAGE = "vet_rate_salt";
+const PIN_HASH_STORAGE = "vet_rate_pin_hash";
+const MIGRATION_FLAG = "vet_rate_vault_migrated";
 
 /**
  * Check if Web Crypto API is available
@@ -28,7 +28,9 @@ export const isCryptoAvailable = () => {
  */
 const generateSalt = () => {
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(salt)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 /**
@@ -48,30 +50,30 @@ const hexToBytes = (hex) => {
 const deriveKey = async (pin, salt) => {
   const encoder = new TextEncoder();
   const pinBuffer = encoder.encode(pin);
-  
+
   // Import PIN as key material
   const keyMaterial = await window.crypto.subtle.importKey(
-    'raw',
+    "raw",
     pinBuffer,
-    { name: 'PBKDF2' },
+    { name: "PBKDF2" },
     false,
-    ['deriveBits', 'deriveKey']
+    ["deriveBits", "deriveKey"],
   );
-  
+
   // Derive AES-GCM key
   const key = await window.crypto.subtle.deriveKey(
     {
-      name: 'PBKDF2',
+      name: "PBKDF2",
       salt: hexToBytes(salt),
       iterations: 100000,
-      hash: 'SHA-256'
+      hash: "SHA-256",
     },
     keyMaterial,
-    { name: 'AES-GCM', length: 256 },
+    { name: "AES-GCM", length: 256 },
     false,
-    ['encrypt', 'decrypt']
+    ["encrypt", "decrypt"],
   );
-  
+
   return key;
 };
 
@@ -81,9 +83,9 @@ const deriveKey = async (pin, salt) => {
 const hashPin = async (pin, salt) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin + salt);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
 /**
@@ -92,28 +94,30 @@ const hashPin = async (pin, salt) => {
 const encryptData = async (data, key) => {
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(JSON.stringify(data));
-  
+
   // Generate IV (Initialization Vector)
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  
+
   // Encrypt
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     {
-      name: 'AES-GCM',
-      iv: iv
+      name: "AES-GCM",
+      iv: iv,
     },
     key,
-    dataBuffer
+    dataBuffer,
   );
-  
+
   // Combine IV and encrypted data
   const encryptedArray = new Uint8Array(encryptedBuffer);
   const combined = new Uint8Array(iv.length + encryptedArray.length);
   combined.set(iv);
   combined.set(encryptedArray, iv.length);
-  
+
   // Convert to hex string
-  return Array.from(combined).map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(combined)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 /**
@@ -121,21 +125,21 @@ const encryptData = async (data, key) => {
  */
 const decryptData = async (encryptedHex, key) => {
   const encryptedBytes = hexToBytes(encryptedHex);
-  
+
   // Extract IV and encrypted data
   const iv = encryptedBytes.slice(0, 12);
   const data = encryptedBytes.slice(12);
-  
+
   // Decrypt
   const decryptedBuffer = await window.crypto.subtle.decrypt(
     {
-      name: 'AES-GCM',
-      iv: iv
+      name: "AES-GCM",
+      iv: iv,
     },
     key,
-    data
+    data,
   );
-  
+
   // Convert to string and parse JSON
   const decoder = new TextDecoder();
   const jsonString = decoder.decode(decryptedBuffer);
@@ -156,15 +160,15 @@ export const verifyPin = async (pin) => {
   try {
     const storedHash = localStorage.getItem(PIN_HASH_STORAGE);
     const salt = localStorage.getItem(SALT_STORAGE);
-    
+
     if (!storedHash || !salt) {
       return false;
     }
-    
+
     const pinHash = await hashPin(pin, salt);
     return pinHash === storedHash;
   } catch (error) {
-    console.error('PIN verification failed:', error);
+    console.error("PIN verification failed:", error);
     return false;
   }
 };
@@ -177,14 +181,14 @@ export const initializeVault = async (pin) => {
     // Generate and store salt
     const salt = generateSalt();
     localStorage.setItem(SALT_STORAGE, salt);
-    
+
     // Hash and store PIN
     const pinHash = await hashPin(pin, salt);
     localStorage.setItem(PIN_HASH_STORAGE, pinHash);
-    
+
     return true;
   } catch (error) {
-    console.error('Vault initialization failed:', error);
+    console.error("Vault initialization failed:", error);
     return false;
   }
 };
@@ -197,41 +201,41 @@ export const changePin = async (oldPin, newPin) => {
     // Verify old PIN
     const isValid = await verifyPin(oldPin);
     if (!isValid) {
-      throw new Error('Invalid current PIN');
+      throw new Error("Invalid current PIN");
     }
-    
+
     // Decrypt all data with old PIN
     const salt = localStorage.getItem(SALT_STORAGE);
     const oldKey = await deriveKey(oldPin, salt);
-    
-    const encryptedKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith(ENCRYPTED_DATA_PREFIX)
+
+    const encryptedKeys = Object.keys(localStorage).filter((key) =>
+      key.startsWith(ENCRYPTED_DATA_PREFIX),
     );
-    
+
     const decryptedData = {};
     for (const key of encryptedKeys) {
-      const storageKey = key.replace(ENCRYPTED_DATA_PREFIX, '');
+      const storageKey = key.replace(ENCRYPTED_DATA_PREFIX, "");
       const encrypted = localStorage.getItem(key);
       decryptedData[storageKey] = await decryptData(encrypted, oldKey);
     }
-    
+
     // Generate new salt and hash for new PIN
     const newSalt = generateSalt();
     localStorage.setItem(SALT_STORAGE, newSalt);
-    
+
     const newPinHash = await hashPin(newPin, newSalt);
     localStorage.setItem(PIN_HASH_STORAGE, newPinHash);
-    
+
     // Re-encrypt all data with new PIN
     const newKey = await deriveKey(newPin, newSalt);
     for (const [storageKey, data] of Object.entries(decryptedData)) {
       const encrypted = await encryptData(data, newKey);
       localStorage.setItem(ENCRYPTED_DATA_PREFIX + storageKey, encrypted);
     }
-    
+
     return true;
   } catch (error) {
-    console.error('PIN change failed:', error);
+    console.error("PIN change failed:", error);
     return false;
   }
 };
@@ -243,15 +247,15 @@ export const secureSetItem = async (key, value, pin) => {
   try {
     const salt = localStorage.getItem(SALT_STORAGE);
     if (!salt) {
-      throw new Error('Vault not initialized');
+      throw new Error("Vault not initialized");
     }
-    
+
     const cryptoKey = await deriveKey(pin, salt);
     const encrypted = await encryptData(value, cryptoKey);
     localStorage.setItem(ENCRYPTED_DATA_PREFIX + key, encrypted);
     return true;
   } catch (error) {
-    console.error('Secure storage failed:', error);
+    console.error("Secure storage failed:", error);
     throw error;
   }
 };
@@ -265,17 +269,17 @@ export const secureGetItem = async (key, pin) => {
     if (!encryptedData) {
       return null;
     }
-    
+
     const salt = localStorage.getItem(SALT_STORAGE);
     if (!salt) {
-      throw new Error('Vault not initialized');
+      throw new Error("Vault not initialized");
     }
-    
+
     const cryptoKey = await deriveKey(pin, salt);
     const decrypted = await decryptData(encryptedData, cryptoKey);
     return decrypted;
   } catch (error) {
-    console.error('Secure retrieval failed:', error);
+    console.error("Secure retrieval failed:", error);
     throw error;
   }
 };
@@ -291,17 +295,17 @@ export const secureRemoveItem = (key) => {
  * Check if data needs migration (legacy plaintext to encrypted)
  */
 export const needsMigration = () => {
-  const hasMigrated = localStorage.getItem(MIGRATION_FLAG) === 'true';
+  const hasMigrated = localStorage.getItem(MIGRATION_FLAG) === "true";
   if (hasMigrated) return false;
-  
+
   // Check for legacy plaintext data
   const legacyKeys = [
-    'vet_rate_saved_claims',
-    'vet_rate_statements',
-    'vet-rate-user-profile'
+    "vet_rate_saved_claims",
+    "vet_rate_statements",
+    "vet-rate-user-profile",
   ];
-  
-  return legacyKeys.some(key => localStorage.getItem(key) !== null);
+
+  return legacyKeys.some((key) => localStorage.getItem(key) !== null);
 };
 
 /**
@@ -310,18 +314,18 @@ export const needsMigration = () => {
 export const migrateLegacyData = async (pin) => {
   try {
     const legacyKeys = [
-      'vet_rate_saved_claims',
-      'vet_rate_statements',
-      'vet-rate-user-profile',
-      'vet_rate_nexus_statements',
-      'vet_rate_cap_simulator_data'
+      "vet_rate_saved_claims",
+      "vet_rate_statements",
+      "vet-rate-user-profile",
+      "vet_rate_nexus_statements",
+      "vet_rate_cap_simulator_data",
     ];
-    
+
     // Initialize vault if not already done
     if (!hasExistingPin()) {
       await initializeVault(pin);
     }
-    
+
     // Migrate each legacy key
     for (const key of legacyKeys) {
       const plaintext = localStorage.getItem(key);
@@ -336,11 +340,11 @@ export const migrateLegacyData = async (pin) => {
         }
       }
     }
-    
-    localStorage.setItem(MIGRATION_FLAG, 'true');
+
+    localStorage.setItem(MIGRATION_FLAG, "true");
     return true;
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error("Migration failed:", error);
     return false;
   }
 };
@@ -350,28 +354,29 @@ export const migrateLegacyData = async (pin) => {
  */
 export const completeMigrationCleanup = () => {
   const legacyKeys = [
-    'vet_rate_saved_claims',
-    'vet_rate_statements',
-    'vet-rate-user-profile',
-    'vet_rate_nexus_statements',
-    'vet_rate_cap_simulator_data'
+    "vet_rate_saved_claims",
+    "vet_rate_statements",
+    "vet-rate-user-profile",
+    "vet_rate_nexus_statements",
+    "vet_rate_cap_simulator_data",
   ];
-  
-  legacyKeys.forEach(key => localStorage.removeItem(key));
+
+  legacyKeys.forEach((key) => localStorage.removeItem(key));
 };
 
 /**
  * Emergency access: Clear all encrypted data (use with caution)
  */
 export const emergencyClearVault = () => {
-  const encryptedKeys = Object.keys(localStorage).filter(key => 
-    key.startsWith(ENCRYPTED_DATA_PREFIX) ||
-    key === PIN_HASH_STORAGE ||
-    key === SALT_STORAGE ||
-    key === MIGRATION_FLAG
+  const encryptedKeys = Object.keys(localStorage).filter(
+    (key) =>
+      key.startsWith(ENCRYPTED_DATA_PREFIX) ||
+      key === PIN_HASH_STORAGE ||
+      key === SALT_STORAGE ||
+      key === MIGRATION_FLAG,
   );
-  
-  encryptedKeys.forEach(key => localStorage.removeItem(key));
+
+  encryptedKeys.forEach((key) => localStorage.removeItem(key));
 };
 
 /**
@@ -380,11 +385,11 @@ export const emergencyClearVault = () => {
 export const getVaultStatus = () => {
   return {
     isInitialized: hasExistingPin(),
-    hasMigrated: localStorage.getItem(MIGRATION_FLAG) === 'true',
+    hasMigrated: localStorage.getItem(MIGRATION_FLAG) === "true",
     needsMigration: needsMigration(),
-    encryptedItemCount: Object.keys(localStorage).filter(k => 
-      k.startsWith(ENCRYPTED_DATA_PREFIX)
+    encryptedItemCount: Object.keys(localStorage).filter((k) =>
+      k.startsWith(ENCRYPTED_DATA_PREFIX),
     ).length,
-    cryptoAvailable: isCryptoAvailable()
+    cryptoAvailable: isCryptoAvailable(),
   };
 };

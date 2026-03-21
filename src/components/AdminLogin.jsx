@@ -1,40 +1,43 @@
 /**
  * Vet-Rate.org - Admin Login Component
  * Secure PIN-based authentication modal
- * 
+ *
  * Security Features:
  * - PIN masking with show/hide toggle
  * - Rate limiting display
  * - Lockout notification
  * - No credentials in DOM
  * - Auto-clear on close
- * 
+ *
  * This component is ONLY shown when triggered via Ctrl+Shift+A.
  * Regular users have no way to discover this exists.
- * 
+ *
  * Built by a fellow veteran. "Authentication is the first line of defense."
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { Shield, Eye, EyeOff, Lock, AlertTriangle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useAdminAuth } from "../contexts/AdminAuthContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import {
+  Shield,
+  Eye,
+  EyeOff,
+  Lock,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 
 export default function AdminLogin() {
   const { t } = useLanguage();
-  const { 
-    showAdminLogin, 
-    closeAdminLogin, 
-    authenticate, 
-    lockoutInfo 
-  } = useAdminAuth();
-  
+  const { showAdminLogin, closeAdminLogin, authenticate, lockoutInfo } =
+    useAdminAuth();
+
   useBodyScrollLock(showAdminLogin);
-  
-  const [pin, setPin] = useState('');
+
+  const [pin, setPin] = useState("");
   const [showPin, setShowPin] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef(null);
 
@@ -48,9 +51,9 @@ export default function AdminLogin() {
   // Clear state when modal closes
   useEffect(() => {
     if (!showAdminLogin) {
-      setPin('');
+      setPin("");
       setShowPin(false);
-      setError('');
+      setError("");
       setIsLoading(false);
     }
   }, [showAdminLogin]);
@@ -58,48 +61,48 @@ export default function AdminLogin() {
   // Handle PIN submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (lockoutInfo.isLocked) {
       return;
     }
-    
+
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       const result = await authenticate(pin);
-      
+
       if (!result.success) {
         setError(result.error);
-        setPin('');
+        setPin("");
         inputRef.current?.focus();
       }
     } catch (err) {
-      setError('Authentication error. Please try again.');
-      console.error('Auth error:', err);
+      setError("Authentication error. Please try again.");
+      console.error("Auth error:", err);
     }
-    
+
     setIsLoading(false);
   };
 
   // Handle PIN input - only allow digits
   const handlePinChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '');
+    const value = e.target.value.replace(/\D/g, "");
     setPin(value);
-    setError('');
+    setError("");
   };
 
   // Format lockout time
   const formatLockoutTime = (ms) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   if (!showAdminLogin) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && closeAdminLogin()}
     >
@@ -111,7 +114,9 @@ export default function AdminLogin() {
               <Shield className="w-6 h-6 text-amber-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Admin Authentication</h2>
+              <h2 className="text-lg font-bold text-white">
+                Admin Authentication
+              </h2>
               <p className="text-xs text-slate-400">Secure access required</p>
             </div>
           </div>
@@ -125,7 +130,9 @@ export default function AdminLogin() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-red-400 font-medium">Account Temporarily Locked</p>
+                  <p className="text-red-400 font-medium">
+                    Account Temporarily Locked
+                  </p>
                   <p className="text-red-300/70 text-sm mt-1">
                     Too many failed attempts. Please wait before trying again.
                   </p>
@@ -151,7 +158,7 @@ export default function AdminLogin() {
                   </div>
                   <input
                     ref={inputRef}
-                    type={showPin ? 'text' : 'password'}
+                    type={showPin ? "text" : "password"}
                     value={pin}
                     onChange={handlePinChange}
                     placeholder="Enter your PIN"
@@ -162,10 +169,10 @@ export default function AdminLogin() {
                     autoCapitalize="off"
                     spellCheck="false"
                     className={`w-full pl-10 pr-12 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-500 font-mono text-lg tracking-widest focus:outline-none focus:ring-2 transition-all ${
-                      error 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-slate-600 focus:ring-amber-500'
-                    } ${lockoutInfo.isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      error
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-slate-600 focus:ring-amber-500"
+                    } ${lockoutInfo.isLocked ? "opacity-50 cursor-not-allowed" : ""}`}
                   />
                   <button
                     type="button"
@@ -173,7 +180,11 @@ export default function AdminLogin() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                     tabIndex={-1}
                   >
-                    {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPin ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -192,8 +203,8 @@ export default function AdminLogin() {
                 disabled={lockoutInfo.isLocked || isLoading || pin.length < 6}
                 className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
                   lockoutInfo.isLocked || isLoading || pin.length < 6
-                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                    : 'bg-amber-500 hover:bg-amber-400 text-slate-900'
+                    ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+                    : "bg-amber-500 hover:bg-amber-400 text-slate-900"
                 }`}
               >
                 {isLoading ? (

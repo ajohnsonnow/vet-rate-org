@@ -1,17 +1,17 @@
 /**
  * Hallucination Trap - AI Output Validator
  * Prevents fake diagnostic codes AND fake VA forms from being displayed to users
- * 
+ *
  * This validator cross-references AI-generated outputs against:
  * - Official 38 CFR Part 4 diagnostic codes database
  * - Official VA Forms allowlist (added Jan 2026 per community feedback)
- * 
+ *
  * Why: Community feedback on r/VAClaims identified that AI can "hallucinate"
  * fake form numbers (like "27-0820" used incorrectly) leading to procedural errors.
  */
 
-import disabilityDataJson from '../data/disabilityData.json';
-import { validateVAForms, safeFormResponse } from './formValidator';
+import disabilityDataJson from "../data/disabilityData.json";
+import { validateVAForms, safeFormResponse } from "./formValidator";
 
 // Re-export form validation for convenience
 export { validateVAForms, safeFormResponse };
@@ -21,12 +21,12 @@ const disabilityData = disabilityDataJson.disabilities || [];
 
 // Build lookup table for O(1) access
 const VALID_CODES = new Set(
-  disabilityData.map(d => String(d.diagnosticCode))
+  disabilityData.map((d) => String(d.diagnosticCode)),
 );
 
 // Build name-to-code mapping for fuzzy matching
 const NAME_TO_CODE = new Map();
-disabilityData.forEach(d => {
+disabilityData.forEach((d) => {
   const normalizedName = d.conditionName.toLowerCase().trim();
   NAME_TO_CODE.set(normalizedName, String(d.diagnosticCode));
 });
@@ -38,34 +38,36 @@ disabilityData.forEach(d => {
  */
 export const validateDiagnosticCode = (code) => {
   const codeStr = String(code).trim();
-  
+
   if (!codeStr) {
     return {
       isValid: false,
       code: codeStr,
-      reason: 'Empty or invalid code'
+      reason: "Empty or invalid code",
     };
   }
 
   const isValid = VALID_CODES.has(codeStr);
-  
+
   if (isValid) {
     // Find the official record
-    const official = disabilityData.find(d => String(d.diagnosticCode) === codeStr);
+    const official = disabilityData.find(
+      (d) => String(d.diagnosticCode) === codeStr,
+    );
     return {
       isValid: true,
       code: codeStr,
       officialName: official?.conditionName,
       bodySystem: official?.bodySystem,
-      officialRecord: official
+      officialRecord: official,
     };
   }
 
   return {
     isValid: false,
     code: codeStr,
-    reason: 'Code not found in 38 CFR Part 4 database',
-    suggestion: findSimilarCodes(codeStr)
+    reason: "Code not found in 38 CFR Part 4 database",
+    suggestion: findSimilarCodes(codeStr),
   };
 };
 
@@ -77,19 +79,19 @@ export const validateDiagnosticCode = (code) => {
 const findSimilarCodes = (code) => {
   const codeStr = String(code);
   const codeNum = parseInt(codeStr, 10);
-  
+
   if (isNaN(codeNum)) return [];
 
   // Find codes within ±10
   const similar = disabilityData
-    .filter(d => {
+    .filter((d) => {
       const dCode = parseInt(d.diagnosticCode, 10);
       return Math.abs(dCode - codeNum) <= 10;
     })
     .slice(0, 3)
-    .map(d => ({
+    .map((d) => ({
       code: d.diagnosticCode,
-      name: d.conditionName
+      name: d.conditionName,
     }));
 
   return similar;
@@ -101,51 +103,51 @@ const findSimilarCodes = (code) => {
  * @returns {Object} Validation result
  */
 export const validateCondition = (condition) => {
-  if (!condition || typeof condition !== 'object') {
+  if (!condition || typeof condition !== "object") {
     return {
       isValid: false,
-      reason: 'Invalid condition object',
-      original: condition
+      reason: "Invalid condition object",
+      original: condition,
     };
   }
 
   // Extract diagnostic code (could be in different fields)
   const code = condition.diagnosticCode || condition.code || condition.dc;
-  
+
   if (!code) {
     // Try to find by name
     if (condition.name) {
       const normalizedName = condition.name.toLowerCase().trim();
       const matchedCode = NAME_TO_CODE.get(normalizedName);
-      
+
       if (matchedCode) {
         const validation = validateDiagnosticCode(matchedCode);
         return {
           ...validation,
           aiProvidedCode: false,
           inferredFromName: true,
-          original: condition
+          original: condition,
         };
       }
     }
 
     return {
       isValid: false,
-      reason: 'No diagnostic code provided',
-      original: condition
+      reason: "No diagnostic code provided",
+      original: condition,
     };
   }
 
   const validation = validateDiagnosticCode(code);
-  
+
   return {
     ...validation,
     original: condition,
     // Override AI's name with official name if code is valid
-    ...(validation.isValid && { 
+    ...(validation.isValid && {
       correctedName: validation.officialName,
-      aiName: condition.name
-    })
+      aiName: condition.name,
+    }),
   };
 };
 
@@ -158,9 +160,9 @@ export const validateConditions = (conditions) => {
   if (!Array.isArray(conditions)) {
     return {
       success: false,
-      error: 'Input must be an array of conditions',
+      error: "Input must be an array of conditions",
       safeData: [],
-      rejected: []
+      rejected: [],
     };
   }
 
@@ -170,27 +172,30 @@ export const validateConditions = (conditions) => {
 
   conditions.forEach((condition, index) => {
     const validation = validateCondition(condition);
-    
+
     if (validation.isValid) {
       safeData.push({
         ...condition,
         diagnosticCode: validation.code,
         // Use official name instead of AI's potentially incorrect name
         name: validation.officialName || condition.name,
-        aiName: condition.name !== validation.officialName ? condition.name : undefined,
+        aiName:
+          condition.name !== validation.officialName
+            ? condition.name
+            : undefined,
         bodySystem: validation.bodySystem,
         validated: true,
-        validatedAt: new Date().toISOString()
+        validatedAt: new Date().toISOString(),
       });
 
       // Warn if AI used different name
       if (condition.name && condition.name !== validation.officialName) {
         warnings.push({
           index,
-          type: 'name_mismatch',
+          type: "name_mismatch",
           aiName: condition.name,
           officialName: validation.officialName,
-          code: validation.code
+          code: validation.code,
         });
       }
     } else {
@@ -199,7 +204,7 @@ export const validateConditions = (conditions) => {
         index,
         reason: validation.reason,
         suggestion: validation.suggestion,
-        rejectedAt: new Date().toISOString()
+        rejectedAt: new Date().toISOString(),
       });
     }
   });
@@ -213,10 +218,11 @@ export const validateConditions = (conditions) => {
       total: conditions.length,
       valid: safeData.length,
       invalid: rejected.length,
-      successRate: conditions.length > 0 
-        ? Math.round((safeData.length / conditions.length) * 100) 
-        : 0
-    }
+      successRate:
+        conditions.length > 0
+          ? Math.round((safeData.length / conditions.length) * 100)
+          : 0,
+    },
   };
 };
 
@@ -230,37 +236,39 @@ export const validateAIResponse = (aiResponse) => {
     let data = aiResponse;
 
     // If string, try to parse as JSON
-    if (typeof aiResponse === 'string') {
+    if (typeof aiResponse === "string") {
       // Remove markdown code blocks if present
       const cleaned = aiResponse
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
         .trim();
-      
+
       try {
         data = JSON.parse(cleaned);
       } catch (e) {
         return {
           success: false,
-          error: 'Failed to parse AI response as JSON',
+          error: "Failed to parse AI response as JSON",
           details: e.message,
           safeData: [],
-          rejected: []
+          rejected: [],
         };
       }
     }
 
     // Handle different response formats
     let conditions = [];
-    
+
     if (Array.isArray(data)) {
       // Check if this array contains condition-like objects (with diagnostic codes)
       // If not, skip validation (e.g., arrays of strings, action items, etc.)
-      const hasConditionObjects = data.some(item => 
-        item && typeof item === 'object' && 
-        (item.diagnosticCode || item.code || item.dc || item.diagnostic_code)
+      const hasConditionObjects = data.some(
+        (item) =>
+          item &&
+          typeof item === "object" &&
+          (item.diagnosticCode || item.code || item.dc || item.diagnostic_code),
       );
-      
+
       if (hasConditionObjects || data.length === 0) {
         conditions = data;
       } else {
@@ -270,7 +278,7 @@ export const validateAIResponse = (aiResponse) => {
           safeData: data,
           rejected: [],
           skipped: true,
-          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 }
+          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 },
         };
       }
     } else if (data.conditions && Array.isArray(data.conditions)) {
@@ -280,11 +288,12 @@ export const validateAIResponse = (aiResponse) => {
     } else if (data.potential_claims && Array.isArray(data.potential_claims)) {
       // C-File analyzer format
       conditions = data.potential_claims;
-    } else if (typeof data === 'object') {
+    } else if (typeof data === "object") {
       // Check if this looks like a condition object (has diagnosticCode, code, or dc)
       // If not, it's probably a different response format (like DecisionDecoder)
       // and we should skip validation
-      const hasConditionFields = data.diagnosticCode || data.code || data.dc || data.diagnostic_code;
+      const hasConditionFields =
+        data.diagnosticCode || data.code || data.dc || data.diagnostic_code;
       if (hasConditionFields) {
         conditions = [data];
       } else {
@@ -293,28 +302,27 @@ export const validateAIResponse = (aiResponse) => {
           success: true,
           safeData: data,
           rejected: [],
-          skipped: true,  // Indicate we skipped validation for non-condition response
-          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 }
+          skipped: true, // Indicate we skipped validation for non-condition response
+          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 },
         };
       }
     } else {
       return {
         success: false,
-        error: 'Unrecognized AI response format',
+        error: "Unrecognized AI response format",
         safeData: [],
-        rejected: []
+        rejected: [],
       };
     }
 
     return validateConditions(conditions);
-
   } catch (error) {
     return {
       success: false,
-      error: 'Failed to validate AI response',
+      error: "Failed to validate AI response",
       details: error.message,
       safeData: [],
-      rejected: []
+      rejected: [],
     };
   }
 };
@@ -326,11 +334,15 @@ export const validateAIResponse = (aiResponse) => {
 export const getDatabaseStats = () => {
   return {
     totalCodes: VALID_CODES.size,
-    bodySystems: [...new Set(disabilityData.map(d => d.bodySystem))].length,
+    bodySystems: [...new Set(disabilityData.map((d) => d.bodySystem))].length,
     codeRange: {
-      min: Math.min(...disabilityData.map(d => parseInt(d.diagnosticCode, 10))),
-      max: Math.max(...disabilityData.map(d => parseInt(d.diagnosticCode, 10)))
-    }
+      min: Math.min(
+        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+      ),
+      max: Math.max(
+        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+      ),
+    },
   };
 };
 
@@ -341,24 +353,29 @@ export const getDatabaseStats = () => {
  * @returns {Array} Matching conditions
  */
 export const searchConditions = (query, limit = 10) => {
-  if (!query || typeof query !== 'string') return [];
+  if (!query || typeof query !== "string") return [];
 
   const normalizedQuery = query.toLowerCase().trim();
   const matches = [];
 
   // Exact code match
   if (VALID_CODES.has(query)) {
-    const exact = disabilityData.find(d => String(d.diagnosticCode) === query);
-    if (exact) matches.push({ ...exact, matchType: 'exact_code' });
+    const exact = disabilityData.find(
+      (d) => String(d.diagnosticCode) === query,
+    );
+    if (exact) matches.push({ ...exact, matchType: "exact_code" });
   }
 
   // Name contains query
-  disabilityData.forEach(d => {
+  disabilityData.forEach((d) => {
     if (matches.length >= limit) return;
-    
+
     const name = d.conditionName.toLowerCase();
-    if (name.includes(normalizedQuery) && !matches.some(m => m.diagnosticCode === d.diagnosticCode)) {
-      matches.push({ ...d, matchType: 'name_contains' });
+    if (
+      name.includes(normalizedQuery) &&
+      !matches.some((m) => m.diagnosticCode === d.diagnosticCode)
+    ) {
+      matches.push({ ...d, matchType: "name_contains" });
     }
   });
 
@@ -374,5 +391,5 @@ export default {
   searchConditions,
   validateVAForms,
   safeFormResponse,
-  VALID_CODES
+  VALID_CODES,
 };

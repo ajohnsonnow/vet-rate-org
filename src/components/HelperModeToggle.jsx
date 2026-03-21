@@ -1,10 +1,10 @@
-﻿import React, { useState } from 'react';
-import { useHelperMode, TERMINOLOGY } from '../contexts/HelperModeContext';
-import { useLanguage } from '../contexts/LanguageContext';
+﻿import React, { useState } from "react";
+import { useHelperMode, TERMINOLOGY } from "../contexts/HelperModeContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * HelperModeToggle Component - "I Am Helping a Veteran"
- * 
+ *
  * A prominent toggle that switches the entire app into Helper/Spouse/Caregiver mode.
  * When enabled:
  * - Military/VA jargon is replaced with plain English
@@ -14,14 +14,21 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const HelperModeToggle = ({ compact = false }) => {
   const { t } = useLanguage();
-  const { isHelperMode, toggleHelperMode, showHelperTooltips, setShowHelperTooltips } = useHelperMode();
+  const {
+    isHelperMode,
+    toggleHelperMode,
+    showHelperTooltips,
+    setShowHelperTooltips,
+  } = useHelperMode();
   const [showInfo, setShowInfo] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
-  
+
   // Handle button click - show explainer if first time
   const handleToggleClick = () => {
-    const hasSeenExplainer = localStorage.getItem('vetrate-helper-explainer-seen');
-    
+    const hasSeenExplainer = localStorage.getItem(
+      "vetrate-helper-explainer-seen",
+    );
+
     if (!hasSeenExplainer && !isHelperMode) {
       // First time clicking - show explainer
       setShowExplainer(true);
@@ -30,17 +37,17 @@ const HelperModeToggle = ({ compact = false }) => {
       toggleHelperMode();
     }
   };
-  
+
   // Handle confirming after reading explainer
   const handleConfirmExplainer = () => {
-    localStorage.setItem('vetrate-helper-explainer-seen', 'true');
+    localStorage.setItem("vetrate-helper-explainer-seen", "true");
     setShowExplainer(false);
     toggleHelperMode();
   };
-  
+
   // Handle dismissing explainer without enabling
   const handleDismissExplainer = () => {
-    localStorage.setItem('vetrate-helper-explainer-seen', 'true');
+    localStorage.setItem("vetrate-helper-explainer-seen", "true");
     setShowExplainer(false);
   };
 
@@ -52,22 +59,33 @@ const HelperModeToggle = ({ compact = false }) => {
           onClick={handleToggleClick}
           className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 shadow-md hover:shadow-lg group ${
             isHelperMode
-              ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-300'
-              : 'bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 text-pink-700 dark:text-pink-300 border border-pink-300/50 dark:border-pink-600/50 hover:from-pink-200 hover:to-rose-200 dark:hover:from-pink-800/60 dark:hover:to-rose-800/60'
+              ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-300"
+              : "bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 text-pink-700 dark:text-pink-300 border border-pink-300/50 dark:border-pink-600/50 hover:from-pink-200 hover:to-rose-200 dark:hover:from-pink-800/60 dark:hover:to-rose-800/60"
           }`}
-          title={isHelperMode ? 'Helper Mode Active - Jargon translated to plain English' : 'I\'m helping a veteran - Click for simplified language'}
+          title={
+            isHelperMode
+              ? "Helper Mode Active - Jargon translated to plain English"
+              : "I'm helping a veteran - Click for simplified language"
+          }
         >
-          <span className="text-lg">{isHelperMode ? '💝' : '🤝'}</span>
-          <span className="hidden sm:inline">{isHelperMode ? 'Helper ON' : 'Helping'}</span>
+          <span className="text-lg">{isHelperMode ? "💝" : "🤝"}</span>
+          <span className="hidden sm:inline">
+            {isHelperMode ? "Helper ON" : "Helping"}
+          </span>
           {!isHelperMode && (
             <span className="hidden lg:inline text-[10px] px-1 py-0.5 bg-pink-500 text-white rounded font-bold group-hover:animate-pulse">
               Caregiver?
             </span>
           )}
         </button>
-        
+
         {/* Explainer Modal */}
-        {showExplainer && <ExplainerModal onConfirm={handleConfirmExplainer} onDismiss={handleDismissExplainer} />}
+        {showExplainer && (
+          <ExplainerModal
+            onConfirm={handleConfirmExplainer}
+            onDismiss={handleDismissExplainer}
+          />
+        )}
       </>
     );
   }
@@ -78,15 +96,17 @@ const HelperModeToggle = ({ compact = false }) => {
       <div className="bg-gradient-to-r from-pink-50 via-rose-50 to-purple-50 dark:from-pink-900/30 dark:via-rose-900/30 dark:to-purple-900/30 border border-pink-200 dark:border-pink-700 rounded-xl p-4">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${
-              isHelperMode 
-                ? 'bg-pink-500 text-white' 
-                : 'bg-white dark:bg-gray-800 border-2 border-pink-200 dark:border-pink-700'
-            }`}>
-              <span className="text-2xl">{isHelperMode ? '💝' : '🤝'}</span>
+            <div
+              className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${
+                isHelperMode
+                  ? "bg-pink-500 text-white"
+                  : "bg-white dark:bg-gray-800 border-2 border-pink-200 dark:border-pink-700"
+              }`}
+            >
+              <span className="text-2xl">{isHelperMode ? "💝" : "🤝"}</span>
             </div>
           </div>
-          
+
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -95,112 +115,134 @@ const HelperModeToggle = ({ compact = false }) => {
                   FOR CAREGIVERS
                 </span>
               </h3>
-              
+
               {/* Toggle Switch */}
               <button
                 onClick={handleToggleClick}
                 className={`relative w-14 h-7 rounded-full transition-colors ${
-                  isHelperMode ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'
+                  isHelperMode ? "bg-pink-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}
                 role="switch"
                 aria-checked={isHelperMode}
               >
                 <span
                   className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                    isHelperMode ? 'translate-x-8' : 'translate-x-1'
+                    isHelperMode ? "translate-x-8" : "translate-x-1"
                   }`}
                 />
               </button>
             </div>
-          
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            <strong>"I am helping a Veteran."</strong> Enable this mode to simplify military/VA jargon 
-            into plain English. Perfect for spouses, family members, or caregivers navigating the claims process.
-          </p>
-          
-          {/* Info toggle */}
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            className="text-sm text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
-          >
-            <span>{showInfo ? '▼' : '▶'}</span>
-            What changes in Helper Mode?
-          </button>
-          
-          {showInfo && (
-            <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg space-y-3">
-              {/* Example translations */}
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                  📝 Term Simplifications (examples):
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                  {Object.entries(TERMINOLOGY).slice(0, 6).map(([term, info]) => (
-                    <div key={term} className="flex items-center gap-2">
-                      <span className="text-gray-400 dark:text-gray-500 line-through">{term}</span>
-                      <span className="text-gray-400">→</span>
-                      <span className="text-pink-600 dark:text-pink-400 font-medium">{info.simple}</span>
-                    </div>
-                  ))}
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              <strong>"I am helping a Veteran."</strong> Enable this mode to
+              simplify military/VA jargon into plain English. Perfect for
+              spouses, family members, or caregivers navigating the claims
+              process.
+            </p>
+
+            {/* Info toggle */}
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="text-sm text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
+            >
+              <span>{showInfo ? "▼" : "▶"}</span>
+              What changes in Helper Mode?
+            </button>
+
+            {showInfo && (
+              <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg space-y-3">
+                {/* Example translations */}
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    📝 Term Simplifications (examples):
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    {Object.entries(TERMINOLOGY)
+                      .slice(0, 6)
+                      .map(([term, info]) => (
+                        <div key={term} className="flex items-center gap-2">
+                          <span className="text-gray-400 dark:text-gray-500 line-through">
+                            {term}
+                          </span>
+                          <span className="text-gray-400">→</span>
+                          <span className="text-pink-600 dark:text-pink-400 font-medium">
+                            {info.simple}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
-              
-              {/* Highlighted tools */}
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                  ⭐ Highlighted Tools for Caregivers:
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {['Witness Bench', 'State Benefits', 'Symptom Logger', 'Forms Helper', 'VSO Finder'].map(tool => (
-                    <span 
-                      key={tool}
-                      className="px-2 py-0.5 bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300 text-xs rounded-full"
-                    >
-                      {tool}
-                    </span>
-                  ))}
+
+                {/* Highlighted tools */}
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    ⭐ Highlighted Tools for Caregivers:
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      "Witness Bench",
+                      "State Benefits",
+                      "Symptom Logger",
+                      "Forms Helper",
+                      "VSO Finder",
+                    ].map((tool) => (
+                      <span
+                        key={tool}
+                        className="px-2 py-0.5 bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300 text-xs rounded-full"
+                      >
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              {/* Tooltips toggle */}
-              <div className="flex items-center justify-between pt-2 border-t dark:border-gray-700">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Show explanatory tooltips on hover
-                </span>
-                <button
-                  onClick={() => setShowHelperTooltips(!showHelperTooltips)}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${
-                    showHelperTooltips ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                  role="switch"
-                  aria-checked={showHelperTooltips}
-                >
-                  <span
-                    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
-                      showHelperTooltips ? 'translate-x-5' : 'translate-x-0.5'
+
+                {/* Tooltips toggle */}
+                <div className="flex items-center justify-between pt-2 border-t dark:border-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Show explanatory tooltips on hover
+                  </span>
+                  <button
+                    onClick={() => setShowHelperTooltips(!showHelperTooltips)}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      showHelperTooltips
+                        ? "bg-pink-500"
+                        : "bg-gray-300 dark:bg-gray-600"
                     }`}
-                  />
-                </button>
+                    role="switch"
+                    aria-checked={showHelperTooltips}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
+                        showHelperTooltips ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Active indicator banner */}
+        {isHelperMode && (
+          <div className="mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg text-center">
+            <p className="text-sm font-medium">
+              ✨ Helper Mode Active - Simplified language is now being used
+              throughout the app
+            </p>
+          </div>
+        )}
       </div>
-      
-      {/* Active indicator banner */}
-      {isHelperMode && (
-        <div className="mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg text-center">
-          <p className="text-sm font-medium">
-            ✨ Helper Mode Active - Simplified language is now being used throughout the app
-          </p>
-        </div>
+
+      {/* Explainer Modal */}
+      {showExplainer && (
+        <ExplainerModal
+          onConfirm={handleConfirmExplainer}
+          onDismiss={handleDismissExplainer}
+        />
       )}
-    </div>
-    
-    {/* Explainer Modal */}
-    {showExplainer && <ExplainerModal onConfirm={handleConfirmExplainer} onDismiss={handleDismissExplainer} />}
-  </>
-);
+    </>
+  );
 };
 
 /**
@@ -216,7 +258,9 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
             <span className="text-4xl">💝</span>
             <div>
               <h2 className="text-2xl font-bold">Helper Mode</h2>
-              <p className="text-pink-100 text-sm">For Spouses, Family Members & Caregivers</p>
+              <p className="text-pink-100 text-sm">
+                For Spouses, Family Members & Caregivers
+              </p>
             </div>
           </div>
         </div>
@@ -229,8 +273,10 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
               <span>👥</span> Who Is This For?
             </h3>
             <p className="text-gray-700 dark:text-gray-300">
-              <strong>"I am helping a Veteran."</strong> Many veterans rely on spouses, adult children, or caregivers 
-              to help navigate the VA claims process. This mode makes the site easier for non-veterans to use.
+              <strong>"I am helping a Veteran."</strong> Many veterans rely on
+              spouses, adult children, or caregivers to help navigate the VA
+              claims process. This mode makes the site easier for non-veterans
+              to use.
             </p>
           </div>
 
@@ -244,25 +290,37 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
               <div className="flex items-start gap-3">
                 <span className="text-2xl flex-shrink-0">📝</span>
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">Simplified Language</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Simplified Language
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Military/VA jargon is translated into plain English:
                   </p>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 line-through">C&P Exam</span>
+                      <span className="text-gray-400 line-through">
+                        C&P Exam
+                      </span>
                       <span className="text-gray-400">→</span>
-                      <span className="text-pink-600 dark:text-pink-400 font-medium">Disability Evaluation Exam</span>
+                      <span className="text-pink-600 dark:text-pink-400 font-medium">
+                        Disability Evaluation Exam
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 line-through">Nexus Letter</span>
+                      <span className="text-gray-400 line-through">
+                        Nexus Letter
+                      </span>
                       <span className="text-gray-400">→</span>
-                      <span className="text-pink-600 dark:text-pink-400 font-medium">Medical Connection Letter</span>
+                      <span className="text-pink-600 dark:text-pink-400 font-medium">
+                        Medical Connection Letter
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400 line-through">VSO</span>
                       <span className="text-gray-400">→</span>
-                      <span className="text-pink-600 dark:text-pink-400 font-medium">Free Claims Helper</span>
+                      <span className="text-pink-600 dark:text-pink-400 font-medium">
+                        Free Claims Helper
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -272,9 +330,12 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
               <div className="flex items-start gap-3">
                 <span className="text-2xl flex-shrink-0">💡</span>
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">Helpful Tooltips</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Helpful Tooltips
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Hover over terms to see explanations of military acronyms and VA terminology.
+                    Hover over terms to see explanations of military acronyms
+                    and VA terminology.
                   </p>
                 </div>
               </div>
@@ -283,13 +344,24 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
               <div className="flex items-start gap-3">
                 <span className="text-2xl flex-shrink-0">⭐</span>
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">Caregiver-Relevant Tools Highlighted</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Caregiver-Relevant Tools Highlighted
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Priority tools for helpers:
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {['Witness Bench', 'State Benefits', 'Symptom Logger', 'Forms Helper', 'VSO Finder'].map(tool => (
-                      <span key={tool} className="px-2 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 text-xs rounded-full font-medium">
+                    {[
+                      "Witness Bench",
+                      "State Benefits",
+                      "Symptom Logger",
+                      "Forms Helper",
+                      "VSO Finder",
+                    ].map((tool) => (
+                      <span
+                        key={tool}
+                        className="px-2 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 text-xs rounded-full font-medium"
+                      >
                         {tool}
                       </span>
                     ))}
@@ -303,11 +375,13 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
           <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">🔒</span>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100">100% Private</h3>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">
+                100% Private
+              </h3>
             </div>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              This preference is saved in your browser only. No data is sent to any server. 
-              You can turn it on/off anytime.
+              This preference is saved in your browser only. No data is sent to
+              any server. You can turn it on/off anytime.
             </p>
           </div>
 
@@ -329,7 +403,8 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
 
           {/* Dismissal note */}
           <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-            This message will only appear once. You can enable Helper Mode anytime from the header.
+            This message will only appear once. You can enable Helper Mode
+            anytime from the header.
           </p>
         </div>
       </div>
@@ -341,18 +416,19 @@ const ExplainerModal = ({ onConfirm, onDismiss }) => {
  * HelperTooltip - Wrap terms to show tooltips in Helper Mode
  */
 export const HelperTooltip = ({ term, children }) => {
-  const { isHelperMode, showHelperTooltips, getTerm, getTooltip } = useHelperMode();
+  const { isHelperMode, showHelperTooltips, getTerm, getTooltip } =
+    useHelperMode();
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   const tooltip = getTooltip(term);
   const displayTerm = isHelperMode ? getTerm(term) : term;
-  
+
   if (!isHelperMode || !showHelperTooltips || !tooltip) {
     return <>{children || displayTerm}</>;
   }
-  
+
   return (
-    <span 
+    <span
       className="relative inline-block"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}

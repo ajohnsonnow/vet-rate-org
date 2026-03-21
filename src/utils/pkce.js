@@ -1,6 +1,6 @@
 /**
  * PKCE (Proof Key for Code Exchange) Utilities
- * 
+ *
  * Implements RFC 7636 for secure OAuth 2.0 authorization without client secrets.
  * Uses native Web Crypto API - no external dependencies required.
  */
@@ -12,7 +12,7 @@
 export function generateCodeVerifier() {
   const array = new Uint8Array(32); // 32 bytes = 256 bits
   window.crypto.getRandomValues(array);
-  
+
   // Convert to base64url encoding (URL-safe base64)
   return base64UrlEncode(array);
 }
@@ -26,10 +26,10 @@ export async function generateCodeChallenge(codeVerifier) {
   // Convert the verifier to a buffer
   const encoder = new TextEncoder();
   const data = encoder.encode(codeVerifier);
-  
+
   // Hash it with SHA-256
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+
   // Convert to base64url encoding
   const hashArray = new Uint8Array(hashBuffer);
   return base64UrlEncode(hashArray);
@@ -53,15 +53,12 @@ export function generateState() {
 function base64UrlEncode(buffer) {
   // Convert buffer to base64
   let base64 = btoa(String.fromCharCode(...buffer));
-  
+
   // Make it URL-safe:
   // Replace + with - (minus)
   // Replace / with _ (underscore)
   // Remove trailing = padding
-  return base64
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
 /**
@@ -71,7 +68,7 @@ function base64UrlEncode(buffer) {
 export async function generatePKCEPair() {
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
-  
+
   return {
     verifier,
     challenge,

@@ -8,10 +8,10 @@
  * Automatically migrates from localStorage to IndexedDB on first use.
  */
 
-import { get, set, del, keys, clear } from 'idb-keyval';
+import { get, set, del, keys, clear } from "idb-keyval";
 
-const MIGRATION_KEY = 'vet_rate_migrated_to_indexeddb';
-const MIGRATION_TIMESTAMP_KEY = 'vet_rate_migration_timestamp';
+const MIGRATION_KEY = "vet_rate_migrated_to_indexeddb";
+const MIGRATION_TIMESTAMP_KEY = "vet_rate_migration_timestamp";
 
 /**
  * Storage wrapper that provides async localStorage-like API using IndexedDB
@@ -27,7 +27,7 @@ export const storage = {
       const value = await get(key);
       return value !== undefined ? value : null;
     } catch (error) {
-      console.error('Storage getItem error:', error);
+      console.error("Storage getItem error:", error);
       return null;
     }
   },
@@ -43,7 +43,7 @@ export const storage = {
       await set(key, value);
       return true;
     } catch (error) {
-      console.error('Storage setItem error:', error);
+      console.error("Storage setItem error:", error);
       return false;
     }
   },
@@ -58,7 +58,7 @@ export const storage = {
       await del(key);
       return true;
     } catch (error) {
-      console.error('Storage removeItem error:', error);
+      console.error("Storage removeItem error:", error);
       return false;
     }
   },
@@ -71,7 +71,7 @@ export const storage = {
     try {
       return await keys();
     } catch (error) {
-      console.error('Storage getAllKeys error:', error);
+      console.error("Storage getAllKeys error:", error);
       return [];
     }
   },
@@ -85,7 +85,7 @@ export const storage = {
       await clear();
       return true;
     } catch (error) {
-      console.error('Storage clear error:', error);
+      console.error("Storage clear error:", error);
       return false;
     }
   },
@@ -100,7 +100,7 @@ export const storage = {
     await Promise.all(
       keyList.map(async (key) => {
         results[key] = await this.getItem(key);
-      })
+      }),
     );
     return results;
   },
@@ -113,14 +113,14 @@ export const storage = {
   async setMultiple(items) {
     try {
       await Promise.all(
-        Object.entries(items).map(([key, value]) => this.setItem(key, value))
+        Object.entries(items).map(([key, value]) => this.setItem(key, value)),
       );
       return true;
     } catch (error) {
-      console.error('Storage setMultiple error:', error);
+      console.error("Storage setMultiple error:", error);
       return false;
     }
-  }
+  },
 };
 
 /**
@@ -130,23 +130,23 @@ export const storage = {
 export async function needsMigration() {
   // Check if we've already migrated
   const alreadyMigrated = await storage.getItem(MIGRATION_KEY);
-  if (alreadyMigrated === 'true') {
+  if (alreadyMigrated === "true") {
     return false;
   }
 
   // Check if there's any data in localStorage that should be migrated
   const veteranProfileKeys = [
-    'vet_rate_veteran_profile',
-    'vet_rate_saved_forms',
-    'vet_rate_my_ratings',
-    'vet_rate_saved_claims',
-    'vet-rate-tos-accepted',
-    'vet-rate-tos-accepted-date',
-    'vetrate_gemini_key',
-    'vet_rate_app_version',
-    'vet_rate_data_schema_version',
-    'vet_rate_last_seen_version',
-    'pwa_install_dismissed'
+    "vet_rate_veteran_profile",
+    "vet_rate_saved_forms",
+    "vet_rate_my_ratings",
+    "vet_rate_saved_claims",
+    "vet-rate-tos-accepted",
+    "vet-rate-tos-accepted-date",
+    "vetrate_gemini_key",
+    "vet_rate_app_version",
+    "vet_rate_data_schema_version",
+    "vet_rate_last_seen_version",
+    "pwa_install_dismissed",
   ];
 
   for (const key of veteranProfileKeys) {
@@ -168,11 +168,11 @@ export async function migrateFromLocalStorage() {
     migratedKeys: [],
     failedKeys: [],
     totalSize: 0,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   try {
-    console.log('🔄 Starting migration from localStorage to IndexedDB...');
+    console.log("🔄 Starting migration from localStorage to IndexedDB...");
 
     // Get all localStorage keys
     const allKeys = [];
@@ -200,20 +200,24 @@ export async function migrateFromLocalStorage() {
     }
 
     // Mark migration as complete
-    await storage.setItem(MIGRATION_KEY, 'true');
+    await storage.setItem(MIGRATION_KEY, "true");
     await storage.setItem(MIGRATION_TIMESTAMP_KEY, migrationResults.timestamp);
 
     migrationResults.success = migrationResults.failedKeys.length === 0;
 
-    console.log(`✨ Migration complete! Migrated ${migrationResults.migratedKeys.length} keys (${(migrationResults.totalSize / 1024).toFixed(2)} KB)`);
+    console.log(
+      `✨ Migration complete! Migrated ${migrationResults.migratedKeys.length} keys (${(migrationResults.totalSize / 1024).toFixed(2)} KB)`,
+    );
 
     // DO NOT clear localStorage - app still reads from it
     // Data is now in both places (IndexedDB for backup, localStorage for live access)
-    console.log('✅ Data successfully backed up to IndexedDB (localStorage preserved)');
+    console.log(
+      "✅ Data successfully backed up to IndexedDB (localStorage preserved)",
+    );
 
     return migrationResults;
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error("❌ Migration failed:", error);
     migrationResults.success = false;
     migrationResults.error = error.message;
     return migrationResults;
@@ -230,12 +234,12 @@ export async function getMigrationStatus() {
   const allKeys = await storage.getAllKeys();
 
   return {
-    isMigrated: isMigrated === 'true',
+    isMigrated: isMigrated === "true",
     migrationDate: timestamp,
     indexedDBKeys: allKeys.length,
     localStorageKeys: localStorage.length,
     estimatedIndexedDBSize: await estimateStorageSize(),
-    estimatedLocalStorageSize: estimateLocalStorageSize()
+    estimatedLocalStorageSize: estimateLocalStorageSize(),
   };
 }
 
@@ -257,7 +261,7 @@ async function estimateStorageSize() {
 
     return totalSize;
   } catch (error) {
-    console.error('Error estimating storage size:', error);
+    console.error("Error estimating storage size:", error);
     return 0;
   }
 }
@@ -295,12 +299,12 @@ export async function exportAllData() {
 
     return {
       exportDate: new Date().toISOString(),
-      version: '1.0.0',
-      storageType: 'IndexedDB',
-      data
+      version: "1.0.0",
+      storageType: "IndexedDB",
+      data,
     };
   } catch (error) {
-    console.error('Error exporting data:', error);
+    console.error("Error exporting data:", error);
     throw error;
   }
 }
@@ -313,11 +317,11 @@ export async function exportAllData() {
 export async function importAllData(exportedData) {
   try {
     if (!exportedData || !exportedData.data) {
-      throw new Error('Invalid export data format');
+      throw new Error("Invalid export data format");
     }
 
-    console.log('📥 Importing data into IndexedDB...');
-    
+    console.log("📥 Importing data into IndexedDB...");
+
     const entries = Object.entries(exportedData.data);
     for (const [key, value] of entries) {
       await storage.setItem(key, value);
@@ -326,7 +330,7 @@ export async function importAllData(exportedData) {
     console.log(`✅ Imported ${entries.length} keys`);
     return true;
   } catch (error) {
-    console.error('Error importing data:', error);
+    console.error("Error importing data:", error);
     throw error;
   }
 }
@@ -337,14 +341,14 @@ export async function importAllData(exportedData) {
  */
 export async function getStorageStats() {
   const migrationStatus = await getMigrationStatus();
-  
+
   // Try to get quota information
   let quota = { usage: 0, quota: 0 };
   if (navigator.storage && navigator.storage.estimate) {
     try {
       quota = await navigator.storage.estimate();
     } catch (e) {
-      console.warn('Could not estimate storage quota:', e);
+      console.warn("Could not estimate storage quota:", e);
     }
   }
 
@@ -352,12 +356,19 @@ export async function getStorageStats() {
     ...migrationStatus,
     quotaUsage: quota.usage,
     quotaLimit: quota.quota,
-    quotaUsagePercent: quota.quota > 0 ? ((quota.usage / quota.quota) * 100).toFixed(2) : 0,
+    quotaUsagePercent:
+      quota.quota > 0 ? ((quota.usage / quota.quota) * 100).toFixed(2) : 0,
     quotaUsageMB: (quota.usage / (1024 * 1024)).toFixed(2),
     quotaLimitMB: (quota.quota / (1024 * 1024)).toFixed(2),
-    estimatedIndexedDBSizeMB: (migrationStatus.estimatedIndexedDBSize / (1024 * 1024)).toFixed(2),
-    estimatedLocalStorageSizeMB: (migrationStatus.estimatedLocalStorageSize / (1024 * 1024)).toFixed(2),
-    localStorageLimitMB: '5-10' // Typical browser limit
+    estimatedIndexedDBSizeMB: (
+      migrationStatus.estimatedIndexedDBSize /
+      (1024 * 1024)
+    ).toFixed(2),
+    estimatedLocalStorageSizeMB: (
+      migrationStatus.estimatedLocalStorageSize /
+      (1024 * 1024)
+    ).toFixed(2),
+    localStorageLimitMB: "5-10", // Typical browser limit
   };
 }
 

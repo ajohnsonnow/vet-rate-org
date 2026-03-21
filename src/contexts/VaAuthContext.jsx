@@ -1,12 +1,18 @@
 /**
  * VA.gov Authentication Context
- * 
+ *
  * Provides authentication state and methods throughout the application.
  * Handles token storage, user info, and authentication status.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { STORAGE_KEYS } from '../config/vaAuth';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { STORAGE_KEYS } from "../config/vaAuth";
 
 // Create the context
 const VaAuthContext = createContext(null);
@@ -29,8 +35,12 @@ export function VaAuthProvider({ children }) {
    */
   useEffect(() => {
     try {
-      const storedAccessToken = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-      const storedRefreshToken = sessionStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      const storedAccessToken = sessionStorage.getItem(
+        STORAGE_KEYS.ACCESS_TOKEN,
+      );
+      const storedRefreshToken = sessionStorage.getItem(
+        STORAGE_KEYS.REFRESH_TOKEN,
+      );
       const storedExpiry = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
       const storedUserInfo = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
 
@@ -39,7 +49,7 @@ export function VaAuthProvider({ children }) {
         setRefreshToken(storedRefreshToken);
         setTokenExpiry(storedExpiry ? parseInt(storedExpiry, 10) : null);
         setUserInfo(storedUserInfo ? JSON.parse(storedUserInfo) : null);
-        
+
         // Check if token is expired
         const now = Date.now();
         if (storedExpiry && parseInt(storedExpiry, 10) > now) {
@@ -50,7 +60,7 @@ export function VaAuthProvider({ children }) {
         }
       }
     } catch (err) {
-      console.error('[VA Auth] Error loading auth state:', err);
+      console.error("[VA Auth] Error loading auth state:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -64,19 +74,27 @@ export function VaAuthProvider({ children }) {
     const handleMessage = (event) => {
       // Only accept messages from same origin
       if (event.origin !== window.location.origin) return;
-      
+
       const { type, data, error: authErr } = event.data || {};
-      
-      if (type === 'VA_AUTH_SUCCESS' && data) {
-        console.log('[VA Auth] Received success message from popup with token data');
-        
+
+      if (type === "VA_AUTH_SUCCESS" && data) {
+        console.log(
+          "[VA Auth] Received success message from popup with token data",
+        );
+
         // The popup sends us the actual token data since sessionStorage isn't shared
-        const { access_token, refresh_token, expires_in, userInfo: popupUserInfo, autoImport } = data;
-        
+        const {
+          access_token,
+          refresh_token,
+          expires_in,
+          userInfo: popupUserInfo,
+          autoImport,
+        } = data;
+
         if (access_token) {
           // Calculate expiry time
-          const expiryTime = Date.now() + ((expires_in || 3600) * 1000);
-          
+          const expiryTime = Date.now() + (expires_in || 3600) * 1000;
+
           // Update React state
           setAccessToken(access_token);
           setRefreshToken(refresh_token || null);
@@ -84,32 +102,38 @@ export function VaAuthProvider({ children }) {
           setUserInfo(popupUserInfo || null);
           setIsAuthenticated(true);
           setError(null);
-          
+
           // Set auto-import flag so MyPacket will auto-fetch records
           if (autoImport) {
-            sessionStorage.setItem('va_auth_just_connected', 'true');
+            sessionStorage.setItem("va_auth_just_connected", "true");
           }
-          
+
           // Also store in sessionStorage for persistence
           sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
           if (refresh_token) {
             sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
           }
-          sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toString());
+          sessionStorage.setItem(
+            STORAGE_KEYS.TOKEN_EXPIRY,
+            expiryTime.toString(),
+          );
           if (popupUserInfo) {
-            sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(popupUserInfo));
+            sessionStorage.setItem(
+              STORAGE_KEYS.USER_INFO,
+              JSON.stringify(popupUserInfo),
+            );
           }
-          
-          console.log('[VA Auth] Authentication state updated from popup');
+
+          console.log("[VA Auth] Authentication state updated from popup");
         }
-      } else if (type === 'VA_AUTH_ERROR') {
-        console.error('[VA Auth] Received error from popup:', authErr);
+      } else if (type === "VA_AUTH_ERROR") {
+        console.error("[VA Auth] Received error from popup:", authErr);
         setError(authErr);
       }
     };
-    
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   /**
@@ -118,10 +142,10 @@ export function VaAuthProvider({ children }) {
   const setAuth = useCallback((tokens, user = null) => {
     try {
       const { access_token, refresh_token, expires_in } = tokens;
-      
+
       // Calculate expiry time (current time + expires_in seconds)
-      const expiryTime = Date.now() + (expires_in * 1000);
-      
+      const expiryTime = Date.now() + expires_in * 1000;
+
       // Store in state
       setAccessToken(access_token);
       setRefreshToken(refresh_token);
@@ -129,7 +153,7 @@ export function VaAuthProvider({ children }) {
       setUserInfo(user);
       setIsAuthenticated(true);
       setError(null);
-      
+
       // Persist to sessionStorage
       sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
       if (refresh_token) {
@@ -139,10 +163,10 @@ export function VaAuthProvider({ children }) {
       if (user) {
         sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
       }
-      
-      console.log('[VA Auth] Authentication successful');
+
+      console.log("[VA Auth] Authentication successful");
     } catch (err) {
-      console.error('[VA Auth] Error storing auth:', err);
+      console.error("[VA Auth] Error storing auth:", err);
       setError(err.message);
     }
   }, []);
@@ -157,14 +181,14 @@ export function VaAuthProvider({ children }) {
     setUserInfo(null);
     setIsAuthenticated(false);
     setError(null);
-    
+
     // Clear from sessionStorage
     sessionStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     sessionStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
     sessionStorage.removeItem(STORAGE_KEYS.USER_INFO);
-    
-    console.log('[VA Auth] Authentication cleared');
+
+    console.log("[VA Auth] Authentication cleared");
   }, []);
 
   /**
@@ -172,9 +196,9 @@ export function VaAuthProvider({ children }) {
    */
   const isTokenExpired = useCallback(() => {
     if (!tokenExpiry) return true;
-    
+
     // Add 60 second buffer for clock skew
-    return Date.now() >= (tokenExpiry - 60000);
+    return Date.now() >= tokenExpiry - 60000;
   }, [tokenExpiry]);
 
   /**
@@ -182,7 +206,7 @@ export function VaAuthProvider({ children }) {
    */
   const setAuthError = useCallback((errorMessage) => {
     setError(errorMessage);
-    console.error('[VA Auth] Error:', errorMessage);
+    console.error("[VA Auth] Error:", errorMessage);
   }, []);
 
   // Context value
@@ -195,7 +219,7 @@ export function VaAuthProvider({ children }) {
     userInfo,
     isLoading,
     error,
-    
+
     // Methods
     setAuth,
     clearAuth,
@@ -204,9 +228,7 @@ export function VaAuthProvider({ children }) {
   };
 
   return (
-    <VaAuthContext.Provider value={value}>
-      {children}
-    </VaAuthContext.Provider>
+    <VaAuthContext.Provider value={value}>{children}</VaAuthContext.Provider>
   );
 }
 
@@ -216,10 +238,10 @@ export function VaAuthProvider({ children }) {
  */
 export function useVaAuthContext() {
   const context = useContext(VaAuthContext);
-  
+
   if (!context) {
-    throw new Error('useVaAuthContext must be used within VaAuthProvider');
+    throw new Error("useVaAuthContext must be used within VaAuthProvider");
   }
-  
+
   return context;
 }

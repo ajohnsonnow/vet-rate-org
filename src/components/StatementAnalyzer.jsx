@@ -1,19 +1,23 @@
 /**
  * Vet-Rate.org - The Diplomat (Tone & Sentiment Analysis)
- * 
+ *
  * Helps veterans write clinical, objective statements instead of emotional ones.
  * Analyzes personal statements for hostile/subjective language and suggests
  * professional rewrites that are more likely to resonate with VA raters.
- * 
+ *
  * Built by a fellow veteran. "Clinical facts, not rage."
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, Check, Lightbulb, Brain } from 'lucide-react';
-import { generateAI, isAnyAIAvailable } from '../utils/unifiedAIService';
-import { AIStatusBadge } from './AIModeSelector';
-import { useLanguage } from '../contexts/LanguageContext';
-import { getVeteranAIContext, saveAnalysisResults, PACKET_DOC_TYPES } from '../utils/veteranContextProvider';
+import React, { useState, useEffect, useRef } from "react";
+import { AlertTriangle, Check, Lightbulb, Brain } from "lucide-react";
+import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
+import { useLanguage } from "../contexts/LanguageContext";
+import {
+  getVeteranAIContext,
+  saveAnalysisResults,
+  PACKET_DOC_TYPES,
+} from "../utils/veteranContextProvider";
 
 // The Diplomat's AI System Prompt
 const TONE_ANALYSIS_PROMPT = `You are a clinical writing coach helping veterans write effective VA disability statements.
@@ -65,14 +69,14 @@ Severity: "low"
 
 Now analyze this statement:`;
 
-const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
+const StatementAnalyzer = ({ text, onApplySuggestion, className = "" }) => {
   const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [appliedIndices, setAppliedIndices] = useState(new Set());
   const debounceTimer = useRef(null);
-  const lastAnalyzedText = useRef('');
+  const lastAnalyzedText = useRef("");
 
   // Auto-analyze after 2 seconds of inactivity
   useEffect(() => {
@@ -109,50 +113,54 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
 
     try {
       // Load veteran context for smarter rewrites
-      const veteranContext = await getVeteranAIContext({ maxPacketTokens: 400 });
+      const veteranContext = await getVeteranAIContext({
+        maxPacketTokens: 400,
+      });
       const contextBlock = veteranContext
         ? `\n\nVETERAN CASE DATA (use for accurate condition names and service details):\n${veteranContext}\n\n`
-        : '';
-      const fullPrompt = TONE_ANALYSIS_PROMPT + contextBlock + '\n\n' + text;
-      
+        : "";
+      const fullPrompt = TONE_ANALYSIS_PROMPT + contextBlock + "\n\n" + text;
+
       // Use unified AI service
       const response = await generateAI(fullPrompt, {
         temperature: 0.3,
         maxTokens: 2000,
-        expectJSON: true
+        expectJSON: true,
       });
 
       // generateAI returns { text, mode } object - extract the text content
       const aiResponse = response?.text || response;
-      const responseStr = typeof aiResponse === 'string' ? aiResponse : JSON.stringify(aiResponse);
+      const responseStr =
+        typeof aiResponse === "string"
+          ? aiResponse
+          : JSON.stringify(aiResponse);
 
       // Parse the AI response (should be JSON)
       let parsedSuggestions = [];
       try {
         // Remove markdown code fences if present
         const cleanedResponse = responseStr
-          .replace(/```json\n?/g, '')
-          .replace(/```\n?/g, '')
+          .replace(/```json\n?/g, "")
+          .replace(/```\n?/g, "")
           .trim();
-        
+
         parsedSuggestions = JSON.parse(cleanedResponse);
-        
+
         // Ensure it's an array
         if (!Array.isArray(parsedSuggestions)) {
           parsedSuggestions = [];
         }
       } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
+        console.error("Failed to parse AI response:", parseError);
         parsedSuggestions = [];
       }
 
       setSuggestions(parsedSuggestions);
       lastAnalyzedText.current = text;
       setAppliedIndices(new Set()); // Reset applied tracking when new analysis
-
     } catch (err) {
-      console.error('Tone analysis error:', err);
-      setError('Could not analyze statement. Check your internet connection.');
+      console.error("Tone analysis error:", err);
+      setError("Could not analyze statement. Check your internet connection.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -161,13 +169,13 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
   const handleApplySuggestion = (suggestion, index) => {
     if (onApplySuggestion) {
       onApplySuggestion(suggestion.original, suggestion.rewrite);
-      
+
       // Mark as applied
-      setAppliedIndices(prev => new Set([...prev, index]));
+      setAppliedIndices((prev) => new Set([...prev, index]));
 
       // Save the applied rewrite to My Packet for record-keeping
       saveAnalysisResults({
-        toolName: 'The Diplomat',
+        toolName: "The Diplomat",
         classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
         rawText: suggestion.original,
         extractedData: {
@@ -176,30 +184,30 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
           reason: suggestion.reason,
           severity: suggestion.severity,
         },
-      }).catch(err => console.warn('Failed to save statement rewrite:', err));
+      }).catch((err) => console.warn("Failed to save statement rewrite:", err));
     }
   };
 
   const getSeverityColor = (severity) => {
     switch (severity) {
-      case 'high':
-        return 'bg-red-50 border-red-300 text-red-900';
-      case 'medium':
-        return 'bg-yellow-50 border-yellow-300 text-yellow-900';
-      case 'low':
-        return 'bg-blue-50 border-blue-300 text-blue-900';
+      case "high":
+        return "bg-red-50 border-red-300 text-red-900";
+      case "medium":
+        return "bg-yellow-50 border-yellow-300 text-yellow-900";
+      case "low":
+        return "bg-blue-50 border-blue-300 text-blue-900";
       default:
-        return 'bg-gray-50 border-gray-300 text-gray-900';
+        return "bg-gray-50 border-gray-300 text-gray-900";
     }
   };
 
   const getSeverityIcon = (severity) => {
     switch (severity) {
-      case 'high':
+      case "high":
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
-      case 'medium':
+      case "medium":
         return <Lightbulb className="w-4 h-4 text-yellow-600" />;
-      case 'low':
+      case "low":
         return <Brain className="w-4 h-4 text-blue-600" />;
       default:
         return null;
@@ -217,15 +225,20 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">The Diplomat</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            The Diplomat
+          </h3>
           <AIStatusBadge showLabel={false} />
           {isAnalyzing && (
-            <span className="text-sm text-gray-500 italic">Analyzing tone...</span>
+            <span className="text-sm text-gray-500 italic">
+              Analyzing tone...
+            </span>
           )}
         </div>
         {suggestions.length > 0 && (
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''} found
+            {suggestions.length} suggestion{suggestions.length !== 1 ? "s" : ""}{" "}
+            found
           </span>
         )}
       </div>
@@ -245,7 +258,7 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
               key={index}
               className={`border rounded-lg p-4 transition-all ${
                 appliedIndices.has(index)
-                  ? 'bg-green-50 border-green-300 opacity-60'
+                  ? "bg-green-50 border-green-300 opacity-60"
                   : getSeverityColor(suggestion.severity)
               }`}
             >
@@ -254,7 +267,7 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
                 {getSeverityIcon(suggestion.severity)}
                 <div className="flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">
-                    {appliedIndices.has(index) ? 'Applied' : 'Suggestion'}
+                    {appliedIndices.has(index) ? "Applied" : "Suggestion"}
                   </p>
                 </div>
                 {appliedIndices.has(index) && (
@@ -317,18 +330,21 @@ const StatementAnalyzer = ({ text, onApplySuggestion, className = '' }) => {
       )}
 
       {/* Helper text */}
-      {!isAnalyzing && suggestions.length === 0 && (!text || text.length < 20) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>The Diplomat</strong> helps you write clinical, professional statements
-            that resonate with VA raters. Start typing your statement, and I'll analyze
-            the tone automatically.
-          </p>
-          <p className="text-xs text-blue-700 mt-2">
-            💡 Tip: Avoid emotional language. Focus on facts, measurements, and specific impacts.
-          </p>
-        </div>
-      )}
+      {!isAnalyzing &&
+        suggestions.length === 0 &&
+        (!text || text.length < 20) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>The Diplomat</strong> helps you write clinical,
+              professional statements that resonate with VA raters. Start typing
+              your statement, and I'll analyze the tone automatically.
+            </p>
+            <p className="text-xs text-blue-700 mt-2">
+              💡 Tip: Avoid emotional language. Focus on facts, measurements,
+              and specific impacts.
+            </p>
+          </div>
+        )}
     </div>
   );
 };

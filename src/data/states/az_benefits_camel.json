@@ -16,9 +16,7 @@
         "minRating": 0,
         "residencyRequired": true,
         "disabilitySpecific": null,
-        "additionalNotes": [
-          "Any service-connected disability qualifies"
-        ]
+        "additionalNotes": ["Any service-connected disability qualifies"]
       },
       "howToApply": "Visit your local DMV office. Submit VA rating letter and DD-214.",
       "legalCitations": [
@@ -42,9 +40,7 @@
         "minRating": 0,
         "residencyRequired": false,
         "disabilitySpecific": null,
-        "additionalNotes": [
-          "Must be using GI Bill benefits"
-        ]
+        "additionalNotes": ["Must be using GI Bill benefits"]
       },
       "howToApply": "Contact the veterans services office at your Arizona institution. Submit DD-214 and proof of GI Bill eligibility.",
       "legalCitations": [
@@ -68,9 +64,7 @@
         "minRating": 10,
         "residencyRequired": true,
         "disabilitySpecific": null,
-        "additionalNotes": [
-          "Discount varies by disability rating"
-        ]
+        "additionalNotes": ["Discount varies by disability rating"]
       },
       "howToApply": "Purchase licenses from any vendor or online. Show VA rating letter for discount.",
       "legalCitations": [

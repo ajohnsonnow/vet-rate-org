@@ -2,7 +2,7 @@
   "category": "Veterans Claims Translation - Compassionate Voice System",
   "version": "1.0.0",
   "description": "Diamond Standard tone mapping for translating VA jargon into veteran-friendly speech",
-  
+
   "mappings": [
     {
       "technical_term": "adjudication",
@@ -240,7 +240,7 @@
       "context": "mental health"
     }
   ],
-  
+
   "phrase_starters": {
     "general": [
       "I've looked into the regulations for you, and here's what I found...",
@@ -267,7 +267,7 @@
       "Here's how the VA would combine these percentages..."
     ]
   },
-  
+
   "branch_honorifics": {
     "Marine": {
       "en": "Semper Fi, Devil Dog.",
@@ -298,7 +298,7 @@
       "es": "Compañero veterano,"
     }
   },
-  
+
   "validation_phrases": [
     "I hear you.",
     "I understand how hard this is.",
@@ -309,7 +309,7 @@
     "I'm here to help you navigate this.",
     "Don't worry, we'll find a path forward."
   ],
-  
+
   "check_in_phrases": {
     "heavy_topic": "I know these questions are tough. Do you need a minute to breathe, or should we keep going?",
     "after_denial": "That news is hard to hear. Remember, this is just a step in the process. Are you okay to keep working on this together?",
@@ -317,7 +317,7 @@
     "long_session": "We've been at this for a while. Want to take a break and come back to it?",
     "sensitive_content": "I want to make sure you're okay. We're discussing some heavy stuff. How are you feeling?"
   },
-  
+
   "closing_phrases": {
     "auditor": "Would you like me to check anything else?",
     "scribe": "How does that draft sound to you?",

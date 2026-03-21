@@ -1,472 +1,472 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { resetTourState, triggerTourRestart } from './BootCampTour';
-import { getTotalToolCount } from '../data/toolkitData';
-import { PROJECT_STATS } from '../data/projectStats';
-import { getDisabilityCount } from '../utils/disabilityCount';
+﻿import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { resetTourState, triggerTourRestart } from "./BootCampTour";
+import { getTotalToolCount } from "../data/toolkitData";
+import { PROJECT_STATS } from "../data/projectStats";
+import { getDisabilityCount } from "../utils/disabilityCount";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
   {
-    id: 'home',
-    title: 'Home',
-    icon: '🏠',
+    id: "home",
+    title: "Home",
+    icon: "🏠",
   },
   {
-    id: 'getting-started',
-    title: 'Getting Started',
-    icon: '🚀',
+    id: "getting-started",
+    title: "Getting Started",
+    icon: "🚀",
     children: [
-      { id: 'first-visit', title: 'Your First Visit' },
-      { id: 'interface-overview', title: 'Interface Overview' },
-      { id: 'accessibility', title: 'Accessibility' },
+      { id: "first-visit", title: "Your First Visit" },
+      { id: "interface-overview", title: "Interface Overview" },
+      { id: "accessibility", title: "Accessibility" },
     ],
   },
   {
-    id: 'search',
-    title: 'Search & Explore',
-    icon: '🔍',
+    id: "search",
+    title: "Search & Explore",
+    icon: "🔍",
     children: [
-      { id: 'how-to-search', title: 'How to Search' },
-      { id: 'search-results', title: 'Search Results' },
-      { id: 'disability-details', title: 'Disability Details' },
-      { id: 'rating-criteria', title: 'Rating Criteria' },
+      { id: "how-to-search", title: "How to Search" },
+      { id: "search-results", title: "Search Results" },
+      { id: "disability-details", title: "Disability Details" },
+      { id: "rating-criteria", title: "Rating Criteria" },
     ],
   },
   // === CALCULATE YOUR RATING ===
   {
-    id: 'category-calculate',
-    title: '📊 Calculate',
+    id: "category-calculate",
+    title: "📊 Calculate",
     isCategory: true,
   },
   {
-    id: 'what-if-sandbox',
-    title: 'What-If Sandbox',
-    icon: '🧮',
+    id: "what-if-sandbox",
+    title: "What-If Sandbox",
+    icon: "🧮",
   },
   {
-    id: 'retro-pay-hunter',
-    title: 'Retro Pay Hunter',
-    icon: '🧮',
+    id: "retro-pay-hunter",
+    title: "Retro Pay Hunter",
+    icon: "🧮",
   },
   {
-    id: 'time-machine',
-    title: 'Time Machine',
-    icon: '🧮',
+    id: "time-machine",
+    title: "Time Machine",
+    icon: "🧮",
   },
   {
-    id: 'tactical-calculator',
-    title: 'Tactical Calculator',
-    icon: '🧮',
+    id: "tactical-calculator",
+    title: "Tactical Calculator",
+    icon: "🧮",
     children: [
-      { id: 'calc-overview', title: 'How VA Math Works' },
-      { id: 'calc-bilateral', title: 'Bilateral Factor' },
-      { id: 'calc-dependents', title: 'Dependent Benefits' },
-      { id: 'calc-what-if', title: 'What-If Scenarios' },
+      { id: "calc-overview", title: "How VA Math Works" },
+      { id: "calc-bilateral", title: "Bilateral Factor" },
+      { id: "calc-dependents", title: "Dependent Benefits" },
+      { id: "calc-what-if", title: "What-If Scenarios" },
     ],
   },
   // === DISCOVER YOUR CLAIMS ===
   {
-    id: 'category-discover',
-    title: '🔍 Discover',
+    id: "category-discover",
+    title: "🔍 Discover",
     isCategory: true,
   },
   {
-    id: 'bdd-builder',
-    title: 'BDD Builder',
-    icon: '🔍',
+    id: "bdd-builder",
+    title: "BDD Builder",
+    icon: "🔍",
   },
   {
-    id: 'cap-exam-simulator',
-    title: 'C&P Exam Simulator',
-    icon: '🔍',
+    id: "cap-exam-simulator",
+    title: "C&P Exam Simulator",
+    icon: "🔍",
   },
   {
-    id: 'mos-hazard-matcher',
-    title: 'MOS Hazard Matcher',
-    icon: '🔍',
+    id: "mos-hazard-matcher",
+    title: "MOS Hazard Matcher",
+    icon: "🔍",
   },
   {
-    id: 'web-of-conditions',
-    title: 'Web of Conditions',
-    icon: '🔍',
+    id: "web-of-conditions",
+    title: "Web of Conditions",
+    icon: "🔍",
   },
   {
-    id: 'secondary-scout',
-    title: 'Secondary Scout',
-    icon: '🔬',
+    id: "secondary-scout",
+    title: "Secondary Scout",
+    icon: "🔬",
     children: [
-      { id: 'scout-launching', title: 'Launching Scout' },
-      { id: 'scout-results', title: 'Understanding Results' },
-      { id: 'scout-add-to-packet', title: 'Add to Packet' },
+      { id: "scout-launching", title: "Launching Scout" },
+      { id: "scout-results", title: "Understanding Results" },
+      { id: "scout-add-to-packet", title: "Add to Packet" },
     ],
   },
   {
-    id: 'cap-simulator',
-    title: 'C&P Exam Simulator',
-    icon: '🎯',
+    id: "cap-simulator",
+    title: "C&P Exam Simulator",
+    icon: "🎯",
     children: [
-      { id: 'simulator-getting-started', title: 'Getting Started' },
-      { id: 'condition-selection', title: 'Condition Selection' },
-      { id: 'taking-simulation', title: 'Taking the Simulation' },
-      { id: 'simulator-results', title: 'Results & Feedback' },
-      { id: 'flashcards', title: 'Flashcard Mode' },
+      { id: "simulator-getting-started", title: "Getting Started" },
+      { id: "condition-selection", title: "Condition Selection" },
+      { id: "taking-simulation", title: "Taking the Simulation" },
+      { id: "simulator-results", title: "Results & Feedback" },
+      { id: "flashcards", title: "Flashcard Mode" },
     ],
   },
   {
-    id: 'dbq-library',
-    title: 'DBQ Library',
-    icon: '📑',
+    id: "dbq-library",
+    title: "DBQ Library",
+    icon: "📑",
     children: [
-      { id: 'dbq-overview', title: 'What are DBQs?' },
-      { id: 'dbq-browse', title: 'Browsing DBQs' },
-      { id: 'dbq-usage', title: 'Using DBQs' },
+      { id: "dbq-overview", title: "What are DBQs?" },
+      { id: "dbq-browse", title: "Browsing DBQs" },
+      { id: "dbq-usage", title: "Using DBQs" },
     ],
   },
   {
-    id: 'pathfinder',
-    title: 'Pathfinder',
-    icon: '🧭',
+    id: "pathfinder",
+    title: "Pathfinder",
+    icon: "🧭",
   },
   {
-    id: 'workflow-guide',
-    title: 'Workflow Guide',
-    icon: '🗺️',
+    id: "workflow-guide",
+    title: "Workflow Guide",
+    icon: "🗺️",
     children: [
-      { id: 'workflow-overview', title: 'Mission Briefings' },
-      { id: 'workflow-progress', title: 'Tracking Progress' },
+      { id: "workflow-overview", title: "Mission Briefings" },
+      { id: "workflow-progress", title: "Tracking Progress" },
     ],
   },
   // === BUILD YOUR EVIDENCE ===
   {
-    id: 'category-evidence',
-    title: '📋 Build Evidence',
+    id: "category-evidence",
+    title: "📋 Build Evidence",
     isCategory: true,
   },
   {
-    id: 'c-file-ai-analyzer',
-    title: 'C-File AI Analyzer',
-    icon: '📋',
+    id: "c-file-ai-analyzer",
+    title: "C-File AI Analyzer",
+    icon: "📋",
   },
   {
-    id: 'pdf-evidence-finder',
-    title: 'PDF Evidence Finder',
-    icon: '📋',
+    id: "pdf-evidence-finder",
+    title: "PDF Evidence Finder",
+    icon: "📋",
   },
   {
-    id: 'somatic-target',
-    title: 'Somatic Target',
-    icon: '📋',
+    id: "somatic-target",
+    title: "Somatic Target",
+    icon: "📋",
   },
   {
-    id: 'evidence-timeline',
-    title: 'Evidence Timeline',
-    icon: '📋',
+    id: "evidence-timeline",
+    title: "Evidence Timeline",
+    icon: "📋",
   },
   {
-    id: 'foia-keysmith',
-    title: 'FOIA Keysmith',
-    icon: '📋',
+    id: "foia-keysmith",
+    title: "FOIA Keysmith",
+    icon: "📋",
   },
   {
-    id: 'cfile-analyzer',
-    title: 'C-File AI Analyzer',
-    icon: '🔎',
+    id: "cfile-analyzer",
+    title: "C-File AI Analyzer",
+    icon: "🔎",
     children: [
-      { id: 'cfile-what-is', title: 'What is a C-File?' },
-      { id: 'cfile-upload', title: 'Dropping In Records' },
-      { id: 'cfile-analysis', title: 'Understanding Results' },
+      { id: "cfile-what-is", title: "What is a C-File?" },
+      { id: "cfile-upload", title: "Dropping In Records" },
+      { id: "cfile-analysis", title: "Understanding Results" },
     ],
   },
   {
-    id: 'blue-button',
-    title: 'Blue Button X-Ray',
-    icon: '💙',
+    id: "blue-button",
+    title: "Blue Button X-Ray",
+    icon: "💙",
     children: [
-      { id: 'blue-overview', title: 'What Is Blue Button?' },
-      { id: 'blue-extract', title: 'Extracting Evidence' },
+      { id: "blue-overview", title: "What Is Blue Button?" },
+      { id: "blue-extract", title: "Extracting Evidence" },
     ],
   },
   {
-    id: 'witness-bench',
-    title: 'Witness Bench',
-    icon: '👥',
+    id: "witness-bench",
+    title: "Witness Bench",
+    icon: "👥",
     children: [
-      { id: 'witness-overview', title: 'Buddy Statements' },
-      { id: 'witness-interview', title: 'The Interview' },
-      { id: 'witness-output', title: 'Statement Output' },
+      { id: "witness-overview", title: "Buddy Statements" },
+      { id: "witness-interview", title: "The Interview" },
+      { id: "witness-output", title: "Statement Output" },
     ],
   },
   {
-    id: 'nexus-builder',
-    title: 'Nexus Builder',
-    icon: '🔗',
+    id: "nexus-builder",
+    title: "Nexus Builder",
+    icon: "🔗",
     children: [
-      { id: 'what-is-nexus', title: 'What is a Nexus?' },
-      { id: 'building-statement', title: 'Building Your Statement' },
-      { id: 'doctor-cheat-sheet', title: "Doctor's Cheat Sheet" },
-      { id: 'download-options', title: 'Download Options' },
+      { id: "what-is-nexus", title: "What is a Nexus?" },
+      { id: "building-statement", title: "Building Your Statement" },
+      { id: "doctor-cheat-sheet", title: "Doctor's Cheat Sheet" },
+      { id: "download-options", title: "Download Options" },
     ],
   },
   {
-    id: 'forms-helper',
-    title: 'Forms Helper',
-    icon: '📋',
+    id: "forms-helper",
+    title: "Forms Helper",
+    icon: "📋",
     children: [
-      { id: 'available-forms', title: 'Available Forms' },
-      { id: 'buddy-statements', title: 'Buddy Statements' },
-      { id: 'intent-to-file', title: 'Intent to File' },
-      { id: 'ptsd-stressor', title: 'PTSD Stressor' },
-      { id: 'veteran-profile', title: 'Veteran Profile' },
+      { id: "available-forms", title: "Available Forms" },
+      { id: "buddy-statements", title: "Buddy Statements" },
+      { id: "intent-to-file", title: "Intent to File" },
+      { id: "ptsd-stressor", title: "PTSD Stressor" },
+      { id: "veteran-profile", title: "Veteran Profile" },
     ],
   },
   // === QUALITY CONTROL ===
   {
-    id: 'category-qc',
-    title: '🎯 Quality Control',
+    id: "category-qc",
+    title: "🎯 Quality Control",
     isCategory: true,
   },
   {
-    id: 'the-war-game',
-    title: 'The War Game',
-    icon: '✅',
+    id: "the-war-game",
+    title: "The War Game",
+    icon: "✅",
   },
   {
-    id: 'denials-decoder',
-    title: 'Denials Decoder',
-    icon: '✅',
+    id: "denials-decoder",
+    title: "Denials Decoder",
+    icon: "✅",
   },
   {
-    id: 'consistency-engine',
-    title: 'Consistency Engine',
-    icon: '✅',
+    id: "consistency-engine",
+    title: "Consistency Engine",
+    icon: "✅",
   },
   {
-    id: 'evidence-gap-finder',
-    title: 'Evidence Gap Finder',
-    icon: '✅',
+    id: "evidence-gap-finder",
+    title: "Evidence Gap Finder",
+    icon: "✅",
   },
   {
-    id: 'red-team',
-    title: 'Red Team Simulator',
-    icon: '🎭',
+    id: "red-team",
+    title: "Red Team Simulator",
+    icon: "🎭",
     children: [
-      { id: 'red-overview', title: 'What is Red Team?' },
-      { id: 'red-analysis', title: 'Weakness Analysis' },
+      { id: "red-overview", title: "What is Red Team?" },
+      { id: "red-analysis", title: "Weakness Analysis" },
     ],
   },
   {
-    id: 'decision-decoder',
-    title: 'Decision Decoder',
-    icon: '📜',
+    id: "decision-decoder",
+    title: "Decision Decoder",
+    icon: "📜",
     children: [
-      { id: 'decoder-overview', title: 'Overview' },
-      { id: 'decoder-upload', title: 'Drop In Decision' },
-      { id: 'decoder-appeal', title: 'Appeal Options' },
+      { id: "decoder-overview", title: "Overview" },
+      { id: "decoder-upload", title: "Drop In Decision" },
+      { id: "decoder-appeal", title: "Appeal Options" },
     ],
   },
   {
-    id: 'shark-radar',
-    title: 'Shark Radar',
-    icon: '🦈',
+    id: "shark-radar",
+    title: "Shark Radar",
+    icon: "🦈",
   },
   // === ADVANCED STRATEGY ===
   {
-    id: 'category-advanced',
-    title: '⚡ Advanced Strategy',
+    id: "category-advanced",
+    title: "⚡ Advanced Strategy",
     isCategory: true,
   },
   {
-    id: 'state-benefit-hunter',
-    title: 'State Benefit Hunter',
-    icon: '💰',
+    id: "state-benefit-hunter",
+    title: "State Benefit Hunter",
+    icon: "💰",
   },
   {
-    id: 'the-tribunal',
-    title: 'The Tribunal',
-    icon: '💰',
+    id: "the-tribunal",
+    title: "The Tribunal",
+    icon: "💰",
   },
   {
-    id: 'legislative-watchdog',
-    title: 'Legislative Watchdog',
-    icon: '💰',
+    id: "legislative-watchdog",
+    title: "Legislative Watchdog",
+    icon: "💰",
   },
   {
-    id: 'tdiu-builder',
-    title: 'TDIU Builder',
-    icon: '💼',
+    id: "tdiu-builder",
+    title: "TDIU Builder",
+    icon: "💼",
     children: [
-      { id: 'tdiu-overview', title: 'What is TDIU?' },
-      { id: 'tdiu-eligibility', title: 'Eligibility Check' },
+      { id: "tdiu-overview", title: "What is TDIU?" },
+      { id: "tdiu-eligibility", title: "Eligibility Check" },
     ],
   },
   {
-    id: 'risk-assessment',
-    title: 'Risk Assessment',
-    icon: '⚠️',
+    id: "risk-assessment",
+    title: "Risk Assessment",
+    icon: "⚠️",
   },
   {
-    id: 'symptom-logger',
-    title: 'Symptom Logger',
-    icon: '📊',
+    id: "symptom-logger",
+    title: "Symptom Logger",
+    icon: "📊",
     children: [
-      { id: 'symptom-overview', title: 'Why Track Symptoms?' },
-      { id: 'symptom-logging', title: 'Logging Symptoms' },
-      { id: 'symptom-reports', title: 'Reports & Export' },
+      { id: "symptom-overview", title: "Why Track Symptoms?" },
+      { id: "symptom-logging", title: "Logging Symptoms" },
+      { id: "symptom-reports", title: "Reports & Export" },
     ],
   },
   {
-    id: 'pact-act',
-    title: 'PACT Act Navigator',
-    icon: '☢️',
+    id: "pact-act",
+    title: "PACT Act Navigator",
+    icon: "☢️",
     children: [
-      { id: 'pact-overview', title: 'What is PACT Act?' },
-      { id: 'pact-conditions', title: 'Covered Conditions' },
-      { id: 'pact-locations', title: 'Covered Locations' },
+      { id: "pact-overview", title: "What is PACT Act?" },
+      { id: "pact-conditions", title: "Covered Conditions" },
+      { id: "pact-locations", title: "Covered Locations" },
     ],
   },
   {
-    id: 'foia-generator',
-    title: 'FOIA Keysmith',
-    icon: '🔑',
+    id: "foia-generator",
+    title: "FOIA Keysmith",
+    icon: "🔑",
   },
   // === SHOCK & AWE ===
   {
-    id: 'category-shock',
-    title: '💎 Shock & Awe',
+    id: "category-shock",
+    title: "💎 Shock & Awe",
     isCategory: true,
   },
   {
-    id: 'million-dollar',
-    title: 'Million Dollar Dashboard',
-    icon: '💰',
+    id: "million-dollar",
+    title: "Million Dollar Dashboard",
+    icon: "💰",
   },
   {
-    id: 'mos-matcher',
-    title: 'MOS Hazard Matcher',
-    icon: '🎖️',
+    id: "mos-matcher",
+    title: "MOS Hazard Matcher",
+    icon: "🎖️",
   },
   {
-    id: 'web-conditions',
-    title: 'Web of Conditions',
-    icon: '🕸️',
+    id: "web-conditions",
+    title: "Web of Conditions",
+    icon: "🕸️",
   },
   // === SUPPORT & RESOURCES ===
   {
-    id: 'category-support',
-    title: '🤝 Support',
+    id: "category-support",
+    title: "🤝 Support",
     isCategory: true,
   },
   {
-    id: 'field-manual',
-    title: 'Field Manual',
-    icon: '🤝',
+    id: "field-manual",
+    title: "Field Manual",
+    icon: "🤝",
   },
   {
-    id: 'the-bunker',
-    title: 'The Bunker',
-    icon: '🤝',
+    id: "the-bunker",
+    title: "The Bunker",
+    icon: "🤝",
   },
   {
-    id: 'cloud-sync',
-    title: 'Cloud Sync',
-    icon: '🤝',
+    id: "cloud-sync",
+    title: "Cloud Sync",
+    icon: "🤝",
   },
   {
-    id: 'va-gov-integration',
-    title: 'VA.gov Integration',
-    icon: '🤝',
+    id: "va-gov-integration",
+    title: "VA.gov Integration",
+    icon: "🤝",
   },
   {
-    id: 'knowledge-base',
-    title: 'Knowledge Base',
-    icon: '🤝',
+    id: "knowledge-base",
+    title: "Knowledge Base",
+    icon: "🤝",
   },
   {
-    id: 'user-manual',
-    title: 'Field Manual',
-    icon: '🤝',
+    id: "user-manual",
+    title: "Field Manual",
+    icon: "🤝",
   },
   {
-    id: 'vso-finder',
-    title: 'VSO Finder',
-    icon: '🏢',
+    id: "vso-finder",
+    title: "VSO Finder",
+    icon: "🏢",
   },
   {
-    id: 'state-benefits',
-    title: 'State Benefit Hunter',
-    icon: '💵',
+    id: "state-benefits",
+    title: "State Benefit Hunter",
+    icon: "💵",
   },
   // === DATA MANAGEMENT ===
   {
-    id: 'category-data',
-    title: '📁 Data & Settings',
+    id: "category-data",
+    title: "📁 Data & Settings",
     isCategory: true,
   },
   {
-    id: 'my-packet',
-    title: 'My Packet',
-    icon: '📁',
+    id: "my-packet",
+    title: "My Packet",
+    icon: "📁",
     children: [
-      { id: 'managing-claims', title: 'Managing Claims' },
-      { id: 'saved-forms', title: 'Saved Forms' },
-      { id: 'backup-restore', title: 'Backup & Restore' },
-      { id: 'exporting-data', title: 'Exporting Data' },
+      { id: "managing-claims", title: "Managing Claims" },
+      { id: "saved-forms", title: "Saved Forms" },
+      { id: "backup-restore", title: "Backup & Restore" },
+      { id: "exporting-data", title: "Exporting Data" },
     ],
   },
   {
-    id: 'va-resources',
-    title: 'VA Resources',
-    icon: '🏛️',
+    id: "va-resources",
+    title: "VA Resources",
+    icon: "🏛️",
     children: [
-      { id: 'online-portals', title: 'Online Portals' },
-      { id: 'phone-numbers', title: 'Phone Numbers' },
-      { id: 'external-resources', title: 'External Resources' },
+      { id: "online-portals", title: "Online Portals" },
+      { id: "phone-numbers", title: "Phone Numbers" },
+      { id: "external-resources", title: "External Resources" },
     ],
   },
   {
-    id: 'settings',
-    title: 'Settings',
-    icon: '⚙️',
+    id: "settings",
+    title: "Settings",
+    icon: "⚙️",
     children: [
-      { id: 'display-mode', title: 'Display Mode' },
-      { id: 'accessibility-options', title: 'Accessibility Options' },
-      { id: 'data-management', title: 'Data Management' },
+      { id: "display-mode", title: "Display Mode" },
+      { id: "accessibility-options", title: "Accessibility Options" },
+      { id: "data-management", title: "Data Management" },
     ],
   },
   {
-    id: 'ai-settings',
-    title: 'AI Settings',
-    icon: '🤖',
+    id: "ai-settings",
+    title: "AI Settings",
+    icon: "🤖",
     children: [
-      { id: 'local-ai-overview', title: 'Local AI Overview' },
-      { id: 'model-selection', title: 'Choosing the Right Model' },
-      { id: 'cloud-vs-local', title: 'Cloud vs Local AI' },
-      { id: 'vram-requirements', title: 'VRAM Requirements' },
+      { id: "local-ai-overview", title: "Local AI Overview" },
+      { id: "model-selection", title: "Choosing the Right Model" },
+      { id: "cloud-vs-local", title: "Cloud vs Local AI" },
+      { id: "vram-requirements", title: "VRAM Requirements" },
     ],
   },
   {
-    id: 'reference',
-    title: 'Reference',
-    icon: '📖',
+    id: "reference",
+    title: "Reference",
+    icon: "📖",
     children: [
-      { id: 'glossary', title: 'Glossary' },
-      { id: 'cfr-reference', title: 'CFR Reference' },
-      { id: 'keyboard-shortcuts', title: 'Keyboard Shortcuts' },
+      { id: "glossary", title: "Glossary" },
+      { id: "cfr-reference", title: "CFR Reference" },
+      { id: "keyboard-shortcuts", title: "Keyboard Shortcuts" },
     ],
   },
   {
-    id: 'faq',
-    title: 'FAQ',
-    icon: '❓',
+    id: "faq",
+    title: "FAQ",
+    icon: "❓",
   },
 ];
 
 // Documentation content - organized by section ID
 const documentationContent = {
   home: {
-    title: 'Vet-Rate.org Field Manual',
+    title: "Vet-Rate.org Field Manual",
     content: `
 Welcome to the comprehensive field manual for **Vet-Rate.org** - your complete VA claims toolkit with **39 powerful tools**.
 
@@ -573,8 +573,8 @@ All data stays in your browser. We don't collect, store, or transmit any persona
     `,
   },
 
-  'getting-started': {
-    title: 'Getting Started',
+  "getting-started": {
+    title: "Getting Started",
     content: `
 Get up and running with Vet-Rate.org in minutes.
 
@@ -599,8 +599,8 @@ Get up and running with Vet-Rate.org in minutes.
     `,
   },
 
-  'first-visit': {
-    title: 'Your First Visit',
+  "first-visit": {
+    title: "Your First Visit",
     content: `
 Here's what to expect when you first visit Vet-Rate.org.
 
@@ -657,8 +657,8 @@ After acknowledging the disclaimer, you'll see:
     `,
   },
 
-  'interface-overview': {
-    title: 'Interface Overview',
+  "interface-overview": {
+    title: "Interface Overview",
     content: `
 Learn your way around the Vet-Rate.org interface.
 
@@ -696,7 +696,7 @@ Click the **☰** icon in the header for:
   },
 
   accessibility: {
-    title: 'Accessibility',
+    title: "Accessibility",
     content: `
 Vet-Rate.org is designed to be accessible to all veterans.
 
@@ -733,7 +733,7 @@ Disables animations for vestibular sensitivities.
   },
 
   search: {
-    title: 'Search & Explore',
+    title: "Search & Explore",
     content: `
 Master the search functionality to find any VA disability condition.
 
@@ -759,8 +759,8 @@ Master the search functionality to find any VA disability condition.
     `,
   },
 
-  'how-to-search': {
-    title: 'How to Search',
+  "how-to-search": {
+    title: "How to Search",
     content: `
 Find exactly what you're looking for.
 
@@ -787,8 +787,8 @@ Find exactly what you're looking for.
     `,
   },
 
-  'search-results': {
-    title: 'Search Results',
+  "search-results": {
+    title: "Search Results",
     content: `
 Understanding your search results.
 
@@ -816,8 +816,8 @@ Try:
     `,
   },
 
-  'disability-details': {
-    title: 'Disability Details',
+  "disability-details": {
+    title: "Disability Details",
     content: `
 Deep dive into any disability condition.
 
@@ -845,8 +845,8 @@ Shows each rating level (0%, 10%, 20%, etc.) with:
     `,
   },
 
-  'rating-criteria': {
-    title: 'Rating Criteria',
+  "rating-criteria": {
+    title: "Rating Criteria",
     content: `
 Understanding VA rating criteria.
 
@@ -876,8 +876,8 @@ Formula: Combined = A + B × (1 - A)
     `,
   },
 
-  'secondary-scout': {
-    title: 'Secondary Scout',
+  "secondary-scout": {
+    title: "Secondary Scout",
     content: `
 Discover secondary conditions linked to your service-connected disabilities.
 
@@ -898,8 +898,8 @@ Secondary conditions can significantly increase your combined rating without pro
     `,
   },
 
-  'scout-launching': {
-    title: 'Launching Secondary Scout',
+  "scout-launching": {
+    title: "Launching Secondary Scout",
     content: `
 Start finding your secondary conditions.
 
@@ -922,8 +922,8 @@ Start finding your secondary conditions.
     `,
   },
 
-  'scout-results': {
-    title: 'Understanding Scout Results',
+  "scout-results": {
+    title: "Understanding Scout Results",
     content: `
 Make sense of your Secondary Scout findings.
 
@@ -949,8 +949,8 @@ Make sense of your Secondary Scout findings.
     `,
   },
 
-  'scout-add-to-packet': {
-    title: 'Adding to My Packet',
+  "scout-add-to-packet": {
+    title: "Adding to My Packet",
     content: `
 Save secondary condition suggestions for your claims packet.
 
@@ -976,8 +976,8 @@ Save secondary condition suggestions for your claims packet.
     `,
   },
 
-  'cap-simulator': {
-    title: 'C&P Exam Simulator',
+  "cap-simulator": {
+    title: "C&P Exam Simulator",
     content: `
 Prepare for your Compensation & Pension examination.
 
@@ -998,8 +998,8 @@ This is for **practice only**. It cannot predict your actual rating. Always be h
     `,
   },
 
-  'simulator-getting-started': {
-    title: 'Getting Started with Simulator',
+  "simulator-getting-started": {
+    title: "Getting Started with Simulator",
     content: `
 Begin your C&P exam preparation.
 
@@ -1024,8 +1024,8 @@ Begin your C&P exam preparation.
     `,
   },
 
-  'condition-selection': {
-    title: 'Condition Selection',
+  "condition-selection": {
+    title: "Condition Selection",
     content: `
 Choose which condition to simulate.
 
@@ -1049,8 +1049,8 @@ You can run separate simulations for each claimed condition.
     `,
   },
 
-  'taking-simulation': {
-    title: 'Taking the Simulation',
+  "taking-simulation": {
+    title: "Taking the Simulation",
     content: `
 What to expect during the simulation.
 
@@ -1075,8 +1075,8 @@ What to expect during the simulation.
     `,
   },
 
-  'simulator-results': {
-    title: 'Results & Feedback',
+  "simulator-results": {
+    title: "Results & Feedback",
     content: `
 Understanding your simulation results.
 
@@ -1103,7 +1103,7 @@ This estimate is for **educational purposes only**:
   },
 
   flashcards: {
-    title: 'Flashcard Mode',
+    title: "Flashcard Mode",
     content: `
 Quick-review C&P exam concepts.
 
@@ -1132,8 +1132,8 @@ Quick question-and-answer cards for reviewing:
   },
 
   // DBQ Library Documentation
-  'dbq-library': {
-    title: 'DBQ Library',
+  "dbq-library": {
+    title: "DBQ Library",
     content: `
 Browse the complete Disability Benefits Questionnaire (DBQ) library.
 
@@ -1158,8 +1158,8 @@ The DBQ Library is organized by condition category for easy navigation.
     `,
   },
 
-  'dbq-overview': {
-    title: 'What are DBQs?',
+  "dbq-overview": {
+    title: "What are DBQs?",
     content: `
 Understanding Disability Benefits Questionnaires.
 
@@ -1190,8 +1190,8 @@ Review the DBQ for your condition before your C&P exam to understand what will b
     `,
   },
 
-  'dbq-browse': {
-    title: 'Browsing DBQs',
+  "dbq-browse": {
+    title: "Browsing DBQs",
     content: `
 Navigate the DBQ collection effectively.
 
@@ -1226,8 +1226,8 @@ For each DBQ:
     `,
   },
 
-  'dbq-usage': {
-    title: 'Using DBQs',
+  "dbq-usage": {
+    title: "Using DBQs",
     content: `
 Get the most value from DBQ information.
 
@@ -1260,8 +1260,8 @@ Some veterans have private doctors complete DBQs:
   },
 
   // Workflow Guide Documentation
-  'workflow-guide': {
-    title: 'Workflow Guide',
+  "workflow-guide": {
+    title: "Workflow Guide",
     content: `
 Follow step-by-step "Mission Briefings" for every claims scenario.
 
@@ -1286,8 +1286,8 @@ Multiple mission briefings covering the most common claims scenarios with specif
     `,
   },
 
-  'workflow-overview': {
-    title: 'Mission Briefings',
+  "workflow-overview": {
+    title: "Mission Briefings",
     content: `
 Understand the workflow system.
 
@@ -1314,8 +1314,8 @@ Understand the workflow system.
     `,
   },
 
-  'workflow-progress': {
-    title: 'Tracking Progress',
+  "workflow-progress": {
+    title: "Tracking Progress",
     content: `
 Monitor and continue your workflow progress.
 
@@ -1347,8 +1347,8 @@ You can work through multiple workflows simultaneously for different claims or c
     `,
   },
 
-  'nexus-builder': {
-    title: 'Nexus Builder',
+  "nexus-builder": {
+    title: "Nexus Builder",
     content: `
 Create supporting statements for your claims.
 
@@ -1371,8 +1371,8 @@ A medical connection between your current condition and military service. Requir
     `,
   },
 
-  'what-is-nexus': {
-    title: 'What is a Nexus?',
+  "what-is-nexus": {
+    title: "What is a Nexus?",
     content: `
 Understanding the nexus requirement.
 
@@ -1402,8 +1402,8 @@ Without a nexus, your claim will likely be denied - even with a diagnosis and in
     `,
   },
 
-  'building-statement': {
-    title: 'Building Your Statement',
+  "building-statement": {
+    title: "Building Your Statement",
     content: `
 Create your personal statement step by step.
 
@@ -1431,7 +1431,7 @@ Create your personal statement step by step.
     `,
   },
 
-  'doctor-cheat-sheet': {
+  "doctor-cheat-sheet": {
     title: "Doctor's Cheat Sheet",
     content: `
 Help your doctor help you.
@@ -1460,8 +1460,8 @@ Most doctors don't know VA requirements. This helps them:
     `,
   },
 
-  'download-options': {
-    title: 'Download Options',
+  "download-options": {
+    title: "Download Options",
     content: `
 Export your statements and documents.
 
@@ -1486,8 +1486,8 @@ Export your statements and documents.
     `,
   },
 
-  'forms-helper': {
-    title: 'Forms Helper',
+  "forms-helper": {
+    title: "Forms Helper",
     content: `
 Get help filling out VA forms.
 
@@ -1512,8 +1512,8 @@ Forms Helper assists with completion but doesn't submit to VA. You must submit t
     `,
   },
 
-  'available-forms': {
-    title: 'Available Forms',
+  "available-forms": {
+    title: "Available Forms",
     content: `
 Forms Helper currently supports:
 
@@ -1534,8 +1534,8 @@ We're working on adding more forms. Let us know which ones you need!
     `,
   },
 
-  'buddy-statements': {
-    title: 'Buddy Statements',
+  "buddy-statements": {
+    title: "Buddy Statements",
     content: `
 Powerful supporting evidence from people who know you.
 
@@ -1571,8 +1571,8 @@ A written statement from someone who can attest to:
     `,
   },
 
-  'intent-to-file': {
-    title: 'Intent to File',
+  "intent-to-file": {
+    title: "Intent to File",
     content: `
 Protect your effective date.
 
@@ -1602,8 +1602,8 @@ You have 1 year to submit your full claim with evidence.
     `,
   },
 
-  'ptsd-stressor': {
-    title: 'PTSD Stressor Statement',
+  "ptsd-stressor": {
+    title: "PTSD Stressor Statement",
     content: `
 Document traumatic events for your PTSD claim.
 
@@ -1637,8 +1637,8 @@ VA Form 21-0781 - describes the traumatic event(s) that caused your PTSD.
     `,
   },
 
-  'veteran-profile': {
-    title: 'Veteran Profile',
+  "veteran-profile": {
+    title: "Veteran Profile",
     content: `
 Keep your information organized.
 
@@ -1665,8 +1665,8 @@ This is for your reference - not submitted to VA.
 
   // ========== NEW TOOLS DOCUMENTATION ==========
 
-  'tactical-calculator': {
-    title: 'Tactical Calculator',
+  "tactical-calculator": {
+    title: "Tactical Calculator",
     content: `
 Calculate your combined VA disability rating with precision.
 
@@ -1695,8 +1695,8 @@ The VA doesn't add ratings. They use "efficiency" math:
     `,
   },
 
-  'calc-overview': {
-    title: 'How VA Math Works',
+  "calc-overview": {
+    title: "How VA Math Works",
     content: `
 Understanding the VA Combined Ratings Table.
 
@@ -1728,8 +1728,8 @@ Understanding VA math helps you:
     `,
   },
 
-  'calc-bilateral': {
-    title: 'Bilateral Factor',
+  "calc-bilateral": {
+    title: "Bilateral Factor",
     content: `
 Get a 10% boost for paired extremity conditions.
 
@@ -1757,8 +1757,8 @@ Left knee 20% + Right knee 10%:
     `,
   },
 
-  'calc-dependents': {
-    title: 'Dependent Benefits',
+  "calc-dependents": {
+    title: "Dependent Benefits",
     content: `
 Additional compensation for dependents at 30%+.
 
@@ -1786,8 +1786,8 @@ Extra amount if your spouse requires A&A care.
     `,
   },
 
-  'calc-what-if': {
-    title: 'What-If Scenarios',
+  "calc-what-if": {
+    title: "What-If Scenarios",
     content: `
 Test how new ratings would affect your combined.
 
@@ -1808,8 +1808,8 @@ Use What-If to:
     `,
   },
 
-  'cfile-analyzer': {
-    title: 'C-File AI Analyzer',
+  "cfile-analyzer": {
+    title: "C-File AI Analyzer",
     content: `
 AI-powered analysis of your VA claims file.
 
@@ -1835,8 +1835,8 @@ Your documents are processed locally or with your own API key. We never store yo
     `,
   },
 
-  'cfile-what-is': {
-    title: 'What is a C-File?',
+  "cfile-what-is": {
+    title: "What is a C-File?",
     content: `
 Your complete VA claims history.
 
@@ -1864,8 +1864,8 @@ Your complete VA claims history.
     `,
   },
 
-  'cfile-upload': {
-    title: 'Dropping In Records',
+  "cfile-upload": {
+    title: "Dropping In Records",
     content: `
 How to use the C-File Analyzer.
 
@@ -1891,8 +1891,8 @@ Your files are processed:
     `,
   },
 
-  'cfile-analysis': {
-    title: 'Understanding Results',
+  "cfile-analysis": {
+    title: "Understanding Results",
     content: `
 Reading your C-File analysis.
 
@@ -1912,8 +1912,8 @@ Reading your C-File analysis.
     `,
   },
 
-  'decision-decoder': {
-    title: 'Decision Decoder',
+  "decision-decoder": {
+    title: "Decision Decoder",
     content: `
 Understand VA decision letters and find appeal opportunities.
 
@@ -1934,8 +1934,8 @@ Drop in your VA decision letter and get:
     `,
   },
 
-  'decoder-overview': {
-    title: 'Decision Decoder Overview',
+  "decoder-overview": {
+    title: "Decision Decoder Overview",
     content: `
 Turn confusing VA letters into actionable information.
 
@@ -1957,8 +1957,8 @@ Decision Decoder:
     `,
   },
 
-  'decoder-upload': {
-    title: 'Drop In Decision',
+  "decoder-upload": {
+    title: "Drop In Decision",
     content: `
 How to drop in your decision letter.
 
@@ -1977,8 +1977,8 @@ How to drop in your decision letter.
     `,
   },
 
-  'decoder-appeal': {
-    title: 'Appeal Options',
+  "decoder-appeal": {
+    title: "Appeal Options",
     content: `
 Understanding your appeal choices.
 
@@ -2004,8 +2004,8 @@ Understanding your appeal choices.
     `,
   },
 
-  'blue-button': {
-    title: 'Blue Button X-Ray',
+  "blue-button": {
+    title: "Blue Button X-Ray",
     content: `
 Extract claim-relevant evidence from your VA medical records.
 
@@ -2027,8 +2027,8 @@ Your VA records often contain evidence you didn't know existed - including state
     `,
   },
 
-  'blue-overview': {
-    title: 'What Is Blue Button?',
+  "blue-overview": {
+    title: "What Is Blue Button?",
     content: `
 VA's health record download system.
 
@@ -2063,8 +2063,8 @@ VA's health record download system.
     `,
   },
 
-  'blue-extract': {
-    title: 'Extracting Evidence',
+  "blue-extract": {
+    title: "Extracting Evidence",
     content: `
 Finding hidden evidence in your records.
 
@@ -2084,8 +2084,8 @@ Finding hidden evidence in your records.
     `,
   },
 
-  'red-team': {
-    title: 'Red Team Simulator',
+  "red-team": {
+    title: "Red Team Simulator",
     content: `
 Think like a VA examiner to strengthen your claim.
 
@@ -2109,8 +2109,8 @@ Military concept: Have someone attack your own plan to find weaknesses before th
     `,
   },
 
-  'red-overview': {
-    title: 'What is Red Team?',
+  "red-overview": {
+    title: "What is Red Team?",
     content: `
 Adversarial analysis of your claim.
 
@@ -2135,8 +2135,8 @@ VA examiners look for:
     `,
   },
 
-  'red-analysis': {
-    title: 'Weakness Analysis',
+  "red-analysis": {
+    title: "Weakness Analysis",
     content: `
 Understanding Red Team results.
 
@@ -2162,8 +2162,8 @@ Each weakness includes:
     `,
   },
 
-  'witness-bench': {
-    title: 'Witness Bench',
+  "witness-bench": {
+    title: "Witness Bench",
     content: `
 AI-powered buddy statement wizard.
 
@@ -2188,8 +2188,8 @@ Third-party observations are powerful evidence:
     `,
   },
 
-  'witness-overview': {
-    title: 'Buddy Statements',
+  "witness-overview": {
+    title: "Buddy Statements",
     content: `
 Third-party evidence for your claim.
 
@@ -2215,8 +2215,8 @@ Specific, observable details that veterans often don't report themselves.
     `,
   },
 
-  'witness-interview': {
-    title: 'The Interview',
+  "witness-interview": {
+    title: "The Interview",
     content: `
 Guided questions for powerful statements.
 
@@ -2245,8 +2245,8 @@ The Witness Bench asks questions designed to elicit:
     `,
   },
 
-  'witness-output': {
-    title: 'Statement Output',
+  "witness-output": {
+    title: "Statement Output",
     content: `
 Your completed buddy statement.
 
@@ -2271,8 +2271,8 @@ Your completed buddy statement.
     `,
   },
 
-  'risk-assessment': {
-    title: 'Risk Assessment',
+  "risk-assessment": {
+    title: "Risk Assessment",
     content: `
 Identify potential weaknesses before filing.
 
@@ -2302,8 +2302,8 @@ Analyzes your claim for:
     `,
   },
 
-  'tdiu-builder': {
-    title: 'TDIU Builder',
+  "tdiu-builder": {
+    title: "TDIU Builder",
     content: `
 Evaluate your eligibility for Total Disability Individual Unemployability.
 
@@ -2329,8 +2329,8 @@ Compensation at the 100% rate when you can't work due to service-connected disab
     `,
   },
 
-  'tdiu-overview': {
-    title: 'What is TDIU?',
+  "tdiu-overview": {
+    title: "What is TDIU?",
     content: `
 100% pay without 100% rating.
 
@@ -2351,8 +2351,8 @@ If your service-connected disabilities prevent you from maintaining "substantial
     `,
   },
 
-  'tdiu-eligibility': {
-    title: 'Eligibility Check',
+  "tdiu-eligibility": {
+    title: "Eligibility Check",
     content: `
 Do you qualify for TDIU?
 
@@ -2375,8 +2375,8 @@ Must be unable to secure and follow "substantially gainful employment" due to se
     `,
   },
 
-  'symptom-logger': {
-    title: 'Symptom Logger',
+  "symptom-logger": {
+    title: "Symptom Logger",
     content: `
 Track your symptoms over time to build evidence.
 
@@ -2402,8 +2402,8 @@ Your symptom history becomes powerful evidence showing the true impact of your c
     `,
   },
 
-  'symptom-overview': {
-    title: 'Why Track Symptoms?',
+  "symptom-overview": {
+    title: "Why Track Symptoms?",
     content: `
 Build an evidence trail.
 
@@ -2431,8 +2431,8 @@ Daily logging creates:
     `,
   },
 
-  'symptom-logging': {
-    title: 'Logging Symptoms',
+  "symptom-logging": {
+    title: "Logging Symptoms",
     content: `
 Recording your daily symptoms.
 
@@ -2457,8 +2457,8 @@ Log regularly - even good days. It shows the complete picture.
     `,
   },
 
-  'symptom-reports': {
-    title: 'Reports & Export',
+  "symptom-reports": {
+    title: "Reports & Export",
     content: `
 Using your symptom data.
 
@@ -2481,8 +2481,8 @@ Bring your symptom log to show the examiner your true condition over time, not j
     `,
   },
 
-  'million-dollar': {
-    title: 'Million Dollar Dashboard',
+  "million-dollar": {
+    title: "Million Dollar Dashboard",
     content: `
 See the lifetime value of your VA benefits.
 
@@ -2510,8 +2510,8 @@ See the true value of fighting for accurate ratings.
     `,
   },
 
-  'pact-act': {
-    title: 'PACT Act Navigator',
+  "pact-act": {
+    title: "PACT Act Navigator",
     content: `
 Find toxic exposure conditions covered by the PACT Act.
 
@@ -2539,8 +2539,8 @@ The Promise to Address Comprehensive Toxics (PACT) Act of 2022 expanded VA benef
     `,
   },
 
-  'pact-overview': {
-    title: 'What is PACT Act?',
+  "pact-overview": {
+    title: "What is PACT Act?",
     content: `
 Major expansion of toxic exposure benefits.
 
@@ -2566,8 +2566,8 @@ Veterans who served in:
     `,
   },
 
-  'pact-conditions': {
-    title: 'Covered Conditions',
+  "pact-conditions": {
+    title: "Covered Conditions",
     content: `
 Presumptive conditions under PACT Act.
 
@@ -2598,8 +2598,8 @@ Navigator shows which conditions apply to your service.
     `,
   },
 
-  'pact-locations': {
-    title: 'Covered Locations',
+  "pact-locations": {
+    title: "Covered Locations",
     content: `
 Where toxic exposure is presumed.
 
@@ -2627,8 +2627,8 @@ Where toxic exposure is presumed.
     `,
   },
 
-  'state-benefits': {
-    title: 'State Benefit Hunter',
+  "state-benefits": {
+    title: "State Benefit Hunter",
     content: `
 Discover state-level veteran benefits you may be missing.
 
@@ -2655,8 +2655,8 @@ State benefits can add thousands in annual savings on top of federal VA compensa
     `,
   },
 
-  'vso-finder': {
-    title: 'VSO Finder',
+  "vso-finder": {
+    title: "VSO Finder",
     content: `
 Find FREE, accredited help near you.
 
@@ -2689,8 +2689,8 @@ BEWARE of "claim sharks" who charge fees! Legitimate VSOs are FREE.
     `,
   },
 
-  'mos-matcher': {
-    title: 'MOS Hazard Matcher',
+  "mos-matcher": {
+    title: "MOS Hazard Matcher",
     content: `
 Link your military job to exposures and conditions.
 
@@ -2715,8 +2715,8 @@ Your job specialty often involved exposures that cause conditions decades later.
     `,
   },
 
-  'web-conditions': {
-    title: 'Web of Conditions',
+  "web-conditions": {
+    title: "Web of Conditions",
     content: `
 Visualize how conditions connect to each other.
 
@@ -2741,8 +2741,8 @@ Understand the medical logic connecting conditions, making it easier to argue se
     `,
   },
 
-  'foia-generator': {
-    title: 'FOIA Generator',
+  "foia-generator": {
+    title: "FOIA Generator",
     content: `
 Create Freedom of Information Act requests for your records.
 
@@ -2767,8 +2767,8 @@ Sometimes records aren't in your C-File. FOIA requests can uncover documentation
     `,
   },
 
-  'shark-radar': {
-    title: 'Shark Radar',
+  "shark-radar": {
+    title: "Shark Radar",
     content: `
 Identify and avoid predatory claim services.
 
@@ -2801,8 +2801,8 @@ Always verify accreditation at VA.gov before signing anything.
     `,
   },
 
-  'pathfinder': {
-    title: 'Pathfinder',
+  pathfinder: {
+    title: "Pathfinder",
     content: `
 Your strategic roadmap from claim to benefits.
 
@@ -2829,8 +2829,8 @@ Pathfinder considers your specific situation to recommend whether to file primar
     `,
   },
 
-  'my-packet': {
-    title: 'My Packet',
+  "my-packet": {
+    title: "My Packet",
     content: `
 Organize all your claims in one place.
 
@@ -2855,8 +2855,8 @@ All data stored locally in your browser. Use Backup & Restore to save externally
     `,
   },
 
-  'managing-claims': {
-    title: 'Managing Claims',
+  "managing-claims": {
+    title: "Managing Claims",
     content: `
 Organize your disability claims.
 
@@ -2884,8 +2884,8 @@ Each saved claim shows:
     `,
   },
 
-  'saved-forms': {
-    title: 'Saved Forms',
+  "saved-forms": {
+    title: "Saved Forms",
     content: `
 Access your form progress.
 
@@ -2909,8 +2909,8 @@ Access your form progress.
     `,
   },
 
-  'backup-restore': {
-    title: 'Backup & Restore',
+  "backup-restore": {
+    title: "Backup & Restore",
     content: `
 Protect your data.
 
@@ -2944,8 +2944,8 @@ Your data is stored in your browser. If you:
     `,
   },
 
-  'exporting-data': {
-    title: 'Exporting Data',
+  "exporting-data": {
+    title: "Exporting Data",
     content: `
 Download your claims packet.
 
@@ -2975,8 +2975,8 @@ Download specific:
     `,
   },
 
-  'va-resources': {
-    title: 'VA Resources',
+  "va-resources": {
+    title: "VA Resources",
     content: `
 Quick access to official VA resources.
 
@@ -3000,8 +3000,8 @@ Vet-Rate.org is independent. For official help, use VA resources.
     `,
   },
 
-  'online-portals': {
-    title: 'Online Portals',
+  "online-portals": {
+    title: "Online Portals",
     content: `
 ## VA.gov
 Main VA portal for:
@@ -3023,8 +3023,8 @@ Legacy portal (transitioning to VA.gov):
     `,
   },
 
-  'phone-numbers': {
-    title: 'Phone Numbers',
+  "phone-numbers": {
+    title: "Phone Numbers",
     content: `
 ## Emergency
 
@@ -3045,8 +3045,8 @@ Text: 838255
     `,
   },
 
-  'external-resources': {
-    title: 'External Resources',
+  "external-resources": {
+    title: "External Resources",
     content: `
 ## Veterans Service Organizations (VSOs)
 
@@ -3069,7 +3069,7 @@ Visit VA.gov and search for accredited representatives in your area.
   },
 
   settings: {
-    title: 'Settings',
+    title: "Settings",
     content: `
 Customize your Vet-Rate.org experience.
 
@@ -3091,8 +3091,8 @@ Customize your Vet-Rate.org experience.
     `,
   },
 
-  'display-mode': {
-    title: 'Display Mode',
+  "display-mode": {
+    title: "Display Mode",
     content: `
 Choose your preferred appearance.
 
@@ -3114,8 +3114,8 @@ Setting is saved for future visits.
     `,
   },
 
-  'accessibility-options': {
-    title: 'Accessibility Options',
+  "accessibility-options": {
+    title: "Accessibility Options",
     content: `
 Make Vet-Rate.org work for you.
 
@@ -3141,8 +3141,8 @@ All settings persist across sessions.
     `,
   },
 
-  'data-management': {
-    title: 'Data Management',
+  "data-management": {
+    title: "Data Management",
     content: `
 Control your local data.
 
@@ -3170,8 +3170,8 @@ We never see, collect, or transmit your data. It stays on your device.
     `,
   },
 
-  'ai-settings': {
-    title: 'AI Settings',
+  "ai-settings": {
+    title: "AI Settings",
     content: `
 Configure AI to power your claims analysis.
 
@@ -3201,8 +3201,8 @@ Fast and powerful, requires internet.
     `,
   },
 
-  'local-ai-overview': {
-    title: 'Local AI Overview',
+  "local-ai-overview": {
+    title: "Local AI Overview",
     content: `
 Run AI 100% on your device - your data never leaves your computer.
 
@@ -3236,8 +3236,8 @@ If you have a gaming laptop with both integrated and discrete GPUs:
     `,
   },
 
-  'model-selection': {
-    title: 'Choosing the Right Model',
+  "model-selection": {
+    title: "Choosing the Right Model",
     content: `
 The Diamond Swarm automatically selects the best model for each task:
 
@@ -3308,8 +3308,8 @@ Each AI-powered tool shows a badge recommending the best model. Look for:
     `,
   },
 
-  'cloud-vs-local': {
-    title: 'Cloud vs Local AI',
+  "cloud-vs-local": {
+    title: "Cloud vs Local AI",
     content: `
 Choose based on your priorities.
 
@@ -3345,8 +3345,8 @@ Yes! You can switch modes anytime:
     `,
   },
 
-  'vram-requirements': {
-    title: 'VRAM Requirements',
+  "vram-requirements": {
+    title: "VRAM Requirements",
     content: `
 Choose a model that fits your GPU memory.
 
@@ -3389,7 +3389,7 @@ Choose a model that fits your GPU memory.
   },
 
   reference: {
-    title: 'Reference',
+    title: "Reference",
     content: `
 Quick reference materials.
 
@@ -3405,7 +3405,7 @@ Navigate efficiently with your keyboard.
   },
 
   glossary: {
-    title: 'Glossary',
+    title: "Glossary",
     content: `
 Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 
@@ -3625,8 +3625,8 @@ For the complete glossary with 195+ terms, hover over highlighted VA terms throu
     `,
   },
 
-  'cfr-reference': {
-    title: 'CFR Reference',
+  "cfr-reference": {
+    title: "CFR Reference",
     content: `
 Key Code of Federal Regulations sections.
 
@@ -3651,8 +3651,8 @@ Key Code of Federal Regulations sections.
     `,
   },
 
-  'keyboard-shortcuts': {
-    title: 'Keyboard Shortcuts',
+  "keyboard-shortcuts": {
+    title: "Keyboard Shortcuts",
     content: `
 Navigate efficiently with your keyboard.
 
@@ -3684,7 +3684,7 @@ Navigate efficiently with your keyboard.
   },
 
   faq: {
-    title: 'Frequently Asked Questions',
+    title: "Frequently Asked Questions",
     content: `
 Common questions answered.
 
@@ -3745,8 +3745,8 @@ Available 24/7
 // Simple markdown-like renderer
 const renderContent = (content, onClose) => {
   if (!content) return null;
-  
-  const lines = content.trim().split('\n');
+
+  const lines = content.trim().split("\n");
   const elements = [];
   let inTable = false;
   let tableRows = [];
@@ -3754,35 +3754,45 @@ const renderContent = (content, onClose) => {
   let listItems = [];
   let inBlockquote = false;
   let blockquoteContent = [];
-  
+
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={`list-${elements.length}`} className="list-disc pl-6 mb-4 space-y-1">
+        <ul
+          key={`list-${elements.length}`}
+          className="list-disc pl-6 mb-4 space-y-1"
+        >
           {listItems.map((item, i) => (
-            <li key={i} className="text-gray-700 dark:text-gray-300">{renderInline(item)}</li>
+            <li key={i} className="text-gray-700 dark:text-gray-300">
+              {renderInline(item)}
+            </li>
           ))}
-        </ul>
+        </ul>,
       );
       listItems = [];
       inList = false;
     }
   };
-  
+
   const flushBlockquote = () => {
     if (blockquoteContent.length > 0) {
       elements.push(
-        <blockquote key={`bq-${elements.length}`} className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r">
+        <blockquote
+          key={`bq-${elements.length}`}
+          className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
+        >
           {blockquoteContent.map((line, i) => (
-            <p key={i} className="text-gray-700 dark:text-gray-300">{renderInline(line)}</p>
+            <p key={i} className="text-gray-700 dark:text-gray-300">
+              {renderInline(line)}
+            </p>
           ))}
-        </blockquote>
+        </blockquote>,
       );
       blockquoteContent = [];
       inBlockquote = false;
     }
   };
-  
+
   const flushTable = () => {
     if (tableRows.length > 0) {
       const headers = tableRows[0];
@@ -3793,7 +3803,10 @@ const renderContent = (content, onClose) => {
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 {headers.map((cell, i) => (
-                  <th key={i} className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    key={i}
+                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     {renderInline(cell.trim())}
                   </th>
                 ))}
@@ -3803,7 +3816,10 @@ const renderContent = (content, onClose) => {
               {dataRows.map((row, rowIdx) => (
                 <tr key={rowIdx}>
                   {row.map((cell, cellIdx) => (
-                    <td key={cellIdx} className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                    <td
+                      key={cellIdx}
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
+                    >
                       {renderInline(cell.trim())}
                     </td>
                   ))}
@@ -3811,90 +3827,102 @@ const renderContent = (content, onClose) => {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>,
       );
       tableRows = [];
       inTable = false;
     }
   };
-  
+
   const renderInline = (text) => {
     if (!text) return text;
-    
+
     // Handle bold
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     // Handle inline code
-    text = text.replace(/`(.+?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>');
+    text = text.replace(
+      /`(.+?)`/g,
+      '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
+    );
     // Handle links
-    text = text.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">$1</a>');
-    
+    text = text.replace(
+      /\[(.+?)\]\((.+?)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">$1</a>',
+    );
+
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
   };
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    
+
     // Empty line - flush lists/blockquotes
-    if (line.trim() === '') {
+    if (line.trim() === "") {
       flushList();
       flushBlockquote();
       flushTable();
       continue;
     }
-    
+
     // Headers
-    if (line.startsWith('## ')) {
+    if (line.startsWith("## ")) {
       flushList();
       flushBlockquote();
       flushTable();
       elements.push(
-        <h2 key={`h2-${i}`} className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3">
+        <h2
+          key={`h2-${i}`}
+          className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
+        >
           {line.slice(3)}
-        </h2>
+        </h2>,
       );
       continue;
     }
-    
-    if (line.startsWith('### ')) {
+
+    if (line.startsWith("### ")) {
       flushList();
       flushBlockquote();
       flushTable();
       elements.push(
-        <h3 key={`h3-${i}`} className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">
+        <h3
+          key={`h3-${i}`}
+          className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
+        >
           {line.slice(4)}
-        </h3>
+        </h3>,
       );
       continue;
     }
-    
+
     // Blockquote
-    if (line.startsWith('> ')) {
+    if (line.startsWith("> ")) {
       flushList();
       flushTable();
       inBlockquote = true;
       blockquoteContent.push(line.slice(2));
       continue;
     }
-    
+
     // Table
-    if (line.startsWith('|')) {
+    if (line.startsWith("|")) {
       flushList();
       flushBlockquote();
       inTable = true;
-      const cells = line.split('|').filter(cell => cell.trim() !== '');
+      const cells = line.split("|").filter((cell) => cell.trim() !== "");
       tableRows.push(cells);
       continue;
     }
-    
+
     // List item
-    if (line.startsWith('- ')) {
+    if (line.startsWith("- ")) {
       flushBlockquote();
       flushTable();
       inList = true;
       listItems.push(line.slice(2));
       continue;
     }
-    
+
     // Numbered list
     if (/^\d+\.\s/.test(line)) {
       flushBlockquote();
@@ -3908,9 +3936,9 @@ const renderContent = (content, onClose) => {
       }
       continue;
     }
-    
+
     // Special: Tour restart button
-    if (line.includes('<tour-restart-button>')) {
+    if (line.includes("<tour-restart-button>")) {
       flushList();
       flushBlockquote();
       flushTable();
@@ -3929,11 +3957,11 @@ const renderContent = (content, onClose) => {
           >
             🎓 Restart Interactive Tour
           </button>
-        </div>
+        </div>,
       );
       continue;
     }
-    
+
     // Regular paragraph
     flushList();
     flushBlockquote();
@@ -3941,424 +3969,487 @@ const renderContent = (content, onClose) => {
     elements.push(
       <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
         {renderInline(line)}
-      </p>
+      </p>,
     );
   }
-  
+
   // Flush remaining
   flushList();
   flushBlockquote();
   flushTable();
-  
+
   return elements;
 };
 
 const UserManual = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
-  
+
   // Lock background scroll when modal is open
   useBodyScrollLock(true);
-  
-  const [currentSection, setCurrentSection] = useState('home');
-  const [expandedSections, setExpandedSections] = useState(['getting-started']);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const [currentSection, setCurrentSection] = useState("home");
+  const [expandedSections, setExpandedSections] = useState(["getting-started"]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
+
   // Get current content
-  const currentContent = documentationContent[currentSection] || documentationContent.home;
-  
+  const currentContent =
+    documentationContent[currentSection] || documentationContent.home;
+
   // Helper to get translated navigation title
   const getNavTitle = (id, fallbackTitle) => {
     const navKeyMap = {
-      'home': 'navHome',
-      'getting-started': 'navGettingStarted',
-      'first-visit': 'navFirstVisit',
-      'interface-overview': 'navInterfaceOverview',
-      'accessibility': 'navAccessibility',
-      'search': 'navSearchExplore',
-      'how-to-search': 'navHowToSearch',
-      'search-results': 'navSearchResults',
-      'disability-details': 'navDisabilityDetails',
-      'rating-criteria': 'navRatingCriteria',
-      'tactical-calculator': 'navTacticalCalculator',
-      'calc-overview': 'navCalcOverview',
-      'calc-bilateral': 'navCalcBilateral',
-      'calc-dependents': 'navCalcDependents',
-      'calc-what-if': 'navCalcWhatIf',
-      'secondary-scout': 'navSecondaryScout',
-      'scout-launching': 'navScoutLaunching',
-      'scout-results': 'navScoutResults',
-      'scout-add-to-packet': 'navScoutAddToPacket',
-      'cp-exam-simulator': 'navCPExamSimulator',
-      'simulator-getting-started': 'navSimulatorGettingStarted',
-      'condition-selection': 'navConditionSelection',
-      'taking-simulation': 'navTakingSimulation',
-      'simulator-results': 'navSimulatorResults',
-      'flashcards': 'navFlashcards',
-      'dbq-library': 'navDBQLibrary',
-      'dbq-overview': 'navDBQOverview',
-      'dbq-browse': 'navDBQBrowse',
-      'dbq-usage': 'navDBQUsage',
-      'pathfinder': 'navPathfinder',
-      'workflow-guide': 'navWorkflowGuide',
-      'workflow-overview': 'navWorkflowOverview',
-      'workflow-progress': 'navWorkflowProgress',
-      'cfile-analyzer': 'navCFileAnalyzer',
-      'cfile-what-is': 'navCFileWhatIs',
-      'cfile-upload': 'navCFileUpload',
-      'cfile-analysis': 'navCFileAnalysis',
-      'blue-button': 'navBlueButtonXRay',
-      'blue-overview': 'navBlueOverview',
-      'blue-extract': 'navBlueExtract',
-      'witness-bench': 'navWitnessBench',
-      'witness-overview': 'navWitnessOverview',
-      'witness-interview': 'navWitnessInterview',
-      'witness-output': 'navWitnessOutput',
-      'nexus-builder': 'navNexusBuilder',
-      'what-is-nexus': 'navWhatIsNexus',
-      'building-statement': 'navBuildingStatement',
-      'doctor-cheat-sheet': 'navDoctorCheatSheet',
-      'download-options': 'navDownloadOptions',
-      'forms-helper': 'navFormsHelper',
-      'available-forms': 'navAvailableForms',
-      'buddy-statements': 'navBuddyStatements',
-      'intent-to-file': 'navIntentToFile',
-      'ptsd-stressor': 'navPTSDStressor',
-      'veteran-profile': 'navVeteranProfile',
-      'red-team': 'navRedTeamSimulator',
-      'red-overview': 'navRedOverview',
-      'red-analysis': 'navRedAnalysis',
-      'decision-decoder': 'navDecisionDecoder',
-      'decoder-overview': 'navDecoderOverview',
-      'decoder-upload': 'navDecoderUpload',
-      'decoder-appeal': 'navDecoderAppeal',
-      'shark-radar': 'navSharkRadar',
-      'tdiu-builder': 'navTDIUBuilder',
-      'tdiu-overview': 'navTDIUOverview',
-      'tdiu-eligibility': 'navTDIUEligibility',
-      'risk-assessment': 'navRiskAssessment',
-      'symptom-logger': 'navSymptomLogger',
-      'symptom-overview': 'navSymptomOverview',
-      'symptom-logging': 'navSymptomLogging',
-      'symptom-reports': 'navSymptomReports',
-      'pact-act': 'navPACTActNavigator',
-      'pact-overview': 'navPACTOverview',
-      'pact-conditions': 'navPACTConditions',
-      'pact-locations': 'navPACTLocations',
-      'foia-generator': 'navFOIAKeysmith',
-      'million-dollar': 'navMillionDollar',
-      'mos-matcher': 'navMOSHazardMatcher',
-      'web-conditions': 'navWebOfConditions',
-      'vso-finder': 'navVSOFinder',
-      'state-benefits': 'navStateBenefitHunter',
-      'my-packet': 'navMyPacket',
-      'managing-claims': 'navManagingClaims',
-      'saved-forms': 'navSavedForms',
-      'backup-restore': 'navBackupRestore',
-      'exporting-data': 'navExportingData',
-      'va-resources': 'navVAResources',
-      'online-portals': 'navOnlinePortals',
-      'phone-numbers': 'navPhoneNumbers',
-      'external-resources': 'navExternalResources',
-      'settings': 'navSettings',
-      'display-mode': 'navDisplayMode',
-      'accessibility-options': 'navAccessibilityOptions',
-      'data-management': 'navDataManagement',
-      'ai-settings': 'navAISettings',
-      'local-ai-overview': 'navLocalAIOverview',
-      'model-selection': 'navModelSelection',
-      'cloud-vs-local': 'navCloudVsLocal',
+      home: "navHome",
+      "getting-started": "navGettingStarted",
+      "first-visit": "navFirstVisit",
+      "interface-overview": "navInterfaceOverview",
+      accessibility: "navAccessibility",
+      search: "navSearchExplore",
+      "how-to-search": "navHowToSearch",
+      "search-results": "navSearchResults",
+      "disability-details": "navDisabilityDetails",
+      "rating-criteria": "navRatingCriteria",
+      "tactical-calculator": "navTacticalCalculator",
+      "calc-overview": "navCalcOverview",
+      "calc-bilateral": "navCalcBilateral",
+      "calc-dependents": "navCalcDependents",
+      "calc-what-if": "navCalcWhatIf",
+      "secondary-scout": "navSecondaryScout",
+      "scout-launching": "navScoutLaunching",
+      "scout-results": "navScoutResults",
+      "scout-add-to-packet": "navScoutAddToPacket",
+      "cp-exam-simulator": "navCPExamSimulator",
+      "simulator-getting-started": "navSimulatorGettingStarted",
+      "condition-selection": "navConditionSelection",
+      "taking-simulation": "navTakingSimulation",
+      "simulator-results": "navSimulatorResults",
+      flashcards: "navFlashcards",
+      "dbq-library": "navDBQLibrary",
+      "dbq-overview": "navDBQOverview",
+      "dbq-browse": "navDBQBrowse",
+      "dbq-usage": "navDBQUsage",
+      pathfinder: "navPathfinder",
+      "workflow-guide": "navWorkflowGuide",
+      "workflow-overview": "navWorkflowOverview",
+      "workflow-progress": "navWorkflowProgress",
+      "cfile-analyzer": "navCFileAnalyzer",
+      "cfile-what-is": "navCFileWhatIs",
+      "cfile-upload": "navCFileUpload",
+      "cfile-analysis": "navCFileAnalysis",
+      "blue-button": "navBlueButtonXRay",
+      "blue-overview": "navBlueOverview",
+      "blue-extract": "navBlueExtract",
+      "witness-bench": "navWitnessBench",
+      "witness-overview": "navWitnessOverview",
+      "witness-interview": "navWitnessInterview",
+      "witness-output": "navWitnessOutput",
+      "nexus-builder": "navNexusBuilder",
+      "what-is-nexus": "navWhatIsNexus",
+      "building-statement": "navBuildingStatement",
+      "doctor-cheat-sheet": "navDoctorCheatSheet",
+      "download-options": "navDownloadOptions",
+      "forms-helper": "navFormsHelper",
+      "available-forms": "navAvailableForms",
+      "buddy-statements": "navBuddyStatements",
+      "intent-to-file": "navIntentToFile",
+      "ptsd-stressor": "navPTSDStressor",
+      "veteran-profile": "navVeteranProfile",
+      "red-team": "navRedTeamSimulator",
+      "red-overview": "navRedOverview",
+      "red-analysis": "navRedAnalysis",
+      "decision-decoder": "navDecisionDecoder",
+      "decoder-overview": "navDecoderOverview",
+      "decoder-upload": "navDecoderUpload",
+      "decoder-appeal": "navDecoderAppeal",
+      "shark-radar": "navSharkRadar",
+      "tdiu-builder": "navTDIUBuilder",
+      "tdiu-overview": "navTDIUOverview",
+      "tdiu-eligibility": "navTDIUEligibility",
+      "risk-assessment": "navRiskAssessment",
+      "symptom-logger": "navSymptomLogger",
+      "symptom-overview": "navSymptomOverview",
+      "symptom-logging": "navSymptomLogging",
+      "symptom-reports": "navSymptomReports",
+      "pact-act": "navPACTActNavigator",
+      "pact-overview": "navPACTOverview",
+      "pact-conditions": "navPACTConditions",
+      "pact-locations": "navPACTLocations",
+      "foia-generator": "navFOIAKeysmith",
+      "million-dollar": "navMillionDollar",
+      "mos-matcher": "navMOSHazardMatcher",
+      "web-conditions": "navWebOfConditions",
+      "vso-finder": "navVSOFinder",
+      "state-benefits": "navStateBenefitHunter",
+      "my-packet": "navMyPacket",
+      "managing-claims": "navManagingClaims",
+      "saved-forms": "navSavedForms",
+      "backup-restore": "navBackupRestore",
+      "exporting-data": "navExportingData",
+      "va-resources": "navVAResources",
+      "online-portals": "navOnlinePortals",
+      "phone-numbers": "navPhoneNumbers",
+      "external-resources": "navExternalResources",
+      settings: "navSettings",
+      "display-mode": "navDisplayMode",
+      "accessibility-options": "navAccessibilityOptions",
+      "data-management": "navDataManagement",
+      "ai-settings": "navAISettings",
+      "local-ai-overview": "navLocalAIOverview",
+      "model-selection": "navModelSelection",
+      "cloud-vs-local": "navCloudVsLocal",
     };
     const key = navKeyMap[id];
     if (key) {
-      const translated = t('userManual', key);
+      const translated = t("userManual", key);
       if (translated !== key) return translated;
     }
     return fallbackTitle;
   };
-  
+
   // Helper to get translated category title
   const getCategoryTitle = (title) => {
     const catKeyMap = {
-      'Getting Started': 'catGettingStarted',
-      'Search & Explore': 'catSearchExplore',
-      '📊 Calculate': 'catCalculate',
-      '🔍 Discover': 'catDiscover',
-      '📋 Build Evidence': 'catBuildEvidence',
-      '🎯 Quality Control': 'catQualityControl',
-      '⚡ Advanced Strategy': 'catAdvancedStrategy',
-      '💎 Shock & Awe': 'catShockAwe',
-      '🤝 Support': 'catSupport',
-      '📁 Data & Settings': 'catDataSettings',
+      "Getting Started": "catGettingStarted",
+      "Search & Explore": "catSearchExplore",
+      "📊 Calculate": "catCalculate",
+      "🔍 Discover": "catDiscover",
+      "📋 Build Evidence": "catBuildEvidence",
+      "🎯 Quality Control": "catQualityControl",
+      "⚡ Advanced Strategy": "catAdvancedStrategy",
+      "💎 Shock & Awe": "catShockAwe",
+      "🤝 Support": "catSupport",
+      "📁 Data & Settings": "catDataSettings",
     };
     const key = catKeyMap[title];
     if (key) {
-      const translated = t('userManual', key);
+      const translated = t("userManual", key);
       if (translated !== key) return translated;
     }
     return title;
   };
-  
+
   // Toggle section expansion
   const toggleSection = (sectionId) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
+    setExpandedSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
     );
   };
-  
+
   // Search functionality
-  const searchResults = searchQuery.trim() 
-    ? Object.entries(documentationContent).filter(([id, content]) => 
-        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        content.content.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 10)
+  const searchResults = searchQuery.trim()
+    ? Object.entries(documentationContent)
+        .filter(
+          ([id, content]) =>
+            content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            content.content.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .slice(0, 10)
     : [];
-  
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [onClose]);
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
       {/* Main container */}
       <div className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden">
-        
         {/* Mobile header */}
         <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-white/20 rounded-lg"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
-          <h1 className="font-bold">{t('userManual', 'title')}</h1>
-          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <h1 className="font-bold">{t("userManual", "title")}</h1>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/20 rounded-lg"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
-        
+
         {/* Sidebar - scrollbar on left using RTL */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`} dir="rtl">
+        <div
+          className={`${sidebarOpen ? "block" : "hidden"} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`}
+          dir="rtl"
+        >
           {/* Wrapper to restore LTR for content */}
           <div dir="ltr">
-          {/* Desktop header */}
-          <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h1 className="text-lg font-bold flex items-center gap-2">
-                {t('userManual', 'title')}
-              </h1>
-              <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            {/* Desktop header */}
+            <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h1 className="text-lg font-bold flex items-center gap-2">
+                  {t("userManual", "title")}
+                </h1>
+                <button
+                  onClick={onClose}
+                  className="p-1 hover:bg-white/20 rounded"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder={t("userManual", "searchPlaceholder")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+                <svg
+                  className="absolute left-3 top-2.5 w-4 h-4 text-white/70"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
-              </button>
+              </div>
             </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={t('userManual', 'searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-              />
-              <svg className="absolute left-3 top-2.5 w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-          
-          {/* Search results */}
-          {searchQuery.trim() && (
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">{t('userManual', 'searchResults')}</h3>
-              {searchResults.length > 0 ? (
-                <div className="space-y-1">
-                  {searchResults.map(([id, content]) => (
-                    <button
-                      key={id}
-                      onClick={() => {
-                        setCurrentSection(id);
-                        setSearchQuery('');
-                        setSidebarOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    >
-                      {getNavTitle(id, content.title)}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('userManual', 'noResultsFound')}</p>
-              )}
-            </div>
-          )}
-          
-          {/* Navigation */}
-          <nav className="p-3">
-            {navigationStructure.map((section) => (
-              <div key={section.id} className="mb-1">
-                {/* Category Headers */}
-                {section.isCategory ? (
-                  <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                    {getCategoryTitle(section.title)}
-                  </div>
-                ) : section.children ? (
-                  <>
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{section.icon}</span>
-                        <span>{getNavTitle(section.id, section.title)}</span>
-                      </span>
-                      <svg 
-                        className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? 'rotate-90' : ''}`} 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+
+            {/* Search results */}
+            {searchQuery.trim() && (
+              <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                  {t("userManual", "searchResults")}
+                </h3>
+                {searchResults.length > 0 ? (
+                  <div className="space-y-1">
+                    {searchResults.map(([id, content]) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setCurrentSection(id);
+                          setSearchQuery("");
+                          setSidebarOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                    {expandedSections.includes(section.id) && (
-                      <div className="ml-6 mt-1 space-y-1">
-                        <button
-                          onClick={() => {
-                            setCurrentSection(section.id);
-                            setSidebarOpen(false);
-                          }}
-                          className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
-                            currentSection === section.id 
-                              ? 'bg-va-blue text-white' 
-                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          }`}
+                        {getNavTitle(id, content.title)}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("userManual", "noResultsFound")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Navigation */}
+            <nav className="p-3">
+              {navigationStructure.map((section) => (
+                <div key={section.id} className="mb-1">
+                  {/* Category Headers */}
+                  {section.isCategory ? (
+                    <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+                      {getCategoryTitle(section.title)}
+                    </div>
+                  ) : section.children ? (
+                    <>
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{section.icon}</span>
+                          <span>{getNavTitle(section.id, section.title)}</span>
+                        </span>
+                        <svg
+                          className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? "rotate-90" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          {t('userManual', 'overview')}
-                        </button>
-                        {section.children.map((child) => (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                      {expandedSections.includes(section.id) && (
+                        <div className="ml-6 mt-1 space-y-1">
                           <button
-                            key={child.id}
                             onClick={() => {
-                              setCurrentSection(child.id);
+                              setCurrentSection(section.id);
                               setSidebarOpen(false);
                             }}
                             className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
-                              currentSection === child.id 
-                                ? 'bg-va-blue text-white' 
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                              currentSection === section.id
+                                ? "bg-va-blue text-white"
+                                : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                             }`}
                           >
-                            {getNavTitle(child.id, child.title)}
+                            {t("userManual", "overview")}
                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setCurrentSection(section.id);
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
-                      currentSection === section.id 
-                        ? 'bg-va-blue text-white' 
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <span>{section.icon}</span>
-                    <span>{getNavTitle(section.id, section.title)}</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </nav>
-          
-          {/* Start Tour button */}
-          <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => {
-                // Close the User Manual first
-                if (onClose) onClose();
-                // Trigger tour restart after a brief delay
-                setTimeout(() => {
-                  triggerTourRestart();
-                }, 300);
-              }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
-            >
-              {t('userManual', 'startTour')}
-            </button>
-          </div>
-          
-          {/* Report bug link */}
-          <div className="px-3 pb-3">
-            <button
-              onClick={onReportBug}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-            >
-              {t('userManual', 'reportBug')}
-            </button>
-          </div>
+                          {section.children.map((child) => (
+                            <button
+                              key={child.id}
+                              onClick={() => {
+                                setCurrentSection(child.id);
+                                setSidebarOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+                                currentSection === child.id
+                                  ? "bg-va-blue text-white"
+                                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                              }`}
+                            >
+                              {getNavTitle(child.id, child.title)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setCurrentSection(section.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+                        currentSection === section.id
+                          ? "bg-va-blue text-white"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <span>{section.icon}</span>
+                      <span>{getNavTitle(section.id, section.title)}</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            {/* Start Tour button */}
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  // Close the User Manual first
+                  if (onClose) onClose();
+                  // Trigger tour restart after a brief delay
+                  setTimeout(() => {
+                    triggerTourRestart();
+                  }, 300);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
+              >
+                {t("userManual", "startTour")}
+              </button>
+            </div>
+
+            {/* Report bug link */}
+            <div className="px-3 pb-3">
+              <button
+                onClick={onReportBug}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+              >
+                {t("userManual", "reportBug")}
+              </button>
+            </div>
           </div>
         </div>
-        
+
         {/* Content area */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-6 md:p-8">
             {/* Breadcrumb */}
             <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              <button 
-                onClick={() => setCurrentSection('home')}
+              <button
+                onClick={() => setCurrentSection("home")}
                 className="hover:text-va-blue dark:hover:text-va-gold"
               >
-                {t('userManual', 'home')}
+                {t("userManual", "home")}
               </button>
-              {currentSection !== 'home' && (
+              {currentSection !== "home" && (
                 <>
                   <span className="mx-2">/</span>
-                  <span className="text-gray-900 dark:text-white">{getNavTitle(currentSection, currentContent.title)}</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {getNavTitle(currentSection, currentContent.title)}
+                  </span>
                 </>
               )}
             </nav>
-            
+
             {/* Title */}
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
               {getNavTitle(currentSection, currentContent.title)}
             </h1>
-            
+
             {/* Content */}
             <div className="prose dark:prose-invert max-w-none">
               {renderContent(currentContent.content, onClose)}
             </div>
-            
+
             {/* Navigation buttons */}
             <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
               <button
-                onClick={() => setCurrentSection('home')}
+                onClick={() => setCurrentSection("home")}
                 className="flex items-center gap-2 text-va-blue dark:text-va-gold hover:underline"
               >
-                {t('userManual', 'backToHome')}
+                {t("userManual", "backToHome")}
               </button>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
               >
-                {t('userManual', 'closeManual')}
+                {t("userManual", "closeManual")}
               </button>
             </div>
           </div>

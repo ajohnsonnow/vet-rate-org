@@ -10,23 +10,23 @@
  */
 
 // Schema version for future compatibility
-const SCHEMA_VERSION = '1.0.0';
+const SCHEMA_VERSION = "1.0.0";
 
 // All localStorage keys used by Vet-Rate.org
 const STORAGE_KEYS = [
-  'vet_rate_saved_claims',
-  'vet_rate_statements',
-  'vet_rate_veteran_profile',
-  'vet_rate_saved_forms',
-  'vet_rate_my_ratings',
-  'vetrate-helper-mode',
-  'vetrate-helper-tooltips',
-  'vetrate_disclaimer-acknowledged',
-  'vet-rate-theme',
-  'vet-rate-color-blind-mode',
-  'vet-rate-reduced-motion',
-  'vet-rate-font-size',
-  'vetrate-mobile-notice-dismissed'
+  "vet_rate_saved_claims",
+  "vet_rate_statements",
+  "vet_rate_veteran_profile",
+  "vet_rate_saved_forms",
+  "vet_rate_my_ratings",
+  "vetrate-helper-mode",
+  "vetrate-helper-tooltips",
+  "vetrate_disclaimer-acknowledged",
+  "vet-rate-theme",
+  "vet-rate-color-blind-mode",
+  "vet-rate-reduced-motion",
+  "vet-rate-font-size",
+  "vetrate-mobile-notice-dismissed",
 ];
 
 /**
@@ -38,12 +38,12 @@ export const exportData = () => {
     const backup = {
       schemaVersion: SCHEMA_VERSION,
       exportDate: new Date().toISOString(),
-      appVersion: '1.0',
-      data: {}
+      appVersion: "1.0",
+      data: {},
     };
 
     // Collect all data from localStorage
-    STORAGE_KEYS.forEach(key => {
+    STORAGE_KEYS.forEach((key) => {
       const value = localStorage.getItem(key);
       if (value !== null) {
         backup.data[key] = value;
@@ -54,13 +54,13 @@ export const exportData = () => {
     backup.metadata = {
       totalKeys: Object.keys(backup.data).length,
       browser: navigator.userAgent,
-      platform: navigator.platform
+      platform: navigator.platform,
     };
 
     return backup;
   } catch (error) {
-    console.error('Error exporting data:', error);
-    throw new Error('Failed to export data. Please try again.');
+    console.error("Error exporting data:", error);
+    throw new Error("Failed to export data. Please try again.");
   }
 };
 
@@ -71,15 +71,15 @@ export const exportData = () => {
  */
 export const downloadBackup = (backupData, filename = null) => {
   try {
-    const date = new Date().toISOString().split('T')[0];
+    const date = new Date().toISOString().split("T")[0];
     const defaultFilename = `vet-rate-bunker-backup-${date}.json`;
     const finalFilename = filename || defaultFilename;
 
     const json = JSON.stringify(backupData, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = finalFilename;
     document.body.appendChild(a);
@@ -89,8 +89,8 @@ export const downloadBackup = (backupData, filename = null) => {
 
     return true;
   } catch (error) {
-    console.error('Error downloading backup:', error);
-    throw new Error('Failed to download backup file.');
+    console.error("Error downloading backup:", error);
+    throw new Error("Failed to download backup file.");
   }
 };
 
@@ -102,10 +102,11 @@ export const downloadBackup = (backupData, filename = null) => {
 export const validateBackup = (backupData) => {
   try {
     // Check if it's valid JSON object
-    if (!backupData || typeof backupData !== 'object') {
+    if (!backupData || typeof backupData !== "object") {
       return {
         success: false,
-        message: 'Invalid backup file format. Please select a valid Vet-Rate backup file.'
+        message:
+          "Invalid backup file format. Please select a valid Vet-Rate backup file.",
       };
     }
 
@@ -113,37 +114,38 @@ export const validateBackup = (backupData) => {
     if (!backupData.schemaVersion) {
       return {
         success: false,
-        message: 'This file is missing version information. It may not be a valid Vet-Rate backup.'
+        message:
+          "This file is missing version information. It may not be a valid Vet-Rate backup.",
       };
     }
 
-    if (!backupData.data || typeof backupData.data !== 'object') {
+    if (!backupData.data || typeof backupData.data !== "object") {
       return {
         success: false,
-        message: 'Backup file is corrupted or incomplete.'
+        message: "Backup file is corrupted or incomplete.",
       };
     }
 
     // Version compatibility check
-    const [majorVersion] = backupData.schemaVersion.split('.');
-    const [currentMajorVersion] = SCHEMA_VERSION.split('.');
+    const [majorVersion] = backupData.schemaVersion.split(".");
+    const [currentMajorVersion] = SCHEMA_VERSION.split(".");
 
     if (majorVersion !== currentMajorVersion) {
       return {
         success: false,
-        message: `This backup is from an incompatible version (${backupData.schemaVersion}). Current version: ${SCHEMA_VERSION}`
+        message: `This backup is from an incompatible version (${backupData.schemaVersion}). Current version: ${SCHEMA_VERSION}`,
       };
     }
 
     return {
       success: true,
-      message: 'Backup file is valid',
-      metadata: backupData.metadata
+      message: "Backup file is valid",
+      metadata: backupData.metadata,
     };
   } catch (error) {
     return {
       success: false,
-      message: 'Error validating backup file: ' + error.message
+      message: "Error validating backup file: " + error.message,
     };
   }
 };
@@ -193,15 +195,15 @@ export const importData = (backupData, merge = false) => {
       skippedKeys,
       totalKeys: Object.keys(backupData.data).length,
       exportDate: backupData.exportDate,
-      message: merge 
+      message: merge
         ? `Successfully imported ${importedKeys} items (${skippedKeys} skipped due to existing data).`
-        : `Successfully imported ${importedKeys} items.`
+        : `Successfully imported ${importedKeys} items.`,
     };
   } catch (error) {
-    console.error('Error importing data:', error);
+    console.error("Error importing data:", error);
     return {
       success: false,
-      message: error.message || 'Failed to import backup data.'
+      message: error.message || "Failed to import backup data.",
     };
   }
 };
@@ -221,12 +223,16 @@ export const parseBackupFile = (file) => {
         const backup = JSON.parse(text);
         resolve(backup);
       } catch (error) {
-        reject(new Error('Failed to parse backup file. Please ensure it is a valid JSON file.'));
+        reject(
+          new Error(
+            "Failed to parse backup file. Please ensure it is a valid JSON file.",
+          ),
+        );
       }
     };
 
     reader.onerror = () => {
-      reject(new Error('Failed to read backup file.'));
+      reject(new Error("Failed to read backup file."));
     };
 
     reader.readAsText(file);
@@ -239,8 +245,8 @@ export const parseBackupFile = (file) => {
  */
 export const clearAllData = () => {
   let clearedKeys = 0;
-  
-  STORAGE_KEYS.forEach(key => {
+
+  STORAGE_KEYS.forEach((key) => {
     if (localStorage.getItem(key) !== null) {
       localStorage.removeItem(key);
       clearedKeys++;
@@ -259,7 +265,7 @@ export const getStorageStats = () => {
     let totalSize = 0;
     const keyStats = [];
 
-    STORAGE_KEYS.forEach(key => {
+    STORAGE_KEYS.forEach((key) => {
       const value = localStorage.getItem(key);
       if (value !== null) {
         const size = new Blob([value]).size;
@@ -267,7 +273,7 @@ export const getStorageStats = () => {
         keyStats.push({
           key,
           size,
-          sizeKB: (size / 1024).toFixed(2)
+          sizeKB: (size / 1024).toFixed(2),
         });
       }
     });
@@ -277,10 +283,10 @@ export const getStorageStats = () => {
       totalSize,
       totalSizeKB: (totalSize / 1024).toFixed(2),
       totalSizeMB: (totalSize / 1024 / 1024).toFixed(2),
-      keys: keyStats.sort((a, b) => b.size - a.size) // Sort by size descending
+      keys: keyStats.sort((a, b) => b.size - a.size), // Sort by size descending
     };
   } catch (error) {
-    console.error('Error getting storage stats:', error);
+    console.error("Error getting storage stats:", error);
     return null;
   }
 };

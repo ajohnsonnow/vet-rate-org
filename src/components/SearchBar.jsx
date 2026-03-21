@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { getSearchSuggestions } from '../utils/searchUtils';
-import disabilityData from '../data/disabilityData.json';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect, useRef } from "react";
+import { getSearchSuggestions } from "../utils/searchUtils";
+import disabilityData from "../data/disabilityData.json";
+import { useLanguage } from "../contexts/LanguageContext";
 
 function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
   const { t } = useLanguage();
@@ -11,7 +11,11 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
 
   useEffect(() => {
     if (searchTerm.trim().length >= 2) {
-      const newSuggestions = getSearchSuggestions(searchTerm, disabilityData, 8);
+      const newSuggestions = getSearchSuggestions(
+        searchTerm,
+        disabilityData,
+        8,
+      );
       setSuggestions(newSuggestions);
       setShowSuggestions(true);
     } else {
@@ -23,20 +27,23 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setShowSuggestions(false);
       }
     };
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setShowSuggestions(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -72,24 +79,29 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
             onFocus={() => {
               if (suggestions.length > 0) setShowSuggestions(true);
             }}
-            placeholder={t('searchBar', 'placeholder')}
+            placeholder={t("searchBar", "placeholder")}
             className="w-full pl-12 pr-12 py-4 text-base sm:text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:border-va-blue focus:ring-2 focus:ring-va-blue focus:ring-opacity-50 transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 min-h-[44px]"
             autoComplete="off"
             disabled={isLoading}
-            aria-label={t('searchBar', 'ariaLabel')}
+            aria-label={t("searchBar", "ariaLabel")}
             role="combobox"
             aria-expanded={showSuggestions && suggestions.length > 0}
             aria-haspopup="listbox"
             aria-controls="search-suggestions"
-            style={{ fontSize: '16px' }}
+            style={{ fontSize: "16px" }}
           />
           {searchTerm && (
             <button
               onClick={onClear}
               className="absolute right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
-              aria-label={t('searchBar', 'clearSearch')}
+              aria-label={t("searchBar", "clearSearch")}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
                 <path
                   fillRule="evenodd"
                   d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -102,10 +114,10 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
 
         {/* Suggestions dropdown - limited height with scroll */}
         {showSuggestions && suggestions.length > 0 && (
-          <div 
+          <div
             id="search-suggestions"
             role="listbox"
-            aria-label={t('searchBar', 'suggestionsLabel')}
+            aria-label={t("searchBar", "suggestionsLabel")}
             className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => (
@@ -119,12 +131,14 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition cursor-pointer text-sm min-h-[44px] flex items-center"
               >
-                <span className="text-gray-900 dark:text-gray-100">{suggestion}</span>
+                <span className="text-gray-900 dark:text-gray-100">
+                  {suggestion}
+                </span>
               </button>
             ))}
             {/* Hint to close dropdown */}
             <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 text-center border-t border-gray-200 dark:border-gray-700">
-              {t('searchBar', 'suggestionHint')}
+              {t("searchBar", "suggestionHint")}
             </div>
           </div>
         )}
@@ -132,7 +146,10 @@ function SearchBar({ searchTerm, setSearchTerm, onClear, isLoading }) {
 
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          <span className="font-semibold">{t('searchBar', 'examplesLabel')}</span> {t('searchBar', 'examplesText')}
+          <span className="font-semibold">
+            {t("searchBar", "examplesLabel")}
+          </span>{" "}
+          {t("searchBar", "examplesText")}
         </p>
       </div>
     </div>

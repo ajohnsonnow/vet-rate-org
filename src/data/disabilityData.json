@@ -4,11 +4,7 @@
       "id": 1,
       "diagnosticCode": "5000",
       "conditionName": "Osteomyelitis (Acute, Subacute, or Chronic)",
-      "aliases": [
-        "bone infection",
-        "osteomyelitis",
-        "bone marrow infection"
-      ],
+      "aliases": ["bone infection", "osteomyelitis", "bone marrow infection"],
       "searchTerms": [
         "osteomyelitis",
         "acute osteomyelitis",
@@ -199,10 +195,7 @@
       "id": 5,
       "diagnosticCode": "5004",
       "conditionName": "Arthritis, gonorrheal",
-      "aliases": [
-        "arthritis, gonorrheal",
-        "arthritis gonorrheal"
-      ],
+      "aliases": ["arthritis, gonorrheal", "arthritis gonorrheal"],
       "searchTerms": [
         "musculoskeletal",
         "gonorrheal",
@@ -224,10 +217,7 @@
       "id": 6,
       "diagnosticCode": "5005",
       "conditionName": "Arthritis, pneumococcic",
-      "aliases": [
-        "arthritis, pneumococcic",
-        "arthritis pneumococcic"
-      ],
+      "aliases": ["arthritis, pneumococcic", "arthritis pneumococcic"],
       "searchTerms": [
         "musculoskeletal",
         "pneumococcic",
@@ -249,10 +239,7 @@
       "id": 7,
       "diagnosticCode": "5006",
       "conditionName": "Arthritis, typhoid",
-      "aliases": [
-        "arthritis typhoid",
-        "arthritis, typhoid"
-      ],
+      "aliases": ["arthritis typhoid", "arthritis, typhoid"],
       "searchTerms": [
         "typhoid",
         "musculoskeletal",
@@ -274,10 +261,7 @@
       "id": 8,
       "diagnosticCode": "5007",
       "conditionName": "Arthritis, syphilitic",
-      "aliases": [
-        "arthritis, syphilitic",
-        "arthritis syphilitic"
-      ],
+      "aliases": ["arthritis, syphilitic", "arthritis syphilitic"],
       "searchTerms": [
         "musculoskeletal",
         "syphilitic",
@@ -299,10 +283,7 @@
       "id": 9,
       "diagnosticCode": "5008",
       "conditionName": "Arthritis, streptococcic",
-      "aliases": [
-        "arthritis streptococcic",
-        "arthritis, streptococcic"
-      ],
+      "aliases": ["arthritis streptococcic", "arthritis, streptococcic"],
       "searchTerms": [
         "musculoskeletal",
         "arthritis, streptococcic",
@@ -394,9 +375,7 @@
       "id": 12,
       "diagnosticCode": "5011",
       "conditionName": "Decompression illness",
-      "aliases": [
-        "decompression illness"
-      ],
+      "aliases": ["decompression illness"],
       "searchTerms": [
         "5011",
         "musculoskeletal",
@@ -452,11 +431,7 @@
       "id": 14,
       "diagnosticCode": "5013",
       "conditionName": "Osteoporosis, residuals of",
-      "aliases": [
-        "osteoporosis residuals",
-        "osteoporosis, residuals of",
-        "OR"
-      ],
+      "aliases": ["osteoporosis residuals", "osteoporosis, residuals of", "OR"],
       "searchTerms": [
         "5013",
         "musculoskeletal",
@@ -478,11 +453,7 @@
       "id": 15,
       "diagnosticCode": "5014",
       "conditionName": "Osteomalacia, residuals of",
-      "aliases": [
-        "osteomalacia residuals",
-        "osteomalacia, residuals of",
-        "OR"
-      ],
+      "aliases": ["osteomalacia residuals", "osteomalacia, residuals of", "OR"],
       "searchTerms": [
         "musculoskeletal",
         "osteomalacia, residuals of",
@@ -504,11 +475,7 @@
       "id": 16,
       "diagnosticCode": "5015",
       "conditionName": "Bones, neoplasm, benign",
-      "aliases": [
-        "bones neoplasm benign",
-        "bones, neoplasm, benign",
-        "BNB"
-      ],
+      "aliases": ["bones neoplasm benign", "bones, neoplasm, benign", "BNB"],
       "searchTerms": [
         "musculoskeletal",
         "5015",
@@ -531,9 +498,7 @@
       "id": 17,
       "diagnosticCode": "5016",
       "conditionName": "Osteitis deformans",
-      "aliases": [
-        "osteitis deformans"
-      ],
+      "aliases": ["osteitis deformans"],
       "searchTerms": [
         "musculoskeletal",
         "osteitis deformans",
@@ -555,14 +520,8 @@
       "id": 18,
       "diagnosticCode": "5017",
       "conditionName": "Gout",
-      "aliases": [
-        "gout"
-      ],
-      "searchTerms": [
-        "gout",
-        "musculoskeletal",
-        "5017"
-      ],
+      "aliases": ["gout"],
+      "searchTerms": ["gout", "musculoskeletal", "5017"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -577,14 +536,8 @@
       "id": 19,
       "diagnosticCode": "5019",
       "conditionName": "Bursitis",
-      "aliases": [
-        "bursitis"
-      ],
-      "searchTerms": [
-        "5019",
-        "musculoskeletal",
-        "bursitis"
-      ],
+      "aliases": ["bursitis"],
+      "searchTerms": ["5019", "musculoskeletal", "bursitis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -599,14 +552,8 @@
       "id": 20,
       "diagnosticCode": "5021",
       "conditionName": "Myositis",
-      "aliases": [
-        "myositis"
-      ],
-      "searchTerms": [
-        "myositis",
-        "musculoskeletal",
-        "5021"
-      ],
+      "aliases": ["myositis"],
+      "searchTerms": ["myositis", "musculoskeletal", "5021"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -621,9 +568,7 @@
       "id": 21,
       "diagnosticCode": "5023",
       "conditionName": "Heterotopic ossification",
-      "aliases": [
-        "heterotopic ossification"
-      ],
+      "aliases": ["heterotopic ossification"],
       "searchTerms": [
         "heterotopic",
         "musculoskeletal",
@@ -673,11 +618,7 @@
       "id": 23,
       "diagnosticCode": "5025",
       "conditionName": "Fibromyalgia",
-      "aliases": [
-        "fibromyalgia",
-        "fibromyalgia syndrome",
-        "FM"
-      ],
+      "aliases": ["fibromyalgia", "fibromyalgia syndrome", "FM"],
       "searchTerms": [
         "fibromyalgia",
         "FM",
@@ -710,10 +651,7 @@
       "id": 24,
       "diagnosticCode": "5051",
       "conditionName": "Shoulder replacement (prosthesis)",
-      "aliases": [
-        "shoulder replacement (prosthesis)",
-        "SR("
-      ],
+      "aliases": ["shoulder replacement (prosthesis)", "SR("],
       "searchTerms": [
         "musculoskeletal",
         "prosthesis",
@@ -745,10 +683,7 @@
       "id": 25,
       "diagnosticCode": "5052",
       "conditionName": "Elbow replacement (prosthesis)",
-      "aliases": [
-        "ER(",
-        "elbow replacement (prosthesis)"
-      ],
+      "aliases": ["ER(", "elbow replacement (prosthesis)"],
       "searchTerms": [
         "musculoskeletal",
         "elbow",
@@ -780,10 +715,7 @@
       "id": 26,
       "diagnosticCode": "5053",
       "conditionName": "Wrist replacement (prosthesis)",
-      "aliases": [
-        "wrist replacement (prosthesis)",
-        "WR("
-      ],
+      "aliases": ["wrist replacement (prosthesis)", "WR("],
       "searchTerms": [
         "musculoskeletal",
         "wrist replacement (prosthesis)",
@@ -886,10 +818,7 @@
       "id": 29,
       "diagnosticCode": "5056",
       "conditionName": "Ankle replacement (prosthesis)",
-      "aliases": [
-        "AR(",
-        "ankle replacement (prosthesis)"
-      ],
+      "aliases": ["AR(", "ankle replacement (prosthesis)"],
       "searchTerms": [
         "5056",
         "musculoskeletal",
@@ -1057,11 +986,7 @@
       "id": 35,
       "diagnosticCode": "5109",
       "conditionName": "Loss of use of both hands",
-      "aliases": [
-        "loss of use of both hands",
-        "LUBH",
-        "loss both hands"
-      ],
+      "aliases": ["loss of use of both hands", "LUBH", "loss both hands"],
       "searchTerms": [
         "loss",
         "both",
@@ -1086,11 +1011,7 @@
       "id": 36,
       "diagnosticCode": "5110",
       "conditionName": "Loss of use of both feet",
-      "aliases": [
-        "loss of use of both feet",
-        "loss both feet",
-        "LUBF"
-      ],
+      "aliases": ["loss of use of both feet", "loss both feet", "LUBF"],
       "searchTerms": [
         "loss",
         "both",
@@ -1275,11 +1196,7 @@
       "id": 43,
       "diagnosticCode": "5125",
       "conditionName": "Hand, loss of use of",
-      "aliases": [
-        "hand, loss of use of",
-        "hand loss",
-        "HLU"
-      ],
+      "aliases": ["hand, loss of use of", "hand loss", "HLU"],
       "searchTerms": [
         "loss",
         "musculoskeletal",
@@ -1304,11 +1221,7 @@
       "id": 44,
       "diagnosticCode": "5126",
       "conditionName": "Five digits of one hand",
-      "aliases": [
-        "five digits of one hand",
-        "five digits hand",
-        "FDOH"
-      ],
+      "aliases": ["five digits of one hand", "five digits hand", "FDOH"],
       "searchTerms": [
         "musculoskeletal",
         "hand",
@@ -1730,11 +1643,7 @@
       "id": 61,
       "diagnosticCode": "5143",
       "conditionName": "Two digits: Thumb and long",
-      "aliases": [
-        "two digits: thumb and long",
-        "TDTAL",
-        "digits: thumb long"
-      ],
+      "aliases": ["two digits: thumb and long", "TDTAL", "digits: thumb long"],
       "searchTerms": [
         "musculoskeletal",
         "5143",
@@ -1753,11 +1662,7 @@
       "id": 62,
       "diagnosticCode": "5144",
       "conditionName": "Two digits: Thumb and ring",
-      "aliases": [
-        "two digits: thumb and ring",
-        "digits: thumb ring",
-        "TDTAR"
-      ],
+      "aliases": ["two digits: thumb and ring", "digits: thumb ring", "TDTAR"],
       "searchTerms": [
         "musculoskeletal",
         "two digits: thumb and ring",
@@ -1799,11 +1704,7 @@
       "id": 64,
       "diagnosticCode": "5146",
       "conditionName": "Two digits: Index and long",
-      "aliases": [
-        "two digits: index and long",
-        "digits: index long",
-        "TDIAL"
-      ],
+      "aliases": ["two digits: index and long", "digits: index long", "TDIAL"],
       "searchTerms": [
         "musculoskeletal",
         "index",
@@ -1822,11 +1723,7 @@
       "id": 65,
       "diagnosticCode": "5147",
       "conditionName": "Two digits: Index and ring",
-      "aliases": [
-        "digits: index ring",
-        "TDIAR",
-        "two digits: index and ring"
-      ],
+      "aliases": ["digits: index ring", "TDIAR", "two digits: index and ring"],
       "searchTerms": [
         "musculoskeletal",
         "5147",
@@ -1868,11 +1765,7 @@
       "id": 67,
       "diagnosticCode": "5149",
       "conditionName": "Two digits: Long and ring",
-      "aliases": [
-        "two digits: long and ring",
-        "digits: long ring",
-        "TDLAR"
-      ],
+      "aliases": ["two digits: long and ring", "digits: long ring", "TDLAR"],
       "searchTerms": [
         "musculoskeletal",
         "5149",
@@ -1937,10 +1830,7 @@
       "id": 70,
       "diagnosticCode": "5152",
       "conditionName": "Single finger: Thumb",
-      "aliases": [
-        "single finger: thumb",
-        "SFT"
-      ],
+      "aliases": ["single finger: thumb", "SFT"],
       "searchTerms": [
         "finger:",
         "musculoskeletal",
@@ -1983,11 +1873,7 @@
       "id": 72,
       "diagnosticCode": "5154",
       "conditionName": "Single finger: Long finger",
-      "aliases": [
-        "single finger: long",
-        "SFLF",
-        "single finger: long finger"
-      ],
+      "aliases": ["single finger: long", "SFLF", "single finger: long finger"],
       "searchTerms": [
         "finger:",
         "musculoskeletal",
@@ -2007,11 +1893,7 @@
       "id": 73,
       "diagnosticCode": "5155",
       "conditionName": "Single finger: Ring finger",
-      "aliases": [
-        "single finger: ring finger",
-        "single finger: ring",
-        "SFRF"
-      ],
+      "aliases": ["single finger: ring finger", "single finger: ring", "SFRF"],
       "searchTerms": [
         "finger:",
         "single finger: ring finger",
@@ -2238,11 +2120,7 @@
       "id": 82,
       "diagnosticCode": "5167",
       "conditionName": "Foot, loss of use of",
-      "aliases": [
-        "foot loss",
-        "foot, loss of use of",
-        "FLU"
-      ],
+      "aliases": ["foot loss", "foot, loss of use of", "FLU"],
       "searchTerms": [
         "loss",
         "musculoskeletal",
@@ -2291,11 +2169,7 @@
       "id": 84,
       "diagnosticCode": "5171",
       "conditionName": "Toe, great, amputation of",
-      "aliases": [
-        "TGA",
-        "great amputation",
-        "toe, great, amputation of"
-      ],
+      "aliases": ["TGA", "great amputation", "toe, great, amputation of"],
       "searchTerms": [
         "amputation",
         "musculoskeletal",
@@ -2399,9 +2273,7 @@
           "30": "Intermediate between favorable and unfavorable (non-dominant) / Favorable, abduction to 60°, can reach mouth and head (dominant)",
           "20": "Favorable, abduction to 60°, can reach mouth and head (non-dominant)"
         },
-        "notes": [
-          "The scapula and humerus move as one piece."
-        ]
+        "notes": ["The scapula and humerus move as one piece."]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -2409,11 +2281,7 @@
       "id": 88,
       "diagnosticCode": "5201",
       "conditionName": "Arm, limitation of motion",
-      "aliases": [
-        "arm, limitation of motion",
-        "ALM",
-        "limitation motion"
-      ],
+      "aliases": ["arm, limitation of motion", "ALM", "limitation motion"],
       "searchTerms": [
         "arm, limitation of motion",
         "musculoskeletal",
@@ -2439,11 +2307,7 @@
       "id": 89,
       "diagnosticCode": "5202",
       "conditionName": "Humerus, other impairment",
-      "aliases": [
-        "HOI",
-        "humerus, other impairment",
-        "humerus impairment"
-      ],
+      "aliases": ["HOI", "humerus, other impairment", "humerus impairment"],
       "searchTerms": [
         "humerus, other impairment",
         "musculoskeletal",
@@ -2493,10 +2357,7 @@
       "id": 91,
       "diagnosticCode": "5205",
       "conditionName": "Elbow, ankylosis",
-      "aliases": [
-        "elbow ankylosis",
-        "elbow, ankylosis"
-      ],
+      "aliases": ["elbow ankylosis", "elbow, ankylosis"],
       "searchTerms": [
         "musculoskeletal",
         "elbow",
@@ -2560,11 +2421,7 @@
       "id": 94,
       "diagnosticCode": "5208",
       "conditionName": "Forearm, flexion limited",
-      "aliases": [
-        "forearm flexion limited",
-        "forearm, flexion limited",
-        "FFL"
-      ],
+      "aliases": ["forearm flexion limited", "forearm, flexion limited", "FFL"],
       "searchTerms": [
         "musculoskeletal",
         "limited",
@@ -2583,11 +2440,7 @@
       "id": 95,
       "diagnosticCode": "5209",
       "conditionName": "Elbow, other impairment",
-      "aliases": [
-        "elbow impairment",
-        "EOI",
-        "elbow, other impairment"
-      ],
+      "aliases": ["elbow impairment", "EOI", "elbow, other impairment"],
       "searchTerms": [
         "musculoskeletal",
         "5209",
@@ -2606,11 +2459,7 @@
       "id": 96,
       "diagnosticCode": "5210",
       "conditionName": "Radius and ulna, nonunion",
-      "aliases": [
-        "RAUN",
-        "radius and ulna, nonunion",
-        "radius ulna nonunion"
-      ],
+      "aliases": ["RAUN", "radius and ulna, nonunion", "radius ulna nonunion"],
       "searchTerms": [
         "5210",
         "musculoskeletal",
@@ -2629,10 +2478,7 @@
       "id": 97,
       "diagnosticCode": "5211",
       "conditionName": "Ulna, impairment",
-      "aliases": [
-        "ulna, impairment",
-        "ulna impairment"
-      ],
+      "aliases": ["ulna, impairment", "ulna impairment"],
       "searchTerms": [
         "musculoskeletal",
         "ulna",
@@ -2650,10 +2496,7 @@
       "id": 98,
       "diagnosticCode": "5212",
       "conditionName": "Radius, impairment",
-      "aliases": [
-        "radius impairment",
-        "radius, impairment"
-      ],
+      "aliases": ["radius impairment", "radius, impairment"],
       "searchTerms": [
         "musculoskeletal",
         "radius",
@@ -2694,10 +2537,7 @@
       "id": 100,
       "diagnosticCode": "5214",
       "conditionName": "Wrist, ankylosis",
-      "aliases": [
-        "wrist ankylosis",
-        "wrist, ankylosis"
-      ],
+      "aliases": ["wrist ankylosis", "wrist, ankylosis"],
       "searchTerms": [
         "musculoskeletal",
         "wrist",
@@ -2984,11 +2824,7 @@
       "id": 111,
       "diagnosticCode": "5225",
       "conditionName": "Index finger, ankylosis",
-      "aliases": [
-        "IFA",
-        "index finger ankylosis",
-        "index finger, ankylosis"
-      ],
+      "aliases": ["IFA", "index finger ankylosis", "index finger, ankylosis"],
       "searchTerms": [
         "musculoskeletal",
         "index",
@@ -3007,11 +2843,7 @@
       "id": 112,
       "diagnosticCode": "5226",
       "conditionName": "Long finger, ankylosis",
-      "aliases": [
-        "long finger ankylosis",
-        "long finger, ankylosis",
-        "LFA"
-      ],
+      "aliases": ["long finger ankylosis", "long finger, ankylosis", "LFA"],
       "searchTerms": [
         "musculoskeletal",
         "long finger, ankylosis",
@@ -3285,9 +3117,7 @@
       "id": 120,
       "diagnosticCode": "5238",
       "conditionName": "Spinal stenosis",
-      "aliases": [
-        "spinal stenosis"
-      ],
+      "aliases": ["spinal stenosis"],
       "searchTerms": [
         "5238",
         "musculoskeletal",
@@ -3352,11 +3182,7 @@
       "id": 122,
       "diagnosticCode": "5240",
       "conditionName": "Ankylosing Spondylitis",
-      "aliases": [
-        "AS",
-        "ankylosing spondylitis",
-        "bamboo spine"
-      ],
+      "aliases": ["AS", "ankylosing spondylitis", "bamboo spine"],
       "searchTerms": [
         "ankylosing spondylitis",
         "AS",
@@ -3402,9 +3228,7 @@
       "id": 123,
       "diagnosticCode": "5241",
       "conditionName": "Spinal fusion",
-      "aliases": [
-        "spinal fusion"
-      ],
+      "aliases": ["spinal fusion"],
       "searchTerms": [
         "musculoskeletal",
         "fusion",
@@ -3549,16 +3373,8 @@
       "id": 127,
       "diagnosticCode": "5250",
       "conditionName": "Hip, ankylosis",
-      "aliases": [
-        "ankylosis",
-        "hip, ankylosis"
-      ],
-      "searchTerms": [
-        "ankylosis",
-        "musculoskeletal",
-        "hip, ankylosis",
-        "5250"
-      ],
+      "aliases": ["ankylosis", "hip, ankylosis"],
+      "searchTerms": ["ankylosis", "musculoskeletal", "hip, ankylosis", "5250"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -3638,10 +3454,7 @@
       "id": 130,
       "diagnosticCode": "5253",
       "conditionName": "Thigh, impairment",
-      "aliases": [
-        "thigh impairment",
-        "thigh, impairment"
-      ],
+      "aliases": ["thigh impairment", "thigh, impairment"],
       "searchTerms": [
         "musculoskeletal",
         "impairment",
@@ -3666,11 +3479,7 @@
       "id": 131,
       "diagnosticCode": "5254",
       "conditionName": "Hip, flail joint",
-      "aliases": [
-        "hip, flail joint",
-        "HFJ",
-        "flail joint"
-      ],
+      "aliases": ["hip, flail joint", "HFJ", "flail joint"],
       "searchTerms": [
         "hip, flail joint",
         "musculoskeletal",
@@ -3694,10 +3503,7 @@
       "id": 132,
       "diagnosticCode": "5255",
       "conditionName": "Femur, impairment",
-      "aliases": [
-        "femur impairment",
-        "femur, impairment"
-      ],
+      "aliases": ["femur impairment", "femur, impairment"],
       "searchTerms": [
         "musculoskeletal",
         "femur",
@@ -3715,10 +3521,7 @@
       "id": 133,
       "diagnosticCode": "5256",
       "conditionName": "Knee, ankylosis",
-      "aliases": [
-        "knee, ankylosis",
-        "knee ankylosis"
-      ],
+      "aliases": ["knee, ankylosis", "knee ankylosis"],
       "searchTerms": [
         "musculoskeletal",
         "knee, ankylosis",
@@ -3745,11 +3548,7 @@
       "id": 134,
       "diagnosticCode": "5257",
       "conditionName": "Knee, other impairment",
-      "aliases": [
-        "knee, other impairment",
-        "knee impairment",
-        "KOI"
-      ],
+      "aliases": ["knee, other impairment", "knee impairment", "KOI"],
       "searchTerms": [
         "knee, other impairment",
         "musculoskeletal",
@@ -3874,11 +3673,7 @@
       "id": 137,
       "diagnosticCode": "5260",
       "conditionName": "Leg, limitation of flexion",
-      "aliases": [
-        "LLF",
-        "leg, limitation of flexion",
-        "limitation flexion"
-      ],
+      "aliases": ["LLF", "leg, limitation of flexion", "limitation flexion"],
       "searchTerms": [
         "musculoskeletal",
         "5260",
@@ -3972,9 +3767,7 @@
       "id": 140,
       "diagnosticCode": "5263",
       "conditionName": "Genu recurvatum",
-      "aliases": [
-        "genu recurvatum"
-      ],
+      "aliases": ["genu recurvatum"],
       "searchTerms": [
         "musculoskeletal",
         "genu recurvatum",
@@ -3998,9 +3791,7 @@
       "id": 141,
       "diagnosticCode": "5269",
       "conditionName": "Plantar fasciitis",
-      "aliases": [
-        "plantar fasciitis"
-      ],
+      "aliases": ["plantar fasciitis"],
       "searchTerms": [
         "musculoskeletal",
         "plantar fasciitis",
@@ -4030,10 +3821,7 @@
       "id": 142,
       "diagnosticCode": "5270",
       "conditionName": "Ankle, ankylosis",
-      "aliases": [
-        "ankle, ankylosis",
-        "ankle ankylosis"
-      ],
+      "aliases": ["ankle, ankylosis", "ankle ankylosis"],
       "searchTerms": [
         "ankle, ankylosis",
         "musculoskeletal",
@@ -4059,11 +3847,7 @@
       "id": 143,
       "diagnosticCode": "5271",
       "conditionName": "Ankle, limited motion",
-      "aliases": [
-        "ALM",
-        "ankle, limited motion",
-        "ankle limited motion"
-      ],
+      "aliases": ["ALM", "ankle, limited motion", "ankle limited motion"],
       "searchTerms": [
         "musculoskeletal",
         "limited",
@@ -4136,14 +3920,8 @@
       "id": 146,
       "diagnosticCode": "5274",
       "conditionName": "Astragalectomy",
-      "aliases": [
-        "astragalectomy"
-      ],
-      "searchTerms": [
-        "astragalectomy",
-        "musculoskeletal",
-        "5274"
-      ],
+      "aliases": ["astragalectomy"],
+      "searchTerms": ["astragalectomy", "musculoskeletal", "5274"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -4178,10 +3956,7 @@
       "id": 148,
       "diagnosticCode": "5276",
       "conditionName": "Flatfoot, acquired",
-      "aliases": [
-        "flatfoot, acquired",
-        "flatfoot acquired"
-      ],
+      "aliases": ["flatfoot, acquired", "flatfoot acquired"],
       "searchTerms": [
         "musculoskeletal",
         "flatfoot",
@@ -4209,11 +3984,7 @@
       "id": 149,
       "diagnosticCode": "5277",
       "conditionName": "Weak foot, bilateral",
-      "aliases": [
-        "WFB",
-        "weak foot, bilateral",
-        "weak foot bilateral"
-      ],
+      "aliases": ["WFB", "weak foot, bilateral", "weak foot bilateral"],
       "searchTerms": [
         "5277",
         "musculoskeletal",
@@ -4232,11 +4003,7 @@
       "id": 150,
       "diagnosticCode": "5278",
       "conditionName": "Claw foot (pes cavus), acquired",
-      "aliases": [
-        "CF(CA",
-        "claw foot (pes",
-        "claw foot (pes cavus), acquired"
-      ],
+      "aliases": ["CF(CA", "claw foot (pes", "claw foot (pes cavus), acquired"],
       "searchTerms": [
         "musculoskeletal",
         "cavus",
@@ -4280,9 +4047,7 @@
       "id": 152,
       "diagnosticCode": "5280",
       "conditionName": "Hallux valgus",
-      "aliases": [
-        "hallux valgus"
-      ],
+      "aliases": ["hallux valgus"],
       "searchTerms": [
         "musculoskeletal",
         "valgus",
@@ -4300,9 +4065,7 @@
       "id": 153,
       "diagnosticCode": "5281",
       "conditionName": "Hallux rigidus",
-      "aliases": [
-        "hallux rigidus"
-      ],
+      "aliases": ["hallux rigidus"],
       "searchTerms": [
         "musculoskeletal",
         "hallux rigidus",
@@ -4320,16 +4083,8 @@
       "id": 154,
       "diagnosticCode": "5282",
       "conditionName": "Hammer toe",
-      "aliases": [
-        "hammer toe",
-        "hammer"
-      ],
-      "searchTerms": [
-        "hammer toe",
-        "musculoskeletal",
-        "hammer",
-        "5282"
-      ],
+      "aliases": ["hammer toe", "hammer"],
+      "searchTerms": ["hammer toe", "musculoskeletal", "hammer", "5282"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.71a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -4363,11 +4118,7 @@
       "id": 156,
       "diagnosticCode": "5284",
       "conditionName": "Foot injuries, other",
-      "aliases": [
-        "foot injuries",
-        "foot injuries, other",
-        "FIO"
-      ],
+      "aliases": ["foot injuries", "foot injuries, other", "FIO"],
       "searchTerms": [
         "musculoskeletal",
         "foot injuries, other",
@@ -4386,11 +4137,7 @@
       "id": 157,
       "diagnosticCode": "5296",
       "conditionName": "Skull, loss of part of",
-      "aliases": [
-        "skull loss part",
-        "SLP",
-        "skull, loss of part of"
-      ],
+      "aliases": ["skull loss part", "SLP", "skull, loss of part of"],
       "searchTerms": [
         "loss",
         "musculoskeletal",
@@ -4411,9 +4158,7 @@
           "30": "Area intermediate",
           "10": "Area smaller than the size of a 25-cent piece or 0.716 in² (4.619 cm²)"
         },
-        "notes": [
-          "Rate separately for intracranial complications."
-        ]
+        "notes": ["Rate separately for intracranial complications."]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -4421,11 +4166,7 @@
       "id": 158,
       "diagnosticCode": "5297",
       "conditionName": "Ribs, removal of",
-      "aliases": [
-        "ribs, removal of",
-        "RR",
-        "ribs removal"
-      ],
+      "aliases": ["ribs, removal of", "RR", "ribs removal"],
       "searchTerms": [
         "ribs",
         "ribs, removal of",
@@ -4453,11 +4194,7 @@
       "id": 159,
       "diagnosticCode": "5298",
       "conditionName": "Complex Regional Pain Syndrome (CRPS)",
-      "aliases": [
-        "CRPS",
-        "RSD",
-        "reflex sympathetic dystrophy"
-      ],
+      "aliases": ["CRPS", "RSD", "reflex sympathetic dystrophy"],
       "searchTerms": [
         "complex regional pain syndrome",
         "CRPS",
@@ -4519,11 +4256,7 @@
       "id": 161,
       "diagnosticCode": "5302",
       "conditionName": "Group II: Depression of arm",
-      "aliases": [
-        "group depression",
-        "GIDA",
-        "group ii: depression of arm"
-      ],
+      "aliases": ["group depression", "GIDA", "group ii: depression of arm"],
       "searchTerms": [
         "group",
         "musculoskeletal",
@@ -4615,11 +4348,7 @@
       "id": 164,
       "diagnosticCode": "5305",
       "conditionName": "Group V: Elbow supination",
-      "aliases": [
-        "group v: elbow supination",
-        "GES",
-        "group elbow supination"
-      ],
+      "aliases": ["group v: elbow supination", "GES", "group elbow supination"],
       "searchTerms": [
         "group",
         "musculoskeletal",
@@ -4748,11 +4477,7 @@
       "id": 168,
       "diagnosticCode": "5309",
       "conditionName": "Group IX: Forearm muscles",
-      "aliases": [
-        "GIFM",
-        "group forearm muscles",
-        "group ix: forearm muscles"
-      ],
+      "aliases": ["GIFM", "group forearm muscles", "group ix: forearm muscles"],
       "searchTerms": [
         "group",
         "musculoskeletal",
@@ -4818,10 +4543,7 @@
       "id": 171,
       "diagnosticCode": "5312",
       "conditionName": "Group XII: Dorsiflexion",
-      "aliases": [
-        "GXD",
-        "group xii: dorsiflexion"
-      ],
+      "aliases": ["GXD", "group xii: dorsiflexion"],
       "searchTerms": [
         "group",
         "musculoskeletal",
@@ -4889,11 +4611,7 @@
       "id": 174,
       "diagnosticCode": "5315",
       "conditionName": "Group XV: Adduction of hip",
-      "aliases": [
-        "GXAH",
-        "group adduction",
-        "group xv: adduction of hip"
-      ],
+      "aliases": ["GXAH", "group adduction", "group xv: adduction of hip"],
       "searchTerms": [
         "group",
         "5315",
@@ -4911,11 +4629,7 @@
       "id": 175,
       "diagnosticCode": "5316",
       "conditionName": "Group XVI: Flexion of hip",
-      "aliases": [
-        "group xvi: flexion of hip",
-        "GXFH",
-        "group xvi: flexion"
-      ],
+      "aliases": ["group xvi: flexion of hip", "GXFH", "group xvi: flexion"],
       "searchTerms": [
         "group xvi: flexion of hip",
         "group",
@@ -5041,10 +4755,7 @@
       "id": 180,
       "diagnosticCode": "5321",
       "conditionName": "Group XXI: Respiration",
-      "aliases": [
-        "GXR",
-        "group xxi: respiration"
-      ],
+      "aliases": ["GXR", "group xxi: respiration"],
       "searchTerms": [
         "group",
         "musculoskeletal",
@@ -5113,11 +4824,7 @@
       "id": 183,
       "diagnosticCode": "5324",
       "conditionName": "Diaphragm, rupture of",
-      "aliases": [
-        "DR",
-        "diaphragm rupture",
-        "diaphragm, rupture of"
-      ],
+      "aliases": ["DR", "diaphragm rupture", "diaphragm, rupture of"],
       "searchTerms": [
         "musculoskeletal",
         "rupture",
@@ -5163,9 +4870,7 @@
       "id": 185,
       "diagnosticCode": "5326",
       "conditionName": "Muscle hernia",
-      "aliases": [
-        "muscle hernia"
-      ],
+      "aliases": ["muscle hernia"],
       "searchTerms": [
         "muscle hernia",
         "musculoskeletal",
@@ -5229,11 +4934,7 @@
       "id": 188,
       "diagnosticCode": "5329",
       "conditionName": "Sarcoma, soft tissue",
-      "aliases": [
-        "SST",
-        "sarcoma soft tissue",
-        "sarcoma, soft tissue"
-      ],
+      "aliases": ["SST", "sarcoma soft tissue", "sarcoma, soft tissue"],
       "searchTerms": [
         "5329",
         "musculoskeletal",
@@ -5274,9 +4975,7 @@
       "id": 190,
       "diagnosticCode": "5331",
       "conditionName": "Compartment syndrome",
-      "aliases": [
-        "compartment syndrome"
-      ],
+      "aliases": ["compartment syndrome"],
       "searchTerms": [
         "musculoskeletal",
         "5331",
@@ -5330,14 +5029,8 @@
       "id": 192,
       "diagnosticCode": "6001",
       "conditionName": "Keratopathy",
-      "aliases": [
-        "keratopathy"
-      ],
-      "searchTerms": [
-        "eye vision",
-        "keratopathy",
-        "6001"
-      ],
+      "aliases": ["keratopathy"],
+      "searchTerms": ["eye vision", "keratopathy", "6001"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5354,12 +5047,7 @@
       "id": 193,
       "diagnosticCode": "6002",
       "conditionName": "Diabetes Mellitus",
-      "aliases": [
-        "diabetes",
-        "DM",
-        "type 1 diabetes",
-        "type 2 diabetes"
-      ],
+      "aliases": ["diabetes", "DM", "type 1 diabetes", "type 2 diabetes"],
       "searchTerms": [
         "diabetes",
         "diabetes mellitus",
@@ -5399,14 +5087,8 @@
       "id": 194,
       "diagnosticCode": "6003",
       "conditionName": "Iritis",
-      "aliases": [
-        "iritis"
-      ],
-      "searchTerms": [
-        "eye vision",
-        "6003",
-        "iritis"
-      ],
+      "aliases": ["iritis"],
+      "searchTerms": ["eye vision", "6003", "iritis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5423,14 +5105,8 @@
       "id": 195,
       "diagnosticCode": "6004",
       "conditionName": "Cyclitis",
-      "aliases": [
-        "cyclitis"
-      ],
-      "searchTerms": [
-        "6004",
-        "eye vision",
-        "cyclitis"
-      ],
+      "aliases": ["cyclitis"],
+      "searchTerms": ["6004", "eye vision", "cyclitis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5447,14 +5123,8 @@
       "id": 196,
       "diagnosticCode": "6005",
       "conditionName": "Choroiditis",
-      "aliases": [
-        "choroiditis"
-      ],
-      "searchTerms": [
-        "eye vision",
-        "6005",
-        "choroiditis"
-      ],
+      "aliases": ["choroiditis"],
+      "searchTerms": ["eye vision", "6005", "choroiditis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5505,9 +5175,7 @@
       "id": 198,
       "diagnosticCode": "6007",
       "conditionName": "Intraocular hemorrhage",
-      "aliases": [
-        "intraocular hemorrhage"
-      ],
+      "aliases": ["intraocular hemorrhage"],
       "searchTerms": [
         "6007",
         "hemorrhage",
@@ -5531,11 +5199,7 @@
       "id": 199,
       "diagnosticCode": "6008",
       "conditionName": "Detachment of retina",
-      "aliases": [
-        "detachment retina",
-        "detachment of retina",
-        "DR"
-      ],
+      "aliases": ["detachment retina", "detachment of retina", "DR"],
       "searchTerms": [
         "detachment",
         "detachment of retina",
@@ -5563,11 +5227,7 @@
       "id": 200,
       "diagnosticCode": "6009",
       "conditionName": "Unhealed eye injury",
-      "aliases": [
-        "unhealed injury",
-        "UEI",
-        "unhealed eye injury"
-      ],
+      "aliases": ["unhealed injury", "UEI", "unhealed eye injury"],
       "searchTerms": [
         "unhealed",
         "6009",
@@ -5591,11 +5251,7 @@
       "id": 201,
       "diagnosticCode": "6010",
       "conditionName": "Tuberculosis of eye",
-      "aliases": [
-        "tuberculosis",
-        "TE",
-        "tuberculosis of eye"
-      ],
+      "aliases": ["tuberculosis", "TE", "tuberculosis of eye"],
       "searchTerms": [
         "tuberculosis",
         "6010",
@@ -5650,9 +5306,7 @@
       "id": 203,
       "diagnosticCode": "6012",
       "conditionName": "Angle-closure glaucoma",
-      "aliases": [
-        "angle-closure glaucoma"
-      ],
+      "aliases": ["angle-closure glaucoma"],
       "searchTerms": [
         "angle-closure glaucoma",
         "6012",
@@ -5676,9 +5330,7 @@
       "id": 204,
       "diagnosticCode": "6013",
       "conditionName": "Open-angle glaucoma",
-      "aliases": [
-        "open-angle glaucoma"
-      ],
+      "aliases": ["open-angle glaucoma"],
       "searchTerms": [
         "6013",
         "eye vision",
@@ -5766,10 +5418,7 @@
       "id": 207,
       "diagnosticCode": "6016",
       "conditionName": "Nystagmus, central",
-      "aliases": [
-        "nystagmus central",
-        "nystagmus, central"
-      ],
+      "aliases": ["nystagmus central", "nystagmus, central"],
       "searchTerms": [
         "6016",
         "central",
@@ -5822,11 +5471,7 @@
       "id": 209,
       "diagnosticCode": "6018",
       "conditionName": "Conjunctivitis, other, chronic",
-      "aliases": [
-        "COC",
-        "conjunctivitis",
-        "conjunctivitis, other, chronic"
-      ],
+      "aliases": ["COC", "conjunctivitis", "conjunctivitis, other, chronic"],
       "searchTerms": [
         "other",
         "conjunctivitis, other, chronic",
@@ -5881,14 +5526,8 @@
       "id": 211,
       "diagnosticCode": "6020",
       "conditionName": "Ectropion",
-      "aliases": [
-        "ectropion"
-      ],
-      "searchTerms": [
-        "6020",
-        "eye vision",
-        "ectropion"
-      ],
+      "aliases": ["ectropion"],
+      "searchTerms": ["6020", "eye vision", "ectropion"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5905,14 +5544,8 @@
       "id": 212,
       "diagnosticCode": "6021",
       "conditionName": "Entropion",
-      "aliases": [
-        "entropion"
-      ],
-      "searchTerms": [
-        "6021",
-        "entropion",
-        "eye vision"
-      ],
+      "aliases": ["entropion"],
+      "searchTerms": ["6021", "entropion", "eye vision"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5929,14 +5562,8 @@
       "id": 213,
       "diagnosticCode": "6022",
       "conditionName": "Lagophthalmos",
-      "aliases": [
-        "lagophthalmos"
-      ],
-      "searchTerms": [
-        "lagophthalmos",
-        "6022",
-        "eye vision"
-      ],
+      "aliases": ["lagophthalmos"],
+      "searchTerms": ["lagophthalmos", "6022", "eye vision"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -5953,11 +5580,7 @@
       "id": 214,
       "diagnosticCode": "6023",
       "conditionName": "Eyebrows, loss of",
-      "aliases": [
-        "EL",
-        "eyebrows, loss of",
-        "eyebrows loss"
-      ],
+      "aliases": ["EL", "eyebrows, loss of", "eyebrows loss"],
       "searchTerms": [
         "loss",
         "6023",
@@ -5981,11 +5604,7 @@
       "id": 215,
       "diagnosticCode": "6024",
       "conditionName": "Eyelashes, loss of",
-      "aliases": [
-        "EL",
-        "eyelashes loss",
-        "eyelashes, loss of"
-      ],
+      "aliases": ["EL", "eyelashes loss", "eyelashes, loss of"],
       "searchTerms": [
         "loss",
         "eyelashes, loss of",
@@ -6040,11 +5659,7 @@
       "id": 217,
       "diagnosticCode": "6026",
       "conditionName": "Glaucoma",
-      "aliases": [
-        "glaucoma",
-        "increased eye pressure",
-        "optic nerve glaucoma"
-      ],
+      "aliases": ["glaucoma", "increased eye pressure", "optic nerve glaucoma"],
       "searchTerms": [
         "glaucoma",
         "eye pressure",
@@ -6078,11 +5693,7 @@
       "id": 218,
       "diagnosticCode": "6027",
       "conditionName": "Cataract",
-      "aliases": [
-        "cataract",
-        "lens clouding",
-        "cloudy lens"
-      ],
+      "aliases": ["cataract", "lens clouding", "cloudy lens"],
       "searchTerms": [
         "cataract",
         "lens clouding",
@@ -6139,14 +5750,8 @@
       "id": 220,
       "diagnosticCode": "6029",
       "conditionName": "Aphakia",
-      "aliases": [
-        "aphakia"
-      ],
-      "searchTerms": [
-        "aphakia",
-        "6029",
-        "eye vision"
-      ],
+      "aliases": ["aphakia"],
+      "searchTerms": ["aphakia", "6029", "eye vision"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -6194,14 +5799,8 @@
       "id": 222,
       "diagnosticCode": "6031",
       "conditionName": "Dacryocystitis",
-      "aliases": [
-        "dacryocystitis"
-      ],
-      "searchTerms": [
-        "eye vision",
-        "6031",
-        "dacryocystitis"
-      ],
+      "aliases": ["dacryocystitis"],
+      "searchTerms": ["eye vision", "6031", "dacryocystitis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -6218,11 +5817,7 @@
       "id": 223,
       "diagnosticCode": "6032",
       "conditionName": "Eyelids, loss of portion of",
-      "aliases": [
-        "eyelids loss portion",
-        "eyelids, loss of portion of",
-        "ELP"
-      ],
+      "aliases": ["eyelids loss portion", "eyelids, loss of portion of", "ELP"],
       "searchTerms": [
         "eyelids, loss of portion of",
         "loss",
@@ -6279,14 +5874,8 @@
       "id": 225,
       "diagnosticCode": "6034",
       "conditionName": "Pterygium",
-      "aliases": [
-        "pterygium"
-      ],
-      "searchTerms": [
-        "pterygium",
-        "6034",
-        "eye vision"
-      ],
+      "aliases": ["pterygium"],
+      "searchTerms": ["pterygium", "6034", "eye vision"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -6303,14 +5892,8 @@
       "id": 226,
       "diagnosticCode": "6035",
       "conditionName": "Keratoconus",
-      "aliases": [
-        "keratoconus"
-      ],
-      "searchTerms": [
-        "keratoconus",
-        "eye vision",
-        "6035"
-      ],
+      "aliases": ["keratoconus"],
+      "searchTerms": ["keratoconus", "eye vision", "6035"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -6360,9 +5943,7 @@
       "id": 228,
       "diagnosticCode": "6040",
       "conditionName": "Diabetic retinopathy",
-      "aliases": [
-        "diabetic retinopathy"
-      ],
+      "aliases": ["diabetic retinopathy"],
       "searchTerms": [
         "diabetic",
         "diabetic retinopathy",
@@ -6390,9 +5971,7 @@
       "id": 229,
       "diagnosticCode": "6042",
       "conditionName": "Retinal dystrophy",
-      "aliases": [
-        "retinal dystrophy"
-      ],
+      "aliases": ["retinal dystrophy"],
       "searchTerms": [
         "6042",
         "retinal dystrophy",
@@ -6419,9 +5998,7 @@
       "id": 230,
       "diagnosticCode": "6046",
       "conditionName": "Post-chiasmal disorders",
-      "aliases": [
-        "post-chiasmal disorders"
-      ],
+      "aliases": ["post-chiasmal disorders"],
       "searchTerms": [
         "post-chiasmal disorders",
         "post-chiasmal",
@@ -6448,11 +6025,7 @@
       "id": 231,
       "diagnosticCode": "6061",
       "conditionName": "Anatomical loss, both eyes",
-      "aliases": [
-        "anatomical loss, both eyes",
-        "ALBE",
-        "anatomical loss both"
-      ],
+      "aliases": ["anatomical loss, both eyes", "ALBE", "anatomical loss both"],
       "searchTerms": [
         "loss",
         "both",
@@ -6630,11 +6203,7 @@
       "id": 237,
       "diagnosticCode": "6067",
       "conditionName": "Blindness one eye, other 5/200",
-      "aliases": [
-        "BOEO5",
-        "blindness one eye, other 5/200",
-        "blindness 5/200"
-      ],
+      "aliases": ["BOEO5", "blindness one eye, other 5/200", "blindness 5/200"],
       "searchTerms": [
         "6067",
         "other",
@@ -6717,11 +6286,7 @@
       "id": 240,
       "diagnosticCode": "6070",
       "conditionName": "Blindness one eye, other 20/40",
-      "aliases": [
-        "blindness one eye, other 20/40",
-        "BOEO2",
-        "blindness 20/40"
-      ],
+      "aliases": ["blindness one eye, other 20/40", "BOEO2", "blindness 20/40"],
       "searchTerms": [
         "20/40",
         "other",
@@ -7050,14 +6615,8 @@
       "id": 251,
       "diagnosticCode": "6081",
       "conditionName": "Scotoma",
-      "aliases": [
-        "scotoma"
-      ],
-      "searchTerms": [
-        "eye vision",
-        "scotoma",
-        "6081"
-      ],
+      "aliases": ["scotoma"],
+      "searchTerms": ["eye vision", "scotoma", "6081"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7074,14 +6633,8 @@
       "id": 252,
       "diagnosticCode": "6090",
       "conditionName": "Diplopia",
-      "aliases": [
-        "diplopia"
-      ],
-      "searchTerms": [
-        "6090",
-        "eye vision",
-        "diplopia"
-      ],
+      "aliases": ["diplopia"],
+      "searchTerms": ["6090", "eye vision", "diplopia"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7099,14 +6652,8 @@
       "id": 253,
       "diagnosticCode": "6091",
       "conditionName": "Symblepharon",
-      "aliases": [
-        "symblepharon"
-      ],
-      "searchTerms": [
-        "symblepharon",
-        "6091",
-        "eye vision"
-      ],
+      "aliases": ["symblepharon"],
+      "searchTerms": ["symblepharon", "6091", "eye vision"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.79",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7271,9 +6818,7 @@
         "ratings": {
           "10": "With retraction of tympanic membrane or adhesions in the middle ear"
         },
-        "notes": [
-          "Rate hearing loss separately under diagnostic code 6100"
-        ]
+        "notes": ["Rate hearing loss separately under diagnostic code 6100"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7281,14 +6826,8 @@
       "id": 258,
       "diagnosticCode": "6202",
       "conditionName": "Otosclerosis",
-      "aliases": [
-        "otosclerosis"
-      ],
-      "searchTerms": [
-        "ear hearing",
-        "otosclerosis",
-        "6202"
-      ],
+      "aliases": ["otosclerosis"],
+      "searchTerms": ["ear hearing", "otosclerosis", "6202"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.87 or § 4.87a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7306,10 +6845,7 @@
       "id": 259,
       "diagnosticCode": "6204",
       "conditionName": "Peripheral vestibular disorders",
-      "aliases": [
-        "peripheral vestibular disorders",
-        "PVD"
-      ],
+      "aliases": ["peripheral vestibular disorders", "PVD"],
       "searchTerms": [
         "vestibular",
         "peripheral vestibular disorders",
@@ -7339,9 +6875,7 @@
       "id": 260,
       "diagnosticCode": "6205",
       "conditionName": "Meniere's syndrome",
-      "aliases": [
-        "meniere's syndrome"
-      ],
+      "aliases": ["meniere's syndrome"],
       "searchTerms": [
         "meniere's",
         "6205",
@@ -7372,11 +6906,7 @@
       "id": 261,
       "diagnosticCode": "6207",
       "conditionName": "Loss of auricle",
-      "aliases": [
-        "loss auricle",
-        "loss of auricle",
-        "LA"
-      ],
+      "aliases": ["loss auricle", "loss of auricle", "LA"],
       "searchTerms": [
         "loss",
         "6207",
@@ -7394,9 +6924,7 @@
           "30": "Complete loss of both auricles (external ears)",
           "10": "Loss of one auricle"
         },
-        "notes": [
-          "Rate hearing loss separately under diagnostic code 6100"
-        ]
+        "notes": ["Rate hearing loss separately under diagnostic code 6100"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7404,11 +6932,7 @@
       "id": 262,
       "diagnosticCode": "6208",
       "conditionName": "Malignant neoplasm of ear",
-      "aliases": [
-        "malignant neoplasm",
-        "MNE",
-        "malignant neoplasm of ear"
-      ],
+      "aliases": ["malignant neoplasm", "MNE", "malignant neoplasm of ear"],
       "searchTerms": [
         "malignant neoplasm of ear",
         "6208",
@@ -7436,11 +6960,7 @@
       "id": 263,
       "diagnosticCode": "6209",
       "conditionName": "Benign neoplasm of ear",
-      "aliases": [
-        "BNE",
-        "benign neoplasm",
-        "benign neoplasm of ear"
-      ],
+      "aliases": ["BNE", "benign neoplasm", "benign neoplasm of ear"],
       "searchTerms": [
         "6209",
         "benign neoplasm of ear",
@@ -7457,9 +6977,7 @@
         "ratings": {
           "10": "With documented benign neoplasm of ear producing functional impairment"
         },
-        "notes": [
-          "Rate hearing loss separately under diagnostic code 6100"
-        ]
+        "notes": ["Rate hearing loss separately under diagnostic code 6100"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7467,11 +6985,7 @@
       "id": 264,
       "diagnosticCode": "6210",
       "conditionName": "Chronic otitis externa",
-      "aliases": [
-        "chronic otitis externa",
-        "COE",
-        "otitis externa"
-      ],
+      "aliases": ["chronic otitis externa", "COE", "otitis externa"],
       "searchTerms": [
         "otitis",
         "6210",
@@ -7518,9 +7032,7 @@
         "ratings": {
           "10": "With persistent perforation of tympanic membrane"
         },
-        "notes": [
-          "Rate hearing loss separately under diagnostic code 6100"
-        ]
+        "notes": ["Rate hearing loss separately under diagnostic code 6100"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7616,9 +7128,7 @@
       "ratingCriteria": {
         "type": "rated-as",
         "ratedUnder": "Rate hearing loss under diagnostic code 6100 using Table VI based on audiometric testing.",
-        "notes": [
-          "Use the same criteria and tables as diagnostic code 6100"
-        ]
+        "notes": ["Use the same criteria and tables as diagnostic code 6100"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7677,11 +7187,7 @@
       "id": 269,
       "diagnosticCode": "6268",
       "conditionName": "Meniere's Syndrome",
-      "aliases": [
-        "Meniere's disease",
-        "Meniere syndrome",
-        "episodic vertigo"
-      ],
+      "aliases": ["Meniere's disease", "Meniere syndrome", "episodic vertigo"],
       "searchTerms": [
         "Meniere's",
         "Meniere disease",
@@ -7789,16 +7295,8 @@
       "id": 272,
       "diagnosticCode": "6300",
       "conditionName": "Tuberculosis",
-      "aliases": [
-        "TB",
-        "tuberculous",
-        "tuberculosis"
-      ],
-      "searchTerms": [
-        "tuberculosis",
-        "TB",
-        "tuberculous disease"
-      ],
+      "aliases": ["TB", "tuberculous", "tuberculosis"],
+      "searchTerms": ["tuberculosis", "TB", "tuberculous disease"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.88",
       "ratingSchedule": "38 CFR § 4.88",
       "documentationRequirements": "Documentation must include: chest X-ray findings, sputum cultures, PPD or Quantiferon test results, treatment history, active vs inactive status, and any residual complications.",
@@ -7832,9 +7330,7 @@
       "id": 273,
       "diagnosticCode": "6301",
       "conditionName": "Visceral Leishmaniasis",
-      "aliases": [
-        "visceral leishmaniasis"
-      ],
+      "aliases": ["visceral leishmaniasis"],
       "searchTerms": [
         "leishmaniasis",
         "6301",
@@ -7861,10 +7357,7 @@
       "id": 274,
       "diagnosticCode": "6302",
       "conditionName": "Leprosy (Hansen's Disease)",
-      "aliases": [
-        "leprosy (hansen's disease)",
-        "L(D"
-      ],
+      "aliases": ["leprosy (hansen's disease)", "L(D"],
       "searchTerms": [
         "disease",
         "leprosy",
@@ -7883,9 +7376,7 @@
           "100": "Active, progressive leprosy with systemic involvement",
           "10": "With skin lesions or peripheral nerve involvement"
         },
-        "notes": [
-          "Rate complications such as neuropathy separately"
-        ]
+        "notes": ["Rate complications such as neuropathy separately"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -7893,14 +7384,8 @@
       "id": 275,
       "diagnosticCode": "6304",
       "conditionName": "Malaria",
-      "aliases": [
-        "malaria"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "malaria",
-        "6304"
-      ],
+      "aliases": ["malaria"],
+      "searchTerms": ["infectious disease", "malaria", "6304"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7949,14 +7434,8 @@
       "id": 277,
       "diagnosticCode": "6306",
       "conditionName": "Bartonellosis",
-      "aliases": [
-        "bartonellosis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "bartonellosis",
-        "6306"
-      ],
+      "aliases": ["bartonellosis"],
+      "searchTerms": ["infectious disease", "bartonellosis", "6306"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -7976,14 +7455,8 @@
       "id": 278,
       "diagnosticCode": "6307",
       "conditionName": "Plague",
-      "aliases": [
-        "plague"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "6307",
-        "plague"
-      ],
+      "aliases": ["plague"],
+      "searchTerms": ["infectious disease", "6307", "plague"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8002,9 +7475,7 @@
       "id": 279,
       "diagnosticCode": "6308",
       "conditionName": "Relapsing fever",
-      "aliases": [
-        "relapsing fever"
-      ],
+      "aliases": ["relapsing fever"],
       "searchTerms": [
         "6308",
         "fever",
@@ -8029,9 +7500,7 @@
       "id": 280,
       "diagnosticCode": "6309",
       "conditionName": "Rheumatic fever",
-      "aliases": [
-        "rheumatic fever"
-      ],
+      "aliases": ["rheumatic fever"],
       "searchTerms": [
         "6309",
         "fever",
@@ -8053,14 +7522,8 @@
       "id": 281,
       "diagnosticCode": "6310",
       "conditionName": "Syphilis",
-      "aliases": [
-        "syphilis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "6310",
-        "syphilis"
-      ],
+      "aliases": ["syphilis"],
+      "searchTerms": ["infectious disease", "6310", "syphilis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8075,10 +7538,7 @@
       "id": 282,
       "diagnosticCode": "6311",
       "conditionName": "Tuberculosis, miliary",
-      "aliases": [
-        "tuberculosis, miliary",
-        "tuberculosis miliary"
-      ],
+      "aliases": ["tuberculosis, miliary", "tuberculosis miliary"],
       "searchTerms": [
         "6311",
         "tuberculosis, miliary",
@@ -8106,10 +7566,7 @@
       "id": 283,
       "diagnosticCode": "6312",
       "conditionName": "Nontuberculosis mycobacterium infection",
-      "aliases": [
-        "nontuberculosis mycobacterium infection",
-        "NMI"
-      ],
+      "aliases": ["nontuberculosis mycobacterium infection", "NMI"],
       "searchTerms": [
         "6312",
         "mycobacterium",
@@ -8137,14 +7594,8 @@
       "id": 284,
       "diagnosticCode": "6313",
       "conditionName": "Avitaminosis",
-      "aliases": [
-        "avitaminosis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "avitaminosis",
-        "6313"
-      ],
+      "aliases": ["avitaminosis"],
+      "searchTerms": ["infectious disease", "avitaminosis", "6313"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8159,14 +7610,8 @@
       "id": 285,
       "diagnosticCode": "6314",
       "conditionName": "Beriberi",
-      "aliases": [
-        "beriberi"
-      ],
-      "searchTerms": [
-        "6314",
-        "infectious disease",
-        "beriberi"
-      ],
+      "aliases": ["beriberi"],
+      "searchTerms": ["6314", "infectious disease", "beriberi"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8186,14 +7631,8 @@
       "id": 286,
       "diagnosticCode": "6315",
       "conditionName": "Pellagra",
-      "aliases": [
-        "pellagra"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "6315",
-        "pellagra"
-      ],
+      "aliases": ["pellagra"],
+      "searchTerms": ["infectious disease", "6315", "pellagra"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8212,14 +7651,8 @@
       "id": 287,
       "diagnosticCode": "6316",
       "conditionName": "Brucellosis",
-      "aliases": [
-        "brucellosis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "brucellosis",
-        "6316"
-      ],
+      "aliases": ["brucellosis"],
+      "searchTerms": ["infectious disease", "brucellosis", "6316"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8273,14 +7706,8 @@
       "id": 289,
       "diagnosticCode": "6318",
       "conditionName": "Melioidosis",
-      "aliases": [
-        "melioidosis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "melioidosis",
-        "6318"
-      ],
+      "aliases": ["melioidosis"],
+      "searchTerms": ["infectious disease", "melioidosis", "6318"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8300,9 +7727,7 @@
       "id": 290,
       "diagnosticCode": "6319",
       "conditionName": "Lyme disease",
-      "aliases": [
-        "lyme disease"
-      ],
+      "aliases": ["lyme disease"],
       "searchTerms": [
         "lyme",
         "disease",
@@ -8330,9 +7755,7 @@
       "id": 291,
       "diagnosticCode": "6320",
       "conditionName": "Parasitic diseases",
-      "aliases": [
-        "parasitic diseases"
-      ],
+      "aliases": ["parasitic diseases"],
       "searchTerms": [
         "diseases",
         "parasitic",
@@ -8388,14 +7811,8 @@
       "id": 293,
       "diagnosticCode": "6326",
       "conditionName": "Schistosomiasis",
-      "aliases": [
-        "schistosomiasis"
-      ],
-      "searchTerms": [
-        "infectious disease",
-        "schistosomiasis",
-        "6326"
-      ],
+      "aliases": ["schistosomiasis"],
+      "searchTerms": ["infectious disease", "schistosomiasis", "6326"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -8451,10 +7868,7 @@
       "id": 295,
       "diagnosticCode": "6330",
       "conditionName": "Campylobacter jejuni infection",
-      "aliases": [
-        "CJI",
-        "campylobacter jejuni infection"
-      ],
+      "aliases": ["CJI", "campylobacter jejuni infection"],
       "searchTerms": [
         "campylobacter",
         "jejuni",
@@ -8519,10 +7933,7 @@
       "id": 297,
       "diagnosticCode": "6333",
       "conditionName": "Nontyphoid salmonella infections",
-      "aliases": [
-        "NSI",
-        "nontyphoid salmonella infections"
-      ],
+      "aliases": ["NSI", "nontyphoid salmonella infections"],
       "searchTerms": [
         "salmonella",
         "infections",
@@ -8550,9 +7961,7 @@
       "id": 298,
       "diagnosticCode": "6334",
       "conditionName": "Shigella infections",
-      "aliases": [
-        "shigella infections"
-      ],
+      "aliases": ["shigella infections"],
       "searchTerms": [
         "infections",
         "6334",
@@ -8578,11 +7987,7 @@
       "id": 299,
       "diagnosticCode": "6335",
       "conditionName": "West Nile virus infection",
-      "aliases": [
-        "west nile virus infection",
-        "west nile virus",
-        "WNVI"
-      ],
+      "aliases": ["west nile virus infection", "west nile virus", "WNVI"],
       "searchTerms": [
         "west",
         "6335",
@@ -8612,11 +8017,7 @@
       "id": 300,
       "diagnosticCode": "6350",
       "conditionName": "Systemic Lupus Erythematosus",
-      "aliases": [
-        "SLE",
-        "lupus",
-        "lupus erythematosus"
-      ],
+      "aliases": ["SLE", "lupus", "lupus erythematosus"],
       "searchTerms": [
         "systemic lupus erythematosus",
         "SLE",
@@ -8653,9 +8054,7 @@
       "id": 301,
       "diagnosticCode": "6351",
       "conditionName": "HIV-Related Illness",
-      "aliases": [
-        "hiv-related illness"
-      ],
+      "aliases": ["hiv-related illness"],
       "searchTerms": [
         "hiv-related",
         "infectious disease",
@@ -8770,11 +8169,7 @@
       "id": 304,
       "diagnosticCode": "6504",
       "conditionName": "Nose, loss of part of, or scars",
-      "aliases": [
-        "NLPS",
-        "nose, loss of part of, or scars",
-        "nose loss part"
-      ],
+      "aliases": ["NLPS", "nose, loss of part of, or scars", "nose loss part"],
       "searchTerms": [
         "loss",
         "nose, loss of part of, or scars",
@@ -8800,11 +8195,7 @@
       "id": 305,
       "diagnosticCode": "6510",
       "conditionName": "Sinusitis (Chronic)",
-      "aliases": [
-        "chronic sinusitis",
-        "sinus infection",
-        "rhinosinusitis"
-      ],
+      "aliases": ["chronic sinusitis", "sinus infection", "rhinosinusitis"],
       "searchTerms": [
         "chronic sinusitis",
         "sinus infection",
@@ -8847,11 +8238,7 @@
       "id": 306,
       "diagnosticCode": "6511",
       "conditionName": "Sinusitis, ethmoid, chronic",
-      "aliases": [
-        "SEC",
-        "sinusitis ethmoid",
-        "sinusitis, ethmoid, chronic"
-      ],
+      "aliases": ["SEC", "sinusitis ethmoid", "sinusitis, ethmoid, chronic"],
       "searchTerms": [
         "6511",
         "sinusitis",
@@ -8874,11 +8261,7 @@
       "id": 307,
       "diagnosticCode": "6512",
       "conditionName": "Sinusitis, frontal, chronic",
-      "aliases": [
-        "sinusitis, frontal, chronic",
-        "SFC",
-        "sinusitis frontal"
-      ],
+      "aliases": ["sinusitis, frontal, chronic", "SFC", "sinusitis frontal"],
       "searchTerms": [
         "sinusitis",
         "6512",
@@ -8928,11 +8311,7 @@
       "id": 309,
       "diagnosticCode": "6514",
       "conditionName": "Sinusitis, sphenoid, chronic",
-      "aliases": [
-        "SSC",
-        "sinusitis, sphenoid, chronic",
-        "sinusitis sphenoid"
-      ],
+      "aliases": ["SSC", "sinusitis, sphenoid, chronic", "sinusitis sphenoid"],
       "searchTerms": [
         "sinusitis",
         "6514",
@@ -8955,10 +8334,7 @@
       "id": 310,
       "diagnosticCode": "6515",
       "conditionName": "Laryngitis, tuberculous",
-      "aliases": [
-        "laryngitis, tuberculous",
-        "laryngitis tuberculous"
-      ],
+      "aliases": ["laryngitis, tuberculous", "laryngitis tuberculous"],
       "searchTerms": [
         "tuberculous",
         "6515",
@@ -8980,10 +8356,7 @@
       "id": 311,
       "diagnosticCode": "6516",
       "conditionName": "Laryngitis, chronic",
-      "aliases": [
-        "laryngitis",
-        "laryngitis, chronic"
-      ],
+      "aliases": ["laryngitis", "laryngitis, chronic"],
       "searchTerms": [
         "chronic",
         "laryngitis, chronic",
@@ -9007,10 +8380,7 @@
       "id": 312,
       "diagnosticCode": "6518",
       "conditionName": "Laryngectomy, total",
-      "aliases": [
-        "laryngectomy, total",
-        "laryngectomy total"
-      ],
+      "aliases": ["laryngectomy, total", "laryngectomy total"],
       "searchTerms": [
         "6518",
         "respiratory breathing",
@@ -9027,9 +8397,7 @@
         "ratings": {
           "100": "Following total laryngectomy"
         },
-        "notes": [
-          "Rate complications such as tracheostomy separately"
-        ]
+        "notes": ["Rate complications such as tracheostomy separately"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -9067,11 +8435,7 @@
       "id": 314,
       "diagnosticCode": "6520",
       "conditionName": "Larynx, stenosis of",
-      "aliases": [
-        "LS",
-        "larynx stenosis",
-        "larynx, stenosis of"
-      ],
+      "aliases": ["LS", "larynx stenosis", "larynx, stenosis of"],
       "searchTerms": [
         "larynx",
         "stenosis",
@@ -9096,11 +8460,7 @@
       "id": 315,
       "diagnosticCode": "6521",
       "conditionName": "Pharynx, injuries to",
-      "aliases": [
-        "PI",
-        "pharynx, injuries to",
-        "pharynx injuries"
-      ],
+      "aliases": ["PI", "pharynx, injuries to", "pharynx injuries"],
       "searchTerms": [
         "pharynx",
         "pharynx, injuries to",
@@ -9173,9 +8533,7 @@
       "id": 317,
       "diagnosticCode": "6523",
       "conditionName": "Bacterial rhinitis",
-      "aliases": [
-        "bacterial rhinitis"
-      ],
+      "aliases": ["bacterial rhinitis"],
       "searchTerms": [
         "6523",
         "bacterial",
@@ -9199,9 +8557,7 @@
       "id": 318,
       "diagnosticCode": "6524",
       "conditionName": "Granulomatous rhinitis",
-      "aliases": [
-        "granulomatous rhinitis"
-      ],
+      "aliases": ["granulomatous rhinitis"],
       "searchTerms": [
         "granulomatous rhinitis",
         "granulomatous",
@@ -9225,10 +8581,7 @@
       "id": 319,
       "diagnosticCode": "6600",
       "conditionName": "Bronchitis, chronic",
-      "aliases": [
-        "bronchitis, chronic",
-        "bronchitis"
-      ],
+      "aliases": ["bronchitis, chronic", "bronchitis"],
       "searchTerms": [
         "bronchitis, chronic",
         "bronchitis",
@@ -9257,14 +8610,8 @@
       "id": 320,
       "diagnosticCode": "6601",
       "conditionName": "Bronchiectasis",
-      "aliases": [
-        "bronchiectasis"
-      ],
-      "searchTerms": [
-        "bronchiectasis",
-        "respiratory breathing",
-        "6601"
-      ],
+      "aliases": ["bronchiectasis"],
+      "searchTerms": ["bronchiectasis", "respiratory breathing", "6601"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -9285,11 +8632,7 @@
       "id": 321,
       "diagnosticCode": "6602",
       "conditionName": "Asthma",
-      "aliases": [
-        "asthma",
-        "bronchial asthma",
-        "reactive airway disease"
-      ],
+      "aliases": ["asthma", "bronchial asthma", "reactive airway disease"],
       "searchTerms": [
         "asthma",
         "bronchial asthma",
@@ -9339,10 +8682,7 @@
       "id": 322,
       "diagnosticCode": "6603",
       "conditionName": "Emphysema, pulmonary",
-      "aliases": [
-        "emphysema, pulmonary",
-        "emphysema pulmonary"
-      ],
+      "aliases": ["emphysema, pulmonary", "emphysema pulmonary"],
       "searchTerms": [
         "6603",
         "respiratory breathing",
@@ -9371,11 +8711,7 @@
       "id": 323,
       "diagnosticCode": "6604",
       "conditionName": "Chronic Obstructive Pulmonary Disease (COPD)",
-      "aliases": [
-        "COPD",
-        "emphysema",
-        "chronic bronchitis"
-      ],
+      "aliases": ["COPD", "emphysema", "chronic bronchitis"],
       "searchTerms": [
         "COPD",
         "chronic obstructive pulmonary disease",
@@ -9665,11 +9001,7 @@
       "id": 332,
       "diagnosticCode": "6730",
       "conditionName": "Pulmonary TB, chronic, active",
-      "aliases": [
-        "pulmonary active",
-        "pulmonary tb, chronic, active",
-        "PCA"
-      ],
+      "aliases": ["pulmonary active", "pulmonary tb, chronic, active", "PCA"],
       "searchTerms": [
         "pulmonary tb, chronic, active",
         "chronic",
@@ -9765,10 +9097,7 @@
       "id": 335,
       "diagnosticCode": "6817",
       "conditionName": "Pulmonary Vascular Disease",
-      "aliases": [
-        "pulmonary vascular disease",
-        "PVD"
-      ],
+      "aliases": ["pulmonary vascular disease", "PVD"],
       "searchTerms": [
         "disease",
         "pulmonary vascular disease",
@@ -9863,14 +9192,8 @@
       "id": 338,
       "diagnosticCode": "6822",
       "conditionName": "Actinomycosis",
-      "aliases": [
-        "actinomycosis"
-      ],
-      "searchTerms": [
-        "respiratory breathing",
-        "actinomycosis",
-        "6822"
-      ],
+      "aliases": ["actinomycosis"],
+      "searchTerms": ["respiratory breathing", "actinomycosis", "6822"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -9891,14 +9214,8 @@
       "id": 339,
       "diagnosticCode": "6823",
       "conditionName": "Nocardiosis",
-      "aliases": [
-        "nocardiosis"
-      ],
-      "searchTerms": [
-        "6823",
-        "respiratory breathing",
-        "nocardiosis"
-      ],
+      "aliases": ["nocardiosis"],
+      "searchTerms": ["6823", "respiratory breathing", "nocardiosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -9919,11 +9236,7 @@
       "id": 340,
       "diagnosticCode": "6824",
       "conditionName": "Chronic lung abscess",
-      "aliases": [
-        "lung abscess",
-        "CLA",
-        "chronic lung abscess"
-      ],
+      "aliases": ["lung abscess", "CLA", "chronic lung abscess"],
       "searchTerms": [
         "6824",
         "lung",
@@ -9952,10 +9265,7 @@
       "id": 341,
       "diagnosticCode": "6825",
       "conditionName": "Diffuse interstitial fibrosis",
-      "aliases": [
-        "DIF",
-        "diffuse interstitial fibrosis"
-      ],
+      "aliases": ["DIF", "diffuse interstitial fibrosis"],
       "searchTerms": [
         "6825",
         "diffuse interstitial fibrosis",
@@ -9985,10 +9295,7 @@
       "id": 342,
       "diagnosticCode": "6826",
       "conditionName": "Desquamative interstitial pneumonitis",
-      "aliases": [
-        "desquamative interstitial pneumonitis",
-        "DIP"
-      ],
+      "aliases": ["desquamative interstitial pneumonitis", "DIP"],
       "searchTerms": [
         "pneumonitis",
         "desquamative interstitial pneumonitis",
@@ -10017,10 +9324,7 @@
       "id": 343,
       "diagnosticCode": "6827",
       "conditionName": "Pulmonary alveolar proteinosis",
-      "aliases": [
-        "pulmonary alveolar proteinosis",
-        "PAP"
-      ],
+      "aliases": ["pulmonary alveolar proteinosis", "PAP"],
       "searchTerms": [
         "6827",
         "pulmonary alveolar proteinosis",
@@ -10152,9 +9456,7 @@
       "id": 347,
       "diagnosticCode": "6831",
       "conditionName": "Hypersensitivity pneumonitis",
-      "aliases": [
-        "hypersensitivity pneumonitis"
-      ],
+      "aliases": ["hypersensitivity pneumonitis"],
       "searchTerms": [
         "pneumonitis",
         "6831",
@@ -10182,14 +9484,8 @@
       "id": 348,
       "diagnosticCode": "6832",
       "conditionName": "Pneumoconiosis",
-      "aliases": [
-        "pneumoconiosis"
-      ],
-      "searchTerms": [
-        "respiratory breathing",
-        "6832",
-        "pneumoconiosis"
-      ],
+      "aliases": ["pneumoconiosis"],
+      "searchTerms": ["respiratory breathing", "6832", "pneumoconiosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10204,14 +9500,8 @@
       "id": 349,
       "diagnosticCode": "6833",
       "conditionName": "Asbestosis",
-      "aliases": [
-        "asbestosis"
-      ],
-      "searchTerms": [
-        "asbestosis",
-        "respiratory breathing",
-        "6833"
-      ],
+      "aliases": ["asbestosis"],
+      "searchTerms": ["asbestosis", "respiratory breathing", "6833"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10226,14 +9516,8 @@
       "id": 350,
       "diagnosticCode": "6834",
       "conditionName": "Histoplasmosis",
-      "aliases": [
-        "histoplasmosis"
-      ],
-      "searchTerms": [
-        "6834",
-        "respiratory breathing",
-        "histoplasmosis"
-      ],
+      "aliases": ["histoplasmosis"],
+      "searchTerms": ["6834", "respiratory breathing", "histoplasmosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10248,14 +9532,8 @@
       "id": 351,
       "diagnosticCode": "6835",
       "conditionName": "Coccidioidomycosis",
-      "aliases": [
-        "coccidioidomycosis"
-      ],
-      "searchTerms": [
-        "6835",
-        "coccidioidomycosis",
-        "respiratory breathing"
-      ],
+      "aliases": ["coccidioidomycosis"],
+      "searchTerms": ["6835", "coccidioidomycosis", "respiratory breathing"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10270,14 +9548,8 @@
       "id": 352,
       "diagnosticCode": "6836",
       "conditionName": "Blastomycosis",
-      "aliases": [
-        "blastomycosis"
-      ],
-      "searchTerms": [
-        "blastomycosis",
-        "6836",
-        "respiratory breathing"
-      ],
+      "aliases": ["blastomycosis"],
+      "searchTerms": ["blastomycosis", "6836", "respiratory breathing"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10292,14 +9564,8 @@
       "id": 353,
       "diagnosticCode": "6837",
       "conditionName": "Cryptococcosis",
-      "aliases": [
-        "cryptococcosis"
-      ],
-      "searchTerms": [
-        "6837",
-        "respiratory breathing",
-        "cryptococcosis"
-      ],
+      "aliases": ["cryptococcosis"],
+      "searchTerms": ["6837", "respiratory breathing", "cryptococcosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10314,14 +9580,8 @@
       "id": 354,
       "diagnosticCode": "6838",
       "conditionName": "Aspergillosis",
-      "aliases": [
-        "aspergillosis"
-      ],
-      "searchTerms": [
-        "6838",
-        "respiratory breathing",
-        "aspergillosis"
-      ],
+      "aliases": ["aspergillosis"],
+      "searchTerms": ["6838", "respiratory breathing", "aspergillosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10342,14 +9602,8 @@
       "id": 355,
       "diagnosticCode": "6839",
       "conditionName": "Mucormycosis",
-      "aliases": [
-        "mucormycosis"
-      ],
-      "searchTerms": [
-        "mucormycosis",
-        "respiratory breathing",
-        "6839"
-      ],
+      "aliases": ["mucormycosis"],
+      "searchTerms": ["mucormycosis", "respiratory breathing", "6839"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10506,9 +9760,7 @@
       "id": 360,
       "diagnosticCode": "6844",
       "conditionName": "Post-surgical residual",
-      "aliases": [
-        "post-surgical residual"
-      ],
+      "aliases": ["post-surgical residual"],
       "searchTerms": [
         "post-surgical residual",
         "post-surgical",
@@ -10569,14 +9821,8 @@
       "id": 362,
       "diagnosticCode": "6846",
       "conditionName": "Sarcoidosis",
-      "aliases": [
-        "sarcoidosis"
-      ],
-      "searchTerms": [
-        "sarcoidosis",
-        "respiratory breathing",
-        "6846"
-      ],
+      "aliases": ["sarcoidosis"],
+      "searchTerms": ["sarcoidosis", "respiratory breathing", "6846"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.97",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10660,10 +9906,7 @@
       "id": 364,
       "diagnosticCode": "7000",
       "conditionName": "Valvular heart disease",
-      "aliases": [
-        "valvular heart disease",
-        "VHD"
-      ],
+      "aliases": ["valvular heart disease", "VHD"],
       "searchTerms": [
         "disease",
         "valvular heart disease",
@@ -10696,14 +9939,8 @@
       "id": 365,
       "diagnosticCode": "7001",
       "conditionName": "Endocarditis",
-      "aliases": [
-        "endocarditis"
-      ],
-      "searchTerms": [
-        "cardiovascular heart",
-        "7001",
-        "endocarditis"
-      ],
+      "aliases": ["endocarditis"],
+      "searchTerms": ["cardiovascular heart", "7001", "endocarditis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.104",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -10718,11 +9955,7 @@
       "id": 366,
       "diagnosticCode": "7002",
       "conditionName": "Congestive Heart Failure",
-      "aliases": [
-        "CHF",
-        "heart failure",
-        "cardiac failure"
-      ],
+      "aliases": ["CHF", "heart failure", "cardiac failure"],
       "searchTerms": [
         "congestive heart failure",
         "CHF",
@@ -10765,9 +9998,7 @@
       "id": 367,
       "diagnosticCode": "7003",
       "conditionName": "Pericardial adhesions",
-      "aliases": [
-        "pericardial adhesions"
-      ],
+      "aliases": ["pericardial adhesions"],
       "searchTerms": [
         "7003",
         "pericardial",
@@ -10793,10 +10024,7 @@
       "id": 368,
       "diagnosticCode": "7004",
       "conditionName": "Syphilitic Heart Disease",
-      "aliases": [
-        "syphilitic heart disease",
-        "cardiovascular syphilis"
-      ],
+      "aliases": ["syphilitic heart disease", "cardiovascular syphilis"],
       "searchTerms": [
         "syphilitic heart disease",
         "cardiovascular syphilis",
@@ -10888,9 +10116,7 @@
       "id": 370,
       "diagnosticCode": "7006",
       "conditionName": "Myocardial infarction",
-      "aliases": [
-        "myocardial infarction"
-      ],
+      "aliases": ["myocardial infarction"],
       "searchTerms": [
         "7006",
         "cardiovascular heart",
@@ -10919,10 +10145,7 @@
       "id": 371,
       "diagnosticCode": "7007",
       "conditionName": "Hypertensive heart disease",
-      "aliases": [
-        "HHD",
-        "hypertensive heart disease"
-      ],
+      "aliases": ["HHD", "hypertensive heart disease"],
       "searchTerms": [
         "disease",
         "7007",
@@ -10945,10 +10168,7 @@
       "id": 372,
       "diagnosticCode": "7008",
       "conditionName": "Hyperthyroid heart disease",
-      "aliases": [
-        "HHD",
-        "hyperthyroid heart disease"
-      ],
+      "aliases": ["HHD", "hyperthyroid heart disease"],
       "searchTerms": [
         "disease",
         "7008",
@@ -11003,12 +10223,7 @@
       "id": 374,
       "diagnosticCode": "7010",
       "conditionName": "Atrial Fibrillation",
-      "aliases": [
-        "AFib",
-        "AF",
-        "irregular heartbeat",
-        "atrial fibrillation"
-      ],
+      "aliases": ["AFib", "AF", "irregular heartbeat", "atrial fibrillation"],
       "searchTerms": [
         "atrial fibrillation",
         "AFib",
@@ -11046,9 +10261,7 @@
       "id": 375,
       "diagnosticCode": "7011",
       "conditionName": "Ventricular arrhythmias",
-      "aliases": [
-        "ventricular arrhythmias"
-      ],
+      "aliases": ["ventricular arrhythmias"],
       "searchTerms": [
         "7011",
         "ventricular",
@@ -11075,9 +10288,7 @@
       "id": 376,
       "diagnosticCode": "7015",
       "conditionName": "Atrioventricular block",
-      "aliases": [
-        "atrioventricular block"
-      ],
+      "aliases": ["atrioventricular block"],
       "searchTerms": [
         "7015",
         "atrioventricular",
@@ -11104,10 +10315,7 @@
       "id": 377,
       "diagnosticCode": "7016",
       "conditionName": "Heart valve replacement",
-      "aliases": [
-        "HVR",
-        "heart valve replacement"
-      ],
+      "aliases": ["HVR", "heart valve replacement"],
       "searchTerms": [
         "7016",
         "valve",
@@ -11139,10 +10347,7 @@
       "id": 378,
       "diagnosticCode": "7017",
       "conditionName": "Coronary bypass surgery",
-      "aliases": [
-        "CBS",
-        "coronary bypass surgery"
-      ],
+      "aliases": ["CBS", "coronary bypass surgery"],
       "searchTerms": [
         "coronary bypass surgery",
         "coronary",
@@ -11164,9 +10369,7 @@
           "20": "With workload of greater than 7 METs but not greater than 10 METs results in symptoms",
           "10": "Post-CABG with asymptomatic status on medication"
         },
-        "notes": [
-          "Automatic 100% for three months post-surgery"
-        ]
+        "notes": ["Automatic 100% for three months post-surgery"]
       },
       "lastVerifiedDate": "2026-01-18"
     },
@@ -11174,10 +10377,7 @@
       "id": 379,
       "diagnosticCode": "7018",
       "conditionName": "Implantable cardiac pacemakers",
-      "aliases": [
-        "ICP",
-        "implantable cardiac pacemakers"
-      ],
+      "aliases": ["ICP", "implantable cardiac pacemakers"],
       "searchTerms": [
         "implantable cardiac pacemakers",
         "cardiac",
@@ -11204,9 +10404,7 @@
       "id": 380,
       "diagnosticCode": "7019",
       "conditionName": "Cardiac transplantation",
-      "aliases": [
-        "cardiac transplantation"
-      ],
+      "aliases": ["cardiac transplantation"],
       "searchTerms": [
         "cardiac",
         "transplantation",
@@ -11234,14 +10432,8 @@
       "id": 381,
       "diagnosticCode": "7020",
       "conditionName": "Cardiomyopathy",
-      "aliases": [
-        "cardiomyopathy"
-      ],
-      "searchTerms": [
-        "cardiovascular heart",
-        "7020",
-        "cardiomyopathy"
-      ],
+      "aliases": ["cardiomyopathy"],
+      "searchTerms": ["cardiovascular heart", "7020", "cardiomyopathy"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.104",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -11319,9 +10511,7 @@
       "id": 383,
       "diagnosticCode": "7110",
       "conditionName": "Aortic aneurysm",
-      "aliases": [
-        "aortic aneurysm"
-      ],
+      "aliases": ["aortic aneurysm"],
       "searchTerms": [
         "aortic",
         "aortic aneurysm",
@@ -11348,11 +10538,7 @@
       "id": 384,
       "diagnosticCode": "7111",
       "conditionName": "Aneurysm, large artery",
-      "aliases": [
-        "aneurysm, large artery",
-        "ALA",
-        "aneurysm large artery"
-      ],
+      "aliases": ["aneurysm, large artery", "ALA", "aneurysm large artery"],
       "searchTerms": [
         "cardiovascular heart",
         "artery",
@@ -11380,11 +10566,7 @@
       "id": 385,
       "diagnosticCode": "7112",
       "conditionName": "Aneurysm, small artery",
-      "aliases": [
-        "aneurysm small artery",
-        "ASA",
-        "aneurysm, small artery"
-      ],
+      "aliases": ["aneurysm small artery", "ASA", "aneurysm, small artery"],
       "searchTerms": [
         "artery",
         "7112",
@@ -11445,10 +10627,7 @@
       "id": 387,
       "diagnosticCode": "7114",
       "conditionName": "Peripheral arterial disease",
-      "aliases": [
-        "PAD",
-        "peripheral arterial disease"
-      ],
+      "aliases": ["PAD", "peripheral arterial disease"],
       "searchTerms": [
         "disease",
         "peripheral arterial disease",
@@ -11509,11 +10688,7 @@
       "id": 389,
       "diagnosticCode": "7117",
       "conditionName": "Peripheral Artery Disease",
-      "aliases": [
-        "PAD",
-        "peripheral vascular disease",
-        "claudication"
-      ],
+      "aliases": ["PAD", "peripheral vascular disease", "claudication"],
       "searchTerms": [
         "peripheral artery disease",
         "PAD",
@@ -11552,9 +10727,7 @@
       "id": 390,
       "diagnosticCode": "7118",
       "conditionName": "Angioneurotic edema",
-      "aliases": [
-        "angioneurotic edema"
-      ],
+      "aliases": ["angioneurotic edema"],
       "searchTerms": [
         "angioneurotic edema",
         "cardiovascular heart",
@@ -11582,14 +10755,8 @@
       "id": 391,
       "diagnosticCode": "7119",
       "conditionName": "Erythromelalgia",
-      "aliases": [
-        "erythromelalgia"
-      ],
-      "searchTerms": [
-        "cardiovascular heart",
-        "erythromelalgia",
-        "7119"
-      ],
+      "aliases": ["erythromelalgia"],
+      "searchTerms": ["cardiovascular heart", "erythromelalgia", "7119"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.104",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -11609,9 +10776,7 @@
       "id": 392,
       "diagnosticCode": "7120",
       "conditionName": "Varicose veins",
-      "aliases": [
-        "varicose veins"
-      ],
+      "aliases": ["varicose veins"],
       "searchTerms": [
         "7120",
         "veins",
@@ -11638,9 +10803,7 @@
       "id": 393,
       "diagnosticCode": "7121",
       "conditionName": "Post-phlebitic syndrome",
-      "aliases": [
-        "post-phlebitic syndrome"
-      ],
+      "aliases": ["post-phlebitic syndrome"],
       "searchTerms": [
         "7121",
         "post-phlebitic",
@@ -11664,10 +10827,7 @@
       "id": 394,
       "diagnosticCode": "7122",
       "conditionName": "Cold injury residuals",
-      "aliases": [
-        "CIR",
-        "cold injury residuals"
-      ],
+      "aliases": ["CIR", "cold injury residuals"],
       "searchTerms": [
         "cold",
         "cold injury residuals",
@@ -11778,11 +10938,7 @@
       "id": 398,
       "diagnosticCode": "7201",
       "conditionName": "Lips, injuries of",
-      "aliases": [
-        "lips, injuries of",
-        "lips injuries",
-        "LI"
-      ],
+      "aliases": ["lips, injuries of", "lips injuries", "LI"],
       "searchTerms": [
         "digestive gastrointestinal",
         "lips, injuries of",
@@ -11807,11 +10963,7 @@
       "id": 399,
       "diagnosticCode": "7202",
       "conditionName": "Tongue, loss of whole or part",
-      "aliases": [
-        "tongue loss whole",
-        "TLWP",
-        "tongue, loss of whole or part"
-      ],
+      "aliases": ["tongue loss whole", "TLWP", "tongue, loss of whole or part"],
       "searchTerms": [
         "loss",
         "part",
@@ -11840,11 +10992,7 @@
       "id": 400,
       "diagnosticCode": "7203",
       "conditionName": "Esophagus, stricture of",
-      "aliases": [
-        "ES",
-        "esophagus, stricture of",
-        "esophagus stricture"
-      ],
+      "aliases": ["ES", "esophagus, stricture of", "esophagus stricture"],
       "searchTerms": [
         "digestive gastrointestinal",
         "esophagus, stricture of",
@@ -11870,10 +11018,7 @@
       "id": 401,
       "diagnosticCode": "7204",
       "conditionName": "Esophageal motility disorder",
-      "aliases": [
-        "EMD",
-        "esophageal motility disorder"
-      ],
+      "aliases": ["EMD", "esophageal motility disorder"],
       "searchTerms": [
         "disorder",
         "digestive gastrointestinal",
@@ -11995,9 +11140,7 @@
       "id": 404,
       "diagnosticCode": "7207",
       "conditionName": "Barrett's esophagus",
-      "aliases": [
-        "barrett's esophagus"
-      ],
+      "aliases": ["barrett's esophagus"],
       "searchTerms": [
         "7207",
         "digestive gastrointestinal",
@@ -12020,11 +11163,7 @@
       "id": 405,
       "diagnosticCode": "7301",
       "conditionName": "Peritoneum, adhesions of",
-      "aliases": [
-        "peritoneum adhesions",
-        "PA",
-        "peritoneum, adhesions of"
-      ],
+      "aliases": ["peritoneum adhesions", "PA", "peritoneum, adhesions of"],
       "searchTerms": [
         "peritoneum, adhesions of",
         "digestive gastrointestinal",
@@ -12083,11 +11222,7 @@
       "id": 407,
       "diagnosticCode": "7304",
       "conditionName": "Peptic Ulcer Disease",
-      "aliases": [
-        "stomach ulcer",
-        "duodenal ulcer",
-        "peptic ulcer"
-      ],
+      "aliases": ["stomach ulcer", "duodenal ulcer", "peptic ulcer"],
       "searchTerms": [
         "peptic ulcer",
         "stomach ulcer",
@@ -12126,10 +11261,7 @@
       "id": 408,
       "diagnosticCode": "7307",
       "conditionName": "Gastritis, chronic",
-      "aliases": [
-        "gastritis",
-        "gastritis, chronic"
-      ],
+      "aliases": ["gastritis", "gastritis, chronic"],
       "searchTerms": [
         "gastritis",
         "digestive gastrointestinal",
@@ -12152,9 +11284,7 @@
       "id": 409,
       "diagnosticCode": "7308",
       "conditionName": "Postgastrectomy syndromes",
-      "aliases": [
-        "postgastrectomy syndromes"
-      ],
+      "aliases": ["postgastrectomy syndromes"],
       "searchTerms": [
         "7308",
         "postgastrectomy",
@@ -12177,11 +11307,7 @@
       "id": 410,
       "diagnosticCode": "7309",
       "conditionName": "Stomach, stenosis of",
-      "aliases": [
-        "stomach, stenosis of",
-        "stomach stenosis",
-        "SS"
-      ],
+      "aliases": ["stomach, stenosis of", "stomach stenosis", "SS"],
       "searchTerms": [
         "digestive gastrointestinal",
         "stenosis",
@@ -12265,11 +11391,7 @@
       "id": 413,
       "diagnosticCode": "7312",
       "conditionName": "Cirrhosis of the Liver",
-      "aliases": [
-        "liver cirrhosis",
-        "cirrhosis",
-        "hepatic cirrhosis"
-      ],
+      "aliases": ["liver cirrhosis", "cirrhosis", "hepatic cirrhosis"],
       "searchTerms": [
         "cirrhosis",
         "liver cirrhosis",
@@ -12348,10 +11470,7 @@
       "id": 415,
       "diagnosticCode": "7315",
       "conditionName": "Cholelithiasis, chronic",
-      "aliases": [
-        "cholelithiasis, chronic",
-        "cholelithiasis"
-      ],
+      "aliases": ["cholelithiasis, chronic", "cholelithiasis"],
       "searchTerms": [
         "cholelithiasis, chronic",
         "7315",
@@ -12374,11 +11493,7 @@
       "id": 416,
       "diagnosticCode": "7317",
       "conditionName": "Gallbladder, injury of",
-      "aliases": [
-        "gallbladder, injury of",
-        "gallbladder injury",
-        "GI"
-      ],
+      "aliases": ["gallbladder, injury of", "gallbladder injury", "GI"],
       "searchTerms": [
         "gallbladder",
         "digestive gastrointestinal",
@@ -12434,11 +11549,7 @@
       "id": 418,
       "diagnosticCode": "7319",
       "conditionName": "Irritable Bowel Syndrome (IBS)",
-      "aliases": [
-        "IBS",
-        "irritable bowel",
-        "spastic colon"
-      ],
+      "aliases": ["IBS", "irritable bowel", "spastic colon"],
       "searchTerms": [
         "irritable bowel syndrome",
         "IBS",
@@ -12475,12 +11586,7 @@
       "id": 419,
       "diagnosticCode": "7323",
       "conditionName": "Ulcerative Colitis",
-      "aliases": [
-        "UC",
-        "colitis",
-        "inflammatory bowel disease",
-        "IBD"
-      ],
+      "aliases": ["UC", "colitis", "inflammatory bowel disease", "IBD"],
       "searchTerms": [
         "ulcerative colitis",
         "UC",
@@ -12524,10 +11630,7 @@
       "id": 420,
       "diagnosticCode": "7325",
       "conditionName": "Enteritis, chronic",
-      "aliases": [
-        "enteritis, chronic",
-        "enteritis"
-      ],
+      "aliases": ["enteritis, chronic", "enteritis"],
       "searchTerms": [
         "enteritis, chronic",
         "digestive gastrointestinal",
@@ -12727,14 +11830,8 @@
       "id": 426,
       "diagnosticCode": "7331",
       "conditionName": "Peritonitis",
-      "aliases": [
-        "peritonitis"
-      ],
-      "searchTerms": [
-        "7331",
-        "digestive gastrointestinal",
-        "peritonitis"
-      ],
+      "aliases": ["peritonitis"],
+      "searchTerms": ["7331", "digestive gastrointestinal", "peritonitis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.114",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -12817,11 +11914,7 @@
       "id": 429,
       "diagnosticCode": "7334",
       "conditionName": "Rectum, prolapse of",
-      "aliases": [
-        "RP",
-        "rectum prolapse",
-        "rectum, prolapse of"
-      ],
+      "aliases": ["RP", "rectum prolapse", "rectum, prolapse of"],
       "searchTerms": [
         "rectum",
         "digestive gastrointestinal",
@@ -12974,14 +12067,8 @@
       "id": 434,
       "diagnosticCode": "7342",
       "conditionName": "Visceroptosis",
-      "aliases": [
-        "visceroptosis"
-      ],
-      "searchTerms": [
-        "digestive gastrointestinal",
-        "visceroptosis",
-        "7342"
-      ],
+      "aliases": ["visceroptosis"],
+      "searchTerms": ["digestive gastrointestinal", "visceroptosis", "7342"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.114",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -13141,10 +12228,7 @@
       "id": 439,
       "diagnosticCode": "7347",
       "conditionName": "Pancreatitis, chronic",
-      "aliases": [
-        "pancreatitis",
-        "pancreatitis, chronic"
-      ],
+      "aliases": ["pancreatitis", "pancreatitis, chronic"],
       "searchTerms": [
         "pancreatitis",
         "digestive gastrointestinal",
@@ -13200,9 +12284,7 @@
       "id": 441,
       "diagnosticCode": "7350",
       "conditionName": "Liver abscess",
-      "aliases": [
-        "liver abscess"
-      ],
+      "aliases": ["liver abscess"],
       "searchTerms": [
         "7350",
         "digestive gastrointestinal",
@@ -13227,9 +12309,7 @@
       "id": 442,
       "diagnosticCode": "7351",
       "conditionName": "Liver transplant",
-      "aliases": [
-        "liver transplant"
-      ],
+      "aliases": ["liver transplant"],
       "searchTerms": [
         "transplant",
         "digestive gastrointestinal",
@@ -13254,9 +12334,7 @@
       "id": 443,
       "diagnosticCode": "7352",
       "conditionName": "Pancreas transplant",
-      "aliases": [
-        "pancreas transplant"
-      ],
+      "aliases": ["pancreas transplant"],
       "searchTerms": [
         "7352",
         "transplant",
@@ -13274,11 +12352,7 @@
       "id": 444,
       "diagnosticCode": "7354",
       "conditionName": "Hepatitis C",
-      "aliases": [
-        "Hepatitis C",
-        "HCV",
-        "chronic hepatitis C"
-      ],
+      "aliases": ["Hepatitis C", "HCV", "chronic hepatitis C"],
       "searchTerms": [
         "Hepatitis C",
         "HCV",
@@ -13312,9 +12386,7 @@
       "id": 445,
       "diagnosticCode": "7355",
       "conditionName": "Celiac disease",
-      "aliases": [
-        "celiac disease"
-      ],
+      "aliases": ["celiac disease"],
       "searchTerms": [
         "disease",
         "7355",
@@ -13332,10 +12404,7 @@
       "id": 446,
       "diagnosticCode": "7356",
       "conditionName": "Gastrointestinal dysmotility syndrome",
-      "aliases": [
-        "GDS",
-        "gastrointestinal dysmotility syndrome"
-      ],
+      "aliases": ["GDS", "gastrointestinal dysmotility syndrome"],
       "searchTerms": [
         "dysmotility",
         "gastrointestinal",
@@ -13354,10 +12423,7 @@
       "id": 447,
       "diagnosticCode": "7357",
       "conditionName": "Post pancreatectomy syndrome",
-      "aliases": [
-        "post pancreatectomy syndrome",
-        "PPS"
-      ],
+      "aliases": ["post pancreatectomy syndrome", "PPS"],
       "searchTerms": [
         "pancreatectomy",
         "post",
@@ -13376,11 +12442,7 @@
       "id": 448,
       "diagnosticCode": "7500",
       "conditionName": "Kidney, removal of",
-      "aliases": [
-        "KR",
-        "kidney removal",
-        "kidney, removal of"
-      ],
+      "aliases": ["KR", "kidney removal", "kidney, removal of"],
       "searchTerms": [
         "removal",
         "7500",
@@ -13410,12 +12472,7 @@
       "id": 449,
       "diagnosticCode": "7501",
       "conditionName": "Chronic Kidney Disease",
-      "aliases": [
-        "CKD",
-        "renal disease",
-        "kidney disease",
-        "kidney failure"
-      ],
+      "aliases": ["CKD", "renal disease", "kidney disease", "kidney failure"],
       "searchTerms": [
         "chronic kidney disease",
         "CKD",
@@ -13460,10 +12517,7 @@
       "id": 450,
       "diagnosticCode": "7502",
       "conditionName": "Nephritis, chronic",
-      "aliases": [
-        "nephritis, chronic",
-        "nephritis"
-      ],
+      "aliases": ["nephritis, chronic", "nephritis"],
       "searchTerms": [
         "7502",
         "nephritis",
@@ -13486,10 +12540,7 @@
       "id": 451,
       "diagnosticCode": "7504",
       "conditionName": "Pyelonephritis, chronic",
-      "aliases": [
-        "pyelonephritis",
-        "pyelonephritis, chronic"
-      ],
+      "aliases": ["pyelonephritis", "pyelonephritis, chronic"],
       "searchTerms": [
         "7504",
         "chronic",
@@ -13517,11 +12568,7 @@
       "id": 452,
       "diagnosticCode": "7505",
       "conditionName": "Kidney, tuberculosis of",
-      "aliases": [
-        "kidney, tuberculosis of",
-        "kidney tuberculosis",
-        "KT"
-      ],
+      "aliases": ["kidney, tuberculosis of", "kidney tuberculosis", "KT"],
       "searchTerms": [
         "tuberculosis",
         "7505",
@@ -13544,10 +12591,7 @@
       "id": 453,
       "diagnosticCode": "7507",
       "conditionName": "Nephrosclerosis, arteriolar",
-      "aliases": [
-        "nephrosclerosis arteriolar",
-        "nephrosclerosis, arteriolar"
-      ],
+      "aliases": ["nephrosclerosis arteriolar", "nephrosclerosis, arteriolar"],
       "searchTerms": [
         "7507",
         "arteriolar",
@@ -13570,9 +12614,7 @@
       "id": 454,
       "diagnosticCode": "7508",
       "conditionName": "Nephrolithiasis/Ureterolithiasis/Nephrocalcinosis",
-      "aliases": [
-        "nephrolithiasis/ureterolithiasis/nephrocalcinosis"
-      ],
+      "aliases": ["nephrolithiasis/ureterolithiasis/nephrocalcinosis"],
       "searchTerms": [
         "genitourinary kidney bladder",
         "7508",
@@ -13595,14 +12637,8 @@
       "id": 455,
       "diagnosticCode": "7509",
       "conditionName": "Hydronephrosis",
-      "aliases": [
-        "hydronephrosis"
-      ],
-      "searchTerms": [
-        "7509",
-        "genitourinary kidney bladder",
-        "hydronephrosis"
-      ],
+      "aliases": ["hydronephrosis"],
+      "searchTerms": ["7509", "genitourinary kidney bladder", "hydronephrosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.115a or § 4.115b",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -13622,11 +12658,7 @@
       "id": 456,
       "diagnosticCode": "7511",
       "conditionName": "Ureter, stricture of",
-      "aliases": [
-        "US",
-        "ureter stricture",
-        "ureter, stricture of"
-      ],
+      "aliases": ["US", "ureter stricture", "ureter, stricture of"],
       "searchTerms": [
         "ureter",
         "ureter, stricture of",
@@ -13650,10 +12682,7 @@
       "id": 457,
       "diagnosticCode": "7512",
       "conditionName": "Cystitis, chronic",
-      "aliases": [
-        "cystitis, chronic",
-        "cystitis"
-      ],
+      "aliases": ["cystitis, chronic", "cystitis"],
       "searchTerms": [
         "7512",
         "cystitis, chronic",
@@ -13679,11 +12708,7 @@
       "id": 458,
       "diagnosticCode": "7515",
       "conditionName": "Bladder, calculus in",
-      "aliases": [
-        "bladder calculus",
-        "BC",
-        "bladder, calculus in"
-      ],
+      "aliases": ["bladder calculus", "BC", "bladder, calculus in"],
       "searchTerms": [
         "7515",
         "bladder",
@@ -13711,11 +12736,7 @@
       "id": 459,
       "diagnosticCode": "7516",
       "conditionName": "Bladder, fistula of",
-      "aliases": [
-        "BF",
-        "bladder fistula",
-        "bladder, fistula of"
-      ],
+      "aliases": ["BF", "bladder fistula", "bladder, fistula of"],
       "searchTerms": [
         "bladder, fistula of",
         "bladder",
@@ -13742,11 +12763,7 @@
       "id": 460,
       "diagnosticCode": "7517",
       "conditionName": "Bladder, injury of",
-      "aliases": [
-        "bladder, injury of",
-        "bladder injury",
-        "BI"
-      ],
+      "aliases": ["bladder, injury of", "bladder injury", "BI"],
       "searchTerms": [
         "bladder",
         "bladder, injury of",
@@ -13772,11 +12789,7 @@
       "id": 461,
       "diagnosticCode": "7518",
       "conditionName": "Urethra, stricture of",
-      "aliases": [
-        "US",
-        "urethra stricture",
-        "urethra, stricture of"
-      ],
+      "aliases": ["US", "urethra stricture", "urethra, stricture of"],
       "searchTerms": [
         "7518",
         "genitourinary kidney bladder",
@@ -13802,11 +12815,7 @@
       "id": 462,
       "diagnosticCode": "7519",
       "conditionName": "Urethra, fistula of",
-      "aliases": [
-        "UF",
-        "urethra, fistula of",
-        "urethra fistula"
-      ],
+      "aliases": ["UF", "urethra, fistula of", "urethra fistula"],
       "searchTerms": [
         "fistula",
         "7519",
@@ -13863,11 +12872,7 @@
       "id": 464,
       "diagnosticCode": "7521",
       "conditionName": "Penis, removal of glans",
-      "aliases": [
-        "penis, removal of glans",
-        "penis removal glans",
-        "PRG"
-      ],
+      "aliases": ["penis, removal of glans", "penis removal glans", "PRG"],
       "searchTerms": [
         "penis",
         "removal",
@@ -13892,11 +12897,7 @@
       "id": 465,
       "diagnosticCode": "7522",
       "conditionName": "Erectile Dysfunction",
-      "aliases": [
-        "erectile dysfunction",
-        "ED",
-        "impotence"
-      ],
+      "aliases": ["erectile dysfunction", "ED", "impotence"],
       "searchTerms": [
         "erectile dysfunction",
         "ED",
@@ -13953,11 +12954,7 @@
       "id": 467,
       "diagnosticCode": "7524",
       "conditionName": "Testis, removal of",
-      "aliases": [
-        "TR",
-        "testis removal",
-        "testis, removal of"
-      ],
+      "aliases": ["TR", "testis removal", "testis, removal of"],
       "searchTerms": [
         "removal",
         "testis",
@@ -14169,11 +13166,7 @@
       "id": 472,
       "diagnosticCode": "7530",
       "conditionName": "Renal disease, chronic",
-      "aliases": [
-        "renal disease",
-        "RDC",
-        "renal disease, chronic"
-      ],
+      "aliases": ["renal disease", "RDC", "renal disease, chronic"],
       "searchTerms": [
         "disease",
         "7530",
@@ -14198,9 +13191,7 @@
       "id": 473,
       "diagnosticCode": "7531",
       "conditionName": "Kidney transplant",
-      "aliases": [
-        "kidney transplant"
-      ],
+      "aliases": ["kidney transplant"],
       "searchTerms": [
         "7531",
         "transplant",
@@ -14224,10 +13215,7 @@
       "id": 474,
       "diagnosticCode": "7532",
       "conditionName": "Renal tubular disorders",
-      "aliases": [
-        "RTD",
-        "renal tubular disorders"
-      ],
+      "aliases": ["RTD", "renal tubular disorders"],
       "searchTerms": [
         "tubular",
         "renal tubular disorders",
@@ -14275,10 +13263,7 @@
       "id": 476,
       "diagnosticCode": "7534",
       "conditionName": "Atherosclerotic renal disease",
-      "aliases": [
-        "atherosclerotic renal disease",
-        "ARD"
-      ],
+      "aliases": ["atherosclerotic renal disease", "ARD"],
       "searchTerms": [
         "disease",
         "atherosclerotic",
@@ -14297,9 +13282,7 @@
       "id": 477,
       "diagnosticCode": "7535",
       "conditionName": "Toxic nephropathy",
-      "aliases": [
-        "toxic nephropathy"
-      ],
+      "aliases": ["toxic nephropathy"],
       "searchTerms": [
         "7535",
         "nephropathy",
@@ -14317,9 +13300,7 @@
       "id": 478,
       "diagnosticCode": "7536",
       "conditionName": "Glomerulonephritis",
-      "aliases": [
-        "glomerulonephritis"
-      ],
+      "aliases": ["glomerulonephritis"],
       "searchTerms": [
         "glomerulonephritis",
         "genitourinary kidney bladder",
@@ -14335,9 +13316,7 @@
       "id": 479,
       "diagnosticCode": "7537",
       "conditionName": "Interstitial nephritis",
-      "aliases": [
-        "interstitial nephritis"
-      ],
+      "aliases": ["interstitial nephritis"],
       "searchTerms": [
         "nephritis",
         "interstitial",
@@ -14355,9 +13334,7 @@
       "id": 480,
       "diagnosticCode": "7538",
       "conditionName": "Papillary necrosis",
-      "aliases": [
-        "papillary necrosis"
-      ],
+      "aliases": ["papillary necrosis"],
       "searchTerms": [
         "necrosis",
         "papillary necrosis",
@@ -14375,10 +13352,7 @@
       "id": 481,
       "diagnosticCode": "7539",
       "conditionName": "Renal amyloid disease",
-      "aliases": [
-        "RAD",
-        "renal amyloid disease"
-      ],
+      "aliases": ["RAD", "renal amyloid disease"],
       "searchTerms": [
         "disease",
         "renal",
@@ -14506,9 +13480,7 @@
       "id": 485,
       "diagnosticCode": "7543",
       "conditionName": "Varicocele/Hydrocele",
-      "aliases": [
-        "varicocele/hydrocele"
-      ],
+      "aliases": ["varicocele/hydrocele"],
       "searchTerms": [
         "7543",
         "genitourinary kidney bladder",
@@ -14549,11 +13521,7 @@
       "id": 487,
       "diagnosticCode": "7545",
       "conditionName": "Bladder, diverticulum of",
-      "aliases": [
-        "BD",
-        "bladder, diverticulum of",
-        "bladder diverticulum"
-      ],
+      "aliases": ["BD", "bladder, diverticulum of", "bladder diverticulum"],
       "searchTerms": [
         "bladder, diverticulum of",
         "bladder",
@@ -14916,11 +13884,7 @@
       "id": 495,
       "diagnosticCode": "7618",
       "conditionName": "Uterus, Removal (Including Corpus)",
-      "aliases": [
-        "hysterectomy",
-        "uterus removal",
-        "total hysterectomy"
-      ],
+      "aliases": ["hysterectomy", "uterus removal", "total hysterectomy"],
       "searchTerms": [
         "hysterectomy",
         "uterus removal",
@@ -14956,11 +13920,7 @@
       "id": 496,
       "diagnosticCode": "7619",
       "conditionName": "Ovary, Removal",
-      "aliases": [
-        "oophorectomy",
-        "ovary removal",
-        "ovarian removal"
-      ],
+      "aliases": ["oophorectomy", "ovary removal", "ovarian removal"],
       "searchTerms": [
         "oophorectomy",
         "ovary removal",
@@ -15091,11 +14051,7 @@
       "id": 499,
       "diagnosticCode": "7624",
       "conditionName": "Fistula, Rectovaginal",
-      "aliases": [
-        "rectovaginal fistula",
-        "RVF",
-        "rectal-vaginal fistula"
-      ],
+      "aliases": ["rectovaginal fistula", "RVF", "rectal-vaginal fistula"],
       "searchTerms": [
         "rectovaginal fistula",
         "RVF",
@@ -15336,10 +14292,7 @@
       "id": 504,
       "diagnosticCode": "7629",
       "conditionName": "Endometriosis",
-      "aliases": [
-        "endometriosis",
-        "pelvic endometriosis"
-      ],
+      "aliases": ["endometriosis", "pelvic endometriosis"],
       "searchTerms": [
         "endometriosis",
         "pelvic pain",
@@ -15522,10 +14475,7 @@
       "id": 509,
       "diagnosticCode": "7702",
       "conditionName": "Agranulocytosis, acquired",
-      "aliases": [
-        "agranulocytosis acquired",
-        "agranulocytosis, acquired"
-      ],
+      "aliases": ["agranulocytosis acquired", "agranulocytosis, acquired"],
       "searchTerms": [
         "7702",
         "agranulocytosis, acquired",
@@ -15551,14 +14501,8 @@
       "id": 510,
       "diagnosticCode": "7703",
       "conditionName": "Leukemia",
-      "aliases": [
-        "leukemia"
-      ],
-      "searchTerms": [
-        "leukemia",
-        "7703",
-        "hematologic blood"
-      ],
+      "aliases": ["leukemia"],
+      "searchTerms": ["leukemia", "7703", "hematologic blood"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.117",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -15576,9 +14520,7 @@
       "id": 511,
       "diagnosticCode": "7704",
       "conditionName": "Polycythemia vera",
-      "aliases": [
-        "polycythemia vera"
-      ],
+      "aliases": ["polycythemia vera"],
       "searchTerms": [
         "polycythemia",
         "polycythemia vera",
@@ -15605,9 +14547,7 @@
       "id": 512,
       "diagnosticCode": "7705",
       "conditionName": "Immune thrombocytopenia",
-      "aliases": [
-        "immune thrombocytopenia"
-      ],
+      "aliases": ["immune thrombocytopenia"],
       "searchTerms": [
         "immune",
         "thrombocytopenia",
@@ -15633,14 +14573,8 @@
       "id": 513,
       "diagnosticCode": "7706",
       "conditionName": "Splenectomy",
-      "aliases": [
-        "splenectomy"
-      ],
-      "searchTerms": [
-        "7706",
-        "hematologic blood",
-        "splenectomy"
-      ],
+      "aliases": ["splenectomy"],
+      "searchTerms": ["7706", "hematologic blood", "splenectomy"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.117",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -15657,11 +14591,7 @@
       "id": 514,
       "diagnosticCode": "7707",
       "conditionName": "Spleen, injury of, healed",
-      "aliases": [
-        "SIH",
-        "spleen, injury of, healed",
-        "spleen injury healed"
-      ],
+      "aliases": ["SIH", "spleen, injury of, healed", "spleen injury healed"],
       "searchTerms": [
         "spleen, injury of, healed",
         "7707",
@@ -15686,9 +14616,7 @@
       "id": 515,
       "diagnosticCode": "7709",
       "conditionName": "Hodgkin's lymphoma",
-      "aliases": [
-        "hodgkin's lymphoma"
-      ],
+      "aliases": ["hodgkin's lymphoma"],
       "searchTerms": [
         "lymphoma",
         "7709",
@@ -15713,10 +14641,7 @@
       "id": 516,
       "diagnosticCode": "7710",
       "conditionName": "Adenitis, tuberculous",
-      "aliases": [
-        "adenitis tuberculous",
-        "adenitis, tuberculous"
-      ],
+      "aliases": ["adenitis tuberculous", "adenitis, tuberculous"],
       "searchTerms": [
         "adenitis",
         "tuberculous",
@@ -15741,9 +14666,7 @@
       "id": 517,
       "diagnosticCode": "7712",
       "conditionName": "Multiple myeloma",
-      "aliases": [
-        "multiple myeloma"
-      ],
+      "aliases": ["multiple myeloma"],
       "searchTerms": [
         "multiple",
         "7712",
@@ -15768,10 +14691,7 @@
       "id": 518,
       "diagnosticCode": "7714",
       "conditionName": "Sickle cell anemia",
-      "aliases": [
-        "sickle cell anemia",
-        "SCA"
-      ],
+      "aliases": ["sickle cell anemia", "SCA"],
       "searchTerms": [
         "anemia",
         "cell",
@@ -15799,9 +14719,7 @@
       "id": 519,
       "diagnosticCode": "7715",
       "conditionName": "Non-Hodgkin's lymphoma",
-      "aliases": [
-        "non-hodgkin's lymphoma"
-      ],
+      "aliases": ["non-hodgkin's lymphoma"],
       "searchTerms": [
         "lymphoma",
         "7715",
@@ -15826,9 +14744,7 @@
       "id": 520,
       "diagnosticCode": "7716",
       "conditionName": "Aplastic anemia",
-      "aliases": [
-        "aplastic anemia"
-      ],
+      "aliases": ["aplastic anemia"],
       "searchTerms": [
         "aplastic anemia",
         "anemia",
@@ -15949,10 +14865,7 @@
       "id": 524,
       "diagnosticCode": "7720",
       "conditionName": "Iron deficiency anemia",
-      "aliases": [
-        "iron deficiency anemia",
-        "IDA"
-      ],
+      "aliases": ["iron deficiency anemia", "IDA"],
       "searchTerms": [
         "anemia",
         "hematologic blood",
@@ -15979,10 +14892,7 @@
       "id": 525,
       "diagnosticCode": "7721",
       "conditionName": "Folic acid deficiency",
-      "aliases": [
-        "folic acid deficiency",
-        "FAD"
-      ],
+      "aliases": ["folic acid deficiency", "FAD"],
       "searchTerms": [
         "acid",
         "deficiency",
@@ -16035,10 +14945,7 @@
       "id": 527,
       "diagnosticCode": "7723",
       "conditionName": "Acquired hemolytic anemia",
-      "aliases": [
-        "AHA",
-        "acquired hemolytic anemia"
-      ],
+      "aliases": ["AHA", "acquired hemolytic anemia"],
       "searchTerms": [
         "7723",
         "anemia",
@@ -16067,9 +14974,7 @@
       "id": 528,
       "diagnosticCode": "7724",
       "conditionName": "Solitary plasmacytoma",
-      "aliases": [
-        "solitary plasmacytoma"
-      ],
+      "aliases": ["solitary plasmacytoma"],
       "searchTerms": [
         "7724",
         "solitary plasmacytoma",
@@ -16094,9 +14999,7 @@
       "id": 529,
       "diagnosticCode": "7725",
       "conditionName": "Myelodysplastic syndromes",
-      "aliases": [
-        "myelodysplastic syndromes"
-      ],
+      "aliases": ["myelodysplastic syndromes"],
       "searchTerms": [
         "7725",
         "myelodysplastic",
@@ -16123,11 +15026,7 @@
       "id": 530,
       "diagnosticCode": "7800",
       "conditionName": "Skin Conditions (Various)",
-      "aliases": [
-        "skin disease",
-        "dermatological condition",
-        "skin disorder"
-      ],
+      "aliases": ["skin disease", "dermatological condition", "skin disorder"],
       "searchTerms": [
         "skin condition",
         "dermatological",
@@ -16268,10 +15167,7 @@
       "id": 534,
       "diagnosticCode": "7805",
       "conditionName": "Scars, other",
-      "aliases": [
-        "scars, other",
-        "scars"
-      ],
+      "aliases": ["scars, other", "scars"],
       "searchTerms": [
         "scars, other",
         "other",
@@ -16295,11 +15191,7 @@
       "id": 535,
       "diagnosticCode": "7806",
       "conditionName": "Eczema (Atopic Dermatitis)",
-      "aliases": [
-        "eczema",
-        "atopic dermatitis",
-        "dermatitis"
-      ],
+      "aliases": ["eczema", "atopic dermatitis", "dermatitis"],
       "searchTerms": [
         "eczema",
         "atopic dermatitis",
@@ -16366,11 +15258,7 @@
       "id": 537,
       "diagnosticCode": "7808",
       "conditionName": "Leishmaniasis, Old World",
-      "aliases": [
-        "leishmaniasis world",
-        "leishmaniasis, old world",
-        "LOW"
-      ],
+      "aliases": ["leishmaniasis world", "leishmaniasis, old world", "LOW"],
       "searchTerms": [
         "world",
         "leishmaniasis",
@@ -16393,10 +15281,7 @@
       "id": 538,
       "diagnosticCode": "7809",
       "conditionName": "Discoid lupus erythematosus",
-      "aliases": [
-        "discoid lupus erythematosus",
-        "DLE"
-      ],
+      "aliases": ["discoid lupus erythematosus", "DLE"],
       "searchTerms": [
         "discoid lupus erythematosus",
         "erythematosus",
@@ -16449,14 +15334,8 @@
       "id": 540,
       "diagnosticCode": "7813",
       "conditionName": "Dermatophytosis",
-      "aliases": [
-        "dermatophytosis"
-      ],
-      "searchTerms": [
-        "7813",
-        "dermatophytosis",
-        "skin dermatologic"
-      ],
+      "aliases": ["dermatophytosis"],
+      "searchTerms": ["7813", "dermatophytosis", "skin dermatologic"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16474,9 +15353,7 @@
       "id": 541,
       "diagnosticCode": "7815",
       "conditionName": "Bullous disorders",
-      "aliases": [
-        "bullous disorders"
-      ],
+      "aliases": ["bullous disorders"],
       "searchTerms": [
         "7815",
         "bullous",
@@ -16502,11 +15379,7 @@
       "id": 542,
       "diagnosticCode": "7816",
       "conditionName": "Psoriasis",
-      "aliases": [
-        "psoriasis",
-        "plaque psoriasis",
-        "scaly skin"
-      ],
+      "aliases": ["psoriasis", "plaque psoriasis", "scaly skin"],
       "searchTerms": [
         "psoriasis",
         "plaque psoriasis",
@@ -16544,14 +15417,8 @@
       "id": 543,
       "diagnosticCode": "7817",
       "conditionName": "Erythroderma",
-      "aliases": [
-        "erythroderma"
-      ],
-      "searchTerms": [
-        "erythroderma",
-        "skin dermatologic",
-        "7817"
-      ],
+      "aliases": ["erythroderma"],
+      "searchTerms": ["erythroderma", "skin dermatologic", "7817"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16570,10 +15437,7 @@
       "id": 544,
       "diagnosticCode": "7818",
       "conditionName": "Malignant skin neoplasms",
-      "aliases": [
-        "malignant skin neoplasms",
-        "MSN"
-      ],
+      "aliases": ["malignant skin neoplasms", "MSN"],
       "searchTerms": [
         "7818",
         "skin",
@@ -16599,10 +15463,7 @@
       "id": 545,
       "diagnosticCode": "7819",
       "conditionName": "Benign skin neoplasms",
-      "aliases": [
-        "BSN",
-        "benign skin neoplasms"
-      ],
+      "aliases": ["BSN", "benign skin neoplasms"],
       "searchTerms": [
         "skin",
         "benign skin neoplasms",
@@ -16627,11 +15488,7 @@
       "id": 546,
       "diagnosticCode": "7820",
       "conditionName": "Infections of the skin",
-      "aliases": [
-        "infections skin",
-        "infections of the skin",
-        "ITS"
-      ],
+      "aliases": ["infections skin", "infections of the skin", "ITS"],
       "searchTerms": [
         "infections",
         "skin",
@@ -16685,9 +15542,7 @@
       "id": 548,
       "diagnosticCode": "7822",
       "conditionName": "Papulosquamous disorders",
-      "aliases": [
-        "papulosquamous disorders"
-      ],
+      "aliases": ["papulosquamous disorders"],
       "searchTerms": [
         "7822",
         "papulosquamous",
@@ -16710,14 +15565,8 @@
       "id": 549,
       "diagnosticCode": "7823",
       "conditionName": "Vitiligo",
-      "aliases": [
-        "vitiligo"
-      ],
-      "searchTerms": [
-        "7823",
-        "skin dermatologic",
-        "vitiligo"
-      ],
+      "aliases": ["vitiligo"],
+      "searchTerms": ["7823", "skin dermatologic", "vitiligo"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16761,10 +15610,7 @@
       "id": 551,
       "diagnosticCode": "7825",
       "conditionName": "Chronic urticaria",
-      "aliases": [
-        "urticaria",
-        "chronic urticaria"
-      ],
+      "aliases": ["urticaria", "chronic urticaria"],
       "searchTerms": [
         "7825",
         "chronic",
@@ -16818,9 +15664,7 @@
       "id": 553,
       "diagnosticCode": "7827",
       "conditionName": "Erythema multiforme",
-      "aliases": [
-        "erythema multiforme"
-      ],
+      "aliases": ["erythema multiforme"],
       "searchTerms": [
         "7827",
         "skin dermatologic",
@@ -16845,14 +15689,8 @@
       "id": 554,
       "diagnosticCode": "7828",
       "conditionName": "Acne",
-      "aliases": [
-        "acne"
-      ],
-      "searchTerms": [
-        "acne",
-        "7828",
-        "skin dermatologic"
-      ],
+      "aliases": ["acne"],
+      "searchTerms": ["acne", "7828", "skin dermatologic"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16868,14 +15706,8 @@
       "id": 555,
       "diagnosticCode": "7829",
       "conditionName": "Chloracne",
-      "aliases": [
-        "chloracne"
-      ],
-      "searchTerms": [
-        "skin dermatologic",
-        "7829",
-        "chloracne"
-      ],
+      "aliases": ["chloracne"],
+      "searchTerms": ["skin dermatologic", "7829", "chloracne"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16891,9 +15723,7 @@
       "id": 556,
       "diagnosticCode": "7830",
       "conditionName": "Scarring alopecia",
-      "aliases": [
-        "scarring alopecia"
-      ],
+      "aliases": ["scarring alopecia"],
       "searchTerms": [
         "alopecia",
         "scarring alopecia",
@@ -16916,9 +15746,7 @@
       "id": 557,
       "diagnosticCode": "7831",
       "conditionName": "Alopecia areata",
-      "aliases": [
-        "alopecia areata"
-      ],
+      "aliases": ["alopecia areata"],
       "searchTerms": [
         "alopecia",
         "areata",
@@ -16936,14 +15764,8 @@
       "id": 558,
       "diagnosticCode": "7832",
       "conditionName": "Hyperhidrosis",
-      "aliases": [
-        "hyperhidrosis"
-      ],
-      "searchTerms": [
-        "hyperhidrosis",
-        "skin dermatologic",
-        "7832"
-      ],
+      "aliases": ["hyperhidrosis"],
+      "searchTerms": ["hyperhidrosis", "skin dermatologic", "7832"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.118",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -16954,9 +15776,7 @@
       "id": 559,
       "diagnosticCode": "7833",
       "conditionName": "Malignant melanoma",
-      "aliases": [
-        "malignant melanoma"
-      ],
+      "aliases": ["malignant melanoma"],
       "searchTerms": [
         "melanoma",
         "malignant",
@@ -17193,14 +16013,8 @@
       "id": 564,
       "diagnosticCode": "7904",
       "conditionName": "Hyperparathyroidism",
-      "aliases": [
-        "hyperparathyroidism"
-      ],
-      "searchTerms": [
-        "7904",
-        "endocrine hormonal",
-        "hyperparathyroidism"
-      ],
+      "aliases": ["hyperparathyroidism"],
+      "searchTerms": ["7904", "endocrine hormonal", "hyperparathyroidism"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17219,14 +16033,8 @@
       "id": 565,
       "diagnosticCode": "7905",
       "conditionName": "Hypoparathyroidism",
-      "aliases": [
-        "hypoparathyroidism"
-      ],
-      "searchTerms": [
-        "7905",
-        "endocrine hormonal",
-        "hypoparathyroidism"
-      ],
+      "aliases": ["hypoparathyroidism"],
+      "searchTerms": ["7905", "endocrine hormonal", "hypoparathyroidism"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17246,14 +16054,8 @@
       "id": 566,
       "diagnosticCode": "7906",
       "conditionName": "Thyroiditis",
-      "aliases": [
-        "thyroiditis"
-      ],
-      "searchTerms": [
-        "7906",
-        "thyroiditis",
-        "endocrine hormonal"
-      ],
+      "aliases": ["thyroiditis"],
+      "searchTerms": ["7906", "thyroiditis", "endocrine hormonal"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17269,9 +16071,7 @@
       "id": 567,
       "diagnosticCode": "7907",
       "conditionName": "Cushing's syndrome",
-      "aliases": [
-        "cushing's syndrome"
-      ],
+      "aliases": ["cushing's syndrome"],
       "searchTerms": [
         "7907",
         "syndrome",
@@ -17298,14 +16098,8 @@
       "id": 568,
       "diagnosticCode": "7908",
       "conditionName": "Acromegaly",
-      "aliases": [
-        "acromegaly"
-      ],
-      "searchTerms": [
-        "7908",
-        "acromegaly",
-        "endocrine hormonal"
-      ],
+      "aliases": ["acromegaly"],
+      "searchTerms": ["7908", "acromegaly", "endocrine hormonal"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17325,9 +16119,7 @@
       "id": 569,
       "diagnosticCode": "7909",
       "conditionName": "Diabetes insipidus",
-      "aliases": [
-        "diabetes insipidus"
-      ],
+      "aliases": ["diabetes insipidus"],
       "searchTerms": [
         "7909",
         "diabetes insipidus",
@@ -17386,9 +16178,7 @@
       "id": 571,
       "diagnosticCode": "7912",
       "conditionName": "Polyglandular syndrome",
-      "aliases": [
-        "polyglandular syndrome"
-      ],
+      "aliases": ["polyglandular syndrome"],
       "searchTerms": [
         "polyglandular syndrome",
         "syndrome",
@@ -17414,9 +16204,7 @@
       "id": 572,
       "diagnosticCode": "7913",
       "conditionName": "Diabetes mellitus",
-      "aliases": [
-        "diabetes mellitus"
-      ],
+      "aliases": ["diabetes mellitus"],
       "searchTerms": [
         "7913",
         "mellitus",
@@ -17503,14 +16291,8 @@
       "id": 575,
       "diagnosticCode": "7916",
       "conditionName": "Hyperpituitarism",
-      "aliases": [
-        "hyperpituitarism"
-      ],
-      "searchTerms": [
-        "7916",
-        "endocrine hormonal",
-        "hyperpituitarism"
-      ],
+      "aliases": ["hyperpituitarism"],
+      "searchTerms": ["7916", "endocrine hormonal", "hyperpituitarism"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17530,14 +16312,8 @@
       "id": 576,
       "diagnosticCode": "7917",
       "conditionName": "Hyperaldosteronism",
-      "aliases": [
-        "hyperaldosteronism"
-      ],
-      "searchTerms": [
-        "hyperaldosteronism",
-        "endocrine hormonal",
-        "7917"
-      ],
+      "aliases": ["hyperaldosteronism"],
+      "searchTerms": ["hyperaldosteronism", "endocrine hormonal", "7917"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17557,14 +16333,8 @@
       "id": 577,
       "diagnosticCode": "7918",
       "conditionName": "Pheochromocytoma",
-      "aliases": [
-        "pheochromocytoma"
-      ],
-      "searchTerms": [
-        "endocrine hormonal",
-        "7918",
-        "pheochromocytoma"
-      ],
+      "aliases": ["pheochromocytoma"],
+      "searchTerms": ["endocrine hormonal", "7918", "pheochromocytoma"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.119",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17643,11 +16413,7 @@
       "id": 580,
       "diagnosticCode": "8002",
       "conditionName": "Paralysis of Facial Nerve (Bell's Palsy)",
-      "aliases": [
-        "Bell's palsy",
-        "facial paralysis",
-        "facial nerve palsy"
-      ],
+      "aliases": ["Bell's palsy", "facial paralysis", "facial nerve palsy"],
       "searchTerms": [
         "Bell's palsy",
         "facial paralysis",
@@ -17715,9 +16481,7 @@
       "id": 582,
       "diagnosticCode": "8004",
       "conditionName": "Paralysis agitans",
-      "aliases": [
-        "paralysis agitans"
-      ],
+      "aliases": ["paralysis agitans"],
       "searchTerms": [
         "8004",
         "agitans",
@@ -17743,9 +16507,7 @@
       "id": 583,
       "diagnosticCode": "8005",
       "conditionName": "Bulbar palsy",
-      "aliases": [
-        "bulbar palsy"
-      ],
+      "aliases": ["bulbar palsy"],
       "searchTerms": [
         "bulbar",
         "bulbar palsy",
@@ -17854,14 +16616,8 @@
       "id": 587,
       "diagnosticCode": "8010",
       "conditionName": "Myelitis",
-      "aliases": [
-        "myelitis"
-      ],
-      "searchTerms": [
-        "8010",
-        "neurological nerve brain",
-        "myelitis"
-      ],
+      "aliases": ["myelitis"],
+      "searchTerms": ["8010", "neurological nerve brain", "myelitis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17882,10 +16638,7 @@
       "id": 588,
       "diagnosticCode": "8011",
       "conditionName": "Poliomyelitis, anterior",
-      "aliases": [
-        "poliomyelitis, anterior",
-        "poliomyelitis anterior"
-      ],
+      "aliases": ["poliomyelitis, anterior", "poliomyelitis anterior"],
       "searchTerms": [
         "anterior",
         "poliomyelitis, anterior",
@@ -17913,14 +16666,8 @@
       "id": 589,
       "diagnosticCode": "8012",
       "conditionName": "Hematomyelia",
-      "aliases": [
-        "hematomyelia"
-      ],
-      "searchTerms": [
-        "hematomyelia",
-        "8012",
-        "neurological nerve brain"
-      ],
+      "aliases": ["hematomyelia"],
+      "searchTerms": ["hematomyelia", "8012", "neurological nerve brain"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -17936,10 +16683,7 @@
       "id": 590,
       "diagnosticCode": "8013",
       "conditionName": "Syphilis, cerebrospinal",
-      "aliases": [
-        "syphilis, cerebrospinal",
-        "syphilis cerebrospinal"
-      ],
+      "aliases": ["syphilis, cerebrospinal", "syphilis cerebrospinal"],
       "searchTerms": [
         "cerebrospinal",
         "neurological nerve brain",
@@ -17966,10 +16710,7 @@
       "id": 591,
       "diagnosticCode": "8014",
       "conditionName": "Syphilis, meningovascular",
-      "aliases": [
-        "syphilis, meningovascular",
-        "syphilis meningovascular"
-      ],
+      "aliases": ["syphilis, meningovascular", "syphilis meningovascular"],
       "searchTerms": [
         "8014",
         "syphilis, meningovascular",
@@ -17992,9 +16733,7 @@
       "id": 592,
       "diagnosticCode": "8015",
       "conditionName": "Tabes dorsalis",
-      "aliases": [
-        "tabes dorsalis"
-      ],
+      "aliases": ["tabes dorsalis"],
       "searchTerms": [
         "dorsalis",
         "8015",
@@ -18020,10 +16759,7 @@
       "id": 593,
       "diagnosticCode": "8017",
       "conditionName": "Amyotrophic lateral sclerosis",
-      "aliases": [
-        "ALS",
-        "amyotrophic lateral sclerosis"
-      ],
+      "aliases": ["ALS", "amyotrophic lateral sclerosis"],
       "searchTerms": [
         "amyotrophic lateral sclerosis",
         "8017",
@@ -18048,15 +16784,8 @@
       "id": 594,
       "diagnosticCode": "8018",
       "conditionName": "Multiple Sclerosis",
-      "aliases": [
-        "MS",
-        "multiple sclerosis"
-      ],
-      "searchTerms": [
-        "multiple sclerosis",
-        "MS",
-        "demyelinating disease"
-      ],
+      "aliases": ["MS", "multiple sclerosis"],
+      "searchTerms": ["multiple sclerosis", "MS", "demyelinating disease"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.124a#p-4.124a(MultipleSclerosis)",
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Documentation must include: MRI showing lesions on brain/spinal cord, cerebrospinal fluid findings, neurological examination documenting deficits, EDSS (Expanded Disability Status Scale) score, symptoms (fatigue, weakness, balance problems), current disease-modifying therapy, and functional limitations.",
@@ -18111,11 +16840,7 @@
       "id": 596,
       "diagnosticCode": "8020",
       "conditionName": "Brain, abscess of",
-      "aliases": [
-        "brain abscess",
-        "brain, abscess of",
-        "BA"
-      ],
+      "aliases": ["brain abscess", "brain, abscess of", "BA"],
       "searchTerms": [
         "8020",
         "brain, abscess of",
@@ -18198,10 +16923,7 @@
       "id": 599,
       "diagnosticCode": "8023",
       "conditionName": "Progressive muscular atrophy",
-      "aliases": [
-        "progressive muscular atrophy",
-        "PMA"
-      ],
+      "aliases": ["progressive muscular atrophy", "PMA"],
       "searchTerms": [
         "atrophy",
         "progressive muscular atrophy",
@@ -18226,14 +16948,8 @@
       "id": 600,
       "diagnosticCode": "8024",
       "conditionName": "Syringomyelia",
-      "aliases": [
-        "syringomyelia"
-      ],
-      "searchTerms": [
-        "8024",
-        "neurological nerve brain",
-        "syringomyelia"
-      ],
+      "aliases": ["syringomyelia"],
+      "searchTerms": ["8024", "neurological nerve brain", "syringomyelia"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -18252,10 +16968,7 @@
       "id": 601,
       "diagnosticCode": "8025",
       "conditionName": "Myasthenia Gravis",
-      "aliases": [
-        "MG",
-        "myasthenia gravis"
-      ],
+      "aliases": ["MG", "myasthenia gravis"],
       "searchTerms": [
         "myasthenia gravis",
         "MG",
@@ -18286,12 +16999,7 @@
       "id": 602,
       "diagnosticCode": "8045",
       "conditionName": "Traumatic Brain Injury (TBI) Residuals",
-      "aliases": [
-        "TBI",
-        "brain injury",
-        "concussion",
-        "head injury"
-      ],
+      "aliases": ["TBI", "brain injury", "concussion", "head injury"],
       "searchTerms": [
         "traumatic brain injury",
         "TBI",
@@ -18341,9 +17049,7 @@
       "id": 603,
       "diagnosticCode": "8046",
       "conditionName": "Cerebral arteriosclerosis",
-      "aliases": [
-        "cerebral arteriosclerosis"
-      ],
+      "aliases": ["cerebral arteriosclerosis"],
       "searchTerms": [
         "8046",
         "arteriosclerosis",
@@ -18370,11 +17076,7 @@
       "id": 604,
       "diagnosticCode": "8100",
       "conditionName": "Migraine Headaches",
-      "aliases": [
-        "migraines",
-        "migraine",
-        "vascular headache"
-      ],
+      "aliases": ["migraines", "migraine", "vascular headache"],
       "searchTerms": [
         "migraine",
         "migraines",
@@ -18418,10 +17120,7 @@
       "id": 605,
       "diagnosticCode": "8103",
       "conditionName": "Tic, convulsive",
-      "aliases": [
-        "convulsive",
-        "tic, convulsive"
-      ],
+      "aliases": ["convulsive", "tic, convulsive"],
       "searchTerms": [
         "neurological nerve brain",
         "convulsive",
@@ -18446,9 +17145,7 @@
       "id": 606,
       "diagnosticCode": "8104",
       "conditionName": "Paramyoclonus multiplex",
-      "aliases": [
-        "paramyoclonus multiplex"
-      ],
+      "aliases": ["paramyoclonus multiplex"],
       "searchTerms": [
         "paramyoclonus",
         "paramyoclonus multiplex",
@@ -18473,10 +17170,7 @@
       "id": 607,
       "diagnosticCode": "8105",
       "conditionName": "Chorea, Sydenham's",
-      "aliases": [
-        "chorea, sydenham's",
-        "chorea sydenham's"
-      ],
+      "aliases": ["chorea, sydenham's", "chorea sydenham's"],
       "searchTerms": [
         "chorea",
         "chorea, sydenham's",
@@ -18501,10 +17195,7 @@
       "id": 608,
       "diagnosticCode": "8106",
       "conditionName": "Chorea, Huntington's",
-      "aliases": [
-        "chorea huntington's",
-        "chorea, huntington's"
-      ],
+      "aliases": ["chorea huntington's", "chorea, huntington's"],
       "searchTerms": [
         "huntington's",
         "chorea",
@@ -18528,10 +17219,7 @@
       "id": 609,
       "diagnosticCode": "8107",
       "conditionName": "Athetosis, acquired",
-      "aliases": [
-        "athetosis, acquired",
-        "athetosis acquired"
-      ],
+      "aliases": ["athetosis, acquired", "athetosis acquired"],
       "searchTerms": [
         "athetosis, acquired",
         "acquired",
@@ -18557,14 +17245,8 @@
       "id": 610,
       "diagnosticCode": "8108",
       "conditionName": "Narcolepsy",
-      "aliases": [
-        "narcolepsy"
-      ],
-      "searchTerms": [
-        "narcolepsy",
-        "8108",
-        "neurological nerve brain"
-      ],
+      "aliases": ["narcolepsy"],
+      "searchTerms": ["narcolepsy", "8108", "neurological nerve brain"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.124a",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -19354,11 +18036,7 @@
       "id": 635,
       "diagnosticCode": "8516",
       "conditionName": "Ulnar nerve, paralysis of",
-      "aliases": [
-        "ulnar nerve paralysis",
-        "ulnar nerve, paralysis of",
-        "UNP"
-      ],
+      "aliases": ["ulnar nerve paralysis", "ulnar nerve, paralysis of", "UNP"],
       "searchTerms": [
         "ulnar nerve, paralysis of",
         "ulnar",
@@ -19483,11 +18161,7 @@
       "id": 639,
       "diagnosticCode": "8520",
       "conditionName": "Radiculopathy (Sciatic Nerve)",
-      "aliases": [
-        "sciatica",
-        "sciatic nerve pain",
-        "radiculopathy"
-      ],
+      "aliases": ["sciatica", "sciatic nerve pain", "radiculopathy"],
       "searchTerms": [
         "sciatica",
         "sciatic nerve",
@@ -20000,11 +18674,7 @@
       "id": 656,
       "diagnosticCode": "8615",
       "conditionName": "Neuritis, median nerve",
-      "aliases": [
-        "NMN",
-        "neuritis median nerve",
-        "neuritis, median nerve"
-      ],
+      "aliases": ["NMN", "neuritis median nerve", "neuritis, median nerve"],
       "searchTerms": [
         "median",
         "8615",
@@ -20023,11 +18693,7 @@
       "id": 657,
       "diagnosticCode": "8616",
       "conditionName": "Neuritis, ulnar nerve",
-      "aliases": [
-        "NUN",
-        "neuritis ulnar nerve",
-        "neuritis, ulnar nerve"
-      ],
+      "aliases": ["NUN", "neuritis ulnar nerve", "neuritis, ulnar nerve"],
       "searchTerms": [
         "8616",
         "ulnar",
@@ -20116,11 +18782,7 @@
       "id": 661,
       "diagnosticCode": "8620",
       "conditionName": "Neuritis, sciatic nerve",
-      "aliases": [
-        "neuritis, sciatic nerve",
-        "neuritis sciatic nerve",
-        "NSN"
-      ],
+      "aliases": ["neuritis, sciatic nerve", "neuritis sciatic nerve", "NSN"],
       "searchTerms": [
         "sciatic",
         "8620",
@@ -20497,11 +19159,7 @@
       "id": 677,
       "diagnosticCode": "8715",
       "conditionName": "Neuralgia, median nerve",
-      "aliases": [
-        "neuralgia median nerve",
-        "neuralgia, median nerve",
-        "NMN"
-      ],
+      "aliases": ["neuralgia median nerve", "neuralgia, median nerve", "NMN"],
       "searchTerms": [
         "median",
         "8715",
@@ -20520,11 +19178,7 @@
       "id": 678,
       "diagnosticCode": "8716",
       "conditionName": "Neuralgia, ulnar nerve",
-      "aliases": [
-        "neuralgia ulnar nerve",
-        "NUN",
-        "neuralgia, ulnar nerve"
-      ],
+      "aliases": ["neuralgia ulnar nerve", "NUN", "neuralgia, ulnar nerve"],
       "searchTerms": [
         "8716",
         "ulnar",
@@ -20613,11 +19267,7 @@
       "id": 682,
       "diagnosticCode": "8720",
       "conditionName": "Neuralgia, sciatic nerve",
-      "aliases": [
-        "neuralgia sciatic nerve",
-        "NSN",
-        "neuralgia, sciatic nerve"
-      ],
+      "aliases": ["neuralgia sciatic nerve", "NSN", "neuralgia, sciatic nerve"],
       "searchTerms": [
         "sciatic",
         "neuralgia, sciatic nerve",
@@ -20876,12 +19526,7 @@
       "id": 693,
       "diagnosticCode": "8910",
       "conditionName": "Epilepsy (Major Seizures)",
-      "aliases": [
-        "epilepsy",
-        "seizures",
-        "seizure disorder",
-        "convulsions"
-      ],
+      "aliases": ["epilepsy", "seizures", "seizure disorder", "convulsions"],
       "searchTerms": [
         "epilepsy",
         "seizures",
@@ -20912,11 +19557,7 @@
       "id": 694,
       "diagnosticCode": "8911",
       "conditionName": "Petit mal epilepsy",
-      "aliases": [
-        "petit epilepsy",
-        "petit mal epilepsy",
-        "PME"
-      ],
+      "aliases": ["petit epilepsy", "petit mal epilepsy", "PME"],
       "searchTerms": [
         "petit mal epilepsy",
         "epilepsy",
@@ -20959,9 +19600,7 @@
       "id": 696,
       "diagnosticCode": "8913",
       "conditionName": "Diencephalic epilepsy",
-      "aliases": [
-        "diencephalic epilepsy"
-      ],
+      "aliases": ["diencephalic epilepsy"],
       "searchTerms": [
         "diencephalic epilepsy",
         "epilepsy",
@@ -20979,9 +19618,7 @@
       "id": 697,
       "diagnosticCode": "8914",
       "conditionName": "Psychomotor epilepsy",
-      "aliases": [
-        "psychomotor epilepsy"
-      ],
+      "aliases": ["psychomotor epilepsy"],
       "searchTerms": [
         "epilepsy",
         "8914",
@@ -20999,15 +19636,8 @@
       "id": 698,
       "diagnosticCode": "9201",
       "conditionName": "Schizophrenia",
-      "aliases": [
-        "schizophrenia",
-        "psychotic disorder"
-      ],
-      "searchTerms": [
-        "schizophrenia",
-        "psychotic disorder",
-        "psychosis"
-      ],
+      "aliases": ["schizophrenia", "psychotic disorder"],
+      "searchTerms": ["schizophrenia", "psychotic disorder", "psychosis"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.130",
       "ratingSchedule": "38 CFR § 4.130",
       "documentationRequirements": "Documentation must include: psychiatric evaluation, DSM-5 diagnosis, positive/negative symptoms, medication regimen, hospitalizations, functional impairment in work/social/self-care areas, and GAF score.",
@@ -21047,9 +19677,7 @@
       "id": 699,
       "diagnosticCode": "9208",
       "conditionName": "Delusional disorder",
-      "aliases": [
-        "delusional disorder"
-      ],
+      "aliases": ["delusional disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "delusional disorder",
@@ -21116,9 +19744,7 @@
       "id": 701,
       "diagnosticCode": "9211",
       "conditionName": "Schizoaffective disorder",
-      "aliases": [
-        "schizoaffective disorder"
-      ],
+      "aliases": ["schizoaffective disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "disorder",
@@ -21148,14 +19774,8 @@
       "id": 702,
       "diagnosticCode": "9300",
       "conditionName": "Delirium",
-      "aliases": [
-        "delirium"
-      ],
-      "searchTerms": [
-        "9300",
-        "mental health psychiatric",
-        "delirium"
-      ],
+      "aliases": ["delirium"],
+      "searchTerms": ["9300", "mental health psychiatric", "delirium"],
       "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4",
       "ratingSchedule": "38 CFR § 4.130",
       "documentationRequirements": "Requires medical documentation, diagnosis confirmation, treatment history, and functional impact assessment. Consult 38 CFR Part 4 for specific requirements.",
@@ -21287,10 +19907,7 @@
       "id": 706,
       "diagnosticCode": "9310",
       "conditionName": "Unspecified neurocognitive disorder",
-      "aliases": [
-        "unspecified neurocognitive disorder",
-        "UND"
-      ],
+      "aliases": ["unspecified neurocognitive disorder", "UND"],
       "searchTerms": [
         "unspecified",
         "mental health psychiatric",
@@ -21392,11 +20009,7 @@
       "id": 709,
       "diagnosticCode": "9400",
       "conditionName": "Generalized Anxiety Disorder",
-      "aliases": [
-        "GAD",
-        "anxiety disorder",
-        "generalized anxiety"
-      ],
+      "aliases": ["GAD", "anxiety disorder", "generalized anxiety"],
       "searchTerms": [
         "generalized anxiety disorder",
         "GAD",
@@ -21479,12 +20092,7 @@
       "id": 711,
       "diagnosticCode": "9404",
       "conditionName": "Obsessive Compulsive Disorder (OCD)",
-      "aliases": [
-        "OCD",
-        "obsessive compulsive",
-        "obsessions",
-        "compulsions"
-      ],
+      "aliases": ["OCD", "obsessive compulsive", "obsessions", "compulsions"],
       "searchTerms": [
         "OCD",
         "obsessive compulsive disorder",
@@ -21618,11 +20226,7 @@
       "id": 714,
       "diagnosticCode": "9412",
       "conditionName": "Panic Disorder",
-      "aliases": [
-        "panic attacks",
-        "panic disorder",
-        "panic anxiety"
-      ],
+      "aliases": ["panic attacks", "panic disorder", "panic anxiety"],
       "searchTerms": [
         "panic disorder",
         "panic attacks",
@@ -21664,10 +20268,7 @@
       "id": 715,
       "diagnosticCode": "9413",
       "conditionName": "Unspecified anxiety disorder",
-      "aliases": [
-        "UAD",
-        "unspecified anxiety disorder"
-      ],
+      "aliases": ["UAD", "unspecified anxiety disorder"],
       "searchTerms": [
         "unspecified",
         "mental health psychiatric",
@@ -21734,9 +20335,7 @@
       "id": 717,
       "diagnosticCode": "9417",
       "conditionName": "Depersonalization/derealization disorder",
-      "aliases": [
-        "depersonalization/derealization disorder"
-      ],
+      "aliases": ["depersonalization/derealization disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "disorder",
@@ -21766,10 +20365,7 @@
       "id": 718,
       "diagnosticCode": "9421",
       "conditionName": "Somatic symptom disorder",
-      "aliases": [
-        "SSD",
-        "somatic symptom disorder"
-      ],
+      "aliases": ["SSD", "somatic symptom disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "disorder",
@@ -21873,9 +20469,7 @@
       "id": 721,
       "diagnosticCode": "9424",
       "conditionName": "Conversion disorder",
-      "aliases": [
-        "conversion disorder"
-      ],
+      "aliases": ["conversion disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "disorder",
@@ -21905,10 +20499,7 @@
       "id": 722,
       "diagnosticCode": "9425",
       "conditionName": "Illness anxiety disorder",
-      "aliases": [
-        "IAD",
-        "illness anxiety disorder"
-      ],
+      "aliases": ["IAD", "illness anxiety disorder"],
       "searchTerms": [
         "mental health psychiatric",
         "disorder",
@@ -21939,9 +20530,7 @@
       "id": 723,
       "diagnosticCode": "9431",
       "conditionName": "Cyclothymic disorder",
-      "aliases": [
-        "cyclothymic disorder"
-      ],
+      "aliases": ["cyclothymic disorder"],
       "searchTerms": [
         "9431",
         "mental health psychiatric",
@@ -21971,11 +20560,7 @@
       "id": 724,
       "diagnosticCode": "9432",
       "conditionName": "Bipolar Disorder",
-      "aliases": [
-        "bipolar",
-        "manic depression",
-        "bipolar disorder"
-      ],
+      "aliases": ["bipolar", "manic depression", "bipolar disorder"],
       "searchTerms": [
         "bipolar disorder",
         "bipolar",
@@ -22105,10 +20690,7 @@
       "id": 727,
       "diagnosticCode": "9435",
       "conditionName": "Unspecified depressive disorder",
-      "aliases": [
-        "UDD",
-        "unspecified depressive disorder"
-      ],
+      "aliases": ["UDD", "unspecified depressive disorder"],
       "searchTerms": [
         "unspecified",
         "mental health psychiatric",
@@ -22139,10 +20721,7 @@
       "id": 728,
       "diagnosticCode": "9440",
       "conditionName": "Chronic Adjustment Disorder",
-      "aliases": [
-        "adjustment disorder",
-        "stress reaction"
-      ],
+      "aliases": ["adjustment disorder", "stress reaction"],
       "searchTerms": [
         "adjustment disorder",
         "chronic adjustment",
@@ -22183,9 +20762,7 @@
       "id": 729,
       "diagnosticCode": "9520",
       "conditionName": "Anorexia nervosa",
-      "aliases": [
-        "anorexia nervosa"
-      ],
+      "aliases": ["anorexia nervosa"],
       "searchTerms": [
         "mental health psychiatric",
         "9520",
@@ -22203,9 +20780,7 @@
       "id": 730,
       "diagnosticCode": "9521",
       "conditionName": "Bulimia nervosa",
-      "aliases": [
-        "bulimia nervosa"
-      ],
+      "aliases": ["bulimia nervosa"],
       "searchTerms": [
         "bulimia nervosa",
         "mental health psychiatric",
@@ -22312,11 +20887,7 @@
       "id": 734,
       "diagnosticCode": "9903",
       "conditionName": "Mandible, nonunion of",
-      "aliases": [
-        "mandible nonunion",
-        "MN",
-        "mandible, nonunion of"
-      ],
+      "aliases": ["mandible nonunion", "MN", "mandible, nonunion of"],
       "searchTerms": [
         "dental oral mouth",
         "nonunion",
@@ -22340,11 +20911,7 @@
       "id": 735,
       "diagnosticCode": "9904",
       "conditionName": "Mandible, malunion of",
-      "aliases": [
-        "mandible malunion",
-        "MM",
-        "mandible, malunion of"
-      ],
+      "aliases": ["mandible malunion", "MM", "mandible, malunion of"],
       "searchTerms": [
         "dental oral mouth",
         "mandible, malunion of",
@@ -22368,12 +20935,7 @@
       "id": 736,
       "diagnosticCode": "9905",
       "conditionName": "Temporomandibular Joint (TMJ) Disorder",
-      "aliases": [
-        "TMJ",
-        "TMJ disorder",
-        "jaw pain",
-        "temporomandibular joint"
-      ],
+      "aliases": ["TMJ", "TMJ disorder", "jaw pain", "temporomandibular joint"],
       "searchTerms": [
         "TMJ",
         "temporomandibular",
@@ -22414,9 +20976,7 @@
       "id": 737,
       "diagnosticCode": "9908",
       "conditionName": "Condyloid process",
-      "aliases": [
-        "condyloid process"
-      ],
+      "aliases": ["condyloid process"],
       "searchTerms": [
         "condyloid process",
         "dental oral mouth",
@@ -22440,9 +21000,7 @@
       "id": 738,
       "diagnosticCode": "9909",
       "conditionName": "Coronoid process",
-      "aliases": [
-        "coronoid process"
-      ],
+      "aliases": ["coronoid process"],
       "searchTerms": [
         "dental oral mouth",
         "9909",
@@ -22466,11 +21024,7 @@
       "id": 739,
       "diagnosticCode": "9911",
       "conditionName": "Hard palate, loss of",
-      "aliases": [
-        "hard palate loss",
-        "HPL",
-        "hard palate, loss of"
-      ],
+      "aliases": ["hard palate loss", "HPL", "hard palate, loss of"],
       "searchTerms": [
         "loss",
         "dental oral mouth",
@@ -22496,11 +21050,7 @@
       "id": 740,
       "diagnosticCode": "9913",
       "conditionName": "Teeth, loss of",
-      "aliases": [
-        "teeth, loss of",
-        "TL",
-        "teeth loss"
-      ],
+      "aliases": ["teeth, loss of", "TL", "teeth loss"],
       "searchTerms": [
         "loss",
         "dental oral mouth",
@@ -22556,11 +21106,7 @@
       "id": 742,
       "diagnosticCode": "9915",
       "conditionName": "Maxilla, loss of half or less",
-      "aliases": [
-        "maxilla loss half",
-        "maxilla, loss of half or less",
-        "MLHL"
-      ],
+      "aliases": ["maxilla loss half", "maxilla, loss of half or less", "MLHL"],
       "searchTerms": [
         "loss",
         "maxilla",
@@ -22678,11 +21224,7 @@
       "id": 746,
       "diagnosticCode": "5250-5259",
       "conditionName": "Hip Conditions (Various)",
-      "aliases": [
-        "hip pain",
-        "hip injury",
-        "hip arthritis"
-      ],
+      "aliases": ["hip pain", "hip injury", "hip arthritis"],
       "searchTerms": [
         "hip pain",
         "hip arthritis",
@@ -22733,12 +21275,7 @@
       "id": 748,
       "diagnosticCode": "5270-5276",
       "conditionName": "Ankle and Foot Conditions",
-      "aliases": [
-        "ankle pain",
-        "foot pain",
-        "plantar fasciitis",
-        "flat feet"
-      ],
+      "aliases": ["ankle pain", "foot pain", "plantar fasciitis", "flat feet"],
       "searchTerms": [
         "ankle pain",
         "foot pain",
@@ -22760,11 +21297,7 @@
       "id": 749,
       "diagnosticCode": "8510-8540",
       "conditionName": "Peripheral Neuropathy",
-      "aliases": [
-        "neuropathy",
-        "nerve damage",
-        "peripheral nerve disorder"
-      ],
+      "aliases": ["neuropathy", "nerve damage", "peripheral nerve disorder"],
       "searchTerms": [
         "peripheral neuropathy",
         "neuropathy",
@@ -22832,13 +21365,7 @@
       "cardiovascular",
       "7005"
     ],
-    "headaches": [
-      "migraines",
-      "migraine",
-      "head pain",
-      "cephalgia",
-      "8100"
-    ],
+    "headaches": ["migraines", "migraine", "head pain", "cephalgia", "8100"],
     "depression": [
       "major depressive disorder",
       "MDD",
@@ -22885,18 +21412,8 @@
       "7312",
       "7354"
     ],
-    "lupus": [
-      "SLE",
-      "systemic lupus",
-      "autoimmune",
-      "6350"
-    ],
-    "fibromyalgia": [
-      "FM",
-      "chronic pain syndrome",
-      "myofascial pain",
-      "5025"
-    ],
+    "lupus": ["SLE", "systemic lupus", "autoimmune", "6350"],
+    "fibromyalgia": ["FM", "chronic pain syndrome", "myofascial pain", "5025"],
     "brain injury": [
       "TBI",
       "traumatic brain injury",
@@ -22905,17 +21422,8 @@
       "blast injury",
       "8045"
     ],
-    "multiple sclerosis": [
-      "MS",
-      "demyelinating disease",
-      "8018"
-    ],
-    "myasthenia": [
-      "MG",
-      "myasthenia gravis",
-      "muscle weakness",
-      "8025"
-    ],
+    "multiple sclerosis": ["MS", "demyelinating disease", "8018"],
+    "myasthenia": ["MG", "myasthenia gravis", "muscle weakness", "8025"],
     "spine": [
       "spinal",
       "vertebral",
@@ -22955,19 +21463,8 @@
       "5201",
       "5202"
     ],
-    "hip": [
-      "hip pain",
-      "hip injury",
-      "hip replacement",
-      "5250-5255",
-      "5253"
-    ],
-    "ankle": [
-      "ankle pain",
-      "ankle injury",
-      "ankle sprain",
-      "5270-5274"
-    ],
+    "hip": ["hip pain", "hip injury", "hip replacement", "5250-5255", "5253"],
+    "ankle": ["ankle pain", "ankle injury", "ankle sprain", "5270-5274"],
     "foot": [
       "foot pain",
       "plantar fasciitis",
@@ -22990,19 +21487,8 @@
       "5211-5215",
       "8515"
     ],
-    "hand": [
-      "hand pain",
-      "hand injury",
-      "finger pain",
-      "5216-5228"
-    ],
-    "neck": [
-      "cervical",
-      "neck pain",
-      "cervical strain",
-      "5237",
-      "5019"
-    ],
+    "hand": ["hand pain", "hand injury", "finger pain", "5216-5228"],
+    "neck": ["cervical", "neck pain", "cervical strain", "5237", "5019"],
     "hearing": [
       "hearing loss",
       "deafness",
@@ -23020,19 +21506,8 @@
       "6027",
       "6026"
     ],
-    "tinnitus": [
-      "ringing in ears",
-      "buzzing ears",
-      "ear noise",
-      "6260"
-    ],
-    "vertigo": [
-      "dizziness",
-      "balance problems",
-      "Meniere's",
-      "6266",
-      "6268"
-    ],
+    "tinnitus": ["ringing in ears", "buzzing ears", "ear noise", "6260"],
+    "vertigo": ["dizziness", "balance problems", "Meniere's", "6266", "6268"],
     "respiratory": [
       "breathing",
       "lung disease",
@@ -23057,12 +21532,7 @@
       "8045",
       "8100"
     ],
-    "skin": [
-      "dermatological",
-      "skin disease",
-      "rash",
-      "7800-7833"
-    ],
+    "skin": ["dermatological", "skin disease", "rash", "7800-7833"],
     "digestive": [
       "gastrointestinal",
       "GI",
@@ -23080,29 +21550,10 @@
       "7500-7545",
       "7522"
     ],
-    "erectile dysfunction": [
-      "ED",
-      "impotence",
-      "sexual dysfunction",
-      "7522"
-    ],
-    "GERD": [
-      "acid reflux",
-      "heartburn",
-      "gastroesophageal reflux",
-      "7346"
-    ],
-    "IBS": [
-      "irritable bowel",
-      "bowel problems",
-      "7319"
-    ],
-    "sciatica": [
-      "sciatic nerve",
-      "leg pain",
-      "radiculopathy",
-      "8520"
-    ],
+    "erectile dysfunction": ["ED", "impotence", "sexual dysfunction", "7522"],
+    "GERD": ["acid reflux", "heartburn", "gastroesophageal reflux", "7346"],
+    "IBS": ["irritable bowel", "bowel problems", "7319"],
+    "sciatica": ["sciatic nerve", "leg pain", "radiculopathy", "8520"],
     "radiculopathy": [
       "nerve root compression",
       "pinched nerve",
@@ -23115,83 +21566,20 @@
       "diabetic neuropathy",
       "8520-8540"
     ],
-    "paralysis": [
-      "paralyzed",
-      "loss of function",
-      "8510-8540"
-    ],
-    "migraine": [
-      "headache",
-      "vascular headache",
-      "8100"
-    ],
-    "seizures": [
-      "epilepsy",
-      "convulsions",
-      "8910-8911"
-    ],
-    "stroke": [
-      "CVA",
-      "cerebrovascular accident",
-      "brain attack",
-      "8007"
-    ],
-    "Parkinson's": [
-      "Parkinson disease",
-      "PD",
-      "8004"
-    ],
-    "cancer": [
-      "malignancy",
-      "carcinoma",
-      "tumor",
-      "neoplasm"
-    ],
-    "amputation": [
-      "limb loss",
-      "missing limb",
-      "5165-5171",
-      "5286-5289"
-    ],
-    "scarring": [
-      "scars",
-      "keloid",
-      "disfigurement",
-      "5290-5292",
-      "7800-7805"
-    ],
-    "burns": [
-      "burn scars",
-      "thermal injury",
-      "7800-7808"
-    ],
-    "infectious": [
-      "infection",
-      "disease",
-      "6300-6354"
-    ],
-    "tuberculosis": [
-      "TB",
-      "tuberculous",
-      "6300-6350"
-    ],
-    "HIV": [
-      "AIDS",
-      "human immunodeficiency virus",
-      "6351"
-    ],
-    "chronic fatigue": [
-      "CFS",
-      "chronic fatigue syndrome",
-      "ME",
-      "6354"
-    ],
-    "endocrine": [
-      "hormone",
-      "gland",
-      "thyroid",
-      "7900-7919"
-    ],
+    "paralysis": ["paralyzed", "loss of function", "8510-8540"],
+    "migraine": ["headache", "vascular headache", "8100"],
+    "seizures": ["epilepsy", "convulsions", "8910-8911"],
+    "stroke": ["CVA", "cerebrovascular accident", "brain attack", "8007"],
+    "Parkinson's": ["Parkinson disease", "PD", "8004"],
+    "cancer": ["malignancy", "carcinoma", "tumor", "neoplasm"],
+    "amputation": ["limb loss", "missing limb", "5165-5171", "5286-5289"],
+    "scarring": ["scars", "keloid", "disfigurement", "5290-5292", "7800-7805"],
+    "burns": ["burn scars", "thermal injury", "7800-7808"],
+    "infectious": ["infection", "disease", "6300-6354"],
+    "tuberculosis": ["TB", "tuberculous", "6300-6350"],
+    "HIV": ["AIDS", "human immunodeficiency virus", "6351"],
+    "chronic fatigue": ["CFS", "chronic fatigue syndrome", "ME", "6354"],
+    "endocrine": ["hormone", "gland", "thyroid", "7900-7919"],
     "thyroid": [
       "hypothyroid",
       "hyperthyroid",
@@ -23199,16 +21587,8 @@
       "Hashimoto",
       "7900-7905"
     ],
-    "addison": [
-      "adrenal insufficiency",
-      "Addison's disease",
-      "7911"
-    ],
-    "Cushing": [
-      "Cushing's syndrome",
-      "hypercortisolism",
-      "7907"
-    ],
+    "addison": ["adrenal insufficiency", "Addison's disease", "7911"],
+    "Cushing": ["Cushing's syndrome", "hypercortisolism", "7907"],
     "gynecological": [
       "female reproductive",
       "uterus",
@@ -23229,13 +21609,7 @@
       "vaginal stenosis",
       "7611"
     ],
-    "vulva": [
-      "vulvar",
-      "vulvovaginitis",
-      "vulvar pain",
-      "vulvodynia",
-      "7610"
-    ],
+    "vulva": ["vulvar", "vulvovaginitis", "vulvar pain", "vulvodynia", "7610"],
     "cervix": [
       "cervical",
       "cervicitis",
@@ -23289,11 +21663,7 @@
       "7617",
       "7618"
     ],
-    "endometriosis": [
-      "pelvic pain",
-      "endometriosis",
-      "7625"
-    ],
+    "endometriosis": ["pelvic pain", "endometriosis", "7625"],
     "pelvic prolapse": [
       "pelvic organ prolapse",
       "uterine prolapse",
@@ -23310,41 +21680,12 @@
       "7624",
       "7625"
     ],
-    "dental": [
-      "teeth",
-      "oral",
-      "jaw",
-      "TMJ",
-      "9900-9918"
-    ],
-    "TMJ": [
-      "temporomandibular joint",
-      "jaw pain",
-      "9905"
-    ],
-    "hematologic": [
-      "blood",
-      "anemia",
-      "bleeding",
-      "clotting",
-      "7720-7725"
-    ],
-    "anemia": [
-      "low blood count",
-      "low hemoglobin",
-      "7720-7723"
-    ],
-    "allergic rhinitis": [
-      "hay fever",
-      "allergies",
-      "nasal allergies",
-      "6522"
-    ],
-    "sinusitis": [
-      "sinus infection",
-      "chronic sinusitis",
-      "6510"
-    ],
+    "dental": ["teeth", "oral", "jaw", "TMJ", "9900-9918"],
+    "TMJ": ["temporomandibular joint", "jaw pain", "9905"],
+    "hematologic": ["blood", "anemia", "bleeding", "clotting", "7720-7725"],
+    "anemia": ["low blood count", "low hemoglobin", "7720-7723"],
+    "allergic rhinitis": ["hay fever", "allergies", "nasal allergies", "6522"],
+    "sinusitis": ["sinus infection", "chronic sinusitis", "6510"],
     "rhinitis": [
       "nasal inflammation",
       "stuffy nose",
@@ -23353,135 +21694,52 @@
       "nasal congestion",
       "6522"
     ],
-    "pneumonia": [
-      "lung infection",
-      "6600-6604"
-    ],
-    "bronchitis": [
-      "airway inflammation",
-      "chronic bronchitis",
-      "6600"
-    ],
-    "pneumothorax": [
-      "collapsed lung",
-      "6844"
-    ],
-    "pulmonary fibrosis": [
-      "lung scarring",
-      "6825-6826"
-    ],
-    "sarcoidosis": [
-      "granulomatous disease",
-      "6846"
-    ],
+    "pneumonia": ["lung infection", "6600-6604"],
+    "bronchitis": ["airway inflammation", "chronic bronchitis", "6600"],
+    "pneumothorax": ["collapsed lung", "6844"],
+    "pulmonary fibrosis": ["lung scarring", "6825-6826"],
+    "sarcoidosis": ["granulomatous disease", "6846"],
     "coronary artery disease": [
       "CAD",
       "heart disease",
       "atherosclerosis",
       "7005-7011"
     ],
-    "myocardial infarction": [
-      "heart attack",
-      "MI",
-      "7006"
-    ],
-    "congestive heart failure": [
-      "CHF",
-      "heart failure",
-      "7002"
-    ],
+    "myocardial infarction": ["heart attack", "MI", "7006"],
+    "congestive heart failure": ["CHF", "heart failure", "7002"],
     "arrhythmia": [
       "irregular heartbeat",
       "atrial fibrillation",
       "AFib",
       "7010"
     ],
-    "valvular disease": [
-      "heart valve",
-      "valve disorder",
-      "7000-7003"
-    ],
-    "peripheral artery disease": [
-      "PAD",
-      "claudication",
-      "7117"
-    ],
-    "varicose veins": [
-      "venous insufficiency",
-      "7120-7122"
-    ],
-    "deep vein thrombosis": [
-      "DVT",
-      "blood clot",
-      "7121"
-    ],
-    "hemorrhoids": [
-      "piles",
-      "rectal hemorrhoids",
-      "7336"
-    ],
-    "peptic ulcer": [
-      "stomach ulcer",
-      "duodenal ulcer",
-      "7304"
-    ],
+    "valvular disease": ["heart valve", "valve disorder", "7000-7003"],
+    "peripheral artery disease": ["PAD", "claudication", "7117"],
+    "varicose veins": ["venous insufficiency", "7120-7122"],
+    "deep vein thrombosis": ["DVT", "blood clot", "7121"],
+    "hemorrhoids": ["piles", "rectal hemorrhoids", "7336"],
+    "peptic ulcer": ["stomach ulcer", "duodenal ulcer", "7304"],
     "Crohn's disease": [
       "inflammatory bowel disease",
       "IBD",
       "Crohn",
       "7323-7326"
     ],
-    "ulcerative colitis": [
-      "UC",
-      "colitis",
-      "inflammatory bowel",
-      "7323"
-    ],
-    "pancreatitis": [
-      "pancreas inflammation",
-      "7347"
-    ],
-    "cholecystitis": [
-      "gallbladder",
-      "gallstones",
-      "7318"
-    ],
-    "hernia": [
-      "inguinal hernia",
-      "hiatal hernia",
-      "7338-7342"
-    ],
+    "ulcerative colitis": ["UC", "colitis", "inflammatory bowel", "7323"],
+    "pancreatitis": ["pancreas inflammation", "7347"],
+    "cholecystitis": ["gallbladder", "gallstones", "7318"],
+    "hernia": ["inguinal hernia", "hiatal hernia", "7338-7342"],
     "kidney disease": [
       "renal disease",
       "chronic kidney disease",
       "CKD",
       "7500-7505"
     ],
-    "kidney stones": [
-      "renal calculi",
-      "nephrolithiasis",
-      "7508"
-    ],
-    "urinary incontinence": [
-      "bladder control",
-      "incontinence",
-      "7540-7542"
-    ],
-    "prostate": [
-      "BPH",
-      "prostatitis",
-      "prostate enlargement",
-      "7527-7528"
-    ],
-    "infertility": [
-      "sterility",
-      "fertility issues",
-      "7520-7522"
-    ],
-    "ovarian cyst": [
-      "ovarian disorder",
-      "7627"
-    ],
+    "kidney stones": ["renal calculi", "nephrolithiasis", "7508"],
+    "urinary incontinence": ["bladder control", "incontinence", "7540-7542"],
+    "prostate": ["BPH", "prostatitis", "prostate enlargement", "7527-7528"],
+    "infertility": ["sterility", "fertility issues", "7520-7522"],
+    "ovarian cyst": ["ovarian disorder", "7627"],
     "breast conditions": [
       "mastitis",
       "gynecomastia",
@@ -23493,61 +21751,18 @@
       "7630",
       "7631"
     ],
-    "leukemia": [
-      "blood cancer",
-      "7703"
-    ],
-    "lymphoma": [
-      "lymphatic cancer",
-      "7709"
-    ],
-    "sickle cell": [
-      "sickle cell disease",
-      "sickle cell anemia",
-      "7714"
-    ],
-    "hemophilia": [
-      "bleeding disorder",
-      "clotting disorder",
-      "7716"
-    ],
-    "eczema": [
-      "atopic dermatitis",
-      "skin inflammation",
-      "7806"
-    ],
-    "psoriasis": [
-      "plaque psoriasis",
-      "scaly skin",
-      "7816"
-    ],
-    "acne": [
-      "acne scars",
-      "acne vulgaris",
-      "7800"
-    ],
-    "vitiligo": [
-      "skin depigmentation",
-      "7828"
-    ],
-    "alopecia": [
-      "hair loss",
-      "baldness",
-      "7829"
-    ],
-    "melanoma": [
-      "skin cancer",
-      "7833"
-    ],
-    "bipolar": [
-      "manic depression",
-      "bipolar disorder",
-      "9432"
-    ],
-    "schizophrenia": [
-      "psychotic disorder",
-      "9201-9205"
-    ],
+    "leukemia": ["blood cancer", "7703"],
+    "lymphoma": ["lymphatic cancer", "7709"],
+    "sickle cell": ["sickle cell disease", "sickle cell anemia", "7714"],
+    "hemophilia": ["bleeding disorder", "clotting disorder", "7716"],
+    "eczema": ["atopic dermatitis", "skin inflammation", "7806"],
+    "psoriasis": ["plaque psoriasis", "scaly skin", "7816"],
+    "acne": ["acne scars", "acne vulgaris", "7800"],
+    "vitiligo": ["skin depigmentation", "7828"],
+    "alopecia": ["hair loss", "baldness", "7829"],
+    "melanoma": ["skin cancer", "7833"],
+    "bipolar": ["manic depression", "bipolar disorder", "9432"],
+    "schizophrenia": ["psychotic disorder", "9201-9205"],
     "substance abuse": [
       "addiction",
       "substance dependence",
@@ -23555,160 +21770,42 @@
       "alcohol abuse",
       "9200-9204"
     ],
-    "panic disorder": [
-      "panic attacks",
-      "9412"
-    ],
+    "panic disorder": ["panic attacks", "9412"],
     "OCD": [
       "obsessive compulsive disorder",
       "obsessions",
       "compulsions",
       "9404"
     ],
-    "eating disorders": [
-      "anorexia",
-      "bulimia",
-      "9520"
-    ],
-    "personality disorder": [
-      "borderline",
-      "antisocial",
-      "9300-9307"
-    ],
-    "dementia": [
-      "Alzheimer's",
-      "cognitive decline",
-      "memory loss",
-      "9326"
-    ],
-    "ADD": [
-      "ADHD",
-      "attention deficit",
-      "hyperactivity",
-      "9440"
-    ],
-    "autism": [
-      "autism spectrum",
-      "ASD",
-      "pervasive developmental"
-    ],
-    "TBI": [
-      "traumatic brain injury",
-      "head trauma",
-      "concussion",
-      "8045"
-    ],
-    "Bell's palsy": [
-      "facial paralysis",
-      "facial nerve palsy",
-      "8207"
-    ],
-    "carpal tunnel syndrome": [
-      "CTS",
-      "median nerve",
-      "wrist pain",
-      "8515"
-    ],
-    "cubital tunnel syndrome": [
-      "ulnar nerve",
-      "elbow nerve",
-      "5317"
-    ],
-    "tarsal tunnel syndrome": [
-      "ankle nerve compression",
-      "8526"
-    ],
-    "plantar fasciitis": [
-      "heel pain",
-      "heel spur",
-      "5276"
-    ],
-    "tennis elbow": [
-      "lateral epicondylitis",
-      "5024"
-    ],
-    "golfer's elbow": [
-      "medial epicondylitis",
-      "5024"
-    ],
-    "rotator cuff": [
-      "shoulder tear",
-      "rotator cuff tear",
-      "5203-5204"
-    ],
-    "frozen shoulder": [
-      "adhesive capsulitis",
-      "5306"
-    ],
-    "bursitis": [
-      "bursa inflammation",
-      "5305"
-    ],
-    "tendonitis": [
-      "tendinitis",
-      "tendon inflammation",
-      "5024"
-    ],
-    "bunions": [
-      "hallux valgus",
-      "toe deformity",
-      "5279"
-    ],
-    "hammer toe": [
-      "toe deformity",
-      "5281"
-    ],
-    "flat feet": [
-      "pes planus",
-      "fallen arches",
-      "5276"
-    ],
-    "herniated disc": [
-      "slipped disc",
-      "ruptured disc",
-      "bulging disc",
-      "5243"
-    ],
-    "spinal stenosis": [
-      "spinal narrowing",
-      "nerve compression",
-      "5238"
-    ],
-    "spondylolisthesis": [
-      "vertebral slip",
-      "spine instability",
-      "5239"
-    ],
-    "scoliosis": [
-      "spinal curvature",
-      "curved spine",
-      "5241"
-    ],
-    "kyphosis": [
-      "hunchback",
-      "rounded back",
-      "5241"
-    ],
-    "lordosis": [
-      "swayback",
-      "excessive spinal curve",
-      "5241"
-    ],
-    "gout": [
-      "gouty arthritis",
-      "uric acid",
-      "5310"
-    ],
-    "osteoporosis": [
-      "bone loss",
-      "fragile bones",
-      "bone thinning",
-      "5013"
-    ],
-    "Paget's disease": [
-      "osteitis deformans",
-      "6006"
-    ],
+    "eating disorders": ["anorexia", "bulimia", "9520"],
+    "personality disorder": ["borderline", "antisocial", "9300-9307"],
+    "dementia": ["Alzheimer's", "cognitive decline", "memory loss", "9326"],
+    "ADD": ["ADHD", "attention deficit", "hyperactivity", "9440"],
+    "autism": ["autism spectrum", "ASD", "pervasive developmental"],
+    "TBI": ["traumatic brain injury", "head trauma", "concussion", "8045"],
+    "Bell's palsy": ["facial paralysis", "facial nerve palsy", "8207"],
+    "carpal tunnel syndrome": ["CTS", "median nerve", "wrist pain", "8515"],
+    "cubital tunnel syndrome": ["ulnar nerve", "elbow nerve", "5317"],
+    "tarsal tunnel syndrome": ["ankle nerve compression", "8526"],
+    "plantar fasciitis": ["heel pain", "heel spur", "5276"],
+    "tennis elbow": ["lateral epicondylitis", "5024"],
+    "golfer's elbow": ["medial epicondylitis", "5024"],
+    "rotator cuff": ["shoulder tear", "rotator cuff tear", "5203-5204"],
+    "frozen shoulder": ["adhesive capsulitis", "5306"],
+    "bursitis": ["bursa inflammation", "5305"],
+    "tendonitis": ["tendinitis", "tendon inflammation", "5024"],
+    "bunions": ["hallux valgus", "toe deformity", "5279"],
+    "hammer toe": ["toe deformity", "5281"],
+    "flat feet": ["pes planus", "fallen arches", "5276"],
+    "herniated disc": ["slipped disc", "ruptured disc", "bulging disc", "5243"],
+    "spinal stenosis": ["spinal narrowing", "nerve compression", "5238"],
+    "spondylolisthesis": ["vertebral slip", "spine instability", "5239"],
+    "scoliosis": ["spinal curvature", "curved spine", "5241"],
+    "kyphosis": ["hunchback", "rounded back", "5241"],
+    "lordosis": ["swayback", "excessive spinal curve", "5241"],
+    "gout": ["gouty arthritis", "uric acid", "5310"],
+    "osteoporosis": ["bone loss", "fragile bones", "bone thinning", "5013"],
+    "Paget's disease": ["osteitis deformans", "6006"],
     "complex regional pain syndrome": [
       "CRPS",
       "RSD",

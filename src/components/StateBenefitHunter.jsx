@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import ReportBugLink from './ReportBugLink';
-import BuyMeCoffee from './BuyMeCoffee';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import { searchStateBenefits, isAIAvailable } from '../utils/aiStatementHelper';
-import { generateAI } from '../utils/unifiedAIService';
-import { AIStatusBadge } from './AIModeSelector';
-import VoiceInputButton from './VoiceInput';
+import React, { useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import ReportBugLink from "./ReportBugLink";
+import BuyMeCoffee from "./BuyMeCoffee";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { searchStateBenefits, isAIAvailable } from "../utils/aiStatementHelper";
+import { generateAI } from "../utils/unifiedAIService";
+import { AIStatusBadge } from "./AIModeSelector";
+import VoiceInputButton from "./VoiceInput";
 
 /**
  * StateBenefitHunter Component
  * "Money on the Table" - Finds state-specific veteran benefits
- * 
+ *
  * ✅ NOW USING REAL SCRAPED DATA:
  * ==================================
  * This feature uses data scraped from official state .gov sources (178 benefits across 51 states).
  * Last Update: January 24, 2026
- * 
+ *
  * VERIFICATION STATUS:
  * - ✓ Verified (3 states): Texas, California, Florida - Manually verified high-quality data
  * - ⚠ Pending Verification (48 states): Template-generated from state profiles, needs manual review
- * 
+ *
  * DATA COLLECTION:
  * - Property tax exemption laws
  * - Vehicle registration benefits (DV plates)
@@ -29,200 +29,201 @@ import VoiceInputButton from './VoiceInput';
  * - Employment preferences
  * - Healthcare beyond federal VA
  * - Housing assistance programs
- * 
+ *
  * UPDATE MECHANISM:
  * - Quarterly full re-scrapes (Jan, Apr, Jul, Oct)
  * - Monthly legislative monitoring for law changes
  * - User-reported corrections workflow
  * - Admin dashboard for manual updates
- * 
+ *
  * See: src/data/stateBenefits.js for the complete database
  * See: scripts/state-benefits-scraper/FINAL_REPORT.md for scraping details
  */
 
 // All 50 US states plus DC
 const US_STATES = [
-  { value: '', label: 'Select your state...' },
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'DC', label: 'District of Columbia' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' }
+  { value: "", label: "Select your state..." },
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "DC", label: "District of Columbia" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
 ];
 
 // Rating levels for selection
 const RATING_LEVELS = [
-  { value: 0, label: '0%' },
-  { value: 10, label: '10%' },
-  { value: 20, label: '20%' },
-  { value: 30, label: '30%' },
-  { value: 40, label: '40%' },
-  { value: 50, label: '50%' },
-  { value: 60, label: '60%' },
-  { value: 70, label: '70%' },
-  { value: 80, label: '80%' },
-  { value: 90, label: '90%' },
-  { value: 100, label: '100%' },
-  { value: '100-PT', label: '100% P&T (Permanent & Total)' }
+  { value: 0, label: "0%" },
+  { value: 10, label: "10%" },
+  { value: 20, label: "20%" },
+  { value: 30, label: "30%" },
+  { value: 40, label: "40%" },
+  { value: 50, label: "50%" },
+  { value: 60, label: "60%" },
+  { value: 70, label: "70%" },
+  { value: 80, label: "80%" },
+  { value: 90, label: "90%" },
+  { value: 100, label: "100%" },
+  { value: "100-PT", label: "100% P&T (Permanent & Total)" },
 ];
 
 // Category icons and colors for benefit cards
 const CATEGORY_CONFIG = {
-  'Property Tax': {
-    icon: '🏠',
-    color: 'from-green-500 to-emerald-600',
-    bgLight: 'bg-green-50 dark:bg-green-900/30',
-    borderColor: 'border-green-200 dark:border-green-700',
-    textColor: 'text-green-700 dark:text-green-300',
-    badge: 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200',
-    highlight: true // Money saved!
+  "Property Tax": {
+    icon: "🏠",
+    color: "from-green-500 to-emerald-600",
+    bgLight: "bg-green-50 dark:bg-green-900/30",
+    borderColor: "border-green-200 dark:border-green-700",
+    textColor: "text-green-700 dark:text-green-300",
+    badge: "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200",
+    highlight: true, // Money saved!
   },
-  'Tax': {
-    icon: '💵',
-    color: 'from-green-500 to-emerald-600',
-    bgLight: 'bg-green-50 dark:bg-green-900/30',
-    borderColor: 'border-green-200 dark:border-green-700',
-    textColor: 'text-green-700 dark:text-green-300',
-    badge: 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200',
-    highlight: true
+  Tax: {
+    icon: "💵",
+    color: "from-green-500 to-emerald-600",
+    bgLight: "bg-green-50 dark:bg-green-900/30",
+    borderColor: "border-green-200 dark:border-green-700",
+    textColor: "text-green-700 dark:text-green-300",
+    badge: "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200",
+    highlight: true,
   },
-  'Vehicle': {
-    icon: '🚗',
-    color: 'from-blue-500 to-indigo-600',
-    bgLight: 'bg-blue-50 dark:bg-blue-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-700',
-    textColor: 'text-blue-700 dark:text-blue-300',
-    badge: 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
+  Vehicle: {
+    icon: "🚗",
+    color: "from-blue-500 to-indigo-600",
+    bgLight: "bg-blue-50 dark:bg-blue-900/30",
+    borderColor: "border-blue-200 dark:border-blue-700",
+    textColor: "text-blue-700 dark:text-blue-300",
+    badge: "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200",
   },
-  'Education': {
-    icon: '🎓',
-    color: 'from-purple-500 to-violet-600',
-    bgLight: 'bg-purple-50 dark:bg-purple-900/30',
-    borderColor: 'border-purple-200 dark:border-purple-700',
-    textColor: 'text-purple-700 dark:text-purple-300',
-    badge: 'bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200'
+  Education: {
+    icon: "🎓",
+    color: "from-purple-500 to-violet-600",
+    bgLight: "bg-purple-50 dark:bg-purple-900/30",
+    borderColor: "border-purple-200 dark:border-purple-700",
+    textColor: "text-purple-700 dark:text-purple-300",
+    badge:
+      "bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200",
   },
-  'Recreation': {
-    icon: '🎣',
-    color: 'from-cyan-500 to-sky-600',
-    bgLight: 'bg-cyan-50 dark:bg-cyan-900/30',
-    borderColor: 'border-cyan-200 dark:border-cyan-700',
-    textColor: 'text-cyan-700 dark:text-cyan-300',
-    badge: 'bg-cyan-100 dark:bg-cyan-800 text-cyan-800 dark:text-cyan-200',
-    lifestyle: true // Lifestyle benefit!
+  Recreation: {
+    icon: "🎣",
+    color: "from-cyan-500 to-sky-600",
+    bgLight: "bg-cyan-50 dark:bg-cyan-900/30",
+    borderColor: "border-cyan-200 dark:border-cyan-700",
+    textColor: "text-cyan-700 dark:text-cyan-300",
+    badge: "bg-cyan-100 dark:bg-cyan-800 text-cyan-800 dark:text-cyan-200",
+    lifestyle: true, // Lifestyle benefit!
   },
-  'Employment': {
-    icon: '💼',
-    color: 'from-amber-500 to-orange-600',
-    bgLight: 'bg-amber-50 dark:bg-amber-900/30',
-    borderColor: 'border-amber-200 dark:border-amber-700',
-    textColor: 'text-amber-700 dark:text-amber-300',
-    badge: 'bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200'
+  Employment: {
+    icon: "💼",
+    color: "from-amber-500 to-orange-600",
+    bgLight: "bg-amber-50 dark:bg-amber-900/30",
+    borderColor: "border-amber-200 dark:border-amber-700",
+    textColor: "text-amber-700 dark:text-amber-300",
+    badge: "bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200",
   },
-  'Healthcare': {
-    icon: '🏥',
-    color: 'from-red-500 to-rose-600',
-    bgLight: 'bg-red-50 dark:bg-red-900/30',
-    borderColor: 'border-red-200 dark:border-red-700',
-    textColor: 'text-red-700 dark:text-red-300',
-    badge: 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+  Healthcare: {
+    icon: "🏥",
+    color: "from-red-500 to-rose-600",
+    bgLight: "bg-red-50 dark:bg-red-900/30",
+    borderColor: "border-red-200 dark:border-red-700",
+    textColor: "text-red-700 dark:text-red-300",
+    badge: "bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200",
   },
-  'Housing': {
-    icon: '🏡',
-    color: 'from-teal-500 to-green-600',
-    bgLight: 'bg-teal-50 dark:bg-teal-900/30',
-    borderColor: 'border-teal-200 dark:border-teal-700',
-    textColor: 'text-teal-700 dark:text-teal-300',
-    badge: 'bg-teal-100 dark:bg-teal-800 text-teal-800 dark:text-teal-200',
-    highlight: true
+  Housing: {
+    icon: "🏡",
+    color: "from-teal-500 to-green-600",
+    bgLight: "bg-teal-50 dark:bg-teal-900/30",
+    borderColor: "border-teal-200 dark:border-teal-700",
+    textColor: "text-teal-700 dark:text-teal-300",
+    badge: "bg-teal-100 dark:bg-teal-800 text-teal-800 dark:text-teal-200",
+    highlight: true,
   },
-  'default': {
-    icon: '⭐',
-    color: 'from-gray-500 to-slate-600',
-    bgLight: 'bg-gray-50 dark:bg-gray-900/30',
-    borderColor: 'border-gray-200 dark:border-gray-700',
-    textColor: 'text-gray-700 dark:text-gray-300',
-    badge: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
-  }
+  default: {
+    icon: "⭐",
+    color: "from-gray-500 to-slate-600",
+    bgLight: "bg-gray-50 dark:bg-gray-900/30",
+    borderColor: "border-gray-200 dark:border-gray-700",
+    textColor: "text-gray-700 dark:text-gray-300",
+    badge: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+  },
 };
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
-  
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedRating, setSelectedRating] = useState('');
+
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedRating, setSelectedRating] = useState("");
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
   const [showAIConsultation, setShowAIConsultation] = useState(false);
-  const [aiQuestion, setAIQuestion] = useState('');
+  const [aiQuestion, setAIQuestion] = useState("");
   const [aiAdvice, setAIAdvice] = useState(null);
   const [isAIThinking, setIsAIThinking] = useState(false);
 
   const getStateName = (stateCode) => {
-    const state = US_STATES.find(s => s.value === stateCode);
+    const state = US_STATES.find((s) => s.value === stateCode);
     return state ? state.label : stateCode;
   };
 
   const getRatingDisplay = () => {
-    if (selectedRating === '100-PT') {
-      return '100% P&T';
+    if (selectedRating === "100-PT") {
+      return "100% P&T";
     }
     return `${selectedRating}%`;
   };
 
   const handleSearch = async () => {
-    if (!selectedState || selectedRating === '') {
-      setError('Please select both a state and your combined rating.');
+    if (!selectedState || selectedRating === "") {
+      setError("Please select both a state and your combined rating.");
       return;
     }
 
@@ -235,18 +236,22 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
     try {
       // Use state code directly instead of state name
       const stateCode = selectedState;
-      const ratingNum = selectedRating === '100-PT' ? 100 : parseInt(selectedRating);
-      
+      const ratingNum =
+        selectedRating === "100-PT" ? 100 : parseInt(selectedRating);
+
       const response = await searchStateBenefits(stateCode, ratingNum);
-      
+
       if (response.success) {
         setResults(response.data);
       } else {
-        setError(response.error || 'Failed to retrieve state benefits. Please try again.');
+        setError(
+          response.error ||
+            "Failed to retrieve state benefits. Please try again.",
+        );
       }
     } catch (err) {
-      console.error('State benefits search error:', err);
-      setError('An error occurred while searching. Please try again.');
+      console.error("State benefits search error:", err);
+      setError("An error occurred while searching. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -254,9 +259,11 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
 
   const handleAIConsultation = async () => {
     if (!aiQuestion.trim()) return;
-    
+
     if (!isAIAvailable()) {
-      setError('AI features require an API key. Please configure AI in Settings.');
+      setError(
+        "AI features require an API key. Please configure AI in Settings.",
+      );
       return;
     }
 
@@ -267,14 +274,17 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
     try {
       // Create a timeout promise (60 second timeout)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('AI request timed out after 60 seconds')), 60000);
+        setTimeout(
+          () => reject(new Error("AI request timed out after 60 seconds")),
+          60000,
+        );
       });
 
       const prompt = `You are a state veteran benefits expert helping veterans understand and maximize their state-level benefits.
 
 Veteran's Question: "${aiQuestion}"
-${selectedState ? `State Context: ${getStateName(selectedState)}` : ''}
-${selectedRating ? `VA Rating: ${getRatingDisplay()}` : ''}
+${selectedState ? `State Context: ${getStateName(selectedState)}` : ""}
+${selectedRating ? `VA Rating: ${getRatingDisplay()}` : ""}
 
 Provide helpful, specific advice about:
 - State-specific veteran benefits (property tax, vehicle registration, education, recreation)
@@ -287,23 +297,22 @@ Provide helpful, specific advice about:
 Be practical, encouraging, and emphasize these are benefits that "claim sharks" never tell veterans about.`;
 
       // Race between AI call and timeout
-      const response = await Promise.race([
-        generateAI(prompt),
-        timeoutPromise
-      ]);
-      
+      const response = await Promise.race([generateAI(prompt), timeoutPromise]);
+
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;
       if (aiText) {
-        setAIAdvice(typeof aiText === 'string' ? aiText : JSON.stringify(aiText));
+        setAIAdvice(
+          typeof aiText === "string" ? aiText : JSON.stringify(aiText),
+        );
       } else {
-        setAIAdvice('Failed to get AI advice. Please try again.');
+        setAIAdvice("Failed to get AI advice. Please try again.");
       }
     } catch (err) {
-      console.error('AI consultation error:', err);
-      const errorMsg = err.message?.includes('timed out') 
-        ? 'AI request timed out. Please try again or check your connection.'
-        : 'An error occurred during AI consultation. Please try again.';
+      console.error("AI consultation error:", err);
+      const errorMsg = err.message?.includes("timed out")
+        ? "AI request timed out. Please try again or check your connection."
+        : "An error occurred during AI consultation. Please try again.";
       setError(errorMsg);
       setAIAdvice(null);
     } finally {
@@ -323,10 +332,10 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
   const groupBenefitsByCategory = (benefits) => {
     if (!benefits || !Array.isArray(benefits)) return {};
-    
+
     const grouped = {};
-    benefits.forEach(benefit => {
-      const cat = benefit.category || 'Other';
+    benefits.forEach((benefit) => {
+      const cat = benefit.category || "Other";
       if (!grouped[cat]) {
         grouped[cat] = [];
       }
@@ -337,14 +346,16 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
 
   const renderBenefitCard = (benefit, index) => {
     const config = getCategoryConfig(benefit.category);
-    
+
     return (
-      <div 
+      <div
         key={index}
         className={`${config.bgLight} ${config.borderColor} border rounded-xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5`}
       >
         <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-xl shadow-sm`}>
+          <div
+            className={`w-10 h-10 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-xl shadow-sm`}
+          >
             {config.icon}
           </div>
           <div className="flex-1 min-w-0">
@@ -368,7 +379,8 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
             </p>
             {benefit.requirement && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                <span className="font-medium">Requirement:</span> {benefit.requirement}
+                <span className="font-medium">Requirement:</span>{" "}
+                {benefit.requirement}
               </p>
             )}
           </div>
@@ -378,7 +390,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
@@ -391,15 +403,21 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-            
+
             <div className="relative flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
                   <span className="text-3xl">💰</span>
                 </div>
                 <div>
-                  <h2 id="state-benefit-hunter-title" className="text-2xl sm:text-3xl font-bold">
-                    State Benefit Hunter <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                  <h2
+                    id="state-benefit-hunter-title"
+                    className="text-2xl sm:text-3xl font-bold"
+                  >
+                    State Benefit Hunter{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
                   </h2>
                   <p className="text-green-100 text-sm sm:text-base mt-1">
                     Find the money you're leaving on the table
@@ -407,14 +425,30 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="State Benefit Hunter" />}
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="State Benefit Hunter"
+                  />
+                )}
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                   aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -428,11 +462,15 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">Did you know?</h3>
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                    Did you know?
+                  </h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    Many veterans miss out on <strong>thousands of dollars</strong> in state benefits each year. 
-                    These include property tax exemptions, free vehicle registration, hunting/fishing licenses, 
-                    and education benefits that "Claim Sharks" never tell you about.
+                    Many veterans miss out on{" "}
+                    <strong>thousands of dollars</strong> in state benefits each
+                    year. These include property tax exemptions, free vehicle
+                    registration, hunting/fishing licenses, and education
+                    benefits that "Claim Sharks" never tell you about.
                   </p>
                 </div>
               </div>
@@ -443,7 +481,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Enter Your Information
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* State Selector */}
                 <div>
@@ -455,7 +493,7 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                     onChange={(e) => setSelectedState(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
-                    {US_STATES.map(state => (
+                    {US_STATES.map((state) => (
                       <option key={state.value} value={state.value}>
                         {state.label}
                       </option>
@@ -472,12 +510,12 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                     value={selectedRating}
                     onChange={(e) => {
                       setSelectedRating(e.target.value);
-                      setIsPermanentTotal(e.target.value === '100-PT');
+                      setIsPermanentTotal(e.target.value === "100-PT");
                     }}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">Select your rating...</option>
-                    {RATING_LEVELS.map(rating => (
+                    {RATING_LEVELS.map((rating) => (
                       <option key={rating.value} value={rating.value}>
                         {rating.label}
                       </option>
@@ -487,31 +525,51 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
               </div>
 
               {/* P&T Checkbox for non-100% */}
-              {selectedRating && selectedRating !== '100-PT' && parseInt(selectedRating) >= 70 && (
-                <div className="mb-4">
-                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isPermanentTotal}
-                      onChange={(e) => setIsPermanentTotal(e.target.checked)}
-                      className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
-                    />
-                    <span>I have a <strong>Permanent & Total (P&T)</strong> designation</span>
-                  </label>
-                </div>
-              )}
+              {selectedRating &&
+                selectedRating !== "100-PT" &&
+                parseInt(selectedRating) >= 70 && (
+                  <div className="mb-4">
+                    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isPermanentTotal}
+                        onChange={(e) => setIsPermanentTotal(e.target.checked)}
+                        className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                      />
+                      <span>
+                        I have a <strong>Permanent & Total (P&T)</strong>{" "}
+                        designation
+                      </span>
+                    </label>
+                  </div>
+                )}
 
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                disabled={isLoading || !selectedState || selectedRating === ''}
+                disabled={isLoading || !selectedState || selectedRating === ""}
                 className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
               >
                 {isLoading ? (
                   <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    <svg
+                      className="w-5 h-5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
                     </svg>
                     <span>Hunting for Benefits...</span>
                   </>
@@ -532,13 +590,17 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     AI Benefits Advisor
                   </h3>
-                  <AIStatusBadge onClick={() => setShowAISettings(!showAISettings)} className="mt-1" />
+                  <AIStatusBadge
+                    onClick={() => setShowAISettings(!showAISettings)}
+                    className="mt-1"
+                  />
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Have questions about state benefits, eligibility, or how to apply? Get personalized AI guidance.
+                Have questions about state benefits, eligibility, or how to
+                apply? Get personalized AI guidance.
               </p>
-              
+
               <div className="space-y-3">
                 <div className="relative">
                   <textarea
@@ -550,7 +612,11 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                   />
                   <div className="absolute right-3 top-3">
                     <VoiceInputButton
-                      onTranscript={(text) => setAIQuestion(prev => prev ? `${prev} ${text}` : text)}
+                      onTranscript={(text) =>
+                        setAIQuestion((prev) =>
+                          prev ? `${prev} ${text}` : text,
+                        )
+                      }
                       size="sm"
                     />
                   </div>
@@ -562,9 +628,24 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 >
                   {isAIThinking ? (
                     <>
-                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      <svg
+                        className="w-5 h-5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
                       </svg>
                       <span>AI Consulting...</span>
                     </>
@@ -580,7 +661,9 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                   <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
                     <div className="flex items-start gap-2 mb-2">
                       <span className="text-xl">💡</span>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">Benefits Advisor:</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Benefits Advisor:
+                      </h4>
                     </div>
                     <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {aiAdvice}
@@ -594,10 +677,22 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
             {error && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
-                  <span className="text-red-700 dark:text-red-300">{error}</span>
+                  <span className="text-red-700 dark:text-red-300">
+                    {error}
+                  </span>
                 </div>
               </div>
             )}
@@ -632,9 +727,11 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                         {results.benefits.length} found
                       </span>
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {results.benefits.map((benefit, index) => renderBenefitCard(benefit, index))}
+                      {results.benefits.map((benefit, index) =>
+                        renderBenefitCard(benefit, index),
+                      )}
                     </div>
                   </div>
                 )}
@@ -646,8 +743,12 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                       <div className="flex items-center gap-3">
                         <span className="text-xl">🔗</span>
                         <div>
-                          <p className="font-medium text-blue-800 dark:text-blue-200">Official State Website</p>
-                          <p className="text-sm text-blue-600 dark:text-blue-300">Verify these benefits on the official state page</p>
+                          <p className="font-medium text-blue-800 dark:text-blue-200">
+                            Official State Website
+                          </p>
+                          <p className="text-sm text-blue-600 dark:text-blue-300">
+                            Verify these benefits on the official state page
+                          </p>
                         </div>
                       </div>
                       <a
@@ -657,8 +758,18 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                       >
                         <span>Visit Official Site</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
                         </svg>
                       </a>
                     </div>
@@ -668,35 +779,47 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 {/* Data Source Notice - Now Using Real Data */}
                 <div className="mt-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-300 dark:border-green-600 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{results.verified ? '✓' : '⚠️'}</span>
+                    <span className="text-2xl">
+                      {results.verified ? "✓" : "⚠️"}
+                    </span>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">
-                        {results.verified ? '✓ Verified Data' : '⚠ Pending Verification'}
+                        {results.verified
+                          ? "✓ Verified Data"
+                          : "⚠ Pending Verification"}
                       </p>
                       {results.verified ? (
                         <>
                           <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed">
-                            <strong>Manually Verified:</strong> This data has been scraped and verified from official state sources. 
-                            Includes legal citations, dollar amounts, and eligibility requirements.
+                            <strong>Manually Verified:</strong> This data has
+                            been scraped and verified from official state
+                            sources. Includes legal citations, dollar amounts,
+                            and eligibility requirements.
                           </p>
                           <p className="text-xs text-green-700 dark:text-green-300 leading-relaxed mt-2">
-                            <strong>Last Updated:</strong> {results.lastUpdated || 'January 24, 2026'}
+                            <strong>Last Updated:</strong>{" "}
+                            {results.lastUpdated || "January 24, 2026"}
                           </p>
                         </>
                       ) : (
                         <>
                           <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                            <strong>Template-Generated:</strong> This data was auto-generated from state profiles and needs manual verification. 
-                            Benefits shown are typical for this state but may not reflect current laws.
+                            <strong>Template-Generated:</strong> This data was
+                            auto-generated from state profiles and needs manual
+                            verification. Benefits shown are typical for this
+                            state but may not reflect current laws.
                           </p>
                           <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mt-2">
-                            <strong>Always verify</strong> with your state's official Department of Veterans Affairs before applying. 
-                            We're working to manually verify all 48 remaining states.
+                            <strong>Always verify</strong> with your state's
+                            official Department of Veterans Affairs before
+                            applying. We're working to manually verify all 48
+                            remaining states.
                           </p>
                         </>
                       )}
                       <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
-                        <strong>Report Issues:</strong> Found outdated info? Use the "Report Issue" link below.
+                        <strong>Report Issues:</strong> Found outdated info? Use
+                        the "Report Issue" link below.
                       </p>
                     </div>
                   </div>
@@ -721,13 +844,16 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
                 </p>
                 <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500 max-w-xs mx-auto">
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🏠</span> Checking property tax exemptions...
+                    <span className="animate-pulse">🏠</span> Checking property
+                    tax exemptions...
                   </p>
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🚗</span> Finding vehicle benefits...
+                    <span className="animate-pulse">🚗</span> Finding vehicle
+                    benefits...
                   </p>
                   <p className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">🎓</span> Discovering education programs...
+                    <span className="animate-pulse">🎓</span> Discovering
+                    education programs...
                   </p>
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-4">
@@ -740,8 +866,13 @@ Be practical, encouraging, and emphasize these are benefits that "claim sharks" 
             {!results && !isLoading && !error && (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <div className="text-6xl mb-4">🗺️</div>
-                <p className="text-lg">Select your state and rating to discover your benefits</p>
-                <p className="text-sm mt-2">We'll search for property tax exemptions, vehicle registration benefits, education grants, and more!</p>
+                <p className="text-lg">
+                  Select your state and rating to discover your benefits
+                </p>
+                <p className="text-sm mt-2">
+                  We'll search for property tax exemptions, vehicle registration
+                  benefits, education grants, and more!
+                </p>
               </div>
             )}
           </div>

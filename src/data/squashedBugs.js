@@ -1,24 +1,24 @@
 /**
  * SQUASHED BUGS TRACKER
- * 
+ *
  * This file tracks all bugs that have been reported and squashed.
  * The visible counter encourages users to report bugs!
- * 
+ *
  * ═══════════════════════════════════════════════════════════════
  * HOW TO ADD A SQUASHED BUG (3 OPTIONS):
  * ═══════════════════════════════════════════════════════════════
- * 
+ *
  * OPTION 1: Paste bug report into GitHub Copilot chat
  *   Just paste the bug report and say "Squashed this bug"
  *   Copilot will automatically add it here!
- * 
+ *
  * OPTION 2: Run CLI script
  *   npm run squash-bug
  *   (Interactive mode walks you through it)
- * 
+ *
  * OPTION 3: Manual entry
  *   Add a new object to SQUASHED_BUGS array below
- * 
+ *
  * Categories: UI, Data, Feature, Performance, Mobile, Accessibility, Build, Search, PDF
  * ═══════════════════════════════════════════════════════════════
  */
@@ -26,190 +26,200 @@
 export const SQUASHED_BUGS = [
   // === ADD NEW SQUASHED BUGS AT THE TOP ===
   {
-    id: 'BUG-UNDEFINED-DD214',
-    title: 'ReferenceError: onOpenDD214Analyzer is not defined',
-    reportedBy: 'User via console logs',
-    reportedDate: '2026-01-28',
-    severity: 'High',
-    category: 'Feature',
-    description: 'After processing documents in Muster Call, DocumentIntelligenceBriefing crashed with "ReferenceError: onOpenDD214Analyzer is not defined" when displaying DD214 analysis button.',
-    rootCause: 'Missing prop in function signature. The onOpenDD214Analyzer prop was passed from MusterCall but not declared in DocumentIntelligenceBriefing\'s parameter list, causing undefined reference when button render attempted.',
-    fix: 'Added onOpenDD214Analyzer to DocumentIntelligenceBriefing function parameters alongside existing props (document, extractionResult, conflicts, onVerify, onSkip, onClose).',
-    filesChanged: ['src/components/DocumentIntelligenceBriefing.jsx'],
-    squashedDate: '2026-01-28',
-    squashedBy: 'Diamond Agent',
+    id: "BUG-UNDEFINED-DD214",
+    title: "ReferenceError: onOpenDD214Analyzer is not defined",
+    reportedBy: "User via console logs",
+    reportedDate: "2026-01-28",
+    severity: "High",
+    category: "Feature",
+    description:
+      'After processing documents in Muster Call, DocumentIntelligenceBriefing crashed with "ReferenceError: onOpenDD214Analyzer is not defined" when displaying DD214 analysis button.',
+    rootCause:
+      "Missing prop in function signature. The onOpenDD214Analyzer prop was passed from MusterCall but not declared in DocumentIntelligenceBriefing's parameter list, causing undefined reference when button render attempted.",
+    fix: "Added onOpenDD214Analyzer to DocumentIntelligenceBriefing function parameters alongside existing props (document, extractionResult, conflicts, onVerify, onSkip, onClose).",
+    filesChanged: ["src/components/DocumentIntelligenceBriefing.jsx"],
+    squashedDate: "2026-01-28",
+    squashedBy: "Diamond Agent",
     verified: true,
-    testCase: 'Upload DD214 to Muster Call > Process document > DocumentIntelligenceBriefing opens without error > "Analyze with AI" button visible and clickable',
+    testCase:
+      'Upload DD214 to Muster Call > Process document > DocumentIntelligenceBriefing opens without error > "Analyze with AI" button visible and clickable',
   },
   {
-    id: 'BUG-NAN-PROGRESS',
+    id: "BUG-NAN-PROGRESS",
     title: 'AI Command Center shows "NaN%" during model loading',
-    reportedBy: 'User via chat',
-    reportedDate: '2026-01-28',
-    severity: 'Medium',
-    category: 'UI',
-    description: 'When loading an LLM in AI Command Center\'s quick setup, the progress bar displayed "NaN%" instead of the actual loading percentage (0-100%).',
-    rootCause: 'Callback signature mismatch: diamondSwarm passes { stage, message, progress } object, but AICommandCenter expected (progress, text) parameters. This caused the entire object to be treated as a number, resulting in NaN.',
+    reportedBy: "User via chat",
+    reportedDate: "2026-01-28",
+    severity: "Medium",
+    category: "UI",
+    description:
+      'When loading an LLM in AI Command Center\'s quick setup, the progress bar displayed "NaN%" instead of the actual loading percentage (0-100%).',
+    rootCause:
+      "Callback signature mismatch: diamondSwarm passes { stage, message, progress } object, but AICommandCenter expected (progress, text) parameters. This caused the entire object to be treated as a number, resulting in NaN.",
     fix: 'Updated onProgress callback to handle object parameter correctly: extract progress and message properties, provide fallback values (0 and "Loading..."), and properly format the display.',
-    filesChanged: ['src/components/AICommandCenter.jsx'],
-    squashedDate: '2026-01-28',
-    squashedBy: 'Diamond Agent',
+    filesChanged: ["src/components/AICommandCenter.jsx"],
+    squashedDate: "2026-01-28",
+    squashedBy: "Diamond Agent",
     verified: true,
-    testCase: 'Open AI Command Center > Quick Setup > Click to load any LLM > Progress bar shows 0-100% with status message',
+    testCase:
+      "Open AI Command Center > Quick Setup > Click to load any LLM > Progress bar shows 0-100% with status message",
   },
   {
-    id: 'BUG-MKYB0BKQ',
-    title: 'DD214 Analyzer doesn\'t launch - returns to home page',
-    date: '2026-01-28',
-    reporter: 'Bob@oikia.us',
-    category: 'Feature',
-    severity: 'High',
-    description: 'Clicking "Open DD214 Analyzer" from Getting Started workflow returns user to Command Center instead of opening analyzer.',
-    root_cause: 'DD214 Analyzer was commented out in App.jsx (lines 706 and 2513-2519). Navigation handler and component render were both disabled with "Temporarily disabled - OCR needs work" comments.',
-    fix: 'Re-enabled DD214 Analyzer by uncommenting navigation handler (\'dd214-analyzer\' route) and component render block. Feature works correctly - OCR and vision models both functional.',
-    files_changed: ['src/App.jsx'],
-    lines_modified: 2
+    id: "BUG-MKYB0BKQ",
+    title: "DD214 Analyzer doesn't launch - returns to home page",
+    date: "2026-01-28",
+    reporter: "Bob@oikia.us",
+    category: "Feature",
+    severity: "High",
+    description:
+      'Clicking "Open DD214 Analyzer" from Getting Started workflow returns user to Command Center instead of opening analyzer.',
+    root_cause:
+      'DD214 Analyzer was commented out in App.jsx (lines 706 and 2513-2519). Navigation handler and component render were both disabled with "Temporarily disabled - OCR needs work" comments.',
+    fix: "Re-enabled DD214 Analyzer by uncommenting navigation handler ('dd214-analyzer' route) and component render block. Feature works correctly - OCR and vision models both functional.",
+    files_changed: ["src/App.jsx"],
+    lines_modified: 2,
   },
   {
-    id: 'BUG-2026-015',
-    title: 'LocalAIPanel escaped quotes causing build failure',
-    description: 'Fixed escaped quotes in JSX causing Vite build to fail',
-    category: 'Build',
-    reportedDate: '2026-01-19',
-    squashedDate: '2026-01-19',
-    reportedBy: 'Internal QA',
-    isRecent: true
+    id: "BUG-2026-015",
+    title: "LocalAIPanel escaped quotes causing build failure",
+    description: "Fixed escaped quotes in JSX causing Vite build to fail",
+    category: "Build",
+    reportedDate: "2026-01-19",
+    squashedDate: "2026-01-19",
+    reportedBy: "Internal QA",
+    isRecent: true,
   },
   {
-    id: 'BUG-2026-014',
-    title: 'Tool count showing 40+ instead of actual 39',
-    description: 'Updated all references across 10+ files to show accurate tool count',
-    category: 'Data',
-    reportedDate: '2026-01-19',
-    squashedDate: '2026-01-19',
-    reportedBy: 'Internal QA',
-    isRecent: true
+    id: "BUG-2026-014",
+    title: "Tool count showing 40+ instead of actual 39",
+    description:
+      "Updated all references across 10+ files to show accurate tool count",
+    category: "Data",
+    reportedDate: "2026-01-19",
+    squashedDate: "2026-01-19",
+    reportedBy: "Internal QA",
+    isRecent: true,
   },
   {
-    id: 'BUG-2026-013',
-    title: 'Version not syncing to public/version.json',
-    description: 'Created automated sync-version.js script to sync version across all files',
-    category: 'Build',
-    reportedDate: '2026-01-19',
-    squashedDate: '2026-01-19',
-    reportedBy: 'Internal QA',
-    isRecent: true
+    id: "BUG-2026-013",
+    title: "Version not syncing to public/version.json",
+    description:
+      "Created automated sync-version.js script to sync version across all files",
+    category: "Build",
+    reportedDate: "2026-01-19",
+    squashedDate: "2026-01-19",
+    reportedBy: "Internal QA",
+    isRecent: true,
   },
   {
-    id: 'BUG-2026-012',
-    title: 'FAQ/Support pages showing N/A for stats',
-    description: 'Fixed dynamic stats injection in static HTML files',
-    category: 'Data',
-    reportedDate: '2026-01-19',
-    squashedDate: '2026-01-19',
-    reportedBy: 'Internal QA',
-    isRecent: true
+    id: "BUG-2026-012",
+    title: "FAQ/Support pages showing N/A for stats",
+    description: "Fixed dynamic stats injection in static HTML files",
+    category: "Data",
+    reportedDate: "2026-01-19",
+    squashedDate: "2026-01-19",
+    reportedBy: "Internal QA",
+    isRecent: true,
   },
   {
-    id: 'BUG-2026-011',
-    title: 'Glossary missing common VA terms',
-    description: 'Added 80+ new VA-specific terms to the glossary',
-    category: 'Data',
-    reportedDate: '2026-01-18',
-    squashedDate: '2026-01-19',
-    reportedBy: 'Community',
-    isRecent: true
+    id: "BUG-2026-011",
+    title: "Glossary missing common VA terms",
+    description: "Added 80+ new VA-specific terms to the glossary",
+    category: "Data",
+    reportedDate: "2026-01-18",
+    squashedDate: "2026-01-19",
+    reportedBy: "Community",
+    isRecent: true,
   },
   {
-    id: 'BUG-2026-010',
-    title: 'Dynamic stats not updating in AboutUs',
-    description: 'Implemented centralized projectStats.js for consistent stats',
-    category: 'Feature',
-    reportedDate: '2026-01-18',
-    squashedDate: '2026-01-18',
-    reportedBy: 'Internal QA'
+    id: "BUG-2026-010",
+    title: "Dynamic stats not updating in AboutUs",
+    description: "Implemented centralized projectStats.js for consistent stats",
+    category: "Feature",
+    reportedDate: "2026-01-18",
+    squashedDate: "2026-01-18",
+    reportedBy: "Internal QA",
   },
   {
-    id: 'BUG-2026-009',
-    title: 'Secondary Scout showing duplicate conditions',
-    description: 'Added deduplication logic to secondary condition results',
-    category: 'Feature',
-    reportedDate: '2026-01-15',
-    squashedDate: '2026-01-16',
-    reportedBy: 'Community'
+    id: "BUG-2026-009",
+    title: "Secondary Scout showing duplicate conditions",
+    description: "Added deduplication logic to secondary condition results",
+    category: "Feature",
+    reportedDate: "2026-01-15",
+    squashedDate: "2026-01-16",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-008',
-    title: 'Mobile menu not closing on selection',
-    description: 'Fixed mobile navigation state management',
-    category: 'Mobile',
-    reportedDate: '2026-01-12',
-    squashedDate: '2026-01-13',
-    reportedBy: 'Community'
+    id: "BUG-2026-008",
+    title: "Mobile menu not closing on selection",
+    description: "Fixed mobile navigation state management",
+    category: "Mobile",
+    reportedDate: "2026-01-12",
+    squashedDate: "2026-01-13",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-007',
-    title: 'PDF export cutting off text on some conditions',
-    description: 'Improved PDF layout algorithm for long condition names',
-    category: 'Feature',
-    reportedDate: '2026-01-10',
-    squashedDate: '2026-01-11',
-    reportedBy: 'Community'
+    id: "BUG-2026-007",
+    title: "PDF export cutting off text on some conditions",
+    description: "Improved PDF layout algorithm for long condition names",
+    category: "Feature",
+    reportedDate: "2026-01-10",
+    squashedDate: "2026-01-11",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-006',
-    title: 'Dark mode contrast issues in calculator',
-    description: 'Enhanced color contrast ratios to meet WCAG AA standards',
-    category: 'Accessibility',
-    reportedDate: '2026-01-08',
-    squashedDate: '2026-01-09',
-    reportedBy: 'Community'
+    id: "BUG-2026-006",
+    title: "Dark mode contrast issues in calculator",
+    description: "Enhanced color contrast ratios to meet WCAG AA standards",
+    category: "Accessibility",
+    reportedDate: "2026-01-08",
+    squashedDate: "2026-01-09",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-005',
-    title: 'Search not finding conditions with hyphens',
-    description: 'Improved search tokenization to handle special characters',
-    category: 'Feature',
-    reportedDate: '2026-01-05',
-    squashedDate: '2026-01-06',
-    reportedBy: 'Community'
+    id: "BUG-2026-005",
+    title: "Search not finding conditions with hyphens",
+    description: "Improved search tokenization to handle special characters",
+    category: "Feature",
+    reportedDate: "2026-01-05",
+    squashedDate: "2026-01-06",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-004',
-    title: 'Bilateral factor calculation incorrect',
-    description: 'Fixed bilateral factor formula per 38 CFR 4.26',
-    category: 'Data',
-    reportedDate: '2026-01-03',
-    squashedDate: '2026-01-04',
-    reportedBy: 'Community'
+    id: "BUG-2026-004",
+    title: "Bilateral factor calculation incorrect",
+    description: "Fixed bilateral factor formula per 38 CFR 4.26",
+    category: "Data",
+    reportedDate: "2026-01-03",
+    squashedDate: "2026-01-04",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-003',
-    title: 'C&P Simulator skipping questions',
-    description: 'Fixed state management in question flow logic',
-    category: 'Feature',
-    reportedDate: '2025-12-28',
-    squashedDate: '2025-12-29',
-    reportedBy: 'Community'
+    id: "BUG-2026-003",
+    title: "C&P Simulator skipping questions",
+    description: "Fixed state management in question flow logic",
+    category: "Feature",
+    reportedDate: "2025-12-28",
+    squashedDate: "2025-12-29",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-002',
-    title: 'My Packet not saving on Safari',
-    description: 'Added localStorage fallback for Safari private browsing',
-    category: 'Feature',
-    reportedDate: '2025-12-20',
-    squashedDate: '2025-12-22',
-    reportedBy: 'Community'
+    id: "BUG-2026-002",
+    title: "My Packet not saving on Safari",
+    description: "Added localStorage fallback for Safari private browsing",
+    category: "Feature",
+    reportedDate: "2025-12-20",
+    squashedDate: "2025-12-22",
+    reportedBy: "Community",
   },
   {
-    id: 'BUG-2026-001',
-    title: 'Rating criteria missing for sleep apnea',
-    description: 'Added complete rating schedule from 38 CFR 4.97',
-    category: 'Data',
-    reportedDate: '2025-12-15',
-    squashedDate: '2025-12-16',
-    reportedBy: 'Community'
-  }
+    id: "BUG-2026-001",
+    title: "Rating criteria missing for sleep apnea",
+    description: "Added complete rating schedule from 38 CFR 4.97",
+    category: "Data",
+    reportedDate: "2025-12-15",
+    squashedDate: "2025-12-16",
+    reportedBy: "Community",
+  },
 ];
 
 /**
@@ -220,33 +230,36 @@ export const getSquashedBugCount = () => SQUASHED_BUGS.length;
 /**
  * Get recent squashed bugs (marked with isRecent: true)
  */
-export const getRecentSquashedBugs = () => SQUASHED_BUGS.filter(bug => bug.isRecent);
+export const getRecentSquashedBugs = () =>
+  SQUASHED_BUGS.filter((bug) => bug.isRecent);
 
 /**
  * Get squashed bugs by category
  */
-export const getSquashedBugsByCategory = (category) => 
-  SQUASHED_BUGS.filter(bug => bug.category === category);
+export const getSquashedBugsByCategory = (category) =>
+  SQUASHED_BUGS.filter((bug) => bug.category === category);
 
 /**
  * Get stats summary
  */
 export const getSquashedBugsStats = () => {
   const categories = {};
-  SQUASHED_BUGS.forEach(bug => {
+  SQUASHED_BUGS.forEach((bug) => {
     categories[bug.category] = (categories[bug.category] || 0) + 1;
   });
-  
-  const communityReported = SQUASHED_BUGS.filter(b => b.reportedBy === 'Community').length;
+
+  const communityReported = SQUASHED_BUGS.filter(
+    (b) => b.reportedBy === "Community",
+  ).length;
   const recentCount = getRecentSquashedBugs().length;
-  
+
   return {
     total: SQUASHED_BUGS.length,
     recentCount,
     communityReported,
     internalFound: SQUASHED_BUGS.length - communityReported,
     byCategory: categories,
-    lastSquashed: SQUASHED_BUGS[0]?.squashedDate || 'N/A'
+    lastSquashed: SQUASHED_BUGS[0]?.squashedDate || "N/A",
   };
 };
 
@@ -254,12 +267,12 @@ export const getSquashedBugsStats = () => {
  * Format bugs for changelog display
  */
 export const getSquashedBugsForChangelog = (limit = 5) => {
-  return SQUASHED_BUGS.slice(0, limit).map(bug => ({
-    type: 'fix',
+  return SQUASHED_BUGS.slice(0, limit).map((bug) => ({
+    type: "fix",
     title: bug.title,
     description: bug.description,
     isNew: bug.isRecent,
     category: bug.category,
-    squashedDate: bug.squashedDate
+    squashedDate: bug.squashedDate,
   }));
 };

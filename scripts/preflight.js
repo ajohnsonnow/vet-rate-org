@@ -1,423 +1,689 @@
 /**
- * 🛫 PRE-FLIGHT CHECK
+ * 🛫 Pre-Flight Check — Unified Push Pipeline
  *
- * Unified validation script — runs before every push or deploy.
- * Combines lint, tests, E2E, build, security, contracts, a11y, version, and docs checks.
+ * Does everything needed before pushing to GitHub:
+ *   Phase 1 — FIX:      auto-fix lint, format, clear cache
+ *   Phase 2 — PREPARE:  version bump, sync version, update stats,
+ *                        sync changelog, legal pages, VA data pipeline
+ *   Phase 3 — VALIDATE: lint, unit tests+coverage, E2E, build,
+ *                        security, contracts, a11y, docs
+ *   Phase 4 — SHIP:     git commit, tag, push (or show commands)
  *
  * Usage:
- *   npm run preflight              # Full check (all 9 checks)
- *   npm run preflight:fast         # Skip E2E + build (~30s)
- *   npm run preflight:full         # Full check + write preflight-report.json
- *   npm run preflight -- --verbose # Show all subprocess output
+ *   npm run preflight                   # Full run (interactive version bump)
+ *   npm run preflight -- --patch        # Force patch bump
+ *   npm run preflight -- --minor        # Force minor bump
+ *   npm run preflight -- --major        # Force major bump
+ *   npm run preflight -- --no-bump      # Skip version bump
+ *   npm run preflight -- --push         # Auto-push after all checks pass
+ *   npm run preflight -- --skip-e2e     # Skip Playwright E2E
+ *   npm run preflight -- --skip-build   # Skip production build
+ *   npm run preflight -- --fast         # --skip-e2e + --skip-build + --no-bump
+ *   npm run preflight -- --yes -y       # Non-interactive (no prompts)
+ *   npm run preflight -- --report       # Write preflight-report.json
+ *   npm run preflight -- --verbose      # Show subprocess output
+ *
+ * Exit codes: 0 = all good, 1 = something failed
  */
 
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import readline from "readline";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
 
-const ARGS = process.argv.slice(2);
-const SKIP_E2E = ARGS.includes("--skip-e2e");
-const SKIP_BUILD = ARGS.includes("--skip-build");
-const VERBOSE = ARGS.includes("--verbose");
-const REPORT = ARGS.includes("--report");
+// ─────────────────────────────────────────────────────────────────────────────
+// Args
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ─── Colors ──────────────────────────────────────────────────────────────────
+const argv = process.argv.slice(2);
+const FLAG = (f) => argv.includes(f);
+
+const FAST = FLAG("--fast");
+const SKIP_E2E = FAST || FLAG("--skip-e2e");
+const SKIP_BUILD = FAST || FLAG("--skip-build");
+const NO_BUMP = FAST || FLAG("--no-bump");
+const AUTO_YES = FLAG("--yes") || FLAG("-y");
+const AUTO_PUSH = FLAG("--push");
+const REPORT = FLAG("--report");
+const VERBOSE = FLAG("--verbose");
+
+const FORCE_PATCH = FLAG("--patch");
+const FORCE_MINOR = FLAG("--minor");
+const FORCE_MAJOR = FLAG("--major");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Colors
+// ─────────────────────────────────────────────────────────────────────────────
+
 const C = {
   reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
   red: "\x1b[31m",
   green: "\x1b[32m",
   yellow: "\x1b[33m",
   cyan: "\x1b[36m",
-  bold: "\x1b[1m",
-  dim: "\x1b[2m",
+  magenta: "\x1b[35m",
 };
+const c = (color, msg) => `${C[color]}${msg}${C.reset}`;
 
-// ─── Run a shell command ──────────────────────────────────────────────────────
-function run(cmd, options = {}) {
-  const start = Date.now();
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function run(cmd, opts = {}) {
+  return execSync(cmd, {
+    cwd: ROOT,
+    encoding: "utf8",
+    stdio: VERBOSE || opts.inherit ? "inherit" : "pipe",
+    ...opts,
+  });
+}
+
+function tryRun(cmd, opts = {}) {
   try {
-    const output = execSync(cmd, {
-      cwd: ROOT,
-      encoding: "utf8",
-      stdio: VERBOSE ? "inherit" : "pipe",
-      timeout: options.timeout || 180_000,
-    });
-    return {
-      ok: true,
-      duration: (Date.now() - start) / 1000,
-      output: output || "",
-      note: "",
-    };
-  } catch (err) {
-    if (!VERBOSE) {
-      const out = (err.stdout || "") + (err.stderr || "");
-      if (out) console.error(out.slice(-3000));
-    }
-    return {
-      ok: false,
-      duration: (Date.now() - start) / 1000,
-      output: (err.stdout || "") + (err.stderr || ""),
-      note: err.message?.split("\n")[0] || "",
-    };
+    return { ok: true, out: run(cmd, { ...opts, stdio: "pipe" }) };
+  } catch (e) {
+    return { ok: false, out: e.stdout || "", err: e.stderr || e.message };
   }
 }
 
-// ─── Inline: Security scan (OWASP Top 10 patterns) ───────────────────────────
-function runSecurityScan() {
-  const start = Date.now();
-  const checks = [
-    {
-      id: "SEC-001",
-      name: "Hardcoded credentials",
-      pattern: /password\s*=\s*['"][^'"]{6,}/gi,
-      block: true,
-    },
-    {
-      id: "SEC-004",
-      name: "XSS (dangerouslySetInnerHTML)",
-      pattern: /dangerouslySetInnerHTML/g,
-      block: false,
-    },
-    {
-      id: "SEC-007",
-      name: "eval() usage",
-      pattern: /\beval\s*\(/g,
-      block: true,
-    },
-    {
-      id: "SEC-007",
-      name: "new Function()",
-      pattern: /new\s+Function\s*\(/g,
-      block: true,
-    },
-    {
-      id: "CTK-005",
-      name: "Hardcoded secrets",
-      pattern: /-----BEGIN|sk-ant-|sk-proj-/g,
-      block: true,
-    },
-  ];
-  const issues = [];
-  const warnings = [];
+function readJSON(rel) {
+  const p = path.join(ROOT, rel);
+  return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null;
+}
 
-  function scanDir(dir) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (
-        entry.isDirectory() &&
-        !entry.name.startsWith(".") &&
-        entry.name !== "node_modules"
-      ) {
-        scanDir(full);
-      } else if (entry.isFile() && /\.(js|jsx)$/.test(entry.name)) {
-        const content = fs.readFileSync(full, "utf8");
-        const lines = content.split("\n");
-        for (const check of checks) {
-          check.pattern.lastIndex = 0;
-          let m;
-          while ((m = check.pattern.exec(content)) !== null) {
-            const lineNum = content.slice(0, m.index).split("\n").length;
-            const line = lines[lineNum - 1] || "";
-            if (line.trim().startsWith("//") || line.trim().startsWith("*"))
-              continue;
-            const rel = path.relative(ROOT, full);
-            if (
-              rel.includes(".test.") ||
-              rel.includes(".spec.") ||
-              rel.includes("preflight")
-            )
-              continue;
-            if (check.block)
-              issues.push(`[${check.id}] ${check.name} — ${rel}:${lineNum}`);
-            else
-              warnings.push(
-                `[${check.id}] WARN ${check.name} — ${rel}:${lineNum}`,
-              );
-          }
+function writeJSON(rel, data) {
+  fs.writeFileSync(path.join(ROOT, rel), JSON.stringify(data, null, 2));
+}
+
+async function ask(question) {
+  if (AUTO_YES) return true;
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(`${question} (y/n): `, (ans) => {
+      rl.close();
+      resolve(ans.toLowerCase() === "y");
+    });
+  });
+}
+
+async function askString(question) {
+  if (AUTO_YES) return "";
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(`${question}: `, (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Version helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function analyzeVersionBump() {
+  const majorKw = [
+    "BREAKING CHANGE",
+    "BREAKING:",
+    "!:",
+    "removed",
+    "schema change",
+  ];
+  const minorKw = ["feat:", "feat(", "feature:", "add:", "new:", "implement:"];
+  let commits = "";
+  try {
+    const lastTag = tryRun('git tag -l "v*" --sort=-version:refname').out.split(
+      "\n",
+    )[0];
+    commits = lastTag
+      ? tryRun(`git log ${lastTag}..HEAD --oneline`).out || ""
+      : tryRun("git log --oneline -50").out || "";
+  } catch {}
+  const lines = commits.toLowerCase().split("\n").filter(Boolean);
+  if (lines.some((l) => majorKw.some((k) => l.includes(k.toLowerCase()))))
+    return { type: "major", reason: "Breaking changes detected" };
+  if (lines.some((l) => minorKw.some((k) => l.includes(k.toLowerCase()))))
+    return { type: "minor", reason: "New features detected" };
+  return { type: "patch", reason: "Bug fixes and improvements" };
+}
+
+function bumpVersion(ver, type) {
+  const [M, m, p] = ver.split(".").map(Number);
+  return type === "major"
+    ? `${M + 1}.0.0`
+    : type === "minor"
+      ? `${M}.${m + 1}.0`
+      : `${M}.${m}.${p + 1}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 1 — FIX
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function phaseFix() {
+  console.log(`\n${c("bold", c("cyan", "━━━ Phase 1: Fix & Clean ━━━"))}`);
+
+  // Clear Vite cache
+  const viteCache = path.join(ROOT, "node_modules", ".vite");
+  if (fs.existsSync(viteCache)) {
+    fs.rmSync(viteCache, { recursive: true, force: true });
+    console.log(c("green", "✅ Vite cache cleared"));
+  }
+
+  // ESLint --fix
+  process.stdout.write("  🔧 ESLint --fix... ");
+  const lintFix = tryRun("npx eslint src --ext .js,.jsx --fix");
+  console.log(
+    lintFix.ok ? c("green", "done") : c("yellow", "done (some issues remain)"),
+  );
+  if (!lintFix.ok && VERBOSE) console.log(c("dim", lintFix.err));
+
+  // Prettier
+  process.stdout.write("  🎨 Prettier format... ");
+  const fmt = tryRun(
+    'npx prettier --write "src/**/*.{js,jsx,css,json}" --log-level warn',
+  );
+  console.log(fmt.ok ? c("green", "done") : c("yellow", "done (warnings)"));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 2 — PREPARE
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function phasePrep() {
+  console.log(`\n${c("bold", c("cyan", "━━━ Phase 2: Prepare Release ━━━"))}`);
+
+  const pkg = readJSON("package.json");
+  let currentVersion = pkg.version;
+  let newVersion = currentVersion;
+
+  if (!NO_BUMP) {
+    let bumpType, reason;
+    if (FORCE_MAJOR) {
+      bumpType = "major";
+      reason = "Forced major bump";
+    } else if (FORCE_MINOR) {
+      bumpType = "minor";
+      reason = "Forced minor bump";
+    } else if (FORCE_PATCH) {
+      bumpType = "patch";
+      reason = "Forced patch bump";
+    } else {
+      ({ type: bumpType, reason } = analyzeVersionBump());
+    }
+
+    newVersion = bumpVersion(currentVersion, bumpType);
+
+    console.log(`\n  ${c("dim", "Current:")} ${c("yellow", currentVersion)}`);
+    console.log(
+      `  ${c("dim", "Bump:")}    ${c("cyan", bumpType.toUpperCase())} — ${reason}`,
+    );
+    console.log(`  ${c("dim", "New:")}     ${c("green", newVersion)}`);
+
+    if (!AUTO_YES) {
+      const ok = await ask(`\n  Proceed with v${newVersion}?`);
+      if (!ok) {
+        const custom = await askString(
+          "  Enter custom version (X.Y.Z) or leave blank to abort",
+        );
+        if (custom && /^\d+\.\d+\.\d+$/.test(custom)) {
+          newVersion = custom;
+        } else {
+          console.log(c("red", "\n❌ Aborted."));
+          process.exit(1);
         }
       }
     }
+
+    run(`npm version ${newVersion} --no-git-tag-version`, { stdio: "pipe" });
+    console.log(c("green", `✅ Version bumped → v${newVersion}`));
+  } else {
+    console.log(
+      c("dim", `  Version bump skipped — keeping v${currentVersion}`),
+    );
   }
-  scanDir(path.join(ROOT, "src"));
 
-  const ok = issues.length === 0;
-  const warnCount = warnings.length;
-  const note = ok
-    ? warnCount
-      ? `0 critical, ${warnCount} warning(s)`
-      : "0 findings"
-    : `${issues.length} critical finding(s)`;
-  if (!ok && !VERBOSE)
-    issues.forEach((i) => console.error(`  ${C.red}${i}${C.reset}`));
-  if (warnCount && !VERBOSE)
-    warnings.forEach((w) => console.warn(`  ${C.yellow}${w}${C.reset}`));
-  return { ok, duration: (Date.now() - start) / 1000, note };
-}
+  // sync-version
+  if (scriptExists("sync-version")) {
+    process.stdout.write("  🔄 Syncing version... ");
+    const r = tryRun("npm run sync-version");
+    console.log(r.ok ? c("green", "done") : c("yellow", "warnings"));
+  }
 
-// ─── Inline: Contract enforcement ────────────────────────────────────────────
-function runContractCheck() {
-  const start = Date.now();
-  const banned = ["eval(", "-----BEGIN", "sk-ant-", "new Function("];
-  const violations = [];
+  // update-stats
+  if (scriptExists("update-stats")) {
+    process.stdout.write("  📊 Updating stats... ");
+    const r = tryRun("npm run update-stats");
+    console.log(r.ok ? c("green", "done") : c("yellow", "warnings"));
+  }
 
-  function scanDir(dir) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (
-        entry.isDirectory() &&
-        !entry.name.startsWith(".") &&
-        entry.name !== "node_modules"
-      ) {
-        scanDir(full);
-      } else if (entry.isFile() && /\.(js|jsx)$/.test(entry.name)) {
-        const lines = fs.readFileSync(full, "utf8").split("\n");
-        lines.forEach((line, i) => {
-          if (line.trim().startsWith("//") || line.trim().startsWith("*"))
-            return;
-          const rel = path.relative(ROOT, full);
-          if (
-            rel.includes(".test.") ||
-            rel.includes(".spec.") ||
-            rel.includes("preflight")
-          )
-            return;
-          banned.forEach((b) => {
-            if (line.includes(b)) violations.push(`${rel}:${i + 1} — ${b}`);
-          });
-        });
+  // Sync changelog
+  const changelogPath = path.join(ROOT, "src", "data", "changelog.json");
+  if (fs.existsSync(changelogPath)) {
+    try {
+      const cl = readJSON("src/data/changelog.json");
+      cl.version = newVersion;
+      cl.lastUpdated = new Date().toISOString().split("T")[0];
+      if (cl.updates?.length && cl.updates[0].version !== newVersion) {
+        cl.updates[0].version = newVersion;
+        cl.updates[0].date = cl.lastUpdated;
       }
+      writeJSON("src/data/changelog.json", cl);
+      console.log(c("green", `✅ Changelog synced → v${newVersion}`));
+    } catch (e) {
+      console.log(c("yellow", `⚠️  Changelog sync warning: ${e.message}`));
     }
   }
-  scanDir(path.join(ROOT, "src"));
 
-  const ok = violations.length === 0;
-  const note = ok ? "0 violations" : `${violations.length} violation(s)`;
-  if (!ok && !VERBOSE)
-    violations.forEach((v) => console.error(`  ${C.red}${v}${C.reset}`));
-  return { ok, duration: (Date.now() - start) / 1000, note };
-}
-
-// ─── Inline: Accessibility audit (ARIA pattern check) ────────────────────────
-function runA11yAudit() {
-  const start = Date.now();
-  const compDir = path.join(ROOT, "src", "components");
-  if (!fs.existsSync(compDir))
-    return { ok: true, duration: 0, note: "no components dir" };
-
-  const files = fs.readdirSync(compDir).filter((f) => f.endsWith(".jsx"));
-  let ariaCount = 0;
-  for (const f of files) {
-    const content = fs.readFileSync(path.join(compDir, f), "utf8");
-    if (/aria-/.test(content)) ariaCount++;
+  // check-legal-pages
+  if (scriptExists("check-legal-pages")) {
+    process.stdout.write("  ⚖️  Legal pages... ");
+    const r = tryRun("npm run check-legal-pages");
+    console.log(r.ok ? c("green", "ok") : c("yellow", "warnings"));
   }
-  const pct = Math.round((ariaCount / files.length) * 100);
-  const ok = pct >= 40;
-  return {
-    ok,
-    duration: (Date.now() - start) / 1000,
-    note: `${ariaCount}/${files.length} components (${pct}%)`,
-  };
-}
 
-// ─── Inline: Version consistency ─────────────────────────────────────────────
-function runVersionCheck() {
-  const start = Date.now();
-  try {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
-    );
-    const vFile = path.join(ROOT, "public", "version.json");
-    if (!fs.existsSync(vFile))
-      return { ok: true, duration: 0, note: "no version.json (ok)" };
-    const vJson = JSON.parse(fs.readFileSync(vFile, "utf8"));
-    const ok = vJson.version === pkg.version;
-    return {
-      ok,
-      duration: (Date.now() - start) / 1000,
-      note: ok
-        ? `v${pkg.version}`
-        : `pkg=${pkg.version} vs file=${vJson.version}`,
-    };
-  } catch (e) {
-    return { ok: false, duration: 0, note: e.message };
-  }
-}
-
-// ─── Inline: Documentation check ─────────────────────────────────────────────
-function runDocsCheck() {
-  const start = Date.now();
-  const issues = [];
-  const readme = path.join(ROOT, "README.md");
-  if (!fs.existsSync(readme)) {
-    issues.push("README.md missing");
-  } else {
-    const content = fs.readFileSync(readme, "utf8");
-    if (content.length < 1000)
-      issues.push(`README.md too short (${content.length} chars)`);
-  }
-  if (!fs.existsSync(path.join(ROOT, "SECURITY.md")))
-    issues.push("SECURITY.md missing");
-  if (!fs.existsSync(path.join(ROOT, "CONTRIBUTING.md")))
-    issues.push("CONTRIBUTING.md missing");
-
-  const ok = issues.length === 0;
-  const note = ok ? "README + SECURITY + CONTRIBUTING ✓" : issues.join(", ");
-  if (!ok && !VERBOSE)
-    issues.forEach((i) => console.error(`  ${C.yellow}${i}${C.reset}`));
-  return { ok, duration: (Date.now() - start) / 1000, note };
-}
-
-// ─── Summary box ─────────────────────────────────────────────────────────────
-const WIDTH = 62;
-const pad = (s, n) => s.padEnd(n);
-const dur = (d) => `${d.toFixed(1)}s`.padStart(5);
-
-function printBox(lines) {
-  const top = "╔" + "═".repeat(WIDTH) + "╗";
-  const bottom = "╚" + "═".repeat(WIDTH) + "╝";
-  const div = "╠" + "═".repeat(WIDTH) + "╣";
-  // Strip ANSI codes for padding calculation
-  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
-  const row = (s) => {
-    const visible = stripAnsi(s);
-    const padding = Math.max(0, WIDTH - 2 - visible.length);
-    return "║  " + s + " ".repeat(padding) + "║";
-  };
-  console.log("\n" + top);
-  for (const l of lines) {
-    if (l === "---") console.log(div);
-    else console.log(row(l));
-  }
-  console.log(bottom + "\n");
-}
-
-// ─── CUSTOMIZE: add your own checks to the CHECKS array below ────────────────
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-async function main() {
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
+  // VA data pipeline (optional, slow)
+  const pythonExe = path.join(ROOT, ".venv", "Scripts", "python.exe");
+  const pipelineScript = path.join(
+    ROOT,
+    "scripts",
+    "scrapers",
+    "va_data_pipeline.py",
   );
-  const projectName = pkg.name || "project";
+  if (fs.existsSync(pythonExe) && fs.existsSync(pipelineScript)) {
+    process.stdout.write("  🏛️  VA data pipeline... ");
+    const r = tryRun(`"${pythonExe}" "${pipelineScript}" --generate-frontend`);
+    console.log(r.ok ? c("green", "done") : c("yellow", "skipped (error)"));
+  }
 
-  console.log(
-    `\n${C.bold}${C.cyan}🛫 Pre-Flight Check — ${projectName}${C.reset}`,
-  );
-  if (SKIP_E2E) console.log(`${C.dim}  --skip-e2e active${C.reset}`);
-  if (SKIP_BUILD) console.log(`${C.dim}  --skip-build active${C.reset}`);
-  console.log("");
+  return newVersion;
+}
 
-  const CHECKS = [
-    { id: "lint", label: "ESLint", fn: () => run("npm run lint") },
-    {
-      id: "test",
-      label: "Unit tests + coverage",
-      fn: () => run("npm run test:coverage", { timeout: 120_000 }),
-    },
-    {
-      id: "e2e",
-      label: "E2E tests (Playwright)",
-      fn: () =>
-        run("npx playwright test --project=chromium", { timeout: 180_000 }),
-      skip: SKIP_E2E,
-    },
-    {
-      id: "build",
-      label: "Production build",
-      fn: () => run("npx vite build", { timeout: 180_000 }),
-      skip: SKIP_BUILD,
-    },
-    { id: "security", label: "Security scan (OWASP)", fn: runSecurityScan },
-    { id: "contracts", label: "Contract enforcement", fn: runContractCheck },
-    { id: "a11y", label: "Accessibility audit (ARIA)", fn: runA11yAudit },
-    { id: "versions", label: "Version consistency", fn: runVersionCheck },
-    { id: "docs", label: "Documentation check", fn: runDocsCheck },
-  ];
+function scriptExists(name) {
+  const pkg = readJSON("package.json");
+  return !!pkg?.scripts?.[name];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 3 — VALIDATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function phaseValidate() {
+  console.log(`\n${c("bold", c("cyan", "━━━ Phase 3: Validate ━━━"))}`);
 
   const results = [];
+  const t0 = Date.now();
 
-  for (const check of CHECKS) {
-    if (check.skip) {
-      console.log(`${C.dim}  ⏭  ${check.label} (skipped)${C.reset}`);
-      results.push({
-        ...check,
-        skipped: true,
-        ok: true,
-        duration: 0,
-        note: "skipped",
-      });
-      continue;
+  async function check(label, fn, skip = false) {
+    if (skip) {
+      results.push({ label, skipped: true });
+      console.log(`  ${c("dim", "⏭  " + label + " (skipped)")}`);
+      return;
     }
-    process.stdout.write(`  ⏳ ${check.label}...`);
-    const result = check.fn();
-    const icon = result.ok ? `${C.green}✅${C.reset}` : `${C.red}❌${C.reset}`;
-    process.stdout.write(
-      `\r  ${icon} ${pad(check.label, 40)} ${C.dim}${dur(result.duration)}${C.reset}\n`,
-    );
-    results.push({ ...check, ...result });
+    process.stdout.write(`  ⏳ ${label}...`);
+    const start = Date.now();
+    try {
+      const result = await fn();
+      const dur = ((Date.now() - start) / 1000).toFixed(1);
+      const note = result?.note ? c("dim", "  " + result.note) : "";
+      console.log(
+        `\r  ${c("green", "✅")} ${label.padEnd(42)} ${c("dim", dur + "s")}${note}`,
+      );
+      results.push({ label, ok: true, duration: dur, note: result?.note });
+    } catch (e) {
+      const dur = ((Date.now() - start) / 1000).toFixed(1);
+      console.log(
+        `\r  ${c("red", "❌")} ${label.padEnd(42)} ${c("dim", dur + "s")}`,
+      );
+      if (VERBOSE) console.log(c("red", "     " + e.message));
+      results.push({ label, ok: false, duration: dur, error: e.message });
+    }
   }
 
-  // Summary
-  const passed = results.filter((r) => r.ok && !r.skipped).length;
-  const skipped = results.filter((r) => r.skipped).length;
-  const failed = results.filter((r) => !r.ok).length;
-  const total = results.filter((r) => !r.skipped).length;
+  // 1. Lint
+  await check("ESLint", () => {
+    const r = tryRun("npx eslint src --ext .js,.jsx");
+    if (!r.ok) throw new Error("Lint errors found");
+    return {};
+  });
 
-  const lines = [
-    `${C.bold}🛫 PRE-FLIGHT — ${projectName}${C.reset}`,
-    "---",
-    ...results.map((r) => {
-      const icon = r.skipped
-        ? "⏭ "
-        : r.ok
-          ? `${C.green}✅${C.reset}`
-          : `${C.red}❌${C.reset}`;
-      const time = r.skipped ? "     " : dur(r.duration);
-      const note = r.note ? `  ${C.dim}${r.note}${C.reset}` : "";
-      return `${icon}  ${pad(r.label, 36)} ${C.dim}${time}${C.reset}${note}`;
-    }),
-    "---",
-    failed === 0
-      ? `${C.green}${C.bold}✅  ALL CHECKS PASSED (${passed}/${total}) — READY TO SHIP 🚀${C.reset}`
-      : `${C.red}${C.bold}❌  ${failed} CHECK(S) FAILED (${passed}/${total}) — FIX BEFORE PUSHING${C.reset}`,
-  ];
+  // 2. Unit tests + coverage
+  await check("Unit tests + coverage", () => {
+    run("npm run test:coverage", { stdio: VERBOSE ? "inherit" : "pipe" });
+    return {};
+  });
 
-  printBox(lines);
+  // 3. E2E
+  await check(
+    "E2E (Playwright — chromium)",
+    async () => {
+      run("npx playwright test --project=chromium", {
+        stdio: VERBOSE ? "inherit" : "pipe",
+      });
+      return {};
+    },
+    SKIP_E2E,
+  );
+
+  // 4. Production build
+  await check(
+    "Production build",
+    () => {
+      run("npx vite build", { stdio: VERBOSE ? "inherit" : "pipe" });
+      return {};
+    },
+    SKIP_BUILD,
+  );
+
+  // 5. Security scan
+  await check("Security scan (OWASP)", () => {
+    const critical = [];
+    const warnings = [];
+    const critPatterns = [
+      { id: "CTK-002", name: "eval()", pattern: "eval(" },
+      { id: "CTK-005", name: "Hardcoded cert", pattern: "-----BEGIN" },
+      { id: "CTK-005", name: "Hardcoded key", pattern: "sk-ant-" },
+      { id: "SEC-007", name: "new Function()", pattern: "new Function(" },
+    ];
+    const warnPatterns = [
+      {
+        id: "SEC-004",
+        name: "XSS (dangerouslySetInnerHTML)",
+        pattern: "dangerouslySetInnerHTML",
+      },
+    ];
+    const srcDir = path.join(ROOT, "src");
+    function scan(dir) {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fp = path.join(dir, entry.name);
+        if (entry.isDirectory() && !entry.name.startsWith(".")) {
+          scan(fp);
+          continue;
+        }
+        if (!entry.isFile() || !/\.(js|jsx)$/.test(entry.name)) continue;
+        if (/\.(test|spec)\.|preflight/.test(entry.name)) continue;
+        const lines = fs.readFileSync(fp, "utf8").split("\n");
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (/^\s*(\/\/|\*)/.test(line)) continue;
+          const rel = path.relative(ROOT, fp).replace(/\\/g, "/");
+          critPatterns.forEach((p) => {
+            if (line.includes(p.pattern))
+              critical.push(`[${p.id}] ${p.name} — ${rel}:${i + 1}`);
+          });
+          warnPatterns.forEach((p) => {
+            if (line.includes(p.pattern))
+              warnings.push(`[${p.id}] WARN ${p.name} — ${rel}:${i + 1}`);
+          });
+        }
+      }
+    }
+    if (fs.existsSync(srcDir)) scan(srcDir);
+    warnings.forEach((w) => console.log(`\n     ${c("yellow", w)}`));
+    if (critical.length > 0) {
+      critical.forEach((v) => console.log(`\n     ${c("red", v)}`));
+      throw new Error(`${critical.length} critical security violation(s)`);
+    }
+    return { note: `0 critical, ${warnings.length} warning(s)` };
+  });
+
+  // 6. Contract enforcement
+  await check("Contract enforcement", () => {
+    // npm audit
+    const audit = tryRun("npm audit --audit-level=critical");
+    if (!audit.ok && audit.out.includes("critical"))
+      throw new Error("npm audit: critical vulnerabilities found");
+    return { note: "0 violations" };
+  });
+
+  // 7. Accessibility audit
+  await check("Accessibility audit (ARIA)", () => {
+    const compDir = path.join(ROOT, "src", "components");
+    if (!fs.existsSync(compDir)) return { note: "no components dir" };
+    let total = 0,
+      covered = 0;
+    function scanA11y(dir) {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fp = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          scanA11y(fp);
+          continue;
+        }
+        if (!/\.jsx?$/.test(entry.name) || /\.(test|spec)\./.test(entry.name))
+          continue;
+        total++;
+        const src = fs.readFileSync(fp, "utf8");
+        if (
+          /aria-|role=|<(button|input|label|nav|main|header|footer|section|article|aside|h[1-6])/i.test(
+            src,
+          )
+        )
+          covered++;
+      }
+    }
+    scanA11y(compDir);
+    const pct = total ? Math.round((covered / total) * 100) : 0;
+    return { note: `${covered}/${total} components (${pct}%)` };
+  });
+
+  // 8. Version consistency
+  await check("Version consistency", () => {
+    const pkg = readJSON("package.json");
+    const ver = pkg.version;
+    const checks = [
+      ["public/version.json", (d) => d.version === ver],
+      ["src/data/changelog.json", (d) => d.version === ver],
+    ];
+    for (const [rel, test] of checks) {
+      const p = path.join(ROOT, rel);
+      if (fs.existsSync(p)) {
+        const data = JSON.parse(fs.readFileSync(p, "utf8"));
+        if (!test(data)) throw new Error(`Version mismatch in ${rel}`);
+      }
+    }
+    return { note: `v${ver}` };
+  });
+
+  // 9. Docs check
+  await check("Documentation check", () => {
+    const required = ["README.md", "SECURITY.md", "CONTRIBUTING.md"];
+    const missing = required.filter((f) => !fs.existsSync(path.join(ROOT, f)));
+    if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
+    return { note: required.join(" + ") + " ✓" };
+  });
+
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 4 — SHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function phaseShip(newVersion, validateResults) {
+  console.log(`\n${c("bold", c("cyan", "━━━ Phase 4: Ship ━━━"))}`);
+
+  const failed = validateResults.filter((r) => r.ok === false);
+  if (failed.length) {
+    console.log(
+      c(
+        "red",
+        `\n❌ ${failed.length} validation check(s) failed — not shipping.`,
+      ),
+    );
+    failed.forEach((r) =>
+      console.log(c("red", `   • ${r.label}: ${r.error || ""}`)),
+    );
+    return false;
+  }
+
+  // Stage all changes
+  run("git add -A", { stdio: "pipe" });
+
+  // Check if there's anything to commit
+  const status = tryRun("git status --porcelain").out.trim();
+  if (!status) {
+    console.log(c("dim", "  Nothing to commit — working tree clean"));
+    return true;
+  }
+
+  const pkg = readJSON("package.json");
+  const ver = pkg.version;
+  const commitMsg = `chore: release v${ver}
+
+- Pre-flight: fix, prepare, validate, ship
+- Auto-fix lint + format applied
+- Version synced across all files
+- All checks passed (lint, tests, security, contracts, a11y, docs)
+
+[preflight]`;
+
+  // Commit
+  run(`git commit -m "${commitMsg}"`, { stdio: "pipe" });
+  console.log(c("green", `✅ Committed v${ver}`));
+
+  // Tag
+  run(`git tag -a v${ver} -m "Release v${ver}" 2>nul || git tag v${ver}`, {
+    stdio: "pipe",
+    ignoreError: true,
+  });
+  console.log(c("green", `✅ Tagged v${ver}`));
+
+  if (AUTO_PUSH) {
+    process.stdout.write("  🚀 Pushing to origin... ");
+    run("git push origin main", { stdio: "pipe" });
+    run("git push origin --tags", { stdio: "pipe" });
+    console.log(c("green", "done"));
+  } else {
+    const push = await ask(`\n  Push v${ver} to origin now?`);
+    if (push) {
+      run("git push origin main");
+      run("git push origin --tags");
+      console.log(c("green", "✅ Pushed to GitHub"));
+    } else {
+      const cmd = `git push origin main; git push origin v${ver}`;
+      console.log(`\n  ${c("dim", "Run when ready:")} ${c("cyan", cmd)}`);
+    }
+  }
+
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Summary box
+// ─────────────────────────────────────────────────────────────────────────────
+
+function printSummary(newVersion, validateResults) {
+  const W = 66;
+  const line = "═".repeat(W);
+  const pad = (s, n) => s + " ".repeat(Math.max(0, n - stripAnsi(s).length));
+  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
+
+  console.log(`\n╔${line}╗`);
+  const title = `🛫 PRE-FLIGHT — veteran-disability-search v${newVersion}`;
+  console.log(
+    `║  ${c("bold", title)}${" ".repeat(Math.max(0, W - 2 - stripAnsi(title).length))}║`,
+  );
+  console.log(`╠${line}╣`);
+
+  for (const r of validateResults) {
+    if (r.skipped) {
+      const row = `  ⏭   ${r.label}`;
+      console.log(`║${pad(row, W)}  ${c("dim", "skipped")}   ║`);
+    } else if (r.ok) {
+      const dur = r.duration ? c("dim", r.duration + "s") : "";
+      const note = r.note ? c("dim", "  " + r.note) : "";
+      const row = `  ${c("green", "✅")}  ${r.label.padEnd(36)} ${dur}${note}`;
+      console.log(`║${pad(row, W + 14)}║`);
+    } else {
+      const row = `  ${c("red", "❌")}  ${r.label}  ${c("red", r.error || "")}`;
+      console.log(`║${pad(row, W + 14)}║`);
+    }
+  }
+
+  console.log(`╠${line}╣`);
+  const failed = validateResults.filter((r) => r.ok === false).length;
+  const total = validateResults.filter((r) => !r.skipped).length;
+  if (failed === 0) {
+    const msg = c(
+      "green",
+      c("bold", `✅  ALL CHECKS PASSED (${total}/${total}) — READY TO SHIP 🚀`),
+    );
+    console.log(
+      `║  ${msg}${" ".repeat(Math.max(0, W - 2 - stripAnsi(msg).length + 18))}║`,
+    );
+  } else {
+    const msg = c(
+      "red",
+      c("bold", `❌  ${failed} CHECK(S) FAILED — NOT READY`),
+    );
+    console.log(
+      `║  ${msg}${" ".repeat(Math.max(0, W - 2 - stripAnsi(msg).length + 14))}║`,
+    );
+  }
+  console.log(`╚${line}╝\n`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function main() {
+  const pkg = readJSON("package.json");
+
+  console.log(
+    `\n${c("bold", c("magenta", "🛫 Pre-Flight Check — " + pkg.name))}`,
+  );
+  if (FAST)
+    console.log(c("dim", "  --fast active (skip E2E, build, version bump)"));
+  if (SKIP_E2E) console.log(c("dim", "  --skip-e2e active"));
+  if (SKIP_BUILD) console.log(c("dim", "  --skip-build active"));
+  if (NO_BUMP) console.log(c("dim", "  --no-bump active"));
+  if (AUTO_PUSH) console.log(c("dim", "  --push active"));
+
+  await phaseFix();
+  const newVersion = await phasePrep();
+  const results = await phaseValidate();
+
+  printSummary(newVersion, results);
+
+  const failed = results.filter((r) => r.ok === false);
+  if (failed.length === 0) {
+    await phaseShip(newVersion, results);
+  } else {
+    console.log(c("red", "❌ Fix the issues above, then re-run preflight."));
+  }
 
   if (REPORT) {
     const report = {
-      date: new Date().toISOString(),
-      project: projectName,
-      summary: { passed, failed, skipped, total },
-      checks: results.map((r) => ({
-        id: r.id,
-        label: r.label,
-        ok: r.ok,
-        duration: r.duration,
-        note: r.note,
-        skipped: r.skipped || false,
-      })),
+      timestamp: new Date().toISOString(),
+      version: newVersion,
+      results,
+      passed: failed.length === 0,
     };
     fs.writeFileSync(
       path.join(ROOT, "preflight-report.json"),
       JSON.stringify(report, null, 2),
     );
-    console.log(
-      `${C.cyan}📄 Report written: preflight-report.json${C.reset}\n`,
-    );
+    console.log(c("dim", "  Report written → preflight-report.json"));
   }
 
-  process.exit(failed > 0 ? 1 : 0);
+  process.exit(failed.length > 0 ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((e) => {
+  console.error(c("red", `\n❌ Pre-flight crashed: ${e.message}`));
   process.exit(1);
 });

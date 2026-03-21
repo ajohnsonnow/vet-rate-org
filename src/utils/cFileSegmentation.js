@@ -2,9 +2,9 @@
  * Vet-Rate.org - C-File Segmentation & Bursting Utility
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * PURPOSE: Burst the "monster file" (C-File) into usable segments
- * 
+ *
  * WHAT IS A C-FILE?
  * The "Claims File" or "C-File" is a massive PDF (often 500-5000+ pages)
  * containing EVERY document the VA has on a veteran:
@@ -15,17 +15,21 @@
  * - Private Medical Records
  * - Buddy Statements
  * - Code Sheet (at the END)
- * 
+ *
  * STRATEGY: "Backwards Search" + "Regex Bursting"
  * 1. Start from the END - Code Sheet is always last
  * 2. Identify document boundaries via header patterns
  * 3. Burst into individual "dossiers" for targeted analysis
- * 
+ *
  * KEY INSIGHT: The Code Sheet at the end is the "single source of truth"
  * for current ratings. Work backwards from there.
  */
 
-import { parseVADocument, parseCodeSheet, VA_SECTION_HEADERS } from './vaDocumentParser.js';
+import {
+  parseVADocument,
+  parseCodeSheet,
+  VA_SECTION_HEADERS,
+} from "./vaDocumentParser.js";
 
 /**
  * Document type signatures for segmentation
@@ -39,9 +43,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:CHARACTER\s*OF\s*)?SERVICE:\s*(?:HONORABLE|GENERAL|OTHER)/i,
     ],
     priority: 100,
-    category: 'SERVICE_RECORD',
+    category: "SERVICE_RECORD",
   },
-  
+
   // Performance reports
   PERFORMANCE_EVAL: {
     patterns: [
@@ -50,9 +54,9 @@ export const DOCUMENT_SIGNATURES = {
       /EVALUATION\s*(?:PERIOD|RATING)/i,
     ],
     priority: 80,
-    category: 'SERVICE_RECORD',
+    category: "SERVICE_RECORD",
   },
-  
+
   // Service Treatment Records
   STR: {
     patterns: [
@@ -62,9 +66,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:SICK\s*CALL|CLINICAL\s*NOTE)/i,
     ],
     priority: 90,
-    category: 'MEDICAL',
+    category: "MEDICAL",
   },
-  
+
   // C&P Exams / DBQs
   DBQ: {
     patterns: [
@@ -73,9 +77,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:C&P|COMPENSATION\s*(?:AND|&)\s*PENSION)\s*EXAM/i,
     ],
     priority: 95,
-    category: 'MEDICAL',
+    category: "MEDICAL",
   },
-  
+
   // Rating decisions
   RATING_DECISION: {
     patterns: [
@@ -84,9 +88,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:GRANT|DENIAL)\s*(?:OF\s*)?SERVICE\s*CONNECTION/i,
     ],
     priority: 95,
-    category: 'DECISION',
+    category: "DECISION",
   },
-  
+
   // Code Sheet (always at END)
   CODE_SHEET: {
     patterns: [
@@ -95,9 +99,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:MASTER\s*)?RECORD\s*BRIEF/i,
     ],
     priority: 100,
-    category: 'SUMMARY',
+    category: "SUMMARY",
   },
-  
+
   // BVA Decisions
   BVA_DECISION: {
     patterns: [
@@ -106,29 +110,23 @@ export const DOCUMENT_SIGNATURES = {
       /DOCKET\s*NO/i,
     ],
     priority: 90,
-    category: 'DECISION',
+    category: "DECISION",
   },
-  
+
   // Statement of the Case
   SOC: {
-    patterns: [
-      /STATEMENT\s*OF\s*THE\s*CASE/i,
-      /ISSUES?\s*ON\s*APPEAL/i,
-    ],
+    patterns: [/STATEMENT\s*OF\s*THE\s*CASE/i, /ISSUES?\s*ON\s*APPEAL/i],
     priority: 85,
-    category: 'APPEAL',
+    category: "APPEAL",
   },
-  
+
   // Supplemental SOC
   SSOC: {
-    patterns: [
-      /SUPPLEMENTAL\s*STATEMENT\s*OF\s*THE\s*CASE/i,
-      /SSOC/i,
-    ],
+    patterns: [/SUPPLEMENTAL\s*STATEMENT\s*OF\s*THE\s*CASE/i, /SSOC/i],
     priority: 85,
-    category: 'APPEAL',
+    category: "APPEAL",
   },
-  
+
   // VA Notification Letters
   VA_LETTER: {
     patterns: [
@@ -137,9 +135,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:YOUR\s*)?CLAIM\s*(?:NUMBER|#)/i,
     ],
     priority: 50,
-    category: 'CORRESPONDENCE',
+    category: "CORRESPONDENCE",
   },
-  
+
   // Private Medical Records
   PRIVATE_MEDICAL: {
     patterns: [
@@ -148,9 +146,9 @@ export const DOCUMENT_SIGNATURES = {
       /(?:PATIENT|OFFICE)\s*(?:VISIT|NOTE)/i,
     ],
     priority: 70,
-    category: 'MEDICAL',
+    category: "MEDICAL",
   },
-  
+
   // Buddy/Lay Statements
   BUDDY_STATEMENT: {
     patterns: [
@@ -159,9 +157,9 @@ export const DOCUMENT_SIGNATURES = {
       /VA\s*FORM\s*21-4138/i,
     ],
     priority: 60,
-    category: 'EVIDENCE',
+    category: "EVIDENCE",
   },
-  
+
   // Nexus Letters
   NEXUS_LETTER: {
     patterns: [
@@ -170,7 +168,7 @@ export const DOCUMENT_SIGNATURES = {
       /(?:MEDICAL\s*)?(?:NEXUS|OPINION)/i,
     ],
     priority: 95,
-    category: 'EVIDENCE',
+    category: "EVIDENCE",
   },
 };
 
@@ -187,7 +185,7 @@ const PAGE_BREAK_PATTERNS = [
 /**
  * Segment a C-File into individual documents
  * Uses backwards search strategy
- * 
+ *
  * @param {string} text - Full C-File text
  * @param {Object} options - Segmentation options
  * @returns {Object} Segmented C-File with parsed documents
@@ -203,17 +201,17 @@ export function segmentCFile(text, options = {}) {
   const result = {
     success: true,
     processedAt: new Date().toISOString(),
-    
+
     // Summary statistics
     totalLength: text.length,
     segmentCount: 0,
-    
+
     // The holy grail - Code Sheet data
     codeSheet: null,
-    
+
     // Categorized segments
     segments: [],
-    
+
     // By category for quick access
     byCategory: {
       SERVICE_RECORD: [],
@@ -224,7 +222,7 @@ export function segmentCFile(text, options = {}) {
       EVIDENCE: [],
       UNKNOWN: [],
     },
-    
+
     // Processing notes
     notes: [],
   };
@@ -232,30 +230,35 @@ export function segmentCFile(text, options = {}) {
   try {
     // === STEP 1: BACKWARDS SEARCH FOR CODE SHEET ===
     if (prioritizeCodeSheet) {
-      const codeSheetIndex = findLastOccurrence(text, DOCUMENT_SIGNATURES.CODE_SHEET.patterns);
+      const codeSheetIndex = findLastOccurrence(
+        text,
+        DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
+      );
       if (codeSheetIndex !== -1) {
         const codeSheetText = text.substring(codeSheetIndex);
         result.codeSheet = parseCodeSheet(codeSheetText);
         result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
-        
+
         // Trim the text to exclude the code sheet from further processing
         text = text.substring(0, codeSheetIndex);
       } else {
-        result.notes.push('No Code Sheet found - this may be an incomplete C-File');
+        result.notes.push(
+          "No Code Sheet found - this may be an incomplete C-File",
+        );
       }
     }
 
     // === STEP 2: IDENTIFY DOCUMENT BOUNDARIES ===
     const boundaries = findDocumentBoundaries(text);
-    
+
     // === STEP 3: BURST INTO SEGMENTS ===
     for (let i = 0; i < boundaries.length && i < maxSegments; i++) {
       const boundary = boundaries[i];
       const nextBoundary = boundaries[i + 1];
       const endPosition = nextBoundary ? nextBoundary.position : text.length;
-      
+
       const segmentText = text.substring(boundary.position, endPosition).trim();
-      
+
       if (segmentText.length < minSegmentLength) {
         continue; // Skip tiny fragments
       }
@@ -263,7 +266,7 @@ export function segmentCFile(text, options = {}) {
       const segment = {
         id: `segment_${i + 1}`,
         type: boundary.type,
-        category: DOCUMENT_SIGNATURES[boundary.type]?.category || 'UNKNOWN',
+        category: DOCUMENT_SIGNATURES[boundary.type]?.category || "UNKNOWN",
         position: boundary.position,
         length: segmentText.length,
         preview: segmentText.substring(0, 300),
@@ -289,10 +292,9 @@ export function segmentCFile(text, options = {}) {
       combinedRating: result.codeSheet?.combinedRating || null,
       conditions: result.codeSheet?.conditions || [],
       documentBreakdown: Object.fromEntries(
-        Object.entries(result.byCategory).map(([k, v]) => [k, v.length])
+        Object.entries(result.byCategory).map(([k, v]) => [k, v.length]),
       ),
     };
-
   } catch (err) {
     result.success = false;
     result.error = err.message;
@@ -306,25 +308,33 @@ export function segmentCFile(text, options = {}) {
  */
 function findDocumentBoundaries(text) {
   const boundaries = [];
-  
+
   for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
     for (const pattern of signature.patterns) {
       let match;
-      const globalPattern = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
-      
+      const globalPattern = new RegExp(
+        pattern.source,
+        pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
+      );
+
       while ((match = globalPattern.exec(text)) !== null) {
         // Check for duplicates within 500 chars
-        const isDuplicate = boundaries.some(b => 
-          Math.abs(b.position - match.index) < 500 && b.type === typeName
+        const isDuplicate = boundaries.some(
+          (b) =>
+            Math.abs(b.position - match.index) < 500 && b.type === typeName,
         );
-        
+
         if (!isDuplicate) {
           boundaries.push({
             type: typeName,
             position: match.index,
             matchedText: match[0],
             priority: signature.priority,
-            confidence: calculateMatchConfidence(text, match.index, signature.patterns),
+            confidence: calculateMatchConfidence(
+              text,
+              match.index,
+              signature.patterns,
+            ),
           });
         }
       }
@@ -333,7 +343,7 @@ function findDocumentBoundaries(text) {
 
   // Sort by position
   boundaries.sort((a, b) => a.position - b.position);
-  
+
   // Remove boundaries that are too close together
   const filtered = [];
   for (const boundary of boundaries) {
@@ -354,9 +364,9 @@ function findDocumentBoundaries(text) {
  */
 function findLastOccurrence(text, patterns) {
   let lastIndex = -1;
-  
+
   for (const pattern of patterns) {
-    const globalPattern = new RegExp(pattern.source, 'gi');
+    const globalPattern = new RegExp(pattern.source, "gi");
     let match;
     while ((match = globalPattern.exec(text)) !== null) {
       if (match.index > lastIndex) {
@@ -364,7 +374,7 @@ function findLastOccurrence(text, patterns) {
       }
     }
   }
-  
+
   return lastIndex;
 }
 
@@ -373,14 +383,14 @@ function findLastOccurrence(text, patterns) {
  */
 function calculateMatchConfidence(text, position, patterns) {
   const context = text.substring(Math.max(0, position - 200), position + 500);
-  
+
   let matchCount = 0;
   for (const pattern of patterns) {
     if (context.match(pattern)) {
       matchCount++;
     }
   }
-  
+
   return Math.min(100, (matchCount / patterns.length) * 100);
 }
 
@@ -390,9 +400,9 @@ function calculateMatchConfidence(text, position, patterns) {
  */
 export function extractDBQs(cFileText) {
   const segments = segmentCFile(cFileText, { parseDocuments: true });
-  
-  return segments.segments.filter(seg => 
-    seg.type === 'DBQ' || seg.category === 'MEDICAL'
+
+  return segments.segments.filter(
+    (seg) => seg.type === "DBQ" || seg.category === "MEDICAL",
   );
 }
 
@@ -401,9 +411,9 @@ export function extractDBQs(cFileText) {
  */
 export function extractDecisions(cFileText) {
   const segments = segmentCFile(cFileText, { parseDocuments: true });
-  
-  return segments.segments.filter(seg => 
-    seg.category === 'DECISION' || seg.category === 'APPEAL'
+
+  return segments.segments.filter(
+    (seg) => seg.category === "DECISION" || seg.category === "APPEAL",
   );
 }
 
@@ -426,11 +436,11 @@ export function quickScanCFile(text) {
         if (!scan.detectedTypes.includes(typeName)) {
           scan.detectedTypes.push(typeName);
         }
-        
-        if (typeName === 'CODE_SHEET') scan.hasCodeSheet = true;
-        if (typeName === 'DD214') scan.hasDD214 = true;
-        if (typeName === 'DBQ') scan.hasDBQs = true;
-        if (typeName === 'BVA_DECISION') scan.hasBVA = true;
+
+        if (typeName === "CODE_SHEET") scan.hasCodeSheet = true;
+        if (typeName === "DD214") scan.hasDD214 = true;
+        if (typeName === "DBQ") scan.hasDBQs = true;
+        if (typeName === "BVA_DECISION") scan.hasBVA = true;
       }
     }
   }
@@ -444,14 +454,14 @@ export function quickScanCFile(text) {
  */
 export function buildDocumentInventory(cFileText) {
   const segments = segmentCFile(cFileText, { parseDocuments: false });
-  
+
   return {
     totalDocuments: segments.segmentCount,
-    inventory: segments.segments.map(seg => ({
+    inventory: segments.segments.map((seg) => ({
       id: seg.id,
       type: seg.type,
       category: seg.category,
-      preview: seg.preview.substring(0, 100) + '...',
+      preview: seg.preview.substring(0, 100) + "...",
       position: seg.position,
       length: seg.length,
     })),

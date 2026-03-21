@@ -1,138 +1,142 @@
-﻿import React, { useState, useCallback, useMemo } from 'react';
-import { useBodyScrollLock } from '../utils/useBodyScrollLock';
-import ReportBugLink from './ReportBugLink';
-import BuyMeCoffee from './BuyMeCoffee';
-import { useLanguage } from '../contexts/LanguageContext';
+﻿import React, { useState, useCallback, useMemo } from "react";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import ReportBugLink from "./ReportBugLink";
+import BuyMeCoffee from "./BuyMeCoffee";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * EvidenceImporter Component - "The Wearable Data Bridge"
- * 
+ *
  * WHY: For claims like Sleep Apnea, Tachycardia, PTSD (anxiety), and Migraines,
- * OBJECTIVE DATA from wearables is irrefutable evidence. 
- * 
- * "My Fitbit shows I averaged 43 minutes of deep sleep for 6 months" 
+ * OBJECTIVE DATA from wearables is irrefutable evidence.
+ *
+ * "My Fitbit shows I averaged 43 minutes of deep sleep for 6 months"
  * is infinitely more powerful than "I don't sleep well."
- * 
+ *
  * SUPPORTED FORMATS:
  * - Apple Health Export (CSV)
  * - Fitbit Export (CSV/JSON)
  * - Garmin Connect Export (CSV)
  * - Samsung Health Export (CSV)
  * - Generic CSV with date/value columns
- * 
+ *
  * DATA TYPES RELEVANT TO VA CLAIMS:
  * - Heart Rate / HRV (anxiety, PTSD, cardiac conditions)
  * - Sleep stages (Sleep Apnea, insomnia)
  * - Steps/Activity (mobility issues)
  * - Blood Oxygen (Sleep Apnea, respiratory)
- * 
+ *
  * 100% CLIENT-SIDE: All parsing happens in the browser.
  */
 
 // Known data types and their claim relevance
 const DATA_TYPES = {
   heartRate: {
-    label: 'Heart Rate',
-    emoji: '❤️',
-    unit: 'bpm',
+    label: "Heart Rate",
+    emoji: "❤️",
+    unit: "bpm",
     claimRelevance: [
-      'Tachycardia (7010)',
-      'Arrhythmia',
-      'PTSD/Anxiety (panic attacks)',
-      'Cardiac conditions',
+      "Tachycardia (7010)",
+      "Arrhythmia",
+      "PTSD/Anxiety (panic attacks)",
+      "Cardiac conditions",
     ],
-    ratingTip: 'Sustained elevated resting HR (>100 bpm) or spikes during panic attacks support higher ratings.',
+    ratingTip:
+      "Sustained elevated resting HR (>100 bpm) or spikes during panic attacks support higher ratings.",
   },
   hrv: {
-    label: 'Heart Rate Variability',
-    emoji: '📈',
-    unit: 'ms',
+    label: "Heart Rate Variability",
+    emoji: "📈",
+    unit: "ms",
     claimRelevance: [
-      'PTSD/Anxiety',
-      'Autonomic dysfunction',
-      'Stress-related conditions',
+      "PTSD/Anxiety",
+      "Autonomic dysfunction",
+      "Stress-related conditions",
     ],
-    ratingTip: 'Low HRV is associated with chronic stress, anxiety, and PTSD. Lower numbers = worse condition.',
+    ratingTip:
+      "Low HRV is associated with chronic stress, anxiety, and PTSD. Lower numbers = worse condition.",
   },
   sleepDuration: {
-    label: 'Sleep Duration',
-    emoji: '😴',
-    unit: 'hours',
+    label: "Sleep Duration",
+    emoji: "😴",
+    unit: "hours",
     claimRelevance: [
-      'Sleep Apnea (6847)',
-      'Insomnia (9499)',
-      'PTSD (9411)',
-      'Chronic Fatigue',
+      "Sleep Apnea (6847)",
+      "Insomnia (9499)",
+      "PTSD (9411)",
+      "Chronic Fatigue",
     ],
-    ratingTip: 'Consistently fragmented or short sleep supports sleep disorder claims.',
+    ratingTip:
+      "Consistently fragmented or short sleep supports sleep disorder claims.",
   },
   sleepStages: {
-    label: 'Sleep Stages (Deep/REM)',
-    emoji: '🌙',
-    unit: 'minutes',
-    claimRelevance: [
-      'Sleep Apnea (6847)',
-      'Insomnia',
-      'PTSD (nightmares)',
-    ],
-    ratingTip: 'Low deep sleep % is classic for Sleep Apnea. Frequent waking = poor sleep quality.',
+    label: "Sleep Stages (Deep/REM)",
+    emoji: "🌙",
+    unit: "minutes",
+    claimRelevance: ["Sleep Apnea (6847)", "Insomnia", "PTSD (nightmares)"],
+    ratingTip:
+      "Low deep sleep % is classic for Sleep Apnea. Frequent waking = poor sleep quality.",
   },
   bloodOxygen: {
-    label: 'Blood Oxygen (SpO2)',
-    emoji: '🫁',
-    unit: '%',
-    claimRelevance: [
-      'Sleep Apnea (6847)',
-      'Respiratory conditions',
-      'COPD',
-    ],
-    ratingTip: 'SpO2 drops below 90% during sleep are strong evidence of Sleep Apnea.',
+    label: "Blood Oxygen (SpO2)",
+    emoji: "🫁",
+    unit: "%",
+    claimRelevance: ["Sleep Apnea (6847)", "Respiratory conditions", "COPD"],
+    ratingTip:
+      "SpO2 drops below 90% during sleep are strong evidence of Sleep Apnea.",
   },
   steps: {
-    label: 'Steps / Activity',
-    emoji: '🚶',
-    unit: 'steps',
+    label: "Steps / Activity",
+    emoji: "🚶",
+    unit: "steps",
     claimRelevance: [
-      'Knee/Hip conditions',
-      'Back conditions',
-      'Fatigue/CFS',
-      'TDIU (unable to work)',
+      "Knee/Hip conditions",
+      "Back conditions",
+      "Fatigue/CFS",
+      "TDIU (unable to work)",
     ],
-    ratingTip: 'Dramatic decrease in activity over time shows functional decline.',
+    ratingTip:
+      "Dramatic decrease in activity over time shows functional decline.",
   },
 };
 
 // CSV parsers for different sources
 const PARSERS = {
   appleHealth: {
-    name: 'Apple Health',
-    logo: '🍎',
-    detect: (headers) => headers.includes('sourceName') && headers.includes('type'),
+    name: "Apple Health",
+    logo: "🍎",
+    detect: (headers) =>
+      headers.includes("sourceName") && headers.includes("type"),
     parse: (data, headers) => {
-      const typeIndex = headers.indexOf('type');
-      const valueIndex = headers.indexOf('value');
-      const startIndex = headers.indexOf('startDate');
-      const endIndex = headers.indexOf('endDate');
-      
-      return data.map(row => ({
-        type: mapAppleHealthType(row[typeIndex]),
-        value: parseFloat(row[valueIndex]) || 0,
-        date: row[startIndex] || row[endIndex],
-        source: 'Apple Health',
-      })).filter(r => r.type);
+      const typeIndex = headers.indexOf("type");
+      const valueIndex = headers.indexOf("value");
+      const startIndex = headers.indexOf("startDate");
+      const endIndex = headers.indexOf("endDate");
+
+      return data
+        .map((row) => ({
+          type: mapAppleHealthType(row[typeIndex]),
+          value: parseFloat(row[valueIndex]) || 0,
+          date: row[startIndex] || row[endIndex],
+          source: "Apple Health",
+        }))
+        .filter((r) => r.type);
     },
   },
   fitbit: {
-    name: 'Fitbit',
-    logo: '⌚',
-    detect: (headers) => headers.some(h => h.toLowerCase().includes('fitbit') || h === 'Activities'),
+    name: "Fitbit",
+    logo: "⌚",
+    detect: (headers) =>
+      headers.some(
+        (h) => h.toLowerCase().includes("fitbit") || h === "Activities",
+      ),
     parse: (data, headers) => {
       // Fitbit exports vary, handle common formats
       const results = [];
-      data.forEach(row => {
-        const dateCol = headers.find(h => h.toLowerCase().includes('date'));
+      data.forEach((row) => {
+        const dateCol = headers.find((h) => h.toLowerCase().includes("date"));
         const dateIdx = dateCol ? headers.indexOf(dateCol) : 0;
-        
+
         headers.forEach((header, idx) => {
           const type = mapFitbitType(header);
           if (type && row[idx]) {
@@ -140,7 +144,7 @@ const PARSERS = {
               type,
               value: parseFloat(row[idx]) || 0,
               date: row[dateIdx],
-              source: 'Fitbit',
+              source: "Fitbit",
             });
           }
         });
@@ -149,15 +153,20 @@ const PARSERS = {
     },
   },
   garmin: {
-    name: 'Garmin',
-    logo: '🔺',
-    detect: (headers) => headers.some(h => h.toLowerCase().includes('garmin') || h === 'Activity Type'),
+    name: "Garmin",
+    logo: "🔺",
+    detect: (headers) =>
+      headers.some(
+        (h) => h.toLowerCase().includes("garmin") || h === "Activity Type",
+      ),
     parse: (data, headers) => {
       const results = [];
-      data.forEach(row => {
-        const dateCol = headers.find(h => h.toLowerCase().includes('date') || h === 'Date');
+      data.forEach((row) => {
+        const dateCol = headers.find(
+          (h) => h.toLowerCase().includes("date") || h === "Date",
+        );
         const dateIdx = dateCol ? headers.indexOf(dateCol) : 0;
-        
+
         headers.forEach((header, idx) => {
           const type = mapGarminType(header);
           if (type && row[idx]) {
@@ -165,7 +174,7 @@ const PARSERS = {
               type,
               value: parseFloat(row[idx]) || 0,
               date: row[dateIdx],
-              source: 'Garmin',
+              source: "Garmin",
             });
           }
         });
@@ -174,26 +183,27 @@ const PARSERS = {
     },
   },
   generic: {
-    name: 'Generic CSV',
-    logo: '📄',
+    name: "Generic CSV",
+    logo: "📄",
     detect: () => true, // Fallback
     parse: (data, headers) => {
       const results = [];
-      const dateIdx = headers.findIndex(h => 
-        h.toLowerCase().includes('date') || h.toLowerCase().includes('time')
+      const dateIdx = headers.findIndex(
+        (h) =>
+          h.toLowerCase().includes("date") || h.toLowerCase().includes("time"),
       );
-      
+
       headers.forEach((header, idx) => {
         if (idx === dateIdx) return;
         const type = guessDataType(header);
         if (type) {
-          data.forEach(row => {
+          data.forEach((row) => {
             if (row[idx] && !isNaN(parseFloat(row[idx]))) {
               results.push({
                 type,
                 value: parseFloat(row[idx]),
                 date: dateIdx >= 0 ? row[dateIdx] : new Date().toISOString(),
-                source: 'CSV Import',
+                source: "CSV Import",
               });
             }
           });
@@ -207,59 +217,61 @@ const PARSERS = {
 // Type mapping functions
 function mapAppleHealthType(appleType) {
   const mappings = {
-    'HKQuantityTypeIdentifierHeartRate': 'heartRate',
-    'HKQuantityTypeIdentifierHeartRateVariabilitySDNN': 'hrv',
-    'HKQuantityTypeIdentifierStepCount': 'steps',
-    'HKQuantityTypeIdentifierOxygenSaturation': 'bloodOxygen',
-    'HKCategoryTypeIdentifierSleepAnalysis': 'sleepDuration',
+    HKQuantityTypeIdentifierHeartRate: "heartRate",
+    HKQuantityTypeIdentifierHeartRateVariabilitySDNN: "hrv",
+    HKQuantityTypeIdentifierStepCount: "steps",
+    HKQuantityTypeIdentifierOxygenSaturation: "bloodOxygen",
+    HKCategoryTypeIdentifierSleepAnalysis: "sleepDuration",
   };
   return mappings[appleType] || null;
 }
 
 function mapFitbitType(header) {
   const h = header.toLowerCase();
-  if (h.includes('heart') && h.includes('rate')) return 'heartRate';
-  if (h.includes('steps')) return 'steps';
-  if (h.includes('sleep')) return 'sleepDuration';
-  if (h.includes('spo2') || h.includes('oxygen')) return 'bloodOxygen';
+  if (h.includes("heart") && h.includes("rate")) return "heartRate";
+  if (h.includes("steps")) return "steps";
+  if (h.includes("sleep")) return "sleepDuration";
+  if (h.includes("spo2") || h.includes("oxygen")) return "bloodOxygen";
   return null;
 }
 
 function mapGarminType(header) {
   const h = header.toLowerCase();
-  if (h.includes('heart') || h.includes('hr')) return 'heartRate';
-  if (h.includes('step')) return 'steps';
-  if (h.includes('sleep')) return 'sleepDuration';
-  if (h.includes('spo2') || h.includes('pulse ox')) return 'bloodOxygen';
-  if (h.includes('hrv') || h.includes('variability')) return 'hrv';
+  if (h.includes("heart") || h.includes("hr")) return "heartRate";
+  if (h.includes("step")) return "steps";
+  if (h.includes("sleep")) return "sleepDuration";
+  if (h.includes("spo2") || h.includes("pulse ox")) return "bloodOxygen";
+  if (h.includes("hrv") || h.includes("variability")) return "hrv";
   return null;
 }
 
 function guessDataType(header) {
   const h = header.toLowerCase();
-  if (h.includes('heart') || h.includes('pulse') || h === 'hr' || h === 'bpm') return 'heartRate';
-  if (h.includes('step')) return 'steps';
-  if (h.includes('sleep')) return 'sleepDuration';
-  if (h.includes('oxygen') || h.includes('spo2') || h.includes('o2')) return 'bloodOxygen';
-  if (h.includes('hrv') || h.includes('variability')) return 'hrv';
+  if (h.includes("heart") || h.includes("pulse") || h === "hr" || h === "bpm")
+    return "heartRate";
+  if (h.includes("step")) return "steps";
+  if (h.includes("sleep")) return "sleepDuration";
+  if (h.includes("oxygen") || h.includes("spo2") || h.includes("o2"))
+    return "bloodOxygen";
+  if (h.includes("hrv") || h.includes("variability")) return "hrv";
   return null;
 }
 
 // Parse CSV text into array of arrays
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  return lines.map(line => {
+  const lines = text.trim().split("\n");
+  return lines.map((line) => {
     const result = [];
-    let cell = '';
+    let cell = "";
     let inQuotes = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
       if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === "," && !inQuotes) {
         result.push(cell.trim());
-        cell = '';
+        cell = "";
       } else {
         cell += char;
       }
@@ -272,7 +284,7 @@ function parseCSV(text) {
 const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
-  
+
   const [dragActive, setDragActive] = useState(false);
   const [parsedData, setParsedData] = useState(null);
   const [parseError, setParseError] = useState(null);
@@ -284,9 +296,9 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
   const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   }, []);
@@ -295,8 +307,8 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
     setParseError(null);
     setParsedData(null);
 
-    if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
-      setParseError('Please drop in a CSV file. JSON support coming soon!');
+    if (!file.name.endsWith(".csv") && !file.name.endsWith(".txt")) {
+      setParseError("Please drop in a CSV file. JSON support coming soon!");
       return;
     }
 
@@ -305,9 +317,9 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
       try {
         const text = e.target.result;
         const rows = parseCSV(text);
-        
+
         if (rows.length < 2) {
-          setParseError('File appears to be empty or has no data rows.');
+          setParseError("File appears to be empty or has no data rows.");
           return;
         }
 
@@ -326,20 +338,22 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
 
         if (!parser) {
           parser = PARSERS.generic;
-          setDetectedSource('generic');
+          setDetectedSource("generic");
         }
 
         // Parse data
         const parsed = parser.parse(data, headers);
-        
+
         if (parsed.length === 0) {
-          setParseError('Could not find any health data in this file. Make sure it contains columns for date and measurements like heart rate, steps, or sleep.');
+          setParseError(
+            "Could not find any health data in this file. Make sure it contains columns for date and measurements like heart rate, steps, or sleep.",
+          );
           return;
         }
 
         // Group by type and calculate stats
         const grouped = {};
-        parsed.forEach(item => {
+        parsed.forEach((item) => {
           if (!grouped[item.type]) {
             grouped[item.type] = [];
           }
@@ -347,9 +361,11 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
         });
 
         const stats = Object.entries(grouped).map(([type, items]) => {
-          const values = items.map(i => i.value).filter(v => !isNaN(v));
-          const dates = items.map(i => new Date(i.date)).filter(d => !isNaN(d));
-          
+          const values = items.map((i) => i.value).filter((v) => !isNaN(v));
+          const dates = items
+            .map((i) => new Date(i.date))
+            .filter((d) => !isNaN(d));
+
           return {
             type,
             count: items.length,
@@ -370,63 +386,68 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
         });
 
         // Auto-select relevant types
-        setSelectedTypes(stats.map(s => s.type));
-
+        setSelectedTypes(stats.map((s) => s.type));
       } catch (err) {
-        console.error('Parse error:', err);
+        console.error("Parse error:", err);
         setParseError(`Failed to parse file: ${err.message}`);
       }
     };
 
     reader.onerror = () => {
-      setParseError('Failed to read file. Please try again.');
+      setParseError("Failed to read file. Please try again.");
     };
 
     reader.readAsText(file);
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
-    }
-  }, [processFile]);
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-  const handleFileInput = useCallback((e) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
-    }
-  }, [processFile]);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    },
+    [processFile],
+  );
+
+  const handleFileInput = useCallback(
+    (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processFile(e.target.files[0]);
+      }
+    },
+    [processFile],
+  );
 
   const handleImport = () => {
     if (!parsedData || selectedTypes.length === 0) return;
 
     // Filter data to selected types
-    const filteredStats = parsedData.stats.filter(s => selectedTypes.includes(s.type));
-    
+    const filteredStats = parsedData.stats.filter((s) =>
+      selectedTypes.includes(s.type),
+    );
+
     onImport({
       source: parsedData.source,
       importedAt: new Date().toISOString(),
       stats: filteredStats,
       totalRecords: filteredStats.reduce((sum, s) => sum + s.count, 0),
     });
-    
+
     onClose();
   };
 
   const toggleType = (type) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       role="dialog"
       aria-modal="true"
@@ -437,15 +458,21 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
           {/* Header - Sticky */}
           <div className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden flex-shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            
+
             <div className="relative flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
                   <span className="text-3xl">⌚</span>
                 </div>
                 <div>
-                  <h2 id="evidence-importer-title" className="text-2xl sm:text-3xl font-bold">
-                    Evidence Importer <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">BETA</span>
+                  <h2
+                    id="evidence-importer-title"
+                    className="text-2xl sm:text-3xl font-bold"
+                  >
+                    Evidence Importer{" "}
+                    <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded align-middle">
+                      BETA
+                    </span>
                   </h2>
                   <p className="text-cyan-100 text-sm sm:text-base mt-1">
                     Import Wearable Health Data • Turn Data into Evidence
@@ -453,14 +480,30 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {onReportBug && <ReportBugLink onClick={onReportBug} variant="light" moduleName="Evidence Importer" />}
+                {onReportBug && (
+                  <ReportBugLink
+                    onClick={onReportBug}
+                    variant="light"
+                    moduleName="Evidence Importer"
+                  />
+                )}
                 <button
                   onClick={onClose}
                   className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
                   aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -473,11 +516,17 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h3 className="font-bold text-cyan-800 dark:text-cyan-200">Why Import Wearable Data?</h3>
+                  <h3 className="font-bold text-cyan-800 dark:text-cyan-200">
+                    Why Import Wearable Data?
+                  </h3>
                   <p className="text-sm text-cyan-700 dark:text-cyan-300 mt-1">
-                    <strong>"My Fitbit shows I averaged 43 minutes of deep sleep"</strong> is irrefutable evidence. 
-                    Wearable data provides <strong>objective, timestamped proof</strong> of your symptoms-something 
-                    the VA cannot dismiss as "subjective complaints."
+                    <strong>
+                      "My Fitbit shows I averaged 43 minutes of deep sleep"
+                    </strong>{" "}
+                    is irrefutable evidence. Wearable data provides{" "}
+                    <strong>objective, timestamped proof</strong> of your
+                    symptoms-something the VA cannot dismiss as "subjective
+                    complaints."
                   </p>
                 </div>
               </div>
@@ -488,7 +537,7 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
               onClick={() => setShowHelp(!showHelp)}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
             >
-              <span>{showHelp ? '▼' : '▶'}</span>
+              <span>{showHelp ? "▼" : "▶"}</span>
               <span>How do I export my health data?</span>
             </button>
 
@@ -499,7 +548,8 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                     🍎 Apple Health
                   </h4>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    Health App → Your Profile (top right) → Export All Health Data → Unzip and find the .csv files
+                    Health App → Your Profile (top right) → Export All Health
+                    Data → Unzip and find the .csv files
                   </p>
                 </div>
                 <div>
@@ -507,9 +557,15 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                     ⌚ Fitbit
                   </h4>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    <a href="https://www.fitbit.com/settings/data/export" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                    <a
+                      href="https://www.fitbit.com/settings/data/export"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
                       fitbit.com/settings/data/export
-                    </a> → Request your data → Download and unzip
+                    </a>{" "}
+                    → Request your data → Download and unzip
                   </p>
                 </div>
                 <div>
@@ -517,7 +573,8 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                     🔺 Garmin
                   </h4>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    Garmin Connect → Settings → Account Information → Export Your Data
+                    Garmin Connect → Settings → Account Information → Export
+                    Your Data
                   </p>
                 </div>
                 <div>
@@ -539,9 +596,9 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                  dragActive 
-                    ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30' 
-                    : 'border-gray-300 dark:border-gray-600 hover:border-cyan-400'
+                  dragActive
+                    ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
+                    : "border-gray-300 dark:border-gray-600 hover:border-cyan-400"
                 }`}
               >
                 <div className="text-5xl mb-4">📂</div>
@@ -573,8 +630,12 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                 <div className="flex items-start gap-3">
                   <span className="text-xl">❌</span>
                   <div>
-                    <h4 className="font-bold text-red-800 dark:text-red-200">Import Error</h4>
-                    <p className="text-sm text-red-700 dark:text-red-300 mt-1">{parseError}</p>
+                    <h4 className="font-bold text-red-800 dark:text-red-200">
+                      Import Error
+                    </h4>
+                    <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                      {parseError}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -586,7 +647,9 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                 {/* Source Badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">{PARSERS[detectedSource]?.logo || '📄'}</span>
+                    <span className="text-xl">
+                      {PARSERS[detectedSource]?.logo || "📄"}
+                    </span>
                     <span className="font-medium text-gray-700 dark:text-gray-300">
                       Detected: {parsedData.source}
                     </span>
@@ -610,21 +673,21 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Select data types to import:
                   </p>
-                  
-                  {parsedData.stats.map(stat => {
+
+                  {parsedData.stats.map((stat) => {
                     const typeInfo = DATA_TYPES[stat.type];
                     if (!typeInfo) return null;
-                    
+
                     const isSelected = selectedTypes.includes(stat.type);
-                    
+
                     return (
                       <div
                         key={stat.type}
                         onClick={() => toggleType(stat.type)}
                         className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                            ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
                         }`}
                       >
                         <div className="flex items-start justify-between">
@@ -645,24 +708,30 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="text-right text-sm">
                             <div className="text-gray-600 dark:text-gray-400">
-                              Range: <strong>{stat.min.toFixed(1)} - {stat.max.toFixed(1)}</strong> {typeInfo.unit}
+                              Range:{" "}
+                              <strong>
+                                {stat.min.toFixed(1)} - {stat.max.toFixed(1)}
+                              </strong>{" "}
+                              {typeInfo.unit}
                             </div>
                             <div className="text-gray-500 dark:text-gray-500">
-                              Avg: <strong>{stat.avg.toFixed(1)}</strong> {typeInfo.unit}
+                              Avg: <strong>{stat.avg.toFixed(1)}</strong>{" "}
+                              {typeInfo.unit}
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Date Range */}
                         {stat.startDate && stat.endDate && (
                           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            📅 {stat.startDate.toLocaleDateString()} - {stat.endDate.toLocaleDateString()}
+                            📅 {stat.startDate.toLocaleDateString()} -{" "}
+                            {stat.endDate.toLocaleDateString()}
                           </div>
                         )}
-                        
+
                         {/* Claim Relevance */}
                         {isSelected && (
                           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -671,7 +740,7 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                             </p>
                             <div className="flex flex-wrap gap-1">
                               {typeInfo.claimRelevance.map((claim, idx) => (
-                                <span 
+                                <span
                                   key={idx}
                                   className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full"
                                 >
@@ -696,7 +765,10 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
                   className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   <span>📊</span>
-                  <span>Import {selectedTypes.length} Data Type{selectedTypes.length !== 1 ? 's' : ''}</span>
+                  <span>
+                    Import {selectedTypes.length} Data Type
+                    {selectedTypes.length !== 1 ? "s" : ""}
+                  </span>
                 </button>
               </div>
             )}
@@ -706,8 +778,9 @@ const EvidenceImporter = ({ onClose, onImport, symptomType, onReportBug }) => {
               <div className="flex items-start gap-2">
                 <span>🔒</span>
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  <strong>100% Private:</strong> Your health data is processed entirely in your browser. 
-                  Nothing is uploaded to any server. This data never leaves your device.
+                  <strong>100% Private:</strong> Your health data is processed
+                  entirely in your browser. Nothing is uploaded to any server.
+                  This data never leaves your device.
                 </p>
               </div>
             </div>

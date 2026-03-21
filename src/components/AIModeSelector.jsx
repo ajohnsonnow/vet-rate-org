@@ -1,33 +1,37 @@
 /**
  * Vet-Rate.org - AI Mode Selector
  * "The Faraday Cage Protocol" - Easy switching between Cloud and Local AI
- * 
+ *
  * This component provides a simple, intuitive way for users to:
  * - See their current AI mode
  * - Switch between Cloud and Local AI
  * - Understand the privacy implications of each mode
  */
 
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { 
-  AI_MODES, 
-  getAIMode, 
-  setAIMode, 
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import {
+  AI_MODES,
+  getAIMode,
+  setAIMode,
   getAIStatus,
   isLocalAIReady,
   isLocalAIInitializing,
   isCloudAIAvailable,
-} from '../utils/unifiedAIService';
+} from "../utils/unifiedAIService";
 
 /**
  * Compact AI Mode Indicator (for headers/toolbars)
  * @param {boolean} showLabel - Show full label with Local/Cloud designation
  */
-export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) => {
+export const AIStatusBadge = ({
+  onClick,
+  className = "",
+  showLabel = false,
+}) => {
   const { t } = useLanguage();
   const [status, setStatus] = useState(getAIStatus());
-  
+
   useEffect(() => {
     // Refresh status periodically
     const interval = setInterval(() => {
@@ -37,38 +41,39 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
   }, []);
 
   // Check if any local/private AI is active
-  const isPrivateAI = status.effectiveMode === AI_MODES.SWARM || 
-                      status.effectiveMode === AI_MODES.LOCAL || 
-                      status.effectiveMode === AI_MODES.WLLAMA ||
-                      status.effectiveMode === AI_MODES.LOCAL_SERVER;
+  const isPrivateAI =
+    status.effectiveMode === AI_MODES.SWARM ||
+    status.effectiveMode === AI_MODES.LOCAL ||
+    status.effectiveMode === AI_MODES.WLLAMA ||
+    status.effectiveMode === AI_MODES.LOCAL_SERVER;
 
   const getBadgeStyle = () => {
     // Show warming up state
     if (status.localInitializing || status.wllamaInitializing) {
-      return 'bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse';
+      return "bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse";
     }
     // Warrant Council - purple/diamond
     if (status.effectiveMode === AI_MODES.SWARM) {
-      return 'bg-purple-500/30 text-purple-300 border-purple-400 shadow-purple-500/50 shadow-md';
+      return "bg-purple-500/30 text-purple-300 border-purple-400 shadow-purple-500/50 shadow-md";
     }
     // Wllama - teal
     if (status.effectiveMode === AI_MODES.WLLAMA) {
-      return 'bg-teal-500/30 text-teal-300 border-teal-400 shadow-teal-500/50 shadow-md';
+      return "bg-teal-500/30 text-teal-300 border-teal-400 shadow-teal-500/50 shadow-md";
     }
     // Local Server - green
     if (status.effectiveMode === AI_MODES.LOCAL_SERVER) {
-      return 'bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md';
+      return "bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md";
     }
     // Legacy local mode - green
     if (status.effectiveMode === AI_MODES.LOCAL) {
-      return 'bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md';
+      return "bg-green-500/30 text-green-300 border-green-400 shadow-green-500/50 shadow-md";
     }
     // Cloud - blue
     if (status.effectiveMode === AI_MODES.CLOUD) {
-      return 'bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md';
+      return "bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md";
     }
     // No AI available - yellow warning
-    return 'bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse';
+    return "bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse";
   };
 
   const getDisplayContent = () => {
@@ -123,7 +128,10 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
         <>
           <span className="w-3 h-3 bg-blue-400 rounded-full" />
           <span className="text-base">{status.cloudModelName}</span>
-          <span className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium" title="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries.">
+          <span
+            className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium"
+            title="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
+          >
             💎 DKB*
           </span>
         </>
@@ -139,13 +147,19 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
   };
 
   const getTooltip = () => {
-    if (status.localInitializing || status.wllamaInitializing) return 'AI is warming up...';
-    if (status.effectiveMode === AI_MODES.SWARM) return 'Warrant Council - 100% Private - Full 130K+ DKB';
-    if (status.effectiveMode === AI_MODES.WLLAMA) return 'Wllama (Browser) - 100% Private - Full 130K+ DKB';
-    if (status.effectiveMode === AI_MODES.LOCAL_SERVER) return 'Local Server (llama.cpp) - 100% Private - Full 130K+ DKB';
-    if (status.effectiveMode === AI_MODES.LOCAL) return `${status.localModelName} - 100% Private - Full 130K+ DKB`;
-    if (status.effectiveMode === AI_MODES.CLOUD) return `${status.cloudModelName} - Cloud (💎 DKB 8K web-optimized*)`;
-    return 'No AI configured - Click to set up';
+    if (status.localInitializing || status.wllamaInitializing)
+      return "AI is warming up...";
+    if (status.effectiveMode === AI_MODES.SWARM)
+      return "Warrant Council - 100% Private - Full 130K+ DKB";
+    if (status.effectiveMode === AI_MODES.WLLAMA)
+      return "Wllama (Browser) - 100% Private - Full 130K+ DKB";
+    if (status.effectiveMode === AI_MODES.LOCAL_SERVER)
+      return "Local Server (llama.cpp) - 100% Private - Full 130K+ DKB";
+    if (status.effectiveMode === AI_MODES.LOCAL)
+      return `${status.localModelName} - 100% Private - Full 130K+ DKB`;
+    if (status.effectiveMode === AI_MODES.CLOUD)
+      return `${status.cloudModelName} - Cloud (💎 DKB 8K web-optimized*)`;
+    return "No AI configured - Click to set up";
   };
 
   return (
@@ -162,9 +176,13 @@ export const AIStatusBadge = ({ onClick, className = '', showLabel = false }) =>
 /**
  * AI Mode Toggle Switch (inline)
  */
-export const AIToggle = ({ onModeChange, showLabel = true, className = '' }) => {
+export const AIToggle = ({
+  onModeChange,
+  showLabel = true,
+  className = "",
+}) => {
   const [status, setStatus] = useState(getAIStatus());
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setStatus(getAIStatus());
@@ -173,18 +191,23 @@ export const AIToggle = ({ onModeChange, showLabel = true, className = '' }) => 
   }, []);
 
   const handleToggle = () => {
-    const newMode = status.effectiveMode === AI_MODES.LOCAL ? AI_MODES.CLOUD : AI_MODES.LOCAL;
-    
+    const newMode =
+      status.effectiveMode === AI_MODES.LOCAL ? AI_MODES.CLOUD : AI_MODES.LOCAL;
+
     // Only switch if the target mode is available
     if (newMode === AI_MODES.LOCAL && !isLocalAIReady()) {
-      alert('Local AI is not initialized. Please set up Local AI first in the settings.');
+      alert(
+        "Local AI is not initialized. Please set up Local AI first in the settings.",
+      );
       return;
     }
     if (newMode === AI_MODES.CLOUD && !isCloudAIAvailable()) {
-      alert('Cloud AI requires a Gemini API key. Please configure it in settings.');
+      alert(
+        "Cloud AI requires a Gemini API key. Please configure it in settings.",
+      );
       return;
     }
-    
+
     setAIMode(newMode);
     setStatus(getAIStatus());
     onModeChange?.(newMode);
@@ -196,19 +219,23 @@ export const AIToggle = ({ onModeChange, showLabel = true, className = '' }) => 
     <div className={`flex items-center gap-2 ${className}`}>
       {showLabel && (
         <span className="text-xs text-gray-400">
-          {isLocal ? '🔒 Private' : '☁️ Cloud'}
+          {isLocal ? "🔒 Private" : "☁️ Cloud"}
         </span>
       )}
       <button
         onClick={handleToggle}
         className={`relative w-12 h-6 rounded-full transition-colors ${
-          isLocal ? 'bg-green-600' : 'bg-blue-600'
+          isLocal ? "bg-green-600" : "bg-blue-600"
         }`}
-        title={isLocal ? 'Using Local AI (click for Cloud)' : 'Using Cloud AI (click for Local)'}
+        title={
+          isLocal
+            ? "Using Local AI (click for Cloud)"
+            : "Using Cloud AI (click for Local)"
+        }
       >
         <div
           className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-            isLocal ? 'left-1' : 'left-7'
+            isLocal ? "left-1" : "left-7"
           }`}
         />
       </button>
@@ -238,7 +265,7 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
     if (mode === AI_MODES.CLOUD && !isCloudAIAvailable()) {
       return;
     }
-    
+
     setSelectedMode(mode);
     setAIMode(mode);
     setStatus(getAIStatus());
@@ -250,14 +277,17 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
       <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{status.isPrivate ? '🔒' : '☁️'}</span>
+            <span className="text-lg">{status.isPrivate ? "🔒" : "☁️"}</span>
             <div>
               <p className="text-sm font-medium text-white">
-                {status.effectiveMode === AI_MODES.LOCAL ? 'Local AI' : 
-                 status.effectiveMode === AI_MODES.CLOUD ? 'Cloud AI' : 'No AI'}
+                {status.effectiveMode === AI_MODES.LOCAL
+                  ? "Local AI"
+                  : status.effectiveMode === AI_MODES.CLOUD
+                    ? "Cloud AI"
+                    : "No AI"}
               </p>
               <p className="text-xs text-gray-400">
-                {status.isPrivate ? '100% Private' : 'Data sent to Google'}
+                {status.isPrivate ? "100% Private" : "Data sent to Google"}
               </p>
             </div>
           </div>
@@ -280,39 +310,59 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
             onClick={onClose}
             className="p-1 text-white/80 hover:text-white hover:bg-white/20 rounded"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         )}
       </div>
 
       {/* Current Status */}
-      <div className={`mx-4 mt-4 p-3 rounded-lg border-2 ${
-        status.isPrivate 
-          ? 'bg-green-900/30 border-green-500/50' 
-          : status.effectiveMode 
-            ? 'bg-blue-900/30 border-blue-500/50'
-            : 'bg-gray-800/50 border-gray-600'
-      }`}>
+      <div
+        className={`mx-4 mt-4 p-3 rounded-lg border-2 ${
+          status.isPrivate
+            ? "bg-green-900/30 border-green-500/50"
+            : status.effectiveMode
+              ? "bg-blue-900/30 border-blue-500/50"
+              : "bg-gray-800/50 border-gray-600"
+        }`}
+      >
         <div className="flex items-center gap-2">
           <span className="text-2xl">
-            {status.effectiveMode === AI_MODES.LOCAL ? '🔒' : 
-             status.effectiveMode === AI_MODES.CLOUD ? '☁️' : '⚠️'}
+            {status.effectiveMode === AI_MODES.LOCAL
+              ? "🔒"
+              : status.effectiveMode === AI_MODES.CLOUD
+                ? "☁️"
+                : "⚠️"}
           </span>
           <div>
-            <p className={`font-bold ${
-              status.isPrivate ? 'text-green-400' : 
-              status.effectiveMode ? 'text-blue-400' : 'text-gray-400'
-            }`}>
+            <p
+              className={`font-bold ${
+                status.isPrivate
+                  ? "text-green-400"
+                  : status.effectiveMode
+                    ? "text-blue-400"
+                    : "text-gray-400"
+              }`}
+            >
               {status.statusText}
             </p>
             <p className="text-xs text-gray-400">
-              {status.isPrivate 
-                ? 'Your data never leaves your device' 
-                : status.effectiveMode 
-                  ? 'Encrypted connection to Google'
-                  : 'Configure AI to enable features'}
+              {status.isPrivate
+                ? "Your data never leaves your device"
+                : status.effectiveMode
+                  ? "Encrypted connection to Google"
+                  : "Configure AI to enable features"}
             </p>
           </div>
         </div>
@@ -326,16 +376,18 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
           disabled={!isLocalAIReady()}
           className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
             selectedMode === AI_MODES.LOCAL
-              ? 'bg-green-900/30 border-green-500'
+              ? "bg-green-900/30 border-green-500"
               : isLocalAIReady()
-                ? 'bg-gray-800/50 border-gray-700 hover:border-green-500/50'
-                : 'bg-gray-800/20 border-gray-800 opacity-50 cursor-not-allowed'
+                ? "bg-gray-800/50 border-gray-700 hover:border-green-500/50"
+                : "bg-gray-800/20 border-gray-800 opacity-50 cursor-not-allowed"
           }`}
         >
           <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              selectedMode === AI_MODES.LOCAL ? 'bg-green-500' : 'bg-gray-700'
-            }`}>
+            <div
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                selectedMode === AI_MODES.LOCAL ? "bg-green-500" : "bg-gray-700"
+              }`}
+            >
               <span className="text-xl">🔒</span>
             </div>
             <div className="flex-1">
@@ -376,16 +428,18 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
           disabled={!isCloudAIAvailable()}
           className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
             selectedMode === AI_MODES.CLOUD
-              ? 'bg-blue-900/30 border-blue-500'
+              ? "bg-blue-900/30 border-blue-500"
               : isCloudAIAvailable()
-                ? 'bg-gray-800/50 border-gray-700 hover:border-blue-500/50'
-                : 'bg-gray-800/20 border-gray-800 opacity-50 cursor-not-allowed'
+                ? "bg-gray-800/50 border-gray-700 hover:border-blue-500/50"
+                : "bg-gray-800/20 border-gray-800 opacity-50 cursor-not-allowed"
           }`}
         >
           <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              selectedMode === AI_MODES.CLOUD ? 'bg-blue-500' : 'bg-gray-700'
-            }`}>
+            <div
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                selectedMode === AI_MODES.CLOUD ? "bg-blue-500" : "bg-gray-700"
+              }`}
+            >
               <span className="text-xl">☁️</span>
             </div>
             <div className="flex-1">
@@ -425,19 +479,23 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
           onClick={() => handleModeSelect(AI_MODES.AUTO)}
           className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
             selectedMode === AI_MODES.AUTO
-              ? 'bg-purple-900/30 border-purple-500'
-              : 'bg-gray-800/50 border-gray-700 hover:border-purple-500/50'
+              ? "bg-purple-900/30 border-purple-500"
+              : "bg-gray-800/50 border-gray-700 hover:border-purple-500/50"
           }`}
         >
           <div className="flex items-start gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              selectedMode === AI_MODES.AUTO ? 'bg-purple-500' : 'bg-gray-700'
-            }`}>
+            <div
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                selectedMode === AI_MODES.AUTO ? "bg-purple-500" : "bg-gray-700"
+              }`}
+            >
               <span className="text-xl">⚡</span>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white">Auto (Privacy First)</span>
+                <span className="font-bold text-white">
+                  Auto (Privacy First)
+                </span>
                 {selectedMode === AI_MODES.AUTO && (
                   <span className="text-xs px-2 py-0.5 bg-purple-500/30 text-purple-400 rounded-full">
                     ACTIVE
@@ -456,8 +514,9 @@ const AIModeSelector = ({ onClose, onModeChange, compact = false }) => {
       <div className="px-4 pb-4">
         <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
           <p className="text-xs text-gray-500">
-            💡 <strong>Privacy Tip:</strong> For maximum privacy, use Local AI. Your data never 
-            leaves your device, and it even works offline once the model is loaded.
+            💡 <strong>Privacy Tip:</strong> For maximum privacy, use Local AI.
+            Your data never leaves your device, and it even works offline once
+            the model is loaded.
           </p>
         </div>
       </div>

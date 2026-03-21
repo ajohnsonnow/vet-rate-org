@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * Floating Bug Report Button
@@ -12,13 +12,13 @@ function FloatingBugButton({ onClick }) {
 
   // Show tooltip on first visit
   useEffect(() => {
-    const hasSeenTooltip = sessionStorage.getItem('bugButtonTooltipSeen');
+    const hasSeenTooltip = sessionStorage.getItem("bugButtonTooltipSeen");
     if (!hasSeenTooltip) {
       const timer = setTimeout(() => {
         setShowTooltip(true);
         setTimeout(() => {
           setShowTooltip(false);
-          sessionStorage.setItem('bugButtonTooltipSeen', 'true');
+          sessionStorage.setItem("bugButtonTooltipSeen", "true");
         }, 5000);
       }, 3000);
       return () => clearTimeout(timer);
@@ -28,14 +28,18 @@ function FloatingBugButton({ onClick }) {
   // Keyboard shortcut: Ctrl/Cmd + Shift + B
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'b') {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "b"
+      ) {
         e.preventDefault();
         onClick();
       }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClick]);
 
   return (
@@ -48,14 +52,14 @@ function FloatingBugButton({ onClick }) {
           <div className="absolute bottom-0 left-6 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
         </div>
       )}
-      
+
       {/* Expanded Label */}
       {isExpanded && (
         <div className="bg-red-600 text-white text-sm px-3 py-1.5 rounded-lg shadow-lg animate-fade-in">
           Report a Bug
         </div>
       )}
-      
+
       {/* Bug Button */}
       <button
         onClick={onClick}
@@ -67,20 +71,20 @@ function FloatingBugButton({ onClick }) {
         aria-label="Report a bug (Ctrl+Shift+B)"
         title="Report a bug (Ctrl+Shift+B)"
       >
-        <svg 
-          className="w-6 h-6 transform group-hover:rotate-12 transition-transform" 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className="w-6 h-6 transform group-hover:rotate-12 transition-transform"
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-        
+
         {/* Bug Icon Overlay */}
         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">
           <span className="text-xs">🐛</span>

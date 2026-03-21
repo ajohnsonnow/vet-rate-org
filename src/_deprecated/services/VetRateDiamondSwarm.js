@@ -1,7 +1,7 @@
 /**
  * Vet-Rate Warrant Council Integration
  * 💎 Client-side AI inference using specialized agents
- * 
+ *
  * This service replaces the old WebLLM integration with the Warrant Council
  * architecture - 3 specialized agents for VA claim processing.
  */
@@ -14,8 +14,8 @@ import {
   generateWithSwarm,
   isSwarmReady,
   getCurrentAgent,
-  unloadSwarm
-} from '../utils/diamondSwarm';
+  unloadSwarm,
+} from "../utils/diamondSwarm";
 
 class VetRateDiamondSwarm {
   constructor() {
@@ -31,29 +31,31 @@ Your specialized training includes:
 Always cite specific regulations. Accuracy is paramount.`;
   }
 
-  async initialize(agentId = 'auditor', onProgress) {
+  async initialize(agentId = "auditor", onProgress) {
     try {
       await initializeSwarm(agentId, {
         onProgress: (status) => {
           if (onProgress) {
             onProgress({
               progress: status.progress / 100,
-              text: status.message
+              text: status.message,
             });
           }
           console.log(`💎 Loading: ${status.message}`);
         },
         onComplete: () => {
           this.currentAgent = agentId;
-          console.log(`🎖️ Warrant Council initialized with ${agentId.toUpperCase()} agent`);
+          console.log(
+            `🎖️ Warrant Council initialized with ${agentId.toUpperCase()} agent`,
+          );
         },
         onError: (err) => {
-          console.error('🎖️ Warrant Council initialization failed:', err);
-        }
+          console.error("🎖️ Warrant Council initialization failed:", err);
+        },
       });
       return true;
     } catch (error) {
-      console.error('Warrant Council initialization error:', error);
+      console.error("Warrant Council initialization error:", error);
       throw error;
     }
   }
@@ -66,13 +68,15 @@ Always cite specific regulations. Accuracy is paramount.`;
 
   async chat(userMessage, options = {}) {
     if (!isSwarmReady()) {
-      throw new Error("Warrant Council not initialized. Call initialize() first.");
+      throw new Error(
+        "Warrant Council not initialized. Call initialize() first.",
+      );
     }
 
     const {
       knowledgeContext = "",
       toolId = null,
-      agentId = this.currentAgent || 'auditor'
+      agentId = this.currentAgent || "auditor",
     } = options;
 
     // Build enhanced prompt with knowledge context
@@ -86,7 +90,7 @@ Always cite specific regulations. Accuracy is paramount.`;
       toolId,
       systemPrompt: this.systemPrompt,
       maxTokens: 2048,
-      temperature: 0.7
+      temperature: 0.7,
     });
 
     return result.text;
@@ -107,7 +111,7 @@ Always cite specific regulations. Accuracy is paramount.`;
   async unload() {
     await unloadSwarm();
     this.currentAgent = null;
-    console.log('🎖️ Warrant Council unloaded');
+    console.log("🎖️ Warrant Council unloaded");
   }
 }
 

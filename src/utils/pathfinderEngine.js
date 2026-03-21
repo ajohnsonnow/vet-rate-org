@@ -2,14 +2,19 @@
  * Vet-Rate.org - Pathfinder (Strategy Engine)
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * AI-powered claims strategy engine that analyzes current ratings
  * and suggests high-probability secondary claims.
- * 
+ *
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getAIStatus,
+  AI_MODES,
+} from "./unifiedAIService";
 
 // The specialized system prompt for strategy analysis
 const PATHFINDER_SYSTEM_PROMPT = `You are a Senior VA Claims Strategist. Your goal is to analyze a veteran's current disability profile and suggest "High Probability" secondary claims based on established medical connections.
@@ -87,21 +92,29 @@ COMMON HIGH-VALUE SECONDARY CONNECTIONS TO CONSIDER:
  * @param {string} additionalContext - Optional symptoms or evidence keywords
  * @returns {Promise<Object>} - Strategy analysis results
  */
-export async function analyzeStrategy(apiKey, currentRatings, additionalContext = '') {
+export async function analyzeStrategy(
+  apiKey,
+  currentRatings,
+  additionalContext = "",
+) {
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
-    throw new Error('No AI available. Please set up an API key or enable Local AI.');
+    throw new Error(
+      "No AI available. Please set up an API key or enable Local AI.",
+    );
   }
-  
+
   if (!currentRatings || currentRatings.length === 0) {
-    throw new Error('Please add at least one current service-connected condition');
+    throw new Error(
+      "Please add at least one current service-connected condition",
+    );
   }
-  
+
   // Format current ratings for the prompt
   const ratingsText = currentRatings
-    .map(r => `- ${r.condition}${r.rating ? ` (${r.rating}%)` : ''}`)
-    .join('\n');
-  
+    .map((r) => `- ${r.condition}${r.rating ? ` (${r.rating}%)` : ""}`)
+    .join("\n");
+
   const userPrompt = `${PATHFINDER_SYSTEM_PROMPT}
 
 Analyze this veteran's disability profile and suggest strategic opportunities:
@@ -109,8 +122,12 @@ Analyze this veteran's disability profile and suggest strategic opportunities:
 CURRENT SERVICE-CONNECTED RATINGS:
 ${ratingsText}
 
-${additionalContext ? `ADDITIONAL CONTEXT (symptoms, medications, or evidence):
-${additionalContext}` : ''}
+${
+  additionalContext
+    ? `ADDITIONAL CONTEXT (symptoms, medications, or evidence):
+${additionalContext}`
+    : ""
+}
 
 Provide a comprehensive strategy analysis with secondary claim opportunities.`;
 
@@ -122,52 +139,56 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
       expectJSON: true,
       skipHallucinationCheck: true, // Strategy analysis returns opportunities, not diagnostic codes
     });
-    
+
     // generateAI returns { text, mode } object - extract the text content
     const content = response?.text || response;
-    
+
     if (!content) {
-      throw new Error('No content received from AI');
+      throw new Error("No content received from AI");
     }
-    
+
     // Ensure content is a string before processing
-    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-    
+    const contentStr =
+      typeof content === "string" ? content : JSON.stringify(content);
+
     // Parse JSON response
     let result;
     try {
       let cleanContent = contentStr.trim();
       // Remove markdown formatting if present
-      if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
-      if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
-      if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
-      
+      if (cleanContent.startsWith("```json"))
+        cleanContent = cleanContent.slice(7);
+      if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+      if (cleanContent.endsWith("```"))
+        cleanContent = cleanContent.slice(0, -3);
+
       result = JSON.parse(cleanContent.trim());
     } catch (parseError) {
-      console.error('Parse error:', parseError, contentStr.substring(0, 500));
-      throw new Error('Failed to parse AI response. Please try again.');
+      console.error("Parse error:", parseError, contentStr.substring(0, 500));
+      throw new Error("Failed to parse AI response. Please try again.");
     }
-    
+
     // Validate required fields
     if (!result.opportunities) {
-      throw new Error('AI response missing opportunities. Please try again.');
+      throw new Error("AI response missing opportunities. Please try again.");
     }
-    
+
     // Sort opportunities by priority
     if (result.opportunities) {
-      result.opportunities.sort((a, b) => (a.priority || 5) - (b.priority || 5));
+      result.opportunities.sort(
+        (a, b) => (a.priority || 5) - (b.priority || 5),
+      );
     }
-    
+
     return {
       success: true,
       data: result,
       inputRatings: currentRatings,
       analyzedAt: new Date().toISOString(),
-      aiMode: getAIStatus().effectiveMode // Include which AI mode was used
+      aiMode: getAIStatus().effectiveMode, // Include which AI mode was used
     };
-    
   } catch (error) {
-    console.error('Pathfinder analysis error:', error);
+    console.error("Pathfinder analysis error:", error);
     throw error;
   }
 }
@@ -177,29 +198,29 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
  */
 export function getProbabilityColors(probability) {
   switch (probability?.toUpperCase()) {
-    case 'HIGH':
+    case "HIGH":
       return {
-        bg: 'bg-green-100 dark:bg-green-900/30',
-        text: 'text-green-700 dark:text-green-300',
-        border: 'border-green-500'
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-300",
+        border: "border-green-500",
       };
-    case 'MEDIUM':
+    case "MEDIUM":
       return {
-        bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-        text: 'text-yellow-700 dark:text-yellow-300',
-        border: 'border-yellow-500'
+        bg: "bg-yellow-100 dark:bg-yellow-900/30",
+        text: "text-yellow-700 dark:text-yellow-300",
+        border: "border-yellow-500",
       };
-    case 'LOW':
+    case "LOW":
       return {
-        bg: 'bg-red-100 dark:bg-red-900/30',
-        text: 'text-red-700 dark:text-red-300',
-        border: 'border-red-500'
+        bg: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-300",
+        border: "border-red-500",
       };
     default:
       return {
-        bg: 'bg-gray-100 dark:bg-gray-800',
-        text: 'text-gray-700 dark:text-gray-300',
-        border: 'border-gray-500'
+        bg: "bg-gray-100 dark:bg-gray-800",
+        text: "text-gray-700 dark:text-gray-300",
+        border: "border-gray-500",
       };
   }
 }
@@ -209,14 +230,14 @@ export function getProbabilityColors(probability) {
  */
 export function getConnectionTypeColors(type) {
   switch (type?.toUpperCase()) {
-    case 'DIRECT':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-    case 'MEDICATION':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-    case 'AGGRAVATION':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+    case "DIRECT":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+    case "MEDICATION":
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
+    case "AGGRAVATION":
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
   }
 }
 
@@ -226,7 +247,7 @@ export function getConnectionTypeColors(type) {
  */
 export function getPathfinderPrivacyDisclosure() {
   const status = getAIStatus();
-  
+
   if (status.effectiveMode === AI_MODES.LOCAL) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
@@ -244,7 +265,7 @@ When you analyze your strategy:
 
 ✅ This is the most private way to use AI-powered analysis.`;
   }
-  
+
   return `☁️ CLOUD AI MODE (Google Gemini)
 
 When you analyze your strategy:

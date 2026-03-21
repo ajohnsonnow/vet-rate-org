@@ -3,9 +3,9 @@
  * Demonstrates using dynamic copy with auto-updating stats
  */
 
-import React from 'react';
-import { useAboutUsContent, useDynamicCopy } from '../hooks/useDynamicCopy';
-import { useLanguage } from '../../contexts/LanguageContext';
+import React from "react";
+import { useAboutUsContent, useDynamicCopy } from "../hooks/useDynamicCopy";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export const AboutUsExample = () => {
   const { t } = useLanguage();
@@ -16,10 +16,15 @@ export const AboutUsExample = () => {
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* The Codebase Section */}
       <section>
-        <h2 className="text-3xl font-bold mb-4">{aboutUs.theCodebase.heading}</h2>
+        <h2 className="text-3xl font-bold mb-4">
+          {aboutUs.theCodebase.heading}
+        </h2>
         <div className="space-y-4">
           {aboutUs.theCodebase.paragraphs.map((paragraph, index) => (
-            <p key={index} className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
+            <p
+              key={index}
+              className="text-lg leading-relaxed text-gray-700 dark:text-gray-300"
+            >
               {paragraph}
             </p>
           ))}
@@ -36,7 +41,9 @@ export const AboutUsExample = () => {
 
       {/* The Real Cost */}
       <section className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-        <h3 className="text-2xl font-bold mb-3">{aboutUs.theRealCost.heading}</h3>
+        <h3 className="text-2xl font-bold mb-3">
+          {aboutUs.theRealCost.heading}
+        </h3>
         <p className="text-lg text-gray-700 dark:text-gray-300">
           {aboutUs.theRealCost.content}
         </p>
@@ -55,7 +62,9 @@ export const AboutUsExample = () => {
 
 const StatCard = ({ label, value }) => (
   <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-center">
-    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{value}</div>
+    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+      {value}
+    </div>
     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{label}</div>
   </div>
 );
@@ -67,17 +76,18 @@ const StatCard = ({ label, value }) => (
 export const BuyMeACoffeeExample = () => {
   const { copy, stats } = useDynamicCopy();
   const coffee = copy.buyMeACoffee;
-  
+
   // Randomly select a caption (or rotate through them)
-  const randomCaption = coffee.captions[Math.floor(Math.random() * coffee.captions.length)];
+  const randomCaption =
+    coffee.captions[Math.floor(Math.random() * coffee.captions.length)];
 
   return (
     <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
       <h3 className="text-2xl font-bold mb-4">{coffee.longForm.header}</h3>
-      
+
       {/* Body with line breaks preserved */}
       <div className="space-y-3 mb-6">
-        {coffee.longForm.body.split('\n\n').map((paragraph, index) => (
+        {coffee.longForm.body.split("\n\n").map((paragraph, index) => (
           <p key={index} className="text-gray-700 dark:text-gray-300">
             {paragraph}
           </p>
@@ -109,12 +119,14 @@ export const BuyMeACoffeeExample = () => {
 export const LoadingScreenExample = () => {
   const { copy } = useDynamicCopy();
   const [messageIndex, setMessageIndex] = React.useState(0);
-  
+
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex(prev => (prev + 1) % copy.uiMessages.loadingScreens.length);
+      setMessageIndex(
+        (prev) => (prev + 1) % copy.uiMessages.loadingScreens.length,
+      );
     }, 2000);
-    
+
     return () => clearInterval(interval);
   }, [copy.uiMessages.loadingScreens.length]);
 
@@ -125,7 +137,7 @@ export const LoadingScreenExample = () => {
         <div className="mb-4">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
         </div>
-        
+
         {/* Dynamic message */}
         <p className="text-white text-lg animate-pulse">
           {copy.uiMessages.loadingScreens[messageIndex]}
@@ -162,14 +174,16 @@ export const CustomTextExample = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold">
-        {replace("Welcome to Vet-Rate")}
-      </h2>
+      <h2 className="text-2xl font-bold">{replace("Welcome to Vet-Rate")}</h2>
       <p className="mt-2">
-        {replace("This tool represents {{total_hours}} hours of work, with {{validation_count}} validated conditions.")}
+        {replace(
+          "This tool represents {{total_hours}} hours of work, with {{validation_count}} validated conditions.",
+        )}
       </p>
       <p className="mt-2 text-sm text-gray-600">
-        {replace("Built in {{days_dev}} days with {{productivity_multiplier}}x AI acceleration.")}
+        {replace(
+          "Built in {{days_dev}} days with {{productivity_multiplier}}x AI acceleration.",
+        )}
       </p>
     </div>
   );

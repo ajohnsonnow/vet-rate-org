@@ -9,12 +9,12 @@
  * Enables offline access to all Disability Benefits Questionnaires
  */
 
-import { reconstructBlobUrl } from './sanitize';
+import { reconstructBlobUrl } from "./sanitize";
 
-const DB_NAME = 'vet-rate-dbq-cache';
+const DB_NAME = "vet-rate-dbq-cache";
 const DB_VERSION = 1;
-const STORE_PDF = 'dbq-pdf';
-const STORE_METADATA = 'dbq-metadata';
+const STORE_PDF = "dbq-pdf";
+const STORE_METADATA = "dbq-metadata";
 
 // Initialize IndexedDB
 let dbPromise = null;
@@ -25,29 +25,33 @@ let dbPromise = null;
  */
 function getDB() {
   if (dbPromise) return dbPromise;
-  
+
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      
+
       // Store for PDF binary data
       if (!db.objectStoreNames.contains(STORE_PDF)) {
-        db.createObjectStore(STORE_PDF, { keyPath: 'id' });
+        db.createObjectStore(STORE_PDF, { keyPath: "id" });
       }
       // Store for metadata (last updated, download status, etc.)
       if (!db.objectStoreNames.contains(STORE_METADATA)) {
-        const metaStore = db.createObjectStore(STORE_METADATA, { keyPath: 'id' });
-        metaStore.createIndex('category', 'category', { unique: false });
-        metaStore.createIndex('downloadedAt', 'downloadedAt', { unique: false });
+        const metaStore = db.createObjectStore(STORE_METADATA, {
+          keyPath: "id",
+        });
+        metaStore.createIndex("category", "category", { unique: false });
+        metaStore.createIndex("downloadedAt", "downloadedAt", {
+          unique: false,
+        });
       }
     };
   });
-  
+
   return dbPromise;
 }
 
@@ -62,7 +66,7 @@ function promisifyRequest(request) {
 // Helper to get a record from a store
 async function dbGet(storeName, key) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readonly');
+  const tx = db.transaction(storeName, "readonly");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.get(key));
 }
@@ -70,7 +74,7 @@ async function dbGet(storeName, key) {
 // Helper to put a record in a store
 async function dbPut(storeName, value) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
+  const tx = db.transaction(storeName, "readwrite");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.put(value));
 }
@@ -78,7 +82,7 @@ async function dbPut(storeName, value) {
 // Helper to delete a record from a store
 async function dbDelete(storeName, key) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
+  const tx = db.transaction(storeName, "readwrite");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.delete(key));
 }
@@ -86,7 +90,7 @@ async function dbDelete(storeName, key) {
 // Helper to get all records from a store
 async function dbGetAll(storeName) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readonly');
+  const tx = db.transaction(storeName, "readonly");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.getAll());
 }
@@ -94,7 +98,7 @@ async function dbGetAll(storeName) {
 // Helper to get all keys from a store
 async function dbGetAllKeys(storeName) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readonly');
+  const tx = db.transaction(storeName, "readonly");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.getAllKeys());
 }
@@ -102,7 +106,7 @@ async function dbGetAllKeys(storeName) {
 // Helper to clear a store
 async function dbClear(storeName) {
   const db = await getDB();
-  const tx = db.transaction(storeName, 'readwrite');
+  const tx = db.transaction(storeName, "readwrite");
   const store = tx.objectStore(storeName);
   return promisifyRequest(store.clear());
 }
@@ -121,7 +125,7 @@ export async function isDbqCached(formId) {
     const pdf = await dbGet(STORE_PDF, formId);
     return !!pdf;
   } catch (error) {
-    console.error('Error checking DBQ cache:', error);
+    console.error("Error checking DBQ cache:", error);
     return false;
   }
 }
@@ -139,7 +143,7 @@ export async function getCachedDbq(formId) {
     }
     return null;
   } catch (error) {
-    console.error('Error getting cached DBQ:', error);
+    console.error("Error getting cached DBQ:", error);
     return null;
   }
 }
@@ -154,7 +158,7 @@ export async function getCachedDbq(formId) {
 export async function cacheDbq(formId, pdfBlob, metadata = {}) {
   try {
     const timestamp = new Date().toISOString();
-    
+
     // Store the PDF
     await dbPut(STORE_PDF, {
       id: formId,
@@ -162,21 +166,21 @@ export async function cacheDbq(formId, pdfBlob, metadata = {}) {
       size: pdfBlob.size,
       cachedAt: timestamp,
     });
-    
+
     // Store/update metadata
     await dbPut(STORE_METADATA, {
       id: formId,
       title: metadata.title || formId,
-      category: metadata.category || 'General',
+      category: metadata.category || "General",
       path: metadata.path || `/forms/${formId}.pdf`,
       downloadedAt: timestamp,
       size: pdfBlob.size,
       isCached: true,
     });
-    
+
     return true;
   } catch (error) {
-    console.error('Error caching DBQ:', error);
+    console.error("Error caching DBQ:", error);
     return false;
   }
 }
@@ -189,7 +193,7 @@ export async function cacheDbq(formId, pdfBlob, metadata = {}) {
 export async function removeFromCache(formId) {
   try {
     await dbDelete(STORE_PDF, formId);
-    
+
     // Update metadata to mark as not cached
     const meta = await dbGet(STORE_METADATA, formId);
     if (meta) {
@@ -197,10 +201,10 @@ export async function removeFromCache(formId) {
       meta.downloadedAt = null;
       await dbPut(STORE_METADATA, meta);
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Error removing DBQ from cache:', error);
+    console.error("Error removing DBQ from cache:", error);
     return false;
   }
 }
@@ -217,22 +221,31 @@ export async function getCacheStats() {
   try {
     const allPdfItems = await dbGetAll(STORE_PDF);
     const allMeta = await dbGetAll(STORE_METADATA);
-    
-    const totalSize = allPdfItems.reduce((sum, pdf) => sum + (pdf.size || 0), 0);
+
+    const totalSize = allPdfItems.reduce(
+      (sum, pdf) => sum + (pdf.size || 0),
+      0,
+    );
     const cachedCount = allPdfItems.length;
-    
+
     return {
       cachedCount,
       totalCount: allMeta.length,
       totalSizeBytes: totalSize,
       totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-      lastUpdated: allPdfItems.length > 0 
-        ? Math.max(...allPdfItems.map(p => new Date(p.cachedAt).getTime()))
-        : null,
+      lastUpdated:
+        allPdfItems.length > 0
+          ? Math.max(...allPdfItems.map((p) => new Date(p.cachedAt).getTime()))
+          : null,
     };
   } catch (error) {
-    console.error('Error getting cache stats:', error);
-    return { cachedCount: 0, totalCount: 0, totalSizeBytes: 0, totalSizeMB: '0.00' };
+    console.error("Error getting cache stats:", error);
+    return {
+      cachedCount: 0,
+      totalCount: 0,
+      totalSizeBytes: 0,
+      totalSizeMB: "0.00",
+    };
   }
 }
 
@@ -243,7 +256,7 @@ export async function getCacheStats() {
 export async function clearDbqCache() {
   try {
     await dbClear(STORE_PDF);
-    
+
     // Update all metadata to mark as not cached
     const allMeta = await dbGetAll(STORE_METADATA);
     for (const meta of allMeta) {
@@ -251,10 +264,10 @@ export async function clearDbqCache() {
       meta.downloadedAt = null;
       await dbPut(STORE_METADATA, meta);
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Error clearing DBQ cache:', error);
+    console.error("Error clearing DBQ cache:", error);
     return false;
   }
 }
@@ -277,30 +290,30 @@ export async function downloadAndCacheDbq(form, onProgress = null) {
       if (onProgress) onProgress(100);
       return { success: true, alreadyCached: true };
     }
-    
+
     if (onProgress) onProgress(10);
-    
+
     // Fetch the PDF
     const response = await fetch(form.path);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     if (onProgress) onProgress(50);
-    
+
     const blob = await response.blob();
-    
+
     if (onProgress) onProgress(80);
-    
+
     // Cache it
     const cached = await cacheDbq(form.id, blob, {
       title: form.title,
       category: form.category,
       path: form.path,
     });
-    
+
     if (onProgress) onProgress(100);
-    
+
     return { success: cached };
   } catch (error) {
     console.error(`Error downloading DBQ ${form.id}:`, error);
@@ -317,29 +330,29 @@ export async function downloadAndCacheDbq(form, onProgress = null) {
 export async function downloadAllDbqs(onProgress = null, signal = null) {
   try {
     // Fetch the DBQ index
-    const indexResponse = await fetch('/forms/dbq-index.json');
+    const indexResponse = await fetch("/forms/dbq-index.json");
     if (!indexResponse.ok) {
-      throw new Error('Could not load DBQ index');
+      throw new Error("Could not load DBQ index");
     }
     const index = await indexResponse.json();
     const forms = index.forms || [];
-    
+
     const results = {
       success: true,
       downloaded: 0,
       skipped: 0,
       failed: [],
     };
-    
+
     for (let i = 0; i < forms.length; i++) {
       // Check for abort
       if (signal && signal.aborted) {
         results.success = false;
         break;
       }
-      
+
       const form = forms[i];
-      
+
       if (onProgress) {
         onProgress({
           current: i + 1,
@@ -348,9 +361,9 @@ export async function downloadAllDbqs(onProgress = null, signal = null) {
           percent: Math.round(((i + 1) / forms.length) * 100),
         });
       }
-      
+
       const result = await downloadAndCacheDbq(form);
-      
+
       if (result.alreadyCached) {
         results.skipped++;
       } else if (result.success) {
@@ -358,14 +371,14 @@ export async function downloadAllDbqs(onProgress = null, signal = null) {
       } else {
         results.failed.push(form.id);
       }
-      
+
       // Small delay to prevent overwhelming the browser
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+
     return results;
   } catch (error) {
-    console.error('Error downloading all DBQs:', error);
+    console.error("Error downloading all DBQs:", error);
     return { success: false, downloaded: 0, failed: [error.message] };
   }
 }
@@ -387,7 +400,7 @@ export async function getDbqWithFallback(formId, fallbackPath) {
     if (cached) {
       return { blob: cached, fromCache: true };
     }
-    
+
     // Fallback to network
     if (fallbackPath) {
       const response = await fetch(fallbackPath);
@@ -396,10 +409,10 @@ export async function getDbqWithFallback(formId, fallbackPath) {
         return { blob, fromCache: false };
       }
     }
-    
+
     return { blob: null, fromCache: false };
   } catch (error) {
-    console.error('Error getting DBQ:', error);
+    console.error("Error getting DBQ:", error);
     return { blob: null, fromCache: false };
   }
 }
@@ -413,33 +426,39 @@ export async function getDbqWithFallback(formId, fallbackPath) {
 export async function openDbqInBrowser(formId, fallbackPath) {
   try {
     const { blob, fromCache } = await getDbqWithFallback(formId, fallbackPath);
-    
+
     if (!blob) {
-      return { success: false, error: 'Could not load DBQ' };
+      return { success: false, error: "Could not load DBQ" };
     }
-    
+
     // URL.createObjectURL always returns a browser-internal blob: URL regardless of
     // blob content — it cannot produce an external or user-controlled redirect target.
     const objectUrl = URL.createObjectURL(blob);
     const safeObjectUrl = reconstructBlobUrl(objectUrl);
     if (!safeObjectUrl) {
       URL.revokeObjectURL(objectUrl);
-      return { success: false, error: 'Invalid URL generated' };
+      return { success: false, error: "Invalid URL generated" };
     }
 
     // Open in new tab via detached anchor click — avoids window.open/location.replace OR sinks
-    const a = document.createElement('a');
-    a.setAttribute('href', safeObjectUrl);
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
-    a.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true, view: window }));
+    const a = document.createElement("a");
+    a.setAttribute("href", safeObjectUrl);
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener noreferrer");
+    a.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: false,
+        cancelable: true,
+        view: window,
+      }),
+    );
 
     // Cleanup after a delay (allow browser to load the blob)
     setTimeout(() => URL.revokeObjectURL(safeObjectUrl), 60000);
 
     return { success: true, url: objectUrl, fromCache };
   } catch (error) {
-    console.error('Error opening DBQ:', error);
+    console.error("Error opening DBQ:", error);
     return { success: false, error: error.message };
   }
 }
@@ -460,30 +479,29 @@ export async function openDbqInBrowser(formId, fallbackPath) {
 export async function exportCachedDbqsAsZip() {
   try {
     // Dynamically import JSZip
-    const JSZip = (await import('jszip')).default;
+    const JSZip = (await import("jszip")).default;
     const zip = new JSZip();
-    
+
     const allPdfItems = await dbGetAll(STORE_PDF);
     const allMeta = await dbGetAll(STORE_METADATA);
-    
+
     // Add PDFs to zip
     for (const pdf of allPdfItems) {
       zip.file(`${pdf.id}.pdf`, pdf.pdfBlob);
     }
-    
+
     // Add index
     const index = {
       exportedAt: new Date().toISOString(),
-      forms: allMeta.filter(m => m.isCached),
+      forms: allMeta.filter((m) => m.isCached),
     };
-    zip.file('dbq-index.json', JSON.stringify(index, null, 2));
-    
+    zip.file("dbq-index.json", JSON.stringify(index, null, 2));
+
     // Generate zip
-    const blob = await zip.generateAsync({ type: 'blob' });
+    const blob = await zip.generateAsync({ type: "blob" });
     return blob;
   } catch (error) {
-    console.error('Error exporting DBQs as zip:', error);
+    console.error("Error exporting DBQs as zip:", error);
     return null;
   }
 }
-

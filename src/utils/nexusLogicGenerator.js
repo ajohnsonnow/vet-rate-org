@@ -2,14 +2,19 @@
  * Vet-Rate.org - Nexus Logic Generator
  * Copyright (c) 2024-2026 Anthony Johnson
  * All Rights Reserved.
- * 
+ *
  * AI-powered medical research assistant that generates "Doctor's Packets"
  * to help veterans get nexus letters from their private physicians.
- * 
+ *
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import { generateAI, isAnyAIAvailable, getAIStatus, AI_MODES } from './unifiedAIService';
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getAIStatus,
+  AI_MODES,
+} from "./unifiedAIService";
 
 // The specialized system prompt for generating nexus research
 const NEXUS_LOGIC_SYSTEM_PROMPT = `You are a Medical Research Assistant specializing in pathophysiology and VA Disability Law. Your task is to generate a "Medical Nexus Research Brief" for a veteran to present to their private physician.
@@ -64,16 +69,22 @@ CRITICAL RULES:
  * @param {string} secondaryCondition - The claimed secondary condition
  * @returns {Promise<Object>} - The generated packet data
  */
-export async function generateDoctorsPacket(apiKey, primaryCondition, secondaryCondition) {
+export async function generateDoctorsPacket(
+  apiKey,
+  primaryCondition,
+  secondaryCondition,
+) {
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
-    throw new Error('No AI available. Please set up an API key or enable Local AI.');
+    throw new Error(
+      "No AI available. Please set up an API key or enable Local AI.",
+    );
   }
-  
+
   if (!primaryCondition || !secondaryCondition) {
-    throw new Error('Both primary and secondary conditions are required');
+    throw new Error("Both primary and secondary conditions are required");
   }
-  
+
   const userPrompt = `${NEXUS_LOGIC_SYSTEM_PROMPT}
 
 Generate a Medical Nexus Research Brief for:
@@ -90,58 +101,60 @@ Explain how the primary condition causes or aggravates the secondary condition.`
       expectJSON: true,
       skipHallucinationCheck: true, // Nexus research returns medical mechanisms, not diagnostic codes
     });
-    
+
     // generateAI returns { text, mode } object - extract the text content
     const content = response?.text || response;
-    
+
     if (!content) {
-      throw new Error('No content received from AI');
+      throw new Error("No content received from AI");
     }
-    
+
     // Ensure content is a string before processing
-    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-    
+    const contentStr =
+      typeof content === "string" ? content : JSON.stringify(content);
+
     // Parse JSON response
     let result;
     try {
       let cleanContent = contentStr.trim();
       // Remove markdown formatting if present
-      if (cleanContent.startsWith('```json')) cleanContent = cleanContent.slice(7);
-      if (cleanContent.startsWith('```')) cleanContent = cleanContent.slice(3);
-      if (cleanContent.endsWith('```')) cleanContent = cleanContent.slice(0, -3);
-      
+      if (cleanContent.startsWith("```json"))
+        cleanContent = cleanContent.slice(7);
+      if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+      if (cleanContent.endsWith("```"))
+        cleanContent = cleanContent.slice(0, -3);
+
       result = JSON.parse(cleanContent.trim());
     } catch (parseError) {
-      console.error('Parse error:', parseError, contentStr.substring(0, 500));
-      throw new Error('Failed to parse AI response. Please try again.');
+      console.error("Parse error:", parseError, contentStr.substring(0, 500));
+      throw new Error("Failed to parse AI response. Please try again.");
     }
-    
+
     // Check if AI found no link
     if (result.error) {
       return {
         success: false,
         noLink: true,
         error: result.error,
-        suggestion: result.suggestion
+        suggestion: result.suggestion,
       };
     }
-    
+
     // Validate required fields
     if (!result.mechanism_summary || !result.doctor_template) {
-      throw new Error('AI response missing required fields. Please try again.');
+      throw new Error("AI response missing required fields. Please try again.");
     }
-    
+
     return {
       success: true,
       data: result,
       primaryCondition,
       secondaryCondition,
       generatedAt: new Date().toISOString(),
-      aiMode: getAIStatus().effectiveMode
+      aiMode: getAIStatus().effectiveMode,
     };
-    
   } catch (error) {
-    console.error('Nexus logic generation error:', error);
+    console.error("Nexus logic generation error:", error);
     throw error;
   }
 }
@@ -153,15 +166,19 @@ Explain how the primary condition causes or aggravates the secondary condition.`
  * @param {string} secondaryCondition - Secondary condition name
  * @returns {string} - Formatted letter text
  */
-export function formatDoctorLetter(packetData, primaryCondition, secondaryCondition) {
+export function formatDoctorLetter(
+  packetData,
+  primaryCondition,
+  secondaryCondition,
+) {
   const { doctor_template, mechanism_summary, icd10_codes } = packetData;
-  
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
-  
+
   return `MEDICAL NEXUS OPINION
 Date: ${currentDate}
 
@@ -175,10 +192,14 @@ ${doctor_template.clinical_rationale}
 MEDICAL MECHANISM:
 ${mechanism_summary}
 
-${icd10_codes ? `ICD-10 CODES:
+${
+  icd10_codes
+    ? `ICD-10 CODES:
 - Primary Condition: ${icd10_codes.primary}
 - Secondary Condition: ${icd10_codes.secondary}
-` : ''}
+`
+    : ""
+}
 CONCLUSION:
 ${doctor_template.conclusion}
 
@@ -198,7 +219,7 @@ Medical License Number`;
  */
 export function getNexusLogicPrivacyDisclosure() {
   const status = getAIStatus();
-  
+
   if (status.effectiveMode === AI_MODES.LOCAL) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
@@ -216,7 +237,7 @@ When you generate a Doctor's Packet:
 
 ✅ This is the most private way to generate a Doctor's Packet.`;
   }
-  
+
   return `☁️ CLOUD AI MODE (Google Gemini)
 
 When you generate a Doctor's Packet:
