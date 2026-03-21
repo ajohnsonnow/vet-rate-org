@@ -45,7 +45,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npx vitest run --coverage --coverage.thresholds.lines=50
+        run: npm run test:coverage
 
   build:
     name: Build
