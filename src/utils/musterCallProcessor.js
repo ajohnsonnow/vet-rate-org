@@ -24,6 +24,7 @@
  */
 
 import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
+import { processLargePDF } from "./pdfExtractor";
 import { formatFileSize } from "./ocr";
 import {
   classifyDocument,
@@ -455,19 +456,50 @@ const processSingleDocument = async (file, onProgress) => {
         stage: "platoon_sergeant",
       });
 
-      extractionResult = await analyzeDocument(file, (state) => {
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 25 + (state.progress || 0) * 0.4, // 25-65%
-          ocrState: state.message || state.state,
-          currentPage: state.currentPage,
-          totalPages: state.totalPages,
-          quality: state.quality,
-          confidence: state.confidence,
-          stage: "platoon_sergeant",
+      const isLargePDF =
+        file.name.toLowerCase().endsWith(".pdf") &&
+        file.size > 50 * 1024 * 1024;
+
+      if (isLargePDF) {
+        console.log(
+          `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
+        );
+        const largeResult = await processLargePDF(file, {
+          headPages: 100,
+          tailPages: 100,
+          batchSize: 20,
+          onProgress: (cur, total) => {
+            onProgress?.({
+              filename: file.name,
+              state: PROCESSING_STATES.EXTRACTING,
+              progress: 25 + (cur / total) * 0.4 * 100, // 25-65%
+              stage: "platoon_sergeant",
+              message: `Streaming page ${cur}/${total}...`,
+            });
+          },
         });
-      });
+        extractionResult = {
+          text: largeResult.text,
+          pageCount: largeResult.pageCount,
+          method: largeResult.method,
+          fileType: "PDF",
+          ocrUsed: false,
+        };
+      } else {
+        extractionResult = await analyzeDocument(file, (state) => {
+          onProgress?.({
+            filename: file.name,
+            state: PROCESSING_STATES.EXTRACTING,
+            progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+            ocrState: state.message || state.state,
+            currentPage: state.currentPage,
+            totalPages: state.totalPages,
+            quality: state.quality,
+            confidence: state.confidence,
+            stage: "platoon_sergeant",
+          });
+        });
+      }
 
       // Store OCR confidence for fallback decision
       const ocrConfidence = extractionResult.confidence || 0;

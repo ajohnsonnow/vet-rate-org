@@ -441,7 +441,9 @@ async function main() {
 
   const files = readdirSync(CFILE_DIR).filter(f => {
     const ext = extname(f).toLowerCase();
-    return ['.pdf', '.txt', '.csv'].includes(ext);
+    // Skip CSV — use only PDF sources per project decision
+    if (ext === '.csv') return false;
+    return ['.pdf', '.txt'].includes(ext);
   }).sort();
 
   console.log(`Found ${files.length} documents to process:\n`);
@@ -481,6 +483,9 @@ async function main() {
         extractError = result.error || null;
         if (extractError) {
           console.log(`ERROR: ${extractError}`);
+        } else if (!hasText && pageCount > 0) {
+          console.log(`SCANNED IMAGE PDF — requires browser OCR via Muster Call (${pageCount} pages, 0 text chars)`);
+          extractionMethod = 'scanned-needs-browser-ocr';
         } else {
           console.log(`OK (${pageCount} pages, ${result.totalCharacters} chars, hasText=${hasText})`);
         }
@@ -490,12 +495,6 @@ async function main() {
       pageCount = 1;
       hasText = extractedText.length > 100;
       extractionMethod = 'plaintext';
-      console.log(`OK (${extractedText.length} chars)`);
-    } else if (ext === '.csv') {
-      extractedText = readFileSync(filePath, 'utf8');
-      pageCount = 1;
-      hasText = true;
-      extractionMethod = 'csv';
       console.log(`OK (${extractedText.length} chars)`);
     }
 
@@ -532,6 +531,10 @@ async function main() {
       totalCharacters: extractedText.length,
       extractionMethod,
       extractError,
+      needsBrowserOCR: extractionMethod === 'scanned-needs-browser-ocr',
+      browserOCRNote: extractionMethod === 'scanned-needs-browser-ocr'
+        ? 'Scanned image-only PDF — upload via Muster Call in browser for Tesseract OCR'
+        : null,
       structuredDataExtracted: !!structuredData,
       importedAt: new Date().toISOString(),
     });
@@ -600,7 +603,9 @@ async function main() {
       totalFilesWithText: importedFiles.filter(f => f.hasText).length,
       totalFilesSkipped: importedFiles.filter(f => f.extractionMethod === 'skipped-too-large').length,
       processingNotes: [
-        'JOHNSON 5706 .pdf (328MB C-file) skipped — requires OCR tooling for full extraction',
+        'JOHNSON 5706 .pdf (313MB C-file) skipped — requires OCR tooling for full extraction',
+        'DD214_Johnson [1-4].pdf are scanned image-only PDFs — 0 text chars/page. Full OCR requires browser Tesseract via Muster Call.',
+        'DD214_Johnson_All.csv intentionally skipped — using PDF sources only per project decision.',
         'All claim letters processed using pdfjs-dist legacy Node.js build',
         'Structured data extracted using vaDocumentParser.js pattern matching',
         'Claims list seeded from ground truth (2024-05-08 rating letter) + cross-validated against all letters',

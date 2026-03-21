@@ -110,6 +110,132 @@ export function formatFileSize(bytes) {
 }
 
 /**
+ * Process a large PDF file using streaming (range requests) to avoid loading
+ * the entire file into RAM.  Suitable for C-files (100MB–400MB).
+ *
+ * Strategy: load first `headPages` + last `tailPages` to capture both the
+ * clinical narrative (front) and the Code Sheet / current ratings (back).
+ *
+ * @param {File} file - The large PDF File object (browser File API)
+ * @param {Object} options
+ * @param {number}   [options.headPages=100]   Pages to read from the start
+ * @param {number}   [options.tailPages=100]   Pages to read from the end
+ * @param {number}   [options.batchSize=20]    Pages per batch
+ * @param {Function} [options.onBatch]         Callback(batchResult) after each batch
+ * @param {Function} [options.onProgress]      Callback(currentPage, totalPages)
+ * @returns {Promise<{text, pageCount, processedPages, skippedPages, hasScannedSections}>}
+ */
+export async function processLargePDF(file, options = {}) {
+  const {
+    headPages = 100,
+    tailPages = 100,
+    batchSize = 20,
+    onBatch = null,
+    onProgress = () => {},
+  } = options;
+
+  // Stream the PDF via object URL so pdfjs can range-request pages on demand
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const pdf = await pdfjsLib.getDocument({
+      url: objectUrl,
+      rangeChunkSize: 65536, // 64 KB chunks — enables HTTP range streaming
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
+      disableAutoFetch: false,
+      disableStream: false,
+    }).promise;
+
+    const numPages = pdf.numPages;
+
+    // Build the set of page numbers to process (1-indexed, no duplicates)
+    const head = Math.min(headPages, numPages);
+    const tailStart = Math.max(numPages - tailPages + 1, head + 1);
+    const pagesToProcess = [];
+
+    for (let p = 1; p <= head; p++) pagesToProcess.push(p);
+    for (let p = tailStart; p <= numPages; p++) pagesToProcess.push(p);
+
+    let fullText = "";
+    let pagesWithText = 0;
+    let pagesEmpty = 0;
+    let processedCount = 0;
+
+    // Process in batches
+    for (
+      let batchStart = 0;
+      batchStart < pagesToProcess.length;
+      batchStart += batchSize
+    ) {
+      const batch = pagesToProcess.slice(batchStart, batchStart + batchSize);
+      let batchText = "";
+      const batchPageStats = [];
+
+      for (const pageNum of batch) {
+        try {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map((item) => item.str)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+          const chars = pageText.length;
+          batchText += `--- PAGE ${pageNum} ---\n${pageText}\n\n`;
+          batchPageStats.push({ pageNum, chars });
+
+          if (chars >= 50) pagesWithText++;
+          else pagesEmpty++;
+        } catch (pageErr) {
+          console.warn(
+            `processLargePDF: error on page ${pageNum}:`,
+            pageErr.message,
+          );
+          batchText += `--- PAGE ${pageNum} ---\n[extraction error]\n\n`;
+          batchPageStats.push({ pageNum, chars: 0, error: pageErr.message });
+          pagesEmpty++;
+        }
+
+        processedCount++;
+        onProgress(processedCount, pagesToProcess.length);
+      }
+
+      fullText += batchText;
+
+      if (onBatch) {
+        onBatch({
+          batchIndex: Math.floor(batchStart / batchSize),
+          pagesInBatch: batch,
+          batchText,
+          batchPageStats,
+          totalProcessedSoFar: processedCount,
+        });
+      }
+
+      // Yield to browser between batches to keep UI responsive
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    const skippedPages = numPages - pagesToProcess.length;
+    const hasScannedSections = pagesEmpty > pagesToProcess.length * 0.3;
+
+    return {
+      text: fullText,
+      pageCount: numPages,
+      processedPages: processedCount,
+      skippedPages,
+      hasScannedSections,
+      pagesWithText,
+      pagesEmpty,
+      method: "streaming",
+    };
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+/**
  * Estimate processing time based on page count
  * @param {number} pageCount - Number of pages
  * @returns {string}
