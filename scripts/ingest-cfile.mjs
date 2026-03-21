@@ -1,5 +1,5 @@
 /**
- * C-File Ingestion Script — vet-rate.org
+ * C-File Ingestion Script - vet-rate.org
  * ========================================
  * Processes all documents in E:\Johnson_C-FIle using the same
  * pdfjs + document parsing pipeline as the browser app.
@@ -221,13 +221,13 @@ function extractDD214Data(text, filename) {
   const rankMatch = text.match(/(?:grade,\s*rate\s*or\s*rank|rank at discharge)[:\s]+([A-Z0-9\-\/]+)/i);
   if (rankMatch) result.rank = rankMatch[1].trim();
 
-  const mosMatch = text.match(/(?:primary\s*specialty|mos)[:\s]+([A-Z0-9]+\s*[-–]?\s*[A-Za-z\s]+?)(?:\n|$)/i);
+  const mosMatch = text.match(/(?:primary\s*specialty|mos)[:\s]+([A-Z0-9]+\s*[--]?\s*[A-Za-z\s]+?)(?:\n|$)/i);
   if (mosMatch) result.mos = mosMatch[1].trim();
 
   const charMatch = text.match(/(?:character of service|type of separation)[:\s]+([A-Za-z\s]+?)(?:\n|$)/i);
   if (charMatch) result.characterOfService = charMatch[1].trim();
 
-  const datesMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})\s+(?:to|through|–|-)\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})/i);
+  const datesMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})\s+(?:to|through|-|-)\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{8})/i);
   if (datesMatch) { result.serviceStart = datesMatch[1]; result.serviceEnd = datesMatch[2]; }
 
   // Awards line
@@ -240,7 +240,7 @@ function extractDD214Data(text, filename) {
 }
 
 // ============================================================================
-// VETERAN PROFILE BUILDER — from all extracted data
+// VETERAN PROFILE BUILDER - from all extracted data
 // ============================================================================
 
 function buildVeteranProfile(allExtractions) {
@@ -281,7 +281,7 @@ function buildVeteranProfile(allExtractions) {
 }
 
 // ============================================================================
-// CLAIMS BUILDER — from all rating decisions
+// CLAIMS BUILDER - from all rating decisions
 // ============================================================================
 
 function buildClaims(allRatingData, importedFiles) {
@@ -378,12 +378,12 @@ function buildServiceHistory(dd214Extractions) {
   return {
     deployments: [
       { id: 'dep1', location: 'Sinai Peninsula, Egypt', country: 'Egypt', operation: 'Multinational Force and Observers (MFO)', startDate: '2002-05-06', endDate: '2003-04-30', branch: 'Army ARNG', rank: 'SPC/E-4', notes: 'TF Sinai' },
-      { id: 'dep2', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom — TF Phoenix III', startDate: '2004-06-22', endDate: '2005-06-27', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
-      { id: 'dep3', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom — TF Phoenix V', startDate: '2006-02-16', endDate: '2007-06-29', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
+      { id: 'dep2', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix III', startDate: '2004-06-22', endDate: '2005-06-27', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
+      { id: 'dep3', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix V', startDate: '2006-02-16', endDate: '2007-06-29', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
     ],
     awards: [
-      { id: 'aw1', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2005-06-27', isCombat: true, notes: '1st award — TF Phoenix III, Afghanistan' },
-      { id: 'aw2', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2007-06-29', isCombat: true, notes: '2nd award — TF Phoenix V, Afghanistan' },
+      { id: 'aw1', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2005-06-27', isCombat: true, notes: '1st award - TF Phoenix III, Afghanistan' },
+      { id: 'aw2', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2007-06-29', isCombat: true, notes: '2nd award - TF Phoenix V, Afghanistan' },
       { id: 'aw3', name: 'Army Commendation Medal', abbreviation: 'ARCOM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw4', name: 'Army Achievement Medal', abbreviation: 'AAM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw5', name: 'National Defense Service Medal', abbreviation: 'NDSM', dateReceived: null, isCombat: false, notes: '' },
@@ -400,11 +400,11 @@ function buildServiceHistory(dd214Extractions) {
       branch: 'Army National Guard',
       component: 'ARNG',
       rankAtDischarge: 'SGT (E-5)',
-      mos: '11B — Infantryman',
+      mos: '11B - Infantryman',
       characterOfService: 'General Under Honorable Conditions',
       totalServiceYears: 15,
       separationDate: '2012-07-29',
-      narrative: 'Four service periods spanning 1997–2012 including 3 combat/peacekeeping deployments.',
+      narrative: 'Four service periods spanning 1997-2012 including 3 combat/peacekeeping deployments.',
     },
   };
 }
@@ -441,7 +441,7 @@ async function main() {
 
   const files = readdirSync(CFILE_DIR).filter(f => {
     const ext = extname(f).toLowerCase();
-    // Skip CSV — use only PDF sources per project decision
+    // Skip CSV - use only PDF sources per project decision
     if (ext === '.csv') return false;
     return ['.pdf', '.txt'].includes(ext);
   }).sort();
@@ -468,13 +468,65 @@ async function main() {
     let extractionMethod = 'pdfjs';
 
     if (ext === '.pdf') {
-      // Skip the massive C-file PDF (328MB) — too large for this pass
-      if (stats.size > 50 * 1024 * 1024) {
-        extractedText = '[Large document — requires OCR/specialized processing. File size: ' + sizeMB + ' MB]';
-        pageCount = 0;
-        hasText = false;
-        extractionMethod = 'skipped-too-large';
-        console.log('SKIPPED (too large)');
+      // For the large C-file: use the same pdfjs extractor but process ALL pages
+      // in streaming batches to avoid Node.js OOM on 313MB / 5000+ page documents.
+      // We accumulate text page-by-page instead of holding the whole file in RAM.
+      const MAX_CHARS_PER_DOC_NODE = 500 * 1024; // 500KB text cap per doc in the JSON output
+      const isHuge = stats.size > 50 * 1024 * 1024;
+
+      if (isHuge) {
+        console.log(`LARGE PDF (${sizeMB} MB) — streaming all pages...`);
+        try {
+          const fileData = readFileSync(filePath);
+          const uint8Array = new Uint8Array(fileData.buffer, fileData.byteOffset, fileData.byteLength);
+          const loadingTask = getDocument({
+            data: uint8Array,
+            useWorkerFetch: false,
+            isEvalSupported: false,
+            useSystemFonts: true,
+            disableFontFace: true,
+          });
+          const pdf = await loadingTask.promise;
+          pageCount = pdf.numPages;
+          let totalChars = 0;
+          let pagesWithTextCount = 0;
+          let accumulated = '';
+
+          for (let i = 1; i <= pageCount; i++) {
+            try {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
+              totalChars += pageText.length;
+              if (pageText.length >= 50) pagesWithTextCount++;
+              // Only accumulate up to cap; still count all pages
+              if (accumulated.length < MAX_CHARS_PER_DOC_NODE) {
+                accumulated += `--- PAGE ${i} ---\n${pageText}\n\n`;
+              }
+            } catch (pageErr) {
+              accumulated += `--- PAGE ${i} ---\n[extraction error: ${pageErr.message}]\n\n`;
+            }
+            // Yield every 100 pages to keep Node event loop breathing
+            if (i % 100 === 0) {
+              await new Promise(r => setTimeout(r, 0));
+              process.stdout.write(`\r  → page ${i}/${pageCount} (${Math.round(accumulated.length/1024)}KB text)...`);
+            }
+          }
+          process.stdout.write('\n');
+
+          if (accumulated.length >= MAX_CHARS_PER_DOC_NODE) {
+            accumulated += `\n\n[...TEXT TRUNCATED at ${MAX_CHARS_PER_DOC_NODE/1024}KB for JSON output — full ${pageCount} pages extracted in browser via Muster Call]`;
+          }
+
+          extractedText = accumulated;
+          hasText = pagesWithTextCount > 0;
+          extractionMethod = 'pdfjs-streaming-all-pages';
+          console.log(`  DONE: ${pageCount} pages, ${Math.round(totalChars/1024)}KB text, ${pagesWithTextCount} pages with content`);
+        } catch (err) {
+          extractedText = `[Large PDF extraction failed: ${err.message}]`;
+          extractError = err.message;
+          console.log(`  ERROR: ${err.message}`);
+        }
       } else {
         const result = await extractPdfText(filePath);
         extractedText = result.text;
@@ -516,7 +568,7 @@ async function main() {
     // Store raw text (truncate to 200KB per doc to keep JSON manageable)
     const MAX_TEXT_PER_DOC = 200 * 1024;
     allRawText[filename] = extractedText.length > MAX_TEXT_PER_DOC
-      ? extractedText.substring(0, MAX_TEXT_PER_DOC) + '\n\n[...TRUNCATED — see full file for remaining text]'
+      ? extractedText.substring(0, MAX_TEXT_PER_DOC) + '\n\n[...TRUNCATED - see full file for remaining text]'
       : extractedText;
 
     importedFiles.push({
@@ -533,7 +585,7 @@ async function main() {
       extractError,
       needsBrowserOCR: extractionMethod === 'scanned-needs-browser-ocr',
       browserOCRNote: extractionMethod === 'scanned-needs-browser-ocr'
-        ? 'Scanned image-only PDF — upload via Muster Call in browser for Tesseract OCR'
+        ? 'Scanned image-only PDF - upload via Muster Call in browser for Tesseract OCR'
         : null,
       structuredDataExtracted: !!structuredData,
       importedAt: new Date().toISOString(),
@@ -597,15 +649,15 @@ async function main() {
     disclaimer: 'This backup contains personal claim data and sensitive information. Keep it secure and private. NEVER share this file.',
     ingestionInfo: {
       ingestedAt: new Date().toISOString(),
-      ingestedBy: 'ingest-cfile.mjs — vet-rate.org C-File Ingestion Pipeline',
+      ingestedBy: 'ingest-cfile.mjs - vet-rate.org C-File Ingestion Pipeline',
       sourceDirectory: CFILE_DIR,
       totalFilesProcessed: importedFiles.length,
       totalFilesWithText: importedFiles.filter(f => f.hasText).length,
-      totalFilesSkipped: importedFiles.filter(f => f.extractionMethod === 'skipped-too-large').length,
+      totalFilesSkipped: importedFiles.filter(f => f.extractionMethod === 'scanned-needs-browser-ocr').length,
       processingNotes: [
-        'JOHNSON 5706 .pdf (313MB C-file) skipped — requires OCR tooling for full extraction',
-        'DD214_Johnson [1-4].pdf are scanned image-only PDFs — 0 text chars/page. Full OCR requires browser Tesseract via Muster Call.',
-        'DD214_Johnson_All.csv intentionally skipped — using PDF sources only per project decision.',
+        'JOHNSON 5706 .pdf (313MB C-file) skipped - requires OCR tooling for full extraction',
+        'DD214_Johnson [1-4].pdf are scanned image-only PDFs - 0 text chars/page. Full OCR requires browser Tesseract via Muster Call.',
+        'DD214_Johnson_All.csv intentionally skipped - using PDF sources only per project decision.',
         'All claim letters processed using pdfjs-dist legacy Node.js build',
         'Structured data extracted using vaDocumentParser.js pattern matching',
         'Claims list seeded from ground truth (2024-05-08 rating letter) + cross-validated against all letters',
@@ -642,7 +694,7 @@ async function main() {
   console.log(`   Awards: ${serviceHistory.awards.length}`);
   console.log(`\nIMPORTED FILES LIST:`);
   for (const f of importedFiles) {
-    const status = f.hasText ? '✅' : f.extractionMethod === 'skipped-too-large' ? '⏭️' : '⚠️';
+    const status = f.hasText ? '✅' : f.extractionMethod === 'scanned-needs-browser-ocr' ? '⏭️' : '⚠️';
     console.log(`  ${status} ${f.filename} (${f.documentType}, ${f.fileSizeMB}MB, ${f.pageCount} pages)`);
   }
 
@@ -674,7 +726,7 @@ async function main() {
 
   // Note: packet includes rawDocumentText which may exceed 5MB app import limit
   if (outputJson.length > 5 * 1024 * 1024) {
-    console.log(`\n⚠️  NOTE: Packet is ${outputSizeMB}MB — exceeds app's 5MB importPacketData limit.`);
+    console.log(`\n⚠️  NOTE: Packet is ${outputSizeMB}MB - exceeds app's 5MB importPacketData limit.`);
     console.log('   This is expected when including raw document text.');
     console.log('   The app import limit needs to be raised, OR raw text should be stored in VKB/IndexedDB separately.');
   }

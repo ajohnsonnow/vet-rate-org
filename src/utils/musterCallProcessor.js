@@ -465,16 +465,28 @@ const processSingleDocument = async (file, onProgress) => {
           `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
         );
         const largeResult = await processLargePDF(file, {
-          headPages: 100,
-          tailPages: 100,
           batchSize: 20,
-          onProgress: (cur, total) => {
+          onProgress: (cur, total, pct) => {
             onProgress?.({
               filename: file.name,
               state: PROCESSING_STATES.EXTRACTING,
-              progress: 25 + (cur / total) * 0.4 * 100, // 25-65%
+              progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
               stage: "platoon_sergeant",
-              message: `Streaming page ${cur}/${total}...`,
+              message: `Streaming page ${cur}/${total} (${pct}%)...`,
+              currentPage: cur,
+              totalPages: total,
+            });
+          },
+          onBatch: (batch) => {
+            // Forward per-batch updates for responsive UI on very large files
+            onProgress?.({
+              filename: file.name,
+              state: PROCESSING_STATES.EXTRACTING,
+              progress: 25 + batch.pct * 0.4,
+              stage: "platoon_sergeant",
+              message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
+              currentPage: batch.processedSoFar,
+              totalPages: batch.totalPages,
             });
           },
         });
@@ -484,6 +496,10 @@ const processSingleDocument = async (file, onProgress) => {
           method: largeResult.method,
           fileType: "PDF",
           ocrUsed: false,
+          hasScannedSections: largeResult.hasScannedSections,
+          scannedPageRanges: largeResult.scannedPageRanges || [],
+          pagesWithText: largeResult.pagesWithText,
+          pagesEmpty: largeResult.pagesEmpty,
         };
       } else {
         extractionResult = await analyzeDocument(file, (state) => {
