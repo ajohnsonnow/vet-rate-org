@@ -32,7 +32,7 @@ ignore:
           downloadPdfBlob() which reconstruct blob URLs exclusively from a validated UUID
           via _reconstructBlobUrl() — only ASCII hex and literal separators reach a.href.
           These functions are defined in src/utils/sanitize.js.
-        expires: 2027-01-01T00:00:00.000Z
+        expires: 2026-07-23T00:00:00.000Z
   javascript/OR:
     - '*':
         reason: >-
@@ -40,19 +40,26 @@ ignore:
           blob URL exclusively from a UUID extracted via _BLOB_UUID_RE regex, then passes
           literal 'blob:' + origin + '/' + uuid to window.open(). location.replace() in
           dbqOfflineStorage.js receives the same UUID-reconstructed URL.
-        expires: 2027-01-01T00:00:00.000Z
+        expires: 2026-07-23T00:00:00.000Z
   javascript/CodeInjection:
     - '*':
         reason: >-
           setInterval() first argument in DD214Analyzer.jsx is always an arrow function
           () => checkStatus() — a function reference, never a string from user or browser
           storage.
-        expires: 2027-01-01T00:00:00.000Z
+        expires: 2026-07-23T00:00:00.000Z
   python/PT:
     - '*':
         reason: >-
           All CLI-sourced paths pass through safe_path() which calls os.path.realpath()
           to eliminate ../ sequences then validates the resolved path starts within an
           allowed directory, raising ValueError on traversal attempts.
-        expires: 2027-01-01T00:00:00.000Z
+        expires: 2026-07-23T00:00:00.000Z
   python/Ssrf:
+    - '*':
+        reason: >-
+          All outbound URLs in Python LLM-training scripts are validated against
+          _ALLOWED_URL_PREFIXES before any HTTP call. The list is a hard-coded
+          allow-list of huggingface.co, raw.githubusercontent.com, and ecfr.gov
+          endpoints — no user-supplied scheme/host can reach urllib.request.
+        expires: 2026-07-23T00:00:00.000Z

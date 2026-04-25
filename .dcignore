@@ -2,9 +2,6 @@
 # Syntax identical to .gitignore
 # Files and directories listed here are excluded from Snyk Code SAST analysis.
 
-# Deprecated components and hooks — not in production bundle, not actively used
-src/_deprecated/
-
 # Archive documents — not source code
 archive/
 
