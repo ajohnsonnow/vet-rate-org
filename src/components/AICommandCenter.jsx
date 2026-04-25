@@ -15,6 +15,7 @@ import {
   unloadLocalAI,
   registerLocalAIEngine,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import {
   useDeviceCapability,
   DEVICE_TIERS,
@@ -136,8 +137,8 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   // Tab state
   const [activeTab, setActiveTab] = useState("setup"); // 'setup' | 'advanced'
 
-  // AI Status
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  // AI Status — event-driven via subscribeAIStatus + window events
+  const aiStatus = useAIStatus();
   const [isUnloading, setIsUnloading] = useState(false);
   const localAIReady = isLocalAIReady();
 
@@ -235,17 +236,14 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
     }
   }, []);
 
-  // Update AI status periodically
+  // Keep `isReady` in sync with the event-driven aiStatus snapshot. When
+  // a registerLocalAIEngine() event fires, aiStatus.effectiveMode flips
+  // to "local"; mark this panel ready accordingly.
   useEffect(() => {
-    const interval = setInterval(() => {
-      const status = getAIStatus();
-      setAIStatus(status);
-      if (status.effectiveMode === "local" && !isReady) {
-        setIsReady(true);
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [isReady]);
+    if (aiStatus.effectiveMode === "local" && !isReady) {
+      setIsReady(true);
+    }
+  }, [aiStatus.effectiveMode, isReady]);
 
   // Save API Key
   const handleSaveApiKey = () => {
@@ -269,7 +267,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
       await unloadLocalAI();
       setIsReady(false);
       setLoadedModelId(null);
-      setAIStatus(getAIStatus());
+      // aiStatus snapshot updates automatically via subscribeAIStatus
     } catch (err) {
       console.error("Failed to unload AI:", err);
     } finally {
@@ -324,7 +322,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
       setIsReady(true);
       setLoadedModelId(selectedModel.id);
       setInstalledModels((prev) => new Set([...prev, selectedModel.id]));
-      setAIStatus(getAIStatus());
+      // aiStatus snapshot updates automatically via subscribeAIStatus
     } catch (err) {
       console.error("Failed to initialize AI:", err);
       setLoadProgress({ progress: 0, text: `Error: ${err.message}` });

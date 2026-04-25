@@ -18,11 +18,8 @@ import {
 } from "../utils/pathfinderEngine";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getMyRatings, hasMyRatings, addRating } from "../utils/veteranProfile";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -422,7 +419,7 @@ export default function Pathfinder({
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
   // File drop modal state
@@ -432,7 +429,7 @@ export default function Pathfinder({
   const [fileProgress, setFileProgress] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Load API key, check consent, and monitor AI status
+  // Load saved API key + consent
   useEffect(() => {
     const storedKey = localStorage.getItem("vetrate_gemini_key");
     if (storedKey) {
@@ -442,13 +439,6 @@ export default function Pathfinder({
     if (consent === "true") {
       setHasConsented(true);
     }
-
-    // Update AI status periodically
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   // Load initial conditions from BlueButtonXRay if provided

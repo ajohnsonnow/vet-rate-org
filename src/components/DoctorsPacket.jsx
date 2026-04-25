@@ -15,11 +15,8 @@ import {
 } from "../utils/nexusLogicGenerator";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import ToolCardButton from "./ToolCardButton";
@@ -209,7 +206,7 @@ export default function DoctorsPacket({
   const [hasConsented, setHasConsented] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
 
   // Lock background scroll when modal is open
   useBodyScrollLock(isOpen);
@@ -229,13 +226,6 @@ export default function DoctorsPacket({
         setStep("input");
       }
     }
-
-    // Update AI status periodically
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, [initialPrimary, initialSecondary]);
 
   // Update conditions when props change

@@ -19,9 +19,9 @@ import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   generateAI,
   isAnyAIAvailable,
-  getAIStatus,
   AI_MODES,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import { getMyRatings } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
@@ -176,7 +176,7 @@ export default function RiskAssessment({
 
   // AI state
   const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
   const [aiAnalysis, setAIAnalysis] = useState(null);
   const [isAnalyzingWithAI, setIsAnalyzingWithAI] = useState(false);
   const [aiError, setAIError] = useState(null);
@@ -196,14 +196,6 @@ export default function RiskAssessment({
         .join(", ");
       setCurrentConditions(conditionsList);
     }
-  }, []);
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   /**

@@ -20,11 +20,8 @@ import {
   enhanceFormStatement,
   getAIDataDisclosure,
 } from "../utils/aiStatementHelper";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import ShareButton, { PIISensitive } from "./ShareButton";
@@ -48,15 +45,8 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
   const { t } = useLanguage();
   useBodyScrollLock(true);
 
-  // AI Status monitoring
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // AI status — event-driven via subscribeAIStatus + window events
+  const aiStatus = useAIStatus();
 
   const [selectedForm, setSelectedForm] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);

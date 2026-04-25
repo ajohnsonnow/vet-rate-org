@@ -33,9 +33,9 @@ import { isAIAvailable } from "../utils/aiStatementHelper";
 import {
   generateAI,
   isAnyAIAvailable,
-  getAIStatus,
   AI_MODES,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -429,15 +429,7 @@ export default function TDIUBuilder({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const aiStatus = useAIStatus();
 
   // Output state
   const [vocationalAnalysis, setVocationalAnalysis] = useState(null);

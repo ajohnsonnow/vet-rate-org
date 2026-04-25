@@ -17,11 +17,11 @@ import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   generateAI,
   generateAIWithImage,
-  getAIStatus,
   isAnyAIAvailable,
   isLocalAIReady,
   isLocalAIVisionModel,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -390,8 +390,8 @@ const DD214Analyzer = ({
   const { t } = useLanguage();
   useBodyScrollLock(true);
 
-  // State
-  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
+  // AI status — event-driven via subscribeAIStatus + window events
+  const aiStatus = useAIStatus();
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' | 'upload' | 'manual'
   const [pastedText, setPastedText] = useState("");
   const [droppedFiles, setDroppedFiles] = useState([]);
@@ -412,15 +412,6 @@ const DD214Analyzer = ({
   const [showFormBuilder, setShowFormBuilder] = useState(false);
 
   const fileInputRef = useRef(null);
-
-  // Check AI status on mount and periodically
-  useEffect(() => {
-    /** @type {() => void} */
-    const checkStatus = () => setAIStatus(getAIStatus());
-    checkStatus();
-    const intervalId = setInterval(() => checkStatus(), 1000);
-    return () => clearInterval(intervalId);
-  }, []);
 
   /**
    * Drag and Drop Handlers
@@ -1553,7 +1544,7 @@ const DD214Analyzer = ({
                     "Smart AI loaded for DD214 Analyzer:",
                     model?.name,
                   );
-                  setAIStatus(getAIStatus());
+                  // aiStatus snapshot updates automatically via subscribeAIStatus
                 }}
               />
             </div>

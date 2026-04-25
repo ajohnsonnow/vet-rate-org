@@ -22,7 +22,8 @@ import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { generateAI } from "../utils/unifiedAIService";
 import { isAIAvailable } from "../utils/aiStatementHelper";
-import { getAIStatus, AI_MODES } from "../utils/unifiedAIService";
+import { AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import {
@@ -69,15 +70,7 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [aiAnalysis, setAIAnalysis] = useState("");
   const [isAIThinking, setIsAIThinking] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const aiStatus = useAIStatus();
 
   // Load saved history
   useEffect(() => {

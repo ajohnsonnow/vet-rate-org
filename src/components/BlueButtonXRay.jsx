@@ -18,9 +18,9 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   generateAI,
   isAnyAIAvailable,
-  getAIStatus,
   AI_MODES,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -214,16 +214,8 @@ export default function BlueButtonXRay({
   // Lock body scroll when modal is open
   useBodyScrollLock(true);
 
-  // AI status state
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // AI status — event-driven via subscribeAIStatus + window events
+  const aiStatus = useAIStatus();
 
   // File state
   const [file, setFile] = useState(null);

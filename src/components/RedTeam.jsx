@@ -4,11 +4,8 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { stressTestStatement, isAIAvailable } from "../utils/aiStatementHelper";
-import {
-  getAIStatus,
-  AI_MODES,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
+import { AI_MODES, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -36,7 +33,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'pdf'
 
   // PDF Drop-In state
@@ -45,14 +42,6 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [pdfIsDragging, setPdfIsDragging] = useState(false);
   const [pdfError, setPdfError] = useState(null);
   const pdfFileInputRef = useRef(null);
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // PDF Drop-In handlers
   const handlePdfDragOver = (e) => {

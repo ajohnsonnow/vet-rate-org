@@ -25,11 +25,8 @@ import {
   estimateChunks,
   getContextWindowInfo,
 } from "../utils/cfileAnalyzer";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -58,8 +55,8 @@ export default function CFileAnalyzer({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  // AI status state (unified AI service handles API keys internally)
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  // AI status — event-driven via subscribeAIStatus + window events
+  const aiStatus = useAIStatus();
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -89,14 +86,6 @@ export default function CFileAnalyzer({
   const [analysisResult, setAnalysisResult] = useState(null);
   const [extractedText, setExtractedText] = useState(null);
   const [activeTab, setActiveTab] = useState("summary");
-
-  // Monitor AI status
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Handle file drop
   const handleDrop = useCallback(

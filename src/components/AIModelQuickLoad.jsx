@@ -9,7 +9,7 @@
  * Usage: <AIModelQuickLoad toolId="nexus-builder" onLoadComplete={() => {...}} />
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getAIStatus,
@@ -21,6 +21,7 @@ import {
   getAgentForTool,
   initializeSwarm,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { SWARM_AGENTS, TOOL_AGENT_MAP } from "../utils/diamondSwarm";
 
 /**
@@ -39,7 +40,7 @@ export default function AIModelQuickLoad({
   showFullDropdown = false,
 }) {
   const { t } = useLanguage();
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState(null);
@@ -47,14 +48,6 @@ export default function AIModelQuickLoad({
   // Get recommended agent for this tool
   const recommendedAgentId = TOOL_AGENT_MAP[toolId] || "auditor";
   const recommendedAgent = SWARM_AGENTS[recommendedAgentId.toUpperCase()];
-
-  // Update AI status periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   /**
    * Quick load recommended AI model
@@ -91,8 +84,7 @@ export default function AIModelQuickLoad({
       if (onLoadComplete) {
         onLoadComplete(recommendedAgent);
       }
-
-      setAIStatus(getAIStatus());
+      // aiStatus snapshot updates automatically via subscribeAIStatus
     } catch (err) {
       console.error("Failed to load AI:", err);
       setError(err.message || "Failed to load AI model");

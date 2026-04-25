@@ -84,6 +84,43 @@ let webGPUCheckPromise = null;
 // Promise-based mutex to prevent concurrent generation requests
 let generationLock = null;
 
+// ───────────────────────────────────────────────────────────────────────────
+// AI status change notifications
+// Replaces the per-component `setInterval(getAIStatus, 1000)` polling that
+// woke the main thread once per second per mounted tool. We now emit an
+// event whenever an AI lifecycle state actually changes, so components
+// re-render only when there's something new to show.
+// ───────────────────────────────────────────────────────────────────────────
+const aiStatusListeners = new Set();
+
+/**
+ * Subscribe to AI status changes. Returns an unsubscribe function so the
+ * caller can clean up in `useEffect`.
+ *
+ * @param {() => void} listener - invoked (no args) whenever status changes
+ * @returns {() => void}        - unsubscribe handle
+ */
+export const subscribeAIStatus = (listener) => {
+  if (typeof listener !== "function") return () => {};
+  aiStatusListeners.add(listener);
+  return () => aiStatusListeners.delete(listener);
+};
+
+/**
+ * Internal: notify every subscriber that AI status may have changed. Errors
+ * in one listener are isolated so a misbehaving component cannot break the
+ * rest of the UI.
+ */
+const notifyAIStatusChange = () => {
+  for (const listener of aiStatusListeners) {
+    try {
+      listener();
+    } catch (err) {
+      console.error("[AIStatus] subscriber threw:", err);
+    }
+  }
+};
+
 /**
  * Acquire generation lock - ensures only one generation at a time
  */
@@ -274,6 +311,7 @@ export const getAIMode = () => {
 export const setAIMode = (mode) => {
   if (Object.values(AI_MODES).includes(mode)) {
     localStorage.setItem(AI_MODE_KEY, mode);
+    notifyAIStatusChange();
     return true;
   }
   return false;
@@ -299,6 +337,7 @@ export const registerSwarmEngine = (
   console.log(
     `🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`,
   );
+  notifyAIStatusChange();
 };
 
 /**
@@ -324,6 +363,7 @@ export const registerLocalAIEngine = (
   console.log(
     `📝 Legacy Local AI registered: modelId=${modelId}, ready=${ready}, isVision=${isVisionModel}`,
   );
+  notifyAIStatusChange();
 
   // Dispatch event for DKB status update when Local AI is ready
   if (ready && modelId) {
@@ -383,6 +423,7 @@ export const unloadLocalAI = async () => {
     localAIIsVisionModel = false;
 
     console.log("✅ Local AI unloaded successfully");
+    notifyAIStatusChange();
     return true;
   } catch (err) {
     console.error("Error unloading local AI:", err);
@@ -393,6 +434,7 @@ export const unloadLocalAI = async () => {
     localAIInitializing = false;
     localAIModelId = null;
     localAIIsVisionModel = false;
+    notifyAIStatusChange();
     return false;
   }
 };
@@ -506,6 +548,7 @@ export const initializeWllama = async (
 
   try {
     wllamaInitializing = true;
+    notifyAIStatusChange();
     console.log(`🌐 Initializing Wllama with ${modelName}...`);
 
     const result = await wllamaService.initializeWllama(modelName, onProgress);
@@ -519,10 +562,12 @@ export const initializeWllama = async (
     }
 
     wllamaInitializing = false;
+    notifyAIStatusChange();
     return result.success;
   } catch (err) {
     console.error("🌐 Wllama init error:", err);
     wllamaInitializing = false;
+    notifyAIStatusChange();
     return false;
   }
 };
@@ -546,6 +591,7 @@ export const checkLocalServer = async (force = false) => {
   try {
     console.log("🖥️ Checking local llama.cpp server...");
     const health = await localServerClient.checkServerHealth();
+    const previousAvailability = localServerAvailable;
     localServerAvailable = health.available;
     localServerChecked = true;
 
@@ -555,11 +601,18 @@ export const checkLocalServer = async (force = false) => {
       console.log("🖥️ Local server not available");
     }
 
+    if (previousAvailability !== localServerAvailable) {
+      notifyAIStatusChange();
+    }
     return localServerAvailable;
   } catch (err) {
     console.log("🖥️ Local server check failed:", err.message);
+    const previousAvailability = localServerAvailable;
     localServerAvailable = false;
     localServerChecked = true;
+    if (previousAvailability !== false) {
+      notifyAIStatusChange();
+    }
     return false;
   }
 };
@@ -1641,12 +1694,26 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
  * @param {boolean} options.skipHallucinationCheck - Skip diagnostic code validation
  * @param {boolean} options.skipFeatureCheck - Skip feature flag check
  * @param {number} options.timeout - Timeout in milliseconds (default: 120000 = 2 minutes)
+ * @param {AbortSignal} options.signal - Caller-supplied abort signal. Aborts both the
+ *   in-flight request (cloud fetch) and rejects the wrapper promise immediately so
+ *   callers (e.g. a tool that closes mid-generation) can stop work without waiting
+ *   the full timeout.
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
 export const generateAI = async (prompt, options = {}) => {
   // Apply timeout wrapper to prevent indefinite hangs
   const TIMEOUT_MS = options.timeout || 120000; // 2 minutes default
   let timeoutId;
+  const userSignal = options.signal;
+
+  // Fast-fail if the caller's signal was already aborted before we did anything.
+  if (userSignal && userSignal.aborted) {
+    const reason =
+      userSignal.reason instanceof Error
+        ? userSignal.reason
+        : new Error("AI request aborted by caller");
+    throw reason;
+  }
 
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -1658,18 +1725,35 @@ export const generateAI = async (prompt, options = {}) => {
     }, TIMEOUT_MS);
   });
 
+  // Bridge the user's AbortSignal to a rejecting promise so Promise.race wakes
+  // up the moment they cancel — callers no longer have to wait for the in-flight
+  // network request to give up on its own.
+  let abortReject;
+  const abortPromise = new Promise((_, reject) => {
+    abortReject = reject;
+  });
+  const onAbort = () => {
+    const reason =
+      userSignal?.reason instanceof Error
+        ? userSignal.reason
+        : new Error("AI request aborted by caller");
+    abortReject(reason);
+  };
+  if (userSignal) {
+    userSignal.addEventListener("abort", onAbort, { once: true });
+  }
+
   try {
-    // Race between actual generation and timeout
+    // Race between actual generation, timeout, and explicit abort.
     const result = await Promise.race([
       generateAIInternal(prompt, options),
       timeoutPromise,
+      abortPromise,
     ]);
 
-    // Clear timeout on success
     clearTimeout(timeoutId);
     return result;
   } catch (err) {
-    // Clear timeout on error
     if (timeoutId) clearTimeout(timeoutId);
 
     // Enhance timeout errors with helpful message
@@ -1682,6 +1766,10 @@ export const generateAI = async (prompt, options = {}) => {
     }
 
     throw err;
+  } finally {
+    if (userSignal) {
+      userSignal.removeEventListener("abort", onAbort);
+    }
   }
 };
 

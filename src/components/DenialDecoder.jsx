@@ -26,9 +26,9 @@ import { createWorker } from "tesseract.js";
 import {
   generateAI,
   isAnyAIAvailable,
-  getAIStatus,
   AI_MODES,
 } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import {
@@ -81,18 +81,10 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showRawText, setShowRawText] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-
-  // Monitor AI status
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Handle file upload or camera capture
   const handleImageSelect = async (file) => {

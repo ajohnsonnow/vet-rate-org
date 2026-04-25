@@ -15,11 +15,8 @@ import {
   getSeverityColor,
   getSharkRadarPrivacyDisclosure,
 } from "../utils/sharkRadar";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, AI_MODES } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 
@@ -205,9 +202,9 @@ export default function SharkRadar() {
   const [showAISettings, setShowAISettings] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
 
-  // Load API key and monitor AI status
+  // Load saved API key + consent
   useEffect(() => {
     const storedKey = localStorage.getItem("vetrate_gemini_key");
     if (storedKey) {
@@ -217,13 +214,6 @@ export default function SharkRadar() {
     if (consent === "true") {
       setHasConsented(true);
     }
-
-    // Update AI status periodically
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleSaveKey = (key) => {
@@ -333,9 +323,7 @@ export default function SharkRadar() {
 
             {showAISettings && (
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <AIModeSelector
-                  onModeChange={() => setAIStatus(getAIStatus())}
-                />
+                <AIModeSelector />
               </div>
             )}
           </div>

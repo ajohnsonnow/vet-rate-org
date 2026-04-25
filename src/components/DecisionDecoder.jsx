@@ -4,11 +4,8 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
-import {
-  getAIStatus,
-  AI_MODES,
-  isAnyAIAvailable,
-} from "../utils/unifiedAIService";
+import { AI_MODES, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -47,7 +44,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
+  const aiStatus = useAIStatus();
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
@@ -62,14 +59,6 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   // Benefits Reference hook for claim phase explanations
   const { getClaimPhaseInfo, getAllClaimPhases } = useVaBenefitsRef();
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // File Drop-In handlers (PDF or Image)
   const handleDragOver = (e) => {

@@ -4,8 +4,8 @@
  * with presets and warnings about capabilities and VRAM requirements
  */
 
-import React, { useState, useEffect } from "react";
-import { getAIStatus } from "../utils/unifiedAIService";
+import React, { useState } from "react";
+import { useAIStatus } from "../hooks/useAIStatus";
 import { useLanguage } from "../contexts/LanguageContext";
 
 // Storage keys
@@ -176,15 +176,7 @@ const TokenLimitConfig = () => {
   const [customValue, setCustomValue] = useState("");
   const [isCustom, setIsCustom] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [aiStatus, setAIStatus] = useState(getAIStatus());
-
-  // Update AI status periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+  const aiStatus = useAIStatus();
 
   // Determine current model
   const getCurrentModel = () => {
