@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { clickableProps } from "../hooks/useClickable";
 import {
   EVIDENCE_REQUIREMENTS,
   getAvailableConditions,
@@ -240,14 +241,18 @@ const EvidenceGapVisualizer = ({
           return (
             <div
               key={item.id}
-              className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer ${
+              {...clickableProps(() => toggleEvidence(item.id), {
+                label: `${isFound ? "Mark as missing" : "Mark as found"}: ${item.label || item.id}`,
+                role: "checkbox",
+              })}
+              aria-checked={isFound}
+              className={`relative p-4 rounded-lg border-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 isFound
                   ? "bg-green-900/30 border-green-500/50 hover:border-green-400"
                   : isCritical
                     ? "bg-red-900/30 border-red-500/50 hover:border-red-400 animate-pulse"
                     : "bg-yellow-900/20 border-yellow-500/30 hover:border-yellow-400"
               }`}
-              onClick={() => toggleEvidence(item.id)}
             >
               <div className="flex items-start gap-4">
                 {/* Checkbox */}

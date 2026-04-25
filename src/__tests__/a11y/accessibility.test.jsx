@@ -1,40 +1,27 @@
 /**
- * Accessibility (a11y) Tests
+ * Accessibility (a11y) Tests — WCAG 2.2 AA
  *
- * Uses axe-core to detect WCAG violations in key UI patterns.
- * These tests enforce the app's WCAG compliance claims from the README.
+ * Uses `vitest-axe` (axe-core + Vitest matcher) to detect WCAG violations
+ * in key UI patterns. These tests enforce the app's WCAG compliance claims
+ * from the README.
  *
- * Note: color-contrast is disabled (no real CSS in jsdom).
- * All other WCAG 2.1 AA rules are active.
+ * Disabled rules (require a real layout / paint engine):
+ *   - color-contrast
+ *   - scrollable-region-focusable
+ *
+ * All other WCAG 2.2 AA rules are active.
  */
 
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import axe from "axe-core";
+import { axe, configureAxe } from "vitest-axe";
 
-/**
- * Run axe against a DOM container and return violations.
- * Excludes rules that require a real layout engine.
- */
-async function checkA11y(container) {
-  const results = await axe.run(container, {
-    rules: {
-      "color-contrast": { enabled: false },
-      "scrollable-region-focusable": { enabled: false },
-    },
-  });
-  return results.violations;
-}
-
-function formatViolations(violations) {
-  return violations
-    .map(
-      (v) =>
-        `[${v.impact}] ${v.id}: ${v.description}\n  ` +
-        v.nodes.map((n) => n.html).join("\n  "),
-    )
-    .join("\n");
-}
+const a11y = configureAxe({
+  rules: {
+    "color-contrast": { enabled: false },
+    "scrollable-region-focusable": { enabled: false },
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Semantic HTML structure tests
@@ -54,8 +41,7 @@ describe("Accessibility: semantic HTML structures", () => {
         <button type="submit">Search</button>
       </form>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("results list has no a11y violations", async () => {
@@ -78,8 +64,7 @@ describe("Accessibility: semantic HTML structures", () => {
         </ul>
       </section>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("modal dialog has no a11y violations", async () => {
@@ -100,8 +85,7 @@ describe("Accessibility: semantic HTML structures", () => {
         </button>
       </div>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("navigation landmarks have no a11y violations", async () => {
@@ -130,8 +114,7 @@ describe("Accessibility: semantic HTML structures", () => {
         </footer>
       </div>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("rating result card has no a11y violations", async () => {
@@ -151,13 +134,12 @@ describe("Accessibility: semantic HTML structures", () => {
         </button>
       </section>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("crisis resources section has no a11y violations", async () => {
     const { container } = render(
-      <aside aria-label="Crisis resources" role="complementary">
+      <aside aria-label="Crisis resources">
         <h2>Need Help Now?</h2>
         <p>If you are in crisis, please reach out immediately.</p>
         <a href="tel:988" aria-label="Call Veterans Crisis Line at 9-8-8">
@@ -165,8 +147,7 @@ describe("Accessibility: semantic HTML structures", () => {
         </a>
       </aside>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("skip-to-content link has no a11y violations", async () => {
@@ -180,8 +161,7 @@ describe("Accessibility: semantic HTML structures", () => {
         </main>
       </div>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 
   it("data table has no a11y violations", async () => {
@@ -206,7 +186,6 @@ describe("Accessibility: semantic HTML structures", () => {
         </tbody>
       </table>,
     );
-    const violations = await checkA11y(container);
-    expect(violations, formatViolations(violations)).toHaveLength(0);
+    expect(await a11y(container)).toHaveNoViolations();
   });
 });

@@ -464,9 +464,11 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
             </div>
 
             <div className="flex items-center gap-2">
-              {/* AI Status Button */}
+              {/* AI Status Button — wrapper stops outer-row click bubbling.
+                  role="presentation" tells AT it's a layout shim, not an
+                  interactive element (the badge inside is the real button). */}
               {onOpenAISettings && (
-                <div onClick={(e) => e.stopPropagation()}>
+                <div role="presentation" onClick={(e) => e.stopPropagation()}>
                   <AIStatusBadge
                     onClick={onOpenAISettings}
                     className="text-sm"

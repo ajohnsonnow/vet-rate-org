@@ -12,11 +12,13 @@ test.describe("Crisis interceptor", () => {
   test("crisis modal appears when distress keywords typed in search", async ({
     page,
   }) => {
+    // The disclaimer was already dismissed in beforeEach. The search input
+    // MUST be present on the homepage — if it isn't, that's a real
+    // regression and the safety net is broken, not a flaky environment.
+    // Conditional `test.skip()` here would silently green-light a
+    // production where the crisis interceptor cannot fire.
     const input = page.locator(searchInput).first();
-    if (!(await input.isVisible({ timeout: 5000 }).catch(() => false))) {
-      test.skip();
-      return;
-    }
+    await expect(input).toBeVisible({ timeout: 10_000 });
 
     await input.fill("want to hurt myself");
 
@@ -35,10 +37,7 @@ test.describe("Crisis interceptor", () => {
     page,
   }) => {
     const input = page.locator(searchInput).first();
-    if (!(await input.isVisible({ timeout: 5000 }).catch(() => false))) {
-      test.skip();
-      return;
-    }
+    await expect(input).toBeVisible({ timeout: 10_000 });
 
     await input.fill("suicidal");
 

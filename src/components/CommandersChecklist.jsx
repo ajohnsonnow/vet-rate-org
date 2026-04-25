@@ -13,6 +13,31 @@ import React, { useState } from "react";
 import useClaimProgress from "../utils/useClaimProgress";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useClickable } from "../hooks/useClickable";
+
+// Renders a single milestone row. Pulled out so we can attach `useClickable`
+// (a hook) at the top level of a component, instead of inside .map().
+function MilestoneRow({ milestone, isCompleted, onMilestoneClick, children }) {
+  const handleActivate = () => {
+    if (!isCompleted && onMilestoneClick) onMilestoneClick(milestone);
+  };
+  const props = useClickable(handleActivate, {
+    label: `${isCompleted ? "Completed" : "Start"}: ${milestone.title}`,
+    disabled: isCompleted,
+  });
+  return (
+    <div
+      {...props}
+      className={`border-2 rounded-lg p-4 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        isCompleted
+          ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-500 hover:shadow-lg cursor-pointer"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
 
 // Tool navigation mapping
 const TOOL_LINKS = {
@@ -93,13 +118,16 @@ export default function CommandersChecklist({
   };
 
   const status = getStatusMessage();
+  const openModalProps = useClickable(() => setShowModal(true), {
+    label: `Open Mission Readiness checklist — ${progress.percentage} percent complete`,
+  });
 
   // Widget view (fixed progress bar)
   if (isWidget) {
     return (
       <div
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-4 border-blue-600 shadow-2xl cursor-pointer hover:shadow-blue-500/50 transition-all z-40"
+        {...openModalProps}
+        className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t-4 border-blue-600 shadow-2xl cursor-pointer hover:shadow-blue-500/50 transition-all z-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-2">
@@ -157,8 +185,8 @@ export default function CommandersChecklist({
     return (
       <>
         <div
-          onClick={() => setShowModal(true)}
-          className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-blue-200 dark:border-blue-700 p-4 cursor-pointer hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 transition-all"
+          {...openModalProps}
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-blue-200 dark:border-blue-700 p-4 cursor-pointer hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -399,18 +427,11 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
               const isCompleted = completedMilestones.includes(milestone.id);
 
               return (
-                <div
+                <MilestoneRow
                   key={milestone.id}
-                  onClick={() =>
-                    !isCompleted &&
-                    onMilestoneClick &&
-                    onMilestoneClick(milestone)
-                  }
-                  className={`border-2 rounded-lg p-4 transition-all ${
-                    isCompleted
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-500 hover:shadow-lg cursor-pointer"
-                  }`}
+                  milestone={milestone}
+                  isCompleted={isCompleted}
+                  onMilestoneClick={onMilestoneClick}
                 >
                   <div className="flex items-start gap-4">
                     {/* Checkbox/Icon */}
@@ -467,7 +488,7 @@ function ChecklistModal({ progress, onClose, onMilestoneClick }) {
                       {milestone.weight}pts
                     </div>
                   </div>
-                </div>
+                </MilestoneRow>
               );
             })}
           </div>

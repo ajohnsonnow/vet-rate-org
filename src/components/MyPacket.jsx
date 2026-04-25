@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
+import { clickableProps } from "../hooks/useClickable";
 import {
   Document,
   Packer,
@@ -2550,11 +2551,17 @@ Return ONLY the JSON object, no explanation.`,
                     <div className="space-y-4">
                       {/* Drag & Drop Zone */}
                       <div
-                        onClick={() => dd214FileInputRef.current?.click()}
+                        {...clickableProps(
+                          () => dd214FileInputRef.current?.click(),
+                          {
+                            label:
+                              "Upload DD-214 — drag a PDF here or press Enter to browse",
+                          },
+                        )}
                         onDragOver={handleDD214DragOver}
                         onDragLeave={handleDD214DragLeave}
                         onDrop={handleDD214Drop}
-                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           isDraggingDD214
                             ? "border-blue-500 bg-blue-100 dark:bg-blue-900/40 scale-[1.02]"
                             : "border-blue-300 dark:border-blue-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30"
@@ -3725,8 +3732,10 @@ Return ONLY the JSON object, no explanation.`,
                       {painMaps.map((map) => (
                         <div
                           key={map.id}
-                          className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group"
-                          onClick={() => setViewingPainMap(map)}
+                          {...clickableProps(() => setViewingPainMap(map), {
+                            label: `View pain map ${map.title || map.id}`,
+                          })}
+                          className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-red-300 dark:hover:border-red-500 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-red-500"
                         >
                           {/* Map Preview */}
                           <div className="aspect-[3/4] bg-gradient-to-b from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 relative flex items-center justify-center">

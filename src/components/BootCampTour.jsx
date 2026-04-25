@@ -260,10 +260,20 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
 
     // Small delay to ensure Navigator is closed before tour starts
     setTimeout(() => {
+      // Respect the OS-level reduced-motion preference (WCAG 2.2 SC 2.3.3).
+      // Veterans with vestibular disorders or screen-reader users on
+      // animation-sensitive setups should not get smooth-scroll + popover
+      // transitions just because the tour wants to look slick.
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
       const driverObj = driver({
         showProgress: true,
-        animate: true,
-        allowClose: true,
+        animate: !prefersReducedMotion,
+        allowClose: true, // Driver.js binds Escape to close automatically.
+        smoothScroll: !prefersReducedMotion,
         overlayClickNext: false,
         stagePadding: 10,
         stageRadius: 8,
@@ -272,7 +282,6 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
         nextBtnText: t("bootCampTour", "nextBtn"),
         prevBtnText: t("bootCampTour", "prevBtn"),
         doneBtnText: t("bootCampTour", "doneBtn"),
-        smoothScroll: true,
         onDestroyStarted: () => {
           // Show footer again when tour ends
           const footer = document.querySelector("footer");

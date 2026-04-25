@@ -10,6 +10,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { clickableProps } from "../hooks/useClickable";
 import {
   readFileAsArrayBuffer,
   formatFileSize,
@@ -367,7 +368,10 @@ export default function CFileAnalyzer({
 
       {/* Drop Zone */}
       <div
-        className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
+        {...clickableProps(() => fileInputRef.current?.click(), {
+          label: "Upload C-File — drag a PDF here or press Enter to browse",
+        })}
+        className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           isDragging
             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
             : file
@@ -377,7 +381,6 @@ export default function CFileAnalyzer({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onClick={() => fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}
@@ -1014,6 +1017,7 @@ export default function CFileAnalyzer({
     <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
+      role="presentation"
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"

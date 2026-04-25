@@ -12,6 +12,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useClickable } from "../hooks/useClickable";
 import BuyMeCoffee from "./BuyMeCoffee";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -1374,6 +1375,7 @@ export default function BlueButtonXRay({
     <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-backdrop overscroll-contain"
       onClick={onClose}
+      role="presentation"
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col modal-content"
@@ -1518,7 +1520,11 @@ export default function BlueButtonXRay({
 
                 {/* Drop Zone */}
                 <div
-                  className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                  {...useClickable(() => fileInputRef.current?.click(), {
+                    label:
+                      "Upload Blue Button report — drag a file here or press Enter to browse",
+                  })}
+                  className={`border-3 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
                     isDragging
                       ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30"
                       : file
@@ -1528,7 +1534,6 @@ export default function BlueButtonXRay({
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
                 >
                   <input
                     ref={fileInputRef}
@@ -1758,16 +1763,27 @@ export default function BlueButtonXRay({
                     </p>
                   </div>
 
-                  <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                  <div
+                    role="listbox"
+                    aria-label="Extracted conditions — toggle selection"
+                    className="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto"
+                  >
                     {extractedConditions.map((condition) => (
                       <div
                         key={condition.id}
-                        className={`p-4 cursor-pointer transition-colors ${
+                        {...useClickable(
+                          () => toggleConditionSelection(condition.id),
+                          {
+                            label: `${condition.selected ? "Deselect" : "Select"} ${condition.name || condition.id}`,
+                            role: "option",
+                          },
+                        )}
+                        aria-selected={!!condition.selected}
+                        className={`p-4 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
                           condition.selected
                             ? "bg-cyan-50 dark:bg-cyan-900/30"
                             : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
                         }`}
-                        onClick={() => toggleConditionSelection(condition.id)}
                       >
                         <div className="flex items-start gap-3">
                           {/* Checkbox */}

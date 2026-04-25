@@ -8,6 +8,44 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useClickable } from "../hooks/useClickable";
+
+const FilterCard = ({
+  active,
+  label,
+  onToggle,
+  children,
+  ringClass,
+  bgClass,
+  borderClass,
+}) => {
+  const props = useClickable(onToggle, {
+    label: active
+      ? `Show all claims (currently filtered to ${label})`
+      : `Filter claims to ${label}`,
+    expanded: active,
+  });
+  return (
+    <div
+      {...props}
+      className={`p-4 rounded-lg border-2 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${active ? ringClass : ""} ${bgClass} ${borderClass}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+const ClaimHeader = ({ isExpanded, onToggle, label, children }) => {
+  const props = useClickable(onToggle, { label, expanded: isExpanded });
+  return (
+    <div
+      {...props}
+      className="p-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      {children}
+    </div>
+  );
+};
 
 // Likelihood styles
 const LIKELIHOOD_STYLES = {
@@ -66,9 +104,13 @@ export default function CFileClaimsCards({ claims = [] }) {
     <div className="p-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "high" ? "ring-2 ring-green-500" : ""} ${LIKELIHOOD_STYLES.high.bg} ${LIKELIHOOD_STYLES.high.border}`}
-          onClick={() => setFilter(filter === "high" ? "all" : "high")}
+        <FilterCard
+          active={filter === "high"}
+          label="high likelihood"
+          onToggle={() => setFilter(filter === "high" ? "all" : "high")}
+          ringClass="ring-2 ring-green-500"
+          bgClass={LIKELIHOOD_STYLES.high.bg}
+          borderClass={LIKELIHOOD_STYLES.high.border}
         >
           <div className="text-3xl font-bold text-green-700 dark:text-green-300">
             {counts.high}
@@ -79,11 +121,15 @@ export default function CFileClaimsCards({ claims = [] }) {
           <div className="text-xs text-green-600/70 dark:text-green-400/70 mt-1">
             Strong evidence found
           </div>
-        </div>
+        </FilterCard>
 
-        <div
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "medium" ? "ring-2 ring-amber-500" : ""} ${LIKELIHOOD_STYLES.medium.bg} ${LIKELIHOOD_STYLES.medium.border}`}
-          onClick={() => setFilter(filter === "medium" ? "all" : "medium")}
+        <FilterCard
+          active={filter === "medium"}
+          label="medium likelihood"
+          onToggle={() => setFilter(filter === "medium" ? "all" : "medium")}
+          ringClass="ring-2 ring-amber-500"
+          bgClass={LIKELIHOOD_STYLES.medium.bg}
+          borderClass={LIKELIHOOD_STYLES.medium.border}
         >
           <div className="text-3xl font-bold text-amber-700 dark:text-amber-300">
             {counts.medium}
@@ -94,11 +140,15 @@ export default function CFileClaimsCards({ claims = [] }) {
           <div className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
             Needs more evidence
           </div>
-        </div>
+        </FilterCard>
 
-        <div
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${filter === "low" ? "ring-2 ring-red-500" : ""} ${LIKELIHOOD_STYLES.low.bg} ${LIKELIHOOD_STYLES.low.border}`}
-          onClick={() => setFilter(filter === "low" ? "all" : "low")}
+        <FilterCard
+          active={filter === "low"}
+          label="low likelihood"
+          onToggle={() => setFilter(filter === "low" ? "all" : "low")}
+          ringClass="ring-2 ring-red-500"
+          bgClass={LIKELIHOOD_STYLES.low.bg}
+          borderClass={LIKELIHOOD_STYLES.low.border}
         >
           <div className="text-3xl font-bold text-red-700 dark:text-red-300">
             {counts.low}
@@ -109,7 +159,7 @@ export default function CFileClaimsCards({ claims = [] }) {
           <div className="text-xs text-red-600/70 dark:text-red-400/70 mt-1">
             Significant gaps
           </div>
-        </div>
+        </FilterCard>
       </div>
 
       {filter !== "all" && (
@@ -137,9 +187,10 @@ export default function CFileClaimsCards({ claims = [] }) {
                 className={`${style.bg} border-2 ${style.border} rounded-xl overflow-hidden transition-all hover:shadow-lg ${isExpanded ? "md:col-span-2" : ""}`}
               >
                 {/* Header */}
-                <div
-                  className="p-4 cursor-pointer"
-                  onClick={() => setExpandedClaim(isExpanded ? null : idx)}
+                <ClaimHeader
+                  isExpanded={isExpanded}
+                  onToggle={() => setExpandedClaim(isExpanded ? null : idx)}
+                  label={`${isExpanded ? "Collapse" : "Expand"} claim ${claim.condition || ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
@@ -193,7 +244,7 @@ export default function CFileClaimsCards({ claims = [] }) {
                       </span>
                     </div>
                   </div>
-                </div>
+                </ClaimHeader>
 
                 {/* Expanded Details */}
                 {isExpanded && (

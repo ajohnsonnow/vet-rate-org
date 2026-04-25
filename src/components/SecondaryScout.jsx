@@ -530,15 +530,44 @@ const SecondaryConditionCard = ({
         isSelected ? "border-blue-500 bg-blue-50/30" : "border-gray-200"
       }`}
     >
-      {/* Card Header */}
-      <div className="p-6 cursor-pointer" onClick={onToggle}>
+      {/* Card Header — full row toggles the expand/collapse view */}
+      <div
+        className="p-6 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-label={`Toggle details for ${suggestion.secondaryCondition}`}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+      >
         <div className="flex items-start justify-between">
-          {/* Selection Checkbox */}
+          {/* Selection Checkbox — semantically a checkbox; stops the
+              outer card-toggle from firing when the user toggles it. */}
           <div
             className="mr-4 flex-shrink-0"
+            role="checkbox"
+            aria-checked={isSelected}
+            aria-label={
+              isSelected
+                ? `Deselect ${suggestion.secondaryCondition}`
+                : `Select ${suggestion.secondaryCondition}`
+            }
+            tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
               onToggleSelect();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleSelect();
+              }
             }}
           >
             <div

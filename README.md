@@ -124,7 +124,7 @@ Vet-Rate.org isn't just a calculator - it's a complete VA claims command center 
 
 ### Accessibility
 
-- **WCAG 2.1 AA Compliant**: Full keyboard navigation and screen reader support
+- **WCAG 2.2 AA Compliant**: Full keyboard navigation and screen reader support
 - **Dark Mode**: Reduce eye strain with dark theme
 - **Font Size Controls**: Adjustable text sizing
 - **Reduce Motion**: Animation controls for vestibular sensitivity
@@ -408,7 +408,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | Shark Radar | 220 hrs | 2,200 | 1 Mid | Predatory service detector |
 | VA Resources Hub | 210 hrs | 2,100 | 1 Junior | Comprehensive VA program directory |
 | VSO Finder | 190 hrs | 1,900 | 1 Mid | Accredited Veterans Service Officer locator |
-| Accessibility Features | 160 hrs | 1,600 | 1 Senior | WCAG 2.1 AA compliance, screen readers |
+| Accessibility Features | 160 hrs | 1,600 | 1 Senior | WCAG 2.2 AA compliance, screen readers |
 | Field Manual | 180 hrs | 1,800 | 1 Mid, 1 Junior | Complete documentation system |
 
 **Notes**:

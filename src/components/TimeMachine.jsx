@@ -14,6 +14,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { clickableProps } from "../hooks/useClickable";
 import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
@@ -141,8 +142,10 @@ export default function TimeMachine({
   if (isWidget && countdown && !isEditing) {
     return (
       <div
-        onClick={() => setIsEditing(true)}
-        className={`cursor-pointer transition-all ${
+        {...clickableProps(() => setIsEditing(true), {
+          label: "Edit Intent to File deadline",
+        })}
+        className={`cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-white ${
           countdown.isExpired
             ? "bg-red-600 text-white"
             : countdown.isCritical
