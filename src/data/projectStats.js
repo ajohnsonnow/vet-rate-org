@@ -65,14 +65,16 @@ export const PROJECT_STATS = {
     3,
 
   // Tool Categories (for dynamic references)
-  // Matches categories in toolkitData.js
+  // Source of truth: toolkitData.js TOOLKIT_CATEGORIES.
+  // If you change tool membership there, update these counts and bump
+  // projectStats.json `live.toolCount` to match the sum (currently 42).
   toolCounts: {
     ratingCalculators: 5, // Calculate Your Rating (Blue)
-    discoveryResearch: 6, // Discover Your Claims (Teal)
+    discoveryResearch: 7, // Discover Your Claims (Teal)
     evidenceBuilding: 10, // Build Your Evidence (Violet)
     qualityControl: 8, // Quality Control (Rose)
     maximizeStrategy: 4, // Maximize Your Rating (Amber)
-    supportResources: 7, // Support & Resources (Sky)
+    supportResources: 8, // Support & Resources (Sky)
   },
 
   // Development Time & Cost (from dynamic JSON)

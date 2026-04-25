@@ -18,16 +18,22 @@ We take security issues seriously. If you discover a vulnerability, please repor
 
 ### How to Report
 
-Please use the secure **Bug Report / Feedback** tool located directly within the Vet-Rate.org application:
+There are two confidential channels. Pick whichever is faster for you.
 
-1. Open the application menu.
+**1. In-app Bug Report / Feedback (preferred for non-technical reporters)**
+
+1. Open the Vet-Rate.org application menu.
 2. Select **"Report a Bug"**.
-3. **CRITICAL**: Start your message with the tag `[SECURITY]`.
+3. **CRITICAL**: Start your message subject with the tag `[SECURITY]`.
 4. Describe the vulnerability and steps to reproduce it.
 
-These reports are routed to a private, high-priority channel for immediate review by the lead developer.
+Reports tagged `[SECURITY]` are routed to a private, high-priority channel for immediate review by the lead developer. The form does not transmit your message anywhere except that private channel.
 
-We aim to acknowledge reports within **48 hours** and will provide a timeline for the fix.
+**2. GitHub private security advisory (preferred for technical reporters with a PoC)**
+
+Open a private advisory at <https://github.com/ajohnsonnow/vet-rate-org/security/advisories/new>. Only project maintainers can see it; nothing is published until we mutually agree on the disclosure timing.
+
+We aim to acknowledge reports within **48 hours** and will provide a fix timeline within 7 days.
 
 ## 🔒 Security Architecture
 
@@ -227,7 +233,7 @@ echo ".env.local" >> .gitignore
 
 **DO NOT** open public GitHub issues for security vulnerabilities.
 
-Instead, email security concerns to: **<security@example.com>**
+Use one of the confidential channels documented in [§ Reporting a Vulnerability](#-reporting-a-vulnerability) above (in-app Bug Report tagged `[SECURITY]`, or a GitHub private security advisory).
 
 Include:
 
@@ -236,7 +242,7 @@ Include:
 * Potential impact
 * Suggested fix (if any)
 
-We will respond within 24-48 hours.
+We will respond within 48 hours.
 
 ## Third-Party Services
 
@@ -261,7 +267,7 @@ This application does NOT use:
 
 ## Legal Compliance
 
-### WCAG 2.1 Accessibility
+### WCAG 2.2 Accessibility
 
 * Level AA compliant
 * Keyboard navigation
@@ -286,5 +292,5 @@ This application does NOT use:
 
 For security questions:
 
-* Email: <security@example.com>
-* GitHub Issues: For non-sensitive questions only
+* Confidential: in-app **Bug Report / Feedback** with the `[SECURITY]` subject prefix, or a [GitHub private security advisory](https://github.com/ajohnsonnow/vet-rate-org/security/advisories/new)
+* Public, non-sensitive: [GitHub Issues](https://github.com/ajohnsonnow/vet-rate-org/issues)

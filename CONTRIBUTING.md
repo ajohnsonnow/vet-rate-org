@@ -6,7 +6,7 @@ Thank you for considering contributing to this project! This guide explains how 
 
 Provide veterans with accurate, accessible information about disability ratings and benefits using official eCFR data from 38 CFR Parts 3 & 4.
 
-## �- Ways to Contribute
+## 🤝 Ways to Contribute
 
 ### 1. Report Bugs
 
@@ -375,7 +375,7 @@ function searchDisabilityData(query, data) {
 
 **Do NOT open public issues for security vulnerabilities.**
 
-Email security concerns to: <security@example.com>
+Use the in-app **Bug Report / Feedback** tool with the `[SECURITY]` prefix in the subject line — see [SECURITY.md](./SECURITY.md) for the full disclosure flow. Reports are routed to a private, high-priority channel for review by the lead developer.
 
 Include:
 
@@ -384,7 +384,7 @@ Include:
 - Potential impact
 - Suggested fix (optional)
 
-Response time: 24-48 hours
+Response time: 48 hours (acknowledgement); 90-day disclosure window per [SECURITY.md](./SECURITY.md).
 
 ## ⭐ Code Review Process
 
@@ -415,8 +415,8 @@ Maintainers will review your PR for:
 
 ## 💬 Questions or Need Help?
 
-- Ask in [GitHub Discussions](https://github.com/yourusername/vet-disability-search/discussions)
-- Email: <support@example.com>
+- Open a [GitHub Issue](https://github.com/ajohnsonnow/vet-rate-org/issues) for bugs and feature requests
+- Use the in-app **Bug Report / Feedback** tool for non-public questions
 - Check existing issues for answers
 
 ## 🎉 Recognition
@@ -449,7 +449,7 @@ This project is dedicated to providing a welcoming and inclusive environment:
 - Welcome diverse perspectives
 - Focus on the code, not the person
 - Provide constructive feedback
-- Report violations to: <conduct@example.com>
+- Report violations through the in-app **Bug Report / Feedback** tool with the `[CONDUCT]` prefix
 
 ## 📋 Contributor Checklist
 

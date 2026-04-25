@@ -130,12 +130,16 @@ localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
 ## Key Files
 
-- `src/utils/vaCalculations.js` - VA math formulas (38 CFR 4.25/4.26)
-- `src/data/diagnosticCodes.json` - Medical condition codes
-- `src/components/Calculator.jsx` - Main calculator
+- `src/utils/vaCalculator.js` - VA math formulas (38 CFR 4.25/4.26); `calculateVARating`, `calculateCompensation`, `VA_PAY_RATES_2026`
+- `src/utils/ratingCalculator.js` - Parallel combined-rating engine (kept in cross-check parity with `vaCalculator.js` via `src/__tests__/utils/ratingCalculator.crosscheck.test.js`)
+- `src/data/disabilityData.json` - 748 VA conditions / diagnostic codes (eCFR-validated; `src/utils/disabilityCount.js` is the read API)
+- `src/data/toolkitData.js` - Canonical tool list (single source of truth for tool count; cross-checked by `src/__tests__/utils/toolCount.crosscheck.test.js`)
+- `src/data/projectStats.json` + `src/data/projectStats.js` - Auto-generated project metrics; do not hand-edit JSON
+- `src/components/TacticalCalculator.jsx` - Main combined-rating UI
 - `src/components/DD214Analyzer.jsx` - Document analyzer
 - `.arc/CONTRACTS.md` - Governance contracts
 - `CLAUDE.md` - Master agentic context
+- `README.md` - User-facing claims; tool count and stats must agree with `toolkitData.js` and `projectStats.json`
 - `.aiignore` - AI context exclusions
 
 ## Don't Do

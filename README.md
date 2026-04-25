@@ -6,13 +6,16 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ## 🔒 Privacy & Security First
 
-**TL;DR: Your data NEVER leaves your device. We can prove it.**
+**TL;DR: By default, your data stays on your device. Any time something would leave your browser, you'll be asked first. We can prove it.**
 
-- **100% Client-Side Processing**: Everything runs in your browser - no backend servers
-- **Zero Data Collection**: No accounts, no tracking, no analytics, no PII storage
-- **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/vet-rate-org) or use DevTools to watch network traffic
+- **Client-Side by Default**: All core processing — search, calculation, document parsing, local-LLM inference — runs in your browser. There is no application backend that stores your data.
+- **Zero Data Collection (no PII)**: We don't run accounts, sell ads, or store personal info. The only network calls on first load are to fetch the app itself (HTML/CSS/JS) and an optional privacy-preserving page-view counter (GoatCounter, no cookies, IP-anonymized — gated by `VITE_ENABLE_ANALYTICS`).
+- **Opt-In Egress, Clearly Labeled**: Three features can send data off-device, and each requires an explicit user action:
+  - **Google Gemini (BYOK)** — only after you paste your own API key in Settings and click "Generate."
+  - **Google Drive Cloud Sync** — only after you click "Connect Drive" in The Bunker; data goes to *your* Drive, not ours.
+  - **Hugging Face model downloads** — first time you enable a Warrant Council local model; the weights are then cached and run 100% offline.
+- **Open Source & Verifiable**: [Audit the code yourself](https://github.com/ajohnsonnow/vet-rate-org) or open DevTools → Network and watch traffic. We also ship an automated [`network-egress.spec.ts`](tests/e2e/network-egress.spec.ts) that fails CI if the app contacts an unexpected host.
 - **No "If It's Free, You're the Product"**: Static hosting costs ~$0/month. Built by a veteran for veterans.
-- **AI Options**: Custom local LLMs (100% private) or optional Google Gemini (BYOK) - your choice
 
 **Don't trust - verify:** See [Security Proof Documentation](./docs/privacy/security-proof.md) for step-by-step verification guide.
 
@@ -20,7 +23,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ## 💎 What Makes Vet-Rate.org Different
 
-While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **41 professional-grade tools completely free**:
+While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **42 professional-grade tools completely free**:
 
 | What Others Charge | Vet-Rate.org |
 |-------------------|--------------|
@@ -37,41 +40,42 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 ## 🎯 Features - Your Complete Claims Arsenal
 
-### �-️ Core Intelligence Tools
+### 🛡️ Core Intelligence Tools
 
 - **Smart Search**: Find disabilities by condition name, diagnostic code, or synonyms across 748 validated conditions
 - **748 VA Disabilities**: Complete coverage of all body systems from 38 CFR Part 4 (eCFR validated Jan 2026)
 - **Rating Criteria**: Detailed percentage breakdowns for every condition (0%-100%)
-- **PACT Act Navigator**: ☢️ Identify toxic exposure presumptive conditions and eligibility
-- **Web of Conditions**: 🕸️ Interactive force-directed graph visualization of connected disabilities
 
 ### 💰 Rating & Benefits Calculators
 
 - **Tactical Calculator**: 🧮 Advanced combined rating calculator with bilateral factors, dependents, and 2026 pay rates
 - **Million Dollar Dashboard**: 💰 Calculate lifetime benefit value ($1-2.5M+) and retirement projections
-- **TDIU Builder**: 💼 Evaluate Total Disability Individual Unemployability eligibility
-- **State Benefit Hunter**: �-�️ Discover state-level veteran benefits by location (all 50 states + DC)
 - **What-If Sandbox**: 🔄 Drag-and-drop rating scenario planner
+- **Retro Pay Hunter**: 💵 🆕 Find missed back pay from rating history errors and CUE claims
+- **Time Machine**: ⏳ 🆕 Intent to File countdown with backpay tracking
 
 ### 🔍 Discovery & Research Tools
 
+- **BDD Builder**: 🎒 🆕 Pre-discharge claims planner for active duty members transitioning out (180-90 day window)
 - **Secondary Scout**: 🔍 Discover 65+ medically-recognized secondary conditions with probability ratings
-- **C&P Exam Simulator**: ✅ Practice with DBQ-aligned questions and get percentage predictions
-- **Exam Prep Room**: 📋 🆕 See the actual DBQ questions BEFORE your C&P exam
-- **MOS Hazard Matcher**: �-️ Link military occupational specialties to exposures and conditions
+- **C&P Exam Simulator**: ✅ Practice DBQ-aligned questions, view actual exam questions, and get percentage predictions
 - **Pathfinder**: 🧭 AI-powered strategic roadmap from initial claim to appeal
-- **Risk Assessment**: ⚠️ "Poke the Bear" calculator - identify potential claim risks before filing
+- **MOS Hazard Matcher**: 🎯 Link military occupational specialties to exposures and conditions
+- **PACT Act Navigator**: ☢️ Identify toxic exposure presumptive conditions and eligibility
+- **Web of Conditions**: 🕸️ Interactive force-directed graph visualization of connected disabilities
 
 ### 📝 Evidence Building Suite
 
-- **C-File AI Analyzer**: 🔬 Upload your Claims File PDF-AI finds evidence in thousands of pages ($500+ value)
+- **C-File AI Analyzer**: 🔬 Upload your Claims File PDF — AI finds evidence in thousands of pages ($500+ value)
 - **Blue Button X-Ray**: 💙 Parse VA health records for claim-relevant diagnoses
 - **PDF Evidence Finder**: 🔍 🆕 Search 2,000+ page STRs for keywords ("The Needle")
 - **Witness Bench**: 👥 AI-assisted buddy statement generator with smart interview questions
-- **Nexus Builder**: �- Generate medical nexus statements with optional AI enhancement
-- **Forms Helper**: ✏️ Guided assistance for 16+ VA forms with Auto-Scribe PDF filling
+- **Nexus Builder**: 📄 Generate medical nexus statements with optional AI enhancement
+- **Forms Helper**: ✏️ Guided assistance for 94 VA forms with Auto-Scribe PDF filling
 - **Symptom Logger**: 📝 Track daily symptoms with body map selector for evidence documentation
+- **Somatic Target**: 🎯 Interactive body map that translates clicks into medical terminology
 - **Evidence Timeline**: 📊 🆕 Visual continuity tracker with automatic gap detection
+- **FOIA Keysmith**: 🔑 Generate FOIA requests for military and VA records
 
 ### 🎯 Quality Control Tools
 
@@ -88,7 +92,7 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 - **TDIU Builder**: 💼 Get 100% pay at lower ratings when unemployable
 - **State Benefit Hunter**: 🗺️ Discover state benefits (all 50 states + DC)
-- **The Tribunal**: �-️ 🆕 Voice-interactive mock BVA hearing simulator
+- **The Tribunal**: 🏛️ 🆕 Voice-interactive mock BVA hearing simulator
 - **Legislative Watchdog**: 📡 Track VA rule changes - never miss new presumptives
 
 ### 🤝 Support & Resources
@@ -96,7 +100,9 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 - **VSO Finder**: 🔍 Locate free, accredited Veterans Service Officers
 - **The Bunker**: 🏰 🆕 Export/import all your data - never lose your work
 - **Cloud Sync**: ☁️ 🆕 Back up to YOUR Google Drive (encrypted)
+- **VA.gov Integration**: 🏛️ 🆕 Connect to VA.gov APIs - view claims, service history, and appeals (Demo Ready)
 - **My Packet**: 📁 Save and manage all your claims evidence in one place
+- **Knowledge Base**: 🧠 🆕 AI-powered knowledge graph built from your documents
 - **VA Resources Hub**: Direct links to official VA programs, crisis support, and benefits
 - **Field Manual**: Comprehensive guide to using every feature
 
@@ -107,24 +113,26 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **42 specialized tools** across 6 categories:
 
 - **📊 Calculate Your Rating** (5 tools): Tactical Calculator, Million Dollar Dashboard, What-If Sandbox, Retro Pay Hunter, Time Machine
-- **🔍 Discover Your Claims** (6 tools): Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
+- **🔍 Discover Your Claims** (7 tools): BDD Builder, Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
 - **📋 Build Your Evidence** (10 tools): C-File Analyzer, Blue Button X-Ray, PDF Evidence Finder, Witness Bench, Nexus Builder, Forms Helper, Symptom Logger, Somatic Target, Evidence Timeline, FOIA Keysmith
 - **✅ Quality Control** (8 tools): Red Team, War Game, Decision Decoder, Denials Decoder, Shark Radar, Consistency Engine, Evidence Gap Finder, Risk Assessment
 - **💰 Maximize Your Rating** (4 tools): TDIU Builder, State Benefit Hunter, The Tribunal, Legislative Watchdog
 - **🤝 Support & Resources** (8 tools): VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, Knowledge Base, VA Resources Hub, Field Manual
 
+> Total: 5 + 7 + 10 + 8 + 4 + 8 = **42 tools** (canonical source: [`src/data/toolkitData.js`](src/data/toolkitData.js)).
+
 **What others charge $10K+ for in services, we provide free forever.**
 
 ### Privacy & Security
 
-- **100% Client-Side**: All core processing happens in your browser
-- **Zero Data Collection**: No accounts, no tracking, no PII storage
-- **No External Transmission**: Your searches never leave your device
-- **AI Options**: Local Warrant Council models (recommended) or optional Gemini cloud with YOUR API key
+- **Client-Side by Default**: All search, calculation, document parsing, and local-LLM inference happens in your browser
+- **Zero Data Collection (no PII)**: No accounts, no third-party tracking, no PII storage; one optional cookieless page-view counter gated by `VITE_ENABLE_ANALYTICS`
+- **No First-Party Egress for User Data**: Your searches and inputs never leave your device unless you explicitly opt in to Gemini (BYOK), Google Drive Cloud Sync, or download a local AI model from Hugging Face
+- **AI Options**: Local Warrant Council models (recommended, fully on-device after first download) or optional Gemini cloud with YOUR API key
 
 ### Accessibility
 
-- **WCAG 2.1 AA Compliant**: Full keyboard navigation and screen reader support
+- **WCAG 2.2 AA Compliant**: Full keyboard navigation and screen reader support
 - **Dark Mode**: Reduce eye strain with dark theme
 - **Font Size Controls**: Adjustable text sizing
 - **Reduce Motion**: Animation controls for vestibular sensitivity
@@ -220,7 +228,7 @@ vet-rate-org/
 │   └── index.css
 ├── public/
 │   ├── images/               # Logo and assets
-│   └── forms/                # VA PDF forms (16 files)
+│   └── forms/                # VA PDF forms (94 files)
 ├── scripts/                  # Development utilities
 ├── index.html
 ├── package.json
@@ -277,11 +285,13 @@ This comprehensive platform represents significant development effort to create 
 
 ### Overall Project
 
+> **Methodology note.** All numbers below come from a single source of truth — [`src/data/projectStats.json`](src/data/projectStats.json) — which is regenerated from the working tree by `scripts/update-stats.js`. "Traditional" cost is *what an industry-standard team or solo dev would have charged*; "AI-assisted" is *the actual hours spent here*, monetized at a senior contractor rate ($420/hr blended). The earlier $7,425 / 55-hour / 4.5-day figures in older revisions are obsolete and have been removed.
+
 - **Professional Team Value**: $2,089,580 (senior-heavy) to $2,592,745 (balanced team)
 - **Traditional Solo Development**: 31,033 hours (14.9 years full-time) @ $135/hr = $4,189,455
-- **Actual AI-Assisted Development**: 150 hours over 31 days = $63,000
-- **Productivity Multiplier**: 207x (AI-assisted development vs. traditional)
-- **Lines of Code**: 254,527 lines (src directory)
+- **Actual AI-Assisted Development**: 150 hours across 65 days @ $420/hr blended = **$63,000**
+- **Productivity Multiplier**: 207× (AI-assisted vs. traditional solo at LOC equivalence)
+- **Lines of Code**: 254,527 lines (`src/`)
 - **Total Files**: 1,808 project files
 - **App Size**: 355.86 MB
 - **Components**: 159 React components (42 major tools + 117 supporting)
@@ -317,9 +327,9 @@ This comprehensive platform represents significant development effort to create 
 
 **Option D: AI-Assisted Development** (Actual) ✅
 
-- 1 Senior Developer + AI Tools: $63,000
-- **Total: $7,425** | Timeline: 4.5 days
-- **Savings: 99.6%** compared to traditional approaches
+- 1 Senior Developer + AI Tools: 150 hours @ $420/hr = **$63,000**
+- **Total: $63,000** | Timeline: 65 days (calendar), ~31 active coding sessions
+- **Savings: 98.5%** compared to the $4.19M traditional-solo benchmark
 
 ### Production Rate Analysis
 
@@ -338,8 +348,6 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 ### Development Breakdown (Traditional Equivalent)
 
-### Development Breakdown (Traditional Equivalent)
-
 - **13,147 hrs** - Coding (128,477 lines @ 9.77 LOC/hr blended team rate)
 - **250 hrs** - Data validation (748 disabilities against 38 CFR)
 - **1,200 hrs** - Testing & QA (15% of dev time)
@@ -351,33 +359,29 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 ### Actual Development Timeline
 
-- **First Commit**: January 15, 2026 at 8:05 PM
-- **Latest Commit**: January 19, 2026 at 11:45 PM
-- **Total Commits**: 55 commits across 18 active coding sessions
-- **Code Changes**: +138,000 lines added, -14,000 lines removed
-- **Daily Breakdown**:
-  - Jan 15: 13 commits (~6-8 hours)
-  - Jan 16: 2 commits (~2-3 hours)
-  - Jan 17: 16 commits (~10-12 hours)
-  - Jan 18: 15 commits (~8-10 hours)
-  - Jan 19: 9 commits (~6-8 hours)
+- **First Commit**: January 15, 2026
+- **Latest Stats Snapshot**: March 21, 2026 (auto-regenerated by `npm run update-stats`)
+- **Total Commits**: 262 commits across 31 active coding sessions
+- **Code Changes**: +254,527 LOC in `src/` (current snapshot)
+
+> Daily commit counts are no longer kept in this file — they go stale immediately. Run `git shortlog -sn --since="65 days ago"` for the current breakdown.
 
 ### The Reality of Modern Development
 
-**Traditional Development Cost**: A professional team would require **$2.09M-$2.59M** and 12-24 months. A solo senior developer would need **15,420 hours** (7.4 years full-time).
+**Traditional Development Cost**: A professional team would require **$2.09M–$2.59M** and 12–24 months. A solo senior developer would need **31,033 hours** (14.9 years full-time) at industry rates.
 
-**AI-Assisted Reality**: **55 hours** using Claude 4.5 Opus/Sonnet/Haiku in VS Code, combined with modern frameworks (React 18, Vite, Tailwind CSS) = **$7,425 total cost**.
+**AI-Assisted Reality**: **150 hours** of focused work across 65 days using Claude 4.5 Opus/Sonnet/Haiku in VS Code, combined with modern frameworks (React 18, Vite, Tailwind CSS) = **$63,000 total cost** at a $420/hr senior contractor rate.
 
-**This 207x productivity multiplier** is why we can offer professional-grade tools worth $2.5M that others charge $500+ per use or 30% of backpay ($15K-50K average) - completely free to veterans forever.
+**This 207× productivity multiplier** is why we can offer professional-grade tools worth $2M+ that others charge $500+ per use or 30% of backpay ($15K-50K average) — completely free to veterans forever.
 
 **Cost Breakdown by Developer Level** (industry standard rates):
 
-- **Balanced Team** (1 Principal, 2 Senior, 3 Mid, 2 Junior): $2,592,745 over 18-24 months
-- **Senior-Heavy Team** (1 Principal, 4 Senior, 1 Mid): $2,089,580 over 12-15 months  
-- **Solo Senior Developer** (traditional): $2,081,700 over 7.4 years
-- **Actual AI-Assisted** (2026): **$63,000 over 31 days** ✅
+- **Balanced Team** (1 Principal, 2 Senior, 3 Mid, 2 Junior): $2,592,745 over 18–24 months
+- **Senior-Heavy Team** (1 Principal, 4 Senior, 1 Mid): $2,089,580 over 12–15 months  
+- **Solo Senior Developer** (traditional): $4,189,455 over 14.9 years
+- **Actual AI-Assisted** (2026): **$63,000 over 65 days** ✅
 
-*See [DEVELOPMENT_ANALYSIS.md](./DEVELOPMENT_ANALYSIS.md) for detailed production rate calculations.*
+*See [AGENTIC_VALUE_PROPOSITION.md](./AGENTIC_VALUE_PROPOSITION.md) for the full production-rate methodology, including how the $420/hr blended rate, 150-hour total, and 207× multiplier are derived.*
 
 ### Major Component Development Hours (Traditional Team Estimates)
 
@@ -386,7 +390,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | C-File AI Analyzer | 920 hrs | 9,200 | 1 Senior, 1 Mid | AI analysis of claims files ($500+ value elsewhere) |
 | C&P Exam Simulator | 780 hrs | 7,800 | 1 Senior, 2 Mid | DBQ-aligned practice questions with AI predictions |
 | Tactical Calculator | 850 hrs | 8,500 | 2 Senior | Combined rating calculator with 2026 pay rates |
-| Forms Helper | 680 hrs | 6,800 | 1 Senior, 1 Mid, 1 Junior | Guided assistance for 16+ VA forms |
+| Forms Helper | 680 hrs | 6,800 | 1 Senior, 1 Mid, 1 Junior | Guided assistance for 94 VA forms |
 | Blue Button X-Ray | 510 hrs | 5,100 | 1 Senior, 1 Mid | Extracts claim evidence from medical records |
 | Secondary Scout | 620 hrs | 6,200 | 1 Senior, 1 Mid | Discovers 65+ secondary conditions |
 | Decision Decoder | 490 hrs | 4,900 | 1 Senior | AI translation of VA decision letters |
@@ -408,7 +412,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 | Shark Radar | 220 hrs | 2,200 | 1 Mid | Predatory service detector |
 | VA Resources Hub | 210 hrs | 2,100 | 1 Junior | Comprehensive VA program directory |
 | VSO Finder | 190 hrs | 1,900 | 1 Mid | Accredited Veterans Service Officer locator |
-| Accessibility Features | 160 hrs | 1,600 | 1 Senior | WCAG 2.1 AA compliance, screen readers |
+| Accessibility Features | 160 hrs | 1,600 | 1 Senior | WCAG 2.2 AA compliance, screen readers |
 | Field Manual | 180 hrs | 1,800 | 1 Mid, 1 Junior | Complete documentation system |
 
 **Notes**:

@@ -42,15 +42,22 @@ export function getFormattedDisabilityCount(includeLabel = false) {
   return includeLabel ? `${count} conditions` : `${count}`;
 }
 
+// Last full eCFR re-validation of all 748 conditions in disabilityData.json
+// against 38 CFR Part 4. POLICY: bump this date only after running the full
+// validation pipeline (scripts/validate-disabilities.js). Quarterly re-runs
+// are tracked in projectStats.json `last_updated`. This timestamp is what is
+// surfaced to users in About / Field Manual; do not bump cosmetically.
+export const DISABILITY_VALIDATION_DATE = "2026-01-15";
+
 /**
  * Get disability count with validation status
- * @returns {Object} { count, validated, validationDate }
+ * @returns {Object} { count, validated, validationDate, source }
  */
 export function getDisabilityCountWithValidation() {
   return {
     count: getDisabilityCount(),
     validated: true,
-    validationDate: "2026-01-15", // eCFR validation date
+    validationDate: DISABILITY_VALIDATION_DATE,
     source: "38 CFR Part 4",
   };
 }
