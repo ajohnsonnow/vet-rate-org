@@ -324,16 +324,17 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
     `🔬 Using ${isDegraded ? "HIGH" : "standard"} resolution scales: [${baseScales.join(", ")}] for strategy: ${strategy}`,
   );
 
-  // Initialize Tesseract worker with optimized settings for v7
+  // Initialize Tesseract worker with optimized settings for v7. Worker is
+  // declared first so the `finally` block can always reach it even if
+  // `setParameters` (or any subsequent call) throws.
   const worker = await Tesseract.createWorker(config.LANGUAGES);
 
-  // Configure Tesseract for maximum accuracy
-  await worker.setParameters({
-    tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-    preserve_interword_spaces: "1",
-  });
-
   try {
+    await worker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      preserve_interword_spaces: "1",
+    });
+
     // Process pages
     for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
       onProgress({
@@ -455,7 +456,11 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
       totalCharsExtracted: totalChars,
     };
   } finally {
-    await worker.terminate();
+    try {
+      await worker.terminate();
+    } catch (terminateErr) {
+      console.warn("Failed to terminate Tesseract worker:", terminateErr);
+    }
   }
 }
 

@@ -102,9 +102,9 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
     setError(null);
     setProgress(0);
 
+    let worker = null;
     try {
-      // Create Tesseract worker for OCR
-      const worker = await createWorker("eng", 1, {
+      worker = await createWorker("eng", 1, {
         logger: (m) => {
           if (m.status === "recognizing text") {
             setProgress(Math.round(m.progress * 100));
@@ -112,11 +112,9 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
         },
       });
 
-      // Perform OCR
       const {
         data: { text },
       } = await worker.recognize(file);
-      await worker.terminate();
 
       if (!text || text.trim().length < 50) {
         throw new Error(
@@ -127,7 +125,6 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
       setExtractedText(text);
       setStep("analyzing");
 
-      // Now analyze with AI
       await analyzeWithAI(text);
     } catch (err) {
       console.error("OCR Error:", err);
@@ -136,6 +133,16 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
           "Failed to process image. Please try again with a clearer photo.",
       );
       setStep("upload");
+    } finally {
+      // Always release the Tesseract worker — leaks survive component
+      // unmounts and consume tens of MB each.
+      if (worker) {
+        try {
+          await worker.terminate();
+        } catch (terminateErr) {
+          console.warn("Failed to terminate Tesseract worker:", terminateErr);
+        }
+      }
     }
   };
 

@@ -174,8 +174,9 @@ async function performOCR(imageBlob, onProgress) {
     };
   }
 
+  let worker = null;
   try {
-    const worker = await tesseract.createWorker("eng", 1, {
+    worker = await tesseract.createWorker("eng", 1, {
       logger: (m) => {
         if (onProgress && m.status === "recognizing text") {
           onProgress(Math.round(m.progress * 100));
@@ -184,7 +185,6 @@ async function performOCR(imageBlob, onProgress) {
     });
 
     const { data } = await worker.recognize(imageBlob);
-    await worker.terminate();
 
     return {
       text: data.text,
@@ -199,6 +199,14 @@ async function performOCR(imageBlob, onProgress) {
       confidence: 0,
       error: err.message,
     };
+  } finally {
+    if (worker) {
+      try {
+        await worker.terminate();
+      } catch (terminateErr) {
+        console.warn("Failed to terminate Tesseract worker:", terminateErr);
+      }
+    }
   }
 }
 

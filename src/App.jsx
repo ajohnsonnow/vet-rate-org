@@ -395,14 +395,14 @@ function App() {
     if (showStateBenefitHunter) return "State Benefits";
     if (showPathfinder) return "Pathfinder";
     if (showClaimNavigator) return "Claim Navigator";
-    if (showRedTeam) return "War Game";
+    if (showRedTeam) return "Red Team";
     if (showMillionDollarDashboard) return "Million Dollar Dashboard";
     if (showRetroPayHunter) return "Retro Pay Hunter";
     if (showWhatIfSandbox) return "What-If Sandbox";
     if (showEvidenceTimeline) return "Evidence Timeline";
     if (showDenialDecoder) return "Denial Decoder";
     if (showBodyMapSelector) return "Body Map";
-    if (showClaimStressTest) return "Claim Stress Test";
+    if (showClaimStressTest) return "War Game";
     if (showPainPainter) return "Pain Painter";
     if (showDD214Analyzer) return "DD214 Analyzer";
     if (showBlueButtonXRay) return "Blue Button X-Ray";
@@ -1143,9 +1143,10 @@ function App() {
       <GlobalCommandSearch
         isOpen={showCommandSearch}
         onClose={() => setShowCommandSearch(false)}
-        onSelectTool={(toolId) => {
+        onToolSelect={(toolId) => {
           setShowCommandSearch(false);
-          // Map tool IDs to their respective state setters
+          // Tool ID -> launcher. Keys MUST match the `id` field in the
+          // TOOLS array inside GlobalCommandSearch.jsx exactly.
           const toolHandlers = {
             "tactical-calculator": () => setShowTacticalCalculator(true),
             "my-packet": () => setShowMyPacket(true),
@@ -1157,6 +1158,7 @@ function App() {
             "cfile-analyzer": () => setShowCFileAnalyzer(true),
             "forms-helper": () => setShowFormsHelper(true),
             "red-team": () => setShowRedTeam(true),
+            "war-game": () => setShowClaimStressTest(true),
             "shark-radar": () => setShowSharkRadar(true),
             "denial-decoder": () => setShowDenialDecoder(true),
             "decision-decoder": () => setShowDecisionDecoder(true),
@@ -1173,9 +1175,11 @@ function App() {
             "million-dollar": () => setShowMillionDollarDashboard(true),
             "what-if-sandbox": () => setShowWhatIfSandbox(true),
             "retro-pay": () => setShowRetroPayHunter(true),
+            "retro-hunter": () => setShowRetroPayHunter(true),
             "time-machine": () => setShowTimeMachine(true),
             "pact-act": () => setShowPACTActNavigator(true),
             "mos-hazard": () => setShowMOSHazardMatcher(true),
+            "web-conditions": () => setShowWebOfConditions(true),
             "web-of-conditions": () => setShowWebOfConditions(true),
             "blue-button": () => setShowBlueButtonXRay(true),
             "witness-bench": () => setShowWitnessBench(true),
@@ -1193,8 +1197,9 @@ function App() {
           };
           const handler = toolHandlers[toolId];
           if (handler) handler();
+          else console.warn(`[CMD+K] No handler for tool id: ${toolId}`);
         }}
-        onSelectDiagnosticCode={(code) => {
+        onConditionSelect={(code) => {
           setShowCommandSearch(false);
           // Search for the diagnostic code
           setSearchTerm(code.code);

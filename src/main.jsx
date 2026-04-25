@@ -16,6 +16,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { VaAuthProvider } from "./contexts/VaAuthContext";
 import VaAuthCallback from "./auth/VaAuthCallback";
@@ -78,9 +79,11 @@ if (!capabilityResults.passed) {
 
   ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
-      <ThemeProvider>
-        <VaAuthProvider>{renderRoute()}</VaAuthProvider>
-      </ThemeProvider>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <VaAuthProvider>{renderRoute()}</VaAuthProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     </React.StrictMode>,
   );
 }

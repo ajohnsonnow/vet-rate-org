@@ -7,7 +7,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
-    "plugin:react/jsx-runtime"
+    "plugin:react/jsx-runtime",
+    "plugin:react-hooks/recommended"
   ],
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -16,7 +17,7 @@
       "jsx": true
     }
   },
-  "plugins": ["react"],
+  "plugins": ["react", "react-hooks"],
   "settings": {
     "react": {
       "version": "detect"
@@ -38,6 +39,8 @@
     "no-constant-condition": "warn",
     "no-empty": "warn",
     "no-misleading-character-class": "warn",
-    "no-control-regex": "warn"
+    "no-control-regex": "warn",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
   }
 }

@@ -33,10 +33,19 @@ const diagnosticCodes = disabilityData.disabilities.map((d) => ({
   searchTerms: d.searchTerms || [],
 }));
 
-// Tool definitions for quick access
+// Search debounce window in milliseconds. Configurable per environment so
+// slower devices can ease keystroke pressure on the indexer.
+const SEARCH_DEBOUNCE_MS = Math.max(
+  0,
+  Number(import.meta.env?.VITE_SEARCH_DEBOUNCE_MS) || 150,
+);
+
+// Tool definitions for quick access. Tool `id`s MUST match the keys in the
+// `toolHandlers` map inside `App.jsx` exactly — otherwise selecting the entry
+// from CMD+K becomes a silent no-op.
 const TOOLS = [
   {
-    id: "tactical-calc",
+    id: "tactical-calculator",
     name: "Tactical Calculator",
     keywords: ["calculate", "rating", "combined", "math"],
     icon: "🧮",
@@ -78,7 +87,7 @@ const TOOLS = [
     category: "Discovery",
   },
   {
-    id: "pact-navigator",
+    id: "pact-act",
     name: "PACT Act Navigator",
     keywords: ["pact", "toxic", "burn pit", "presumptive"],
     icon: "⚠️",
@@ -93,9 +102,16 @@ const TOOLS = [
   },
   {
     id: "red-team",
-    name: "The War Game",
-    keywords: ["red team", "va rater", "challenge", "stress test"],
+    name: "Red Team (Statement Stress Test)",
+    keywords: ["red team", "va rater", "challenge", "statement stress test"],
     icon: "♟️",
+    category: "Verify",
+  },
+  {
+    id: "war-game",
+    name: "The War Game (Claim Stress Test)",
+    keywords: ["war game", "claim stress test", "adversarial", "simulation"],
+    icon: "🎮",
     category: "Verify",
   },
   {
@@ -261,40 +277,50 @@ export default function GlobalCommandSearch({
         tool.category.toLowerCase().includes(q),
     ).slice(0, 5);
 
-    // Search diagnostic codes (if it looks like a code number)
+    // Search diagnostic codes. `diagnosticCodes` is an array of
+    // `{ code, name, aliases, searchTerms }` objects; iterate it directly.
     let matchedConditions = [];
     if (/^\d+/.test(q)) {
-      // Search by diagnostic code
-      matchedConditions = Object.entries(diagnosticCodes)
-        .filter(([code]) => code.startsWith(q))
-        .map(([code, data]) => ({
-          code,
-          name: data.name || data.condition || "Unknown",
-          category: data.category || "General",
-        }))
-        .slice(0, 5);
+      matchedConditions = diagnosticCodes
+        .filter((d) => typeof d.code === "string" && d.code.startsWith(q))
+        .slice(0, 5)
+        .map((d) => ({
+          code: d.code,
+          name: d.name || "Unknown",
+          category: "Diagnostic Code",
+        }));
     } else {
-      // Search by condition name
-      matchedConditions = Object.entries(diagnosticCodes)
-        .filter(([code, data]) => {
-          const name = (data.name || data.condition || "").toLowerCase();
-          return name.includes(q);
+      matchedConditions = diagnosticCodes
+        .filter((d) => {
+          const name = (d.name || "").toLowerCase();
+          if (name.includes(q)) return true;
+          if (
+            (d.aliases || []).some((a) => String(a).toLowerCase().includes(q))
+          )
+            return true;
+          if (
+            (d.searchTerms || []).some((t) =>
+              String(t).toLowerCase().includes(q),
+            )
+          )
+            return true;
+          return false;
         })
-        .map(([code, data]) => ({
-          code,
-          name: data.name || data.condition || "Unknown",
-          category: data.category || "General",
-        }))
-        .slice(0, 5);
+        .slice(0, 5)
+        .map((d) => ({
+          code: d.code,
+          name: d.name || "Unknown",
+          category: "Diagnostic Code",
+        }));
     }
 
     setResults({ tools: matchedTools, conditions: matchedConditions });
     setSelectedIndex(0);
   }, []);
 
-  // Debounced search
+  // Debounced search (window controlled by VITE_SEARCH_DEBOUNCE_MS)
   useEffect(() => {
-    const timer = setTimeout(() => performSearch(query), 150);
+    const timer = setTimeout(() => performSearch(query), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [query, performSearch]);
 
