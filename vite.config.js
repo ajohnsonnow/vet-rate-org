@@ -101,6 +101,15 @@ export default defineConfig({
     minify: 'terser',
     target: 'esnext',  // Required for top-level await in WebGPU models
     chunkSizeWarningLimit: 7000, // Suppress for WebLLM (6MB), main bundle, PDF libs - all optimally chunked
+    // Strip console.log / console.debug calls from production bundles so we
+    // don't leak veteran-entered data into devtools or paste-bin screenshots.
+    // console.warn / console.error stay so genuine failures stay visible.
+    terserOptions: {
+      compress: {
+        drop_console: ['log', 'info', 'debug', 'trace'],
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

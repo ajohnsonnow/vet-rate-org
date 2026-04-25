@@ -378,11 +378,14 @@ async function phaseValidate() {
     SKIP_E2E,
   );
 
-  // 4. Production build
+  // 4. Production build — use the full `npm run build` so the helper
+  // scripts (sync-version, update-stats, update-docs, sync/check legal
+  // pages) are exercised exactly as they will be in CI. Running `vite
+  // build` in isolation hides regressions in those steps.
   await check(
-    "Production build",
+    "Production build (npm run build)",
     () => {
-      run("npx vite build", { stdio: VERBOSE ? "inherit" : "pipe" });
+      run("npm run build", { stdio: VERBOSE ? "inherit" : "pipe" });
       return {};
     },
     SKIP_BUILD,
