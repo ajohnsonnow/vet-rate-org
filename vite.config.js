@@ -22,20 +22,34 @@ const BRAND_CONFIGS = {
   }
 };
 
-// HTML transformation plugin for branding
+// HTML transformation plugin for branding + analytics gating
 function brandingPlugin() {
   const brandMode = process.env.VITE_BRAND_MODE || 'vetrate';
   const brand = BRAND_CONFIGS[brandMode] || BRAND_CONFIGS.vetrate;
-  
+  // Default analytics ON unless explicitly disabled. Operators of forks (or
+  // SupplyLocker brand) can set VITE_ENABLE_ANALYTICS=false to strip the
+  // GoatCounter snippet at build time. Keeps CSP/CORS clean when off.
+  const analyticsEnabled = process.env.VITE_ENABLE_ANALYTICS !== 'false';
+
   return {
     name: 'branding-transform',
     transformIndexHtml(html) {
-      return html
+      let out = html
         .replace(/<title>.*?<\/title>/, `<title>${brand.title}</title>`)
         .replace(/content="Vet-Rate\.org[^"]*"/, `content="${brand.description}"`)
         .replace(/Vet-Rate-org-logo-official\.png/g, brand.logo.replace('/images/', ''))
         .replace(/#003f87/g, brand.themeColor)
         .replace(/vet-rate-org\.goatcounter\.com\/count/g, brand.analytics.replace('https://', ''));
+
+      if (!analyticsEnabled) {
+        // Strip the GoatCounter script tag entirely. Use a non-greedy match
+        // bounded by the data-goatcounter attribute and the closing </script>.
+        out = out.replace(
+          /\s*<script\s+data-goatcounter=[^>]*>\s*<\/script>/g,
+          '\n    <!-- GoatCounter disabled by VITE_ENABLE_ANALYTICS=false -->'
+        );
+      }
+      return out;
     }
   };
 }

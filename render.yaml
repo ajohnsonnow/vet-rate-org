@@ -32,14 +32,22 @@ services:
         name: X-Content-Type-Options
         value: nosniff
       - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
-      - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
       - path: /*
         name: Permissions-Policy
         value: geolocation=(), microphone=(), camera=()
+      # Defense-in-depth: HSTS preload (browsers cache for 2 years; required
+      # for HSTS preload list submission). Render terminates TLS so this is safe.
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=63072000; includeSubDomains; preload
+      # Defense-in-depth CSP header (the meta CSP in index.html still applies
+      # to navigations; this header also covers non-HTML responses).
+      # Mirrors index.html CSP. Update both when changing.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com https://flagcdn.com https://*.flagcdn.com; connect-src 'self' data: https://generativelanguage.googleapis.com https://www.googleapis.com https://vet-rate-org.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co wasm-unsafe-eval; frame-src 'self' https://accounts.google.com https://dos.zone https://cdn.dos.zone https://archive.org; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; worker-src 'self' blob: https://cdn.jsdelivr.net"
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
@@ -50,12 +58,11 @@ services:
         name: Content-Type
         value: text/css; charset=utf-8
     routes:
-      # SPA client-side routing - serve index.html for all non-asset paths
+      # SPA client-side routing: serve index.html for all non-asset paths.
+      # Render's static service serves files when they exist; the catch-all
+      # rewrite covers any client-only path (incl. /callback, /sandbox-test).
       - type: rewrite
-        source: /callback
-        destination: /index.html
-      - type: rewrite
-        source: /sandbox-test
+        source: /*
         destination: /index.html
 
   # Supply Locker - Supporter Version (same codebase, different branding)
@@ -75,14 +82,17 @@ services:
         name: X-Content-Type-Options
         value: nosniff
       - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
-      - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
       - path: /*
         name: Permissions-Policy
         value: geolocation=(), microphone=(), camera=()
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=63072000; includeSubDomains; preload
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://gc.zgo.at https://cdn.jsdelivr.net blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://www.gravatar.com https://flagcdn.com https://*.flagcdn.com; connect-src 'self' data: https://generativelanguage.googleapis.com https://www.googleapis.com https://supply-locker.goatcounter.com https://huggingface.co https://*.huggingface.co https://*.xethub.hf.co https://raw.githubusercontent.com https://www.federalregister.gov https://sandbox-api.va.gov https://api.va.gov https://cdn.jsdelivr.net https://valighthouse.statuspage.io https://formsubmit.co wasm-unsafe-eval; frame-src 'self' https://accounts.google.com https://dos.zone https://cdn.dos.zone https://archive.org; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests; worker-src 'self' blob: https://cdn.jsdelivr.net"
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
@@ -92,3 +102,7 @@ services:
       - path: /*.css
         name: Content-Type
         value: text/css; charset=utf-8
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -752,9 +752,12 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 
   let response;
   try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    response = await fetch(GEMINI_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: fullPrompt }] }],

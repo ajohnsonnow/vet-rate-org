@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Husky pre-push hook
+# Run the unit-test suite before letting changes leave the developer's machine.
+# Falls back to vitest --run with no coverage to keep this fast (~10-30s).
+# Use SKIP_PREPUSH_TESTS=1 git push to bypass in emergencies (CI is the gate).
+
+set -e
+
+if [ "${SKIP_PREPUSH_TESTS}" = "1" ]; then
+  echo "[pre-push] SKIP_PREPUSH_TESTS=1 set - skipping local test gate."
+  exit 0
+fi
+
+echo "[pre-push] Running vitest in run mode..."
+npx vitest run --reporter=default --bail=1

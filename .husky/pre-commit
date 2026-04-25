@@ -1,1 +1,21 @@
+#!/usr/bin/env sh
+# Husky pre-commit hook
+# 1. lint-staged: format + lint changed files
+# 2. gitleaks (if installed): block commits that contain secrets
+#
+# Install gitleaks: https://github.com/gitleaks/gitleaks
+#   macOS:  brew install gitleaks
+#   Win:    scoop install gitleaks  OR  choco install gitleaks
+#   Linux:  see https://github.com/gitleaks/gitleaks/releases
+
+set -e
+
 npx lint-staged
+
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] Running gitleaks on staged changes..."
+  gitleaks protect --staged --redact --no-banner --verbose --exit-code 1
+else
+  echo "[pre-commit] WARNING: gitleaks not installed - skipping secret scan."
+  echo "[pre-commit] Install it (https://github.com/gitleaks/gitleaks) to block secret leaks."
+fi

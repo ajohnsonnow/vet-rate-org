@@ -7,10 +7,10 @@
  */
 
 import React, { useEffect, useState, useRef } from "react";
-import { useVaAuth } from "./useVaAuth";
+import { useVaAuth } from "../hooks/useVaAuth";
 
 const VaAuthCallback = () => {
-  const { exchangeCodeForTokens, error: authError } = useVaAuth();
+  const { handleCallback, error: authError } = useVaAuth();
   const [status, setStatus] = useState("processing");
   const [error, setError] = useState(null);
 
@@ -21,27 +21,24 @@ const VaAuthCallback = () => {
   const isPopup = window.opener && window.opener !== window;
 
   useEffect(() => {
-    // Prevent double execution from StrictMode
     if (hasProcessed.current) {
       console.log("[VA Callback] Already processing, skipping duplicate call");
       return;
     }
     hasProcessed.current = true;
 
-    const handleCallback = async () => {
+    const runCallback = async () => {
       console.log(
         "[VA Callback] Processing OAuth callback...",
         isPopup ? "(popup mode)" : "(redirect mode)",
       );
 
-      // Parse URL parameters
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       const state = params.get("state");
       const errorParam = params.get("error");
       const errorDescription = params.get("error_description");
 
-      // Check for OAuth error
       if (errorParam) {
         console.error(
           "[VA Callback] OAuth error:",
@@ -52,7 +49,6 @@ const VaAuthCallback = () => {
         setError(errMsg);
         setStatus("error");
 
-        // Notify parent window if in popup
         if (isPopup && window.opener) {
           window.opener.postMessage(
             { type: "VA_AUTH_ERROR", error: errMsg },
@@ -62,7 +58,6 @@ const VaAuthCallback = () => {
         return;
       }
 
-      // Validate required parameters
       if (!code) {
         console.error("[VA Callback] Missing authorization code");
         setError("Missing authorization code. Please try again.");
@@ -77,51 +72,57 @@ const VaAuthCallback = () => {
         return;
       }
 
-      try {
-        // Exchange code for tokens
-        const tokenData = await exchangeCodeForTokens(code, state);
-        console.log("[VA Callback] Token exchange successful");
+      const result = await handleCallback(code, state);
 
-        // Set flag so MyPacket knows to auto-import records
-        sessionStorage.setItem("va_auth_just_connected", "true");
-
-        setStatus("success");
-
-        // If in popup, notify parent and close
-        if (isPopup && window.opener) {
-          window.opener.postMessage(
-            {
-              type: "VA_AUTH_SUCCESS",
-              data: { ...tokenData, autoImport: true },
-            },
-            window.location.origin,
-          );
-          setTimeout(() => {
-            window.close();
-          }, 1000);
-        } else {
-          // Traditional redirect flow - go to main app
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 1500);
-        }
-      } catch (err) {
-        console.error("[VA Callback] Token exchange failed:", err);
-        setError(err.message);
+      if (!result.success) {
+        console.error("[VA Callback] Token exchange failed:", result.error);
+        setError(result.error || "Token exchange failed");
         setStatus("error");
 
-        // Notify parent window if in popup
         if (isPopup && window.opener) {
           window.opener.postMessage(
-            { type: "VA_AUTH_ERROR", error: err.message },
+            { type: "VA_AUTH_ERROR", error: result.error },
             window.location.origin,
           );
         }
+        return;
+      }
+
+      console.log("[VA Callback] Token exchange successful");
+
+      // Set flag so MyPacket knows to auto-import records
+      sessionStorage.setItem("va_auth_just_connected", "true");
+
+      setStatus("success");
+
+      // If in popup, notify parent and close.
+      // sessionStorage is window-scoped: the parent cannot read what the
+      // popup wrote, so we hand the tokens + userInfo over via postMessage.
+      if (isPopup && window.opener) {
+        window.opener.postMessage(
+          {
+            type: "VA_AUTH_SUCCESS",
+            data: {
+              ...(result.tokens || {}),
+              userInfo: result.userInfo,
+              autoImport: true,
+            },
+          },
+          window.location.origin,
+        );
+        setTimeout(() => {
+          window.close();
+        }, 1000);
+      } else {
+        // Traditional redirect flow - go to main app
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
       }
     };
 
-    handleCallback();
-  }, [exchangeCodeForTokens, isPopup]);
+    runCallback();
+  }, [handleCallback, isPopup]);
 
   // Processing state
   if (status === "processing") {

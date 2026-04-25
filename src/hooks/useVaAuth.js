@@ -172,7 +172,10 @@ export function useVaAuth() {
         sessionStorage.removeItem(STORAGE_KEYS.CODE_VERIFIER);
         sessionStorage.removeItem(STORAGE_KEYS.STATE);
 
-        return { success: true };
+        // Return tokens + user so popup callbacks can postMessage to opener.
+        // sessionStorage is window-scoped, so the parent window can't read
+        // what the popup wrote; the popup must hand the data over explicitly.
+        return { success: true, tokens, userInfo: user };
       } catch (err) {
         console.error("[VA Auth] Callback error:", err);
         setError(err.message);

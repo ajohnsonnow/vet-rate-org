@@ -18,7 +18,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { useVaAuth } from "../../auth/useVaAuth";
+import { useVaAuth } from "../../hooks/useVaAuth";
 import {
   getServiceHistory,
   getClaims,
