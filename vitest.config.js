@@ -29,7 +29,6 @@ export default defineConfig({
         "src/contexts/**", // React contexts — require component tree
         "src/components/**", // 150+ UI components — E2E tested via Playwright
         "src/**/*.test.{js,jsx}",
-        "src/test/**",
         "src/__tests__/**",
       ],
     },

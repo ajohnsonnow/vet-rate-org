@@ -4,14 +4,14 @@ import {
   SCHEMA_VERSION,
   UPDATE_CHECK_INTERVAL,
   VERSION_STORAGE_KEY,
-} from "../utils/version";
+} from "../../utils/version";
 
 describe("APP_VERSION", () => {
   it("is defined", () => {
     expect(APP_VERSION).toBeDefined();
   });
 
-  it("follows semver format", () => {
+  it("follows semver", () => {
     expect(APP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 
@@ -25,27 +25,24 @@ describe("SCHEMA_VERSION", () => {
     expect(SCHEMA_VERSION).toBeDefined();
   });
 
-  it("follows semver", () => {
+  it("follows semver (strict)", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
 
 describe("UPDATE_CHECK_INTERVAL", () => {
-  it("is 15 minutes in ms", () => {
+  it("equals 15 minutes in ms", () => {
     expect(UPDATE_CHECK_INTERVAL).toBe(15 * 60 * 1000);
   });
 
-  it("is a positive number", () => {
+  it("is positive", () => {
     expect(UPDATE_CHECK_INTERVAL).toBeGreaterThan(0);
   });
 });
 
-describe("Storage Keys", () => {
-  it("VERSION_STORAGE_KEY is defined", () => {
+describe("Storage keys", () => {
+  it("VERSION_STORAGE_KEY is non-empty", () => {
     expect(VERSION_STORAGE_KEY).toBeTruthy();
-  });
-
-  it("storage key is a reasonable string", () => {
     expect(VERSION_STORAGE_KEY.length).toBeGreaterThan(5);
   });
 });

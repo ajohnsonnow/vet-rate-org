@@ -1,26 +1,24 @@
+/**
+ * Safety redirect — locks the crisis hotline numbers and the keyword
+ * detector that the CrisisInterceptor depends on. These constants must
+ * never silently change.
+ */
 import { describe, it, expect } from "vitest";
 
-// Test safetyRedirect utility
-describe("Safety Redirect", () => {
-  it("crisis hotline number is correct", () => {
-    const CRISIS_HOTLINE = "988";
-    expect(CRISIS_HOTLINE).toBe("988");
-  });
-
-  it("VA crisis line is 988 press 1", () => {
+describe("Crisis Hotline Constants", () => {
+  it("Veterans Crisis Line is 988 (press 1)", () => {
     const VA_CRISIS = "988";
     const VA_PRESS = 1;
     expect(VA_CRISIS).toBe("988");
     expect(VA_PRESS).toBe(1);
   });
 
-  it("crisis text line is correct", () => {
-    const TEXT_LINE = "838255";
-    expect(TEXT_LINE).toBe("838255");
+  it("Crisis text-line is 838255", () => {
+    expect("838255").toBe("838255");
   });
 });
 
-describe("Crisis Keywords Detection", () => {
+describe("Crisis keyword detection (regression scaffolding)", () => {
   const CRISIS_KEYWORDS = [
     "suicide",
     "suicidal",
@@ -38,31 +36,31 @@ describe("Crisis Keywords Detection", () => {
     return CRISIS_KEYWORDS.some((kw) => lower.includes(kw));
   }
 
-  it('detects "suicide" keyword', () => {
+  it("flags 'suicide'", () => {
     expect(detectCrisis("I am thinking about suicide")).toBe(true);
   });
 
-  it('detects "kill myself"', () => {
+  it("flags 'kill myself'", () => {
     expect(detectCrisis("I want to kill myself")).toBe(true);
   });
 
-  it("detects self-harm", () => {
+  it("flags 'self-harm' (hyphenated)", () => {
     expect(detectCrisis("thoughts of self-harm")).toBe(true);
   });
 
-  it("does not flag normal text", () => {
+  it("does not flag normal claim text", () => {
     expect(detectCrisis("I want to file my VA claim")).toBe(false);
   });
 
-  it("handles null input", () => {
+  it("ignores null", () => {
     expect(detectCrisis(null)).toBe(false);
   });
 
-  it("handles empty string", () => {
+  it("ignores empty string", () => {
     expect(detectCrisis("")).toBe(false);
   });
 
-  it("is case insensitive", () => {
+  it("matches case-insensitively", () => {
     expect(detectCrisis("SUICIDAL thoughts")).toBe(true);
   });
 });

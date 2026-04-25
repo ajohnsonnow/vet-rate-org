@@ -1,8 +1,14 @@
+/**
+ * Feature-flag pure-logic tests.
+ *
+ * These intentionally inline the cache+resolve helpers (rather than importing)
+ * because the production module depends on `localStorage` and a server fetch
+ * — both of which we already cover at higher levels (vitest-axe smoke +
+ * Playwright). What matters here is the *policy*: fail-open, master-AI gate,
+ * 5-minute cache window. Lock those rules.
+ */
 import { describe, it, expect } from "vitest";
 
-/**
- * Feature flag logic tests (pure logic, no DOM/localStorage)
- */
 const CACHE_DURATION = 5 * 60 * 1000;
 
 function isCacheValid(cached) {
@@ -25,7 +31,7 @@ function resolveFeature(featureName, status) {
   }
 }
 
-describe("featureFlags - cache validity", () => {
+describe("featureFlags — cache validity", () => {
   it("rejects null cache", () => {
     expect(isCacheValid(null)).toBe(false);
   });
@@ -34,24 +40,24 @@ describe("featureFlags - cache validity", () => {
     expect(isCacheValid({ data: {} })).toBe(false);
   });
 
-  it("accepts fresh cache", () => {
+  it("accepts fresh cache (<5min)", () => {
     expect(isCacheValid({ timestamp: Date.now() - 1000 })).toBe(true);
   });
 
-  it("rejects expired cache (>5 min)", () => {
+  it("rejects expired cache (>5min)", () => {
     expect(isCacheValid({ timestamp: Date.now() - 10 * 60 * 1000 })).toBe(
       false,
     );
   });
 });
 
-describe("featureFlags - feature resolution", () => {
+describe("featureFlags — feature resolution", () => {
   it("returns true (fail-open) when no status", () => {
     expect(resolveFeature("ai", null)).toBe(true);
     expect(resolveFeature("local_ai", null)).toBe(true);
   });
 
-  it("respects disabled AI", () => {
+  it("respects disabled master AI", () => {
     const status = {
       aiEnabled: false,
       localAIEnabled: true,
@@ -78,7 +84,7 @@ describe("featureFlags - feature resolution", () => {
     expect(resolveFeature("local_ai", status)).toBe(true);
   });
 
-  it("returns true for unknown features", () => {
+  it("returns true for unknown features (fail-open)", () => {
     expect(resolveFeature("some_random", { aiEnabled: false })).toBe(true);
   });
 });

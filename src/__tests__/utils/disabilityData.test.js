@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-// Test the data structure of disabilityData.json
-import disabilityData from "../data/disabilityData.json";
+import disabilityData from "../../data/disabilityData.json";
 
 describe("disabilityData.json structure", () => {
   it("exists and is loaded", () => {
@@ -61,10 +59,9 @@ describe("disabilityData content quality", () => {
     expect(names.some((n) => n.includes("sleep apnea"))).toBe(true);
   });
 
-  it("no duplicate entries", () => {
+  it("no duplicate entries (≥90% unique IDs)", () => {
     const ids = data.map((d) => d.id || d.code || d.name).filter(Boolean);
     const unique = new Set(ids);
-    // Allow some tolerance for data with different structures
     expect(unique.size).toBeGreaterThan(data.length * 0.9);
   });
 });

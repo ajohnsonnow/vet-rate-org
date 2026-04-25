@@ -1,7 +1,9 @@
+/**
+ * VA form-reference extractor — pure regex tests.
+ * Anchored against the patterns Forms Helper uses to surface "you also need
+ * VA Form X" suggestions in free-text input.
+ */
 import { describe, it, expect } from "vitest";
-
-// Test formValidator - VA form reference detection and validation
-// Dynamic import to handle the JSON dependency
 
 describe("Form Reference Extraction", () => {
   const FORM_PATTERNS = [
@@ -31,36 +33,37 @@ describe("Form Reference Extraction", () => {
   });
 
   it("extracts SF forms", () => {
-    const forms = extractFormReferences("Submit SF-180 to get your records");
-    expect(forms).toContain("SF-180");
+    expect(
+      extractFormReferences("Submit SF-180 to get your records"),
+    ).toContain("SF-180");
   });
 
-  it("extracts multiple forms", () => {
+  it("extracts multiple forms in one pass", () => {
     const forms = extractFormReferences(
       "You need 21-526EZ and 20-0995 and SF-180",
     );
     expect(forms.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("returns empty array for text without forms", () => {
-    const forms = extractFormReferences("PTSD is rated at 70 percent");
-    expect(forms).toEqual([]);
+  it("returns empty for plain text without forms", () => {
+    expect(extractFormReferences("PTSD is rated at 70 percent")).toEqual([]);
   });
 
-  it("returns empty array for null input", () => {
+  it("returns empty for null", () => {
     expect(extractFormReferences(null)).toEqual([]);
   });
 
-  it("returns empty array for empty string", () => {
+  it("returns empty for empty string", () => {
     expect(extractFormReferences("")).toEqual([]);
   });
 
   it("extracts SGLV insurance forms", () => {
-    const forms = extractFormReferences("Complete SGLV-8286 for beneficiary");
-    expect(forms).toContain("SGLV-8286");
+    expect(
+      extractFormReferences("Complete SGLV-8286 for beneficiary"),
+    ).toContain("SGLV-8286");
   });
 
-  it('handles "VA Form" prefix', () => {
+  it("handles 'VA Form' prefix", () => {
     const forms = extractFormReferences(
       "VA Form 21-4138 is the statement form",
     );

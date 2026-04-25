@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { isStaleData, getDataAgeDays } from "../utils/staleDataDetection";
+import { isStaleData, getDataAgeDays } from "../../utils/staleDataDetection";
 
 describe("staleDataDetection", () => {
   describe("isStaleData", () => {
-    it("returns true when no lastVerifiedDate", () => {
+    it("treats data with no lastVerifiedDate as stale", () => {
       expect(isStaleData({})).toBe(true);
       expect(isStaleData({ name: "PTSD" })).toBe(true);
     });
 
-    it("returns true for data older than 365 days", () => {
+    it("treats data older than 365 days as stale", () => {
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 400);
       expect(isStaleData({ lastVerifiedDate: oldDate.toISOString() })).toBe(
@@ -16,7 +16,7 @@ describe("staleDataDetection", () => {
       );
     });
 
-    it("returns false for recently verified data", () => {
+    it("treats recent data as fresh", () => {
       const recent = new Date();
       recent.setDate(recent.getDate() - 30);
       expect(isStaleData({ lastVerifiedDate: recent.toISOString() })).toBe(
@@ -24,19 +24,18 @@ describe("staleDataDetection", () => {
       );
     });
 
-    it("handles invalid date strings gracefully", () => {
-      // 'not-a-date' creates an Invalid Date which produces NaN in calculations
+    it("returns boolean for invalid date strings", () => {
       const result = isStaleData({ lastVerifiedDate: "not-a-date" });
       expect(typeof result).toBe("boolean");
     });
   });
 
   describe("getDataAgeDays", () => {
-    it("returns Infinity when no date", () => {
+    it("returns Infinity when no date present", () => {
       expect(getDataAgeDays({})).toBe(Infinity);
     });
 
-    it("returns correct age in days", () => {
+    it("returns correct age in days (±1 day jitter)", () => {
       const d = new Date();
       d.setDate(d.getDate() - 100);
       const age = getDataAgeDays({ lastVerifiedDate: d.toISOString() });
@@ -44,9 +43,8 @@ describe("staleDataDetection", () => {
       expect(age).toBeLessThanOrEqual(101);
     });
 
-    it("handles invalid dates gracefully", () => {
+    it("returns a number for invalid input (does not throw)", () => {
       const result = getDataAgeDays({ lastVerifiedDate: "garbage" });
-      // NaN or Infinity depending on implementation
       expect(typeof result).toBe("number");
     });
   });

@@ -1,3 +1,8 @@
+/**
+ * searchUtils — normalises veteran-typed search terms to match the
+ * disability index. Punctuation/case mismatches were the #1 cause of
+ * "I can't find my condition" reports before normalisation.
+ */
 import { describe, it, expect } from "vitest";
 import { normalizeSearchTerm } from "../../utils/searchUtils";
 
@@ -7,7 +12,7 @@ describe("normalizeSearchTerm", () => {
   });
 
   it("trims whitespace", () => {
-    expect(normalizeSearchTerm("  ptsd  ")).toBe("ptsd");
+    expect(normalizeSearchTerm("  ankle  ")).toBe("ankle");
   });
 
   it("replaces hyphens with spaces", () => {
@@ -22,17 +27,40 @@ describe("normalizeSearchTerm", () => {
     expect(normalizeSearchTerm("knee/leg")).toBe("knee leg");
   });
 
-  it("normalizes multiple spaces", () => {
-    expect(normalizeSearchTerm("a   b   c")).toBe("a b c");
+  it("replaces parentheses with spaces", () => {
+    expect(normalizeSearchTerm("tinnitus (ringing)")).toBe("tinnitus ringing");
   });
 
-  it("handles parentheses", () => {
-    expect(normalizeSearchTerm("tinnitus (bilateral)")).toBe(
-      "tinnitus bilateral",
-    );
+  it("normalises multiple spaces to a single space", () => {
+    expect(normalizeSearchTerm("sleep   apnea")).toBe("sleep apnea");
   });
 
   it("handles empty string", () => {
     expect(normalizeSearchTerm("")).toBe("");
+  });
+
+  it("handles complex medical terms", () => {
+    expect(
+      normalizeSearchTerm(
+        "Degenerative arthritis (hypertrophic/osteoarthritis)",
+      ),
+    ).toBe("degenerative arthritis hypertrophic osteoarthritis");
+  });
+});
+
+describe("searchDisabilityData — defensive defaults", () => {
+  it("returns empty array for empty query", async () => {
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
+    expect(searchDisabilityData("", { disabilities: [] })).toEqual([]);
+  });
+
+  it("returns empty array for whitespace-only query", async () => {
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
+    expect(searchDisabilityData("   ", { disabilities: [] })).toEqual([]);
+  });
+
+  it("returns empty array for invalid data", async () => {
+    const { searchDisabilityData } = await import("../../utils/searchUtils");
+    expect(searchDisabilityData("ptsd", null)).toEqual([]);
   });
 });
