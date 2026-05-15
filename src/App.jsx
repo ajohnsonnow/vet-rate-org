@@ -38,6 +38,7 @@ import CrisisListener from "./features/crisis/CrisisListener";
 import { useUpdateOrchestrator } from "./features/update/useUpdateOrchestrator";
 import VisionSimulator from "./features/vision/VisionSimulator";
 import MaintenancePage from "./features/maintenance/MaintenancePage";
+import MusterCallFlow from "./features/muster-call/MusterCallFlow";
 import ToastContainer, { useToast } from "./components/Toast";
 import PWAInstallButton from "./components/PWAInstallButton";
 import ZonkButton from "./components/ZonkButton";
@@ -126,10 +127,6 @@ const BodyMapSelector = lazy(() => import("./components/BodyMapSelector"));
 const ClaimStressTest = lazy(() => import("./components/ClaimStressTest"));
 const EvidenceTimeline = lazy(() => import("./components/EvidenceTimeline"));
 const BDDBuilder = lazy(() => import("./components/BDDBuilder"));
-const MusterCall = lazy(() => import("./components/MusterCall"));
-const IntelligenceBriefing = lazy(
-  () => import("./components/IntelligenceBriefing"),
-);
 const VKBViewer = lazy(() => import("./components/VKBViewer"));
 const VKBTimeline = lazy(() => import("./components/VKBTimeline"));
 const RecordSearch = lazy(() => import("./components/RecordSearch"));
@@ -258,12 +255,6 @@ function App() {
     useState(false);
   const [showRetroPayHunter, setShowRetroPayHunter] = useState(false);
   const [showPainPainter, setShowPainPainter] = useState(false);
-
-  // MUSTER CALL: Mass Document Processing
-  const [showMusterCall, setShowMusterCall] = useState(false);
-  const [showIntelligenceBriefing, setShowIntelligenceBriefing] =
-    useState(false);
-  const [briefingData, setBriefingData] = useState(null);
 
   // VKB: Veteran Knowledge Base Viewer
   const [showVKBViewer, setShowVKBViewer] = useState(false);
@@ -1558,7 +1549,9 @@ function App() {
                 </div>
               </div>
               <button
-                onClick={() => setShowMusterCall(true)}
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("openMusterCall"))
+                }
                 className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl whitespace-nowrap transform hover:-translate-y-0.5"
               >
                 🎯 Answer the Call
@@ -2921,53 +2914,15 @@ function App() {
             onOpenAISettings={() => setShowAISettings(true)}
             onOpenMusterCall={() => {
               setShowDD214Analyzer(false);
-              setShowMusterCall(true);
+              window.dispatchEvent(new CustomEvent("openMusterCall"));
             }}
           />
         )}
 
-        {/* Muster Call - Mass Document Processor */}
-        {showMusterCall && (
-          <MusterCall
-            isOpen={showMusterCall}
-            onClose={() => setShowMusterCall(false)}
-            onOpenDD214Analyzer={() => {
-              setShowMusterCall(false);
-              setShowDD214Analyzer(true);
-            }}
-            onProcessComplete={(extractedData) => {
-              setBriefingData(extractedData);
-              setShowIntelligenceBriefing(true);
-              setShowMusterCall(false);
-            }}
-          />
-        )}
-
-        {/* Intelligence Briefing - Post-Muster Call Data Review */}
-        {showIntelligenceBriefing && (
-          <IntelligenceBriefing
-            isOpen={showIntelligenceBriefing}
-            onClose={() => {
-              setShowIntelligenceBriefing(false);
-              setBriefingData(null);
-            }}
-            extractedData={briefingData}
-            onConfirm={(confirmedData) => {
-              // Save to My Packet
-              localStorage.setItem(
-                "vetrate_my_packet_data",
-                JSON.stringify(confirmedData),
-              );
-              setShowIntelligenceBriefing(false);
-              setBriefingData(null);
-              // Show success message
-              console.log("Data committed to My Packet:", confirmedData);
-            }}
-            onEdit={(section, field, value) => {
-              console.log(`User edited ${field} in ${section}:`, value);
-            }}
-          />
-        )}
+        {/* Muster Call → Intelligence Briefing — owned by features/muster-call */}
+        <MusterCallFlow
+          onOpenDD214Analyzer={() => setShowDD214Analyzer(true)}
+        />
 
         {/* VKB Viewer - Veteran Knowledge Base */}
         {showVKBViewer && (
