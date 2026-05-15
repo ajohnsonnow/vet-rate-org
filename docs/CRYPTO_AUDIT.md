@@ -140,7 +140,7 @@ The sniffer `_hasMagic(bytes)` reads the first 4 bytes. If they match `VS2\0`, V
 
 - **Argon2id / scrypt.** Argon2id is the modern recommendation, but the only browser-side path is a WASM bundle (≥250 KB) loaded into a service worker. The cost-benefit didn't justify the bundle hit at our scale; PBKDF2-SHA256 at 600k iterations matches OWASP 2023's accepted alternative for PBKDF2. Revisit if a future ASVS L2 push requires Argon2id.
 - **Key wrapping (RFC 3394, AES-KW).** Our generated-key path uses raw export rather than wrapping. AES-KW would be an additional 32-byte wrap. We chose raw export because the exported key is stored on-device only (`storeLocalKey` in localStorage, never sent to cloud) — there is no transport surface that AES-KW would protect.
-- **Authenticated additional data (AAD) on AES-GCM.** GCM permits AAD that is integrity-protected but not encrypted. We don't currently bind ciphertexts to a filename / user-ID / version with AAD, which means a ciphertext from User A's backup could in principle be pasted into User B's storage and decrypt with B's key (it won't, because the keys differ, but the format doesn't enforce it). Tracked as a future hardening item; low priority because the threat assumes already-compromised cloud accounts on both sides.
+- **Authenticated additional data (AAD) on AES-GCM. (Shipped B24, 2026-05-15.)** New writes bind AAD per-envelope so a ciphertext from one envelope cannot be decrypted as if it came from another, even with the same key. Two new envelope versions: [cloudEncryption.js](../src/utils/cloudEncryption.js) `VR_ENC_V3` — AAD = UTF-8 `"vetrate.cloud-encryption.v3"`; [cloudSync.js](../src/utils/cloudSync.js) `VS3\0` magic — AAD = UTF-8 `"vetrate.cloud-sync.v3"`. Decrypt paths still accept V1 + V2 envelopes without AAD so existing user backups keep working. A V3 ciphertext relabeled as V2 fails the GCM tag check; a tampered ciphertext fails; a cross-context paste (cloud-encryption ciphertext fed to cloud-sync or vice versa) fails. Tests: [cloudEncryptionAAD.test.js](../src/__tests__/utils/cloudEncryptionAAD.test.js) + [cloudSyncAAD.test.js](../src/__tests__/utils/cloudSyncAAD.test.js) (10 cases covering roundtrip, downgrade, tamper, legacy regression).
 - **HKDF.** We derive directly from passphrase via PBKDF2 to a single AES-GCM key. We don't derive sub-keys via HKDF because we only need one symmetric key per ciphertext.
 
 ---
@@ -157,4 +157,4 @@ Re-open this document if any of these happen:
 
 ---
 
-*Owner: Anthony Johnson. Last updated 2026-05-15. Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 13 — promoted from gap to partial; will move to compliant once AAD is bound on AES-GCM (low-priority hardening).*
+*Owner: Anthony Johnson. Last updated 2026-05-15. Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 13 — moved to compliant in B24 after shipping AAD-bound AES-GCM on both cloud-encryption (`VR_ENC_V3`) and cloud-sync (`VS3\0` magic) envelopes.*

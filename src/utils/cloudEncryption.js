@@ -18,15 +18,23 @@
  * PBKDF2_ITERATIONS again, also update CRYPTO_AUDIT.md.
  */
 
-// VR_ENC_V2 = PBKDF2 with 600,000 iterations (OWASP 2023). VR_ENC_V1 = 100,000.
-// Decrypt path selects iteration count based on package.version so older
-// backups still open.
-const ENCRYPTION_VERSION = "VR_ENC_V2";
+// VR_ENC_V3 = V2 + AAD-bound GCM (domain separation). V2 = PBKDF2 600k.
+// V1 = PBKDF2 100k. Decrypt path picks iteration count + AAD presence from
+// the envelope version so older backups still open.
+const ENCRYPTION_VERSION = "VR_ENC_V3";
 const PBKDF2_ITERATIONS = 600_000;
 const PBKDF2_LEGACY_ITERATIONS = 100_000;
 
+// AAD binds ciphertext to its envelope context — a V3 ciphertext cannot be
+// repurposed against a V3-cloud-sync envelope (different AAD) or vice versa.
+const AAD_V3 = new TextEncoder().encode("vetrate.cloud-encryption.v3");
+
 function iterationsForVersion(version) {
   return version === "VR_ENC_V1" ? PBKDF2_LEGACY_ITERATIONS : PBKDF2_ITERATIONS;
+}
+
+function aadForVersion(version) {
+  return version === "VR_ENC_V3" ? AAD_V3 : undefined;
 }
 
 /**
@@ -137,9 +145,9 @@ export const encryptForCloud = async (data, passphrase = null) => {
     keyExport = arrayBufferToBase64(rawKey);
   }
 
-  // Encrypt the data
+  // Encrypt the data (AAD binds ciphertext to V3 cloud-encryption context).
   const encryptedBuffer = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: iv },
+    { name: "AES-GCM", iv: iv, additionalData: AAD_V3 },
     key,
     dataBuffer,
   );
@@ -210,10 +218,14 @@ export const decryptFromCloud = async (
     );
   }
 
-  // Decrypt
+  // Decrypt — V3 envelopes are bound to AAD; V1/V2 envelopes have none.
   try {
+    const aad = aadForVersion(encryptedPackage.version);
+    const params = { name: "AES-GCM", iv: iv };
+    if (aad) params.additionalData = aad;
+
     const decryptedBuffer = await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: iv },
+      params,
       key,
       encryptedData,
     );
@@ -237,11 +249,15 @@ export const generateSecureBackupName = (prefix = "vetrate_backup") => {
   return `${prefix}_${timestamp}_${randomId}.enc.json`;
 };
 
+const RECOGNIZED_VERSIONS = new Set(["VR_ENC_V1", "VR_ENC_V2", "VR_ENC_V3"]);
+
 /**
  * Check if a backup is encrypted
  */
 export const isEncryptedBackup = (data) => {
-  return data && data.version === ENCRYPTION_VERSION && data.encrypted === true;
+  return (
+    data && data.encrypted === true && RECOGNIZED_VERSIONS.has(data.version)
+  );
 };
 
 /**

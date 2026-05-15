@@ -1,0 +1,83 @@
+import { describe, it, expect } from "vitest";
+import { encryptData, decryptData } from "../../utils/cloudSync";
+
+describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
+  it("encrypts to VS3 envelope and roundtrips", async () => {
+    const plaintext = JSON.stringify({ packet: "test", n: 7 });
+    const cipher = await encryptData(plaintext, "passphrase");
+
+    const bytes = Uint8Array.from(atob(cipher), (c) => c.charCodeAt(0));
+    expect(bytes[0]).toBe(0x56); // 'V'
+    expect(bytes[1]).toBe(0x53); // 'S'
+    expect(bytes[2]).toBe(0x33); // '3'
+    expect(bytes[3]).toBe(0x00); // \0
+
+    const out = await decryptData(cipher, "passphrase");
+    expect(out).toBe(plaintext);
+  });
+
+  it("wrong passphrase fails", async () => {
+    const cipher = await encryptData("hello", "right");
+    await expect(decryptData(cipher, "wrong")).rejects.toThrow();
+  });
+
+  it("tampered VS3 ciphertext fails the GCM tag check", async () => {
+    const cipher = await encryptData("payload", "passphrase");
+    const bytes = Uint8Array.from(atob(cipher), (c) => c.charCodeAt(0));
+    bytes[bytes.length - 5] ^= 0x40;
+    const tampered = btoa(String.fromCharCode(...bytes));
+    await expect(decryptData(tampered, "passphrase")).rejects.toThrow();
+  });
+
+  it("downgrade attempt: flipping VS3→VS2 magic on a V3 ciphertext fails", async () => {
+    const cipher = await encryptData("payload", "passphrase");
+    const bytes = Uint8Array.from(atob(cipher), (c) => c.charCodeAt(0));
+    bytes[2] = 0x32; // 'V','S','2','\0' — claim V2 envelope (no AAD)
+    const downgraded = btoa(String.fromCharCode(...bytes));
+    await expect(decryptData(downgraded, "passphrase")).rejects.toThrow();
+  });
+
+  it("legacy VS2 envelope still decrypts (regression safety)", async () => {
+    // Hand-build a VS2 envelope by encrypting without AAD, prefixing VS2 magic.
+    const password = "passphrase";
+    const plaintext = "legacy data";
+    const enc = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const km = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations: 600_000, hash: "SHA-256" },
+      km,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"],
+    );
+    const ct = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      enc.encode(plaintext),
+    );
+    const magicV2 = new Uint8Array([0x56, 0x53, 0x32, 0x00]);
+    const out = new Uint8Array(
+      magicV2.length + salt.length + iv.length + ct.byteLength,
+    );
+    let o = 0;
+    out.set(magicV2, o);
+    o += magicV2.length;
+    out.set(salt, o);
+    o += salt.length;
+    out.set(iv, o);
+    o += iv.length;
+    out.set(new Uint8Array(ct), o);
+    const b64 = btoa(String.fromCharCode(...out));
+
+    const decrypted = await decryptData(b64, password);
+    expect(decrypted).toBe(plaintext);
+  });
+});
