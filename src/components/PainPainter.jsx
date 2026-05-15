@@ -1496,7 +1496,6 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                           }`}
                           aria-pressed={view === key}
                           aria-label={`${viewData.name} - Press ${viewData.shortcut}`}
-                          title={`${viewData.name} (${viewData.shortcut})`}
                         >
                           <span className="text-lg block">{viewData.icon}</span>
                           <span className="text-xs">
@@ -1599,7 +1598,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                   <button
                     onClick={() => setZoom((prev) => Math.max(0.5, prev - 0.1))}
                     className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                    title="Zoom Out"
+                    aria-label="Zoom Out"
                   >
                     <svg
                       className="w-4 h-4"
@@ -1621,7 +1620,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                   <button
                     onClick={() => setZoom((prev) => Math.min(2, prev + 0.1))}
                     className="p-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                    title="Zoom In"
+                    aria-label="Zoom In"
                   >
                     <svg
                       className="w-4 h-4"
@@ -1689,7 +1688,7 @@ const PainPainter = ({ onClose, onExport, onReportBug }) => {
                     <button
                       onClick={() => setPainPoints({})}
                       className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg border border-red-500/40 flex items-center gap-2 transition-colors"
-                      title="Clear all pain points from the map"
+                      aria-label="Clear all pain points from the map"
                     >
                       <svg
                         className="w-4 h-4"

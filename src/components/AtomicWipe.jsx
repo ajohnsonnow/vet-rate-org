@@ -171,7 +171,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
             focus:outline-none focus:ring-2 focus:ring-red-500
             transition-colors
           `}
-          title="Clear all local data"
+          aria-label="Clear all local data"
         >
           🔥 Clear Data
         </button>
@@ -202,7 +202,7 @@ export default function AtomicWipe({ compact = false, onWipeComplete }) {
           focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
           transition-colors
         `}
-        title="Clear all local data"
+        aria-label="Clear all local data"
       >
         <span className="text-xl">🔥</span>
         <div className="text-left">

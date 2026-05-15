@@ -128,7 +128,7 @@ const RedditCopyButton = ({
         style={{
           backgroundColor: isCopied ? undefined : redditOrange,
         }}
-        title={
+        aria-label={
           isCopied
             ? "Copied!"
             : "Copy formatted for Reddit (with linked citations)"

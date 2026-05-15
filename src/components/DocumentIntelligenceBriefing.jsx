@@ -82,7 +82,7 @@ const VerifiableField = ({
           {tooltip && (
             <span
               className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
-              title={tooltip}
+              aria-label={tooltip}
             >
               💡
             </span>
@@ -133,7 +133,7 @@ const VerifiableField = ({
                     ? "text-white bg-red-600 hover:bg-red-700 px-2 py-0.5 rounded"
                     : "text-red-600 hover:text-red-700 dark:text-red-400"
                 }`}
-                title={
+                aria-label={
                   showDeleteConfirm
                     ? "Click again to confirm delete"
                     : "Delete this field (OCR error?)"
@@ -603,7 +603,7 @@ const AddMissingFieldPanel = ({
                       >
                         <label
                           className="w-1/3 text-xs font-medium text-gray-600 dark:text-gray-400 truncate"
-                          title={field.label}
+                          aria-label={field.label}
                         >
                           {field.label}
                         </label>
@@ -623,7 +623,7 @@ const AddMissingFieldPanel = ({
                           onClick={() => handleAddField(field.key)}
                           disabled={!fieldValues[field.key]?.trim()}
                           className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded text-sm"
-                          title="Add this field"
+                          aria-label="Add this field"
                         >
                           ✓
                         </button>
@@ -1034,7 +1034,7 @@ export default function DocumentIntelligenceBriefing({
                   <button
                     onClick={onOpenDD214Analyzer}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
-                    title="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
+                    aria-label="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
                   >
                     🔍 Analyze with AI
                   </button>
@@ -1246,7 +1246,7 @@ export default function DocumentIntelligenceBriefing({
                               {getTooltip(key) && (
                                 <span
                                   className="ml-2 text-xs text-gray-500 dark:text-gray-400 cursor-help"
-                                  title={getTooltip(key)}
+                                  aria-label={getTooltip(key)}
                                 >
                                   💡
                                 </span>
@@ -1304,7 +1304,7 @@ export default function DocumentIntelligenceBriefing({
                                       handleArrayItemDelete(key, idx)
                                     }
                                     className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
-                                    title="Remove this item (OCR error?)"
+                                    aria-label="Remove this item (OCR error?)"
                                   >
                                     🗑️
                                   </button>

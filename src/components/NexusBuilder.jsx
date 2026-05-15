@@ -780,7 +780,7 @@ Sincerely,
                     {isSpeechRecognitionSupported() && (
                       <div
                         className="absolute right-2 top-2"
-                        title="Click to dictate using voice"
+                        aria-label="Click to dictate using voice"
                       >
                         <VoiceInputButton
                           onTranscript={(text) =>
@@ -880,7 +880,7 @@ Sincerely,
                     {isSpeechRecognitionSupported() && (
                       <div
                         className="absolute right-2 top-2"
-                        title="Click to dictate using voice"
+                        aria-label="Click to dictate using voice"
                       >
                         <VoiceInputButton
                           onTranscript={(text) =>
@@ -976,7 +976,7 @@ Sincerely,
                     {isSpeechRecognitionSupported() && (
                       <div
                         className="absolute right-2 top-2"
-                        title="Click to dictate using voice"
+                        aria-label="Click to dictate using voice"
                       >
                         <VoiceInputButton
                           onTranscript={(text) =>
@@ -1063,7 +1063,7 @@ Sincerely,
                     {isSpeechRecognitionSupported() && (
                       <div
                         className="absolute right-2 top-2"
-                        title="Click to dictate using voice"
+                        aria-label="Click to dictate using voice"
                       >
                         <VoiceInputButton
                           onTranscript={(text) =>
@@ -1150,7 +1150,7 @@ Sincerely,
                     {isSpeechRecognitionSupported() && (
                       <div
                         className="absolute right-2 top-2"
-                        title="Click to dictate using voice"
+                        aria-label="Click to dictate using voice"
                       >
                         <VoiceInputButton
                           onTranscript={(text) =>
@@ -1461,7 +1461,7 @@ Sincerely,
                       <button
                         onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                         disabled={!isCertified}
-                        title={
+                        aria-label={
                           !isCertified
                             ? t("nexusBuilder.certifyBeforeDownload")
                             : ""
@@ -1549,7 +1549,7 @@ Sincerely,
                     <button
                       onClick={handleFinish}
                       disabled={!isCertified}
-                      title={
+                      aria-label={
                         !isCertified
                           ? t("nexusBuilder.certifyBeforeDownload")
                           : ""

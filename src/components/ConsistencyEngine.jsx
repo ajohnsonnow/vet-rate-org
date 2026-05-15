@@ -414,7 +414,7 @@ export function ConsistencyBadge({ onClick }) {
       <button
         onClick={onClick}
         className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 transition-colors relative"
-        title="Running consistency check..."
+        aria-label="Running consistency check..."
       >
         <span className="text-lg animate-spin inline-block">⚙️</span>
       </button>
@@ -431,7 +431,7 @@ export function ConsistencyBadge({ onClick }) {
             ? "bg-red-500/20 hover:bg-red-500/40 animate-pulse"
             : "bg-yellow-500/20 hover:bg-yellow-500/40"
       }`}
-      title={healthStatus.message}
+      aria-label={healthStatus.message}
     >
       <span className="text-lg">{healthStatus.icon}</span>
       {totalCount > 0 && (

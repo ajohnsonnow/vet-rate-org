@@ -365,7 +365,7 @@ export default function FeatureLookup({ onClose }) {
             <button
               onClick={handleExport}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Export All Requests"
+              aria-label="Export All Requests"
             >
               <Download className="w-5 h-5" />
             </button>
@@ -373,7 +373,7 @@ export default function FeatureLookup({ onClose }) {
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              title="Close"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>

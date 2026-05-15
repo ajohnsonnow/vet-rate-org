@@ -403,7 +403,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={() => setShowHelp(true)}
             className="p-2 text-slate-400 hover:text-white transition-colors"
-            title="Help"
+            aria-label="Help"
           >
             <HelpCircle className="w-5 h-5" />
           </button>
@@ -411,14 +411,14 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={handleExport}
             className="p-2 text-slate-400 hover:text-white transition-colors"
-            title="Export Claims"
+            aria-label="Export Claims"
           >
             <Download className="w-5 h-5" />
           </button>
 
           <label
             className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            title="Import Claims"
+            aria-label="Import Claims"
           >
             <Upload className="w-5 h-5" />
             <input
@@ -432,7 +432,7 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
           <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-            title="Close"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -912,7 +912,7 @@ const RedditSummaryButton = ({ analysis, claim }) => {
           ? "bg-green-500 text-white"
           : "bg-orange-500 hover:bg-orange-600 text-white"
       }`}
-      title="Copy Reddit-formatted summary"
+      aria-label="Copy Reddit-formatted summary"
     >
       {copied ? (
         <>
@@ -1211,14 +1211,14 @@ const ClaimDetail = ({ claim, onUpdate, onDelete, onBack, onViewEvidence }) => {
             <button
               onClick={() => setShowDateEditor(true)}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Edit Dates"
+              aria-label="Edit Dates"
             >
               <Calendar className="w-5 h-5" />
             </button>
             <button
               onClick={() => onDelete(claim.id)}
               className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-              title="Delete Claim"
+              aria-label="Delete Claim"
             >
               <Trash2 className="w-5 h-5" />
             </button>

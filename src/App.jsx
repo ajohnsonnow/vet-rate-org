@@ -2641,7 +2641,7 @@ function App() {
           id="tour-ai-navigator-btn"
           onClick={() => aiAssistant.open(getCurrentToolName())}
           className="fixed bottom-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-4 shadow-2xl transition-all hover:scale-110 group"
-          title="Open AI Navigator - Your personal claims guide"
+          aria-label="Open AI Navigator - Your personal claims guide"
         >
           <div className="relative">
             <span className="text-2xl">🧭</span>
@@ -2787,7 +2787,7 @@ function App() {
                 🐛 Report Bug
                 <span
                   className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full group-hover:bg-green-500 transition-colors"
-                  title={`${getSquashedBugCount()} bugs squashed!`}
+                  aria-label={`${getSquashedBugCount()} bugs squashed`}
                 >
                   {getSquashedBugCount()}
                   <AnimatedBug size="xs" />✓
@@ -2798,7 +2798,7 @@ function App() {
               <span
                 onClick={debugDumpHandler}
                 className="cursor-default select-none"
-                title="Copyright Notice"
+                aria-label="Copyright Notice"
               >
                 {BRAND.copyright}
               </span>{" "}
@@ -3737,7 +3737,7 @@ function App() {
               <button
                 onClick={() => setShowVisionSimulator(false)}
                 className="absolute -top-2 -right-2 z-10 p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full shadow-lg"
-                title="Close"
+                aria-label="Close"
               >
                 <svg
                   className="w-5 h-5"

@@ -576,7 +576,7 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         <button
           onClick={() => setShowDetails(!showDetails)}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-          title="Diamond Knowledge Base - Click for details"
+          aria-label="Diamond Knowledge Base - Click for details"
         >
           <span className={getStatusColor()}>{getStatusIcon()}</span>
           <span className="font-medium text-gray-700 dark:text-gray-200">
@@ -589,7 +589,7 @@ export default function KnowledgeBaseStatus({ compact = false }) {
                 </span>
                 <span
                   className="text-emerald-500 dark:text-emerald-400 ml-1"
-                  title="Full DKB active with Local AI"
+                  aria-label="Full DKB active with Local AI"
                 >
                   🧠
                 </span>
@@ -603,7 +603,7 @@ export default function KnowledgeBaseStatus({ compact = false }) {
                 {kbStatus.isWebOptimized && !kbStatus.loading && (
                   <span
                     className="text-amber-500 dark:text-amber-400 ml-1"
-                    title={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}
+                    aria-label={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}
                   >
                     *
                   </span>
@@ -614,7 +614,7 @@ export default function KnowledgeBaseStatus({ compact = false }) {
           {kbStatus.ecfrCurrent && (
             <span
               className="text-green-500 dark:text-green-400"
-              title="Diamond Certified - Official VA Sources"
+              aria-label="Diamond Certified - Official VA Sources"
             >
               💎
             </span>

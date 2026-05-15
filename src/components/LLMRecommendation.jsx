@@ -57,7 +57,7 @@ export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
             ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50"
             : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50"
         }`}
-        title="View AI model recommendations for this tool"
+        aria-label="View AI model recommendations for this tool"
       >
         {analysis.isOptimal ? "✓" : "💡"}{" "}
         {recommendation.primary.badge || "AI Ready"}

@@ -325,7 +325,7 @@ export default function PacketPersistence({
           onClick={handleSavePacket}
           disabled={isLoading}
           className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-          title="Save packet to your device"
+          aria-label="Save packet to your device"
         >
           <svg
             className="w-4 h-4"

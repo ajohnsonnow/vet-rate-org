@@ -172,7 +172,7 @@ export default function AdminPanel() {
             <button
               onClick={closeAdminPanel}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Close Panel (Esc)"
+              aria-label="Close Panel (Esc)"
             >
               <X className="w-5 h-5" />
             </button>

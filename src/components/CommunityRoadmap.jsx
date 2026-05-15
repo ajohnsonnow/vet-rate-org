@@ -316,7 +316,9 @@ const RoadmapCard = ({ item, onVote, hasVoted, isSubmitting }) => {
                 : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }
           `}
-            title={hasVoted ? "You voted for this!" : "Vote for this feature"}
+            aria-label={
+              hasVoted ? "You voted for this!" : "Vote for this feature"
+            }
           >
             <svg
               className="w-3.5 h-3.5"

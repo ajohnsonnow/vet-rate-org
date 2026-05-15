@@ -36,7 +36,7 @@ export const PACTActBadge = ({ diagnosticCode, showTooltip = true }) => {
     >
       <span
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-sm cursor-help"
-        title="PACT Act Presumptive Condition"
+        aria-label="PACT Act Presumptive Condition"
       >
         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
           <path

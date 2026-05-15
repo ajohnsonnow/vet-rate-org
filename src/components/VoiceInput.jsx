@@ -243,11 +243,6 @@ const VoiceInputButton = ({
           ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           ${className}
         `}
-        title={
-          isListening
-            ? "Click to stop recording"
-            : "Click to speak instead of typing"
-        }
         aria-label={
           isListening
             ? "Stop voice recording"

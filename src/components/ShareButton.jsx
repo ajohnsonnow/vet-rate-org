@@ -352,7 +352,7 @@ const ShareButton = ({
         <button
           onClick={handlePreview}
           disabled={isCapturing}
-          title="Export for Reddit (PII Protected)"
+          aria-label="Export for Reddit (PII Protected)"
           className={`p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors disabled:opacity-50 ${className}`}
         >
           {isCapturing ? (
@@ -404,7 +404,7 @@ const ShareButton = ({
           onClick={handlePreview}
           disabled={isCapturing}
           className={`fixed bottom-20 right-4 z-40 p-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full shadow-2xl hover:scale-110 transition-transform disabled:opacity-50 ${className}`}
-          title="Export for Reddit (PII Protected)"
+          aria-label="Export for Reddit (PII Protected)"
         >
           {isCapturing ? (
             <svg

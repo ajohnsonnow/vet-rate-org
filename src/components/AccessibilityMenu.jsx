@@ -164,7 +164,6 @@ export default function AccessibilityMenu() {
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label={t("accessibility", "settingsMenuAria")}
-        title={t("accessibility", "settingsTitle")}
       >
         {/* Accessibility Icon */}
         <svg

@@ -69,7 +69,6 @@ function FloatingBugButton({ onClick }) {
         onBlur={() => setIsExpanded(false)}
         className="group bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800"
         aria-label="Report a bug (Ctrl+Shift+B)"
-        title="Report a bug (Ctrl+Shift+B)"
       >
         <svg
           className="w-6 h-6 transform group-hover:rotate-12 transition-transform"

@@ -45,7 +45,6 @@ function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
     <button
       onClick={handleClick}
       className={`${baseStyles} ${variantStyles}`}
-      title="Report a bug in this module"
       aria-label={`Report a bug${moduleName ? ` in ${moduleName}` : ""}`}
     >
       <span>🐛</span>

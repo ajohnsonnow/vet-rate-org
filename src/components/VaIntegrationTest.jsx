@@ -536,7 +536,7 @@ const VaIntegrationTest = ({ onClose }) => {
                       onClick={fetchServiceHistory}
                       disabled={loading.serviceHistory}
                       className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-lg transition-colors disabled:opacity-50"
-                      title="Refresh"
+                      aria-label="Refresh"
                     >
                       <RefreshCw
                         className={`w-5 h-5 ${loading.serviceHistory ? "animate-spin" : ""}`}
@@ -639,7 +639,7 @@ const VaIntegrationTest = ({ onClose }) => {
                       onClick={fetchClaims}
                       disabled={loading.claims}
                       className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-800/50 rounded-lg transition-colors disabled:opacity-50"
-                      title="Refresh"
+                      aria-label="Refresh"
                     >
                       <RefreshCw
                         className={`w-5 h-5 ${loading.claims ? "animate-spin" : ""}`}
@@ -787,7 +787,7 @@ const VaIntegrationTest = ({ onClose }) => {
                       onClick={fetchAppealableIssues}
                       disabled={loading.appealableIssues}
                       className="p-2 text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-800/50 rounded-lg transition-colors disabled:opacity-50"
-                      title="Refresh"
+                      aria-label="Refresh"
                     >
                       <RefreshCw
                         className={`w-5 h-5 ${loading.appealableIssues ? "animate-spin" : ""}`}

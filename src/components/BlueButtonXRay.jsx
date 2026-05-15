@@ -1831,7 +1831,7 @@ export default function BlueButtonXRay({
                                   );
                                 }}
                                 className="px-3 py-1.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/70 transition-colors"
-                                title="Search rating criteria for this condition"
+                                aria-label="Search rating criteria for this condition"
                               >
                                 🔍 Check Criteria
                               </button>

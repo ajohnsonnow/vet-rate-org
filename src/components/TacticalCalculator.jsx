@@ -598,7 +598,7 @@ const TacticalCalculator = ({
                                 handleRemoveFromMyRatings(rating.id)
                               }
                               className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                              title="Remove"
+                              aria-label="Remove"
                             >
                               <svg
                                 className="w-5 h-5"
@@ -1217,7 +1217,6 @@ const TacticalCalculator = ({
                                 onClick={() => handleEditCondition(condition)}
                                 className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
                                 aria-label="Edit"
-                                title="Edit condition"
                               >
                                 <svg
                                   className="w-5 h-5"
@@ -1239,7 +1238,6 @@ const TacticalCalculator = ({
                                 }
                                 className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                                 aria-label="Remove"
-                                title="Remove condition"
                               >
                                 <svg
                                   className="w-5 h-5"

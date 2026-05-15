@@ -1577,7 +1577,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Copy text from a digital DD214 and paste it here"
+                aria-label="Copy text from a digital DD214 and paste it here"
               >
                 📋 {t("dd214Analyzer", "pasteText")}
               </button>
@@ -1588,7 +1588,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Upload PDF or image files - we'll extract the text for you"
+                aria-label="Upload PDF or image files - we'll extract the text for you"
               >
                 📄 {t("dd214Analyzer", "dropInPdf")}{" "}
                 {extractedTexts.length > 0 && `(${extractedTexts.length})`}
@@ -1600,7 +1600,7 @@ const DD214Analyzer = ({
                     ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 }`}
-                title="Fill out a guided form if you don't have a digital copy"
+                aria-label="Fill out a guided form if you don't have a digital copy"
               >
                 ✏️ {t("dd214Analyzer", "manualEntry")}
               </button>

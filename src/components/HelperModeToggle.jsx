@@ -62,7 +62,7 @@ const HelperModeToggle = ({ compact = false }) => {
               ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-pink-300"
               : "bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 text-pink-700 dark:text-pink-300 border border-pink-300/50 dark:border-pink-600/50 hover:from-pink-200 hover:to-rose-200 dark:hover:from-pink-800/60 dark:hover:to-rose-800/60"
           }`}
-          title={
+          aria-label={
             isHelperMode
               ? "Helper Mode Active - Jargon translated to plain English"
               : "I'm helping a veteran - Click for simplified language"

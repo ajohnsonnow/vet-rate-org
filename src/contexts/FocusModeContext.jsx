@@ -142,11 +142,6 @@ export function FocusToggle({ variant = "dark", className = "" }) {
       className={`focus-exempt p-2 rounded-lg transition-all duration-200 ${styles} ${className} ${
         focusMode ? "ring-2 ring-blue-400 bg-blue-600/20" : ""
       }`}
-      title={
-        focusMode
-          ? "Exit Focus Mode (ESC)"
-          : "Enable Focus Mode (TBI/ADHD Friendly)"
-      }
       aria-label={focusMode ? "Disable Focus Mode" : "Enable Focus Mode"}
       style={{ zIndex: 9999, position: "relative" }}
     >
@@ -189,11 +184,6 @@ export function FocusModeToggle() {
         opacity: 1,
         position: "fixed",
       }}
-      title={
-        focusMode
-          ? "Click to EXIT Focus Mode (or press ESC)"
-          : "Enable Focus Mode (TBI/ADHD Friendly)"
-      }
       aria-label={focusMode ? "Disable Focus Mode" : "Enable Focus Mode"}
     >
       <div className="flex items-center gap-2 pointer-events-none">

@@ -940,7 +940,7 @@ IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Ke
                     ? "bg-white/30 text-white"
                     : "hover:bg-white/20 text-white/80"
                 }`}
-                title="AI Settings"
+                aria-label="AI Settings"
               >
                 <span className="text-xl">🤖</span>
               </button>

@@ -27,7 +27,7 @@ const DoomFrame = lazy(() =>
     default: ({ onClose }) => (
       <iframe
         src="https://archive.org/embed/msdos_DOOM_1993"
-        title="DOOM - Stress Relief Division"
+        aria-label="DOOM - Stress Relief Division"
         className="w-full h-full border-0"
         allow="autoplay; fullscreen; gamepad"
         allowFullScreen
@@ -245,7 +245,7 @@ const StressReliefDivision = () => {
           <button
             onClick={handleClose}
             className="text-red-500 hover:text-red-300 font-mono text-2xl transition-colors"
-            title="Exit Stress Relief (ESC)"
+            aria-label="Exit Stress Relief (ESC)"
           >
             [X] EXIT
           </button>

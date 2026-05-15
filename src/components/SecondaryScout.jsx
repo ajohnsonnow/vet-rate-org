@@ -432,7 +432,7 @@ const SecondaryScout = ({
               <button
                 onClick={clearSelection}
                 className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
-                title={t("secondaryScoutSection.clearSelection")}
+                aria-label={t("secondaryScoutSection.clearSelection")}
               >
                 <svg
                   className="w-5 h-5"

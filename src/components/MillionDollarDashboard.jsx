@@ -530,7 +530,7 @@ export default function MillionDollarDashboard({ onClose, onReportBug }) {
                       <button
                         onClick={handleLoadMyRatings}
                         className="text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-                        title="Calculate from your saved ratings"
+                        aria-label="Calculate from your saved ratings"
                       >
                         📊 Load
                       </button>
