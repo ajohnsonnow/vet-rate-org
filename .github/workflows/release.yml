@@ -1,0 +1,69 @@
+name: release
+
+# Triggered when a semver tag (vX.Y.Z) is pushed. Builds the production
+# artifacts, generates a CycloneDX SBOM, and publishes both as the GitHub
+# Release. SBOM provenance lets downstream consumers (auditors, security
+# scanners) verify exactly which versions of which packages shipped.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref (tag or commit) to release'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build + SBOM + Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Generate CycloneDX SBOM (production deps)
+        run: |
+          mkdir -p sbom
+          npm sbom --sbom-format=cyclonedx --omit=dev > sbom/sbom.cdx.json
+          # Also produce the SPDX form for tools that prefer it.
+          npm sbom --sbom-format=spdx     --omit=dev > sbom/sbom.spdx.json
+          echo "=== SBOM components: ==="
+          node -e "const s=JSON.parse(require('fs').readFileSync('sbom/sbom.cdx.json','utf8')); console.log('CycloneDX components:', (s.components||[]).length);"
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.ref_name }}
+          path: sbom/
+          retention-days: 90
+
+      - name: Create GitHub Release with SBOM attached
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then TAG="${{ inputs.ref }}"; fi
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            sbom/sbom.cdx.json sbom/sbom.spdx.json

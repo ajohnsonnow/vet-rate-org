@@ -523,25 +523,25 @@ async function phaseValidate() {
     return { note: "all budgets met" };
   });
 
-  // 6. Contract enforcement
+  // 6. Contract enforcement (blocking as of S8)
   //
-  // Vulnerability findings are informational during Sprint 1–2 (pre-existing
-  // protobufjs/xmldom advisories tracked in AUDIT_FINDINGS.md, addressed in S8
-  // supply-chain hardening). Set STRICT_AUDIT=true in CI once those resolve.
-  await check("Contract enforcement", () => {
-    const STRICT_AUDIT = process.env.STRICT_AUDIT === "true";
-    const audit = tryRun("npm audit --audit-level=critical");
-    if (!audit.ok && audit.out.includes("critical")) {
-      if (STRICT_AUDIT) {
-        throw new Error("npm audit: critical vulnerabilities found");
-      }
+  // S8 closed the protobufjs/xmldom advisories via npm `overrides`. This step
+  // is now blocking on high+ production advisories. Opt-out via
+  // STRICT_AUDIT=false only when diagnosing a newly-published CVE that the
+  // dependency tree hasn't caught up to yet.
+  await check("Contract enforcement (prod audit)", () => {
+    const STRICT_AUDIT = process.env.STRICT_AUDIT !== "false";
+    const audit = tryRun("npm audit --omit=dev --audit-level=high");
+    if (!audit.ok) {
       const critMatch = /(\d+) critical/.exec(audit.out);
       const highMatch = /(\d+) high/.exec(audit.out);
-      return {
-        note: `pre-existing: ${critMatch?.[1] ?? "?"} critical, ${highMatch?.[1] ?? "?"} high — tracked, fix in S8`,
-      };
+      const summary = `${critMatch?.[1] ?? "0"} critical, ${highMatch?.[1] ?? "0"} high`;
+      if (STRICT_AUDIT) {
+        throw new Error(`npm audit (prod): ${summary}`);
+      }
+      return { note: `non-strict mode: ${summary}` };
     }
-    return { note: "0 violations" };
+    return { note: "0 high+ in production deps" };
   });
 
   // 7. Accessibility audit

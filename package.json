@@ -1,6 +1,6 @@
 {
   "name": "veteran-disability-search",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "description": "Comprehensive veteran disability search and resource guide using eCFR data",
   "type": "module",
   "scripts": {
@@ -100,7 +100,9 @@
     "vitest-axe": "^0.1.0"
   },
   "overrides": {
-    "dompurify": "file:packages/dompurify-noop"
+    "dompurify": "file:packages/dompurify-noop",
+    "@xmldom/xmldom": "^0.8.13",
+    "protobufjs": "^7.5.6"
   },
   "engines": {
     "node": ">=18.0.0",
