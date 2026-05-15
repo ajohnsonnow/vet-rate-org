@@ -147,7 +147,6 @@ const RetroPayHunter = lazy(() => import("./components/RetroPayHunter"));
 const PainPainter = lazy(() => import("./components/PainPainter"));
 const VAAITransparency = lazy(() => import("./components/VAAITransparency"));
 const VaIntegrationTest = lazy(() => import("./components/VaIntegrationTest"));
-const VaSandboxTest = lazy(() => import("./components/VaSandboxTest"));
 const DemoDashboard = lazy(() => import("./components/DemoDashboard"));
 const NexusQualityAnalyzer = lazy(
   () => import("./components/NexusQualityAnalyzer"),
@@ -240,7 +239,6 @@ function App() {
   const [showWhatIfSandbox, setShowWhatIfSandbox] = useState(false);
   const [showVAAITransparency, setShowVAAITransparency] = useState(false);
   const [showVaIntegrationDemo, setShowVaIntegrationDemo] = useState(false);
-  const [showVaSandboxTest, setShowVaSandboxTest] = useState(false);
   const [showDemoDashboard, setShowDemoDashboard] = useState(false);
 
   // NEW DIAMOND-TIER FEATURES
@@ -3248,11 +3246,6 @@ function App() {
         {/* VA Integration Demo Dashboard (for Production Access Demo) */}
         {isVaApiEnabled() && showVaIntegrationDemo && (
           <VaIntegrationTest onClose={() => setShowVaIntegrationDemo(false)} />
-        )}
-
-        {/* VA Sandbox Test Dashboard (Comprehensive API Validation) */}
-        {isVaApiEnabled() && showVaSandboxTest && (
-          <VaSandboxTest onClose={() => setShowVaSandboxTest(false)} />
         )}
 
         {/* Demo Dashboard - For VA Production Access Demo with Nathan */}
